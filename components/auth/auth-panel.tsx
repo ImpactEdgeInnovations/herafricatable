@@ -30,23 +30,6 @@ export function AuthPanel({ intent }: { intent: AuthIntent }) {
   const destination = destinationFor(intent);
   const isAdmin = intent === "admin";
 
-  async function continueWithGoogle() {
-    setBusy(true);
-    setMessage(null);
-    try {
-      const supabase = createClient();
-      const callback = `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: callback },
-      });
-      if (error) throw error;
-    } catch (error) {
-      setBusy(false);
-      setMessage({ kind: "error", text: safeMessage(error instanceof Error ? error.message : "Unknown error") });
-    }
-  }
-
   async function requestCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -56,13 +39,12 @@ export function AuthPanel({ intent }: { intent: AuthIntent }) {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
         options: {
-          shouldCreateUser: true,
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`,
+          shouldCreateUser: !isAdmin,
         },
       });
       if (error) throw error;
       setStep("verify");
-      setMessage({ kind: "success", text: "Check your email for a six-digit code. You may also receive a secure sign-in link while the beta email template is being finalized." });
+      setMessage({ kind: "success", text: "A six-digit sign-in code has been sent to your email. It expires shortly and can only be used once." });
     } catch (error) {
       setMessage({ kind: "error", text: safeMessage(error instanceof Error ? error.message : "Unknown error") });
     } finally {
@@ -99,16 +81,9 @@ export function AuthPanel({ intent }: { intent: AuthIntent }) {
       <h2>{isAdmin ? "Admin sign in" : "Take your seat"}</h2>
       <p className="auth-description">
         {isAdmin
-          ? <>Use your approved team email. <strong>Admin access is verified after sign-in.</strong></>
-          : <>Continue with Google or use a one-time email code. <strong>No password required.</strong></>}
+          ? <>Enter your approved team email to receive a one-time code. <strong>Admin access is verified after sign-in.</strong></>
+          : <>Enter your email to receive a secure six-digit code. Gmail and professional addresses are supported. <strong>No password required.</strong></>}
       </p>
-
-      <button className="button google-button" type="button" onClick={continueWithGoogle} disabled={busy}>
-        <span className="google-mark" aria-hidden="true">G</span>
-        Continue with Google
-      </button>
-
-      <div className="auth-divider"><span>or use email</span></div>
 
       {step === "request" ? (
         <form className="auth-form" onSubmit={requestCode}>
@@ -146,7 +121,7 @@ export function AuthPanel({ intent }: { intent: AuthIntent }) {
             {busy ? "Verifying…" : "Verify and continue"}
           </button>
           <button className="button google-button" type="button" onClick={() => { setStep("request"); setToken(""); setMessage(null); }} disabled={busy}>
-            Use a different email
+            Use a different email or request a new code
           </button>
         </form>
       )}

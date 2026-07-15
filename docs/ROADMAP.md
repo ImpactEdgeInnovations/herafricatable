@@ -41,10 +41,35 @@ A feature is not complete merely because its screen exists. It is complete when:
 
 ## Release scope
 
+## Current delivery status — 15 July 2026
+
+### Completed foundation
+
+- [x] Prestige public landing page, live admin-managed event countdown, legal pages,
+  and dedicated FAQ page
+- [x] Supabase browser/server clients, request-level session refresh and protected
+  member/admin routes
+- [x] Single-method email OTP request and six-digit verification interface
+- [x] Pending member state, invite-based onboarding eligibility, admin roles and RLS
+- [x] First public operational control: publish or hide the next-event countdown
+- [x] Vercel production deployment from `main` and environment normalization
+
+### Immediate release gate
+
+- [ ] Configure the Supabase email template with `{{ .Token }}` and disable magic-link
+  wording
+- [ ] Configure production SMTP and verify sender-domain authentication
+- [ ] Seed and verify the Super Admin account, then test member and admin OTP end to end
+- [ ] Implement onboarding and enforce pending/onboarding/active route decisions
+- [ ] Add automated authentication, authorization and migration tests to CI
+
+The next implementation phase begins only after the email-code flow succeeds on both
+localhost and production with a real member account and the approved admin account.
+
 ### P0 — launch-critical
 
 - Public landing page, sign-in, legal pages, waitlist/contact entry
-- Google OAuth and email OTP authentication
+- Email OTP authentication
 - Ticket/payment registration and admin-controlled manual registration
 - Member onboarding and public/private profile fields
 - Event home, programme, announcements, menu, gallery, sponsors
@@ -101,7 +126,7 @@ A feature is not complete merely because its screen exists. It is complete when:
 **Day 3: authentication and authorization skeleton**
 
 - Implement Supabase SSR sessions and request-level session refresh.
-- Add Google OAuth PKCE callback and email OTP request/verification.
+- Add email OTP request and six-digit verification.
 - Add pending, active, dormant, suspended, and deleted access states.
 - Seed the first Super Admin through an auditable migration/operation.
 - Test anonymous, member, dormant, event-staff, moderator, and super-admin boundaries.
