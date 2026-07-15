@@ -12,9 +12,14 @@ export function getSupabasePublicEnv() {
     );
   }
 
+  // Supabase clients require the project origin. Normalize values copied from
+  // REST API examples so a trailing /rest/v1 does not break browser queries.
+  const normalizedUrl = supabaseUrl
+    .replace(/\/rest\/v1\/?$/, "")
+    .replace(/\/$/, "");
+
   return {
-    url: supabaseUrl,
+    url: normalizedUrl,
     publishableKey: supabasePublishableKey,
   };
 }
-

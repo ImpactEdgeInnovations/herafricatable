@@ -45,14 +45,6 @@ const principles = [
   ["04", "Yours beyond the event", "Your connections, conversations, communities, and event memories stay with you."],
 ];
 
-const faqs = [
-  ["Is Her Africa Table only an event platform?", "No. Curated events are the front door and trust signal. The platform is the lasting network where members continue connecting, learning, sharing opportunities, and building relationships."],
-  ["Who can join the private beta?", "The first beta is invitation and approval based. Ticket holders, approved founding members, and vouched applicants can enter. Signing in verifies identity; it does not automatically grant membership."],
-  ["How is my contact information protected?", "Your public member card shows only professional profile information. Phone, email, and social links remain gated until you accept a connection. You can pause discovery or block a member at any time."],
-  ["Do I need to download an app?", "No. Her Africa Table launches as a mobile-first web experience that works from your browser and can be saved to your home screen."],
-  ["What happens if online payments are unavailable?", "Admin can switch an event to manual review. Your registration is recorded, verified by the team, and grants the same membership access after approval."],
-];
-
 export default function HomePage() {
   return (
     <main className="site-shell">
@@ -65,7 +57,7 @@ export default function HomePage() {
           <a href="#why">Why the table</a>
           <a href="#experience">The experience</a>
           <a href="#membership">Membership</a>
-          <a href="#questions">Questions</a>
+          <Link href="/faq">FAQ</Link>
         </nav>
         <nav className="header-actions" aria-label="Account navigation">
           <Link className="button button-small button-outline" href="/sign-in">Member sign in</Link>
@@ -196,18 +188,6 @@ export default function HomePage() {
         </blockquote>
       </section>
 
-      <section className="faq-section" id="questions" aria-labelledby="faq-title">
-        <div className="faq-heading"><p className="eyebrow">Good questions</p><h2 id="faq-title">Before you take your seat.</h2><p>Still need help? <a href="mailto:support@herafricatable.com">Speak with the team.</a></p></div>
-        <div className="faq-list">
-          {faqs.map(([question, answer], index) => (
-            <details key={question} open={index === 0}>
-              <summary><span>{String(index + 1).padStart(2, "0")}</span>{question}<i>+</i></summary>
-              <p>{answer}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
       <section className="closing-section" aria-labelledby="closing-title">
         <p className="eyebrow light-eyebrow">Your invitation starts here</p>
         <h2 id="closing-title">The next opportunity may already be sitting at the table.</h2>
@@ -220,7 +200,7 @@ export default function HomePage() {
           <div className="brand footer-brand"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></div>
           <p>A private professional network for African women, beginning in Nairobi.</p>
         </div>
-        <div className="footer-column"><strong>Explore</strong><a href="#why">Why the table</a><a href="#experience">The experience</a><a href="#membership">Membership</a><a href="#questions">Questions</a></div>
+        <div className="footer-column"><strong>Explore</strong><a href="#why">Why the table</a><a href="#experience">The experience</a><a href="#membership">Membership</a><Link href="/faq">FAQ</Link></div>
         <div className="footer-column"><strong>Account</strong><Link href="/sign-in">Member sign in</Link><Link href="/admin/sign-in">Admin sign in</Link><a href="mailto:support@herafricatable.com">Support</a></div>
         <div className="footer-column"><strong>Trust</strong><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/community-guidelines">Community guidelines</Link></div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} Her Africa Table</span><span>Built with intention in Nairobi.</span></div>
