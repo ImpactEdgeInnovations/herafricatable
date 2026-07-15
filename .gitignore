@@ -12,6 +12,9 @@ out/
 .env.test.local
 .env.production.local
 
+# Local Supabase bootstrap data (may contain administrator/member emails)
+supabase/.bootstrap*.sql
+
 # Vercel
 .vercel/
 
@@ -27,4 +30,3 @@ coverage/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
-
