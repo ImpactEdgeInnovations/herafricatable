@@ -77,7 +77,12 @@ export function EventCountdown() {
           <span><b>{twoDigits(timeLeft.seconds)}</b><small>Seconds</small></span>
         </div>
       ) : (
-        <p className="countdown-pending">Schedule released privately.</p>
+        <div className="countdown-clock countdown-clock-pending" aria-label="Event date awaiting publication">
+          <span><b>—</b><small>Days</small></span>
+          <span><b>—</b><small>Hours</small></span>
+          <span><b>—</b><small>Minutes</small></span>
+          <span><b>—</b><small>Seconds</small></span>
+        </div>
       )}
 
       <Link href="/sign-in">Request a seat <span aria-hidden="true">→</span></Link>

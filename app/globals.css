@@ -930,11 +930,11 @@ body { background: var(--paper); }
 .countdown-section {
   display: grid;
   width: min(1180px, calc(100% - 48px));
-  min-height: 112px;
+  min-height: 92px;
   align-items: center;
   margin: 0 auto;
-  padding: 22px 0;
-  border-top: 1px solid var(--line);
+  padding: 16px 0;
+  border-top: 0;
   border-bottom: 1px solid var(--line);
   grid-template-columns: 1fr auto auto;
   gap: 46px;
@@ -947,6 +947,7 @@ body { background: var(--paper); }
 .countdown-clock > span { display: grid; min-width: 42px; gap: 3px; text-align: center; }
 .countdown-clock b { font-family: var(--serif); font-size: 1.45rem; font-weight: 400; font-variant-numeric: tabular-nums; }
 .countdown-clock small { color: var(--muted); font-size: .49rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.countdown-clock-pending { opacity: .48; }
 .countdown-pending { margin: 0; color: var(--muted); font-family: var(--serif); font-size: .88rem; font-style: italic; }
 .countdown-section > a { display: inline-flex; align-items: center; gap: 14px; color: var(--wine); font-size: .7rem; font-weight: 800; text-decoration: none; }
 

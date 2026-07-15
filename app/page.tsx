@@ -72,6 +72,8 @@ export default function HomePage() {
         </nav>
       </header>
 
+      <EventCountdown />
+
       <section className="landing-hero" aria-labelledby="hero-title">
         <div className="hero-copy">
           <p className="eyebrow"><span /> Private membership · Nairobi</p>
@@ -93,8 +95,6 @@ export default function HomePage() {
           <p className="visual-note">Designed around real conversations—not follower counts.</p>
         </div>
       </section>
-
-      <EventCountdown />
 
       <section className="promise-section" id="why" aria-labelledby="promise-title">
         <div className="section-heading">
