@@ -873,3 +873,106 @@ body { background: var(--paper); }
   .founding-section { min-height: auto; }
   .closing-section { min-height: 420px; }
 }
+
+/* Private members' house refinement */
+.site-header {
+  width: min(1180px, calc(100% - 48px));
+  min-height: 82px;
+}
+.desktop-nav { margin-left: auto; margin-right: 48px; }
+.header-actions { gap: 0; }
+.landing-hero {
+  width: min(1180px, calc(100% - 48px));
+  min-height: 690px;
+  grid-template-columns: 1.08fr .92fr;
+  gap: clamp(54px, 7vw, 100px);
+}
+.hero-copy { padding-right: 0; }
+.landing-hero h1 {
+  max-width: 680px;
+  font-size: clamp(3.8rem, 5.8vw, 6.15rem);
+  line-height: .95;
+}
+.landing-hero h1 em { color: var(--wine); }
+.hero-intro { max-width: 560px; }
+.table-visual { min-height: 500px; align-self: center; }
+.table-visual::before { inset: 20%; }
+.table-top { width: 42%; }
+
+.founding-section {
+  display: grid;
+  min-height: 450px;
+  place-items: center;
+  padding-top: 100px;
+  padding-bottom: 100px;
+  grid-template-columns: 1fr;
+}
+.founding-section blockquote { max-width: 980px; text-align: center; }
+.founding-section blockquote p { font-size: clamp(2rem, 3.6vw, 3.6rem); line-height: 1.12; }
+.founding-section blockquote footer { margin-top: 30px; }
+
+@media (max-width: 920px) {
+  .desktop-nav { margin-right: 0; }
+  .landing-hero { grid-template-columns: 1fr; }
+  .table-visual { min-height: 480px; }
+}
+
+@media (max-width: 620px) {
+  .site-header,
+  .landing-hero { width: calc(100% - 32px); }
+  .site-header { min-height: 72px; }
+  .landing-hero { min-height: auto; gap: 0; }
+  .landing-hero h1 { font-size: clamp(3.2rem, 14.8vw, 4.35rem); }
+  .table-visual { min-height: 380px; }
+  .founding-section { min-height: 390px; padding-top: 72px; padding-bottom: 72px; }
+}
+
+.countdown-section {
+  display: grid;
+  width: min(1180px, calc(100% - 48px));
+  min-height: 112px;
+  align-items: center;
+  margin: 0 auto;
+  padding: 22px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  grid-template-columns: 1fr auto auto;
+  gap: 46px;
+}
+.countdown-intro { display: grid; gap: 3px; }
+.countdown-intro > span { color: var(--wine); font-size: .56rem; font-weight: 800; letter-spacing: .17em; text-transform: uppercase; }
+.countdown-intro strong { font-family: var(--serif); font-size: 1.05rem; font-weight: 400; }
+.countdown-intro small { color: var(--muted); font-size: .65rem; }
+.countdown-clock { display: flex; align-items: center; gap: 26px; }
+.countdown-clock > span { display: grid; min-width: 42px; gap: 3px; text-align: center; }
+.countdown-clock b { font-family: var(--serif); font-size: 1.45rem; font-weight: 400; font-variant-numeric: tabular-nums; }
+.countdown-clock small { color: var(--muted); font-size: .49rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.countdown-pending { margin: 0; color: var(--muted); font-family: var(--serif); font-size: .88rem; font-style: italic; }
+.countdown-section > a { display: inline-flex; align-items: center; gap: 14px; color: var(--wine); font-size: .7rem; font-weight: 800; text-decoration: none; }
+
+.admin-portal { align-items: start; padding-top: 60px; padding-bottom: 60px; }
+.admin-portal .portal-card { width: min(900px, 100%); }
+.countdown-manager { display: grid; margin-top: 55px; padding-top: 45px; border-top: 1px solid var(--line); grid-template-columns: .8fr 1.2fr; gap: 55px; }
+.countdown-manager h2 { margin: 0; font-family: var(--serif); font-size: 2rem; font-weight: 400; }
+.countdown-manager > div > p:last-child { color: var(--muted); font-size: .82rem; line-height: 1.65; }
+.countdown-manager form { display: grid; gap: 16px; }
+.countdown-manager label { display: grid; gap: 7px; color: var(--ink); font-size: .72rem; font-weight: 700; }
+.countdown-manager input:not([type="checkbox"]) { min-height: 46px; padding: 0 13px; border: 1px solid var(--line); outline: 0; background: #fff; color: var(--ink); }
+.countdown-manager input:focus { border-color: var(--wine); }
+.countdown-manager .publish-control { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.publish-control input { accent-color: var(--wine); }
+.countdown-manager .button { width: max-content; }
+.manager-message { margin: 0; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+
+@media (max-width: 720px) {
+  .countdown-section {
+    width: calc(100% - 32px);
+    padding: 26px 0;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+  }
+  .countdown-clock { grid-row: 2; grid-column: 1 / -1; justify-content: space-between; gap: 12px; }
+  .countdown-pending { grid-row: 2; grid-column: 1 / -1; }
+  .countdown-section > a { justify-self: end; }
+  .countdown-manager { grid-template-columns: 1fr; gap: 28px; }
+}

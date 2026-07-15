@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EventCountdown } from "@/components/event-countdown";
 
 const ArrowIcon = () => (
   <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 10h11m-4-4 4 4-4 4" /></svg>
@@ -55,12 +56,6 @@ const faqs = [
 export default function HomePage() {
   return (
     <main className="site-shell">
-      <div className="beta-strip">
-        <span>Founding beta</span>
-        <p>First gathering: Nairobi · Event details shared with approved members</p>
-        <Link href="/sign-in">Request access <ArrowIcon /></Link>
-      </div>
-
       <header className="site-header">
         <Link className="brand" href="/" aria-label="Her Africa Table home">
           <span className="brand-mark" aria-hidden="true">H</span>
@@ -73,37 +68,38 @@ export default function HomePage() {
           <a href="#questions">Questions</a>
         </nav>
         <nav className="header-actions" aria-label="Account navigation">
-          <Link className="text-link admin-link" href="/admin/sign-in">Admin</Link>
           <Link className="button button-small button-outline" href="/sign-in">Member sign in</Link>
         </nav>
       </header>
 
       <section className="landing-hero" aria-labelledby="hero-title">
         <div className="hero-copy">
-          <p className="eyebrow"><span /> The table is being set</p>
-          <h1 id="hero-title">Your seat.<br /><em>Your network.</em><br />Your next chapter.</h1>
-          <p className="hero-intro">A private professional network where African women turn meaningful introductions into lasting relationships, opportunities, and growth.</p>
+          <p className="eyebrow"><span /> Private membership · Nairobi</p>
+          <h1 id="hero-title">The table for women<br /><em>shaping Africa.</em></h1>
+          <p className="hero-intro">A curated network for African women who found, lead, invest, and build—designed for trusted relationships that move beyond the room.</p>
           <div className="hero-actions">
-            <Link className="button button-primary" href="/sign-in">Enter the beta <ArrowIcon /></Link>
-            <a className="text-link" href="#membership">See how membership works</a>
+            <Link className="button button-primary" href="/sign-in">Request membership <ArrowIcon /></Link>
+            <a className="text-link" href="#membership">Explore the network</a>
           </div>
           <div className="trust-row" aria-label="Membership qualities">
-            <span>Curated membership</span><span>Private by design</span><span>Built for connection</span>
+            <span>Application-led</span><span>Private by design</span><span>Nairobi founding circle</span>
           </div>
         </div>
 
         <div className="table-visual" aria-label="Her Africa Table founding network in Nairobi">
-          <div className="visual-index"><span>01</span><p>Private network<br />for African women</p></div>
+          <div className="visual-index"><span>Circle 01</span><p>Private members&apos; network<br />Nairobi · Kenya</p></div>
           <div className="table-top"><span className="table-monogram">HAT</span><span className="table-subtitle">A seat changes everything</span></div>
-          <div className="visual-bottom"><span>Nairobi</span><span>Founding beta</span></div>
+          <div className="visual-bottom"><span>Est. Nairobi</span><span>Founding circle</span></div>
           <p className="visual-note">Designed around real conversations—not follower counts.</p>
         </div>
       </section>
 
+      <EventCountdown />
+
       <section className="promise-section" id="why" aria-labelledby="promise-title">
         <div className="section-heading">
           <p className="eyebrow">Beyond the event</p>
-          <h2 id="promise-title">The room may close.<br />The network stays open.</h2>
+          <h2 id="promise-title">One room.<br />A network that endures.</h2>
         </div>
         <p className="section-lead">Events are where trust begins. Her Africa Table is where the connection keeps working—before the next gathering and long after the last conversation.</p>
         <div className="value-grid">
@@ -128,7 +124,7 @@ export default function HomePage() {
             <div><dt>Access</dt><dd>Invitation and approval</dd></div>
             <div><dt>Details</dt><dd>Announced to beta members</dd></div>
           </dl>
-          <Link className="button button-primary" href="/sign-in">Join the Nairobi beta <ArrowIcon /></Link>
+          <Link className="button button-primary" href="/sign-in">Request a seat <ArrowIcon /></Link>
         </div>
       </section>
 
@@ -190,16 +186,14 @@ export default function HomePage() {
           <li><strong>02</strong><span><b>Complete your profile</b>Share enough for the right women to find you.</span></li>
           <li><strong>03</strong><span><b>Take your seat</b>Enter the event, directory, and trusted network.</span></li>
         </ol>
-        <Link className="button button-light" href="/sign-in">Request beta access <ArrowIcon /></Link>
+        <Link className="button button-light" href="/sign-in">Request membership <ArrowIcon /></Link>
       </section>
 
       <section className="founding-section" aria-labelledby="founding-title">
-        <div className="founder-mark">“</div>
         <blockquote>
-          <p id="founding-title">We are building the room we wanted to find: ambitious without being transactional, private without being closed, and useful long after everyone goes home.</p>
+          <p id="founding-title">A considered room for ambitious women—private enough for trust, diverse enough for perspective, and useful long after everyone goes home.</p>
           <footer>— A note from the founding team</footer>
         </blockquote>
-        <div className="founding-note"><span>Founding member stories</span><p>Authentic member voices, event photography, and partner marks will be added here after consent—not fabricated for launch.</p></div>
       </section>
 
       <section className="faq-section" id="questions" aria-labelledby="faq-title">
@@ -217,8 +211,8 @@ export default function HomePage() {
       <section className="closing-section" aria-labelledby="closing-title">
         <p className="eyebrow light-eyebrow">Your invitation starts here</p>
         <h2 id="closing-title">The next opportunity may already be sitting at the table.</h2>
-        <p>Join the private beta and be among the first women shaping Her Africa Table in Nairobi.</p>
-        <div><Link className="button button-light" href="/sign-in">Request beta access <ArrowIcon /></Link><a href="mailto:support@herafricatable.com">Ask us a question</a></div>
+        <p>Request membership in the Nairobi founding circle and help shape the table from its first chapter.</p>
+        <div><Link className="button button-light" href="/sign-in">Request membership <ArrowIcon /></Link><a href="mailto:support@herafricatable.com">Ask us a question</a></div>
       </section>
 
       <footer className="site-footer complete-footer">
