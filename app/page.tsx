@@ -92,12 +92,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="table-visual" aria-label="An abstract round table representing connection">
-          <div className="orbit orbit-one" /><div className="orbit orbit-two" />
+        <div className="table-visual" aria-label="Her Africa Table founding network in Nairobi">
+          <div className="visual-index"><span>01</span><p>Private network<br />for African women</p></div>
           <div className="table-top"><span className="table-monogram">HAT</span><span className="table-subtitle">A seat changes everything</span></div>
-          <div className="seat seat-one"><span>01</span></div><div className="seat seat-two"><span>02</span></div>
-          <div className="seat seat-three"><span>03</span></div><div className="seat seat-four"><span>04</span></div>
-          <div className="seat seat-five"><span>05</span></div><div className="seat seat-six"><span>06</span></div>
+          <div className="visual-bottom"><span>Nairobi</span><span>Founding beta</span></div>
           <p className="visual-note">Designed around real conversations—not follower counts.</p>
         </div>
       </section>
@@ -236,4 +234,3 @@ export default function HomePage() {
     </main>
   );
 }
-
