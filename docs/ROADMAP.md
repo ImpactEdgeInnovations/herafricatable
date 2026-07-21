@@ -41,7 +41,7 @@ A feature is not complete merely because its screen exists. It is complete when:
 
 ## Release scope
 
-## Current delivery status — 15 July 2026
+## Current delivery status — 21 July 2026
 
 ### Completed foundation
 
@@ -53,6 +53,10 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [x] Pending member state, invite-based onboarding eligibility, admin roles and RLS
 - [x] First public operational control: publish or hide the next-event countdown
 - [x] Vercel production deployment from `main` and environment normalization
+- [x] Temporary Supabase password access for pre-SMTP administrator testing
+- [x] Admin command center and database-backed launch roadmap view
+- [x] Member review operations with audited approval, suspension and restoration
+- [x] Onboarding foundation with public/private profile separation and consent records
 
 ### Immediate release gate
 
@@ -60,11 +64,12 @@ A feature is not complete merely because its screen exists. It is complete when:
   wording
 - [ ] Configure production SMTP and verify sender-domain authentication
 - [ ] Seed and verify the Super Admin account, then test member and admin OTP end to end
-- [ ] Implement onboarding and enforce pending/onboarding/active route decisions
+- [ ] Apply and verify the onboarding/admin migration in production Supabase
+- [ ] Complete a real pending → onboarding → active acceptance test
 - [ ] Add automated authentication, authorization and migration tests to CI
 
-The next implementation phase begins only after the email-code flow succeeds on both
-localhost and production with a real member account and the approved admin account.
+Temporary password access allows administrator testing to continue while production
+email delivery is configured. Email OTP must still pass end to end before public beta.
 
 ### P0 — launch-critical
 
@@ -269,7 +274,7 @@ flag with no navigation exposure and no unsafe partial access.
 
 | Product area | Minimum production acceptance |
 |---|---|
-| Authentication | Google OAuth and email OTP work locally and in production; redirects are allow-listed; sessions are cookie-based and refreshed safely. |
+| Authentication | Email OTP works locally and in production; temporary passwords are retired; redirects are allow-listed; sessions are cookie-based and refreshed safely. |
 | Registration | Authentication does not imply membership; automatic and manual approvals issue one auditable entitlement. |
 | Profiles | Public and private data are separated; private contacts require an accepted connection; pause mode removes discovery. |
 | Events | Staff access is event-scoped; drafts are not member-visible; upcoming/past transitions are deterministic. |

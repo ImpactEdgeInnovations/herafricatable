@@ -68,9 +68,8 @@ a `profiles` row keyed to `auth.users.id`.
 
 Authentication and authorization are intentionally separate:
 
-- Google OAuth proves control of a Google identity.
 - Email OTP proves control of an email address.
-- Neither proves payment, event attendance, membership, or an admin role.
+- Authentication does not prove payment, event attendance, membership, or an admin role.
 - Product access is determined from registration, entitlement, membership and role
   records.
 
@@ -182,9 +181,9 @@ why report-triggered private-content review is mediated through an audited opera
 
 ## Authentication flow
 
-1. Visitor chooses Google or email code.
-2. Supabase authenticates and returns through `/auth/callback` for OAuth, or verifies
-   the submitted OTP.
+1. Visitor requests an email code.
+2. Supabase verifies the submitted OTP. A temporary password path may be enabled only
+   during controlled pre-SMTP testing.
 3. Server establishes the cookie session.
 4. Application resolves profile, registration, membership and role state.
 5. Pending users see registration/approval status; approved incomplete users see
@@ -192,8 +191,7 @@ why report-triggered private-content review is mediated through an audited opera
 6. Every protected route revalidates authorization server-side; client state is only
    a presentation aid.
 
-Account linking and duplicate-email behavior must be tested before launch, especially
-when the same person uses Google first and OTP later.
+Duplicate-email and repeated OTP behavior must be tested before launch.
 
 ## Payment architecture
 

@@ -26,7 +26,7 @@
 
 - [ ] Production Site URL and redirect allow list are exact
 - [ ] Localhost, Preview and Production callbacks work
-- [ ] Google consent branding and OAuth configuration are production-ready
+- [ ] Email OTP template, sender branding and delivery configuration are production-ready
 - [ ] Email OTP uses production sender configuration
 - [ ] OTP and authentication endpoints are rate-limited
 - [ ] Authenticated pending users cannot access member data
