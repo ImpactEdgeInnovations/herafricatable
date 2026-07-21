@@ -1288,6 +1288,16 @@ body { background: var(--paper); }
 .directory-grid article > button:disabled { border-color: var(--line); color: var(--muted); cursor: default; }
 .network-message { position: fixed; right: 24px; bottom: 24px; max-width: 340px; margin: 0; padding: 16px 20px; background: var(--wine); color: #fff; font-size: .7rem; }
 .network-error { width: min(1120px,calc(100% - 48px)); margin: 0 auto; }
+.network-safety-actions { flex-wrap: wrap; justify-content: end; }
+.blocked-members { width: min(1120px,calc(100% - 48px)); margin: 0 auto; padding: 45px 0; border-top: 1px solid var(--line); }
+.blocked-members > div { display: flex; max-width: 520px; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.blocked-members > div span { font-size: .72rem; }
+.blocked-members button { border: 0; background: transparent; color: var(--wine); font-size: .62rem; font-weight: 800; cursor: pointer; }
+.moderation-queue > div:last-of-type { display: grid; }
+.moderation-queue article { display: grid; align-items: center; padding: 22px 0; border-top: 1px solid var(--line); grid-template-columns: 145px 1fr auto; gap: 28px; }
+.moderation-queue article > div:first-child { display: grid; justify-items: start; gap: 7px; }
+.moderation-queue article small { color: var(--muted); font-size: .58rem; text-transform: capitalize; }
+.moderation-queue article p { margin: 7px 0 0; color: var(--muted); font-size: .72rem; line-height: 1.6; }
 .event-registration-page { min-height: 100vh; padding-bottom: 100px; background: var(--paper); }
 .event-registration-form, .registration-status-card { width: min(760px, calc(100% - 48px)); margin: 0 auto; padding: 90px 0; }
 .event-registration-form header h1, .registration-status-card h2 { margin: 0; font-family: var(--serif); font-size: clamp(3rem, 6vw, 5.4rem); font-weight: 400; letter-spacing: -.05em; line-height: .96; text-transform: capitalize; }
@@ -1470,6 +1480,9 @@ body { background: var(--paper); }
   .directory-grid { grid-template-columns: 1fr; }
   .network-identity form { align-items: stretch; flex-direction: column; }
   .network-connections article { grid-template-columns: 52px 1fr; }
+  .blocked-members { width: calc(100% - 32px); }
+  .moderation-queue article { grid-template-columns: 1fr; }
+  .network-safety-actions { justify-content: start; }
   .public-event-list > article { align-items: start; grid-template-columns: 75px 1fr; gap: 20px; }
   .public-event-list > article > a { grid-column: 2; }
   .public-event-date strong { font-size: 2.4rem; }

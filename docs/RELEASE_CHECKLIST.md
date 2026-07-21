@@ -58,6 +58,8 @@
 - [ ] Private phone and WhatsApp data appear only to accepted connections when sharing is enabled
 - [ ] Reverse-direction duplicate connection requests cannot create a second relationship
 - [ ] Report actions exist on profiles, messages and posts
+- [ ] Blocking immediately removes directory, connection and private-contact visibility in both directions
+- [ ] Moderator report access is limited to submitted details and captured evidence
 - [ ] Moderator content access is report-scoped and audited
 - [ ] Terms, Privacy Notice and Community Guidelines are versioned
 - [ ] Consent records store accepted document versions and timestamps

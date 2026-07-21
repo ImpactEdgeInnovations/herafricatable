@@ -3,7 +3,7 @@ const phases = [
   { label: "Members", range: "Days 4–7", progress: 72, status: "Live testing", detail: "Onboarding, profiles, approvals, consent and admin operations." },
   { label: "Events", range: "Days 8–11", progress: 96, status: "Acceptance testing", detail: "Event lifecycle, scoped staff, programme, announcements, sponsors, menu and private-by-default galleries are operational." },
   { label: "Registration", range: "Days 12–15", progress: 91, status: "Acceptance testing", detail: "Tickets, orders, receipts, manual review, Paystack verification, refunds, reconciliation and idempotent entitlements are built." },
-  { label: "Network", range: "Days 16–30", progress: 24, status: "Directory and connections", detail: "Privacy-safe discovery, connection codes, mutual acceptance and gated contact sharing are built; blocking and messaging follow." },
+  { label: "Network", range: "Days 16–30", progress: 39, status: "Safety controls", detail: "Discovery, mutual connections, gated contacts, removal, blocking, reporting and moderator operations are built; messaging follows." },
 ];
 
 export function RoadmapOverview() {
