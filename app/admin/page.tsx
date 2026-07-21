@@ -19,6 +19,7 @@ import {
   type AdminMenuItem,
 } from "@/components/admin/event-menu-manager";
 import { EventGalleryManager, type AdminGalleryAlbum, type AdminMediaAsset } from "@/components/admin/event-gallery-manager";
+import { RegistrationManager, type AdminRegistration, type AdminTicket } from "@/components/admin/registration-manager";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -130,12 +131,15 @@ export default async function AdminHomePage() {
     if (signed.error) signed = await supabase.storage.from("event-media").createSignedUrl(asset.storage_path, 3600);
     return { ...asset, signed_url: signed.data?.signedUrl ?? null };
   }));
+  const ticketResult = eventIds.length ? await supabase.from("ticket_types").select("id, event_id, name, description, price_minor, currency, inventory_quantity, sales_start_at, sales_end_at, status, sort_order").in("event_id", eventIds).order("sort_order", { ascending: true }) : { data: [], error: null };
+  const registrationResults = await Promise.all(eventIds.map((eventId) => supabase.rpc("list_event_registrations", { p_event_id: eventId })));
+  const registrations = registrationResults.flatMap((result) => (result.data as AdminRegistration[] | null) ?? []);
 
   return (
     <main className="admin-command-center">
       <header className="admin-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Admin command center</small></span></Link>
-        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#roadmap">Roadmap</a></nav>
+        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#roadmap">Roadmap</a></nav>
         <span className="admin-role">{role.role.replace("_", " ")}</span>
       </header>
       <section className="admin-hero" id="overview">
@@ -152,6 +156,7 @@ export default async function AdminHomePage() {
       {canManageEvents && !eventResult.error ? <EventContentManager events={events} initialSessions={sessions} initialAnnouncements={((announcementData as AdminAnnouncement[] | null) ?? [])} initialSponsors={((sponsorData as AdminSponsor[] | null) ?? [])} speakerLinks={(speakerLinks as unknown as { session_id: string; event_speakers: { company: string | null; job_title: string | null; name: string } | null }[] | null) ?? []} isSuperAdmin={role.role === "super_admin"} /> : null}
       {canManageEvents && !eventResult.error ? <EventMenuManager events={events} initialMenus={menus} initialCourses={courses} initialItems={menuItems} initialFeedback={((feedbackResult.data as AdminMenuFeedback[] | null) ?? [])} migrationReady={!menuResult.error && !courseResult.error && !itemResult.error && !feedbackResult.error} /> : null}
       {canManageEvents && !eventResult.error ? <EventGalleryManager events={events} initialAlbums={albums} initialAssets={assets} migrationReady={!albumResult.error && !assetResult.error} /> : null}
+      {canManageEvents && !eventResult.error ? <RegistrationManager events={events} initialTickets={((ticketResult.data as AdminTicket[] | null) ?? [])} initialRegistrations={registrations} migrationReady={!ticketResult.error && registrationResults.every((result) => !result.error)} /> : null}
       <RoadmapOverview />
       <section className="admin-section" id="event">
         <EventCountdownManager canManage={canManageCountdown} initialSettings={(countdown as CountdownSettings | null) ?? null} userId={user.id} />

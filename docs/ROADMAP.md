@@ -75,6 +75,8 @@ A feature is not complete merely because its screen exists. It is complete when:
   allergen information, member feedback foundations, and audited moderation
 - [x] Private event-media Storage, gallery albums, audited media publishing,
   accessible metadata, signed delivery URLs, and responsive public galleries
+- [x] Provider-neutral registration commerce foundation with ticket inventory,
+  minor-unit pricing, orders, manual review, and idempotent entitlement fulfillment
 
 ### Immediate release gate
 
@@ -93,6 +95,7 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [x] Apply `20260721200000_event_content_operations.sql` in production Supabase
 - [ ] Apply `20260721230000_event_menu_operations.sql` in production Supabase
 - [ ] Apply `20260722090000_event_gallery_operations.sql` in production Supabase
+- [ ] Apply `20260722130000_registration_commerce_foundation.sql` in production Supabase
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [ ] Add automated authentication, authorization and migration tests to CI
 

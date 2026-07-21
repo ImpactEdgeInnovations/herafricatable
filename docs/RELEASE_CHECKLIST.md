@@ -40,6 +40,8 @@
 - [ ] Webhook signature and replay/idempotency tests pass
 - [ ] Callback pages never grant payment status
 - [ ] Manual approval captures reviewer, reference, notes and time
+- [ ] Ticket inventory is checked under a row lock before an order reservation is created
+- [ ] Automatic mode remains unavailable until server initialization and signed webhook verification pass
 - [ ] Duplicate payment/entitlement protection passes
 - [ ] Reconciliation, refund and cancellation runbooks are available
 - [ ] Real low-value end-to-end payment has been reconciled before public sale

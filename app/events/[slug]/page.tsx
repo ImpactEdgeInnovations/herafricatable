@@ -82,7 +82,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <div><p className="eyebrow">{event.format.replace("_", " ")} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "A carefully curated Her Africa Table gathering."}</p></div>
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div></dl>
-          {event.registration_mode === "closed" ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <Link className="button button-primary" href="/sign-in">{cta}</Link>}
+          {event.registration_mode === "closed" ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <Link className="button button-primary" href={`/events/${slug}/register`}>{cta}</Link>}
         </aside>
       </section>
 

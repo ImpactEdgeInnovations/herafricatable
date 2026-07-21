@@ -113,6 +113,9 @@ of an overly broad query exposing private information.
 
 Money is stored as integer minor units plus an ISO currency code. Payment provider
 references and webhook event IDs are unique. Entitlements are issued idempotently.
+The browser can create a registration request but cannot approve an order or issue an
+entitlement. Manual review and future verified-provider processing converge on the
+same locked fulfillment operation.
 
 ### Events and content
 

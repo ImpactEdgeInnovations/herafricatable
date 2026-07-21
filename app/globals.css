@@ -1206,6 +1206,24 @@ body { background: var(--paper); }
 .gallery-assets-list small { color: var(--muted); font-size: .54rem; text-transform: capitalize; }
 .gallery-asset-form { padding-left: 34px; border-left: 1px solid var(--line); }
 .selected-file { margin: 0; color: var(--wine); font-size: .64rem; font-weight: 750; }
+.registration-admin-grid { display: grid; align-items: start; grid-template-columns: 265px 1fr; gap: 42px; }
+.registration-review { margin-top: 55px; padding-top: 38px; border-top: 1px solid var(--line); }
+.event-registration-page { min-height: 100vh; padding-bottom: 100px; background: var(--paper); }
+.event-registration-form, .registration-status-card { width: min(760px, calc(100% - 48px)); margin: 0 auto; padding: 90px 0; }
+.event-registration-form header h1, .registration-status-card h2 { margin: 0; font-family: var(--serif); font-size: clamp(3rem, 6vw, 5.4rem); font-weight: 400; letter-spacing: -.05em; line-height: .96; text-transform: capitalize; }
+.event-registration-form header > p:last-child, .registration-status-card > p:last-child { max-width: 610px; color: var(--muted); line-height: 1.7; }
+.ticket-choice-list { display: grid; margin: 48px 0 34px; gap: 10px; }
+.ticket-choice-list label { display: grid; min-height: 88px; align-items: center; padding: 18px 20px; border: 1px solid var(--line); background: #fff; grid-template-columns: 22px 1fr auto; gap: 16px; cursor: pointer; }
+.ticket-choice-list label.selected { border-color: var(--wine); background: var(--cream); }
+.ticket-choice-list input { accent-color: var(--wine); }
+.ticket-choice-list label > span { display: grid; gap: 5px; }
+.ticket-choice-list small { color: var(--muted); font-size: .65rem; }
+.ticket-choice-list b { font-family: var(--serif); font-size: 1.1rem; font-weight: 400; }
+.registration-fields { margin: 0 0 30px; }
+.registration-total { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 28px; padding: 20px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.registration-total span { color: var(--muted); font-size: .65rem; font-weight: 800; text-transform: uppercase; }
+.registration-total strong { font-family: var(--serif); font-size: 1.8rem; font-weight: 400; }
+.event-registration-form > .manager-message { margin-top: 18px; }
 
 /* Public events */
 .events-page, .event-detail-page { min-height: 100vh; background: var(--paper); }
@@ -1321,6 +1339,7 @@ body { background: var(--paper); }
   .gallery-admin-grid { grid-template-columns: 1fr; }
   .gallery-album-form { padding: 0 0 40px; border-right: 0; border-bottom: 1px solid var(--line); }
   .public-gallery-album { grid-template-columns: 1fr; gap: 30px; }
+  .registration-admin-grid { grid-template-columns: 1fr; }
   .event-detail-hero { grid-template-columns: 1fr; gap: 50px; }
   .event-content-section { grid-template-columns: 1fr; gap: 40px; }
 }
