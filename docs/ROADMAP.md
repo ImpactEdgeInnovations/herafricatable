@@ -91,6 +91,8 @@ A feature is not complete merely because its screen exists. It is complete when:
   controls, lifecycle states, rate limits, realtime updates, and audit history
 - [x] Member visibility settings, portable JSON export, deletion cooling-off and
   cancellation, Super Admin review, anonymization, access revocation and retention boundaries
+- [x] Realtime in-app notifications, member delivery preferences, transactional email
+  outbox, idempotent Resend worker, retries, admin monitoring and database health endpoint
 
 ### Immediate release gate
 
@@ -117,6 +119,8 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Apply `20260723130000_private_messaging.sql` in production Supabase
 - [x] Apply `20260723170000_support_operations.sql` in production Supabase
 - [ ] Apply `20260723210000_privacy_account_lifecycle.sql` in production Supabase
+- [ ] Apply `20260724090000_notification_operations.sql` in production Supabase
+- [ ] Verify the Resend sending domain and configure the production email worker schedule
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [ ] Add automated authentication, authorization and migration tests to CI
 

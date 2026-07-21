@@ -96,6 +96,10 @@
 - [ ] Ticket capacity, currency, dates, timezone and venue are verified
 - [ ] Empty/loading/error states teach the user what to do
 - [ ] Notification copy, links and preferences were tested
+- [ ] Resend sender domain, SPF and DKIM are verified
+- [ ] Notification cron frequency matches the Vercel plan and support SLA
+- [ ] Email outbox idempotency, retry backoff and permanent-failure alerting pass
+- [ ] Essential registration, account and privacy notices cannot be opted out
 - [ ] Feature flags expose only modules that passed their acceptance gate
 
 ## Quality
@@ -118,6 +122,7 @@
 
 - [ ] Application errors and critical auth/payment failures alert an owner
 - [ ] Health check and synthetic registration/sign-in checks are active
+- [ ] `/api/health` is monitored externally and alerts on sustained degradation
 - [ ] Logs exclude OTPs, secrets, private messages and unnecessary personal data
 - [ ] Notification delivery/bounce logs are visible to support
 - [ ] Payment and entitlement events are traceable by correlation ID

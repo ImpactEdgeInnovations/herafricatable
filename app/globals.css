@@ -1401,6 +1401,43 @@ body { background: var(--paper); }
 .privacy-request-list blockquote { margin: 12px 0; padding: 12px 15px; border-left: 2px solid var(--gold); background: var(--cream); font-size: .7rem; line-height: 1.6; }
 .member-actions button.danger { border-color: #6d1727; color: #6d1727; }
 
+/* Notifications and delivery operations */
+.notifications-page { min-height: 100vh; padding-bottom: 100px; background: var(--paper); }
+.notification-layout { display: grid; width: min(1160px,calc(100% - 48px)); margin: 60px auto 0; grid-template-columns: 1fr 340px; gap: 55px; }
+.notification-feed > header { display: flex; align-items: end; justify-content: space-between; margin-bottom: 35px; }
+.notification-feed h1 { margin: 0; font-family: var(--serif); font-size: clamp(3.5rem,7vw,5.8rem); font-weight: 400; letter-spacing: -.055em; }
+.notification-feed > header button { border: 0; background: transparent; color: var(--wine); font-size: .62rem; font-weight: 800; cursor: pointer; }
+.notification-feed article { display: grid; align-items: start; padding: 24px 0; border-top: 1px solid var(--line); grid-template-columns: 85px 1fr auto; gap: 24px; }
+.notification-feed article.unread { border-left: 2px solid var(--wine); padding-left: 17px; }
+.notification-kind { color: var(--gold); font-size: .55rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.notification-feed h2 { margin: 0; font-family: var(--serif); font-size: 1.3rem; font-weight: 400; }
+.notification-feed article p { margin: 7px 0; color: var(--muted); font-size: .72rem; line-height: 1.6; }
+.notification-feed article small { color: var(--muted); font-size: .54rem; }
+.notification-feed article > a,.notification-feed article > button { border: 0; background: transparent; color: var(--wine); font-size: .61rem; font-weight: 800; text-decoration: none; cursor: pointer; }
+.notification-preferences { align-self: start; position: sticky; top: 25px; padding: 30px; border: 1px solid var(--line); background: var(--cream); }
+.notification-preferences h2 { margin: 5px 0 12px; font-family: var(--serif); font-size: 2rem; font-weight: 400; }
+.notification-preferences > p:last-of-type { color: var(--muted); font-size: .7rem; line-height: 1.6; }
+.notification-preferences form { display: grid; margin-top: 28px; gap: 19px; }
+.notification-preferences label { display: flex; align-items: flex-start; gap: 11px; }
+.notification-preferences input { margin-top: 3px; accent-color: var(--wine); }
+.notification-preferences label span { display: grid; gap: 3px; }
+.notification-preferences label strong { font-size: .68rem; }
+.notification-preferences label small { color: var(--muted); font-size: .57rem; line-height: 1.45; }
+.notification-operations { margin-top: 60px; }
+.provider-state { padding: 8px 11px; border: 1px solid var(--line); font-size: .55rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.provider-state.ready { border-color: #55745e; color: #36513e; }
+.provider-state.pending { border-color: #b99248; color: #765614; }
+.notification-metrics { display: grid; margin: 35px 0; grid-template-columns: repeat(4,1fr); }
+.notification-metrics article { display: grid; padding: 22px; border: 1px solid var(--line); border-right: 0; }
+.notification-metrics article:last-child { border-right: 1px solid var(--line); }
+.notification-metrics strong { font-family: var(--serif); font-size: 2rem; font-weight: 400; }
+.notification-metrics span { color: var(--muted); font-size: .56rem; font-weight: 800; text-transform: uppercase; }
+.notification-job-list > header,.notification-job-list > article { display: grid; align-items: center; padding: 13px 10px; border-bottom: 1px solid var(--line); grid-template-columns: 1.3fr .65fr .55fr 1.2fr 60px; gap: 15px; }
+.notification-job-list > header { color: var(--muted); font-size: .53rem; font-weight: 800; text-transform: uppercase; }
+.notification-job-list strong { display: block; overflow: hidden; font-size: .66rem; text-overflow: ellipsis; white-space: nowrap; }
+.notification-job-list small,.notification-job-list article > span { color: var(--muted); font-size: .55rem; overflow-wrap: anywhere; }
+.notification-job-list button { border: 0; background: transparent; color: var(--wine); font-size: .59rem; font-weight: 800; cursor: pointer; }
+
 .event-registration-page { min-height: 100vh; padding-bottom: 100px; background: var(--paper); }
 .event-registration-form, .registration-status-card { width: min(760px, calc(100% - 48px)); margin: 0 auto; padding: 90px 0; }
 .event-registration-form header h1, .registration-status-card h2 { margin: 0; font-family: var(--serif); font-size: clamp(3rem, 6vw, 5.4rem); font-weight: 400; letter-spacing: -.05em; line-height: .96; text-transform: capitalize; }
@@ -1542,6 +1579,10 @@ body { background: var(--paper); }
   .support-admin-controls .support-note { grid-column: 1/-1; }
   .privacy-request-list article { grid-template-columns: 120px 1fr; }
   .privacy-request-list article .member-actions { grid-column: 2; }
+  .notification-layout { grid-template-columns: 1fr; }
+  .notification-preferences { position: static; }
+  .notification-job-list > header { display: none; }
+  .notification-job-list > article { grid-template-columns: 1fr 100px; }
 }
 
 @media (max-width: 620px) {
@@ -1607,6 +1648,12 @@ body { background: var(--paper); }
   .settings-action > button { justify-self: start; }
   .settings-history article,.privacy-request-list article { grid-template-columns: 1fr; }
   .privacy-request-list article .member-actions { grid-column: auto; }
+  .notification-layout { width: calc(100% - 32px); margin-top: 45px; }
+  .notification-feed article { grid-template-columns: 65px 1fr; gap: 14px; }
+  .notification-feed article > a,.notification-feed article > button { grid-column: 2; justify-self: start; }
+  .notification-metrics { grid-template-columns: repeat(2,1fr); }
+  .notification-metrics article:nth-child(2) { border-right: 1px solid var(--line); }
+  .notification-job-list > article { grid-template-columns: 1fr; }
   .public-event-list > article { align-items: start; grid-template-columns: 75px 1fr; gap: 20px; }
   .public-event-list > article > a { grid-column: 2; }
   .public-event-date strong { font-size: 2.4rem; }

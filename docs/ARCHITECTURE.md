@@ -248,9 +248,16 @@ generated IDs, not raw user filenames. Uploaded media is never trusted as execut
 
 ## Notifications and background work
 
-Business events enqueue notification jobs; request handlers do not send a large batch
-inline. Each job has a deterministic idempotency key, attempt count, next-attempt time
-and final state. Delivery webhooks update the notification log.
+Business events enqueue notification jobs and never call the email provider inline.
+Each job has a deterministic idempotency key, attempt count, next-attempt time and
+final state. Provider delivery webhooks remain a release-gated enhancement for
+delivered, bounced and complained states.
+
+The initial delivery worker claims email jobs with `FOR UPDATE SKIP LOCKED`, uses a
+stable job identifier as the provider idempotency key, records every attempt, and
+requeues transient failures with exponential backoff. Member preferences may suppress
+network, event and support email but never essential account, registration or privacy
+notices. Provider credentials exist only in server-side Vercel environment variables.
 
 Transactional/security messages remain enabled. Member preferences control grouped
 event, connection, community and platform communications.
