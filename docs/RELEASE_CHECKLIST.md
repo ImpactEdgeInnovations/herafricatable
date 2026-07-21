@@ -68,6 +68,9 @@
 - [ ] Draft menus and dishes are invisible outside their assigned event administration scope
 - [ ] Menu allergen content is reviewed by the event's catering owner before publishing
 - [ ] Menu comments remain private until an assigned administrator moderates them
+- [ ] Draft and archived gallery objects cannot receive anonymous signed URLs
+- [ ] Gallery uploads reject unsupported MIME types and files larger than 10 MB
+- [ ] Every published image has meaningful alt text and an accurate source credit
 - [ ] Ticket capacity, currency, dates, timezone and venue are verified
 - [ ] Empty/loading/error states teach the user what to do
 - [ ] Notification copy, links and preferences were tested

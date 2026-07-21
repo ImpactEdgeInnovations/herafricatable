@@ -119,7 +119,7 @@ references and webhook event IDs are unique. Entitlements are issued idempotentl
 - `events`, `venues`, `programme_days`, `programme_sessions`, `event_speakers`
 - `event_announcements`, `event_sponsors`
 - `event_menus`, `menu_courses`, `menu_items`, `menu_item_feedback`
-- `gallery_albums`, `media_assets`
+- `gallery_albums`, `media_assets` backed by the private `event-media` bucket
 - `event_feedback`
 - `sponsors`, `sponsor_assets`, `sponsor_intro_requests`
 
@@ -133,6 +133,8 @@ Creating or changing a featured event is an audited Super Admin operation and ke
 the landing-page countdown synchronized with the event source of truth.
 Menu feedback writes run through a controlled operation for active members; comments
 remain pending until an authorized event administrator approves or hides them.
+Event gallery objects remain private in Storage. Public pages receive one-hour signed,
+transformed URLs only when the event, album, and media record are all published.
 
 ### Network and communication
 

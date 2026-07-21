@@ -18,6 +18,7 @@ import {
   type AdminMenuFeedback,
   type AdminMenuItem,
 } from "@/components/admin/event-menu-manager";
+import { EventGalleryManager, type AdminGalleryAlbum, type AdminMediaAsset } from "@/components/admin/event-gallery-manager";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -115,12 +116,26 @@ export default async function AdminHomePage() {
   const feedbackResult = itemIds.length
     ? await supabase.from("menu_item_feedback").select("item_id, user_id, rating, is_favorite, comment, moderation_status").in("item_id", itemIds).order("updated_at", { ascending: false })
     : { data: [], error: null };
+  const albumResult = eventIds.length
+    ? await supabase.from("gallery_albums").select("id, event_id, title, introduction, status, sort_order").in("event_id", eventIds).order("sort_order", { ascending: true })
+    : { data: [], error: null };
+  const albums = (albumResult.data as AdminGalleryAlbum[] | null) ?? [];
+  const albumIds = albums.map((album) => album.id);
+  const assetResult = albumIds.length
+    ? await supabase.from("media_assets").select("id, album_id, storage_path, mime_type, width, height, alt_text, caption, credit, captured_at, status, is_featured, sort_order").in("album_id", albumIds).order("sort_order", { ascending: true })
+    : { data: [], error: null };
+  const rawAssets = (assetResult.data as AdminMediaAsset[] | null) ?? [];
+  const assets = await Promise.all(rawAssets.map(async (asset) => {
+    let signed = await supabase.storage.from("event-media").createSignedUrl(asset.storage_path, 3600, { transform: { height: 320, quality: 75, resize: "cover", width: 480 } });
+    if (signed.error) signed = await supabase.storage.from("event-media").createSignedUrl(asset.storage_path, 3600);
+    return { ...asset, signed_url: signed.data?.signedUrl ?? null };
+  }));
 
   return (
     <main className="admin-command-center">
       <header className="admin-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Admin command center</small></span></Link>
-        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#roadmap">Roadmap</a></nav>
+        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#roadmap">Roadmap</a></nav>
         <span className="admin-role">{role.role.replace("_", " ")}</span>
       </header>
       <section className="admin-hero" id="overview">
@@ -136,6 +151,7 @@ export default async function AdminHomePage() {
       {canManageEvents ? <EventManager initialEvents={events} privateEvents={privateEvents} canCreate={role.role === "super_admin"} migrationReady={!eventResult.error} /> : null}
       {canManageEvents && !eventResult.error ? <EventContentManager events={events} initialSessions={sessions} initialAnnouncements={((announcementData as AdminAnnouncement[] | null) ?? [])} initialSponsors={((sponsorData as AdminSponsor[] | null) ?? [])} speakerLinks={(speakerLinks as unknown as { session_id: string; event_speakers: { company: string | null; job_title: string | null; name: string } | null }[] | null) ?? []} isSuperAdmin={role.role === "super_admin"} /> : null}
       {canManageEvents && !eventResult.error ? <EventMenuManager events={events} initialMenus={menus} initialCourses={courses} initialItems={menuItems} initialFeedback={((feedbackResult.data as AdminMenuFeedback[] | null) ?? [])} migrationReady={!menuResult.error && !courseResult.error && !itemResult.error && !feedbackResult.error} /> : null}
+      {canManageEvents && !eventResult.error ? <EventGalleryManager events={events} initialAlbums={albums} initialAssets={assets} migrationReady={!albumResult.error && !assetResult.error} /> : null}
       <RoadmapOverview />
       <section className="admin-section" id="event">
         <EventCountdownManager canManage={canManageCountdown} initialSettings={(countdown as CountdownSettings | null) ?? null} userId={user.id} />
