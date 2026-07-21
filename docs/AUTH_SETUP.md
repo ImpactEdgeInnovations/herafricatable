@@ -4,6 +4,10 @@ Her Africa Table uses one passwordless entry method: a six-digit email OTP deliv
 through Supabase Auth. Gmail, Google Workspace and other valid email providers are
 supported. Google does not issue the code and Google OAuth is not enabled.
 
+During pre-SMTP testing, the sign-in interface also supports a temporary Supabase
+email/password account. This is a migration aid, not the intended production method;
+remove or rotate it after email OTP delivery is ready.
+
 ## Required application URLs
 
 ### Local application

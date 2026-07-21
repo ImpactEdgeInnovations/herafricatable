@@ -1,7 +1,28 @@
 # Beta Access and First Admin
 
-The beta does not use shared passwords or hard-coded credentials. Members and team
-administrators authenticate with Google or email OTP. Access is granted through
+## Temporary password access
+
+Until production email delivery is configured, the sign-in pages also accept a
+temporary Supabase email/password account. The password is never stored in this
+repository or exposed in browser code.
+
+Create the temporary account in Supabase Dashboard → Authentication → Users, using
+the approved administrator email. Mark the email as confirmed. Then grant the account
+its role in the SQL Editor:
+
+```sql
+insert into public.user_roles (user_id, role)
+select id, 'super_admin'::public.app_role
+from auth.users
+where lower(email) = 'impactedgeinnovations@gmail.com'
+on conflict (user_id, role) do nothing;
+```
+
+Remove or rotate the temporary password as soon as email OTP and production SMTP are
+working. OTP remains the intended production sign-in method.
+
+Production does not use shared passwords or hard-coded credentials. Members and team
+administrators authenticate with email OTP. Access is granted through
 `beta_invites`, and administrative authority comes from `user_roles`.
 
 Before the first administrator signs in, add an invite through the Supabase SQL Editor:
