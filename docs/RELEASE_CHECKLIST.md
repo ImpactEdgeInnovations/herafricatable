@@ -72,6 +72,10 @@
 - [ ] Account export and deletion were tested
 - [ ] Retention rules and legal-review actions are documented
 - [ ] Support and safety escalation owners are on duty
+- [ ] Members can read only their own support requests and replies
+- [ ] Event staff and moderators cannot read the support inbox
+- [ ] Support assignment, priority, waiting, resolution and closure transitions pass
+- [ ] Support creation/reply rate limits remain enforced outside the application UI
 
 ## Product and content
 

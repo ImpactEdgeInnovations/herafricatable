@@ -153,6 +153,10 @@ transformed URLs only when the event, album, and media record are all published.
 
 A unique canonical pair prevents A→B and B→A duplicates. Conversation creation is a
 controlled operation allowed only for accepted, unblocked connections.
+Support tickets and their replies are readable only by the submitting member and
+Super Admins. Event staff and moderators receive no implicit support access. Creation,
+reply and management operations are rate-limited, and lifecycle changes are audited
+without copying private message bodies into operational logs.
 
 ### Communities, Circles and learning
 
