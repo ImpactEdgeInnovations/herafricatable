@@ -21,6 +21,7 @@ import {
 import { EventGalleryManager, type AdminGalleryAlbum, type AdminMediaAsset } from "@/components/admin/event-gallery-manager";
 import { RegistrationManager, type AdminPaymentAttempt, type AdminRefund, type AdminRegistration, type AdminTicket } from "@/components/admin/registration-manager";
 import { ModerationQueue, type MemberReport } from "@/components/admin/moderation-queue";
+import { EventCheckinConsole, type CheckinAttendee } from "@/components/admin/event-checkin-console";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -141,12 +142,14 @@ export default async function AdminHomePage() {
   const paymentResult = registrationOrderIds.length ? await supabase.from("payment_attempts").select("order_id, provider, provider_reference, amount_minor, currency, status, created_at").in("order_id", registrationOrderIds).order("created_at", { ascending: false }) : { data: [], error: null };
   const refundResults=await Promise.all(eventIds.map((eventId)=>supabase.rpc("list_event_refund_requests",{p_event_id:eventId})));
   const refunds=refundResults.flatMap((result)=>(result.data as AdminRefund[]|null)??[]);
+  const checkinResults=await Promise.all(eventIds.map((eventId)=>supabase.rpc("list_event_checkins",{p_event_id:eventId})));
+  const checkinAttendees=checkinResults.flatMap((result,index)=>((result.data as Omit<CheckinAttendee,"event_id">[]|null)??[]).map((attendee)=>({...attendee,event_id:eventIds[index]})));
 
   return (
     <main className="admin-command-center">
       <header className="admin-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Admin command center</small></span></Link>
-        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#moderation">Safety</a>{role.role==="super_admin"?<><Link href="/admin/support">Support</Link><Link href="/admin/privacy">Privacy</Link><Link href="/admin/notifications">Delivery</Link></>:null}<a href="#roadmap">Roadmap</a></nav>
+        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#check-in">Check-in</a><a href="#moderation">Safety</a>{role.role==="super_admin"?<><Link href="/admin/support">Support</Link><Link href="/admin/privacy">Privacy</Link><Link href="/admin/notifications">Delivery</Link></>:null}<a href="#roadmap">Roadmap</a></nav>
         <span className="admin-role">{role.role.replace("_", " ")}</span>
       </header>
       <section className="admin-hero" id="overview">
@@ -164,6 +167,7 @@ export default async function AdminHomePage() {
       {canManageEvents && !eventResult.error ? <EventMenuManager events={events} initialMenus={menus} initialCourses={courses} initialItems={menuItems} initialFeedback={((feedbackResult.data as AdminMenuFeedback[] | null) ?? [])} migrationReady={!menuResult.error && !courseResult.error && !itemResult.error && !feedbackResult.error} /> : null}
       {canManageEvents && !eventResult.error ? <EventGalleryManager events={events} initialAlbums={albums} initialAssets={assets} migrationReady={!albumResult.error && !assetResult.error} /> : null}
       {canManageEvents && !eventResult.error ? <RegistrationManager events={events} initialTickets={((ticketResult.data as AdminTicket[] | null) ?? [])} initialRegistrations={registrations} initialPayments={((paymentResult.data as AdminPaymentAttempt[] | null) ?? [])} initialRefunds={refunds} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY&&process.env.SUPABASE_SECRET_KEY&&process.env.NEXT_PUBLIC_SITE_URL)} migrationReady={!ticketResult.error && !paymentResult.error && registrationResults.every((result) => !result.error)} /> : null}
+      {canManageEvents && !eventResult.error ? <EventCheckinConsole events={events.map((event)=>({id:event.id,title:event.title,starts_at:event.starts_at,ends_at:event.ends_at}))} initialAttendees={checkinAttendees} migrationReady={checkinResults.every((result)=>!result.error)} /> : null}
       {canModerate?<ModerationQueue reports={(reportResult.data as MemberReport[]|null)??[]} migrationReady={!reportResult.error}/>:null}
       <RoadmapOverview />
       <section className="admin-section" id="event">

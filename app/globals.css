@@ -1439,6 +1439,59 @@ body { background: var(--paper); }
 .notification-job-list button { border: 0; background: transparent; color: var(--wine); font-size: .59rem; font-weight: 800; cursor: pointer; }
 
 .event-registration-page { min-height: 100vh; padding-bottom: 100px; background: var(--paper); }
+.event-pass-page { min-height: 100vh; padding-bottom: 90px; background: var(--paper); }
+.event-pass-shell { display: grid; width: min(1040px, calc(100% - 48px)); margin: 70px auto 0; align-items: center; grid-template-columns: 1fr 390px; gap: clamp(50px, 9vw, 120px); }
+.event-pass-intro h1, .event-pass-unavailable h1 { max-width: 700px; margin: 8px 0 22px; font-family: var(--serif); font-size: clamp(3rem, 6vw, 5.7rem); font-weight: 400; letter-spacing: -.055em; line-height: .95; }
+.event-pass-intro > p:last-of-type, .event-pass-unavailable > p { max-width: 560px; color: var(--muted); line-height: 1.75; }
+.event-pass-intro dl { display: grid; margin: 40px 0 0; border-top: 1px solid var(--line); }
+.event-pass-intro dl div { display: grid; padding: 15px 0; border-bottom: 1px solid var(--line); grid-template-columns: 90px 1fr; gap: 20px; }
+.event-pass-intro dt { color: var(--muted); font-size: .63rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
+.event-pass-intro dd { margin: 0; font-size: .82rem; }
+.event-pass-card { position: relative; padding: 28px; overflow: hidden; border: 1px solid rgba(93, 38, 45, .22); border-radius: 2px; background: #fffdf9; box-shadow: 0 28px 80px rgba(58, 30, 24, .12); text-align: center; }
+.event-pass-card::before { position: absolute; width: 180px; height: 180px; top: -110px; right: -95px; border: 1px solid rgba(93, 38, 45, .14); border-radius: 50%; content: ""; }
+.event-pass-card-head { display: flex; justify-content: space-between; padding-bottom: 22px; border-bottom: 1px solid var(--line); font-size: .65rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+.event-pass-card-head small { color: var(--muted); }
+.event-pass-card img { display: block; width: min(264px, 100%); height: auto; margin: 24px auto; }
+.event-pass-code { display: grid; padding: 18px; border: 1px solid var(--line); gap: 5px; }
+.event-pass-code span { color: var(--muted); font-size: .6rem; text-transform: uppercase; letter-spacing: .13em; }
+.event-pass-code strong { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.35rem; letter-spacing: .18em; }
+.event-pass-card > p { margin: 18px 0 0; color: var(--muted); font-size: .68rem; }
+.event-pass-card.is-used { border-color: rgba(42, 104, 74, .45); }
+.event-pass-unavailable { width: min(850px, calc(100% - 48px)); margin: 100px auto 0; }
+.event-pass-unavailable > div { display: flex; margin-top: 32px; gap: 10px; }
+
+.checkin-event-select { display: grid; min-width: 280px; gap: 8px; }
+.checkin-event-select label, .checkin-scanner form label { color: var(--muted); font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
+.checkin-event-select select, .checkin-scanner input { width: 100%; min-height: 46px; padding: 0 14px; border: 1px solid var(--line); border-radius: 0; background: #fff; color: var(--ink); font: inherit; }
+.checkin-metrics { display: grid; margin-bottom: 26px; border: 1px solid var(--line); grid-template-columns: repeat(3, 1fr); }
+.checkin-metrics article { display: grid; padding: 22px; border-right: 1px solid var(--line); gap: 5px; }
+.checkin-metrics article:last-child { border-right: 0; }
+.checkin-metrics strong { font-family: var(--serif); font-size: 2rem; font-weight: 400; }
+.checkin-metrics span { color: var(--muted); font-size: .6rem; text-transform: uppercase; letter-spacing: .11em; }
+.checkin-workspace { display: grid; grid-template-columns: minmax(300px, .8fr) minmax(420px, 1.2fr); gap: 26px; }
+.checkin-scanner, .checkin-roster { padding: 26px; border: 1px solid var(--line); background: #fff; }
+.checkin-camera { position: relative; display: grid; min-height: 270px; overflow: hidden; place-items: center; border: 1px solid var(--line); background: #201b19; color: rgba(255,255,255,.7); }
+.checkin-camera::after { position: absolute; width: 58%; aspect-ratio: 1; border: 1px solid rgba(255,255,255,.62); content: ""; }
+.checkin-camera video { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+.checkin-camera.active video { opacity: 1; }
+.checkin-camera span { position: absolute; z-index: 2; bottom: 16px; padding: 7px 10px; background: rgba(0,0,0,.58); font-size: .62rem; }
+.checkin-camera-actions { display: flex; margin: 12px 0 22px; }
+.checkin-camera-actions .button { width: 100%; }
+.checkin-scanner form { display: grid; padding-top: 20px; border-top: 1px solid var(--line); gap: 8px; }
+.checkin-scanner form > div { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.checkin-result { display: grid; margin-top: 18px; padding: 15px; border-left: 3px solid var(--wine); background: var(--paper); gap: 4px; }
+.checkin-result.checked_in { border-color: #2a684a; }
+.checkin-result.already_checked_in { border-color: #a8792c; }
+.checkin-result span, .checkin-result small { color: var(--muted); font-size: .67rem; }
+.checkin-roster > header { display: flex; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+.checkin-roster > header span { color: var(--muted); font-size: .72rem; }
+.checkin-roster article { display: grid; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); grid-template-columns: 9px 1fr auto; gap: 13px; }
+.checkin-roster article > span:first-child { width: 8px; height: 8px; border-radius: 50%; background: #b8afa9; }
+.checkin-roster article > span.checked { background: #2a684a; box-shadow: 0 0 0 4px rgba(42,104,74,.1); }
+.checkin-roster article > div { display: grid; gap: 4px; }
+.checkin-roster article small, .checkin-roster article > div:last-child span { color: var(--muted); font-size: .61rem; }
+.checkin-roster article > div:last-child { justify-items: end; }
+.checkin-roster article button { padding: 0; border: 0; background: transparent; color: var(--wine); font-size: .58rem; font-weight: 800; cursor: pointer; }
 .event-registration-form, .registration-status-card { width: min(760px, calc(100% - 48px)); margin: 0 auto; padding: 90px 0; }
 .event-registration-form header h1, .registration-status-card h2 { margin: 0; font-family: var(--serif); font-size: clamp(3rem, 6vw, 5.4rem); font-weight: 400; letter-spacing: -.05em; line-height: .96; text-transform: capitalize; }
 .event-registration-form header > p:last-child, .registration-status-card > p:last-child { max-width: 610px; color: var(--muted); line-height: 1.7; }
@@ -1666,4 +1719,21 @@ body { background: var(--paper); }
   .admin-section-heading { align-items: flex-start; flex-direction: column; }
   .roadmap-list article { grid-template-columns: 32px 1fr; }
   .roadmap-copy { grid-template-columns: 1fr; gap: 10px; }
+}
+
+@media (max-width: 820px) {
+  .event-pass-shell { grid-template-columns: 1fr; }
+  .event-pass-card { width: min(390px, 100%); justify-self: center; }
+  .checkin-workspace { grid-template-columns: 1fr; }
+  .checkin-event-select { width: 100%; min-width: 0; }
+}
+
+@media (max-width: 560px) {
+  .event-pass-shell, .event-pass-unavailable { width: calc(100% - 32px); margin-top: 42px; }
+  .event-pass-unavailable > div { align-items: stretch; flex-direction: column; }
+  .checkin-metrics { grid-template-columns: 1fr; }
+  .checkin-metrics article { border-right: 0; border-bottom: 1px solid var(--line); }
+  .checkin-metrics article:last-child { border-bottom: 0; }
+  .checkin-scanner, .checkin-roster { padding: 18px; }
+  .checkin-scanner form > div { grid-template-columns: 1fr; }
 }

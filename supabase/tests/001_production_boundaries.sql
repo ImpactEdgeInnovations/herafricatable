@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(15);
+select plan(26);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -27,6 +27,14 @@ insert into public.privacy_requests(id,user_id,request_type,reason)values
 insert into public.notifications(id,user_id,kind,title,body,dedupe_key)values
  ('40000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','system','Member A notice','Only member A can read this.','test:a'),
  ('40000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003','system','Member B notice','Only member B can read this.','test:b');
+insert into public.events(id,slug,title,format,status,starts_at,ends_at,registration_mode,created_by)values
+ ('50000000-0000-4000-8000-000000000001','test-table-one','Test Table One','virtual','published',now()-interval '1 hour',now()+interval '2 hours','closed','10000000-0000-4000-8000-000000000001'),
+ ('50000000-0000-4000-8000-000000000002','test-table-two','Test Table Two','virtual','published',now()-interval '1 hour',now()+interval '2 hours','closed','10000000-0000-4000-8000-000000000001');
+insert into public.event_staff_scopes(user_id,event_id,granted_by)values
+ ('10000000-0000-4000-8000-000000000004','50000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001');
+insert into public.event_memberships(event_id,user_id,status,confirmed_at)values
+ ('50000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','confirmed',now()),
+ ('50000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','confirmed',now());
 
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
@@ -40,11 +48,22 @@ select lives_ok($$select public.mark_notification_read('40000000-0000-4000-8000-
 select throws_ok($$select public.mark_notification_read('40000000-0000-4000-8000-000000000002')$$,'P0001','Notification not found','member cannot mutate another notification');
 select throws_ok($$select *from public.list_admin_support_tickets()$$,'P0001','Super admin required','member cannot list admin support queue');
 select throws_ok($$select *from public.claim_notification_jobs(10)$$,'P0001','Service role required','member cannot claim email jobs');
+select is((select count(*)from public.get_my_event_pass('50000000-0000-4000-8000-000000000001')),1::bigint,'confirmed member can issue own first event pass');
+select is((select count(*)from public.get_my_event_pass('50000000-0000-4000-8000-000000000002')),1::bigint,'confirmed member can issue own second event pass');
+select is((select count(*)from public.event_checkin_credentials),2::bigint,'member reads only own event credentials');
+select throws_ok($$select *from public.list_event_checkins('50000000-0000-4000-8000-000000000001')$$,'P0001','Not authorized','member cannot list event check-in roster');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',true);
 select is((select count(*)from public.support_tickets),0::bigint,'event staff cannot read support tickets');
 select throws_ok($$select *from public.list_admin_privacy_requests()$$,'P0001','Super admin required','event staff cannot list privacy queue');
 select throws_ok($$select *from public.list_admin_notification_jobs()$$,'P0001','Super admin required','event staff cannot list delivery queue');
+select is((select count(*)from public.event_checkin_credentials),1::bigint,'event staff reads credentials only for assigned event');
+select is((select count(*)from public.list_event_checkins('50000000-0000-4000-8000-000000000001')),1::bigint,'event staff lists assigned event roster');
+select throws_ok($$select *from public.list_event_checkins('50000000-0000-4000-8000-000000000002')$$,'P0001','Not authorized','event staff cannot list another event roster');
+select is((select outcome from public.check_in_event_member('50000000-0000-4000-8000-000000000001',(select manual_code from public.event_checkin_credentials where event_id='50000000-0000-4000-8000-000000000001'),'manual','pgTAP')), 'checked_in','event staff checks member into assigned event');
+select is((select outcome from public.check_in_event_member('50000000-0000-4000-8000-000000000001',(select manual_code from public.event_checkin_credentials where event_id='50000000-0000-4000-8000-000000000001'),'manual','pgTAP')), 'already_checked_in','duplicate scan is idempotent');
+select lives_ok($$select public.reverse_event_checkin((select id from public.event_checkins where event_id='50000000-0000-4000-8000-000000000001'and reversed_at is null),'Incorrect door scan')$$,'event staff can auditably reverse assigned event check-in');
+select is((select status from public.event_memberships where event_id='50000000-0000-4000-8000-000000000001'and user_id='10000000-0000-4000-8000-000000000002'),'confirmed','reversal restores confirmed attendance state');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select count(*)from public.support_tickets),2::bigint,'super admin reads support tickets');

@@ -127,6 +127,7 @@ both routes require an exact amount/currency match before calling fulfillment.
 - `event_menus`, `menu_courses`, `menu_items`, `menu_item_feedback`
 - `gallery_albums`, `media_assets` backed by the private `event-media` bucket
 - `event_feedback`
+- `event_checkin_credentials`, `event_checkins`, `event_checkin_attempts`
 - `sponsors`, `sponsor_assets`, `sponsor_intro_requests`
 
 Publishing state is explicit (`draft`, `published`, `archived`). Member queries never
@@ -141,6 +142,10 @@ Menu feedback writes run through a controlled operation for active members; comm
 remain pending until an authorized event administrator approves or hides them.
 Event gallery objects remain private in Storage. Public pages receive one-hour signed,
 transformed URLs only when the event, album, and media record are all published.
+Tickets and attendance remain separate: an approved order creates an event membership,
+while a check-in creates an immutable attendance record. Private QR credentials are
+issued only to confirmed members, door operations are limited to the assigned event,
+duplicates are idempotent, and corrections retain the original row as an audited reversal.
 
 ### Network and communication
 

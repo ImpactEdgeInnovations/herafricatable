@@ -117,6 +117,8 @@
 - [ ] Keyboard-only and screen-reader checks pass
 - [ ] Contrast, focus and 44px touch targets pass
 - [ ] QR camera permission denied path falls back to manual code
+- [ ] Check-in opening window, duplicate scan, wrong-event pass and audited reversal pass on launch devices
+- [ ] Every event device is signed in as a scoped staff account, not a shared Super Admin account
 - [ ] Slow-network, offline/retry and duplicate-submit tests pass
 - [ ] Directory, messages and admin lists paginate
 - [ ] Performance and image/media budgets pass
