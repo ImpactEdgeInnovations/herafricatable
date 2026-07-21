@@ -54,6 +54,9 @@
 
 - [ ] Public/private profile fields were tested with unrelated accounts
 - [ ] Pause visibility and blocking take effect immediately
+- [ ] Paused, pending, dormant and suspended profiles are excluded from directory results
+- [ ] Private phone and WhatsApp data appear only to accepted connections when sharing is enabled
+- [ ] Reverse-direction duplicate connection requests cannot create a second relationship
 - [ ] Report actions exist on profiles, messages and posts
 - [ ] Moderator content access is report-scoped and audited
 - [ ] Terms, Privacy Notice and Community Guidelines are versioned

@@ -81,6 +81,8 @@ A feature is not complete merely because its screen exists. It is complete when:
   signature validation, amount/currency matching, and admin reconciliation visibility
 - [x] Member order history and receipts, safe pending cancellation, refund requests,
   and audited manual/automatic refund lifecycle controls
+- [x] Active-member directory, canonical connection pairs, in-person connection codes,
+  request/accept/ignore operations, and accepted-connection private contact gates
 
 ### Immediate release gate
 
@@ -102,6 +104,7 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Apply `20260722130000_registration_commerce_foundation.sql` in production Supabase
 - [ ] Apply `20260722170000_paystack_processing.sql` in production Supabase
 - [ ] Apply `20260722200000_registration_lifecycle.sql` in production Supabase
+- [ ] Apply `20260722230000_member_network_foundation.sql` in production Supabase
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [ ] Add automated authentication, authorization and migration tests to CI
 
