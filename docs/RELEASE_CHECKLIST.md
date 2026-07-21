@@ -63,6 +63,8 @@
 
 - [ ] First event, programme, menu, speakers, sponsors and gallery are accurate
 - [ ] Draft content is not visible to members
+- [ ] Programme sessions cannot be saved outside the parent event dates
+- [ ] Announcement and sponsor visibility changes create audit records
 - [ ] Ticket capacity, currency, dates, timezone and venue are verified
 - [ ] Empty/loading/error states teach the user what to do
 - [ ] Notification copy, links and preferences were tested
@@ -74,6 +76,7 @@
 - [ ] Desktop Chrome/Safari/Firefox pass critical admin journeys
 - [ ] Draft events are invisible anonymously and published events expose no private online URL
 - [ ] Event staff can modify only explicitly assigned events
+- [ ] Removing a staff member's final event scope also removes the event-staff role
 - [ ] Featured-event changes update the public countdown and create an audit event
 - [ ] Cancelled/completed event transitions and timezone rendering are verified
 - [ ] Keyboard-only and screen-reader checks pass

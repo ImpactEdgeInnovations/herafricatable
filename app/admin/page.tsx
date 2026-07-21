@@ -5,6 +5,12 @@ import { EventCountdownManager, type CountdownSettings } from "@/components/admi
 import { MemberReview, type AdminMember } from "@/components/admin/member-review";
 import { RoadmapOverview } from "@/components/admin/roadmap-overview";
 import { EventManager, type AdminEvent } from "@/components/admin/event-manager";
+import {
+  EventContentManager,
+  type AdminAnnouncement,
+  type AdminSession,
+  type AdminSponsor,
+} from "@/components/admin/event-content-manager";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -73,12 +79,23 @@ export default async function AdminHomePage() {
   }));
   const privateEvents = managedRows.map((event) => ({ event_id: event.event_id, online_url: event.online_url }));
   const canManageCountdown = role.role === "super_admin" || role.role === "event_staff";
+  const eventIds = events.map((event) => event.id);
+  const [{ data: sessionData }, { data: announcementData }, { data: sponsorData }] = eventIds.length ? await Promise.all([
+    supabase.from("programme_sessions").select("id, event_id, title, description, starts_at, ends_at, room, status").in("event_id", eventIds).order("starts_at", { ascending: true }),
+    supabase.from("event_announcements").select("id, event_id, title, body, status, published_at").in("event_id", eventIds).order("updated_at", { ascending: false }),
+    supabase.from("event_sponsors").select("id, event_id, name, tier, website_url, logo_url, is_published, sort_order").in("event_id", eventIds).order("sort_order", { ascending: true }),
+  ]) : [{ data: [] }, { data: [] }, { data: [] }];
+  const sessions = (sessionData as AdminSession[] | null) ?? [];
+  const sessionIds = sessions.map((session) => session.id);
+  const { data: speakerLinks } = sessionIds.length
+    ? await supabase.from("session_speakers").select("session_id, event_speakers(name, job_title, company)").in("session_id", sessionIds).order("sort_order", { ascending: true })
+    : { data: [] };
 
   return (
     <main className="admin-command-center">
       <header className="admin-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Admin command center</small></span></Link>
-        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#roadmap">Roadmap</a></nav>
+        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#roadmap">Roadmap</a></nav>
         <span className="admin-role">{role.role.replace("_", " ")}</span>
       </header>
       <section className="admin-hero" id="overview">
@@ -92,6 +109,7 @@ export default async function AdminHomePage() {
       </section>
       {role.role === "super_admin" ? <MemberReview initialMembers={members} currentUserId={user.id} migrationReady={!memberResult.error} /> : null}
       {canManageEvents ? <EventManager initialEvents={events} privateEvents={privateEvents} canCreate={role.role === "super_admin"} migrationReady={!eventResult.error} /> : null}
+      {canManageEvents && !eventResult.error ? <EventContentManager events={events} initialSessions={sessions} initialAnnouncements={((announcementData as AdminAnnouncement[] | null) ?? [])} initialSponsors={((sponsorData as AdminSponsor[] | null) ?? [])} speakerLinks={(speakerLinks as unknown as { session_id: string; event_speakers: { company: string | null; job_title: string | null; name: string } | null }[] | null) ?? []} isSuperAdmin={role.role === "super_admin"} /> : null}
       <RoadmapOverview />
       <section className="admin-section" id="event">
         <EventCountdownManager canManage={canManageCountdown} initialSettings={(countdown as CountdownSettings | null) ?? null} userId={user.id} />

@@ -33,6 +33,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     supabase.from("programme_sessions").select("id, title, description, starts_at, ends_at, room").eq("event_id", event.id).eq("status", "published").order("starts_at", { ascending: true }),
     supabase.from("event_sponsors").select("id, name, tier, website_url, logo_url").eq("event_id", event.id).eq("is_published", true).order("sort_order", { ascending: true }),
   ]);
+  const sessionIds = sessions?.map((session) => session.id) ?? [];
+  const { data: speakerLinks } = sessionIds.length
+    ? await supabase.from("session_speakers").select("session_id, event_speakers(name, job_title, company)").in("session_id", sessionIds).order("sort_order", { ascending: true })
+    : { data: [] };
+
+  function speakersFor(sessionId: string) {
+    return ((speakerLinks as unknown as { session_id: string; event_speakers: { company: string | null; job_title: string | null; name: string } | null }[] | null) ?? [])
+      .filter((link) => link.session_id === sessionId)
+      .map((link) => link.event_speakers)
+      .filter((speaker): speaker is { company: string | null; job_title: string | null; name: string } => Boolean(speaker));
+  }
 
   const cta = event.registration_mode === "waitlist" ? "Join the waitlist" : event.registration_mode === "closed" ? "Registration closed" : event.registration_mode === "manual_review" ? "Request a seat" : "Register";
 
@@ -52,7 +63,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       {announcements?.length ? <section className="event-content-section"><div><p className="eyebrow">Latest information</p><h2>Announcements</h2></div><div className="announcement-list">{announcements.map((item) => <article key={item.id}><span>{item.published_at ? new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short" }).format(new Date(item.published_at)) : "Update"}</span><div><h3>{item.title}</h3><p>{item.body}</p></div></article>)}</div></section> : null}
 
-      <section className="event-content-section"><div><p className="eyebrow">The gathering</p><h2>Programme</h2></div>{sessions?.length ? <div className="programme-list">{sessions.map((session) => <article key={session.id}><time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(session.starts_at))}</time><div><h3>{session.title}</h3><p>{session.description}</p>{session.room ? <span>{session.room}</span> : null}</div></article>)}</div> : <div className="events-empty"><strong>Programme arriving soon.</strong><p>Confirmed attendees will receive programme updates as they are published.</p></div>}</section>
+      <section className="event-content-section"><div><p className="eyebrow">The gathering</p><h2>Programme</h2></div>{sessions?.length ? <div className="programme-list">{sessions.map((session) => { const speakers = speakersFor(session.id); return <article key={session.id}><time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(session.starts_at))}</time><div><h3>{session.title}</h3>{speakers.map((speaker) => <p className="programme-speaker" key={`${session.id}-${speaker.name}`}><strong>{speaker.name}</strong>{[speaker.job_title, speaker.company].filter(Boolean).join(" · ") ? ` · ${[speaker.job_title, speaker.company].filter(Boolean).join(" · ")}` : ""}</p>)}<p>{session.description}</p>{session.room ? <span>{session.room}</span> : null}</div></article>; })}</div> : <div className="events-empty"><strong>Programme arriving soon.</strong><p>Confirmed attendees will receive programme updates as they are published.</p></div>}</section>
 
       {sponsors?.length ? <section className="event-content-section sponsor-section"><div><p className="eyebrow">With thanks</p><h2>Event partners</h2></div><div>{sponsors.map((sponsor) => <article key={sponsor.id}><span>{sponsor.tier || "Partner"}</span><strong>{sponsor.name}</strong></article>)}</div></section> : null}
     </main>
