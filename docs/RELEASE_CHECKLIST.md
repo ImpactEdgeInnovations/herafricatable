@@ -61,6 +61,9 @@
 - [ ] Blocking immediately removes directory, connection and private-contact visibility in both directions
 - [ ] Moderator report access is limited to submitted details and captured evidence
 - [ ] Moderator content access is report-scoped and audited
+- [ ] Administrators cannot list or read member messages outside a submitted evidence snapshot
+- [ ] Removing or blocking a connection immediately prevents message reads and writes
+- [ ] Message rate limits remain enforced when RPCs are called outside the application UI
 - [ ] Terms, Privacy Notice and Community Guidelines are versioned
 - [ ] Consent records store accepted document versions and timestamps
 - [ ] Onboarding draft resumes after sign-out and across devices

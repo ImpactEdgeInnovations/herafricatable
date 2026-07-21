@@ -35,7 +35,7 @@ export default async function MemberHomePage() {
 
   return (
     <main className="member-home-page">
-      <header className="member-home-header"><Link className="brand" href="/"><span className="brand-mark">H</span><span>Her Africa Table<small>Member house</small></span></Link><nav>{accessStatus==="active"?<Link href="/network">Member network</Link>:null}<Link href="/events">Upcoming tables</Link></nav></header>
+      <header className="member-home-header"><Link className="brand" href="/"><span className="brand-mark">H</span><span>Her Africa Table<small>Member house</small></span></Link><nav>{accessStatus==="active"?<><Link href="/network">Member network</Link><Link href="/messages">Messages</Link></>:null}<Link href="/events">Upcoming tables</Link></nav></header>
       <section className="member-welcome">
         <p className="eyebrow">Her Africa Table beta</p>
         <h1>{isApproved ? `Welcome${profile?.display_name ? `, ${profile.display_name}` : ""}.` : isSuspended ? "Your access is paused." : "Your request is at the table."}</h1>
