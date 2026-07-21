@@ -17,6 +17,14 @@ export default async function MemberHomePage() {
 
   const accessStatus = profile?.access_status ?? "pending";
   if (accessStatus === "onboarding") redirect("/onboarding");
+  if (accessStatus === "active") {
+    const { data: completion } = await supabase
+      .from("profiles")
+      .select("profile_completion")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (completion && completion.profile_completion < 100) redirect("/onboarding");
+  }
   const isApproved = ["onboarding", "active", "dormant"].includes(accessStatus);
   const isSuspended = accessStatus === "suspended";
 

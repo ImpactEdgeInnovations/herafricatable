@@ -62,6 +62,8 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [x] Admin command center and database-backed launch roadmap view
 - [x] Member review operations with audited approval, suspension and restoration
 - [x] Onboarding foundation with public/private profile separation and consent records
+- [x] Progressive onboarding v2 implementation with secure avatar upload, structured
+  goals, languages, city, business/referral fields and deterministic completion
 
 ### Immediate release gate
 
@@ -71,9 +73,11 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Seed and verify the Super Admin account, then test member and admin OTP end to end
 - [x] Apply the onboarding/admin migration in production Supabase
 - [ ] Complete a real pending → onboarding → active acceptance test
-- [ ] Add a forward-only onboarding migration for city, languages, referral source,
+- [x] Add a forward-only onboarding migration for city, languages, referral source,
   business/website fields, profile completion and normalized member goals
-- [ ] Convert onboarding to progressive save and verify interruption/resume behavior
+- [ ] Apply `20260721120000_onboarding_v2.sql` in production Supabase
+- [x] Convert onboarding to progressive save
+- [ ] Verify interruption/resume, avatar replacement and activation behavior
 - [ ] Add automated authentication, authorization and migration tests to CI
 
 Temporary password access allows administrator testing to continue while production

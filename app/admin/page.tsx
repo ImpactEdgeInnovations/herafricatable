@@ -32,7 +32,7 @@ export default async function AdminHomePage() {
 
   const [{ data: countdown }, memberResult] = await Promise.all([
     supabase.from("site_event_countdown").select("event_name, city, starts_at, is_published").eq("id", true).maybeSingle(),
-    role.role === "super_admin" ? supabase.rpc("list_admin_members") : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" ? supabase.rpc("list_admin_members_v2") : Promise.resolve({ data: [], error: null }),
   ]);
 
   const members = (memberResult.data as AdminMember[] | null) ?? [];

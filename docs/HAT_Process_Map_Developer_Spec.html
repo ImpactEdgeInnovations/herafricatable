@@ -341,7 +341,7 @@ flowchart TD
             <tr><td>6</td><td>Goal Selection</td><td>Selects structured goals</td><td>Store normalized goal keys—not free text</td><td><code>member_goals</code></td><td>Seed directory filters and future rule-based matching</td></tr>
             <tr><td>7</td><td>Activation</td><td>Finishes required fields and agreements</td><td>Atomic activation operation validates eligibility and consent</td><td><code>profiles.access_status</code> = <code>active</code>; audit event</td><td>Land on member home and send welcome notification</td></tr>
           </table>
-          <div class="buildnote"><span class="lbl">Build note</span>Goal selection is a first-class structured model. The next forward-only migration adds city, languages, business/website fields, referral attribution, profile completion and normalized member goals. The already-applied onboarding migration must never be edited or rerun as a shortcut.</div>
+          <div class="buildnote"><span class="lbl">Build note</span>Goal selection is a first-class structured model. Forward-only migration <code class="mono">20260721120000_onboarding_v2.sql</code> adds city, languages, business/website fields, referral attribution, profile completion, avatar storage and normalized member goals. The already-applied onboarding migration must never be edited or rerun as a shortcut.</div>
         </div>
       </div>
 

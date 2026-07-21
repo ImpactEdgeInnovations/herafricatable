@@ -90,9 +90,12 @@ Admin and create audit events.
 
 ### Identity and privacy
 
-- `profiles`: display name, photo, role, company, industry, country, short bio
-- `profile_private`: phone, email exposure preference, LinkedIn/Instagram and private data
+- `profiles`: display name, owned photo, role, company/business, industry, country/city,
+  languages, short bio, referral source and deterministic completion percentage
+- `profile_private`: phone, WhatsApp, connection-sharing preference,
+  LinkedIn/Instagram and private data
 - `profile_interests`: normalized member-interest relationships
+- `member_goals`: normalized launch-purpose keys used by rule-based discovery
 - `consent_records`: terms, privacy, community rules, media/testimonial consent versions
 - `user_roles`, `event_staff_scopes`, `audit_events`
 

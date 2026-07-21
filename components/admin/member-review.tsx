@@ -6,12 +6,14 @@ import { createClient } from "@/lib/supabase/client";
 export type AdminMember = {
   access_status: "pending" | "onboarding" | "active" | "dormant" | "suspended" | "deleted";
   company: string | null;
+  city: string | null;
   country: string | null;
   created_at: string;
   display_name: string | null;
   email: string;
   job_title: string | null;
   onboarding_completed_at: string | null;
+  profile_completion: number;
   user_id: string;
 };
 
@@ -60,7 +62,7 @@ export function MemberReview({ initialMembers, currentUserId, migrationReady }: 
             <tbody>{members.map((member) => (
               <tr key={member.user_id}>
                 <td><strong>{member.display_name || member.email}</strong>{member.display_name ? <small>{member.email}</small> : null}</td>
-                <td>{member.job_title || member.company || member.country ? <><span>{member.job_title || "Profile started"}</span><small>{[member.company, member.country].filter(Boolean).join(" · ")}</small></> : <span className="muted-value">Not completed</span>}</td>
+                <td>{member.job_title || member.company || member.country ? <><span>{member.job_title || "Profile started"}</span><small>{[member.company, member.city, member.country].filter(Boolean).join(" · ")} · {member.profile_completion}% complete</small></> : <span className="muted-value">Not completed · {member.profile_completion}%</span>}</td>
                 <td><span className={`member-status status-${member.access_status}`}>{member.access_status}</span></td>
                 <td>{new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", year: "numeric" }).format(new Date(member.created_at))}</td>
                 <td><div className="member-actions">

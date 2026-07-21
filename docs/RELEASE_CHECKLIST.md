@@ -52,6 +52,9 @@
 - [ ] Moderator content access is report-scoped and audited
 - [ ] Terms, Privacy Notice and Community Guidelines are versioned
 - [ ] Consent records store accepted document versions and timestamps
+- [ ] Onboarding draft resumes after sign-out and across devices
+- [ ] Avatar uploads enforce owner folder, MIME allow-list and 5 MB limit
+- [ ] Member activation fails unless required profile, interest, goal and consent data exists
 - [ ] Account export and deletion were tested
 - [ ] Retention rules and legal-review actions are documented
 - [ ] Support and safety escalation owners are on duty
