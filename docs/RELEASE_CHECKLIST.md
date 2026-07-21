@@ -70,6 +70,10 @@
 - [ ] Avatar uploads enforce owner folder, MIME allow-list and 5 MB limit
 - [ ] Member activation fails unless required profile, interest, goal and consent data exists
 - [ ] Account export and deletion were tested
+- [ ] Data exports contain only the requesting member's records and omit provider secrets
+- [ ] Deletion requests hide discovery immediately and remain cancellable during cooling-off
+- [ ] Deletion execution is Super Admin-only, removes avatar/personal content and revokes sign-in
+- [ ] Financial and audit retention after deletion matches the approved retention schedule
 - [ ] Retention rules and legal-review actions are documented
 - [ ] Support and safety escalation owners are on duty
 - [ ] Members can read only their own support requests and replies

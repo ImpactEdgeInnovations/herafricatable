@@ -1368,6 +1368,39 @@ body { background: var(--paper); }
 .support-admin-controls { display: grid; align-items: end; padding: 17px 20px; border-top: 1px solid var(--line); background: var(--cream); grid-template-columns: 130px 120px minmax(180px,1fr) minmax(220px,1.4fr) auto; gap: 10px; }
 .admin-support-shell { height: calc(100vh - 125px); }
 
+/* Account privacy */
+.settings-page { min-height: 100vh; padding-bottom: 110px; background: var(--paper); }
+.account-settings-shell { width: min(980px,calc(100% - 48px)); margin: 0 auto; padding: 95px 0; }
+.account-settings-shell > header { max-width: 720px; margin-bottom: 70px; }
+.account-settings-shell > header h1 { margin: 0; font-family: var(--serif); font-size: clamp(4rem,8vw,6.7rem); font-weight: 400; letter-spacing: -.06em; line-height: .9; }
+.account-settings-shell > header > p:last-child { max-width: 620px; margin-top: 28px; color: var(--muted); line-height: 1.7; }
+.settings-card { display: grid; padding: 38px 0; border-top: 1px solid var(--line); grid-template-columns: 1fr 1fr; gap: 70px; }
+.settings-card h2 { margin: 4px 0 12px; font-family: var(--serif); font-size: 2rem; font-weight: 400; }
+.settings-card p { color: var(--muted); font-size: .75rem; line-height: 1.65; }
+.settings-card dl { display: grid; margin: 0; gap: 18px; }
+.settings-card dl div { padding-bottom: 15px; border-bottom: 1px solid var(--line); }
+.settings-card dt { color: var(--muted); font-size: .56rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.settings-card dd { margin: 6px 0 0; font-size: .8rem; }
+.settings-action { align-items: center; }
+.settings-action > button { justify-self: end; }
+.deletion-zone { grid-template-columns: 1fr; }
+.deletion-zone > div { max-width: 680px; }
+.deletion-zone form { display: grid; margin-top: 28px; gap: 16px; }
+.deletion-zone label { display: grid; color: var(--muted); font-size: .59rem; font-weight: 800; letter-spacing: .07em; gap: 7px; text-transform: uppercase; }
+.deletion-zone input,.deletion-zone textarea { padding: 12px; border: 1px solid var(--line); color: var(--ink); font: inherit; font-size: .73rem; text-transform: none; }
+.button-danger { justify-self: start; border: 0; background: #6d1727; color: #fff; }
+.settings-history { margin-top: 55px; }
+.settings-history article { display: grid; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); grid-template-columns: 130px 1fr auto; gap: 20px; }
+.settings-history article span,.settings-history article small { color: var(--muted); font-size: .59rem; }
+.settings-history article strong { font-size: .68rem; text-transform: capitalize; }
+.privacy-operations { margin-top: 60px; }
+.privacy-request-list article { display: grid; align-items: start; padding: 27px 0; border-top: 1px solid var(--line); grid-template-columns: 150px 1fr auto; gap: 30px; }
+.privacy-request-list article > div:first-child { display: grid; justify-items: start; gap: 9px; }
+.privacy-request-list h3 { margin: 0; font-family: var(--serif); font-size: 1.35rem; font-weight: 400; }
+.privacy-request-list p,.privacy-request-list small { margin: 5px 0; color: var(--muted); font-size: .62rem; }
+.privacy-request-list blockquote { margin: 12px 0; padding: 12px 15px; border-left: 2px solid var(--gold); background: var(--cream); font-size: .7rem; line-height: 1.6; }
+.member-actions button.danger { border-color: #6d1727; color: #6d1727; }
+
 .event-registration-page { min-height: 100vh; padding-bottom: 100px; background: var(--paper); }
 .event-registration-form, .registration-status-card { width: min(760px, calc(100% - 48px)); margin: 0 auto; padding: 90px 0; }
 .event-registration-form header h1, .registration-status-card h2 { margin: 0; font-family: var(--serif); font-size: clamp(3rem, 6vw, 5.4rem); font-weight: 400; letter-spacing: -.05em; line-height: .96; text-transform: capitalize; }
@@ -1507,6 +1540,8 @@ body { background: var(--paper); }
   .event-content-section { grid-template-columns: 1fr; gap: 40px; }
   .support-admin-controls { grid-template-columns: 1fr 1fr; }
   .support-admin-controls .support-note { grid-column: 1/-1; }
+  .privacy-request-list article { grid-template-columns: 120px 1fr; }
+  .privacy-request-list article .member-actions { grid-column: 2; }
 }
 
 @media (max-width: 620px) {
@@ -1567,6 +1602,11 @@ body { background: var(--paper); }
   .support-thread article { max-width: 92%; }
   .support-composer,.support-admin-controls { grid-template-columns: 1fr; }
   .support-admin-controls .support-note { grid-column: auto; }
+  .account-settings-shell { width: calc(100% - 32px); padding: 70px 0; }
+  .settings-card { grid-template-columns: 1fr; gap: 24px; }
+  .settings-action > button { justify-self: start; }
+  .settings-history article,.privacy-request-list article { grid-template-columns: 1fr; }
+  .privacy-request-list article .member-actions { grid-column: auto; }
   .public-event-list > article { align-items: start; grid-template-columns: 75px 1fr; gap: 20px; }
   .public-event-list > article > a { grid-column: 2; }
   .public-event-date strong { font-size: 2.4rem; }

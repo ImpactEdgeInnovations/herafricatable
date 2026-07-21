@@ -281,3 +281,10 @@ Engineering will implement consent versioning, export, deletion, retention contr
 data minimization and auditability. Final notices, lawful bases, retention periods,
 cross-border processing and Kenya Data Protection Act/other-market obligations require
 qualified legal review before launch.
+
+Account deletion uses a seven-day cooling-off period. Submission immediately pauses
+directory visibility; cancellation restores the prior setting. Execution is Super
+Admin-only, removes member-authored personal/network content and the avatar object,
+pseudonymizes and bans the authentication identity, and retains order, payment and
+minimal audit records for financial, fraud-prevention and legal obligations. Export
+generation is member-only, rate-limited and delivered locally as structured JSON.

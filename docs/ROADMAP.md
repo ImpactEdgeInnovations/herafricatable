@@ -89,6 +89,8 @@ A feature is not complete merely because its screen exists. It is complete when:
   history, unread tracking, rate limits, deletion, and report-scoped message evidence
 - [x] Private member support requests, threaded replies, priority and assignment
   controls, lifecycle states, rate limits, realtime updates, and audit history
+- [x] Member visibility settings, portable JSON export, deletion cooling-off and
+  cancellation, Super Admin review, anonymization, access revocation and retention boundaries
 
 ### Immediate release gate
 
@@ -113,7 +115,8 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Apply `20260722230000_member_network_foundation.sql` in production Supabase
 - [ ] Apply `20260723090000_network_safety_foundation.sql` in production Supabase
 - [ ] Apply `20260723130000_private_messaging.sql` in production Supabase
-- [ ] Apply `20260723170000_support_operations.sql` in production Supabase
+- [x] Apply `20260723170000_support_operations.sql` in production Supabase
+- [ ] Apply `20260723210000_privacy_account_lifecycle.sql` in production Supabase
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [ ] Add automated authentication, authorization and migration tests to CI
 
