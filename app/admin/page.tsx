@@ -19,7 +19,7 @@ import {
   type AdminMenuItem,
 } from "@/components/admin/event-menu-manager";
 import { EventGalleryManager, type AdminGalleryAlbum, type AdminMediaAsset } from "@/components/admin/event-gallery-manager";
-import { RegistrationManager, type AdminRegistration, type AdminTicket } from "@/components/admin/registration-manager";
+import { RegistrationManager, type AdminPaymentAttempt, type AdminRegistration, type AdminTicket } from "@/components/admin/registration-manager";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -134,6 +134,8 @@ export default async function AdminHomePage() {
   const ticketResult = eventIds.length ? await supabase.from("ticket_types").select("id, event_id, name, description, price_minor, currency, inventory_quantity, sales_start_at, sales_end_at, status, sort_order").in("event_id", eventIds).order("sort_order", { ascending: true }) : { data: [], error: null };
   const registrationResults = await Promise.all(eventIds.map((eventId) => supabase.rpc("list_event_registrations", { p_event_id: eventId })));
   const registrations = registrationResults.flatMap((result) => (result.data as AdminRegistration[] | null) ?? []);
+  const registrationOrderIds = registrations.map((registration) => registration.order_id);
+  const paymentResult = registrationOrderIds.length ? await supabase.from("payment_attempts").select("order_id, provider, provider_reference, amount_minor, currency, status, created_at").in("order_id", registrationOrderIds).order("created_at", { ascending: false }) : { data: [], error: null };
 
   return (
     <main className="admin-command-center">
@@ -156,7 +158,7 @@ export default async function AdminHomePage() {
       {canManageEvents && !eventResult.error ? <EventContentManager events={events} initialSessions={sessions} initialAnnouncements={((announcementData as AdminAnnouncement[] | null) ?? [])} initialSponsors={((sponsorData as AdminSponsor[] | null) ?? [])} speakerLinks={(speakerLinks as unknown as { session_id: string; event_speakers: { company: string | null; job_title: string | null; name: string } | null }[] | null) ?? []} isSuperAdmin={role.role === "super_admin"} /> : null}
       {canManageEvents && !eventResult.error ? <EventMenuManager events={events} initialMenus={menus} initialCourses={courses} initialItems={menuItems} initialFeedback={((feedbackResult.data as AdminMenuFeedback[] | null) ?? [])} migrationReady={!menuResult.error && !courseResult.error && !itemResult.error && !feedbackResult.error} /> : null}
       {canManageEvents && !eventResult.error ? <EventGalleryManager events={events} initialAlbums={albums} initialAssets={assets} migrationReady={!albumResult.error && !assetResult.error} /> : null}
-      {canManageEvents && !eventResult.error ? <RegistrationManager events={events} initialTickets={((ticketResult.data as AdminTicket[] | null) ?? [])} initialRegistrations={registrations} migrationReady={!ticketResult.error && registrationResults.every((result) => !result.error)} /> : null}
+      {canManageEvents && !eventResult.error ? <RegistrationManager events={events} initialTickets={((ticketResult.data as AdminTicket[] | null) ?? [])} initialRegistrations={registrations} initialPayments={((paymentResult.data as AdminPaymentAttempt[] | null) ?? [])} migrationReady={!ticketResult.error && !paymentResult.error && registrationResults.every((result) => !result.error)} /> : null}
       <RoadmapOverview />
       <section className="admin-section" id="event">
         <EventCountdownManager canManage={canManageCountdown} initialSettings={(countdown as CountdownSettings | null) ?? null} userId={user.id} />

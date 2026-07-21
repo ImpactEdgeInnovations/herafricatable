@@ -116,6 +116,9 @@ references and webhook event IDs are unique. Entitlements are issued idempotentl
 The browser can create a registration request but cannot approve an order or issue an
 entitlement. Manual review and future verified-provider processing converge on the
 same locked fulfillment operation.
+Paystack initialization runs only on the application server. Callback references are
+re-verified with Paystack, webhook signatures use HMAC-SHA512 over the raw body, and
+both routes require an exact amount/currency match before calling fulfillment.
 
 ### Events and content
 

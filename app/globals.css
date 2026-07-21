@@ -1208,6 +1208,14 @@ body { background: var(--paper); }
 .selected-file { margin: 0; color: var(--wine); font-size: .64rem; font-weight: 750; }
 .registration-admin-grid { display: grid; align-items: start; grid-template-columns: 265px 1fr; gap: 42px; }
 .registration-review { margin-top: 55px; padding-top: 38px; border-top: 1px solid var(--line); }
+.payment-reconciliation { margin-top: 45px; padding-top: 35px; border-top: 1px solid var(--line); }
+.payment-reconciliation article { display: flex; min-height: 70px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); gap: 25px; }
+.payment-reconciliation article > div { display: grid; justify-items: start; gap: 5px; }
+.payment-reconciliation article > div:last-child { justify-items: end; }
+.payment-reconciliation article strong { font-size: .72rem; }
+.payment-reconciliation article span:not(.member-status) { color: var(--muted); font-size: .6rem; }
+.status-success { background: #e8f2ea; color: #28623a; }
+.status-failed, .status-reversed { background: #f6e4e5; color: #8f2730; }
 .event-registration-page { min-height: 100vh; padding-bottom: 100px; background: var(--paper); }
 .event-registration-form, .registration-status-card { width: min(760px, calc(100% - 48px)); margin: 0 auto; padding: 90px 0; }
 .event-registration-form header h1, .registration-status-card h2 { margin: 0; font-family: var(--serif); font-size: clamp(3rem, 6vw, 5.4rem); font-weight: 400; letter-spacing: -.05em; line-height: .96; text-transform: capitalize; }

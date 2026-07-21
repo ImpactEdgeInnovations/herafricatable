@@ -38,6 +38,8 @@
 - [ ] Admin can select automatic, manual review or closed mode
 - [ ] Paystack live/test keys are in the correct environment scope
 - [ ] Webhook signature and replay/idempotency tests pass
+- [ ] Paystack webhook URL is `/api/payments/paystack/webhook` on the canonical HTTPS domain
+- [ ] Callback verification and webhook delivery converge without duplicate entitlement issuance
 - [ ] Callback pages never grant payment status
 - [ ] Manual approval captures reviewer, reference, notes and time
 - [ ] Ticket inventory is checked under a row lock before an order reservation is created

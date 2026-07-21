@@ -23,3 +23,17 @@ export function getSupabasePublicEnv() {
     publishableKey: supabasePublishableKey,
   };
 }
+
+export function getServerPaymentEnv() {
+  const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!paystackSecretKey) throw new Error("Missing PAYSTACK_SECRET_KEY.");
+  if (!siteUrl) throw new Error("Missing NEXT_PUBLIC_SITE_URL.");
+  return { paystackSecretKey, siteUrl: siteUrl.replace(/\/$/, "") };
+}
+
+export function getSupabaseSecretEnv() {
+  const secretKey = process.env.SUPABASE_SECRET_KEY;
+  if (!secretKey) throw new Error("Missing SUPABASE_SECRET_KEY.");
+  return secretKey;
+}
