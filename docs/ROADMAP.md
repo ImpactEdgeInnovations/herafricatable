@@ -95,6 +95,8 @@ A feature is not complete merely because its screen exists. It is complete when:
   outbox, idempotent Resend worker, retries, admin monitoring and database health endpoint
 - [x] GitHub Actions quality gate, repository contract/secret checks, reproducible local
   Supabase configuration, migration reset, and pgTAP authorization boundary tests
+- [x] Repeatable production smoke suite, anonymous route-boundary checks, mobile public
+  UAT, deployment health diagnostics and a manually gated live-smoke workflow
 
 ### Immediate release gate
 

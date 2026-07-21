@@ -141,3 +141,4 @@
 - [ ] Production backup captured
 - [ ] P0 feature flags enabled deliberately
 - [ ] Smoke test completed after deployment
+- [ ] `REQUIRE_HEALTHY=1 npm run test:live` passes against the production domain

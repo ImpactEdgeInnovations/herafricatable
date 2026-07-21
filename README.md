@@ -14,6 +14,7 @@ Production: [herafricatable.vercel.app](https://herafricatable.vercel.app)
 - [Landing-page content requirements](docs/CONTENT_REQUIREMENTS.md)
 - [Production release checklist](docs/RELEASE_CHECKLIST.md)
 - [Notification delivery setup](docs/NOTIFICATIONS_SETUP.md)
+- [Production UAT record](docs/UAT_REPORT.md)
 
 ## Local setup
 

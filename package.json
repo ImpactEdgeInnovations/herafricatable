@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verify-repository.mjs",
-    "test": "npm run verify && npm run typecheck"
+    "test": "npm run verify && npm run typecheck",
+    "test:live": "node scripts/smoke-live.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.3",

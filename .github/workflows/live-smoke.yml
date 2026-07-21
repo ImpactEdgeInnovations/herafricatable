@@ -1,0 +1,23 @@
+name: Production live smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run test:live
+        env:
+          BASE_URL: https://herafricatable.vercel.app
+          REQUIRE_HEALTHY: "1"
