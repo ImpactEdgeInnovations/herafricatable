@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Her Africa Table — Production Process Map & Developer Specification</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+:root{
+  --paper:#F7F4ED;
+  --panel:#FFFFFF;
+  --ink:#211F2E;
+  --ink-soft:#5B5870;
+  --indigo:#2E3560;
+  --indigo-deep:#1B1F3D;
+  --gold:#C6952F;
+  --gold-soft:#E9D9AF;
+  --line:#E4DFD1;
+  --mono-bg:#F1EEE3;
+  --phase1:#2E3560;
+  --phase2:#5C6390;
+  --phase3:#C6952F;
+  --phase4:#A5673A;
+  --phase5:#7A3B3B;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Iowan Old Style','Georgia','Newsreader',serif;
+  line-height:1.6;
+}
+.display{font-family:'Fraunces','Iowan Old Style',Georgia,serif;}
+.mono{font-family:'JetBrains Mono','SFMono-Regular',Menlo,Consolas,monospace;}
+.sans{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+
+/* ===== Layout ===== */
+.shell{display:grid;grid-template-columns:280px 1fr;min-height:100vh;}
+@media (max-width:900px){.shell{grid-template-columns:1fr;} .sidebar{position:relative;height:auto;}}
+
+.sidebar{
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+  background:var(--indigo-deep);
+  color:#EDE9DD;
+  padding:32px 22px 40px;
+  border-right:1px solid #10132a;
+}
+.sidebar .kicker{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--gold); margin-bottom:6px;
+}
+.sidebar h1{
+  font-family:'Fraunces',Georgia,serif;
+  font-size:22px; line-height:1.25; margin:0 0 4px;
+  color:#fff; font-weight:600;
+}
+.sidebar .sub{
+  font-size:12.5px; color:#B7B3D6; margin-bottom:28px;
+}
+.toc-group{margin-bottom:22px;}
+.toc-label{
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.12em;
+  text-transform:uppercase; color:#8B87B0; margin:0 0 8px;
+}
+.toc-group a{
+  display:block; color:#D8D5EC; text-decoration:none; font-size:13.5px;
+  padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.06);
+  transition:color .15s;
+}
+.toc-group a:hover{color:var(--gold);}
+.modspine{margin-top:8px;}
+.modrow{
+  display:flex; align-items:center; gap:8px; font-size:11.5px;
+  padding:3px 0; color:#B7B3D6;
+}
+.modrow .num{
+  font-family:'JetBrains Mono',monospace; width:18px; text-align:right; color:#8B87B0;
+}
+.modrow .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+
+/* ===== Main content ===== */
+main{padding:56px 64px 120px; max-width:920px;}
+@media (max-width:900px){main{padding:36px 22px 90px;}}
+
+.doc-head{margin-bottom:52px; border-bottom:2px solid var(--indigo); padding-bottom:28px;}
+.doc-head .eyebrow{
+  font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--gold); margin-bottom:10px;
+}
+.doc-head h1{
+  font-family:'Fraunces',Georgia,serif; font-size:40px; line-height:1.12;
+  margin:0 0 10px; color:var(--indigo-deep); font-weight:600;
+}
+.doc-head .version{color:var(--ink-soft); font-size:14.5px;}
+
+section{margin-bottom:64px; scroll-margin-top:24px;}
+h2{
+  font-family:'Fraunces',Georgia,serif; font-size:27px; color:var(--indigo-deep);
+  border-bottom:1px solid var(--line); padding-bottom:10px; margin:0 0 22px;
+  display:flex; align-items:baseline; gap:12px;
+}
+h2 .secnum{font-family:'JetBrains Mono',monospace; font-size:15px; color:var(--gold); font-weight:600;}
+h3{
+  font-family:'Fraunces',Georgia,serif; font-size:20px; color:var(--indigo);
+  margin:36px 0 14px;
+}
+p{margin:0 0 14px; font-size:16px; color:var(--ink);}
+.lede{font-size:17.5px; color:var(--ink-soft); font-style:italic;}
+
+/* purpose callout */
+.callout{
+  background:var(--panel); border-left:3px solid var(--gold);
+  padding:18px 22px; margin:22px 0; font-size:15px; color:var(--ink-soft);
+  border-radius:2px;
+}
+.callout b{color:var(--ink);}
+
+/* module table */
+.modtable{width:100%; border-collapse:collapse; margin:18px 0 8px; font-size:14.5px;}
+.modtable th{
+  font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.08em;
+  text-transform:uppercase; text-align:left; color:#fff; background:var(--indigo);
+  padding:10px 12px;
+}
+.modtable td{padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top;}
+.modtable tr:nth-child(even) td{background:#FBFAF5;}
+.modtable td.mnum{font-family:'JetBrains Mono',monospace; color:var(--gold); font-weight:700;}
+.modtable td.mname{font-weight:600; color:var(--indigo-deep);}
+
+.ai-note{
+  background:linear-gradient(135deg,#F3EDDD,#EDE4CB);
+  border:1px solid var(--gold-soft); border-radius:4px;
+  padding:16px 20px; font-size:14.5px; color:#5A4A1F; margin-top:14px;
+}
+
+/* journey blocks */
+.journey{
+  background:var(--panel); border:1px solid var(--line); border-radius:6px;
+  padding:0; margin:26px 0 40px; overflow:hidden;
+  box-shadow:0 1px 3px rgba(30,25,60,0.05);
+}
+.journey-head{
+  background:var(--indigo-deep); color:#fff; padding:14px 22px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.journey-head .jtitle{font-family:'Fraunces',Georgia,serif; font-size:18px;}
+.journey-head .jtag{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--gold-soft); letter-spacing:.08em;}
+.diagram-wrap{padding:26px 22px 8px; background:#FCFBF7; border-bottom:1px solid var(--line); overflow-x:auto;}
+.diagram-wrap .mermaid{display:flex; justify-content:center;}
+.journey-body{padding:22px;}
+
+/* generic data table (technical breakdown) */
+table.data{width:100%; border-collapse:collapse; margin:8px 0 4px; font-size:13.5px;}
+table.data th{
+  background:var(--mono-bg); font-family:'JetBrains Mono',monospace; font-size:10px;
+  letter-spacing:.06em; text-transform:uppercase; text-align:left; color:var(--indigo-deep);
+  padding:8px 10px; border-bottom:2px solid var(--indigo);
+}
+table.data td{padding:8px 10px; border-bottom:1px solid var(--line); color:var(--ink); vertical-align:top;}
+table.data code{
+  font-family:'JetBrains Mono',monospace; font-size:12px; background:var(--mono-bg);
+  padding:1px 5px; border-radius:3px; color:#8A5A1E;
+}
+table.data tr:hover td{background:#FBF8ED;}
+
+.buildnote{
+  margin-top:14px; padding:14px 18px; background:#EFF1E9; border-left:3px solid var(--indigo);
+  font-size:14px; color:#33352E;
+}
+.buildnote .lbl{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--indigo); display:block; margin-bottom:6px;}
+
+/* roles matrix */
+.rolestable-wrap{overflow-x:auto;}
+table.roles{width:100%; border-collapse:collapse; font-size:13px; min-width:760px;}
+table.roles th{
+  background:var(--indigo); color:#fff; font-family:'JetBrains Mono',monospace; font-size:10px;
+  padding:9px 8px; text-transform:uppercase; letter-spacing:.05em;
+}
+table.roles td{padding:8px; border-bottom:1px solid var(--line); text-align:center;}
+table.roles td:first-child{text-align:left; font-weight:600; color:var(--indigo-deep); background:#FBFAF5;}
+table.roles td.yes{color:#1F6F4E; font-weight:700;}
+table.roles td.no{color:#B7B3B0;}
+
+/* entity map */
+.entity-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:20px 0;}
+@media (max-width:700px){.entity-grid{grid-template-columns:1fr;}}
+.entity{background:var(--panel); border:1px solid var(--line); border-radius:5px; padding:14px 16px;}
+.entity .ename{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--indigo); font-size:13.5px;}
+.entity .edesc{font-size:13px; color:var(--ink-soft); margin-top:4px;}
+
+/* phasing timeline */
+.phasewrap{margin:24px 0;}
+.phase{
+  display:grid; grid-template-columns:150px 1fr; gap:18px; padding:16px 0;
+  border-bottom:1px solid var(--line); align-items:start;
+}
+.phase:last-child{border-bottom:none;}
+.phase .ptime{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-soft);}
+.phase .pname{font-family:'Fraunces',Georgia,serif; font-size:17px; color:var(--indigo-deep); margin-bottom:4px;}
+.phase .pdesc{font-size:14.5px; color:var(--ink);}
+.phase .pbar{height:5px; border-radius:3px; margin-top:8px; max-width:280px;}
+
+/* open questions */
+.qlist{list-style:none; margin:16px 0; padding:0;}
+.qlist li{
+  padding:14px 18px 14px 46px; margin-bottom:10px; background:var(--panel);
+  border:1px solid var(--line); border-radius:5px; position:relative; font-size:14.5px;
+}
+.qlist li::before{
+  content:"?"; position:absolute; left:16px; top:12px; font-family:'Fraunces',Georgia,serif;
+  color:var(--gold); font-weight:700; font-size:17px;
+}
+.qlist b{color:var(--indigo-deep);}
+
+footer{
+  border-top:1px solid var(--line); margin-top:70px; padding-top:22px;
+  font-size:13px; color:var(--ink-soft); font-style:italic;
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <nav class="sidebar sans">
+    <div class="kicker">Her Africa Table</div>
+    <h1>Process Map &amp; Developer Spec</h1>
+    <div class="sub">v2 — 30-day production build</div>
+
+    <div class="toc-group">
+      <div class="toc-label">Document</div>
+      <a href="#purpose">1 · Purpose &amp; use</a>
+      <a href="#modules">2 · System modules</a>
+      <a href="#journeys">3 · Core journeys</a>
+      <a href="#data">4 · Data model</a>
+      <a href="#roles">5 · Roles &amp; permissions</a>
+      <a href="#money">6 · Monetization triggers</a>
+      <a href="#phasing">7 · Build phasing</a>
+      <a href="#questions">8 · Decisions &amp; questions</a>
+    </div>
+
+    <div class="toc-group">
+      <div class="toc-label">14 Modules</div>
+      <div class="modspine">
+        <div class="modrow"><span class="num">01</span><span class="dot" style="background:var(--phase1)"></span>Auth &amp; Onboarding</div>
+        <div class="modrow"><span class="num">02</span><span class="dot" style="background:var(--phase1)"></span>Profile &amp; Identity</div>
+        <div class="modrow"><span class="num">03</span><span class="dot" style="background:var(--phase1)"></span>Discovery / Feed</div>
+        <div class="modrow"><span class="num">04</span><span class="dot" style="background:var(--phase1)"></span>Communities</div>
+        <div class="modrow"><span class="num">05</span><span class="dot" style="background:var(--phase1)"></span>Events</div>
+        <div class="modrow"><span class="num">06</span><span class="dot" style="background:var(--phase2)"></span>Networking</div>
+        <div class="modrow"><span class="num">07</span><span class="dot" style="background:var(--phase2)"></span>Directory &amp; Search</div>
+        <div class="modrow"><span class="num">08</span><span class="dot" style="background:var(--phase4)"></span>Marketplace</div>
+        <div class="modrow"><span class="num">09</span><span class="dot" style="background:var(--phase4)"></span>Travel Hub</div>
+        <div class="modrow"><span class="num">10</span><span class="dot" style="background:var(--phase4)"></span>Learning</div>
+        <div class="modrow"><span class="num">11</span><span class="dot" style="background:var(--phase5)"></span>Opportunities &amp; Trade</div>
+        <div class="modrow"><span class="num">12</span><span class="dot" style="background:var(--phase1)"></span>Messaging</div>
+        <div class="modrow"><span class="num">13</span><span class="dot" style="background:var(--phase3)"></span>Membership &amp; Billing</div>
+        <div class="modrow"><span class="num">14</span><span class="dot" style="background:var(--phase4)"></span>Admin &amp; Analytics</div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="doc-head">
+      <div class="eyebrow">Engineering handoff document</div>
+      <h1>Process Map &amp; Developer Specification</h1>
+      <div class="version">Version 2 — production scope · 30-day delivery · 21 July 2026</div>
+    </div>
+
+    <section id="purpose">
+      <h2><span class="secnum">01</span>Purpose &amp; how to use this document</h2>
+      <p class="lede">The Product Vision Document describes what Her Africa Table is and why it matters. This document translates that vision into how it gets built — the modules, the user flows, the data entities, and the sequencing a developer needs to actually ship it.</p>
+      <p>Each core journey is expressed two ways: a flowchart showing the process end to end, and a step-by-step technical breakdown — screen, user action, system process, data written, and any downstream triggers.</p>
+      <div class="callout"><b>Read this alongside the Product Vision Document, not instead of it</b> — this document assumes that context and focuses purely on build logic.</div>
+      <h3>Production source of truth</h3>
+      <p>The 30-day release is a controlled, event-led launch—not the delivery date for every long-term module. A capability is considered complete only when authorization is enforced in Postgres, failure and empty states exist, mobile and accessibility checks pass, critical paths are tested, operational actions are auditable, and the feature works on localhost, Vercel preview, and production.</p>
+      <div class="callout"><b>Launch loop:</b> registration → identity verification → payment or manual approval → onboarding → event access → member discovery → connection → messaging → ongoing value.</div>
+      <p><b>Confirmed platform decisions:</b> responsive web/PWA first; Supabase email OTP for production identity; temporary password access only during pre-SMTP testing; Vercel hosting; Supabase database/auth/storage; provider-neutral payments with Paystack first; audited manual registration as a first-class fallback; rule-based recommendations before AI.</p>
+    </section>
+
+    <section id="modules">
+      <h2><span class="secnum">02</span>System overview: core modules</h2>
+      <p>The platform breaks into 14 modules. Everything in the Product Vision Document maps into one or more of these.</p>
+      <table class="modtable">
+        <tr><th>#</th><th>Module</th><th>Launch priority</th><th>Covers</th></tr>
+        <tr><td class="mnum">01</td><td class="mname">Auth &amp; Onboarding</td><td>P0 · Day 1–7</td><td>Email OTP, controlled beta password, approval state, progressive profile creation, structured goals and consent</td></tr>
+        <tr><td class="mnum">02</td><td class="mname">Profile &amp; Identity</td><td>P0 · Day 4–7</td><td>Public/private member profiles, verification, visibility controls and QR identity</td></tr>
+        <tr><td class="mnum">03</td><td class="mname">Discovery / Home Feed</td><td>P1 · post-launch</td><td>Rule-ranked content and recommendations; launch home uses event, connection and Ask/Offer summaries</td></tr>
+        <tr><td class="mnum">04</td><td class="mname">Communities</td><td>P1 · post-launch</td><td>Tenant-scoped communities, feeds, resources, chat and host tools</td></tr>
+        <tr><td class="mnum">05</td><td class="mname">Events</td><td>P0 · Day 8–15</td><td>Registration, ticketing, agenda, announcements, check-in, sponsors, menu and gallery</td></tr>
+        <tr><td class="mnum">06</td><td class="mname">Networking &amp; Matchmaking</td><td>P0 · Day 16–19</td><td>Event discovery, connection requests, QR/manual codes and rule-based suggestions</td></tr>
+        <tr><td class="mnum">07</td><td class="mname">Member Directory &amp; Search</td><td>P0 · Day 16–19</td><td>Privacy-safe event and network directories with search and filters</td></tr>
+        <tr><td class="mnum">08</td><td class="mname">Marketplace</td><td>P2 · later</td><td>Business storefronts, products/services, reviews, commission and payouts</td></tr>
+        <tr><td class="mnum">09</td><td class="mname">Travel Hub</td><td>P2 · later</td><td>Destination guides, partner bookings and business travel</td></tr>
+        <tr><td class="mnum">10</td><td class="mname">Learning</td><td>P1 · post-launch</td><td>Courses, workshops, mentorship, access rules and progress</td></tr>
+        <tr><td class="mnum">11</td><td class="mname">Opportunities &amp; Trade</td><td>P2 · later</td><td>Jobs, grants, cross-border trade and supplier discovery</td></tr>
+        <tr><td class="mnum">12</td><td class="mname">Messaging</td><td>P0 · Day 20–22</td><td>Accepted-connection messaging, support, blocking, reporting and unread state</td></tr>
+        <tr><td class="mnum">13</td><td class="mname">Membership &amp; Billing</td><td>P0 core · Day 12–15</td><td>Registration entitlements, Paystack/manual modes and renewal foundation; tiers and Host billing later</td></tr>
+        <tr><td class="mnum">14</td><td class="mname">Admin, Moderation &amp; Analytics</td><td>P0 · continuous</td><td>Member operations, event CMS, payments, moderation, audit logs and launch readiness</td></tr>
+      </table>
+      <div class="callout"><b>Scope rule:</b> P0 must be production-complete for launch. P1 may be present only behind disabled feature flags. P2 remains architecture-compatible but is not exposed in the 30-day product.</div>
+      <div class="ai-note"><b>AI features</b> (Business Coach, Resume Review, Matchmaking, Grant Finder, etc.) are not a separate module — they are an intelligence layer sitting on top of Modules 6, 8, 10, and 11, built after those modules have real data flowing through them. See Section 7, Build Phasing.</div>
+    </section>
+
+    <section id="journeys">
+      <h2><span class="secnum">03</span>Core user journeys — process maps</h2>
+
+      <!-- 3.1 -->
+      <div class="journey">
+        <div class="journey-head"><span class="jtitle">3.1 · Discovery → Join → Onboarding</span><span class="jtag">MODULE 01</span></div>
+        <div class="diagram-wrap"><div class="mermaid">
+flowchart TD
+    A["Woman discovers HAT via social, referral, partner, friend or event"] --> B["Attribution captured"]
+    B --> C{Entry path}
+    C -->|Event registration| D["Ticket or manual registration"]
+    C -->|Membership request| E["Application or approved invitation"]
+    D --> F{Payment mode}
+    F -->|Automatic| G["Verified Paystack webhook"]
+    F -->|Manual review| H["Audited admin approval"]
+    G --> I["Entitlement issued exactly once"]
+    H --> I
+    E --> J["Admin approval"]
+    J --> I
+    I --> K["Email OTP identity verified"]
+    K --> L["Progressive onboarding: profile + private contact + consent"]
+    L --> M["Structured interests and goals selected"]
+    M --> N["Profile activated"]
+    N --> O["Member home: event, people and next useful action"]
+        </div></div>
+        <div class="journey-body">
+          <h3>Technical breakdown</h3>
+          <table class="data">
+            <tr><th>Step</th><th>Screen</th><th>User action</th><th>System process</th><th>Data written</th><th>Triggers</th></tr>
+            <tr><td>1</td><td>Landing / Referral Link</td><td>Clicks a campaign, partner, member or event link</td><td>Capture attribution without placing personal data in URLs</td><td><code>referral_source</code>, <code>referral_code</code>, UTM metadata</td><td>Analytics event: <code>signup_source_captured</code></td></tr>
+            <tr><td>2</td><td>Registration Choice</td><td>Registers for an event or requests membership</td><td>Create a registration request; authentication alone does not grant membership</td><td><code>registration_requests</code> with entry type and status</td><td>Route to automatic payment, manual review or waitlist</td></tr>
+            <tr><td>3</td><td>Payment / Review</td><td>Pays or submits manual reference</td><td>Only verified webhook or audited admin decision approves registration</td><td><code>orders</code>, <code>payment_events</code>, <code>manual_payment_reviews</code>, <code>entitlements</code></td><td>Issue entitlement idempotently; invite member to authenticate</td></tr>
+            <tr><td>4</td><td>Email Sign-in</td><td>Requests and enters a six-digit code</td><td>Supabase verifies email ownership and establishes cookie session</td><td><code>auth.users</code>, <code>profiles</code></td><td>Resolve pending/onboarding/active/suspended access state</td></tr>
+            <tr><td>5</td><td>Profile Build</td><td>Completes progressive onboarding</td><td>Save draft safely; separate directory-safe and private fields</td><td><code>profiles</code>, <code>profile_private</code>, <code>profile_interests</code>, <code>consent_records</code></td><td>Calculate completeness; upload owned avatar</td></tr>
+            <tr><td>6</td><td>Goal Selection</td><td>Selects structured goals</td><td>Store normalized goal keys—not free text</td><td><code>member_goals</code></td><td>Seed directory filters and future rule-based matching</td></tr>
+            <tr><td>7</td><td>Activation</td><td>Finishes required fields and agreements</td><td>Atomic activation operation validates eligibility and consent</td><td><code>profiles.access_status</code> = <code>active</code>; audit event</td><td>Land on member home and send welcome notification</td></tr>
+          </table>
+          <div class="buildnote"><span class="lbl">Build note</span>Goal selection is a first-class structured model. The next forward-only migration adds city, languages, business/website fields, referral attribution, profile completion and normalized member goals. The already-applied onboarding migration must never be edited or rerun as a shortcut.</div>
+        </div>
+      </div>
+
+      <!-- 3.2 -->
+      <div class="journey">
+        <div class="journey-head"><span class="jtitle">3.2 · Home Feed</span><span class="jtag">MODULE 03</span></div>
+        <div class="diagram-wrap"><div class="mermaid">
+flowchart TD
+    A["User opens Home Feed"] --> B["Feed Query: Community posts + Business posts + Event announcements + Discussions + Polls"]
+    B --> C{Ranking Logic}
+    C --> D["Recency"]
+    C --> E["User's Community Memberships"]
+    C --> F["User's Goals/Interests match"]
+    C --> G["Engagement signals: likes/comments/RSVPs"]
+    D & E & F & G --> H["Ranked Feed Rendered"]
+    H --> I{User Interacts}
+    I -->|Like/Comment/Poll vote| J["Engagement event logged"]
+    I -->|Clicks Event| K["Event Detail Screen"]
+    I -->|Clicks Business Post| L["Marketplace Listing Screen"]
+    J --> M["Feeds back into ranking model"]
+        </div></div>
+        <div class="journey-body">
+          <p>Feed is a <b>union query</b> across community posts, business/marketplace posts, event announcements, discussions, and polls — each with its own content type and engagement schema, but a shared <code class="mono">feed_items</code> interface (content_type, author_id, community_id (nullable), created_at, engagement_counts).</p>
+          <div class="buildnote"><span class="lbl">Build note</span>Ranking should start rule-based (recency + community membership + goal match) — do not build an ML ranking model for MVP. This can be swapped later without changing the feed's data contract. Every content type in the feed needs its own detail screen it deep-links to (post, event, business listing, poll result).</div>
+        </div>
+      </div>
+
+      <!-- 3.3 -->
+      <div class="journey">
+        <div class="journey-head"><span class="jtitle">3.3 · Communities &amp; Community Host</span><span class="jtag">MODULE 04</span></div>
+        <div class="diagram-wrap"><div class="mermaid">
+flowchart TD
+    A["Member browses Communities"] --> B{Join or Create?}
+    B -->|Join existing| C["Community Join Flow"]
+    B -->|Apply to become Community Host| D["Host Application"]
+    C --> E["community_memberships row created"]
+    E --> F["Access: Feed, Chat, Resources, Files, Events, Members list"]
+    D --> G["Admin Review"]
+    G -->|Approved| H["Host Role Granted"]
+    G -->|Rejected| I["Notify applicant"]
+    H --> J["Host Toolkit Unlocked"]
+    J --> K["Own Page & Branding"]
+    J --> L["Own Moderators"]
+    J --> M["Own Events"]
+    J --> N["Own Membership Options + Pricing"]
+    J --> O["Own Newsletters"]
+    J --> P["Own Analytics Dashboard"]
+    N --> Q["Community Host Billing — Section 3.7"]
+        </div></div>
+        <div class="journey-body">
+          <h3>Technical breakdown</h3>
+          <table class="data">
+            <tr><th>Step</th><th>Screen</th><th>User action</th><th>System process</th><th>Data written</th><th>Triggers</th></tr>
+            <tr><td>Join</td><td>Community Page</td><td>Taps Join</td><td>Membership check (public/private/paid)</td><td><code>community_memberships</code> (user_id, community_id, role=member, joined_at)</td><td>Community feed now includes this community's posts</td></tr>
+            <tr><td>Host Application</td><td>"Become a Host" form</td><td>Submits application (community name, category, expected size)</td><td>Goes to admin review queue</td><td><code>host_applications</code> row, status=pending</td><td>Notification to admin/moderation team</td></tr>
+            <tr><td>Host Approval</td><td>Admin panel</td><td>Admin approves</td><td>Role upgrade</td><td><code>community_memberships.role</code> = <code>host</code> on target community; <code>communities</code> table created if new</td><td>Host onboarding email + toolkit unlock</td></tr>
+            <tr><td>Host Configuration</td><td>Host Dashboard</td><td>Sets branding, pricing tiers, adds moderators</td><td>CRUD on community settings</td><td><code>communities.branding_json</code>, <code>community_membership_tiers</code>, <code>community_moderators</code></td><td>If pricing set, links to Billing (3.7)</td></tr>
+          </table>
+          <div class="buildnote"><span class="lbl">Build note</span>A Community is effectively a <b>tenant</b> within the platform — it needs its own scoped feed, chat, events, membership tiers, and analytics, but shares the underlying user/auth/payments infrastructure. Model this as a multi-tenancy pattern from the start (community_id as a scoping key across most tables) rather than retrofitting it later — this is the architectural decision with the highest cost if deferred.</div>
+        </div>
+      </div>
+
+      <!-- 3.4 -->
+      <div class="journey">
+        <div class="journey-head"><span class="jtitle">3.4 · Events (Ticketing, Check-in, Networking)</span><span class="jtag">MODULE 05</span></div>
+        <div class="diagram-wrap"><div class="mermaid">
+flowchart TD
+    A["Community or Host creates Event"] --> B["Event Setup: Online/Physical/Hybrid, Agenda, Sponsors, Ticket Tiers"]
+    B --> C["Event Published"]
+    C --> D["Attendee Registers"]
+    D --> E{Free or Paid?}
+    E -->|Paid| F["Payment Processing"]
+    E -->|Free| G["Ticket Issued"]
+    F --> G
+    G --> H["QR Code Generated"]
+    G --> I["Attendee Profile Added to Guest List"]
+    I --> J["Pre-Event Networking Suggestions Triggered"]
+    H --> K["Event Day: QR Check-In"]
+    K --> L["Live Event: Agenda, Livestream, Attendee Chat, Networking"]
+    L --> M["Post-Event: Replay Available, Photos, Follow-up Prompts"]
+        </div></div>
+        <div class="journey-body">
+          <p>Ticketing needs its own <code class="mono">event_tickets</code> entity separate from <code class="mono">event_attendees</code> — a ticket is a purchase record (price, tier, payment status); attendance is a separate state (checked_in: boolean, checked_in_at).</p>
+          <p>Pre-event networking ("12 women in Kigali are in your industry") is a query against the guest list, filtered by location/industry/interests, run once the guest list reaches a minimum threshold — this can reuse the matching logic from Section 3.5.</p>
+          <div class="buildnote"><span class="lbl">Build note</span>Livestream/replay is likely a third-party embed (see Section 8, Open Questions) rather than custom-built video infrastructure for MVP.</div>
+        </div>
+      </div>
+
+      <!-- 3.5 -->
+      <div class="journey">
+        <div class="journey-head"><span class="jtitle">3.5 · Networking &amp; Matchmaking</span><span class="jtag">MODULE 06</span></div>
+        <div class="diagram-wrap"><div class="mermaid">
+flowchart TD
+    A["Trigger: New event registration OR periodic feed refresh OR profile update"] --> B["Matching Engine Runs"]
+    B --> C["Filter Pool: same city/community/industry/goals"]
+    B --> D["Score Candidates: shared interests, complementary goals, mutual connections"]
+    C & D --> E["Ranked Match List"]
+    E --> F["Suggestion Surfaced: 'Connect?' prompt in feed or event page"]
+    F --> G{User Response}
+    G -->|Accept| H["Introduction Made — opens Messaging thread"]
+    G -->|Book session| I["15-min Networking Session Scheduled"]
+    G -->|Ignore| J["Suggestion Suppressed for X days"]
+        </div></div>
+        <div class="journey-body">
+          <div class="buildnote"><span class="lbl">Build note</span>MVP version of this should be a straightforward filtered/scored query (industry match, location match, complementary goals — e.g., "mentor" matched with "be mentored"), not a machine learning model. The AI Features section in the vision doc is the future enhancement layer on top of this same data structure — build the rule-based version first so there's usage data to eventually train on.</div>
+        </div>
+      </div>
+
+      <!-- 3.6 -->
+      <div class="journey">
+        <div class="journey-head"><span class="jtitle">3.6 · Marketplace Transaction</span><span class="jtag">MODULE 08</span></div>
+        <div class="diagram-wrap"><div class="mermaid">
+flowchart TD
+    A["Member creates Business Profile"] --> B["Store Setup: Category, Products/Services, Location, Social Links"]
+    B --> C["Listing Published"]
+    C --> D["Buyer Browses/Searches Marketplace"]
+    D --> E["Buyer Views Listing"]
+    E --> F{Action}
+    F -->|Message Seller| G["Opens Messaging Thread"]
+    F -->|Purchase| H["Checkout Flow"]
+    H --> I["Payment Processed"]
+    I --> J["Platform Commission Deducted"]
+    J --> K["Seller Payout Scheduled"]
+    I --> L["Order Confirmation"]
+    L --> M["Post-Purchase: Review Prompt"]
+        </div></div>
+        <div class="journey-body">
+          <h3>Technical breakdown</h3>
+          <table class="data">
+            <tr><th>Step</th><th>System process</th><th>Data written</th><th>Triggers</th></tr>
+            <tr><td>Listing</td><td>Business + Product/Service CRUD</td><td><code>businesses</code>, <code>products_services</code> tables</td><td>Appears in Marketplace search index</td></tr>
+            <tr><td>Purchase</td><td>Checkout → Payment gateway → Order created</td><td><code>orders</code> (buyer_id, seller_id, item_id, amount, commission_amount)</td><td>Commission split logic fires (Section 6)</td></tr>
+            <tr><td>Payout</td><td>Scheduled batch or on-demand</td><td><code>payouts</code> table, linked to seller's connected payment account</td><td>Seller notified of payout</td></tr>
+            <tr><td>Review</td><td>Post-purchase prompt (e.g. 48hrs after)</td><td><code>reviews</code> table linked to order_id</td><td>Updates business's aggregate rating</td></tr>
+          </table>
+          <div class="buildnote"><span class="lbl">Build note</span>Every monetized transaction on the platform (marketplace, events, courses, travel) should route through <b>one shared payments/commission engine</b>, not separate payment logic per module. This is the difference between a clean Stripe Connect–style architecture and a maintenance headache six months from now.</div>
+        </div>
+      </div>
+
+      <!-- 3.7 -->
+      <div class="journey">
+        <div class="journey-head"><span class="jtitle">3.7 · Membership, Entitlements &amp; Billing</span><span class="jtag">MODULE 13</span></div>
+        <div class="diagram-wrap"><div class="mermaid">
+flowchart TD
+    A["Registration request"] --> B{Admin payment mode}
+    B -->|Automatic| C["Paystack transaction initialized"]
+    B -->|Manual review| D["Reference and evidence submitted"]
+    B -->|Closed| E["Waitlist captured"]
+    C --> F["Signed webhook verified and reconciled"]
+    D --> G["Authorized admin approves or rejects"]
+    F --> H["Shared entitlement issuer"]
+    G --> H
+    H --> I["Event and/or membership entitlement created exactly once"]
+    I --> J["Member onboarding enabled"]
+    J --> K{Later renewal}
+    K -->|Success| I
+    K -->|Failure| L["Grace period → dormant, never deleted"]
+        </div></div>
+        <div class="journey-body">
+          <p>Launch supports event registration and approved membership through one entitlement model. Automatic Paystack processing and audited manual approval must grant the same entitlement through the same idempotent operation. A browser redirect is never proof of payment.</p>
+          <p>Future individual tiers and Community Host subscriptions remain separate billing relationships. Enterprise access is manually provisioned and contract-led rather than forced into consumer checkout.</p>
+          <div class="buildnote"><span class="lbl">Build note</span>Feature access is governed by entitlement records and feature flags, not scattered tier checks. Money uses integer minor units plus ISO currency. Provider references and webhook event IDs are unique. Manual processing remains available through an administrator-controlled platform setting if Paystack approval is delayed.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="data">
+      <h2><span class="secnum">04</span>Data model overview</h2>
+      <p>This is not a full schema — it's the entity map a developer needs to start designing tables/collections without guessing at relationships.</p>
+      <div class="entity-grid">
+        <div class="entity"><div class="ename">users</div><div class="edesc">Auth record (1:1 with profiles)</div></div>
+        <div class="entity"><div class="ename">profiles</div><div class="edesc">Bio data, links to user_goals (many), interests (many)</div></div>
+        <div class="entity"><div class="ename">communities</div><div class="edesc">Has many community_memberships, posts, events, community_membership_tiers</div></div>
+        <div class="entity"><div class="ename">community_memberships</div><div class="edesc">Join table: user ↔ community, with role (member/moderator/host)</div></div>
+        <div class="entity"><div class="ename">businesses</div><div class="edesc">1 per member who sets one up; has many products_services, reviews</div></div>
+        <div class="entity"><div class="ename">events</div><div class="edesc">Belongs to a community (nullable — platform-level too); has many event_tickets, event_attendees, sponsors</div></div>
+        <div class="entity"><div class="ename">event_tickets / event_attendees</div><div class="edesc">Ticket = purchase record; attendee = attendance/check-in state (kept separate)</div></div>
+        <div class="entity"><div class="ename">orders</div><div class="edesc">Universal transaction record — marketplace items, tickets, or courses via polymorphic item_type/item_id</div></div>
+        <div class="entity"><div class="ename">subscriptions</div><div class="edesc">Recurring billing record; polymorphic across membership tiers and Host billing</div></div>
+        <div class="entity"><div class="ename">courses</div><div class="edesc">Has many enrollments</div></div>
+        <div class="entity"><div class="ename">conversations / messages</div><div class="edesc">Supports DM, group, and community-scoped chat via conversation_type field</div></div>
+        <div class="entity"><div class="ename">travel_listings, opportunity_listings</div><div class="edesc">Content types similar in shape to marketplace listings but domain-specific</div></div>
+        <div class="entity"><div class="ename">notifications</div><div class="edesc">Triggered by nearly every module; own delivery/read-state tracking independent of source events</div></div>
+      </div>
+      <div class="callout"><b>Relationship pattern to note:</b> Communities, Events, and (eventually) Marketplace listings all share a similar shape — ownership, membership/attendance, monetization, and a feed. Consider whether a shared "hostable entity" abstraction saves duplicated work, versus building each as a fully separate module. This is a genuine architectural trade-off worth discussing with your developer directly rather than deciding in advance here.</div>
+    </section>
+
+    <section id="roles">
+      <h2><span class="secnum">05</span>Roles &amp; permissions matrix</h2>
+      <div class="rolestable-wrap">
+      <table class="roles">
+        <tr><th>Capability</th><th>Visitor</th><th>Pending</th><th>Active Member</th><th>Community Host*</th><th>Event Staff</th><th>Moderator</th><th>Super Admin</th></tr>
+        <tr><td>Public site and published events</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+        <tr><td>Complete onboarding</td><td class="no">No</td><td>After approval</td><td>Edit own</td><td>Edit own</td><td>By entitlement</td><td>By entitlement</td><td>By entitlement</td></tr>
+        <tr><td>Member directory and discovery</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td><td class="yes">Yes</td><td>Scoped</td><td>Safety only</td><td>Operational</td></tr>
+        <tr><td>Connect and message</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td><td class="yes">Yes</td><td>As member</td><td>As member</td><td>As member</td></tr>
+        <tr><td>Manage assigned events</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td>Own community*</td><td class="yes">Scoped</td><td class="no">No</td><td class="yes">All</td></tr>
+        <tr><td>Review registrations and payments</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td>Scoped</td><td class="no">No</td><td class="yes">All</td></tr>
+        <tr><td>Moderate reported content</td><td class="no">No</td><td class="no">No</td><td>Report/block</td><td>Own community*</td><td class="no">No</td><td class="yes">Report-scoped</td><td class="yes">Report-scoped</td></tr>
+        <tr><td>Assign roles and platform settings</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
+        <tr><td>Financial and audit reporting</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td>Own community*</td><td>Event scoped</td><td class="no">No</td><td class="yes">All</td></tr>
+      </table>
+      </div>
+      <div class="buildnote"><span class="lbl">Build note</span>Identity state, staff role and paid entitlement are separate dimensions. The launch does not expose a general Free/Premium/Executive ladder. Future commercial tiers map to entitlement keys rather than replacing <code class="mono">profiles.access_status</code>. *Community Host is post-launch and must be community-scoped.</div>
+    </section>
+
+    <section id="money">
+      <h2><span class="secnum">06</span>Monetization &amp; billing triggers</h2>
+      <p>Mapping the 13 revenue streams from the vision doc to concrete system events.</p>
+      <div class="callout"><b>Day-30 scope:</b> event tickets, approved account membership, Paystack/manual registration and contract-recording foundations. Marketplace payouts, Host subscriptions, travel commissions, advertising and data products are post-launch even though the shared ledger is designed to accommodate them.</div>
+      <table class="data">
+        <tr><th>Revenue stream</th><th>System trigger</th><th>Billing type</th></tr>
+        <tr><td>Memberships (Premium/Executive)</td><td>Subscription created/renewed</td><td>Recurring</td></tr>
+        <tr><td>Community Host Subscription</td><td>Host application approved + tier selected</td><td>Recurring</td></tr>
+        <tr><td>Event Ticket Fees</td><td>Ticket purchase completed</td><td>Per-transaction (% of ticket price)</td></tr>
+        <tr><td>Marketplace Commission</td><td>Order marked complete</td><td>Per-transaction (% of order value)</td></tr>
+        <tr><td>Travel Commission</td><td>Booking confirmed via partner integration</td><td>Per-transaction (referral/affiliate)</td></tr>
+        <tr><td>Brand Partnerships</td><td>Manually provisioned by admin (sponsorship placement)</td><td>Contract-based, not self-serve</td></tr>
+        <tr><td>Advertising</td><td>Ad slot booked (premium brands only, curated)</td><td>Contract-based</td></tr>
+        <tr><td>Learning (course sales)</td><td>Course purchase/enrollment</td><td>Per-transaction</td></tr>
+        <tr><td>Job Board</td><td>Company posts a listing</td><td>Per-listing fee</td></tr>
+        <tr><td>Business Directory (featured/sponsored)</td><td>Business opts into featured placement</td><td>Recurring or per-campaign</td></tr>
+        <tr><td>Payments</td><td>Any transaction processed through the platform</td><td>Transaction fee (platform-wide)</td></tr>
+        <tr><td>Sponsorships (events/summit/awards)</td><td>Manually provisioned by admin</td><td>Contract-based</td></tr>
+        <tr><td>Data &amp; Insights</td><td>Corporate subscribes to anonymized analytics</td><td>Recurring, separate product</td></tr>
+      </table>
+      <div class="buildnote"><span class="lbl">Build note</span>Everything marked "Per-transaction" or "Recurring" should route through the shared payments engine flagged in Section 3.6. Everything marked "Contract-based" or "Manually provisioned" does not need self-serve checkout for MVP — it needs an admin tool to record the deal and grant the corresponding access/placement. Don't over-build checkout flows for revenue streams that are actually sales-led.</div>
+    </section>
+
+    <section id="phasing">
+      <h2><span class="secnum">07</span>Build phasing</h2>
+      <p>The first release is a 30-day controlled production launch. Daily delivery does not reduce the quality gate: a feature that lacks RLS, failure states, testing or operational ownership stays disabled.</p>
+      <div class="phasewrap">
+        <div class="phase">
+          <div><div class="ptime">Days 1–3</div><div class="pbar" style="background:var(--phase1)"></div></div>
+          <div><div class="pname">Foundation &amp; access</div><div class="pdesc">Vercel/Supabase environments, migrations, CI, email OTP, temporary beta password, profiles, access states, roles, audit foundations and protected routes. Gate: identity never grants membership or admin authority by itself.</div></div>
+        </div>
+        <div class="phase">
+          <div><div class="ptime">Days 4–7</div><div class="pbar" style="background:var(--phase2)"></div></div>
+          <div><div class="pname">Onboarding, profiles &amp; member operations</div><div class="pdesc">Progressive onboarding, photo, city, languages, professional identity, private contacts, structured interests/goals, consent versions, completeness, visibility pause, admin review and suspension. Gate: pending users cannot enter member data; approved incomplete users reach onboarding.</div></div>
+        </div>
+        <div class="phase">
+          <div><div class="ptime">Days 8–11</div><div class="pbar" style="background:var(--phase3)"></div></div>
+          <div><div class="pname">Events &amp; content operations</div><div class="pdesc">Events, venues, programmes, speakers, announcements, menu, gallery, sponsors, publishing states and event-staff scopes. Gate: staff manage only assigned events and members never see drafts.</div></div>
+        </div>
+        <div class="phase">
+          <div><div class="ptime">Days 12–15</div><div class="pbar" style="background:var(--phase4)"></div></div>
+          <div><div class="pname">Registration, Paystack &amp; manual mode</div><div class="pdesc">Orders, inventory, currencies, automatic/manual/closed modes, signed webhooks, idempotency, references, admin review, receipts, entitlements and reconciliation. Gate: only verified webhook or audited approval grants access once.</div></div>
+        </div>
+        <div class="phase">
+          <div><div class="ptime">Days 16–19</div><div class="pbar" style="background:var(--phase1)"></div></div>
+          <div><div class="pname">Directory, QR &amp; connections</div><div class="pdesc">Event/network directories, search and filters, visibility rules, QR/manual connection code, request/accept/ignore, private-field gates, notes and blocking. Gate: two real accounts connect without exposing private contacts prematurely.</div></div>
+        </div>
+        <div class="phase">
+          <div><div class="ptime">Days 20–22</div><div class="pbar" style="background:var(--phase2)"></div></div>
+          <div><div class="pname">Messaging, safety &amp; support</div><div class="pdesc">Accepted-connection conversations, realtime messages, unread state, report/block flows, report-scoped moderation access, audit logs and support inbox. Gate: admins cannot browse private conversations; escalated access is specific and recorded.</div></div>
+        </div>
+        <div class="phase">
+          <div><div class="ptime">Days 23–27</div><div class="pbar" style="background:var(--phase3)"></div></div>
+          <div><div class="pname">Ongoing value &amp; controlled extensions</div><div class="pdesc">Asks &amp; Offers, post-event feedback, Past Events and notification preferences first. Basic communities or learning may ship only if their security and release gates pass; otherwise remain feature-flagged.</div></div>
+        </div>
+        <div class="phase">
+          <div><div class="ptime">Days 28–30</div><div class="pbar" style="background:var(--phase5)"></div></div>
+          <div><div class="pname">Hardening &amp; controlled launch</div><div class="pdesc">RLS adversarial tests, payment replay/signature checks, mobile/accessibility passes, backups, export/deletion workflow, monitoring, support and incident runbooks, real-account smoke tests and launch sign-off.</div></div>
+        </div>
+        <div class="phase">
+          <div><div class="ptime">Post-launch</div><div class="pbar" style="background:var(--phase4)"></div></div>
+          <div><div class="pname">Expansion without rework</div><div class="pdesc">Full communities and Host toolkit, learning, commercial tiers, marketplace, travel, opportunities/trade, Enterprise and AI. These remain schema-compatible but cannot delay or destabilize the first production loop.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="questions">
+      <h2><span class="secnum">08</span>Confirmed decisions &amp; remaining questions</h2>
+      <p>The following implementation decisions are now fixed for the 30-day release:</p>
+      <ul class="qlist">
+        <li><b>Authentication:</b> Supabase email OTP is the production method. The beta password is temporary and must be rotated or removed once SMTP passes.</li>
+        <li><b>Payments:</b> provider-neutral order and entitlement layer; Paystack first; automatic, manual-review and closed/waitlist modes controlled by admin.</li>
+        <li><b>Client:</b> responsive web/PWA on Vercel first. Native app and app-store distribution require measured post-launch demand.</li>
+        <li><b>Recommendations:</b> deterministic goal, interest, location and event rules first. AI consumes governed usage data later.</li>
+        <li><b>Moderation:</b> platform roles plus community-scoped moderators later; private content access is report-triggered and audited.</li>
+        <li><b>Money:</b> integer minor units and ISO currency codes. No floating-point monetary values and no access granted by browser callbacks.</li>
+      </ul>
+      <p>These questions remain, but none blocks the current foundation:</p>
+      <ul class="qlist">
+        <li><b>Production domain:</b> confirm the final custom domain and sender subdomain before SMTP and public launch.</li>
+        <li><b>Legal versions:</b> legal review must approve the Terms, Privacy Notice, Community Guidelines, retention schedule and Kenya data-protection position before public registration.</li>
+        <li><b>Pricing:</b> confirm Nairobi ticket types, KES prices, standalone membership price and refund/cancellation policy before Day 12.</li>
+        <li><b>Launch capacity:</b> confirm expected registrations, staff roles, support coverage and check-in device count for realistic load and operational testing.</li>
+        <li><b>Community portability:</b> define host export and offboarding rules before the post-launch Host toolkit stores community-owned content.</li>
+        <li><b>Video:</b> select a third-party livestream/replay provider only when an event requires it; custom video infrastructure is excluded.</li>
+      </ul>
+    </section>
+
+    <footer>Version 2 · 21 July 2026. This is the production engineering map for the controlled 30-day release. Product expansion remains intentional, feature-flagged and subordinate to security, trust and launch readiness.</footer>
+  </main>
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad:true,
+  theme:'base',
+  themeVariables:{
+    primaryColor:'#EFEBDD',
+    primaryBorderColor:'#2E3560',
+    primaryTextColor:'#211F2E',
+    lineColor:'#8A5A1E',
+    secondaryColor:'#F3EDDD',
+    tertiaryColor:'#FBFAF5',
+    fontFamily:'JetBrains Mono, monospace',
+    fontSize:'13px'
+  },
+  flowchart:{ curve:'basis', padding:14, useMaxWidth:true }
+});
+</script>
+</body>
+</html>

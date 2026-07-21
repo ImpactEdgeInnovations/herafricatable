@@ -6,9 +6,10 @@ Production: [herafricatable.vercel.app](https://herafricatable.vercel.app)
 
 ## Delivery documents
 
+- [Production process map](docs/HAT_Process_Map_Developer_Spec.html)
 - [30-day production roadmap](docs/ROADMAP.md)
 - [Production architecture](docs/ARCHITECTURE.md)
-- [Google OAuth and email OTP setup](docs/AUTH_SETUP.md)
+- [Email OTP setup](docs/AUTH_SETUP.md)
 - [Beta access and first Admin](docs/BETA_ACCESS.md)
 - [Landing-page content requirements](docs/CONTENT_REQUIREMENTS.md)
 - [Production release checklist](docs/RELEASE_CHECKLIST.md)
@@ -44,6 +45,6 @@ Vercel's Development, Preview, and Production environment settings.
 All schema and Row Level Security changes belong in versioned SQL files under
 `supabase/migrations`. Production database changes must be reproducible from Git.
 
-Authentication uses Google OAuth and email OTP as separate Supabase Auth methods.
-Authentication proves identity; registration, payment or an audited admin approval
-grants product membership.
+Production authentication uses Supabase email OTP. Temporary password access exists
+only for controlled pre-SMTP testing. Authentication proves identity; registration,
+payment or an audited admin approval grants product membership.

@@ -10,6 +10,11 @@ The first production release must prove this complete loop:
 
 `registration → verification → onboarding → event access → discovery → connection → ongoing value`
 
+The refined production process map is maintained in
+[`docs/HAT_Process_Map_Developer_Spec.html`](./HAT_Process_Map_Developer_Spec.html).
+It preserves all 14 long-term modules while separating the day-30 P0 release from
+post-launch P1/P2 expansion.
+
 ## Definition of production ready
 
 A feature is not complete merely because its screen exists. It is complete when:
@@ -64,8 +69,11 @@ A feature is not complete merely because its screen exists. It is complete when:
   wording
 - [ ] Configure production SMTP and verify sender-domain authentication
 - [ ] Seed and verify the Super Admin account, then test member and admin OTP end to end
-- [ ] Apply and verify the onboarding/admin migration in production Supabase
+- [x] Apply the onboarding/admin migration in production Supabase
 - [ ] Complete a real pending → onboarding → active acceptance test
+- [ ] Add a forward-only onboarding migration for city, languages, referral source,
+  business/website fields, profile completion and normalized member goals
+- [ ] Convert onboarding to progressive save and verify interruption/resume behavior
 - [ ] Add automated authentication, authorization and migration tests to CI
 
 Temporary password access allows administrator testing to continue while production
