@@ -13,6 +13,7 @@ Production: [herafricatable.vercel.app](https://herafricatable.vercel.app)
 - [Beta access and first Admin](docs/BETA_ACCESS.md)
 - [Landing-page content requirements](docs/CONTENT_REQUIREMENTS.md)
 - [Production release checklist](docs/RELEASE_CHECKLIST.md)
+- [Notification delivery setup](docs/NOTIFICATIONS_SETUP.md)
 
 ## Local setup
 
@@ -24,6 +25,10 @@ Production: [herafricatable.vercel.app](https://herafricatable.vercel.app)
    `/rest/v1`.
 5. Start the application with `npm run dev`.
 6. Open [http://localhost:3000](http://localhost:3000).
+
+Before committing, run `npm test` and `npm run build`. Database migrations and pgTAP
+authorization tests run in an isolated Supabase stack in GitHub Actions; they do not
+connect to the production project.
 
 The local `.env.local` file is ignored by Git. Never commit Supabase secret keys,
 Paystack secret keys, webhook secrets, database passwords, or Resend API keys.
@@ -44,6 +49,8 @@ Vercel's Development, Preview, and Production environment settings.
 
 All schema and Row Level Security changes belong in versioned SQL files under
 `supabase/migrations`. Production database changes must be reproducible from Git.
+The committed `supabase/config.toml` is local/CI configuration and contains no hosted
+project credentials. Database tests live under `supabase/tests`.
 
 Production authentication uses Supabase email OTP. Temporary password access exists
 only for controlled pre-SMTP testing. Authentication proves identity; registration,

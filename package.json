@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify": "node scripts/verify-repository.mjs",
+    "test": "npm run verify && npm run typecheck"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.3",

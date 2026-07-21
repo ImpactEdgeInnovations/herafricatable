@@ -93,6 +93,8 @@ A feature is not complete merely because its screen exists. It is complete when:
   cancellation, Super Admin review, anonymization, access revocation and retention boundaries
 - [x] Realtime in-app notifications, member delivery preferences, transactional email
   outbox, idempotent Resend worker, retries, admin monitoring and database health endpoint
+- [x] GitHub Actions quality gate, repository contract/secret checks, reproducible local
+  Supabase configuration, migration reset, and pgTAP authorization boundary tests
 
 ### Immediate release gate
 
@@ -122,7 +124,8 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Apply `20260724090000_notification_operations.sql` in production Supabase
 - [ ] Verify the Resend sending domain and configure the production email worker schedule
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
-- [ ] Add automated authentication, authorization and migration tests to CI
+- [x] Add automated authentication, authorization and migration tests to CI
+- [ ] Require both application and database GitHub checks before production deployment
 
 Temporary password access allows administrator testing to continue while production
 email delivery is configured. Email OTP must still pass end to end before public beta.

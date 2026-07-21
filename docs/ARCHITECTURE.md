@@ -264,6 +264,13 @@ event, connection, community and platform communications.
 
 ## Observability and operations
 
+Every push to `main` and every pull request runs an application and database quality
+gate. The application job checks committed-secret patterns, migration ordering,
+critical route contracts, TypeScript and the production build. The database job
+creates an isolated Supabase stack, reapplies the full migration chain, then runs
+pgTAP tests for member, staff, Super Admin, privacy, support and service-role boundaries.
+No CI database test connects to production.
+
 - Structured logs use request/event IDs and exclude message bodies, OTPs and secrets.
 - Payment webhook receipt, validation, processing and entitlement IDs are traceable.
 - Admin and moderation actions have actor, target, reason and timestamp.

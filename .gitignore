@@ -14,6 +14,8 @@ out/
 
 # Local Supabase bootstrap data (may contain administrator/member emails)
 supabase/.bootstrap*.sql
+supabase/.temp/
+supabase/.branches/
 
 # Vercel
 .vercel/

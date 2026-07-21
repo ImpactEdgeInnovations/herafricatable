@@ -4,6 +4,8 @@
 
 - [ ] Intended commit is reviewed and present on `main`
 - [ ] Vercel build, typecheck and automated tests pass
+- [ ] GitHub application and database quality-gate jobs are green on the release commit
+- [ ] Main-branch protection requires the quality gate before deployment
 - [ ] Preview deployment was tested before merge
 - [ ] Production points to the intended commit
 - [ ] No secret or `.env.local` file is tracked by Git
@@ -18,6 +20,7 @@
 - [ ] Migrations were rehearsed against non-production data
 - [ ] RLS is enabled on every exposed table and Storage bucket
 - [ ] Anonymous/member/admin/moderator/event-staff boundary tests pass
+- [ ] A clean Supabase reset applies every committed migration in chronological order
 - [ ] Foreign keys, uniqueness constraints and policy indexes are present
 - [ ] Seed/test data is absent or explicitly excluded from analytics
 - [ ] Backup exists and restore procedure has been rehearsed
