@@ -71,6 +71,8 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [x] Public published-event listing and event-detail foundations
 - [x] Audited programme/session and speaker operations, announcement publishing,
   sponsor management, and super-admin event staff assignment
+- [x] Curated event menu CMS with courses, dishes, cultural context, dietary and
+  allergen information, member feedback foundations, and audited moderation
 
 ### Immediate release gate
 
@@ -86,7 +88,8 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [x] Convert onboarding to progressive save
 - [ ] Verify interruption/resume, avatar replacement and activation behavior
 - [x] Apply `20260721160000_events_foundation.sql` in production Supabase
-- [ ] Apply `20260721200000_event_content_operations.sql` in production Supabase
+- [x] Apply `20260721200000_event_content_operations.sql` in production Supabase
+- [ ] Apply `20260721230000_event_menu_operations.sql` in production Supabase
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [ ] Add automated authentication, authorization and migration tests to CI
 

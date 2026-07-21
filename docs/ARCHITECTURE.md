@@ -116,9 +116,9 @@ references and webhook event IDs are unique. Entitlements are issued idempotentl
 
 ### Events and content
 
-- `events`, `venues`, `programme_days`, `programme_sessions`, `speakers`
-- `announcements`
-- `menu_courses`, `menu_items`, `menu_ratings`
+- `events`, `venues`, `programme_days`, `programme_sessions`, `event_speakers`
+- `event_announcements`, `event_sponsors`
+- `event_menus`, `menu_courses`, `menu_items`, `menu_item_feedback`
 - `gallery_albums`, `media_assets`
 - `event_feedback`
 - `sponsors`, `sponsor_assets`, `sponsor_intro_requests`
@@ -131,6 +131,8 @@ not the publicly readable `events` row. Event staff authority is represented by
 `event_staff_scopes`; published-event visibility never expands staff edit scope.
 Creating or changing a featured event is an audited Super Admin operation and keeps
 the landing-page countdown synchronized with the event source of truth.
+Menu feedback writes run through a controlled operation for active members; comments
+remain pending until an authorized event administrator approves or hides them.
 
 ### Network and communication
 

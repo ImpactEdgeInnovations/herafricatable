@@ -65,6 +65,9 @@
 - [ ] Draft content is not visible to members
 - [ ] Programme sessions cannot be saved outside the parent event dates
 - [ ] Announcement and sponsor visibility changes create audit records
+- [ ] Draft menus and dishes are invisible outside their assigned event administration scope
+- [ ] Menu allergen content is reviewed by the event's catering owner before publishing
+- [ ] Menu comments remain private until an assigned administrator moderates them
 - [ ] Ticket capacity, currency, dates, timezone and venue are verified
 - [ ] Empty/loading/error states teach the user what to do
 - [ ] Notification copy, links and preferences were tested

@@ -11,6 +11,13 @@ import {
   type AdminSession,
   type AdminSponsor,
 } from "@/components/admin/event-content-manager";
+import {
+  EventMenuManager,
+  type AdminMenu,
+  type AdminMenuCourse,
+  type AdminMenuFeedback,
+  type AdminMenuItem,
+} from "@/components/admin/event-menu-manager";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -90,12 +97,30 @@ export default async function AdminHomePage() {
   const { data: speakerLinks } = sessionIds.length
     ? await supabase.from("session_speakers").select("session_id, event_speakers(name, job_title, company)").in("session_id", sessionIds).order("sort_order", { ascending: true })
     : { data: [] };
+  const menuResult = eventIds.length
+    ? await supabase.from("event_menus").select("id, event_id, title, introduction, embassy_note, status").in("event_id", eventIds)
+    : { data: [], error: null };
+  const menus = (menuResult.data as AdminMenu[] | null) ?? [];
+  const menuIds = menus.map((menu) => menu.id);
+  const courseResult = menuIds.length
+    ? await supabase.from("menu_courses").select("id, menu_id, name, description, sort_order").in("menu_id", menuIds).order("sort_order", { ascending: true })
+    : { data: [], error: null };
+  const courses = (courseResult.data as AdminMenuCourse[] | null) ?? [];
+  const courseIds = courses.map((course) => course.id);
+  const itemResult = courseIds.length
+    ? await supabase.from("menu_items").select("id, course_id, name, description, cultural_origin, cultural_story, ingredients, dietary_tags, allergen_notes, status, sort_order").in("course_id", courseIds).order("sort_order", { ascending: true })
+    : { data: [], error: null };
+  const menuItems = (itemResult.data as AdminMenuItem[] | null) ?? [];
+  const itemIds = menuItems.map((item) => item.id);
+  const feedbackResult = itemIds.length
+    ? await supabase.from("menu_item_feedback").select("item_id, user_id, rating, is_favorite, comment, moderation_status").in("item_id", itemIds).order("updated_at", { ascending: false })
+    : { data: [], error: null };
 
   return (
     <main className="admin-command-center">
       <header className="admin-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Admin command center</small></span></Link>
-        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#roadmap">Roadmap</a></nav>
+        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#roadmap">Roadmap</a></nav>
         <span className="admin-role">{role.role.replace("_", " ")}</span>
       </header>
       <section className="admin-hero" id="overview">
@@ -110,6 +135,7 @@ export default async function AdminHomePage() {
       {role.role === "super_admin" ? <MemberReview initialMembers={members} currentUserId={user.id} migrationReady={!memberResult.error} /> : null}
       {canManageEvents ? <EventManager initialEvents={events} privateEvents={privateEvents} canCreate={role.role === "super_admin"} migrationReady={!eventResult.error} /> : null}
       {canManageEvents && !eventResult.error ? <EventContentManager events={events} initialSessions={sessions} initialAnnouncements={((announcementData as AdminAnnouncement[] | null) ?? [])} initialSponsors={((sponsorData as AdminSponsor[] | null) ?? [])} speakerLinks={(speakerLinks as unknown as { session_id: string; event_speakers: { company: string | null; job_title: string | null; name: string } | null }[] | null) ?? []} isSuperAdmin={role.role === "super_admin"} /> : null}
+      {canManageEvents && !eventResult.error ? <EventMenuManager events={events} initialMenus={menus} initialCourses={courses} initialItems={menuItems} initialFeedback={((feedbackResult.data as AdminMenuFeedback[] | null) ?? [])} migrationReady={!menuResult.error && !courseResult.error && !itemResult.error && !feedbackResult.error} /> : null}
       <RoadmapOverview />
       <section className="admin-section" id="event">
         <EventCountdownManager canManage={canManageCountdown} initialSettings={(countdown as CountdownSettings | null) ?? null} userId={user.id} />
