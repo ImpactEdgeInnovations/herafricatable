@@ -1216,6 +1216,38 @@ body { background: var(--paper); }
 .payment-reconciliation article span:not(.member-status) { color: var(--muted); font-size: .6rem; }
 .status-success { background: #e8f2ea; color: #28623a; }
 .status-failed, .status-reversed { background: #f6e4e5; color: #8f2730; }
+.payment-readiness { display: inline-flex; margin-top: 16px; padding: 7px 10px; border-radius: 100px; font-size: .58rem; font-weight: 800; }
+.payment-readiness.ready { background: #e8f2ea; color: #28623a; }
+.payment-readiness.not-ready { background: #f4ecd9; color: #765614; }
+.refund-queue { margin-top: 45px; padding-top: 35px; border-top: 1px solid var(--line); }
+.refund-queue > article { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid var(--line); gap: 30px; }
+.refund-queue article > div { display: grid; gap: 6px; }
+.refund-queue article span:not(.member-status) { color: var(--muted); font-size: .62rem; }
+.refund-queue article p { margin: 3px 0 0; color: var(--muted); font-size: .72rem; }
+.member-home-page, .receipt-page { min-height: 100vh; padding-bottom: 100px; background: var(--paper); }
+.member-home-header { display: flex; width: min(1120px, calc(100% - 48px)); min-height: 92px; align-items: center; justify-content: space-between; margin: 0 auto; border-bottom: 1px solid var(--line); }
+.member-home-header > a:last-child { color: var(--wine); font-size: .68rem; font-weight: 800; text-decoration: none; }
+.member-welcome { width: min(1120px, calc(100% - 48px)); margin: 0 auto; padding: 90px 0 75px; }
+.member-welcome h1 { margin: 0; font-family: var(--serif); font-size: clamp(3.5rem, 7vw, 6.4rem); font-weight: 400; letter-spacing: -.055em; line-height: .95; }
+.member-welcome > p:nth-of-type(2) { max-width: 650px; color: var(--muted); line-height: 1.7; }
+.member-orders { display: grid; width: min(1120px, calc(100% - 48px)); margin: 0 auto; padding-top: 65px; border-top: 1px solid var(--line); grid-template-columns: 280px 1fr; gap: 60px; }
+.member-orders h2 { margin: 0; font-family: var(--serif); font-size: 2.5rem; font-weight: 400; }
+.member-orders > div:last-of-type > article { display: grid; min-height: 120px; align-items: center; padding: 20px 0; border-top: 1px solid var(--line); grid-template-columns: 1fr 150px 160px; gap: 24px; }
+.member-orders article > div { display: grid; gap: 5px; }
+.member-orders article > div:nth-child(2) { justify-items: start; }
+.member-orders article > div:last-child { justify-items: end; }
+.member-orders article span, .member-orders article small { color: var(--muted); font-size: .61rem; }
+.member-orders article a, .member-orders article button { border: 0; background: transparent; color: var(--wine); font-size: .62rem; font-weight: 800; text-decoration: none; cursor: pointer; }
+.receipt-card { width: min(820px, calc(100% - 48px)); margin: 80px auto 0; padding: 55px; border: 1px solid var(--line); background: #fff; }
+.receipt-card > header { display: flex; align-items: start; justify-content: space-between; padding-bottom: 35px; border-bottom: 1px solid var(--line); gap: 25px; }
+.receipt-card h1 { margin: 0; font-family: var(--serif); font-size: 2.8rem; font-weight: 400; }
+.receipt-card dl { display: grid; margin: 35px 0; grid-template-columns: repeat(2,1fr); gap: 24px; }
+.receipt-card dt { color: var(--muted); font-size: .56rem; font-weight: 800; text-transform: uppercase; }
+.receipt-card dd { margin: 6px 0 0; font-size: .76rem; }
+.receipt-lines { display: grid; border-top: 1px solid var(--line); }
+.receipt-lines > div { display: flex; justify-content: space-between; padding: 18px 0; border-bottom: 1px solid var(--line); font-size: .75rem; }
+.receipt-lines .receipt-total { font-family: var(--serif); font-size: 1.45rem; }
+.receipt-note { margin: 30px 0 0; color: var(--muted); font-size: .7rem; line-height: 1.65; }
 .event-registration-page { min-height: 100vh; padding-bottom: 100px; background: var(--paper); }
 .event-registration-form, .registration-status-card { width: min(760px, calc(100% - 48px)); margin: 0 auto; padding: 90px 0; }
 .event-registration-form header h1, .registration-status-card h2 { margin: 0; font-family: var(--serif); font-size: clamp(3rem, 6vw, 5.4rem); font-weight: 400; letter-spacing: -.05em; line-height: .96; text-transform: capitalize; }
@@ -1348,6 +1380,7 @@ body { background: var(--paper); }
   .gallery-album-form { padding: 0 0 40px; border-right: 0; border-bottom: 1px solid var(--line); }
   .public-gallery-album { grid-template-columns: 1fr; gap: 30px; }
   .registration-admin-grid { grid-template-columns: 1fr; }
+  .member-orders { grid-template-columns: 1fr; gap: 35px; }
   .event-detail-hero { grid-template-columns: 1fr; gap: 50px; }
   .event-content-section { grid-template-columns: 1fr; gap: 40px; }
 }
@@ -1384,6 +1417,11 @@ body { background: var(--paper); }
   .public-gallery-grid { grid-template-columns: 1fr; }
   .public-gallery-grid figure.featured { grid-column: auto; }
   .public-gallery-grid img, .public-gallery-grid figure.featured img { height: 300px; }
+  .member-home-header, .member-welcome, .member-orders { width: calc(100% - 32px); }
+  .member-orders > div:last-of-type > article { grid-template-columns: 1fr; }
+  .member-orders article > div:last-child { justify-items: start; }
+  .receipt-card { width: calc(100% - 32px); padding: 32px 20px; }
+  .receipt-card dl { grid-template-columns: 1fr; }
   .public-event-list > article { align-items: start; grid-template-columns: 75px 1fr; gap: 20px; }
   .public-event-list > article > a { grid-column: 2; }
   .public-event-date strong { font-size: 2.4rem; }

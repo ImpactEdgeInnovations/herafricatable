@@ -46,6 +46,8 @@
 - [ ] Automatic mode remains unavailable until server initialization and signed webhook verification pass
 - [ ] Duplicate payment/entitlement protection passes
 - [ ] Reconciliation, refund and cancellation runbooks are available
+- [ ] Members can cancel only unpaid registrations and cannot self-approve refunds
+- [ ] Automatic refunds retain access until provider completion is verified
 - [ ] Real low-value end-to-end payment has been reconciled before public sale
 
 ## Privacy, trust and safety
