@@ -72,6 +72,10 @@
 
 - [ ] Latest iOS Safari and Android Chrome pass core journeys
 - [ ] Desktop Chrome/Safari/Firefox pass critical admin journeys
+- [ ] Draft events are invisible anonymously and published events expose no private online URL
+- [ ] Event staff can modify only explicitly assigned events
+- [ ] Featured-event changes update the public countdown and create an audit event
+- [ ] Cancelled/completed event transitions and timezone rendering are verified
 - [ ] Keyboard-only and screen-reader checks pass
 - [ ] Contrast, focus and 44px touch targets pass
 - [ ] QR camera permission denied path falls back to manual code

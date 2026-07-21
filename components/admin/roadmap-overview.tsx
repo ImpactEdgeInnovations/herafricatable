@@ -1,7 +1,7 @@
 const phases = [
-  { label: "Foundation", range: "Days 1–3", progress: 92, status: "In review", detail: "Hosting, Supabase, authentication, roles, RLS and first admin." },
-  { label: "Members", range: "Days 4–7", progress: 42, status: "Building now", detail: "Onboarding, profiles, approvals, consent and admin operations." },
-  { label: "Events", range: "Days 8–11", progress: 12, status: "Next", detail: "Event programme, announcements, menu, gallery and sponsors." },
+  { label: "Foundation", range: "Days 1–3", progress: 96, status: "Acceptance testing", detail: "Hosting, Supabase, authentication, roles, RLS and first admin." },
+  { label: "Members", range: "Days 4–7", progress: 72, status: "Live testing", detail: "Onboarding, profiles, approvals, consent and admin operations." },
+  { label: "Events", range: "Days 8–11", progress: 38, status: "Building now", detail: "Event lifecycle, programme, announcements, menu, gallery and sponsors." },
   { label: "Registration", range: "Days 12–15", progress: 0, status: "Queued", detail: "Paystack, manual processing, entitlements and reconciliation." },
   { label: "Network", range: "Days 16–30", progress: 0, status: "Queued", detail: "Directory, connections, messaging, safety and launch hardening." },
 ];

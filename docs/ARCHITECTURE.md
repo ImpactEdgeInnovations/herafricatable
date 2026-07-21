@@ -126,6 +126,12 @@ references and webhook event IDs are unique. Entitlements are issued idempotentl
 Publishing state is explicit (`draft`, `published`, `archived`). Member queries never
 depend on a frontend-only draft filter.
 
+Private online-event URLs and check-in instructions live in `event_private_details`,
+not the publicly readable `events` row. Event staff authority is represented by
+`event_staff_scopes`; published-event visibility never expands staff edit scope.
+Creating or changing a featured event is an audited Super Admin operation and keeps
+the landing-page countdown synchronized with the event source of truth.
+
 ### Network and communication
 
 - `connections` using a canonical low/high user pair plus requester/recipient fields

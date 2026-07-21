@@ -56,6 +56,7 @@ export default function HomePage() {
         <nav className="desktop-nav" aria-label="About Her Africa Table">
           <a href="#why">Why the table</a>
           <a href="#experience">The experience</a>
+          <Link href="/events">Events</Link>
           <a href="#membership">Membership</a>
           <Link href="/faq">FAQ</Link>
         </nav>

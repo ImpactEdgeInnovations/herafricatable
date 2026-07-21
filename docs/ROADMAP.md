@@ -64,6 +64,11 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [x] Onboarding foundation with public/private profile separation and consent records
 - [x] Progressive onboarding v2 implementation with secure avatar upload, structured
   goals, languages, city, business/referral fields and deterministic completion
+- [x] Event lifecycle foundation with venues, publishing states, registration modes,
+  staff scopes, programme, speakers, announcements, sponsors and RLS
+- [x] Audited admin event editor with protected online access details and automatic
+  featured-event countdown synchronization
+- [x] Public published-event listing and event-detail foundations
 
 ### Immediate release gate
 
@@ -75,9 +80,11 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Complete a real pending → onboarding → active acceptance test
 - [x] Add a forward-only onboarding migration for city, languages, referral source,
   business/website fields, profile completion and normalized member goals
-- [ ] Apply `20260721120000_onboarding_v2.sql` in production Supabase
+- [x] Apply `20260721120000_onboarding_v2.sql` in production Supabase
 - [x] Convert onboarding to progressive save
 - [ ] Verify interruption/resume, avatar replacement and activation behavior
+- [ ] Apply `20260721160000_events_foundation.sql` in production Supabase
+- [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [ ] Add automated authentication, authorization and migration tests to CI
 
 Temporary password access allows administrator testing to continue while production
