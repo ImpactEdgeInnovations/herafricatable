@@ -207,6 +207,12 @@ but a human-reviewable rule and audit record remain.
 - `feature_flags`, `platform_settings`
 - `partners`, `partner_perks`, `perk_codes`, `perk_redemptions`
 
+Vouched invitations use `referral_campaigns`, `referral_codes` and
+`referral_invitations`. Submitting a vouch never changes access. Super Admin approval
+creates the existing `beta_invites` gate, after which the authentication trigger links
+the new identity and profile activation closes attribution. The invitation email is
+queued through the shared delivery worker; campaign and member caps are transactional.
+
 Reports use typed foreign-key relationships where possible. If a polymorphic target is
 used, a server operation validates the target and captures an immutable evidence
 snapshot at report time.

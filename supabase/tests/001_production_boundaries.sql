@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(74);
+select plan(86);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -55,6 +55,9 @@ insert into public.courses(id,slug,title,summary,description,instructor_name,acc
  ('80000000-0000-4000-8000-000000000002','test-paid-course','Test Paid Course','A paid course using the shared order and entitlement engine.','A complete paid course description used to verify manual approval and fulfillment.','Test Instructor','purchase',250000,'KES','manual_review','published','10000000-0000-4000-8000-000000000001');
 insert into public.course_lessons(id,course_id,title,lesson_type,content,status,sort_order)values
  ('81000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000001','Test learning boundary lesson','text','Private lesson content for an enrolled member.','published',0);
+update public.feature_flags set enabled=true where key='referrals';
+insert into public.referral_campaigns(id,name,slug,description,status,max_referrals_per_member,created_by)values
+ ('90000000-0000-4000-8000-000000000001','Test Vouched Invitations','test-vouched-invitations','A controlled referral campaign used for permission and attribution tests.','active',3,'10000000-0000-4000-8000-000000000001');
 
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
@@ -96,6 +99,11 @@ select lives_ok($$select public.create_course_order('80000000-0000-4000-8000-000
 select is((select order_type from public.orders where order_type='course'limit 1),'course','course purchase is explicitly typed in shared orders');
 select throws_ok($$select *from public.list_course_orders()$$,'P0001','Super admin required','member cannot list course purchase operations');
 select throws_ok($$select public.save_course(null,'unauthorized-course','Unauthorized Course','An unauthorized test course summary.','An unauthorized course must never be created by a member.','Member A','free',null,0,'KES','closed','draft')$$,'P0001','Super admin required','member cannot create course content');
+select lives_ok($$select public.create_vouched_referral('90000000-0000-4000-8000-000000000001','referred-member@test.invalid','Former colleague','I have worked closely with her and can vouch for her integrity and contribution.')$$,'active member submits a meaningful private vouch');
+select is((select count(*)from public.list_my_referrals()),1::bigint,'member lists only own referral journey');
+select is((select status from public.referral_invitations where referrer_id='10000000-0000-4000-8000-000000000002'),'pending_review','member referral cannot grant access before review');
+select throws_ok($$select *from public.list_referrals_admin()$$,'P0001','Super admin required','member cannot access private referral review queue');
+select throws_ok($$select public.review_vouched_referral((select id from public.referral_invitations limit 1),'approve','')$$,'P0001','Super admin required','member cannot approve own referral');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
 select is((select count(*)from public.list_my_past_events()),1::bigint,'attendee lists own eligible past event');
 select lives_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,4,5,true,'The facilitated introductions were valuable.','Allow more time for table conversations.','A thoughtful room where meaningful professional connections began.','named')$$,'eligible attendee saves private feedback with named testimonial consent');
@@ -115,6 +123,7 @@ select is((select status from public.event_memberships where event_id='50000000-
 select throws_ok($$select *from public.list_marketplace_reports()$$,'P0001','Moderator role required','event staff cannot access marketplace moderation reports');
 select throws_ok($$select *from public.list_community_reports()$$,'P0001','Moderator role required','event staff cannot access community moderation reports');
 select throws_ok($$select *from public.list_course_orders()$$,'P0001','Super admin required','event staff cannot access course purchase operations');
+select throws_ok($$select *from public.list_referrals_admin()$$,'P0001','Super admin required','event staff cannot access referral review queue');
 select throws_ok($$select *from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')$$,'P0001','Not authorized','event staff cannot read feedback outside assigned event scope');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
@@ -134,6 +143,23 @@ select is((select status from public.community_memberships where community_id='7
 select is((select count(*)from public.list_course_orders()),1::bigint,'super admin lists the pending course order');
 select lives_ok($$select public.review_course_order((select id from public.orders where order_type='course'limit 1),'approve','Verified manual payment during boundary test.')$$,'super admin approves and fulfills a manual course purchase');
 select is((select count(*)from public.course_enrollments where course_id='80000000-0000-4000-8000-000000000002'and status='active'),1::bigint,'approved course order grants one active enrollment');
+select is((select count(*)from public.list_referrals_admin()),1::bigint,'super admin receives the private vouched referral queue');
+select lives_ok($$select public.review_vouched_referral((select id from public.referral_invitations limit 1),'approve','Vouch reviewed against member history.')$$,'super admin approval creates onboarding eligibility');
+select is((select status from public.beta_invites where email='referred-member@test.invalid'),'pending','approved referral creates a pending beta invite');
+select is((select count(*)from public.notification_jobs where template_key='referral_invitation'and to_email='referred-member@test.invalid'),1::bigint,'approved referral queues one invitation email');
+
+set local role postgres;
+insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)values('90000000-0000-4000-8000-000000000002','referred-member@test.invalid','authenticated','authenticated','{}','{}',now());
+set local role authenticated;
+select set_config('request.jwt.claim.role','authenticated',true);
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select is((select status from public.referral_invitations where invitee_email='referred-member@test.invalid'),'claimed','accepted auth invite links referral attribution to the new identity');
+set local role postgres;
+update public.profiles set access_status='active'where id='90000000-0000-4000-8000-000000000002';
+set local role authenticated;
+select set_config('request.jwt.claim.role','authenticated',true);
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select is((select status from public.referral_invitations where invitee_email='referred-member@test.invalid'),'activated','member activation closes the referral conversion lifecycle');
 select lives_ok($$select public.save_event_recap('50000000-0000-4000-8000-000000000003','A test table remembered','A detailed public-safe recap of the completed test gathering.',array['Introductions across industries','A shared commitment to follow through'],'published')$$,'super admin publishes a scoped event recap');
 select is((select count(*)from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')),1::bigint,'super admin reads private feedback through scoped operation');
 select is((select response_count from public.get_event_feedback_summary('50000000-0000-4000-8000-000000000003')),1::bigint,'feedback aggregate reports one response');

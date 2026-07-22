@@ -128,6 +128,8 @@
 - [ ] Learning remains disabled until free, event-bundle, manual and Paystack course access boundaries pass
 - [ ] Unenrolled members cannot read lessons or sign private `course-assets` URLs
 - [ ] Event and course orders both pass amount/currency, replay and reversal tests through shared Paystack processing
+- [ ] Member referral cannot grant access before Super Admin approval
+- [ ] Referral email, claim and activation attribution pass with duplicate and campaign-limit tests
 - [ ] Named, anonymous, rejected and withdrawn testimonial paths are verified end to end
 - [ ] Performance and image/media budgets pass
 
