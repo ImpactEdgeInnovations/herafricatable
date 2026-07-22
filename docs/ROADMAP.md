@@ -105,6 +105,10 @@ A feature is not complete merely because its screen exists. It is complete when:
   shared Paystack/manual fulfillment and production-safe tagged test identities
 - [x] Feature-gated deterministic Circles with explicit opt-in, balanced cohort
   generation, blocked-pair safety, human review, private prompts and responses
+- [x] Feature-gated partner benefits with atomic inventory, private single-use codes,
+  expiry release, member limits and an audited admin redemption ledger
+- [x] Member/admin responsive UI refinement with focused navigation, a modular member
+  launcher, earlier mobile authentication actions and scroll-safe admin controls
 - [x] Repeatable production smoke suite, anonymous route-boundary checks, mobile public
   UAT, deployment health diagnostics and a manually gated live-smoke workflow
 
@@ -144,6 +148,8 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Complete membership manual/Paystack/renewal acceptance and deliberately enable its flag
 - [ ] Apply `20260726090000_circles_deterministic_matching.sql` in production Supabase
 - [ ] Complete Circle matching/privacy/facilitation acceptance and deliberately enable its flag
+- [ ] Apply `20260726130000_partner_perks_redemption.sql` in production Supabase
+- [ ] Complete partner terms/inventory/redemption acceptance and deliberately enable its flag
 - [ ] Verify the Resend sending domain and configure the production email worker schedule
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [x] Add automated authentication, authorization and migration tests to CI

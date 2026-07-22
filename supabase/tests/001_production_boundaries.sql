@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(111);
+select plan(122);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -64,6 +64,11 @@ insert into public.membership_plans(id,slug,name,description,price_minor,currenc
 update public.feature_flags set enabled=true where key='circles';
 insert into public.circle_cycles(id,slug,name,description,starts_at,ends_at,group_size,include_test_accounts,status,created_by)values
  ('92000000-0000-4000-8000-000000000001','test-circle-cycle','Test Circle Cycle','A deterministic member Circle cycle used for privacy and matching boundary tests.',now()+interval'1 day',now()+interval'30 days',3,true,'open','10000000-0000-4000-8000-000000000001');
+update public.feature_flags set enabled=true where key='partner_perks';
+insert into public.partners(id,slug,name,description,category,city,country,status,created_by)values
+ ('93000000-0000-4000-8000-000000000001','test-partner','Test Partner','A reviewed partner used for private redemption and inventory boundary tests.','Business services','Nairobi','Kenya','active','10000000-0000-4000-8000-000000000001');
+insert into public.partner_perks(id,partner_id,slug,title,description,terms,inventory_total,per_member_limit,reservation_days,starts_at,ends_at,status,created_by)values
+ ('94000000-0000-4000-8000-000000000001','93000000-0000-4000-8000-000000000001','test-member-benefit','Test Member Benefit','A limited partner benefit reserved through the production-safe member workflow.','One reservation per active member. Present the private code before expiry.',1,1,7,now()-interval'1 day',now()+interval'30 days','published','10000000-0000-4000-8000-000000000001');
 
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
@@ -118,6 +123,11 @@ select throws_ok($$select public.review_membership_order((select id from public.
 select is((select count(*)from public.list_circle_cycles()),1::bigint,'active member reads the enabled open Circle cycle');
 select lives_ok($$select public.set_circle_opt_in('92000000-0000-4000-8000-000000000001',true,'Seeking a focused peer accountability cohort.')$$,'active member opts into a Circle cycle');
 select throws_ok($$select public.run_circle_matching('92000000-0000-4000-8000-000000000001')$$,'P0001','Super admin required','member cannot run Circle matching');
+select is((select count(*)from public.list_partner_perks()),1::bigint,'active member reads the enabled partner benefit catalog');
+select lives_ok($$select *from public.reserve_partner_perk('94000000-0000-4000-8000-000000000001')$$,'active member atomically reserves available partner inventory');
+select is((select count(*)from public.perk_redemptions),1::bigint,'member reads only her private redemption record');
+select throws_ok($$select *from public.reserve_partner_perk('94000000-0000-4000-8000-000000000001')$$,'P0001','Member redemption limit reached','single-use member limit prevents duplicate reservation');
+select throws_ok($$select *from public.list_perk_redemptions_admin()$$,'P0001','Super admin required','member cannot access the redemption ledger');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
 select is((select count(*)from public.list_my_past_events()),1::bigint,'attendee lists own eligible past event');
 select lives_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,4,5,true,'The facilitated introductions were valuable.','Allow more time for table conversations.','A thoughtful room where meaningful professional connections began.','named')$$,'eligible attendee saves private feedback with named testimonial consent');
@@ -140,6 +150,7 @@ select throws_ok($$select *from public.list_course_orders()$$,'P0001','Super adm
 select throws_ok($$select *from public.list_referrals_admin()$$,'P0001','Super admin required','event staff cannot access referral review queue');
 select throws_ok($$select *from public.list_membership_orders()$$,'P0001','Super admin required','event staff cannot access membership operations');
 select lives_ok($$select public.set_circle_opt_in('92000000-0000-4000-8000-000000000001',true,'Staff identity participates only as an active member.')$$,'event staff may opt in only through the member path');
+select throws_ok($$select *from public.list_perk_redemptions_admin()$$,'P0001','Super admin required','event staff cannot access partner redemption operations');
 select throws_ok($$select *from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')$$,'P0001','Not authorized','event staff cannot read feedback outside assigned event scope');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
@@ -147,6 +158,8 @@ select is((select count(*)from public.list_marketplace_responses('60000000-0000-
 select lives_ok($$select public.review_marketplace_response((select id from public.marketplace_responses where post_id='60000000-0000-4000-8000-000000000001'),'accepted')$$,'post owner can accept a private response');
 select throws_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,5,5,true,'Not eligible for this event feedback.','No improvement note.',null,'none')$$,'P0001','Confirmed event attendance required','non-attendee cannot submit event feedback');
 select lives_ok($$select public.set_circle_opt_in('92000000-0000-4000-8000-000000000001',true,'Seeking complementary expertise and mutual accountability.')$$,'second active member opts into the Circle cycle');
+select is((select count(*)from public.perk_redemptions),0::bigint,'another member cannot read a private redemption code');
+select is((select count(*)from public.list_partner_perks()),1::bigint,'another active member sees the catalog without another member code');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select count(*)from public.support_tickets),2::bigint,'super admin reads support tickets');
@@ -175,6 +188,9 @@ select is((select count(*)from public.list_circle_participants_admin('92000000-0
 select lives_ok($$select public.publish_circle_cycle('92000000-0000-4000-8000-000000000001')$$,'super admin deliberately publishes reviewed Circles');
 select is((select status from public.circle_cycles where id='92000000-0000-4000-8000-000000000001'),'published','published cycle state is explicit');
 select lives_ok($$select public.publish_circle_prompt('92000000-0000-4000-8000-000000000001','The first commitment','Share one concrete outcome you will move forward before this Circle closes.',now(),now()+interval'14 days')$$,'super admin publishes one guided prompt per Circle');
+select is((select count(*)from public.list_perk_redemptions_admin()),1::bigint,'super admin reconciles the complete redemption ledger');
+select lives_ok($$select public.review_perk_redemption((select id from public.perk_redemptions limit 1),'redeem','Partner confirmed the benefit was delivered.')$$,'super admin marks a verified code redeemed');
+select is((select status from public.perk_redemptions limit 1),'redeemed','redemption lifecycle records final delivery state');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 select is((select count(*)from public.list_my_circles()),1::bigint,'assigned member enters only her published Circle');
