@@ -109,6 +109,8 @@ A feature is not complete merely because its screen exists. It is complete when:
   expiry release, member limits and an audited admin redemption ledger
 - [x] Member/admin responsive UI refinement with focused navigation, a modular member
   launcher, earlier mobile authentication actions and scroll-safe admin controls
+- [x] Privacy-safe server analytics with test-account separation, admin-only aggregates,
+  editable audited launch thresholds and a production readiness scorecard
 - [x] Repeatable production smoke suite, anonymous route-boundary checks, mobile public
   UAT, deployment health diagnostics and a manually gated live-smoke workflow
 
@@ -150,6 +152,8 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Complete Circle matching/privacy/facilitation acceptance and deliberately enable its flag
 - [ ] Apply `20260726130000_partner_perks_redemption.sql` in production Supabase
 - [ ] Complete partner terms/inventory/redemption acceptance and deliberately enable its flag
+- [ ] Apply `20260726170000_privacy_safe_analytics.sql` in production Supabase
+- [ ] Review readiness targets and complete a tagged-test versus real-member metric pass
 - [ ] Verify the Resend sending domain and configure the production email worker schedule
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [x] Add automated authentication, authorization and migration tests to CI

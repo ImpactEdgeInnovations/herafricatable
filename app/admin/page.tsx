@@ -35,6 +35,7 @@ import { CircleManager, type CircleParticipant } from "@/components/admin/circle
 import type { CircleCycle } from "@/components/member/circles-hub";
 import { PerksManager, type AdminPartner, type PerkRedemption } from "@/components/admin/perks-manager";
 import type { PartnerPerk } from "@/components/member/perks-gallery";
+import { AnalyticsReadiness, type ProductAnalytic, type ReadinessMetric } from "@/components/admin/analytics-readiness";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -134,6 +135,8 @@ export default async function AdminHomePage() {
   const perkResult=role.role==="super_admin"?await supabase.rpc("list_partner_perks"):{data:[],error:null};
   const perkRedemptionResult=role.role==="super_admin"?await supabase.rpc("list_perk_redemptions_admin"):{data:[],error:null};
   const perkFlagResult=role.role==="super_admin"?await supabase.from("feature_flags").select("enabled").eq("key","partner_perks").maybeSingle():{data:null,error:null};
+  const readinessResult=role.role==="super_admin"?await supabase.rpc("get_launch_readiness_metrics"):{data:[],error:null};
+  const analyticsResult=role.role==="super_admin"?await supabase.rpc("get_product_analytics",{p_days:30}):{data:[],error:null};
   const eventIds = events.map((event) => event.id);
   const [{ data: sessionData }, { data: announcementData }, { data: sponsorData }] = eventIds.length ? await Promise.all([
     supabase.from("programme_sessions").select("id, event_id, title, description, starts_at, ends_at, room, status").in("event_id", eventIds).order("starts_at", { ascending: true }),
@@ -196,7 +199,7 @@ export default async function AdminHomePage() {
     <main className="admin-command-center">
       <header className="admin-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Admin command center</small></span></Link>
-        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#check-in">Check-in</a><a href="#event-feedback">Feedback</a><a href="#moderation">Safety</a><a href="#marketplace-moderation">Marketplace</a>{role.role==="super_admin"?<><a href="#memberships-admin">Memberships</a><a href="#circles-admin">Circles</a><a href="#perks-admin">Perks</a><a href="#communities-admin">Communities</a><a href="#learning-admin">Learning</a><a href="#referrals-admin">Referrals</a></>:null}{role.role==="super_admin"?<><Link href="/admin/support">Support</Link><Link href="/admin/privacy">Privacy</Link><Link href="/admin/notifications">Delivery</Link></>:null}<a href="#roadmap">Roadmap</a></nav>
+        <nav aria-label="Admin navigation"><a href="#overview">Overview</a>{role.role==="super_admin"?<a href="#analytics">Readiness</a>:null}<a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#check-in">Check-in</a><a href="#event-feedback">Feedback</a><a href="#moderation">Safety</a><a href="#marketplace-moderation">Marketplace</a>{role.role==="super_admin"?<><a href="#memberships-admin">Memberships</a><a href="#circles-admin">Circles</a><a href="#perks-admin">Perks</a><a href="#communities-admin">Communities</a><a href="#learning-admin">Learning</a><a href="#referrals-admin">Referrals</a></>:null}{role.role==="super_admin"?<><Link href="/admin/support">Support</Link><Link href="/admin/privacy">Privacy</Link><Link href="/admin/notifications">Delivery</Link></>:null}<a href="#roadmap">Roadmap</a></nav>
         <span className="admin-role">{role.role.replace("_", " ")}</span>
       </header>
       <section className="admin-hero" id="overview">
@@ -208,6 +211,7 @@ export default async function AdminHomePage() {
           <article><strong>{events.length}</strong><span>Events</span></article>
         </div>
       </section>
+      {role.role==="super_admin"?<AnalyticsReadiness metrics={(readinessResult.data as ReadinessMetric[]|null)??[]}analytics={(analyticsResult.data as ProductAnalytic[]|null)??[]}migrationReady={!readinessResult.error&&!analyticsResult.error}/>:null}
       {role.role === "super_admin" ? <MemberReview initialMembers={members} currentUserId={user.id} migrationReady={!memberResult.error} /> : null}
       {canManageEvents ? <EventManager initialEvents={events} privateEvents={privateEvents} canCreate={role.role === "super_admin"} migrationReady={!eventResult.error} /> : null}
       {canManageEvents && !eventResult.error ? <EventContentManager events={events} initialSessions={sessions} initialAnnouncements={((announcementData as AdminAnnouncement[] | null) ?? [])} initialSponsors={((sponsorData as AdminSponsor[] | null) ?? [])} speakerLinks={(speakerLinks as unknown as { session_id: string; event_speakers: { company: string | null; job_title: string | null; name: string } | null }[] | null) ?? []} isSuperAdmin={role.role === "super_admin"} /> : null}

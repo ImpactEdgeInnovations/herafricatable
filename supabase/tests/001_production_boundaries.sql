@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(122);
+select plan(135);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -128,6 +128,9 @@ select lives_ok($$select *from public.reserve_partner_perk('94000000-0000-4000-8
 select is((select count(*)from public.perk_redemptions),1::bigint,'member reads only her private redemption record');
 select throws_ok($$select *from public.reserve_partner_perk('94000000-0000-4000-8000-000000000001')$$,'P0001','Member redemption limit reached','single-use member limit prevents duplicate reservation');
 select throws_ok($$select *from public.list_perk_redemptions_admin()$$,'P0001','Super admin required','member cannot access the redemption ledger');
+select is((select count(*)from public.product_events),0::bigint,'member cannot read raw privacy-safe analytics events');
+select throws_ok($$select *from public.get_product_analytics(30)$$,'P0001','Super admin required','member cannot read aggregate product analytics');
+select throws_ok($$select *from public.get_launch_readiness_metrics()$$,'P0001','Super admin required','member cannot read operational readiness metrics');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
 select is((select count(*)from public.list_my_past_events()),1::bigint,'attendee lists own eligible past event');
 select lives_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,4,5,true,'The facilitated introductions were valuable.','Allow more time for table conversations.','A thoughtful room where meaningful professional connections began.','named')$$,'eligible attendee saves private feedback with named testimonial consent');
@@ -151,6 +154,8 @@ select throws_ok($$select *from public.list_referrals_admin()$$,'P0001','Super a
 select throws_ok($$select *from public.list_membership_orders()$$,'P0001','Super admin required','event staff cannot access membership operations');
 select lives_ok($$select public.set_circle_opt_in('92000000-0000-4000-8000-000000000001',true,'Staff identity participates only as an active member.')$$,'event staff may opt in only through the member path');
 select throws_ok($$select *from public.list_perk_redemptions_admin()$$,'P0001','Super admin required','event staff cannot access partner redemption operations');
+select throws_ok($$select *from public.get_product_analytics(30)$$,'P0001','Super admin required','event staff cannot access product analytics');
+select throws_ok($$select *from public.get_launch_readiness_metrics()$$,'P0001','Super admin required','event staff cannot access launch readiness');
 select throws_ok($$select *from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')$$,'P0001','Not authorized','event staff cannot read feedback outside assigned event scope');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
@@ -191,6 +196,17 @@ select lives_ok($$select public.publish_circle_prompt('92000000-0000-4000-8000-0
 select is((select count(*)from public.list_perk_redemptions_admin()),1::bigint,'super admin reconciles the complete redemption ledger');
 select lives_ok($$select public.review_perk_redemption((select id from public.perk_redemptions limit 1),'redeem','Partner confirmed the benefit was delivered.')$$,'super admin marks a verified code redeemed');
 select is((select status from public.perk_redemptions limit 1),'redeemed','redemption lifecycle records final delivery state');
+select is((select count(*)from public.get_launch_readiness_metrics()),10::bigint,'super admin receives every configured readiness gate');
+select ok((select coalesce(sum(real_events),0)from public.get_product_analytics(30))>0,'server triggers produce aggregate real-member product activity');
+select lives_ok($$select public.save_launch_readiness_target('real_active_members',11)$$,'super admin updates an auditable launch threshold');
+select is((select target_value from public.launch_readiness_targets where metric_key='real_active_members'),11::bigint,'readiness threshold update is persisted');
+select ok(not exists(select 1 from public.product_events where metadata?'body'or metadata?'email'or metadata?'search'),'product analytics metadata excludes content and direct identifiers');
+select is((select count(*)from public.product_events where actor_id='10000000-0000-4000-8000-000000000003'and not is_test_event),0::bigint,'tagging an identity reclassifies its earlier events out of real metrics');
+
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
+select lives_ok($$select public.create_support_ticket('technical','Test analytics boundary','A tagged test identity creates a support event for metric separation.')$$,'tagged test action is captured without entering real metrics');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select is((select test_events from public.get_product_analytics(30)where event_name='support_requested'),1::bigint,'tagged test activity remains separately visible to Super Admin');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 select is((select count(*)from public.list_my_circles()),1::bigint,'assigned member enters only her published Circle');
