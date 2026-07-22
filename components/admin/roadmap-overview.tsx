@@ -4,7 +4,7 @@ const phases = [
   { label: "Events", range: "Days 8–11", progress: 96, status: "Acceptance testing", detail: "Event lifecycle, scoped staff, programme, announcements, sponsors, menu and private-by-default galleries are operational." },
   { label: "Registration", range: "Days 12–15", progress: 91, status: "Acceptance testing", detail: "Tickets, orders, receipts, manual review, Paystack verification, refunds, reconciliation and idempotent entitlements are built." },
   { label: "Network", range: "Days 16–30", progress: 98, status: "Production acceptance", detail: "Marketplace, feedback, Communities, Learning, referrals, renewals, Circles and controlled partner perks are built; production acceptance remains." },
-  { label: "Experience", range: "Every day", progress: 55, status: "Critical actions accessible", detail: "Payment, safety, privacy and readiness decisions now use guided dialogs with inline validation. Remaining operational prompts, cross-browser QA and non-technical user testing remain." },
+  { label: "Experience", range: "Every day", progress: 70, status: "Admin interactions accessible", detail: "Every Admin confirmation now uses a guided dialog with inline validation. Member-facing prompts, cross-browser QA and non-technical user testing remain." },
 ];
 
 export function RoadmapOverview() {

@@ -1,12 +1,369 @@
 "use client";
-import{FormEvent,useState}from"react";import{createClient}from"@/lib/supabase/client";import type{CircleCycle}from"@/components/member/circles-hub";
-export type CircleParticipant={cycle_id:string;circle_id:string;circle_name:string;user_id:string;email:string;display_name:string|null;is_test_account:boolean;city:string|null;industry:string|null;goals:string[];match_score:number;status:string};
-const localDate=(value:string|null|undefined)=>value?new Date(new Date(value).getTime()-new Date(value).getTimezoneOffset()*60000).toISOString().slice(0,16):"";
-export function CircleManager({cycles,participants,enabled,migrationReady}:{cycles:CircleCycle[];participants:CircleParticipant[];enabled:boolean;migrationReady:boolean}){const supabase=createClient();const[selected,setSelected]=useState(cycles[0]?.cycle_id??"");const[busy,setBusy]=useState("");const[message,setMessage]=useState("");const cycle=cycles.find(item=>item.cycle_id===selected);const scoped=participants.filter(item=>item.cycle_id===selected);
- async function toggle(){if(!confirm(enabled?"Pause Circles for every member?":"Enable Circles only after matching acceptance?"))return;setBusy("flag");const{error}=await supabase.rpc("set_feature_flag",{p_enabled:!enabled,p_key:"circles"});setBusy("");setMessage(error?error.message:`Circles ${enabled?"disabled":"enabled"}.`);if(!error)location.reload()}
- async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();const form=new FormData(event.currentTarget);setBusy("save");const{error}=await supabase.rpc("save_circle_cycle",{p_cycle_id:form.get("id")||null,p_description:form.get("description"),p_ends_at:new Date(String(form.get("ends_at"))).toISOString(),p_group_size:Number(form.get("group_size")),p_include_tests:form.get("include_tests")==="on",p_name:form.get("name"),p_slug:form.get("slug"),p_starts_at:new Date(String(form.get("starts_at"))).toISOString(),p_status:form.get("status")});setBusy("");setMessage(error?error.message:"Circle cycle saved and audited.");if(!error)location.reload()}
- async function match(){if(!selected||!confirm("Replace any draft matching for this cycle using deterministic_v1?"))return;setBusy("match");const{data,error}=await supabase.rpc("run_circle_matching",{p_cycle_id:selected});setBusy("");setMessage(error?error.message:`${data} draft Circles created for human review.`);if(!error)location.reload()}
- async function publish(){if(!selected||!confirm("Publish these reviewed Circles and notify every assigned member?"))return;setBusy("publish");const{error}=await supabase.rpc("publish_circle_cycle",{p_cycle_id:selected});setBusy("");setMessage(error?error.message:"Circles published and member notifications queued.");if(!error)location.reload()}
- async function prompt(event:FormEvent<HTMLFormElement>){event.preventDefault();const form=new FormData(event.currentTarget);setBusy("prompt");const opens=new Date(String(form.get("opens_at"))).toISOString();const due=form.get("due_at")?new Date(String(form.get("due_at"))).toISOString():null;const{data,error}=await supabase.rpc("publish_circle_prompt",{p_body:form.get("body"),p_cycle_id:selected,p_due_at:due,p_opens_at:opens,p_title:form.get("title")});setBusy("");setMessage(error?error.message:`Prompt published to ${data} private Circles.`);if(!error)(event.currentTarget as HTMLFormElement).reset()}
- if(!migrationReady)return <section className="admin-section"id="circles-admin"><div className="admin-empty"><strong>Circles migration required</strong><p>Apply the deterministic Circles migration to activate cohort operations.</p></div></section>;
- return <section className="admin-section circle-admin"id="circles-admin"><div className="admin-section-heading"><div><p className="eyebrow">Human-reviewed matching</p><h2>Circles</h2><p>Open opt-in windows, create transparent deterministic cohorts, inspect every assignment and publish deliberately.</p></div><button className={enabled?"danger-action":""}disabled={busy==="flag"}onClick={()=>void toggle()}>{enabled?"Pause member access":"Enable after sign-off"}</button></div><div className="circle-admin-grid"><form onSubmit={event=>void save(event)}><label>Cycle<select value={selected}onChange={event=>setSelected(event.target.value)}><option value="">Create new</option>{cycles.map(item=><option value={item.cycle_id}key={item.cycle_id}>{item.name} · {item.status}</option>)}</select></label><input type="hidden"name="id"value={cycle?.cycle_id??""}/><label>Name<input name="name"required minLength={3}defaultValue={cycle?.name??""}key={`name-${selected}`}/></label><label>URL slug<input name="slug"required pattern="[a-z0-9]+(?:-[a-z0-9]+)*"defaultValue={cycle?.slug??""}key={`slug-${selected}`}/></label><label>Description<textarea name="description"required minLength={20}defaultValue={cycle?.description??""}key={`desc-${selected}`}/></label><div className="admin-form-row"><label>Starts<input name="starts_at"type="datetime-local"required defaultValue={localDate(cycle?.starts_at)}key={`starts-${selected}`}/></label><label>Ends<input name="ends_at"type="datetime-local"required defaultValue={localDate(cycle?.ends_at)}key={`ends-${selected}`}/></label></div><div className="admin-form-row"><label>Women per Circle<input name="group_size"type="number"min="3"max="8"defaultValue={cycle?.group_size??5}key={`size-${selected}`}/></label><label>Status<select name="status"defaultValue={cycle?.status??"draft"}key={`status-${selected}`}><option value="draft">Draft</option><option value="open">Open opt-in</option><option value="matched">Matched</option><option value="published">Published</option><option value="completed">Completed</option></select></label></div><label className="circle-test-option"><input name="include_tests"type="checkbox"defaultChecked={cycle?.include_test_accounts??false}key={`tests-${selected}`}/> Include explicitly tagged test accounts</label><button className="button button-primary"disabled={busy==="save"}>Save cycle</button></form><div className="circle-admin-operations"><div className="circle-match-card"><span>{cycle?.participant_count??0} opted in · {cycle?.circle_count??0} circles</span><h3>Matching release gate</h3><p>The engine orders active participants by city, primary goal, industry and a stable cycle seed, balances group sizes, records its inputs and aborts if a blocked pair lands together.</p><div className="member-actions"><button disabled={!selected||busy==="match"}onClick={()=>void match()}>Run / refresh draft matching</button><button className="button button-primary"disabled={cycle?.status!=="matched"||busy==="publish"}onClick={()=>void publish()}>Publish reviewed matching</button></div></div><form onSubmit={event=>void prompt(event)}><h3>Publish guided prompt</h3><label>Prompt title<input name="title"required minLength={3}/></label><label>Prompt body<textarea name="body"required minLength={20}/></label><div className="admin-form-row"><label>Opens<input name="opens_at"type="datetime-local"required defaultValue={localDate(new Date().toISOString())}/></label><label>Due<input name="due_at"type="datetime-local"/></label></div><button disabled={!selected||cycle?.status!=="published"||busy==="prompt"}>Publish to every Circle</button></form></div></div><div className="circle-participant-list"><h3>Assignment review</h3>{scoped.length?scoped.map(item=><article key={`${item.circle_id}-${item.user_id}`}><div><strong>{item.display_name||item.email}{item.is_test_account?" · TEST":""}</strong><small>{[item.city,item.industry].filter(Boolean).join(" · ")}</small></div><span>{item.circle_name}</span><small>{item.goals.join(" · ")} · score {item.match_score}</small></article>):<div className="admin-empty"><strong>No draft assignments</strong><p>Open the cycle, collect at least the configured group size, then run matching.</p></div>}</div>{message?<p className="manager-message content-manager-message">{message}</p>:null}</section>}
+import { FormEvent, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { CircleCycle } from "@/components/member/circles-hub";
+import { useActionDialog } from "@/components/ui/action-dialog";
+export type CircleParticipant = {
+  cycle_id: string;
+  circle_id: string;
+  circle_name: string;
+  user_id: string;
+  email: string;
+  display_name: string | null;
+  is_test_account: boolean;
+  city: string | null;
+  industry: string | null;
+  goals: string[];
+  match_score: number;
+  status: string;
+};
+const localDate = (value: string | null | undefined) =>
+  value
+    ? new Date(
+        new Date(value).getTime() - new Date(value).getTimezoneOffset() * 60000,
+      )
+        .toISOString()
+        .slice(0, 16)
+    : "";
+export function CircleManager({
+  cycles,
+  participants,
+  enabled,
+  migrationReady,
+}: {
+  cycles: CircleCycle[];
+  participants: CircleParticipant[];
+  enabled: boolean;
+  migrationReady: boolean;
+}) {
+  const supabase = createClient();
+  const { ask, dialog } = useActionDialog();
+  const [selected, setSelected] = useState(cycles[0]?.cycle_id ?? "");
+  const [busy, setBusy] = useState("");
+  const [message, setMessage] = useState("");
+  const cycle = cycles.find((item) => item.cycle_id === selected);
+  const scoped = participants.filter((item) => item.cycle_id === selected);
+  async function toggle() {
+    const result = await ask({ title: enabled ? "Pause Circles for every member?" : "Enable Circles for members?", description: enabled ? "Members will temporarily lose access to Circle cycles and private rooms. Existing assignments and responses remain stored." : "Published cycles and private Circle rooms will become available to eligible members.", confirmLabel: enabled ? "Pause Circles" : "Enable Circles", tone: enabled ? "danger" : "default" });
+    if (!result) return;
+    setBusy("flag");
+    const { error } = await supabase.rpc("set_feature_flag", {
+      p_enabled: !enabled,
+      p_key: "circles",
+    });
+    setBusy("");
+    setMessage(
+      error ? error.message : `Circles ${enabled ? "disabled" : "enabled"}.`,
+    );
+    if (!error) location.reload();
+  }
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setBusy("save");
+    const { error } = await supabase.rpc("save_circle_cycle", {
+      p_cycle_id: form.get("id") || null,
+      p_description: form.get("description"),
+      p_ends_at: new Date(String(form.get("ends_at"))).toISOString(),
+      p_group_size: Number(form.get("group_size")),
+      p_include_tests: form.get("include_tests") === "on",
+      p_name: form.get("name"),
+      p_slug: form.get("slug"),
+      p_starts_at: new Date(String(form.get("starts_at"))).toISOString(),
+      p_status: form.get("status"),
+    });
+    setBusy("");
+    setMessage(error ? error.message : "Circle cycle saved and audited.");
+    if (!error) location.reload();
+  }
+  async function match() {
+    if (!selected) return;
+    const result = await ask({ title: "Refresh this cycle’s draft matching?", description: "This replaces any unpublished draft Circles using the deterministic matching rules. Published assignments are not changed and the new draft remains subject to human review.", confirmLabel: "Refresh draft matching" });
+    if (!result) return;
+    setBusy("match");
+    const { data, error } = await supabase.rpc("run_circle_matching", {
+      p_cycle_id: selected,
+    });
+    setBusy("");
+    setMessage(
+      error ? error.message : `${data} draft Circles created for human review.`,
+    );
+    if (!error) location.reload();
+  }
+  async function publish() {
+    if (!selected) return;
+    const result = await ask({ title: "Publish these reviewed Circles?", description: "Every assigned member will gain access to her private Circle and notification jobs will be queued. Review all assignments before continuing.", confirmLabel: "Publish Circles" });
+    if (!result) return;
+    setBusy("publish");
+    const { error } = await supabase.rpc("publish_circle_cycle", {
+      p_cycle_id: selected,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? error.message
+        : "Circles published and member notifications queued.",
+    );
+    if (!error) location.reload();
+  }
+  async function publishPrompt(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setBusy("prompt");
+    const opens = new Date(String(form.get("opens_at"))).toISOString();
+    const due = form.get("due_at")
+      ? new Date(String(form.get("due_at"))).toISOString()
+      : null;
+    const { data, error } = await supabase.rpc("publish_circle_prompt", {
+      p_body: form.get("body"),
+      p_cycle_id: selected,
+      p_due_at: due,
+      p_opens_at: opens,
+      p_title: form.get("title"),
+    });
+    setBusy("");
+    setMessage(
+      error ? error.message : `Prompt published to ${data} private Circles.`,
+    );
+    if (!error) (event.currentTarget as HTMLFormElement).reset();
+  }
+  if (!migrationReady)
+    return (
+      <section className="admin-section" id="circles-admin">
+        <div className="admin-empty">
+          <strong>Circles migration required</strong>
+          <p>
+            Apply the deterministic Circles migration to activate cohort
+            operations.
+          </p>
+        </div>
+      </section>
+    );
+  return (
+    <section className="admin-section circle-admin" id="circles-admin">
+      <div className="admin-section-heading">
+        <div>
+          <p className="eyebrow">Human-reviewed matching</p>
+          <h2>Circles</h2>
+          <p>
+            Open opt-in windows, create transparent deterministic cohorts,
+            inspect every assignment and publish deliberately.
+          </p>
+        </div>
+        <button
+          className={enabled ? "danger-action" : ""}
+          disabled={busy === "flag"}
+          onClick={() => void toggle()}
+        >
+          {enabled ? "Pause member access" : "Enable after sign-off"}
+        </button>
+      </div>
+      <div className="circle-admin-grid">
+        <form onSubmit={(event) => void save(event)}>
+          <label>
+            Cycle
+            <select
+              value={selected}
+              onChange={(event) => setSelected(event.target.value)}
+            >
+              <option value="">Create new</option>
+              {cycles.map((item) => (
+                <option value={item.cycle_id} key={item.cycle_id}>
+                  {item.name} · {item.status}
+                </option>
+              ))}
+            </select>
+          </label>
+          <input type="hidden" name="id" value={cycle?.cycle_id ?? ""} />
+          <label>
+            Name
+            <input
+              name="name"
+              required
+              minLength={3}
+              defaultValue={cycle?.name ?? ""}
+              key={`name-${selected}`}
+            />
+          </label>
+          <label>
+            URL slug
+            <input
+              name="slug"
+              required
+              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              defaultValue={cycle?.slug ?? ""}
+              key={`slug-${selected}`}
+            />
+          </label>
+          <label>
+            Description
+            <textarea
+              name="description"
+              required
+              minLength={20}
+              defaultValue={cycle?.description ?? ""}
+              key={`desc-${selected}`}
+            />
+          </label>
+          <div className="admin-form-row">
+            <label>
+              Starts
+              <input
+                name="starts_at"
+                type="datetime-local"
+                required
+                defaultValue={localDate(cycle?.starts_at)}
+                key={`starts-${selected}`}
+              />
+            </label>
+            <label>
+              Ends
+              <input
+                name="ends_at"
+                type="datetime-local"
+                required
+                defaultValue={localDate(cycle?.ends_at)}
+                key={`ends-${selected}`}
+              />
+            </label>
+          </div>
+          <div className="admin-form-row">
+            <label>
+              Women per Circle
+              <input
+                name="group_size"
+                type="number"
+                min="3"
+                max="8"
+                defaultValue={cycle?.group_size ?? 5}
+                key={`size-${selected}`}
+              />
+            </label>
+            <label>
+              Status
+              <select
+                name="status"
+                defaultValue={cycle?.status ?? "draft"}
+                key={`status-${selected}`}
+              >
+                <option value="draft">Draft</option>
+                <option value="open">Open opt-in</option>
+                <option value="matched">Matched</option>
+                <option value="published">Published</option>
+                <option value="completed">Completed</option>
+              </select>
+            </label>
+          </div>
+          <label className="circle-test-option">
+            <input
+              name="include_tests"
+              type="checkbox"
+              defaultChecked={cycle?.include_test_accounts ?? false}
+              key={`tests-${selected}`}
+            />{" "}
+            Include explicitly tagged test accounts
+          </label>
+          <button className="button button-primary" disabled={busy === "save"}>
+            Save cycle
+          </button>
+        </form>
+        <div className="circle-admin-operations">
+          <div className="circle-match-card">
+            <span>
+              {cycle?.participant_count ?? 0} opted in ·{" "}
+              {cycle?.circle_count ?? 0} circles
+            </span>
+            <h3>Matching release gate</h3>
+            <p>
+              The engine orders active participants by city, primary goal,
+              industry and a stable cycle seed, balances group sizes, records
+              its inputs and aborts if a blocked pair lands together.
+            </p>
+            <div className="member-actions">
+              <button
+                disabled={!selected || busy === "match"}
+                onClick={() => void match()}
+              >
+                Run / refresh draft matching
+              </button>
+              <button
+                className="button button-primary"
+                disabled={cycle?.status !== "matched" || busy === "publish"}
+                onClick={() => void publish()}
+              >
+                Publish reviewed matching
+              </button>
+            </div>
+          </div>
+          <form onSubmit={(event) => void publishPrompt(event)}>
+            <h3>Publish guided prompt</h3>
+            <label>
+              Prompt title
+              <input name="title" required minLength={3} />
+            </label>
+            <label>
+              Prompt body
+              <textarea name="body" required minLength={20} />
+            </label>
+            <div className="admin-form-row">
+              <label>
+                Opens
+                <input
+                  name="opens_at"
+                  type="datetime-local"
+                  required
+                  defaultValue={localDate(new Date().toISOString())}
+                />
+              </label>
+              <label>
+                Due
+                <input name="due_at" type="datetime-local" />
+              </label>
+            </div>
+            <button
+              disabled={
+                !selected || cycle?.status !== "published" || busy === "prompt"
+              }
+            >
+              Publish to every Circle
+            </button>
+          </form>
+        </div>
+      </div>
+      <div className="circle-participant-list">
+        <h3>Assignment review</h3>
+        {scoped.length ? (
+          scoped.map((item) => (
+            <article key={`${item.circle_id}-${item.user_id}`}>
+              <div>
+                <strong>
+                  {item.display_name || item.email}
+                  {item.is_test_account ? " · TEST" : ""}
+                </strong>
+                <small>
+                  {[item.city, item.industry].filter(Boolean).join(" · ")}
+                </small>
+              </div>
+              <span>{item.circle_name}</span>
+              <small>
+                {item.goals.join(" · ")} · score {item.match_score}
+              </small>
+            </article>
+          ))
+        ) : (
+          <div className="admin-empty">
+            <strong>No draft assignments</strong>
+            <p>
+              Open the cycle, collect at least the configured group size, then
+              run matching.
+            </p>
+          </div>
+        )}
+      </div>
+      {message ? (
+        <p className="manager-message content-manager-message">{message}</p>
+      ) : null}
+      {dialog}
+    </section>
+  );
+}

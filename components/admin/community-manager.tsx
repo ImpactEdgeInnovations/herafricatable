@@ -1,4 +1,325 @@
 "use client";
-import{FormEvent,useMemo,useState}from"react";import{createClient}from"@/lib/supabase/client";import type{CommunitySummary}from"@/components/member/community-directory";
-export type CommunityMember={community_id:string;membership_id:string;user_id:string;display_name:string;job_title:string|null;company:string|null;role:string;status:string;created_at:string};
-export function CommunityManager({communities,members,enabled,migrationReady}:{communities:CommunitySummary[];members:CommunityMember[];enabled:boolean;migrationReady:boolean}){const supabase=useMemo(()=>createClient(),[]);const[selected,setSelected]=useState(communities[0]?.community_id??"");const[busy,setBusy]=useState("");const[message,setMessage]=useState("");const community=communities.find(item=>item.community_id===selected);async function toggle(){setBusy("flag");const{error}=await supabase.rpc("set_feature_flag",{p_enabled:!enabled,p_key:"communities"});setBusy("");setMessage(error?error.message:`Communities ${enabled?"disabled":"enabled"}.`);if(!error)window.location.reload()}async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();const form=new FormData(event.currentTarget);setBusy("save");const{error}=await supabase.rpc("save_community",{p_community_id:form.get("id")||null,p_description:form.get("description"),p_name:form.get("name"),p_slug:form.get("slug"),p_status:form.get("status"),p_type:form.get("type")});setBusy("");setMessage(error?error.message:"Community saved and audited.");if(!error)window.location.reload()}async function invite(event:FormEvent<HTMLFormElement>){event.preventDefault();const form=new FormData(event.currentTarget);setBusy("invite");const{error}=await supabase.rpc("invite_community_member",{p_community_id:selected,p_email:form.get("email"),p_role:form.get("role")});setBusy("");setMessage(error?error.message:"Invitation sent to the member inbox.");if(!error)window.location.reload()}async function review(id:string,action:string){if(action==="transfer_ownership"&&!window.confirm("Transfer ownership to this member? The current owner will become a regular member."))return;setBusy(id);const{error}=await supabase.rpc("review_community_membership",{p_action:action,p_membership_id:id});setBusy("");setMessage(error?error.message:"Membership updated and audited.");if(!error)window.location.reload()}if(!migrationReady)return <section className="admin-section"id="communities-admin"><div className="admin-empty"><strong>Communities migration required</strong><p>Apply the latest communities foundation migration to activate management controls.</p></div></section>;const scoped=members.filter(item=>item.community_id===selected);return <section className="admin-section community-admin"id="communities-admin"><div className="admin-section-heading"><div><p className="eyebrow">Controlled P1 release</p><h2>Communities</h2><p>Create trusted spaces and review membership before deliberately exposing the feature.</p></div><button className={enabled?"danger-action":""}disabled={busy==="flag"}onClick={()=>void toggle()}>{enabled?"Disable member access":"Enable after sign-off"}</button></div><div className="community-admin-layout"><form onSubmit={event=>void save(event)}><input type="hidden"name="id"value={community?.community_id??""}/><label>Community<select value={selected}onChange={event=>setSelected(event.target.value)}><option value="">Create new</option>{communities.map(item=><option key={item.community_id}value={item.community_id}>{item.name}</option>)}</select></label><label>Name<input name="name"required minLength={3}maxLength={80}defaultValue={community?.name??""}key={`name-${selected}`}/></label><label>URL slug<input name="slug"required pattern="[a-z0-9]+(?:-[a-z0-9]+)*"defaultValue={community?.slug??""}key={`slug-${selected}`}/></label><label>Description<textarea name="description"required minLength={20}maxLength={1200}defaultValue={community?.description??""}key={`description-${selected}`}/></label><div className="admin-form-row"><label>Type<select name="type"defaultValue={community?.community_type??"official"}key={`type-${selected}`}><option value="official">Official — instant join</option><option value="private">Private — host approval</option></select></label><label>Status<select name="status"defaultValue={community?.status??"draft"}key={`status-${selected}`}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label></div><button className="button button-primary"disabled={busy==="save"}>{busy==="save"?"Saving…":"Save community"}</button></form><div className="community-member-admin">{selected?<><form className="community-invite"onSubmit={event=>void invite(event)}><label>Invite active member by email<input name="email"type="email"required/></label><label>Role<select name="role"><option value="member">Member</option><option value="moderator">Community moderator</option></select></label><button disabled={busy==="invite"}>Send invitation</button></form><div>{scoped.map(member=><article key={member.membership_id}><div><strong>{member.display_name}</strong><small>{[member.job_title,member.company].filter(Boolean).join(" · ")}</small><span>{member.role} · {member.status}</span></div><div className="member-actions">{member.status==="requested"?<><button disabled={busy===member.membership_id}onClick={()=>void review(member.membership_id,"approve")}>Approve</button><button disabled={busy===member.membership_id}onClick={()=>void review(member.membership_id,"decline")}>Decline</button></>:null}{member.status==="active"&&member.role==="member"?<button disabled={busy===member.membership_id}onClick={()=>void review(member.membership_id,"promote")}>Make moderator</button>:null}{member.status==="active"&&member.role==="moderator"?<button disabled={busy===member.membership_id}onClick={()=>void review(member.membership_id,"demote")}>Remove moderator</button>:null}{member.status==="active"&&member.role!=="owner"?<><button disabled={busy===member.membership_id}onClick={()=>void review(member.membership_id,"transfer_ownership")}>Make owner</button><button className="danger-action"disabled={busy===member.membership_id}onClick={()=>void review(member.membership_id,"remove")}>Remove</button></>:null}</div></article>)}</div></>:<div className="admin-empty"><strong>Create or select a community</strong><p>Membership and host controls will appear here.</p></div>}</div></div>{message?<p className="manager-message content-manager-message">{message}</p>:null}</section>}
+import { FormEvent, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { CommunitySummary } from "@/components/member/community-directory";
+import { useActionDialog } from "@/components/ui/action-dialog";
+export type CommunityMember = {
+  community_id: string;
+  membership_id: string;
+  user_id: string;
+  display_name: string;
+  job_title: string | null;
+  company: string | null;
+  role: string;
+  status: string;
+  created_at: string;
+};
+export function CommunityManager({
+  communities,
+  members,
+  enabled,
+  migrationReady,
+}: {
+  communities: CommunitySummary[];
+  members: CommunityMember[];
+  enabled: boolean;
+  migrationReady: boolean;
+}) {
+  const supabase = useMemo(() => createClient(), []);
+  const { ask, dialog } = useActionDialog();
+  const [selected, setSelected] = useState(communities[0]?.community_id ?? "");
+  const [busy, setBusy] = useState("");
+  const [message, setMessage] = useState("");
+  const community = communities.find((item) => item.community_id === selected);
+  async function toggle() {
+    setBusy("flag");
+    const { error } = await supabase.rpc("set_feature_flag", {
+      p_enabled: !enabled,
+      p_key: "communities",
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? error.message
+        : `Communities ${enabled ? "disabled" : "enabled"}.`,
+    );
+    if (!error) window.location.reload();
+  }
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setBusy("save");
+    const { error } = await supabase.rpc("save_community", {
+      p_community_id: form.get("id") || null,
+      p_description: form.get("description"),
+      p_name: form.get("name"),
+      p_slug: form.get("slug"),
+      p_status: form.get("status"),
+      p_type: form.get("type"),
+    });
+    setBusy("");
+    setMessage(error ? error.message : "Community saved and audited.");
+    if (!error) window.location.reload();
+  }
+  async function invite(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setBusy("invite");
+    const { error } = await supabase.rpc("invite_community_member", {
+      p_community_id: selected,
+      p_email: form.get("email"),
+      p_role: form.get("role"),
+    });
+    setBusy("");
+    setMessage(error ? error.message : "Invitation sent to the member inbox.");
+    if (!error) window.location.reload();
+  }
+  async function review(id: string, action: string) {
+    if (action === "transfer_ownership") {
+      const result = await ask({ title: "Transfer community ownership?", description: "This member will become the community owner. The current owner will become a regular member and lose owner-only controls.", confirmLabel: "Transfer ownership", tone: "danger" });
+      if (!result) return;
+    }
+    setBusy(id);
+    const { error } = await supabase.rpc("review_community_membership", {
+      p_action: action,
+      p_membership_id: id,
+    });
+    setBusy("");
+    setMessage(error ? error.message : "Membership updated and audited.");
+    if (!error) window.location.reload();
+  }
+  if (!migrationReady)
+    return (
+      <section className="admin-section" id="communities-admin">
+        <div className="admin-empty">
+          <strong>Communities migration required</strong>
+          <p>
+            Apply the latest communities foundation migration to activate
+            management controls.
+          </p>
+        </div>
+      </section>
+    );
+  const scoped = members.filter((item) => item.community_id === selected);
+  return (
+    <section className="admin-section community-admin" id="communities-admin">
+      <div className="admin-section-heading">
+        <div>
+          <p className="eyebrow">Controlled P1 release</p>
+          <h2>Communities</h2>
+          <p>
+            Create trusted spaces and review membership before deliberately
+            exposing the feature.
+          </p>
+        </div>
+        <button
+          className={enabled ? "danger-action" : ""}
+          disabled={busy === "flag"}
+          onClick={() => void toggle()}
+        >
+          {enabled ? "Disable member access" : "Enable after sign-off"}
+        </button>
+      </div>
+      <div className="community-admin-layout">
+        <form onSubmit={(event) => void save(event)}>
+          <input
+            type="hidden"
+            name="id"
+            value={community?.community_id ?? ""}
+          />
+          <label>
+            Community
+            <select
+              value={selected}
+              onChange={(event) => setSelected(event.target.value)}
+            >
+              <option value="">Create new</option>
+              {communities.map((item) => (
+                <option key={item.community_id} value={item.community_id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Name
+            <input
+              name="name"
+              required
+              minLength={3}
+              maxLength={80}
+              defaultValue={community?.name ?? ""}
+              key={`name-${selected}`}
+            />
+          </label>
+          <label>
+            URL slug
+            <input
+              name="slug"
+              required
+              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              defaultValue={community?.slug ?? ""}
+              key={`slug-${selected}`}
+            />
+          </label>
+          <label>
+            Description
+            <textarea
+              name="description"
+              required
+              minLength={20}
+              maxLength={1200}
+              defaultValue={community?.description ?? ""}
+              key={`description-${selected}`}
+            />
+          </label>
+          <div className="admin-form-row">
+            <label>
+              Type
+              <select
+                name="type"
+                defaultValue={community?.community_type ?? "official"}
+                key={`type-${selected}`}
+              >
+                <option value="official">Official — instant join</option>
+                <option value="private">Private — host approval</option>
+              </select>
+            </label>
+            <label>
+              Status
+              <select
+                name="status"
+                defaultValue={community?.status ?? "draft"}
+                key={`status-${selected}`}
+              >
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+            </label>
+          </div>
+          <button className="button button-primary" disabled={busy === "save"}>
+            {busy === "save" ? "Saving…" : "Save community"}
+          </button>
+        </form>
+        <div className="community-member-admin">
+          {selected ? (
+            <>
+              <form
+                className="community-invite"
+                onSubmit={(event) => void invite(event)}
+              >
+                <label>
+                  Invite active member by email
+                  <input name="email" type="email" required />
+                </label>
+                <label>
+                  Role
+                  <select name="role">
+                    <option value="member">Member</option>
+                    <option value="moderator">Community moderator</option>
+                  </select>
+                </label>
+                <button disabled={busy === "invite"}>Send invitation</button>
+              </form>
+              <div>
+                {scoped.map((member) => (
+                  <article key={member.membership_id}>
+                    <div>
+                      <strong>{member.display_name}</strong>
+                      <small>
+                        {[member.job_title, member.company]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </small>
+                      <span>
+                        {member.role} · {member.status}
+                      </span>
+                    </div>
+                    <div className="member-actions">
+                      {member.status === "requested" ? (
+                        <>
+                          <button
+                            disabled={busy === member.membership_id}
+                            onClick={() =>
+                              void review(member.membership_id, "approve")
+                            }
+                          >
+                            Approve
+                          </button>
+                          <button
+                            disabled={busy === member.membership_id}
+                            onClick={() =>
+                              void review(member.membership_id, "decline")
+                            }
+                          >
+                            Decline
+                          </button>
+                        </>
+                      ) : null}
+                      {member.status === "active" &&
+                      member.role === "member" ? (
+                        <button
+                          disabled={busy === member.membership_id}
+                          onClick={() =>
+                            void review(member.membership_id, "promote")
+                          }
+                        >
+                          Make moderator
+                        </button>
+                      ) : null}
+                      {member.status === "active" &&
+                      member.role === "moderator" ? (
+                        <button
+                          disabled={busy === member.membership_id}
+                          onClick={() =>
+                            void review(member.membership_id, "demote")
+                          }
+                        >
+                          Remove moderator
+                        </button>
+                      ) : null}
+                      {member.status === "active" && member.role !== "owner" ? (
+                        <>
+                          <button
+                            disabled={busy === member.membership_id}
+                            onClick={() =>
+                              void review(
+                                member.membership_id,
+                                "transfer_ownership",
+                              )
+                            }
+                          >
+                            Make owner
+                          </button>
+                          <button
+                            className="danger-action"
+                            disabled={busy === member.membership_id}
+                            onClick={() =>
+                              void review(member.membership_id, "remove")
+                            }
+                          >
+                            Remove
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="admin-empty">
+              <strong>Create or select a community</strong>
+              <p>Membership and host controls will appear here.</p>
+            </div>
+          )}
+        </div>
+      </div>
+      {message ? (
+        <p className="manager-message content-manager-message">{message}</p>
+      ) : null}
+      {dialog}
+    </section>
+  );
+}

@@ -80,6 +80,7 @@ function ActionDialog({ pending, settle }: { pending: PendingDialog; settle: (re
       aria-labelledby={titleId}
       className="action-dialog"
       onCancel={(event) => { event.preventDefault(); settle(null); }}
+      onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); settle(null); } }}
       ref={dialogRef}
     >
       <form method="dialog" noValidate onSubmit={submit}>
