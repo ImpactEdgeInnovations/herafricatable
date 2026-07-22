@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(86);
+select plan(97);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -58,6 +58,9 @@ insert into public.course_lessons(id,course_id,title,lesson_type,content,status,
 update public.feature_flags set enabled=true where key='referrals';
 insert into public.referral_campaigns(id,name,slug,description,status,max_referrals_per_member,created_by)values
  ('90000000-0000-4000-8000-000000000001','Test Vouched Invitations','test-vouched-invitations','A controlled referral campaign used for permission and attribution tests.','active',3,'10000000-0000-4000-8000-000000000001');
+update public.feature_flags set enabled=true where key='memberships';
+insert into public.membership_plans(id,slug,name,description,price_minor,currency,duration_months,grace_days,payment_mode,status,created_by)values
+ ('91000000-0000-4000-8000-000000000001','test-membership','Test Membership','A controlled annual membership used for renewal and permission boundary tests.',1200000,'KES',12,14,'manual_review','published','10000000-0000-4000-8000-000000000001');
 
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
@@ -104,6 +107,11 @@ select is((select count(*)from public.list_my_referrals()),1::bigint,'member lis
 select is((select status from public.referral_invitations where referrer_id='10000000-0000-4000-8000-000000000002'),'pending_review','member referral cannot grant access before review');
 select throws_ok($$select *from public.list_referrals_admin()$$,'P0001','Super admin required','member cannot access private referral review queue');
 select throws_ok($$select public.review_vouched_referral((select id from public.referral_invitations limit 1),'approve','')$$,'P0001','Super admin required','member cannot approve own referral');
+select is((select count(*)from public.list_membership_catalog()),1::bigint,'active member reads the enabled membership catalog');
+select lives_ok($$select public.create_membership_order('91000000-0000-4000-8000-000000000001','TEST-MEMBERSHIP-PAYMENT','Manual payment boundary test')$$,'member creates a manual membership order');
+select is((select order_type from public.orders where order_type='membership'limit 1),'membership','membership purchase is explicitly typed in shared orders');
+select throws_ok($$select *from public.list_membership_orders()$$,'P0001','Super admin required','member cannot list membership payment operations');
+select throws_ok($$select public.review_membership_order((select id from public.orders where order_type='membership'limit 1),'approve','')$$,'P0001','Super admin required','member cannot approve own membership order');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
 select is((select count(*)from public.list_my_past_events()),1::bigint,'attendee lists own eligible past event');
 select lives_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,4,5,true,'The facilitated introductions were valuable.','Allow more time for table conversations.','A thoughtful room where meaningful professional connections began.','named')$$,'eligible attendee saves private feedback with named testimonial consent');
@@ -124,6 +132,7 @@ select throws_ok($$select *from public.list_marketplace_reports()$$,'P0001','Mod
 select throws_ok($$select *from public.list_community_reports()$$,'P0001','Moderator role required','event staff cannot access community moderation reports');
 select throws_ok($$select *from public.list_course_orders()$$,'P0001','Super admin required','event staff cannot access course purchase operations');
 select throws_ok($$select *from public.list_referrals_admin()$$,'P0001','Super admin required','event staff cannot access referral review queue');
+select throws_ok($$select *from public.list_membership_orders()$$,'P0001','Super admin required','event staff cannot access membership operations');
 select throws_ok($$select *from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')$$,'P0001','Not authorized','event staff cannot read feedback outside assigned event scope');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
@@ -147,6 +156,11 @@ select is((select count(*)from public.list_referrals_admin()),1::bigint,'super a
 select lives_ok($$select public.review_vouched_referral((select id from public.referral_invitations limit 1),'approve','Vouch reviewed against member history.')$$,'super admin approval creates onboarding eligibility');
 select is((select status from public.beta_invites where email='referred-member@test.invalid'),'pending','approved referral creates a pending beta invite');
 select is((select count(*)from public.notification_jobs where template_key='referral_invitation'and to_email='referred-member@test.invalid'),1::bigint,'approved referral queues one invitation email');
+select is((select count(*)from public.list_membership_orders()),1::bigint,'super admin lists the pending membership order');
+select lives_ok($$select public.review_membership_order((select id from public.orders where order_type='membership'limit 1),'approve','Verified manual membership payment.')$$,'super admin approves and fulfills a membership purchase');
+select is((select count(*)from public.membership_periods where user_id='10000000-0000-4000-8000-000000000002'and status='active'),1::bigint,'approved membership order grants one active term');
+select lives_ok($$select public.mark_test_account('10000000-0000-4000-8000-000000000003','Tagged Test Member')$$,'super admin explicitly tags a production test identity');
+select is((select is_test_account from public.profiles where id='10000000-0000-4000-8000-000000000003'),true,'test identity remains distinguishable from real members');
 
 set local role postgres;
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)values('90000000-0000-4000-8000-000000000002','referred-member@test.invalid','authenticated','authenticated','{}','{}',now());

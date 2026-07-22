@@ -30,6 +30,7 @@ import type { CommunitySummary } from "@/components/member/community-directory";
 import { LearningManager, type AdminLesson, type CourseOrder } from "@/components/admin/learning-manager";
 import type { CourseSummary } from "@/components/member/learning-catalog";
 import { ReferralManager, type AdminReferral, type AdminReferralCampaign } from "@/components/admin/referral-manager";
+import { MembershipManager, type AdminMembership, type AdminMembershipPlan, type MembershipOrder } from "@/components/admin/membership-manager";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -116,6 +117,10 @@ export default async function AdminHomePage() {
   const referralCampaignResult=role.role==="super_admin"?await supabase.from("referral_campaigns").select("id,name,slug,description,status,starts_at,ends_at,max_referrals_per_member,max_total_referrals").order("created_at",{ascending:false}):{data:[],error:null};
   const referralResult=role.role==="super_admin"?await supabase.rpc("list_referrals_admin"):{data:[],error:null};
   const referralFlagResult=role.role==="super_admin"?await supabase.from("feature_flags").select("enabled").eq("key","referrals").maybeSingle():{data:null,error:null};
+  const membershipPlanResult=role.role==="super_admin"?await supabase.from("membership_plans").select("id,slug,name,description,price_minor,currency,duration_months,grace_days,payment_mode,status").order("created_at"):{data:[],error:null};
+  const membershipPeriodResult=role.role==="super_admin"?await supabase.rpc("list_memberships_admin"):{data:[],error:null};
+  const membershipOrderResult=role.role==="super_admin"?await supabase.rpc("list_membership_orders"):{data:[],error:null};
+  const membershipFlagResult=role.role==="super_admin"?await supabase.from("feature_flags").select("enabled").eq("key","memberships").maybeSingle():{data:null,error:null};
   const eventIds = events.map((event) => event.id);
   const [{ data: sessionData }, { data: announcementData }, { data: sponsorData }] = eventIds.length ? await Promise.all([
     supabase.from("programme_sessions").select("id, event_id, title, description, starts_at, ends_at, room, status").in("event_id", eventIds).order("starts_at", { ascending: true }),
@@ -178,7 +183,7 @@ export default async function AdminHomePage() {
     <main className="admin-command-center">
       <header className="admin-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Admin command center</small></span></Link>
-        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#check-in">Check-in</a><a href="#event-feedback">Feedback</a><a href="#moderation">Safety</a><a href="#marketplace-moderation">Marketplace</a>{role.role==="super_admin"?<><a href="#communities-admin">Communities</a><a href="#learning-admin">Learning</a><a href="#referrals-admin">Referrals</a></>:null}{role.role==="super_admin"?<><Link href="/admin/support">Support</Link><Link href="/admin/privacy">Privacy</Link><Link href="/admin/notifications">Delivery</Link></>:null}<a href="#roadmap">Roadmap</a></nav>
+        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#check-in">Check-in</a><a href="#event-feedback">Feedback</a><a href="#moderation">Safety</a><a href="#marketplace-moderation">Marketplace</a>{role.role==="super_admin"?<><a href="#memberships-admin">Memberships</a><a href="#communities-admin">Communities</a><a href="#learning-admin">Learning</a><a href="#referrals-admin">Referrals</a></>:null}{role.role==="super_admin"?<><Link href="/admin/support">Support</Link><Link href="/admin/privacy">Privacy</Link><Link href="/admin/notifications">Delivery</Link></>:null}<a href="#roadmap">Roadmap</a></nav>
         <span className="admin-role">{role.role.replace("_", " ")}</span>
       </header>
       <section className="admin-hero" id="overview">
@@ -200,6 +205,7 @@ export default async function AdminHomePage() {
       {canManageEvents && !eventResult.error ? <EventFeedbackManager events={events} feedback={eventFeedback} summaries={feedbackSummaries} recaps={(recapResult.data as EventRecap[]|null)??[]} migrationReady={feedbackResults.every(result=>!result.error)&&feedbackSummaryResults.every(result=>!result.error)&&!recapResult.error} /> : null}
       {canModerate?<ModerationQueue reports={(reportResult.data as MemberReport[]|null)??[]} migrationReady={!reportResult.error}/>:null}
       {canModerate?<MarketplaceModeration reports={(marketplaceReportResult.data as MarketplaceReport[]|null)??[]} migrationReady={!marketplaceReportResult.error}/>:null}
+      {role.role==="super_admin"?<MembershipManager plans={(membershipPlanResult.data as AdminMembershipPlan[]|null)??[]}periods={(membershipPeriodResult.data as AdminMembership[]|null)??[]}orders={(membershipOrderResult.data as MembershipOrder[]|null)??[]}enabled={Boolean(membershipFlagResult.data?.enabled)}migrationReady={!membershipPlanResult.error&&!membershipPeriodResult.error&&!membershipOrderResult.error&&!membershipFlagResult.error}/>:null}
       {role.role==="super_admin"?<CommunityManager communities={communities}members={communityMembers}enabled={Boolean(featureFlagResult.data?.enabled)}migrationReady={!communityResult.error&&!featureFlagResult.error&&communityMemberResults.every(result=>!result.error)}/>:null}
       {canModerate?<CommunityModeration reports={(communityReportResult.data as CommunityReport[]|null)??[]}migrationReady={!communityReportResult.error}/>:null}
       {role.role==="super_admin"?<LearningManager courses={adminCourses}lessons={(lessonResult.data as AdminLesson[]|null)??[]}orders={(courseOrderResult.data as CourseOrder[]|null)??[]}events={events.map(item=>({id:item.id,title:item.title}))}enabled={Boolean(learningFlagResult.data?.enabled)}migrationReady={!learningCourseResult.error&&!lessonResult.error&&!courseOrderResult.error&&!learningFlagResult.error}/>:null}
