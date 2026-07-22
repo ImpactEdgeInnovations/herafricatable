@@ -161,7 +161,7 @@ language plpgsql stable security definer set search_path = '' as $$
 declare actor uuid:=auth.uid(); owner uuid;
 begin
   select author_id into owner from public.marketplace_posts where id=p_post_id;
-  if owner is null or (actor<>owner and not exists(select 1 from public.marketplace_responses where post_id=p_post_id and responder_id=actor)) then raise exception 'Not authorized'; end if;
+  if owner is null or (actor<>owner and not exists(select 1 from public.marketplace_responses mr where mr.post_id=p_post_id and mr.responder_id=actor)) then raise exception 'Not authorized'; end if;
   return query select r.id,r.responder_id,p.display_name,p.job_title,p.company,r.message,r.status,r.responded_at from public.marketplace_responses r join public.profiles p on p.id=r.responder_id where r.post_id=p_post_id and (actor=owner or r.responder_id=actor) order by r.responded_at desc;
 end; $$;
 
