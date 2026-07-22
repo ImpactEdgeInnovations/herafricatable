@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(61);
+select plan(74);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -49,6 +49,12 @@ insert into public.community_memberships(community_id,user_id,role,status,joined
  ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','member','active',now());
 insert into public.community_posts(id,community_id,author_id,body)values
  ('71000000-0000-4000-8000-000000000001','70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','A community post captured for report-scoped moderation testing.');
+update public.feature_flags set enabled=true where key='learning';
+insert into public.courses(id,slug,title,summary,description,instructor_name,access_type,price_minor,currency,payment_mode,status,created_by)values
+ ('80000000-0000-4000-8000-000000000001','test-free-course','Test Free Course','A free course used for learning permission boundary tests.','A complete free course description used to verify enrollment and progress permissions.','Test Instructor','free',0,'KES','closed','published','10000000-0000-4000-8000-000000000001'),
+ ('80000000-0000-4000-8000-000000000002','test-paid-course','Test Paid Course','A paid course using the shared order and entitlement engine.','A complete paid course description used to verify manual approval and fulfillment.','Test Instructor','purchase',250000,'KES','manual_review','published','10000000-0000-4000-8000-000000000001');
+insert into public.course_lessons(id,course_id,title,lesson_type,content,status,sort_order)values
+ ('81000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000001','Test learning boundary lesson','text','Private lesson content for an enrolled member.','published',0);
 
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
@@ -81,6 +87,15 @@ select lives_ok($$select public.create_community_post('70000000-0000-4000-8000-0
 select lives_ok($$select public.report_community_post('71000000-0000-4000-8000-000000000001','other','Report-scoped community moderation boundary test.')$$,'community member reports a visible post with evidence');
 select throws_ok($$select *from public.list_community_reports()$$,'P0001','Moderator role required','member cannot access community moderation evidence');
 select throws_ok($$select public.set_feature_flag('communities',false)$$,'P0001','Super admin required','member cannot change a release gate');
+select is((select count(*)from public.list_courses()),2::bigint,'active member reads the enabled published course catalog');
+select lives_ok($$select public.enroll_in_course('80000000-0000-4000-8000-000000000001')$$,'active member enrolls in a free course');
+select is((select count(*)from public.course_enrollments),1::bigint,'member reads only own course enrollment');
+select lives_ok($$select public.save_lesson_progress('81000000-0000-4000-8000-000000000001',100,null)$$,'enrolled member completes an accessible lesson');
+select is((select status from public.course_enrollments where course_id='80000000-0000-4000-8000-000000000001'),'completed','course completes when every published lesson is complete');
+select lives_ok($$select public.create_course_order('80000000-0000-4000-8000-000000000002','TEST-COURSE-PAYMENT','Manual payment test')$$,'member creates a manual course order through the shared engine');
+select is((select order_type from public.orders where order_type='course'limit 1),'course','course purchase is explicitly typed in shared orders');
+select throws_ok($$select *from public.list_course_orders()$$,'P0001','Super admin required','member cannot list course purchase operations');
+select throws_ok($$select public.save_course(null,'unauthorized-course','Unauthorized Course','An unauthorized test course summary.','An unauthorized course must never be created by a member.','Member A','free',null,0,'KES','closed','draft')$$,'P0001','Super admin required','member cannot create course content');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
 select is((select count(*)from public.list_my_past_events()),1::bigint,'attendee lists own eligible past event');
 select lives_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,4,5,true,'The facilitated introductions were valuable.','Allow more time for table conversations.','A thoughtful room where meaningful professional connections began.','named')$$,'eligible attendee saves private feedback with named testimonial consent');
@@ -99,6 +114,7 @@ select lives_ok($$select public.reverse_event_checkin((select id from public.eve
 select is((select status from public.event_memberships where event_id='50000000-0000-4000-8000-000000000001'and user_id='10000000-0000-4000-8000-000000000002'),'confirmed','reversal restores confirmed attendance state');
 select throws_ok($$select *from public.list_marketplace_reports()$$,'P0001','Moderator role required','event staff cannot access marketplace moderation reports');
 select throws_ok($$select *from public.list_community_reports()$$,'P0001','Moderator role required','event staff cannot access community moderation reports');
+select throws_ok($$select *from public.list_course_orders()$$,'P0001','Super admin required','event staff cannot access course purchase operations');
 select throws_ok($$select *from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')$$,'P0001','Not authorized','event staff cannot read feedback outside assigned event scope');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
@@ -115,6 +131,9 @@ select is((select count(*)from public.list_community_reports()),1::bigint,'super
 select lives_ok($$select public.review_community_report((select id from public.community_post_reports limit 1),'hide','Reported post removed after boundary test review.')$$,'super admin resolves community report and hides source post');
 select lives_ok($$select public.invite_community_member('70000000-0000-4000-8000-000000000002','staff@test.invalid','moderator')$$,'super admin invites an active member into a private community role');
 select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000002'and user_id='10000000-0000-4000-8000-000000000004'),'invited','community invitation remains consent-based until accepted');
+select is((select count(*)from public.list_course_orders()),1::bigint,'super admin lists the pending course order');
+select lives_ok($$select public.review_course_order((select id from public.orders where order_type='course'limit 1),'approve','Verified manual payment during boundary test.')$$,'super admin approves and fulfills a manual course purchase');
+select is((select count(*)from public.course_enrollments where course_id='80000000-0000-4000-8000-000000000002'and status='active'),1::bigint,'approved course order grants one active enrollment');
 select lives_ok($$select public.save_event_recap('50000000-0000-4000-8000-000000000003','A test table remembered','A detailed public-safe recap of the completed test gathering.',array['Introductions across industries','A shared commitment to follow through'],'published')$$,'super admin publishes a scoped event recap');
 select is((select count(*)from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')),1::bigint,'super admin reads private feedback through scoped operation');
 select is((select response_count from public.get_event_feedback_summary('50000000-0000-4000-8000-000000000003')),1::bigint,'feedback aggregate reports one response');

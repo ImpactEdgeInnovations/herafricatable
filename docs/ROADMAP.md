@@ -97,6 +97,8 @@ A feature is not complete merely because its screen exists. It is complete when:
   Supabase configuration, migration reset, and pgTAP authorization boundary tests
 - [x] Feature-gated Communities foundation with official/private membership, invitations,
   host roles, private feeds, rate limits, report-scoped moderation and audited release control
+- [x] Feature-gated Learning foundation with private lessons, user-scoped progress,
+  event/free/manual access and course purchases through the shared payment engine
 - [x] Repeatable production smoke suite, anonymous route-boundary checks, mobile public
   UAT, deployment health diagnostics and a manually gated live-smoke workflow
 
@@ -128,6 +130,8 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Apply `20260724090000_notification_operations.sql` in production Supabase
 - [ ] Apply `20260725090000_communities_foundation.sql` in production Supabase
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag
+- [ ] Apply `20260725130000_learning_foundation.sql` in production Supabase
+- [ ] Complete Learning content/access/payment acceptance and deliberately enable its P1 flag
 - [ ] Verify the Resend sending domain and configure the production email worker schedule
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [x] Add automated authentication, authorization and migration tests to CI

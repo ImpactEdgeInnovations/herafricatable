@@ -18,6 +18,7 @@ Production: [herafricatable.vercel.app](https://herafricatable.vercel.app)
 - [Asks & Offers operations](docs/MARKETPLACE_OPERATIONS.md)
 - [Post-event feedback operations](docs/POST_EVENT_OPERATIONS.md)
 - [Community release operations](docs/COMMUNITY_OPERATIONS.md)
+- [Learning release operations](docs/LEARNING_OPERATIONS.md)
 - [Production UAT record](docs/UAT_REPORT.md)
 
 ## Local setup

@@ -189,6 +189,13 @@ do not receive general private-feed access. Paid or third-party-hosted communiti
 disabled until the additional ownership, export, analytics and billing gates pass.
 - `course_purchases`, `course_enrollments`, `lesson_progress`
 
+Learning is disabled by default. Published lessons require an active enrollment, and
+private files use enrollment-gated Storage policies plus short-lived signed URLs. Free,
+event-bundled and manual access converge on `course_enrollments`. Purchases extend the
+shared order engine with an explicit `order_type` and typed line item; Paystack/manual
+verification converges on one idempotent course fulfillment operation. Progress is
+user-scoped and monotonic, so a later client write cannot reduce completed progress.
+
 Circle launch matching is deterministic and explainable. AI can later propose matches,
 but a human-reviewable rule and audit record remain.
 

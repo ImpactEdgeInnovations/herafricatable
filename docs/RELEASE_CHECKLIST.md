@@ -125,6 +125,9 @@
 - [ ] Marketplace report snapshots, hide/dismiss decisions and notification links pass moderator UAT
 - [ ] Past Events use deterministic end times and expose only published recap fields
 - [ ] Non-attendees cannot submit feedback; scoped staff cannot read another event's responses
+- [ ] Learning remains disabled until free, event-bundle, manual and Paystack course access boundaries pass
+- [ ] Unenrolled members cannot read lessons or sign private `course-assets` URLs
+- [ ] Event and course orders both pass amount/currency, replay and reversal tests through shared Paystack processing
 - [ ] Named, anonymous, rejected and withdrawn testimonial paths are verified end to end
 - [ ] Performance and image/media budgets pass
 
