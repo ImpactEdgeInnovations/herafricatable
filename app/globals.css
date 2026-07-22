@@ -1101,6 +1101,27 @@ body { background: var(--paper); }
 .admin-action-grid > a:hover > span, .admin-action-grid > a:focus-visible > span { color: #d8bc78; }
 .admin-action-grid > a:hover > p, .admin-action-grid > a:focus-visible > p { color: rgba(255,255,255,.7); }
 .admin-action-grid > a:hover > small, .admin-action-grid > a:focus-visible > small { color: #fff; }
+.action-dialog { width: min(560px,calc(100% - 32px)); max-height: min(760px,calc(100vh - 32px)); padding: 0; overflow: auto; border: 1px solid var(--line); background: var(--paper); color: var(--ink); box-shadow: 0 28px 90px rgba(42,35,31,.28); }
+.action-dialog::backdrop { background: rgba(31,24,22,.58); backdrop-filter: blur(3px); }
+.action-dialog > form { display: grid; }
+.action-dialog header { padding: 38px 40px 28px; border-bottom: 1px solid var(--line); }
+.action-dialog h2 { margin: 7px 0 12px; font-family: var(--serif); font-size: clamp(2rem,5vw,3rem); font-weight: 400; letter-spacing: -.04em; line-height: 1; }
+.action-dialog header > p:last-child { margin: 0; color: var(--muted); font-size: .76rem; line-height: 1.7; }
+.action-dialog-fields { display: grid; padding: 28px 40px; gap: 18px; }
+.action-dialog-fields > label { display: grid; color: var(--ink); font-size: .66rem; font-weight: 800; gap: 8px; }
+.action-dialog-fields input:not([type="checkbox"]), .action-dialog-fields select, .action-dialog-fields textarea { width: 100%; min-height: 46px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 0; background: #fff; color: var(--ink); font: inherit; font-size: .72rem; font-weight: 500; }
+.action-dialog-fields textarea { min-height: 112px; resize: vertical; line-height: 1.55; }
+.action-dialog-fields input:focus, .action-dialog-fields select:focus, .action-dialog-fields textarea:focus { border-color: var(--gold); outline: 3px solid rgba(181,143,58,.16); }
+.action-dialog-fields [aria-invalid="true"] { border-color: #9a2933; }
+.action-dialog-check { display: grid !important; align-items: start; grid-template-columns: 18px 1fr; gap: 11px !important; }
+.action-dialog-check input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--wine); }
+.action-dialog-check span { display: grid; gap: 5px; }
+.action-dialog .field-help, .action-dialog-check small { color: var(--muted); font-size: .58rem; font-weight: 500; line-height: 1.5; }
+.action-dialog .field-error { color: #8f2730; font-size: .59rem; font-weight: 750; }
+.action-dialog footer { display: flex; justify-content: flex-end; padding: 20px 40px 26px; border-top: 1px solid var(--line); background: var(--cream); gap: 9px; }
+.action-dialog footer button { min-height: 42px; padding: 10px 16px; border: 1px solid var(--line); background: #fff; color: var(--wine); font-size: .62rem; font-weight: 850; cursor: pointer; }
+.action-dialog footer .button-primary { border-color: var(--wine); background: var(--wine); color: #fff; }
+.action-dialog footer .danger { border-color: #8f2730; background: #8f2730; color: #fff; }
 .admin-section { width: min(1240px, calc(100% - 56px)); margin: 0 auto 24px; padding: 58px; border: 1px solid var(--line); background: var(--paper); }
 .admin-section-heading { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 42px; gap: 40px; }
 .admin-section-heading h2 { margin: 0; font-family: var(--serif); font-size: clamp(2.2rem, 4vw, 3.6rem); font-weight: 400; letter-spacing: -.04em; }
@@ -1869,6 +1890,8 @@ body { background: var(--paper); }
 }
 
 @media (max-width: 620px) {
+  .action-dialog header, .action-dialog-fields { padding-right: 24px; padding-left: 24px; }
+  .action-dialog footer { padding-right: 24px; padding-left: 24px; }
   .admin-header { padding-right: 16px; padding-left: 16px; gap: 12px; }
   .admin-header .brand small { display: none; }
   .admin-role { padding: 7px 9px; font-size: .5rem; }
