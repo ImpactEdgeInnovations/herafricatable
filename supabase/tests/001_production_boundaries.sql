@@ -206,11 +206,11 @@ select is((select count(*)from public.product_events where actor_id='10000000-00
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
 select lives_ok($$select public.create_support_ticket('technical','Test analytics boundary','A tagged test identity creates a support event for metric separation.')$$,'tagged test action is captured without entering real metrics');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
-select is((select test_events from public.get_product_analytics(30)where event_name='support_requested'),1::bigint,'tagged test activity remains separately visible to Super Admin');
+select is((select test_events from public.get_product_analytics(30)where event_name='support_requested'),2::bigint,'tagged identity reclassification and new test activity remain separately visible to Super Admin');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 select is((select count(*)from public.list_my_circles()),1::bigint,'assigned member enters only her published Circle');
-select is((select count(*)from public.list_circle_members((select id from public.circles where cycle_id='92000000-0000-4000-8000-000000000001'limit 1))),3::bigint,'Circle member sees the blocked-safe cohort roster');
+select is((select count(*)from public.list_circle_members((select circle_id from public.list_my_circles()limit 1))),3::bigint,'Circle member sees the blocked-safe cohort roster through the authorized member projection');
 select lives_ok($$select public.save_circle_response((select id from public.circle_prompts limit 1),'I will secure two qualified partner conversations before our next reflection.')$$,'Circle member shares a private cohort reflection');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
