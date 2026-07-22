@@ -123,6 +123,9 @@
 - [ ] Directory, messages and admin lists paginate
 - [ ] Asks & Offers enforce active-member visibility, blocked-pair exclusion and private response ownership
 - [ ] Marketplace report snapshots, hide/dismiss decisions and notification links pass moderator UAT
+- [ ] Past Events use deterministic end times and expose only published recap fields
+- [ ] Non-attendees cannot submit feedback; scoped staff cannot read another event's responses
+- [ ] Named, anonymous, rejected and withdrawn testimonial paths are verified end to end
 - [ ] Performance and image/media budgets pass
 
 ## Observability and operations

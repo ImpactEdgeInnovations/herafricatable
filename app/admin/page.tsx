@@ -23,6 +23,7 @@ import { RegistrationManager, type AdminPaymentAttempt, type AdminRefund, type A
 import { ModerationQueue, type MemberReport } from "@/components/admin/moderation-queue";
 import { EventCheckinConsole, type CheckinAttendee } from "@/components/admin/event-checkin-console";
 import { MarketplaceModeration, type MarketplaceReport } from "@/components/admin/marketplace-moderation";
+import { EventFeedbackManager, type AdminEventFeedback, type EventFeedbackSummary, type EventRecap } from "@/components/admin/event-feedback-manager";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -146,12 +147,17 @@ export default async function AdminHomePage() {
   const refunds=refundResults.flatMap((result)=>(result.data as AdminRefund[]|null)??[]);
   const checkinResults=await Promise.all(eventIds.map((eventId)=>supabase.rpc("list_event_checkins",{p_event_id:eventId})));
   const checkinAttendees=checkinResults.flatMap((result,index)=>((result.data as Omit<CheckinAttendee,"event_id">[]|null)??[]).map((attendee)=>({...attendee,event_id:eventIds[index]})));
+  const feedbackResults=await Promise.all(eventIds.map((eventId)=>supabase.rpc("list_event_feedback_admin",{p_event_id:eventId})));
+  const eventFeedback=feedbackResults.flatMap((result,index)=>((result.data as AdminEventFeedback[]|null)??[]).map((entry)=>({...entry,event_id:eventIds[index]})));
+  const feedbackSummaryResults=await Promise.all(eventIds.map((eventId)=>supabase.rpc("get_event_feedback_summary",{p_event_id:eventId})));
+  const feedbackSummaries=feedbackSummaryResults.flatMap((result,index)=>((result.data as Omit<EventFeedbackSummary,"event_id">[]|null)??[]).map((entry)=>({...entry,event_id:eventIds[index]})));
+  const recapResult=eventIds.length?await supabase.from("event_recaps").select("event_id,title,summary,highlights,status").in("event_id",eventIds):{data:[],error:null};
 
   return (
     <main className="admin-command-center">
       <header className="admin-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Admin command center</small></span></Link>
-        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#check-in">Check-in</a><a href="#moderation">Safety</a><a href="#marketplace-moderation">Marketplace</a>{role.role==="super_admin"?<><Link href="/admin/support">Support</Link><Link href="/admin/privacy">Privacy</Link><Link href="/admin/notifications">Delivery</Link></>:null}<a href="#roadmap">Roadmap</a></nav>
+        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#check-in">Check-in</a><a href="#event-feedback">Feedback</a><a href="#moderation">Safety</a><a href="#marketplace-moderation">Marketplace</a>{role.role==="super_admin"?<><Link href="/admin/support">Support</Link><Link href="/admin/privacy">Privacy</Link><Link href="/admin/notifications">Delivery</Link></>:null}<a href="#roadmap">Roadmap</a></nav>
         <span className="admin-role">{role.role.replace("_", " ")}</span>
       </header>
       <section className="admin-hero" id="overview">
@@ -170,6 +176,7 @@ export default async function AdminHomePage() {
       {canManageEvents && !eventResult.error ? <EventGalleryManager events={events} initialAlbums={albums} initialAssets={assets} migrationReady={!albumResult.error && !assetResult.error} /> : null}
       {canManageEvents && !eventResult.error ? <RegistrationManager events={events} initialTickets={((ticketResult.data as AdminTicket[] | null) ?? [])} initialRegistrations={registrations} initialPayments={((paymentResult.data as AdminPaymentAttempt[] | null) ?? [])} initialRefunds={refunds} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY&&process.env.SUPABASE_SECRET_KEY&&process.env.NEXT_PUBLIC_SITE_URL)} migrationReady={!ticketResult.error && !paymentResult.error && registrationResults.every((result) => !result.error)} /> : null}
       {canManageEvents && !eventResult.error ? <EventCheckinConsole events={events.map((event)=>({id:event.id,title:event.title,starts_at:event.starts_at,ends_at:event.ends_at}))} initialAttendees={checkinAttendees} migrationReady={checkinResults.every((result)=>!result.error)} /> : null}
+      {canManageEvents && !eventResult.error ? <EventFeedbackManager events={events} feedback={eventFeedback} summaries={feedbackSummaries} recaps={(recapResult.data as EventRecap[]|null)??[]} migrationReady={feedbackResults.every(result=>!result.error)&&feedbackSummaryResults.every(result=>!result.error)&&!recapResult.error} /> : null}
       {canModerate?<ModerationQueue reports={(reportResult.data as MemberReport[]|null)??[]} migrationReady={!reportResult.error}/>:null}
       {canModerate?<MarketplaceModeration reports={(marketplaceReportResult.data as MarketplaceReport[]|null)??[]} migrationReady={!marketplaceReportResult.error}/>:null}
       <RoadmapOverview />

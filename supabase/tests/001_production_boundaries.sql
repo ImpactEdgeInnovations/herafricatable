@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(36);
+select plan(47);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -29,12 +29,14 @@ insert into public.notifications(id,user_id,kind,title,body,dedupe_key)values
  ('40000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003','system','Member B notice','Only member B can read this.','test:b');
 insert into public.events(id,slug,title,format,status,starts_at,ends_at,registration_mode,created_by)values
  ('50000000-0000-4000-8000-000000000001','test-table-one','Test Table One','virtual','published',now()-interval '1 hour',now()+interval '2 hours','closed','10000000-0000-4000-8000-000000000001'),
- ('50000000-0000-4000-8000-000000000002','test-table-two','Test Table Two','virtual','published',now()-interval '1 hour',now()+interval '2 hours','closed','10000000-0000-4000-8000-000000000001');
+ ('50000000-0000-4000-8000-000000000002','test-table-two','Test Table Two','virtual','published',now()-interval '1 hour',now()+interval '2 hours','closed','10000000-0000-4000-8000-000000000001'),
+ ('50000000-0000-4000-8000-000000000003','test-past-table','Test Past Table','virtual','completed',now()-interval '2 days',now()-interval '1 day','closed','10000000-0000-4000-8000-000000000001');
 insert into public.event_staff_scopes(user_id,event_id,granted_by)values
  ('10000000-0000-4000-8000-000000000004','50000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001');
 insert into public.event_memberships(event_id,user_id,status,confirmed_at)values
  ('50000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','confirmed',now()),
- ('50000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','confirmed',now());
+ ('50000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','confirmed',now()),
+ ('50000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000002','attended',now());
 insert into public.marketplace_posts(id,author_id,post_type,category,title,body,delivery_mode,status)values
  ('60000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','offer','mentorship','Test mentorship office hours','I can offer a focused thirty minute mentoring conversation.','online','published');
 
@@ -60,6 +62,10 @@ select lives_ok($$select public.respond_to_marketplace_post('60000000-0000-4000-
 select throws_ok($$select public.respond_to_marketplace_post('60000000-0000-4000-8000-000000000001','A second response should not create a duplicate.')$$,'P0001','You already responded to this post','duplicate marketplace response is rejected');
 select is((select count(*)from public.marketplace_responses),1::bigint,'responder reads own private response only');
 select lives_ok($$select public.report_marketplace_post('60000000-0000-4000-8000-000000000001','other','Test report for report-scoped moderation coverage.')$$,'active member can report a visible marketplace post');
+select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
+select is((select count(*)from public.list_my_past_events()),1::bigint,'attendee lists own eligible past event');
+select lives_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,4,5,true,'The facilitated introductions were valuable.','Allow more time for table conversations.','A thoughtful room where meaningful professional connections began.','named')$$,'eligible attendee saves private feedback with named testimonial consent');
+select is((select count(*)from public.event_feedback),1::bigint,'member reads own private event feedback');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',true);
 select is((select count(*)from public.support_tickets),0::bigint,'event staff cannot read support tickets');
@@ -73,16 +79,23 @@ select is((select outcome from public.check_in_event_member('50000000-0000-4000-
 select lives_ok($$select public.reverse_event_checkin((select id from public.event_checkins where event_id='50000000-0000-4000-8000-000000000001'and reversed_at is null),'Incorrect door scan')$$,'event staff can auditably reverse assigned event check-in');
 select is((select status from public.event_memberships where event_id='50000000-0000-4000-8000-000000000001'and user_id='10000000-0000-4000-8000-000000000002'),'confirmed','reversal restores confirmed attendance state');
 select throws_ok($$select *from public.list_marketplace_reports()$$,'P0001','Moderator role required','event staff cannot access marketplace moderation reports');
+select throws_ok($$select *from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')$$,'P0001','Not authorized','event staff cannot read feedback outside assigned event scope');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
 select is((select count(*)from public.list_marketplace_responses('60000000-0000-4000-8000-000000000001')),1::bigint,'post owner reads private responses to own post');
 select lives_ok($$select public.review_marketplace_response((select id from public.marketplace_responses where post_id='60000000-0000-4000-8000-000000000001'),'accepted')$$,'post owner can accept a private response');
+select throws_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,5,5,true,'Not eligible for this event feedback.','No improvement note.',null,'none')$$,'P0001','Confirmed event attendance required','non-attendee cannot submit event feedback');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select count(*)from public.support_tickets),2::bigint,'super admin reads support tickets');
 select is((select count(*)from public.list_admin_privacy_requests()),2::bigint,'super admin lists privacy requests');
 select ok((select count(*)from public.list_admin_notification_jobs())>=2,'super admin lists notification jobs');
 select is((select count(*)from public.list_marketplace_reports()),1::bigint,'super admin receives report snapshot through scoped moderation operation');
+select lives_ok($$select public.save_event_recap('50000000-0000-4000-8000-000000000003','A test table remembered','A detailed public-safe recap of the completed test gathering.',array['Introductions across industries','A shared commitment to follow through'],'published')$$,'super admin publishes a scoped event recap');
+select is((select count(*)from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')),1::bigint,'super admin reads private feedback through scoped operation');
+select is((select response_count from public.get_event_feedback_summary('50000000-0000-4000-8000-000000000003')),1::bigint,'feedback aggregate reports one response');
+select lives_ok($$select public.review_event_feedback((select id from public.event_feedback where event_id='50000000-0000-4000-8000-000000000003'),'approve_testimonial','')$$,'super admin approves consented testimonial');
+select is((select count(*)from public.list_event_testimonials('50000000-0000-4000-8000-000000000003')),1::bigint,'approved consented testimonial enters public-safe projection');
 
 select *from finish();
 rollback;

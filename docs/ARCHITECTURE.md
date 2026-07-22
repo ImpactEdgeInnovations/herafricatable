@@ -127,6 +127,7 @@ both routes require an exact amount/currency match before calling fulfillment.
 - `event_menus`, `menu_courses`, `menu_items`, `menu_item_feedback`
 - `gallery_albums`, `media_assets` backed by the private `event-media` bucket
 - `event_feedback`
+- `event_recaps`, `event_feedback_followups`
 - `event_checkin_credentials`, `event_checkins`, `event_checkin_attempts`
 - `sponsors`, `sponsor_assets`, `sponsor_intro_requests`
 
@@ -146,6 +147,10 @@ Tickets and attendance remain separate: an approved order creates an event membe
 while a check-in creates an immutable attendance record. Private QR credentials are
 issued only to confirmed members, door operations are limited to the assigned event,
 duplicates are idempotent, and corrections retain the original row as an audited reversal.
+Post-event feedback opens only after the event end time and only for confirmed attendees.
+Feedback is private by default. Testimonial reuse requires explicit named or anonymous
+consent, a versioned consent record on the response, and event-scoped approval. Consent
+withdrawal removes the quote from every public projection without deleting private feedback.
 
 ### Network and communication
 
@@ -173,6 +178,10 @@ browsing authority. Hiding preserves both the original evidence and audit trail.
 - `communities`, `community_memberships`, `community_posts`
 - `circles`, `circle_memberships`, `circle_prompts`, `circle_posts`
 - `courses`, `course_lessons`, `course_access_rules`
+
+Communities remain a P1 feature flag. A basic group feed is not exposed until tenant
+ownership, host offboarding/export, community-scoped moderation, resources/chat,
+analytics and any host billing relationship pass their own production acceptance gate.
 - `course_purchases`, `course_enrollments`, `lesson_progress`
 
 Circle launch matching is deterministic and explainable. AI can later propose matches,

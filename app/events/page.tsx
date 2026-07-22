@@ -28,7 +28,7 @@ export default async function EventsPage() {
     <main className="events-page">
       <header className="legal-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></Link>
-        <Link className="button button-small button-outline" href="/sign-in">Member sign in</Link>
+        <div className="event-header-actions"><Link href="/events/past">Past events</Link><Link className="button button-small button-outline" href="/sign-in">Member sign in</Link></div>
       </header>
       <section className="events-intro">
         <p className="eyebrow">Gather with intention</p>
