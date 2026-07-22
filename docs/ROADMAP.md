@@ -103,6 +103,8 @@ A feature is not complete merely because its screen exists. It is complete when:
   email delivery, existing invite-gate integration and claimed/activated attribution
 - [x] Feature-gated membership plans, renewal periods, grace/dormant reconciliation,
   shared Paystack/manual fulfillment and production-safe tagged test identities
+- [x] Feature-gated deterministic Circles with explicit opt-in, balanced cohort
+  generation, blocked-pair safety, human review, private prompts and responses
 - [x] Repeatable production smoke suite, anonymous route-boundary checks, mobile public
   UAT, deployment health diagnostics and a manually gated live-smoke workflow
 
@@ -140,6 +142,8 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Complete referral delivery/claim/activation acceptance and deliberately enable its P1 flag
 - [ ] Apply `20260725210000_membership_renewal_lifecycle.sql` in production Supabase
 - [ ] Complete membership manual/Paystack/renewal acceptance and deliberately enable its flag
+- [ ] Apply `20260726090000_circles_deterministic_matching.sql` in production Supabase
+- [ ] Complete Circle matching/privacy/facilitation acceptance and deliberately enable its flag
 - [ ] Verify the Resend sending domain and configure the production email worker schedule
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [x] Add automated authentication, authorization and migration tests to CI

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(97);
+select plan(111);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -61,6 +61,9 @@ insert into public.referral_campaigns(id,name,slug,description,status,max_referr
 update public.feature_flags set enabled=true where key='memberships';
 insert into public.membership_plans(id,slug,name,description,price_minor,currency,duration_months,grace_days,payment_mode,status,created_by)values
  ('91000000-0000-4000-8000-000000000001','test-membership','Test Membership','A controlled annual membership used for renewal and permission boundary tests.',1200000,'KES',12,14,'manual_review','published','10000000-0000-4000-8000-000000000001');
+update public.feature_flags set enabled=true where key='circles';
+insert into public.circle_cycles(id,slug,name,description,starts_at,ends_at,group_size,include_test_accounts,status,created_by)values
+ ('92000000-0000-4000-8000-000000000001','test-circle-cycle','Test Circle Cycle','A deterministic member Circle cycle used for privacy and matching boundary tests.',now()+interval'1 day',now()+interval'30 days',3,true,'open','10000000-0000-4000-8000-000000000001');
 
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
@@ -112,6 +115,9 @@ select lives_ok($$select public.create_membership_order('91000000-0000-4000-8000
 select is((select order_type from public.orders where order_type='membership'limit 1),'membership','membership purchase is explicitly typed in shared orders');
 select throws_ok($$select *from public.list_membership_orders()$$,'P0001','Super admin required','member cannot list membership payment operations');
 select throws_ok($$select public.review_membership_order((select id from public.orders where order_type='membership'limit 1),'approve','')$$,'P0001','Super admin required','member cannot approve own membership order');
+select is((select count(*)from public.list_circle_cycles()),1::bigint,'active member reads the enabled open Circle cycle');
+select lives_ok($$select public.set_circle_opt_in('92000000-0000-4000-8000-000000000001',true,'Seeking a focused peer accountability cohort.')$$,'active member opts into a Circle cycle');
+select throws_ok($$select public.run_circle_matching('92000000-0000-4000-8000-000000000001')$$,'P0001','Super admin required','member cannot run Circle matching');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
 select is((select count(*)from public.list_my_past_events()),1::bigint,'attendee lists own eligible past event');
 select lives_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,4,5,true,'The facilitated introductions were valuable.','Allow more time for table conversations.','A thoughtful room where meaningful professional connections began.','named')$$,'eligible attendee saves private feedback with named testimonial consent');
@@ -133,12 +139,14 @@ select throws_ok($$select *from public.list_community_reports()$$,'P0001','Moder
 select throws_ok($$select *from public.list_course_orders()$$,'P0001','Super admin required','event staff cannot access course purchase operations');
 select throws_ok($$select *from public.list_referrals_admin()$$,'P0001','Super admin required','event staff cannot access referral review queue');
 select throws_ok($$select *from public.list_membership_orders()$$,'P0001','Super admin required','event staff cannot access membership operations');
+select lives_ok($$select public.set_circle_opt_in('92000000-0000-4000-8000-000000000001',true,'Staff identity participates only as an active member.')$$,'event staff may opt in only through the member path');
 select throws_ok($$select *from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')$$,'P0001','Not authorized','event staff cannot read feedback outside assigned event scope');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
 select is((select count(*)from public.list_marketplace_responses('60000000-0000-4000-8000-000000000001')),1::bigint,'post owner reads private responses to own post');
 select lives_ok($$select public.review_marketplace_response((select id from public.marketplace_responses where post_id='60000000-0000-4000-8000-000000000001'),'accepted')$$,'post owner can accept a private response');
 select throws_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,5,5,true,'Not eligible for this event feedback.','No improvement note.',null,'none')$$,'P0001','Confirmed event attendance required','non-attendee cannot submit event feedback');
+select lives_ok($$select public.set_circle_opt_in('92000000-0000-4000-8000-000000000001',true,'Seeking complementary expertise and mutual accountability.')$$,'second active member opts into the Circle cycle');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select count(*)from public.support_tickets),2::bigint,'super admin reads support tickets');
@@ -161,6 +169,19 @@ select lives_ok($$select public.review_membership_order((select id from public.o
 select is((select count(*)from public.membership_periods where user_id='10000000-0000-4000-8000-000000000002'and status='active'),1::bigint,'approved membership order grants one active term');
 select lives_ok($$select public.mark_test_account('10000000-0000-4000-8000-000000000003','Tagged Test Member')$$,'super admin explicitly tags a production test identity');
 select is((select is_test_account from public.profiles where id='10000000-0000-4000-8000-000000000003'),true,'test identity remains distinguishable from real members');
+select lives_ok($$select public.run_circle_matching('92000000-0000-4000-8000-000000000001')$$,'super admin runs deterministic Circle matching');
+select is((select count(*)from public.circles where cycle_id='92000000-0000-4000-8000-000000000001'),1::bigint,'matching creates one balanced draft Circle');
+select is((select count(*)from public.list_circle_participants_admin('92000000-0000-4000-8000-000000000001')),3::bigint,'super admin reviews every deterministic assignment');
+select lives_ok($$select public.publish_circle_cycle('92000000-0000-4000-8000-000000000001')$$,'super admin deliberately publishes reviewed Circles');
+select is((select status from public.circle_cycles where id='92000000-0000-4000-8000-000000000001'),'published','published cycle state is explicit');
+select lives_ok($$select public.publish_circle_prompt('92000000-0000-4000-8000-000000000001','The first commitment','Share one concrete outcome you will move forward before this Circle closes.',now(),now()+interval'14 days')$$,'super admin publishes one guided prompt per Circle');
+
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select is((select count(*)from public.list_my_circles()),1::bigint,'assigned member enters only her published Circle');
+select is((select count(*)from public.list_circle_members((select id from public.circles where cycle_id='92000000-0000-4000-8000-000000000001'limit 1))),3::bigint,'Circle member sees the blocked-safe cohort roster');
+select lives_ok($$select public.save_circle_response((select id from public.circle_prompts limit 1),'I will secure two qualified partner conversations before our next reflection.')$$,'Circle member shares a private cohort reflection');
+
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 
 set local role postgres;
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)values('90000000-0000-4000-8000-000000000002','referred-member@test.invalid','authenticated','authenticated','{}','{}',now());
