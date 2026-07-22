@@ -43,6 +43,26 @@ A feature is not complete merely because its screen exists. It is complete when:
    native app is a later decision based on measured retention.
 7. **Feature flags protect launch.** Incomplete modules can be deployed safely but
    remain unavailable until their release gate passes.
+8. **The interface teaches itself.** Use plain language, visible next steps, forgiving
+   forms and familiar navigation so members and administrators do not need training.
+
+## UI and usability workstream — every day
+
+Usability is part of production readiness and continues alongside feature delivery:
+
+- [x] Establish a refined visual system with consistent typography, colour, spacing,
+  buttons, cards, forms, feedback states and responsive behavior
+- [x] Replace the member-home product language with clear account status, task-based
+  navigation and three obvious first actions
+- [ ] Simplify the Admin command centre into task groups with plain-language labels,
+  queue counts and guided next steps
+- [ ] Add contextual help and examples to every unfamiliar form without crowding the page
+- [ ] Replace browser prompts with accessible confirmation dialogs and inline validation
+- [ ] Complete a content pass for jargon, technical errors and destructive-action wording
+- [ ] Test the main member and administrator journeys with at least five non-technical users
+- [ ] Pass keyboard, screen-reader, contrast, 200% zoom and mobile usability acceptance
+- [ ] Confirm every core journey has clear loading, empty, success, error and recovery states
+- [ ] Run final visual QA across Safari, Chrome and common phone/tablet sizes
 
 ## Release scope
 
@@ -154,6 +174,7 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Complete partner terms/inventory/redemption acceptance and deliberately enable its flag
 - [ ] Apply `20260726170000_privacy_safe_analytics.sql` in production Supabase
 - [ ] Review readiness targets and complete a tagged-test versus real-member metric pass
+- [ ] Complete the non-technical-user UI workstream and record usability acceptance evidence
 - [ ] Verify the Resend sending domain and configure the production email worker schedule
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [x] Add automated authentication, authorization and migration tests to CI
