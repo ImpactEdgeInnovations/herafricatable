@@ -54,7 +54,7 @@ Usability is part of production readiness and continues alongside feature delive
   buttons, cards, forms, feedback states and responsive behavior
 - [x] Replace the member-home product language with clear account status, task-based
   navigation and three obvious first actions
-- [ ] Simplify the Admin command centre into task groups with plain-language labels,
+- [x] Simplify the Admin command centre into task groups with plain-language labels,
   queue counts and guided next steps
 - [ ] Add contextual help and examples to every unfamiliar form without crowding the page
 - [ ] Replace browser prompts with accessible confirmation dialogs and inline validation

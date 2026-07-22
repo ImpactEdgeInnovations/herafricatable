@@ -36,6 +36,7 @@ import type { CircleCycle } from "@/components/member/circles-hub";
 import { PerksManager, type AdminPartner, type PerkRedemption } from "@/components/admin/perks-manager";
 import type { PartnerPerk } from "@/components/member/perks-gallery";
 import { AnalyticsReadiness, type ProductAnalytic, type ReadinessMetric } from "@/components/admin/analytics-readiness";
+import { AdminActionCentre } from "@/components/admin/admin-action-centre";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -194,12 +195,33 @@ export default async function AdminHomePage() {
   const feedbackSummaryResults=await Promise.all(eventIds.map((eventId)=>supabase.rpc("get_event_feedback_summary",{p_event_id:eventId})));
   const feedbackSummaries=feedbackSummaryResults.flatMap((result,index)=>((result.data as Omit<EventFeedbackSummary,"event_id">[]|null)??[]).map((entry)=>({...entry,event_id:eventIds[index]})));
   const recapResult=eventIds.length?await supabase.from("event_recaps").select("event_id,title,summary,highlights,status").in("event_id",eventIds):{data:[],error:null};
+  const memberReports=(reportResult.data as MemberReport[]|null)??[];
+  const marketplaceReports=(marketplaceReportResult.data as MarketplaceReport[]|null)??[];
+  const communityReports=(communityReportResult.data as CommunityReport[]|null)??[];
+  const openReportCount=[...memberReports,...marketplaceReports,...communityReports].filter((report)=>["open","reviewing"].includes(report.status)).length;
 
   return (
     <main className="admin-command-center">
       <header className="admin-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Admin command center</small></span></Link>
-        <nav aria-label="Admin navigation"><a href="#overview">Overview</a>{role.role==="super_admin"?<a href="#analytics">Readiness</a>:null}<a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#check-in">Check-in</a><a href="#event-feedback">Feedback</a><a href="#moderation">Safety</a><a href="#marketplace-moderation">Marketplace</a>{role.role==="super_admin"?<><a href="#memberships-admin">Memberships</a><a href="#circles-admin">Circles</a><a href="#perks-admin">Perks</a><a href="#communities-admin">Communities</a><a href="#learning-admin">Learning</a><a href="#referrals-admin">Referrals</a></>:null}{role.role==="super_admin"?<><Link href="/admin/support">Support</Link><Link href="/admin/privacy">Privacy</Link><Link href="/admin/notifications">Delivery</Link></>:null}<a href="#roadmap">Roadmap</a></nav>
+        <nav className="admin-primary-nav" aria-label="Admin navigation">
+          <a href="#actions">Tasks</a>
+          {role.role==="super_admin"?<a href="#members">Members</a>:null}
+          {canManageEvents?<a href="#events">Events</a>:null}
+          {canManageEvents?<a href="#registrations">Registrations</a>:null}
+          {canModerate?<a href="#moderation">Safety</a>:null}
+          <details className="admin-tools-menu">
+            <summary>More tools</summary>
+            <div>
+              {role.role==="super_admin"?<a href="#analytics">Launch readiness</a>:null}
+              {canManageEvents?<><a href="#event-content">Programme &amp; publishing</a><a href="#menu">Event menu</a><a href="#gallery">Event gallery</a><a href="#check-in">Event check-in</a><a href="#event-feedback">Event feedback</a></>:null}
+              {canModerate?<><a href="#marketplace-moderation">Marketplace safety</a><a href="#community-moderation">Community safety</a></>:null}
+              {role.role==="super_admin"?<><a href="#memberships-admin">Membership plans</a><a href="#circles-admin">Circles</a><a href="#perks-admin">Partner perks</a><a href="#communities-admin">Communities</a><a href="#learning-admin">Learning</a><a href="#referrals-admin">Referrals</a><Link href="/admin/support">Member support</Link><Link href="/admin/privacy">Privacy requests</Link><Link href="/admin/notifications">Message delivery</Link></>:null}
+              <a href="#event">Homepage countdown</a>
+              <a href="#roadmap">Delivery roadmap</a>
+            </div>
+          </details>
+        </nav>
         <span className="admin-role">{role.role.replace("_", " ")}</span>
       </header>
       <section className="admin-hero" id="overview">
@@ -211,6 +233,15 @@ export default async function AdminHomePage() {
           <article><strong>{events.length}</strong><span>Events</span></article>
         </div>
       </section>
+      <AdminActionCentre
+        draftEvents={events.filter((event)=>event.status==="draft").length}
+        hasEvents={events.length>0}
+        openReports={openReportCount}
+        pendingMembers={members.filter((member)=>member.access_status==="pending").length}
+        pendingRefunds={refunds.filter((refund)=>refund.status==="requested").length}
+        pendingRegistrations={registrations.filter((registration)=>registration.status==="pending_review").length}
+        role={role.role}
+      />
       {role.role==="super_admin"?<AnalyticsReadiness metrics={(readinessResult.data as ReadinessMetric[]|null)??[]}analytics={(analyticsResult.data as ProductAnalytic[]|null)??[]}migrationReady={!readinessResult.error&&!analyticsResult.error}/>:null}
       {role.role === "super_admin" ? <MemberReview initialMembers={members} currentUserId={user.id} migrationReady={!memberResult.error} /> : null}
       {canManageEvents ? <EventManager initialEvents={events} privateEvents={privateEvents} canCreate={role.role === "super_admin"} migrationReady={!eventResult.error} /> : null}
@@ -220,13 +251,13 @@ export default async function AdminHomePage() {
       {canManageEvents && !eventResult.error ? <RegistrationManager events={events} initialTickets={((ticketResult.data as AdminTicket[] | null) ?? [])} initialRegistrations={registrations} initialPayments={((paymentResult.data as AdminPaymentAttempt[] | null) ?? [])} initialRefunds={refunds} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY&&process.env.SUPABASE_SECRET_KEY&&process.env.NEXT_PUBLIC_SITE_URL)} migrationReady={!ticketResult.error && !paymentResult.error && registrationResults.every((result) => !result.error)} /> : null}
       {canManageEvents && !eventResult.error ? <EventCheckinConsole events={events.map((event)=>({id:event.id,title:event.title,starts_at:event.starts_at,ends_at:event.ends_at}))} initialAttendees={checkinAttendees} migrationReady={checkinResults.every((result)=>!result.error)} /> : null}
       {canManageEvents && !eventResult.error ? <EventFeedbackManager events={events} feedback={eventFeedback} summaries={feedbackSummaries} recaps={(recapResult.data as EventRecap[]|null)??[]} migrationReady={feedbackResults.every(result=>!result.error)&&feedbackSummaryResults.every(result=>!result.error)&&!recapResult.error} /> : null}
-      {canModerate?<ModerationQueue reports={(reportResult.data as MemberReport[]|null)??[]} migrationReady={!reportResult.error}/>:null}
-      {canModerate?<MarketplaceModeration reports={(marketplaceReportResult.data as MarketplaceReport[]|null)??[]} migrationReady={!marketplaceReportResult.error}/>:null}
+      {canModerate?<ModerationQueue reports={memberReports} migrationReady={!reportResult.error}/>:null}
+      {canModerate?<MarketplaceModeration reports={marketplaceReports} migrationReady={!marketplaceReportResult.error}/>:null}
       {role.role==="super_admin"?<MembershipManager plans={(membershipPlanResult.data as AdminMembershipPlan[]|null)??[]}periods={(membershipPeriodResult.data as AdminMembership[]|null)??[]}orders={(membershipOrderResult.data as MembershipOrder[]|null)??[]}enabled={Boolean(membershipFlagResult.data?.enabled)}migrationReady={!membershipPlanResult.error&&!membershipPeriodResult.error&&!membershipOrderResult.error&&!membershipFlagResult.error}/>:null}
       {role.role==="super_admin"?<CircleManager cycles={circleCycles}participants={circleParticipants}enabled={Boolean(circleFlagResult.data?.enabled)}migrationReady={!circleCycleResult.error&&!circleFlagResult.error&&circleParticipantResults.every(result=>!result.error)}/>:null}
       {role.role==="super_admin"?<PerksManager partners={(partnerResult.data as AdminPartner[]|null)??[]}perks={(perkResult.data as PartnerPerk[]|null)??[]}redemptions={(perkRedemptionResult.data as PerkRedemption[]|null)??[]}enabled={Boolean(perkFlagResult.data?.enabled)}migrationReady={!partnerResult.error&&!perkResult.error&&!perkRedemptionResult.error&&!perkFlagResult.error}/>:null}
       {role.role==="super_admin"?<CommunityManager communities={communities}members={communityMembers}enabled={Boolean(featureFlagResult.data?.enabled)}migrationReady={!communityResult.error&&!featureFlagResult.error&&communityMemberResults.every(result=>!result.error)}/>:null}
-      {canModerate?<CommunityModeration reports={(communityReportResult.data as CommunityReport[]|null)??[]}migrationReady={!communityReportResult.error}/>:null}
+      {canModerate?<CommunityModeration reports={communityReports}migrationReady={!communityReportResult.error}/>:null}
       {role.role==="super_admin"?<LearningManager courses={adminCourses}lessons={(lessonResult.data as AdminLesson[]|null)??[]}orders={(courseOrderResult.data as CourseOrder[]|null)??[]}events={events.map(item=>({id:item.id,title:item.title}))}enabled={Boolean(learningFlagResult.data?.enabled)}migrationReady={!learningCourseResult.error&&!lessonResult.error&&!courseOrderResult.error&&!learningFlagResult.error}/>:null}
       {role.role==="super_admin"?<ReferralManager campaigns={(referralCampaignResult.data as AdminReferralCampaign[]|null)??[]}referrals={(referralResult.data as AdminReferral[]|null)??[]}enabled={Boolean(referralFlagResult.data?.enabled)}migrationReady={!referralCampaignResult.error&&!referralResult.error&&!referralFlagResult.error}/>:null}
       <RoadmapOverview />
