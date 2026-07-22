@@ -46,7 +46,7 @@ A feature is not complete merely because its screen exists. It is complete when:
 
 ## Release scope
 
-## Current delivery status — 21 July 2026
+## Current delivery status — 22 July 2026
 
 ### Completed foundation
 
@@ -95,6 +95,8 @@ A feature is not complete merely because its screen exists. It is complete when:
   outbox, idempotent Resend worker, retries, admin monitoring and database health endpoint
 - [x] GitHub Actions quality gate, repository contract/secret checks, reproducible local
   Supabase configuration, migration reset, and pgTAP authorization boundary tests
+- [x] Feature-gated Communities foundation with official/private membership, invitations,
+  host roles, private feeds, rate limits, report-scoped moderation and audited release control
 - [x] Repeatable production smoke suite, anonymous route-boundary checks, mobile public
   UAT, deployment health diagnostics and a manually gated live-smoke workflow
 
@@ -124,6 +126,8 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [x] Apply `20260723170000_support_operations.sql` in production Supabase
 - [ ] Apply `20260723210000_privacy_account_lifecycle.sql` in production Supabase
 - [ ] Apply `20260724090000_notification_operations.sql` in production Supabase
+- [ ] Apply `20260725090000_communities_foundation.sql` in production Supabase
+- [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag
 - [ ] Verify the Resend sending domain and configure the production email worker schedule
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [x] Add automated authentication, authorization and migration tests to CI

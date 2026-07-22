@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(47);
+select plan(61);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -39,6 +39,16 @@ insert into public.event_memberships(event_id,user_id,status,confirmed_at)values
  ('50000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000002','attended',now());
 insert into public.marketplace_posts(id,author_id,post_type,category,title,body,delivery_mode,status)values
  ('60000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','offer','mentorship','Test mentorship office hours','I can offer a focused thirty minute mentoring conversation.','online','published');
+update public.feature_flags set enabled=true where key='communities';
+insert into public.communities(id,slug,name,description,community_type,status,created_by)values
+ ('70000000-0000-4000-8000-000000000001','test-official-community','Test Official Community','An official production boundary test community for active members.','official','published','10000000-0000-4000-8000-000000000001'),
+ ('70000000-0000-4000-8000-000000000002','test-private-community','Test Private Community','A private production boundary test community requiring host approval.','private','published','10000000-0000-4000-8000-000000000001');
+insert into public.community_memberships(community_id,user_id,role,status,joined_at)values
+ ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','owner','active',now()),
+ ('70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','owner','active',now()),
+ ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','member','active',now());
+insert into public.community_posts(id,community_id,author_id,body)values
+ ('71000000-0000-4000-8000-000000000001','70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','A community post captured for report-scoped moderation testing.');
 
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
@@ -62,6 +72,15 @@ select lives_ok($$select public.respond_to_marketplace_post('60000000-0000-4000-
 select throws_ok($$select public.respond_to_marketplace_post('60000000-0000-4000-8000-000000000001','A second response should not create a duplicate.')$$,'P0001','You already responded to this post','duplicate marketplace response is rejected');
 select is((select count(*)from public.marketplace_responses),1::bigint,'responder reads own private response only');
 select lives_ok($$select public.report_marketplace_post('60000000-0000-4000-8000-000000000001','other','Test report for report-scoped moderation coverage.')$$,'active member can report a visible marketplace post');
+select is((select count(*)from public.list_communities()),2::bigint,'active member lists published communities behind enabled flag');
+select lives_ok($$select public.request_community_access('70000000-0000-4000-8000-000000000002')$$,'active member requests access to a private community');
+select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000002'and user_id='10000000-0000-4000-8000-000000000002'),'requested','private community request remains pending');
+select throws_ok($$select *from public.list_community_posts('70000000-0000-4000-8000-000000000002',30,0)$$,'P0001','Active community membership required','pending member cannot read private community feed');
+select lives_ok($$select public.request_community_access('70000000-0000-4000-8000-000000000001')$$,'active member joins an official community');
+select lives_ok($$select public.create_community_post('70000000-0000-4000-8000-000000000001','A useful update shared only with this trusted community.')$$,'active community member creates a rate-limited post');
+select lives_ok($$select public.report_community_post('71000000-0000-4000-8000-000000000001','other','Report-scoped community moderation boundary test.')$$,'community member reports a visible post with evidence');
+select throws_ok($$select *from public.list_community_reports()$$,'P0001','Moderator role required','member cannot access community moderation evidence');
+select throws_ok($$select public.set_feature_flag('communities',false)$$,'P0001','Super admin required','member cannot change a release gate');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
 select is((select count(*)from public.list_my_past_events()),1::bigint,'attendee lists own eligible past event');
 select lives_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,4,5,true,'The facilitated introductions were valuable.','Allow more time for table conversations.','A thoughtful room where meaningful professional connections began.','named')$$,'eligible attendee saves private feedback with named testimonial consent');
@@ -79,6 +98,7 @@ select is((select outcome from public.check_in_event_member('50000000-0000-4000-
 select lives_ok($$select public.reverse_event_checkin((select id from public.event_checkins where event_id='50000000-0000-4000-8000-000000000001'and reversed_at is null),'Incorrect door scan')$$,'event staff can auditably reverse assigned event check-in');
 select is((select status from public.event_memberships where event_id='50000000-0000-4000-8000-000000000001'and user_id='10000000-0000-4000-8000-000000000002'),'confirmed','reversal restores confirmed attendance state');
 select throws_ok($$select *from public.list_marketplace_reports()$$,'P0001','Moderator role required','event staff cannot access marketplace moderation reports');
+select throws_ok($$select *from public.list_community_reports()$$,'P0001','Moderator role required','event staff cannot access community moderation reports');
 select throws_ok($$select *from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')$$,'P0001','Not authorized','event staff cannot read feedback outside assigned event scope');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
@@ -91,6 +111,10 @@ select is((select count(*)from public.support_tickets),2::bigint,'super admin re
 select is((select count(*)from public.list_admin_privacy_requests()),2::bigint,'super admin lists privacy requests');
 select ok((select count(*)from public.list_admin_notification_jobs())>=2,'super admin lists notification jobs');
 select is((select count(*)from public.list_marketplace_reports()),1::bigint,'super admin receives report snapshot through scoped moderation operation');
+select is((select count(*)from public.list_community_reports()),1::bigint,'super admin receives only reported community evidence');
+select lives_ok($$select public.review_community_report((select id from public.community_post_reports limit 1),'hide','Reported post removed after boundary test review.')$$,'super admin resolves community report and hides source post');
+select lives_ok($$select public.invite_community_member('70000000-0000-4000-8000-000000000002','staff@test.invalid','moderator')$$,'super admin invites an active member into a private community role');
+select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000002'and user_id='10000000-0000-4000-8000-000000000004'),'invited','community invitation remains consent-based until accepted');
 select lives_ok($$select public.save_event_recap('50000000-0000-4000-8000-000000000003','A test table remembered','A detailed public-safe recap of the completed test gathering.',array['Introductions across industries','A shared commitment to follow through'],'published')$$,'super admin publishes a scoped event recap');
 select is((select count(*)from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')),1::bigint,'super admin reads private feedback through scoped operation');
 select is((select response_count from public.get_event_feedback_summary('50000000-0000-4000-8000-000000000003')),1::bigint,'feedback aggregate reports one response');

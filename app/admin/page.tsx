@@ -24,6 +24,9 @@ import { ModerationQueue, type MemberReport } from "@/components/admin/moderatio
 import { EventCheckinConsole, type CheckinAttendee } from "@/components/admin/event-checkin-console";
 import { MarketplaceModeration, type MarketplaceReport } from "@/components/admin/marketplace-moderation";
 import { EventFeedbackManager, type AdminEventFeedback, type EventFeedbackSummary, type EventRecap } from "@/components/admin/event-feedback-manager";
+import { CommunityManager, type CommunityMember } from "@/components/admin/community-manager";
+import { CommunityModeration, type CommunityReport } from "@/components/admin/community-moderation";
+import type { CommunitySummary } from "@/components/member/community-directory";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -95,6 +98,12 @@ export default async function AdminHomePage() {
   const canManageCountdown = role.role === "super_admin" || role.role === "event_staff";
   const reportResult=canModerate?await supabase.rpc("list_member_reports"):{data:[],error:null};
   const marketplaceReportResult=canModerate?await supabase.rpc("list_marketplace_reports"):{data:[],error:null};
+  const communityResult=role.role==="super_admin"?await supabase.rpc("list_communities"):{data:[],error:null};
+  const communities=(communityResult.data as CommunitySummary[]|null)??[];
+  const communityMemberResults=role.role==="super_admin"?await Promise.all(communities.map(item=>supabase.rpc("list_community_members",{p_community_id:item.community_id}))):[];
+  const communityMembers=communityMemberResults.flatMap((result,index)=>((result.data as Omit<CommunityMember,"community_id">[]|null)??[]).map(item=>({...item,community_id:communities[index].community_id})));
+  const communityReportResult=canModerate?await supabase.rpc("list_community_reports"):{data:[],error:null};
+  const featureFlagResult=role.role==="super_admin"?await supabase.from("feature_flags").select("enabled").eq("key","communities").maybeSingle():{data:null,error:null};
   const eventIds = events.map((event) => event.id);
   const [{ data: sessionData }, { data: announcementData }, { data: sponsorData }] = eventIds.length ? await Promise.all([
     supabase.from("programme_sessions").select("id, event_id, title, description, starts_at, ends_at, room, status").in("event_id", eventIds).order("starts_at", { ascending: true }),
@@ -157,7 +166,7 @@ export default async function AdminHomePage() {
     <main className="admin-command-center">
       <header className="admin-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Admin command center</small></span></Link>
-        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#check-in">Check-in</a><a href="#event-feedback">Feedback</a><a href="#moderation">Safety</a><a href="#marketplace-moderation">Marketplace</a>{role.role==="super_admin"?<><Link href="/admin/support">Support</Link><Link href="/admin/privacy">Privacy</Link><Link href="/admin/notifications">Delivery</Link></>:null}<a href="#roadmap">Roadmap</a></nav>
+        <nav aria-label="Admin navigation"><a href="#overview">Overview</a><a href="#members">Members</a><a href="#events">Events</a><a href="#event-content">Content</a><a href="#menu">Menu</a><a href="#gallery">Gallery</a><a href="#registrations">Registration</a><a href="#check-in">Check-in</a><a href="#event-feedback">Feedback</a><a href="#moderation">Safety</a><a href="#marketplace-moderation">Marketplace</a>{role.role==="super_admin"?<a href="#communities-admin">Communities</a>:null}{role.role==="super_admin"?<><Link href="/admin/support">Support</Link><Link href="/admin/privacy">Privacy</Link><Link href="/admin/notifications">Delivery</Link></>:null}<a href="#roadmap">Roadmap</a></nav>
         <span className="admin-role">{role.role.replace("_", " ")}</span>
       </header>
       <section className="admin-hero" id="overview">
@@ -179,6 +188,8 @@ export default async function AdminHomePage() {
       {canManageEvents && !eventResult.error ? <EventFeedbackManager events={events} feedback={eventFeedback} summaries={feedbackSummaries} recaps={(recapResult.data as EventRecap[]|null)??[]} migrationReady={feedbackResults.every(result=>!result.error)&&feedbackSummaryResults.every(result=>!result.error)&&!recapResult.error} /> : null}
       {canModerate?<ModerationQueue reports={(reportResult.data as MemberReport[]|null)??[]} migrationReady={!reportResult.error}/>:null}
       {canModerate?<MarketplaceModeration reports={(marketplaceReportResult.data as MarketplaceReport[]|null)??[]} migrationReady={!marketplaceReportResult.error}/>:null}
+      {role.role==="super_admin"?<CommunityManager communities={communities}members={communityMembers}enabled={Boolean(featureFlagResult.data?.enabled)}migrationReady={!communityResult.error&&!featureFlagResult.error&&communityMemberResults.every(result=>!result.error)}/>:null}
+      {canModerate?<CommunityModeration reports={(communityReportResult.data as CommunityReport[]|null)??[]}migrationReady={!communityReportResult.error}/>:null}
       <RoadmapOverview />
       <section className="admin-section" id="event">
         <EventCountdownManager canManage={canManageCountdown} initialSettings={(countdown as CountdownSettings | null) ?? null} userId={user.id} />

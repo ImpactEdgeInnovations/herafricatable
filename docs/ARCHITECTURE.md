@@ -182,6 +182,11 @@ browsing authority. Hiding preserves both the original evidence and audit trail.
 Communities remain a P1 feature flag. A basic group feed is not exposed until tenant
 ownership, host offboarding/export, community-scoped moderation, resources/chat,
 analytics and any host billing relationship pass their own production acceptance gate.
+The initial foundation keeps the flag disabled by default, supports official instant-join
+and private approval/invitation membership, and enforces feed access in database
+operations. Platform moderators see only immutable evidence attached to a report; they
+do not receive general private-feed access. Paid or third-party-hosted communities remain
+disabled until the additional ownership, export, analytics and billing gates pass.
 - `course_purchases`, `course_enrollments`, `lesson_progress`
 
 Circle launch matching is deterministic and explainable. AI can later propose matches,

@@ -1705,6 +1705,53 @@ body { background: var(--paper); }
 .menu-feedback-action button { padding: 8px 12px; border: 0; background: var(--wine); color: #fff; font-size: .58rem; font-weight: 800; cursor: pointer; }
 .menu-feedback-action button:disabled { opacity: .45; cursor: not-allowed; }
 .menu-feedback-action span { color: var(--muted); font-size: .58rem; }
+
+.community-page { min-height: 100vh; padding-bottom: 100px; background: var(--paper); }
+.community-hero,.community-room-hero,.community-hold { width: min(1120px,calc(100% - 48px)); margin: 0 auto; }
+.community-hero { padding: 100px 0 70px; border-bottom: 1px solid var(--line); }
+.community-hero h1,.community-room-hero h1,.community-hold h1 { max-width: 780px; margin: 10px 0 20px; font-family: var(--serif); font-size: clamp(3.4rem,7vw,6.5rem); font-weight: 400; letter-spacing: -.06em; line-height: .88; }
+.community-hero > p:last-child,.community-room-hero p,.community-hold p { max-width: 650px; color: var(--muted); line-height: 1.8; }
+.community-grid { display: grid; width: min(1120px,calc(100% - 48px)); margin: 55px auto 0; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+.community-grid > article { display: grid; min-height: 340px; padding: 36px; border: 1px solid var(--line); background: #fff; grid-template-rows: auto auto 1fr auto; }
+.community-card-meta { display: flex; align-items: center; justify-content: space-between; }
+.community-card-meta span { color: var(--wine); font-size: .58rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+.community-card-meta small,.community-grid footer span { color: var(--muted); font-size: .62rem; }
+.community-grid h2 { margin: 35px 0 14px; font-family: var(--serif); font-size: 2.2rem; font-weight: 400; }
+.community-grid p { margin: 0; color: var(--muted); font-size: .72rem; line-height: 1.75; }
+.community-grid footer { display: flex; align-items: center; margin-top: 30px; }
+.community-room-hero { display: flex; align-items: end; justify-content: space-between; padding: 85px 0 55px; border-bottom: 1px solid var(--line); gap: 40px; }
+.community-room-hero h1 { font-size: clamp(3rem,6vw,5.5rem); }
+.community-room-hero > span { padding: 9px 14px; border: 1px solid var(--line); color: var(--muted); font-size: .6rem; white-space: nowrap; }
+.community-composer,.community-feed { width: min(820px,calc(100% - 48px)); margin-right: auto; margin-left: auto; }
+.community-composer { display: grid; margin-top: 50px; padding: 28px; border: 1px solid var(--line); background: #fff; gap: 12px; }
+.community-composer label { font-family: var(--serif); font-size: 1.5rem; }
+.community-composer textarea { min-height: 120px; padding: 15px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: inherit; font-size: .75rem; line-height: 1.7; resize: vertical; }
+.community-composer > div { display: flex; align-items: center; justify-content: space-between; gap: 25px; }
+.community-composer small { color: var(--muted); font-size: .58rem; }
+.community-feed { margin-top: 22px; }
+.community-feed > article { padding: 30px 5px; border-bottom: 1px solid var(--line); }
+.community-feed article header { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+.community-feed article header div { display: grid; gap: 3px; }
+.community-feed article header strong { font-size: .72rem; }
+.community-feed article header small,.community-feed time { color: var(--muted); font-size: .57rem; }
+.community-feed article > p { margin: 22px 0; white-space: pre-wrap; font-family: var(--serif); font-size: 1.25rem; line-height: 1.55; }
+.community-feed article footer { text-align: right; }
+.community-feed article footer button { border: 0; background: transparent; color: var(--muted); font-size: .58rem; cursor: pointer; }
+.community-hold { padding-top: 130px; }
+.community-hold .button { margin-top: 25px; }
+.community-admin-layout { display: grid; grid-template-columns: 380px 1fr; gap: 45px; }
+.community-admin-layout > form,.community-invite { display: grid; align-content: start; gap: 14px; }
+.community-admin-layout label { display: grid; color: var(--muted); font-size: .62rem; font-weight: 800; gap: 6px; }
+.community-admin-layout input,.community-admin-layout select,.community-admin-layout textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-size: .68rem; }
+.community-admin-layout textarea { min-height: 125px; resize: vertical; }
+.community-member-admin { min-width: 0; }
+.community-invite { padding: 20px; border: 1px solid var(--line); grid-template-columns: 1fr 160px auto; }
+.community-invite button { align-self: end; min-height: 44px; border: 0; background: var(--wine); color: #fff; cursor: pointer; }
+.community-member-admin > div > article { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid var(--line); gap: 25px; }
+.community-member-admin article > div:first-child { display: grid; gap: 3px; }
+.community-member-admin article small,.community-member-admin article span { color: var(--muted); font-size: .57rem; }
+@media(max-width:800px){.community-grid{grid-template-columns:1fr}.community-room-hero{align-items:flex-start;flex-direction:column}.community-admin-layout{grid-template-columns:1fr}.community-invite{grid-template-columns:1fr}.community-member-admin>div>article{align-items:flex-start;flex-direction:column}.community-composer>div{align-items:flex-start;flex-direction:column}}
+@media(max-width:520px){.community-hero,.community-room-hero,.community-hold,.community-grid,.community-composer,.community-feed{width:calc(100% - 32px)}.community-grid>article{min-height:300px;padding:26px}.community-composer{padding:20px}.community-hero{padding-top:70px}}
 .embassy-note { max-width: 760px; margin: 55px 0 0 auto; padding: 35px 40px; border: 1px solid var(--line); background: var(--cream); }
 .embassy-note span { color: var(--gold); font-size: .56rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .embassy-note p { margin: 15px 0 0; font-family: var(--serif); font-size: 1.35rem; line-height: 1.55; }
