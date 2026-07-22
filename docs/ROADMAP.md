@@ -57,10 +57,11 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Simplify the Admin command centre into task groups with plain-language labels,
   queue counts and guided next steps
 - [ ] Add contextual help and examples to every unfamiliar form without crowding the page
-- [ ] Replace browser prompts with accessible confirmation dialogs and inline validation
+- [x] Replace browser prompts with accessible confirmation dialogs and inline validation
   - [x] All Admin payment, safety, privacy, event, membership and community
     decisions now use the shared accessible dialog pattern
-  - [ ] Migrate the remaining member-facing prompts
+  - [x] All member account, community, payment, networking and safety actions now use
+    the shared accessible dialog pattern
 - [ ] Complete a content pass for jargon, technical errors and destructive-action wording
 - [ ] Test the main member and administrator journeys with at least five non-technical users
 - [ ] Pass keyboard, screen-reader, contrast, 200% zoom and mobile usability acceptance
