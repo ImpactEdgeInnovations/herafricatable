@@ -172,7 +172,7 @@ select is((select count(*)from public.list_admin_privacy_requests()),2::bigint,'
 select ok((select count(*)from public.list_admin_notification_jobs())>=2,'super admin lists notification jobs');
 select is((select count(*)from public.list_marketplace_reports()),1::bigint,'super admin receives report snapshot through scoped moderation operation');
 select is((select count(*)from public.list_community_reports()),1::bigint,'super admin receives only reported community evidence');
-select lives_ok($$select public.review_community_report((select id from public.community_post_reports limit 1),'hide','Reported post removed after boundary test review.')$$,'super admin resolves community report and hides source post');
+select lives_ok($$select public.review_community_report((select report_id from public.list_community_reports()limit 1),'hide','Reported post removed after boundary test review.')$$,'super admin resolves community report through the authorized moderation projection');
 select lives_ok($$select public.invite_community_member('70000000-0000-4000-8000-000000000002','staff@test.invalid','moderator')$$,'super admin invites an active member into a private community role');
 select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000002'and user_id='10000000-0000-4000-8000-000000000004'),'invited','community invitation remains consent-based until accepted');
 select is((select count(*)from public.list_course_orders()),1::bigint,'super admin lists the pending course order');
