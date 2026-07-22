@@ -15,6 +15,7 @@ Production: [herafricatable.vercel.app](https://herafricatable.vercel.app)
 - [Production release checklist](docs/RELEASE_CHECKLIST.md)
 - [Notification delivery setup](docs/NOTIFICATIONS_SETUP.md)
 - [Event check-in runbook](docs/EVENT_CHECKIN_RUNBOOK.md)
+- [Asks & Offers operations](docs/MARKETPLACE_OPERATIONS.md)
 - [Production UAT record](docs/UAT_REPORT.md)
 
 ## Local setup

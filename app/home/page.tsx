@@ -32,10 +32,12 @@ export default async function MemberHomePage() {
   const orderIds=(orderRows??[]).map((order)=>order.id);
   const { data: refunds }=orderIds.length?await supabase.from("refund_requests").select("order_id").in("order_id",orderIds):{data:[]};
   const orders:MemberOrder[]=(orderRows??[]).map((order)=>({created_at:order.created_at,currency:order.currency,event:order.events as unknown as {slug:string;title:string}|null,id:order.id,processing_mode:order.processing_mode,reference:order.reference,status:order.status,ticket_name:((order.order_items as unknown as {ticket_types:{name:string}|null}[])[0]?.ticket_types?.name??"Event ticket"),total_minor:order.total_minor}));
+  const opportunityResult=accessStatus==="active"?await supabase.rpc("list_marketplace_posts",{p_category:null,p_limit:3,p_offset:0,p_post_type:null,p_search:null}):{data:[],error:null};
+  const opportunities=(opportunityResult.data as {author_name:string;category:string;post_id:string;post_type:string;title:string}[]|null)??[];
 
   return (
     <main className="member-home-page">
-      <header className="member-home-header"><Link className="brand" href="/"><span className="brand-mark">H</span><span>Her Africa Table<small>Member house</small></span></Link><nav>{accessStatus==="active"?<><Link href="/network">Member network</Link><Link href="/messages">Messages</Link></>:null}<Link href="/events">Upcoming tables</Link><Link href="/notifications">Notifications</Link><Link href="/support">Support</Link><Link href="/settings">Settings</Link></nav></header>
+      <header className="member-home-header"><Link className="brand" href="/"><span className="brand-mark">H</span><span>Her Africa Table<small>Member house</small></span></Link><nav>{accessStatus==="active"?<><Link href="/network">Member network</Link><Link href="/opportunities">Asks &amp; Offers</Link><Link href="/messages">Messages</Link></>:null}<Link href="/events">Upcoming tables</Link><Link href="/notifications">Notifications</Link><Link href="/support">Support</Link><Link href="/settings">Settings</Link></nav></header>
       <section className="member-welcome">
         <p className="eyebrow">Her Africa Table beta</p>
         <h1>{isApproved ? `Welcome${profile?.display_name ? `, ${profile.display_name}` : ""}.` : isSuspended ? "Your access is paused." : "Your request is at the table."}</h1>
@@ -45,6 +47,7 @@ export default async function MemberHomePage() {
           <a className="button button-outline" href="mailto:support@herafricatable.com">Contact support</a>
         </div>
       </section>
+      {accessStatus==="active"&&!opportunityResult.error?<section className="home-opportunities"><header><div><p className="eyebrow">Member exchange</p><h2>What the table needs now</h2></div><Link href="/opportunities">View all Asks &amp; Offers</Link></header>{opportunities.length?<div>{opportunities.map(item=><Link href="/opportunities" key={item.post_id}><span>{item.post_type} · {item.category}</span><strong>{item.title}</strong><small>{item.author_name}</small></Link>)}</div>:<div className="admin-empty"><strong>Start the first exchange</strong><p>Share a focused ask or offer that another member can act on.</p><Link href="/opportunities">Create a post</Link></div>}</section>:null}
       <OrderHistory orders={orders} refundOrderIds={(refunds??[]).map((refund)=>refund.order_id)} />
     </main>
   );

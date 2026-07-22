@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(26);
+select plan(36);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -35,6 +35,8 @@ insert into public.event_staff_scopes(user_id,event_id,granted_by)values
 insert into public.event_memberships(event_id,user_id,status,confirmed_at)values
  ('50000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','confirmed',now()),
  ('50000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','confirmed',now());
+insert into public.marketplace_posts(id,author_id,post_type,category,title,body,delivery_mode,status)values
+ ('60000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','offer','mentorship','Test mentorship office hours','I can offer a focused thirty minute mentoring conversation.','online','published');
 
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
@@ -52,6 +54,12 @@ select is((select count(*)from public.get_my_event_pass('50000000-0000-4000-8000
 select is((select count(*)from public.get_my_event_pass('50000000-0000-4000-8000-000000000002')),1::bigint,'confirmed member can issue own second event pass');
 select is((select count(*)from public.event_checkin_credentials),2::bigint,'member reads only own event credentials');
 select throws_ok($$select *from public.list_event_checkins('50000000-0000-4000-8000-000000000001')$$,'P0001','Not authorized','member cannot list event check-in roster');
+select is((select count(*)from public.list_marketplace_posts(null,null,null,24,0)),1::bigint,'active member discovers another active member marketplace post');
+select lives_ok($$select public.save_marketplace_post(null,'ask','business','Need a packaging supplier introduction','I am looking for a trusted sustainable packaging supplier in Kenya.',null,'Nairobi','hybrid',now()+interval'7 days')$$,'active member can create a policy-validated ask');
+select lives_ok($$select public.respond_to_marketplace_post('60000000-0000-4000-8000-000000000001','I would value a conversation about business growth.')$$,'member can privately respond to another member post');
+select throws_ok($$select public.respond_to_marketplace_post('60000000-0000-4000-8000-000000000001','A second response should not create a duplicate.')$$,'P0001','You already responded to this post','duplicate marketplace response is rejected');
+select is((select count(*)from public.marketplace_responses),1::bigint,'responder reads own private response only');
+select lives_ok($$select public.report_marketplace_post('60000000-0000-4000-8000-000000000001','other','Test report for report-scoped moderation coverage.')$$,'active member can report a visible marketplace post');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',true);
 select is((select count(*)from public.support_tickets),0::bigint,'event staff cannot read support tickets');
@@ -64,11 +72,17 @@ select is((select outcome from public.check_in_event_member('50000000-0000-4000-
 select is((select outcome from public.check_in_event_member('50000000-0000-4000-8000-000000000001',(select manual_code from public.event_checkin_credentials where event_id='50000000-0000-4000-8000-000000000001'),'manual','pgTAP')), 'already_checked_in','duplicate scan is idempotent');
 select lives_ok($$select public.reverse_event_checkin((select id from public.event_checkins where event_id='50000000-0000-4000-8000-000000000001'and reversed_at is null),'Incorrect door scan')$$,'event staff can auditably reverse assigned event check-in');
 select is((select status from public.event_memberships where event_id='50000000-0000-4000-8000-000000000001'and user_id='10000000-0000-4000-8000-000000000002'),'confirmed','reversal restores confirmed attendance state');
+select throws_ok($$select *from public.list_marketplace_reports()$$,'P0001','Moderator role required','event staff cannot access marketplace moderation reports');
+
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
+select is((select count(*)from public.list_marketplace_responses('60000000-0000-4000-8000-000000000001')),1::bigint,'post owner reads private responses to own post');
+select lives_ok($$select public.review_marketplace_response((select id from public.marketplace_responses where post_id='60000000-0000-4000-8000-000000000001'),'accepted')$$,'post owner can accept a private response');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select count(*)from public.support_tickets),2::bigint,'super admin reads support tickets');
 select is((select count(*)from public.list_admin_privacy_requests()),2::bigint,'super admin lists privacy requests');
 select ok((select count(*)from public.list_admin_notification_jobs())>=2,'super admin lists notification jobs');
+select is((select count(*)from public.list_marketplace_reports()),1::bigint,'super admin receives report snapshot through scoped moderation operation');
 
 select *from finish();
 rollback;

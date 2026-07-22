@@ -121,6 +121,8 @@
 - [ ] Every event device is signed in as a scoped staff account, not a shared Super Admin account
 - [ ] Slow-network, offline/retry and duplicate-submit tests pass
 - [ ] Directory, messages and admin lists paginate
+- [ ] Asks & Offers enforce active-member visibility, blocked-pair exclusion and private response ownership
+- [ ] Marketplace report snapshots, hide/dismiss decisions and notification links pass moderator UAT
 - [ ] Performance and image/media budgets pass
 
 ## Observability and operations

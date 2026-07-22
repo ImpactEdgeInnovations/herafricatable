@@ -155,6 +155,7 @@ duplicates are idempotent, and corrections retain the original row as an audited
 - `blocks`
 - `asks`, `ask_responses`
 - `support_tickets`, `support_messages`
+- `marketplace_posts`, `marketplace_responses`, `marketplace_reports`
 
 A unique canonical pair prevents A→B and B→A duplicates. Conversation creation is a
 controlled operation allowed only for accepted, unblocked connections.
@@ -162,6 +163,10 @@ Support tickets and their replies are readable only by the submitting member and
 Super Admins. Event staff and moderators receive no implicit support access. Creation,
 reply and management operations are rate-limited, and lifecycle changes are audited
 without copying private message bodies into operational logs.
+Asks and Offers are visible only to active, mutually unblocked members. Responses are
+private to the responder and post owner. Marketplace moderation is report-scoped:
+moderators receive the captured evidence submitted with a report, not unrestricted
+browsing authority. Hiding preserves both the original evidence and audit trail.
 
 ### Communities, Circles and learning
 
