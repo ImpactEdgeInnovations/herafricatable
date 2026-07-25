@@ -51,18 +51,24 @@ A feature is not complete merely because its screen exists. It is complete when:
 Usability is part of production readiness and continues alongside feature delivery:
 
 - [x] Establish a refined visual system with consistent typography, colour, spacing,
-  buttons, cards, forms, feedback states and responsive behavior
+      buttons, cards, forms, feedback states and responsive behavior
 - [x] Replace the member-home product language with clear account status, task-based
-  navigation and three obvious first actions
+      navigation and three obvious first actions
 - [x] Simplify the Admin command centre into task groups with plain-language labels,
-  queue counts and guided next steps
+      queue counts and guided next steps
 - [ ] Add contextual help and examples to every unfamiliar form without crowding the page
+  - [x] Membership payment review, referrals and support requests include concise,
+        accessible examples and privacy guidance
+  - [ ] Complete the same form-level review across Admin configuration screens
 - [x] Replace browser prompts with accessible confirmation dialogs and inline validation
   - [x] All Admin payment, safety, privacy, event, membership and community
-    decisions now use the shared accessible dialog pattern
+        decisions now use the shared accessible dialog pattern
   - [x] All member account, community, payment, networking and safety actions now use
-    the shared accessible dialog pattern
+        the shared accessible dialog pattern
 - [ ] Complete a content pass for jargon, technical errors and destructive-action wording
+  - [x] All member workflows filter raw service errors and provide a clear retry,
+        sign-in or support recovery path
+  - [ ] Complete the equivalent Admin error and terminology review
 - [ ] Test the main member and administrator journeys with at least five non-technical users
 - [ ] Pass keyboard, screen-reader, contrast, 200% zoom and mobile usability acceptance
 - [ ] Confirm every core journey has clear loading, empty, success, error and recovery states
@@ -70,14 +76,14 @@ Usability is part of production readiness and continues alongside feature delive
 
 ## Release scope
 
-## Current delivery status — 22 July 2026
+## Current delivery status — 25 July 2026
 
 ### Completed foundation
 
 - [x] Prestige public landing page, live admin-managed event countdown, legal pages,
-  and dedicated FAQ page
+      and dedicated FAQ page
 - [x] Supabase browser/server clients, request-level session refresh and protected
-  member/admin routes
+      member/admin routes
 - [x] Single-method email OTP request and six-digit verification interface
 - [x] Pending member state, invite-based onboarding eligibility, admin roles and RLS
 - [x] First public operational control: publish or hide the next-event countdown
@@ -87,67 +93,67 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Member review operations with audited approval, suspension and restoration
 - [x] Onboarding foundation with public/private profile separation and consent records
 - [x] Progressive onboarding v2 implementation with secure avatar upload, structured
-  goals, languages, city, business/referral fields and deterministic completion
+      goals, languages, city, business/referral fields and deterministic completion
 - [x] Event lifecycle foundation with venues, publishing states, registration modes,
-  staff scopes, programme, speakers, announcements, sponsors and RLS
+      staff scopes, programme, speakers, announcements, sponsors and RLS
 - [x] Audited admin event editor with protected online access details and automatic
-  featured-event countdown synchronization
+      featured-event countdown synchronization
 - [x] Public published-event listing and event-detail foundations
 - [x] Audited programme/session and speaker operations, announcement publishing,
-  sponsor management, and super-admin event staff assignment
+      sponsor management, and super-admin event staff assignment
 - [x] Curated event menu CMS with courses, dishes, cultural context, dietary and
-  allergen information, member feedback foundations, and audited moderation
+      allergen information, member feedback foundations, and audited moderation
 - [x] Private event-media Storage, gallery albums, audited media publishing,
-  accessible metadata, signed delivery URLs, and responsive public galleries
+      accessible metadata, signed delivery URLs, and responsive public galleries
 - [x] Provider-neutral registration commerce foundation with ticket inventory,
-  minor-unit pricing, orders, manual review, and idempotent entitlement fulfillment
+      minor-unit pricing, orders, manual review, and idempotent entitlement fulfillment
 - [x] Server-only Paystack initialization, callback verification, raw-body webhook
-  signature validation, amount/currency matching, and admin reconciliation visibility
+      signature validation, amount/currency matching, and admin reconciliation visibility
 - [x] Member order history and receipts, safe pending cancellation, refund requests,
-  and audited manual/automatic refund lifecycle controls
+      and audited manual/automatic refund lifecycle controls
 - [x] Active-member directory, canonical connection pairs, in-person connection codes,
-  request/accept/ignore operations, and accepted-connection private contact gates
+      request/accept/ignore operations, and accepted-connection private contact gates
 - [x] Bilateral blocking enforcement, connection removal, member reporting with
-  evidence snapshots, moderator queue, outcomes, and audit history
+      evidence snapshots, moderator queue, outcomes, and audit history
 - [x] Accepted-connection private conversations, realtime messages, pagination-ready
-  history, unread tracking, rate limits, deletion, and report-scoped message evidence
+      history, unread tracking, rate limits, deletion, and report-scoped message evidence
 - [x] Private member support requests, threaded replies, priority and assignment
-  controls, lifecycle states, rate limits, realtime updates, and audit history
+      controls, lifecycle states, rate limits, realtime updates, and audit history
 - [x] Member visibility settings, portable JSON export, deletion cooling-off and
-  cancellation, Super Admin review, anonymization, access revocation and retention boundaries
+      cancellation, Super Admin review, anonymization, access revocation and retention boundaries
 - [x] Realtime in-app notifications, member delivery preferences, transactional email
-  outbox, idempotent Resend worker, retries, admin monitoring and database health endpoint
+      outbox, idempotent Resend worker, retries, admin monitoring and database health endpoint
 - [x] GitHub Actions quality gate, repository contract/secret checks, reproducible local
-  Supabase configuration, migration reset, and pgTAP authorization boundary tests
+      Supabase configuration, migration reset, and pgTAP authorization boundary tests
 - [x] Feature-gated Communities foundation with official/private membership, invitations,
-  host roles, private feeds, rate limits, report-scoped moderation and audited release control
+      host roles, private feeds, rate limits, report-scoped moderation and audited release control
 - [x] Feature-gated Learning foundation with private lessons, user-scoped progress,
-  event/free/manual access and course purchases through the shared payment engine
+      event/free/manual access and course purchases through the shared payment engine
 - [x] Feature-gated vouched invitations with campaign limits, private review,
-  email delivery, existing invite-gate integration and claimed/activated attribution
+      email delivery, existing invite-gate integration and claimed/activated attribution
 - [x] Feature-gated membership plans, renewal periods, grace/dormant reconciliation,
-  shared Paystack/manual fulfillment and production-safe tagged test identities
+      shared Paystack/manual fulfillment and production-safe tagged test identities
 - [x] Feature-gated deterministic Circles with explicit opt-in, balanced cohort
-  generation, blocked-pair safety, human review, private prompts and responses
+      generation, blocked-pair safety, human review, private prompts and responses
 - [x] Feature-gated partner benefits with atomic inventory, private single-use codes,
-  expiry release, member limits and an audited admin redemption ledger
+      expiry release, member limits and an audited admin redemption ledger
 - [x] Member/admin responsive UI refinement with focused navigation, a modular member
-  launcher, earlier mobile authentication actions and scroll-safe admin controls
+      launcher, earlier mobile authentication actions and scroll-safe admin controls
 - [x] Privacy-safe server analytics with test-account separation, admin-only aggregates,
-  editable audited launch thresholds and a production readiness scorecard
+      editable audited launch thresholds and a production readiness scorecard
 - [x] Repeatable production smoke suite, anonymous route-boundary checks, mobile public
-  UAT, deployment health diagnostics and a manually gated live-smoke workflow
+      UAT, deployment health diagnostics and a manually gated live-smoke workflow
 
 ### Immediate release gate
 
 - [ ] Configure the Supabase email template with `{{ .Token }}` and disable magic-link
-  wording
+      wording
 - [ ] Configure production SMTP and verify sender-domain authentication
 - [ ] Seed and verify the Super Admin account, then test member and admin OTP end to end
 - [x] Apply the onboarding/admin migration in production Supabase
 - [ ] Complete a real pending → onboarding → active acceptance test
 - [x] Add a forward-only onboarding migration for city, languages, referral source,
-  business/website fields, profile completion and normalized member goals
+      business/website fields, profile completion and normalized member goals
 - [x] Apply `20260721120000_onboarding_v2.sql` in production Supabase
 - [x] Convert onboarding to progressive save
 - [ ] Verify interruption/resume, avatar replacement and activation behavior
@@ -388,22 +394,22 @@ flag with no navigation exposure and no unsafe partial access.
 
 ## Feature acceptance map
 
-| Product area | Minimum production acceptance |
-|---|---|
+| Product area   | Minimum production acceptance                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Authentication | Email OTP works locally and in production; temporary passwords are retired; redirects are allow-listed; sessions are cookie-based and refreshed safely. |
-| Registration | Authentication does not imply membership; automatic and manual approvals issue one auditable entitlement. |
-| Profiles | Public and private data are separated; private contacts require an accepted connection; pause mode removes discovery. |
-| Events | Staff access is event-scoped; drafts are not member-visible; upcoming/past transitions are deterministic. |
-| Payments | Amounts use integer minor units; webhooks are signed and idempotent; browser callbacks never mark orders paid. |
-| Connections | Canonical user pairs prevent duplicates; ignore is quiet; blocking is immediate and mutual. |
-| Messaging | Only accepted, unblocked pairs can send; pagination and rate limits exist; report evidence is preserved. |
-| Moderation | Report-scoped access is server-mediated and audited; moderator roles cannot access finances or event editing. |
-| Communities | Membership and moderation are policy-enforced; private content is unavailable without membership or report escalation. |
-| Courses | Lesson assets are private/signed; access rules and purchases are server-enforced; progress is user-scoped. |
-| Notifications | Preferences are grouped; transactional messages cannot be disabled; deliveries are logged and retry-safe. |
-| Admin | Every sensitive action is permission-checked and audited; no service key reaches browser code. |
-| Analytics | Metrics use documented definitions and exclude test/seed activity. |
-| Deletion | Identity removal, retained messages, financial records and audit evidence follow a documented retention policy. |
+| Registration   | Authentication does not imply membership; automatic and manual approvals issue one auditable entitlement.                                               |
+| Profiles       | Public and private data are separated; private contacts require an accepted connection; pause mode removes discovery.                                   |
+| Events         | Staff access is event-scoped; drafts are not member-visible; upcoming/past transitions are deterministic.                                               |
+| Payments       | Amounts use integer minor units; webhooks are signed and idempotent; browser callbacks never mark orders paid.                                          |
+| Connections    | Canonical user pairs prevent duplicates; ignore is quiet; blocking is immediate and mutual.                                                             |
+| Messaging      | Only accepted, unblocked pairs can send; pagination and rate limits exist; report evidence is preserved.                                                |
+| Moderation     | Report-scoped access is server-mediated and audited; moderator roles cannot access finances or event editing.                                           |
+| Communities    | Membership and moderation are policy-enforced; private content is unavailable without membership or report escalation.                                  |
+| Courses        | Lesson assets are private/signed; access rules and purchases are server-enforced; progress is user-scoped.                                              |
+| Notifications  | Preferences are grouped; transactional messages cannot be disabled; deliveries are logged and retry-safe.                                               |
+| Admin          | Every sensitive action is permission-checked and audited; no service key reaches browser code.                                                          |
+| Analytics      | Metrics use documented definitions and exclude test/seed activity.                                                                                      |
+| Deletion       | Identity removal, retained messages, financial records and audit evidence follow a documented retention policy.                                         |
 
 ## Success metrics
 

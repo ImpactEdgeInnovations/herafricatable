@@ -2,16 +2,346 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
-const root=new URL("../",import.meta.url);const tracked=execFileSync("git",["ls-files","--cached","--others","--exclude-standard","-z"],{cwd:root,encoding:"utf8"}).split("\0").filter(Boolean);const read=path=>readFileSync(new URL(path,root),"utf8");
-const forbidden=[/sb_secret_[A-Za-z0-9_-]{12,}/,/sk_(?:live|test)_[A-Za-z0-9]{12,}/,/re_[A-Za-z0-9]{20,}/,/SUPABASE_SECRET_KEY[^\S\r\n]*=[^\S\r\n]*\S+/,/CRON_SECRET[^\S\r\n]*=[^\S\r\n]*\S+/];
-for(const path of tracked){if(path==="package-lock.json")continue;const content=read(path);for(const pattern of forbidden)assert(!pattern.test(content),`Potential committed secret in ${path}`)}
-const migrations=tracked.filter(path=>path.startsWith("supabase/migrations/")&&path.endsWith(".sql")).sort();assert(migrations.length>=18,"Expected the complete migration chain");const names=migrations.map(path=>path.split("/").pop());assert.equal(new Set(names.map(name=>name.slice(0,14))).size,names.length,"Migration timestamps must be unique");assert.deepEqual(names,[...names].sort(),"Migrations must sort chronologically");for(const path of migrations.filter(path=>path>="supabase/migrations/20260723170000")){const sql=read(path).trim().toLowerCase();assert(sql.startsWith("begin;"),`${path} must begin atomically`);assert(sql.endsWith("commit;"),`${path} must commit atomically`)}
-const cron=read("app/api/cron/notifications/route.ts");assert(cron.includes("timingSafeEqual"),"Cron authorization must use constant-time comparison");assert(cron.includes("CRON_SECRET"),"Cron route must require CRON_SECRET");const privacy=read("app/api/admin/privacy/delete/route.ts");assert(privacy.includes('eq("role","super_admin")'),"Deletion endpoint must verify Super Admin");assert(privacy.includes("execute_account_deletion"),"Deletion endpoint must use controlled database execution");const webhook=read("app/api/payments/paystack/webhook/route.ts");assert(webhook.indexOf("request.text()")<webhook.indexOf("JSON.parse"),"Paystack signature must verify the raw request body");assert(webhook.includes("timingSafeEqual"),"Paystack signature check must be constant-time");const paymentInitialize=read("app/api/payments/paystack/initialize/route.ts");assert(paymentInitialize.includes("create_course_order"),"Course checkout must use the shared payment initializer");assert(paymentInitialize.includes("order_type"),"Payment metadata must identify fulfillment context");const paymentCallback=read("app/api/payments/paystack/callback/route.ts");assert(paymentCallback.includes("/learning/"),"Verified course checkout must return to Learning");const learningMigration=read("supabase/migrations/20260725130000_learning_foundation.sql");assert(learningMigration.includes("order_item_exactly_one_product"),"Shared order lines must have exactly one product");assert(learningMigration.includes("fulfill_course_order"),"Course purchases must converge on controlled fulfillment");const referralMigration=read("supabase/migrations/20260725170000_referrals_vouched_invitations.sql");assert(referralMigration.indexOf("status='pending_review'")<referralMigration.indexOf("insert into public.beta_invites"),"Referral submission must precede a separate invite approval gate");assert(referralMigration.includes("Super Admin review before a beta invitation"),"Referral access boundary must remain documented in schema");const env=read(".env.example");for(const secret of["SUPABASE_SECRET_KEY","PAYSTACK_SECRET_KEY","RESEND_API_KEY","CRON_SECRET"])assert(!env.includes(`NEXT_PUBLIC_${secret}`),`${secret} must remain server-only`);
-const membershipMigration=read("supabase/migrations/20260725210000_membership_renewal_lifecycle.sql");assert(membershipMigration.includes("pg_advisory_xact_lock"),"Membership grants must serialize per member");assert(membershipMigration.includes("onboarding_completed_at is null"),"Membership payment must preserve onboarding requirements");assert(membershipMigration.includes("is_test_account"),"Production test identities must be explicitly tagged");assert(paymentInitialize.includes("create_membership_order"),"Membership checkout must use the shared payment initializer");const testUsers=read("app/api/admin/test-users/route.ts");assert(testUsers.includes('eq("role","super_admin")'),"Test user creation must verify Super Admin");assert(testUsers.includes('.endsWith(".invalid")'),"Test identities must use a reserved domain");
-const circlesMigration=read("supabase/migrations/20260726090000_circles_deterministic_matching.sql");assert(circlesMigration.includes("deterministic_v1"),"Circle matching must identify its deterministic method");assert(circlesMigration.includes("Matching produced a blocked pair"),"Circle matching must stop on blocked pairs");assert(circlesMigration.indexOf("status='matched'")<circlesMigration.indexOf("publish_circle_cycle"),"Circle matching must remain reviewable before publication");assert(circlesMigration.includes("include_test_accounts"),"Circle cycles must explicitly control test identities");
-const perksMigration=read("supabase/migrations/20260726130000_partner_perks_redemption.sql");assert(perksMigration.includes("for update"),"Perk inventory must be locked before reservation");assert(perksMigration.includes("perk_active_reservation_idx"),"Perks must prevent duplicate active reservations");assert(perksMigration.includes("expire_perk_redemptions"),"Expired reservations must release inventory");assert(perksMigration.includes("Super admin required"),"Redemption reconciliation must remain admin controlled");
-const analyticsMigration=read("supabase/migrations/20260726170000_privacy_safe_analytics.sql");for(const forbiddenField of["ip_address","user_agent","raw_url","search_query","message_body","subject_id","total_minor"])assert(!analyticsMigration.includes(forbiddenField),`Analytics must not collect ${forbiddenField}`);assert(analyticsMigration.includes("is_test_event"),"Analytics must separate tagged test activity");assert(analyticsMigration.includes("Super admin required"),"Analytics aggregates must remain Super Admin-only");assert(analyticsMigration.includes("octet_length(metadata::text)<=2048"),"Analytics metadata must remain bounded");assert(analyticsMigration.includes("t.status='on_sale'"),"Readiness must use the live ticket status contract");
-const databaseCorrections=read("supabase/migrations/20260726210000_ci_database_corrections.sql");assert(databaseCorrections.includes("extensions.gen_random_bytes"),"Security-definer token generation must qualify the extensions schema");assert(databaseCorrections.includes("e.status='published'"),"Readiness queries must qualify status columns");assert(databaseCorrections.includes("nj.status='failed'"),"Notification readiness must avoid output-column ambiguity");const boundaryTests=read("supabase/tests/001_production_boundaries.sql");assert(boundaryTests.includes("select report_id from public.list_community_reports()"),"Moderation tests must use the authorized report projection");assert(boundaryTests.includes("select circle_id from public.list_my_circles()"),"Circle tests must use the authorized member projection");
-const actionDialog=read("components/ui/action-dialog.tsx");assert(actionDialog.includes("showModal()"),"Critical actions must use a modal focus boundary");assert(actionDialog.includes('role="alert"'),"Action validation must announce inline errors");const adminDialogModules=["analytics-readiness","circle-manager","community-manager","community-moderation","event-checkin-console","event-feedback-manager","learning-manager","marketplace-moderation","membership-manager","moderation-queue","perks-manager","privacy-operations","referral-manager","registration-manager"];for(const module of adminDialogModules){const path=`components/admin/${module}.tsx`;const content=read(path);assert(!/\b(?:window\.)?(?:prompt|confirm)\s*\(/.test(content),`${path} must not regress to browser prompts`);assert(content.includes("useActionDialog"),`${path} must use the shared accessible action dialog`)}
-const memberDialogModules=["account-settings","circles-hub","community-feed","learning-catalog","message-center","network-hub","opportunity-marketplace","order-history","perks-gallery"];for(const module of memberDialogModules){const path=`components/member/${module}.tsx`;const content=read(path);assert(!/\b(?:window\.)?(?:prompt|confirm)\s*\(/.test(content),`${path} must not regress to browser prompts`);assert(content.includes("useActionDialog"),`${path} must use the shared accessible action dialog`)}
-console.log(`Repository contracts passed: ${tracked.length} tracked files, ${migrations.length} ordered migrations.`);
+const root = new URL("../", import.meta.url);
+const tracked = execFileSync(
+  "git",
+  ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+  { cwd: root, encoding: "utf8" },
+)
+  .split("\0")
+  .filter(Boolean);
+const read = (path) => readFileSync(new URL(path, root), "utf8");
+const forbidden = [
+  /sb_secret_[A-Za-z0-9_-]{12,}/,
+  /sk_(?:live|test)_[A-Za-z0-9]{12,}/,
+  /re_[A-Za-z0-9]{20,}/,
+  /SUPABASE_SECRET_KEY[^\S\r\n]*=[^\S\r\n]*\S+/,
+  /CRON_SECRET[^\S\r\n]*=[^\S\r\n]*\S+/,
+];
+for (const path of tracked) {
+  if (path === "package-lock.json") continue;
+  const content = read(path);
+  for (const pattern of forbidden)
+    assert(!pattern.test(content), `Potential committed secret in ${path}`);
+}
+const migrations = tracked
+  .filter(
+    (path) => path.startsWith("supabase/migrations/") && path.endsWith(".sql"),
+  )
+  .sort();
+assert(migrations.length >= 18, "Expected the complete migration chain");
+const names = migrations.map((path) => path.split("/").pop());
+assert.equal(
+  new Set(names.map((name) => name.slice(0, 14))).size,
+  names.length,
+  "Migration timestamps must be unique",
+);
+assert.deepEqual(
+  names,
+  [...names].sort(),
+  "Migrations must sort chronologically",
+);
+for (const path of migrations.filter(
+  (path) => path >= "supabase/migrations/20260723170000",
+)) {
+  const sql = read(path).trim().toLowerCase();
+  assert(sql.startsWith("begin;"), `${path} must begin atomically`);
+  assert(sql.endsWith("commit;"), `${path} must commit atomically`);
+}
+const cron = read("app/api/cron/notifications/route.ts");
+assert(
+  cron.includes("timingSafeEqual"),
+  "Cron authorization must use constant-time comparison",
+);
+assert(cron.includes("CRON_SECRET"), "Cron route must require CRON_SECRET");
+const privacy = read("app/api/admin/privacy/delete/route.ts");
+assert(
+  privacy.includes('eq("role","super_admin")'),
+  "Deletion endpoint must verify Super Admin",
+);
+assert(
+  privacy.includes("execute_account_deletion"),
+  "Deletion endpoint must use controlled database execution",
+);
+const webhook = read("app/api/payments/paystack/webhook/route.ts");
+assert(
+  webhook.indexOf("request.text()") < webhook.indexOf("JSON.parse"),
+  "Paystack signature must verify the raw request body",
+);
+assert(
+  webhook.includes("timingSafeEqual"),
+  "Paystack signature check must be constant-time",
+);
+const paymentInitialize = read("app/api/payments/paystack/initialize/route.ts");
+assert(
+  paymentInitialize.includes("create_course_order"),
+  "Course checkout must use the shared payment initializer",
+);
+assert(
+  paymentInitialize.includes("order_type"),
+  "Payment metadata must identify fulfillment context",
+);
+const paymentCallback = read("app/api/payments/paystack/callback/route.ts");
+assert(
+  paymentCallback.includes("/learning/"),
+  "Verified course checkout must return to Learning",
+);
+const learningMigration = read(
+  "supabase/migrations/20260725130000_learning_foundation.sql",
+);
+assert(
+  learningMigration.includes("order_item_exactly_one_product"),
+  "Shared order lines must have exactly one product",
+);
+assert(
+  learningMigration.includes("fulfill_course_order"),
+  "Course purchases must converge on controlled fulfillment",
+);
+const referralMigration = read(
+  "supabase/migrations/20260725170000_referrals_vouched_invitations.sql",
+);
+assert(
+  referralMigration.indexOf("status='pending_review'") <
+    referralMigration.indexOf("insert into public.beta_invites"),
+  "Referral submission must precede a separate invite approval gate",
+);
+assert(
+  referralMigration.includes("Super Admin review before a beta invitation"),
+  "Referral access boundary must remain documented in schema",
+);
+const env = read(".env.example");
+for (const secret of [
+  "SUPABASE_SECRET_KEY",
+  "PAYSTACK_SECRET_KEY",
+  "RESEND_API_KEY",
+  "CRON_SECRET",
+])
+  assert(
+    !env.includes(`NEXT_PUBLIC_${secret}`),
+    `${secret} must remain server-only`,
+  );
+const membershipMigration = read(
+  "supabase/migrations/20260725210000_membership_renewal_lifecycle.sql",
+);
+assert(
+  membershipMigration.includes("pg_advisory_xact_lock"),
+  "Membership grants must serialize per member",
+);
+assert(
+  membershipMigration.includes("onboarding_completed_at is null"),
+  "Membership payment must preserve onboarding requirements",
+);
+assert(
+  membershipMigration.includes("is_test_account"),
+  "Production test identities must be explicitly tagged",
+);
+assert(
+  paymentInitialize.includes("create_membership_order"),
+  "Membership checkout must use the shared payment initializer",
+);
+const testUsers = read("app/api/admin/test-users/route.ts");
+assert(
+  testUsers.includes('eq("role","super_admin")'),
+  "Test user creation must verify Super Admin",
+);
+assert(
+  testUsers.includes('.endsWith(".invalid")'),
+  "Test identities must use a reserved domain",
+);
+const circlesMigration = read(
+  "supabase/migrations/20260726090000_circles_deterministic_matching.sql",
+);
+assert(
+  circlesMigration.includes("deterministic_v1"),
+  "Circle matching must identify its deterministic method",
+);
+assert(
+  circlesMigration.includes("Matching produced a blocked pair"),
+  "Circle matching must stop on blocked pairs",
+);
+assert(
+  circlesMigration.indexOf("status='matched'") <
+    circlesMigration.indexOf("publish_circle_cycle"),
+  "Circle matching must remain reviewable before publication",
+);
+assert(
+  circlesMigration.includes("include_test_accounts"),
+  "Circle cycles must explicitly control test identities",
+);
+const perksMigration = read(
+  "supabase/migrations/20260726130000_partner_perks_redemption.sql",
+);
+assert(
+  perksMigration.includes("for update"),
+  "Perk inventory must be locked before reservation",
+);
+assert(
+  perksMigration.includes("perk_active_reservation_idx"),
+  "Perks must prevent duplicate active reservations",
+);
+assert(
+  perksMigration.includes("expire_perk_redemptions"),
+  "Expired reservations must release inventory",
+);
+assert(
+  perksMigration.includes("Super admin required"),
+  "Redemption reconciliation must remain admin controlled",
+);
+const analyticsMigration = read(
+  "supabase/migrations/20260726170000_privacy_safe_analytics.sql",
+);
+for (const forbiddenField of [
+  "ip_address",
+  "user_agent",
+  "raw_url",
+  "search_query",
+  "message_body",
+  "subject_id",
+  "total_minor",
+])
+  assert(
+    !analyticsMigration.includes(forbiddenField),
+    `Analytics must not collect ${forbiddenField}`,
+  );
+assert(
+  analyticsMigration.includes("is_test_event"),
+  "Analytics must separate tagged test activity",
+);
+assert(
+  analyticsMigration.includes("Super admin required"),
+  "Analytics aggregates must remain Super Admin-only",
+);
+assert(
+  analyticsMigration.includes("octet_length(metadata::text)<=2048"),
+  "Analytics metadata must remain bounded",
+);
+assert(
+  analyticsMigration.includes("t.status='on_sale'"),
+  "Readiness must use the live ticket status contract",
+);
+const databaseCorrections = read(
+  "supabase/migrations/20260726210000_ci_database_corrections.sql",
+);
+assert(
+  databaseCorrections.includes("extensions.gen_random_bytes"),
+  "Security-definer token generation must qualify the extensions schema",
+);
+assert(
+  databaseCorrections.includes("e.status='published'"),
+  "Readiness queries must qualify status columns",
+);
+assert(
+  databaseCorrections.includes("nj.status='failed'"),
+  "Notification readiness must avoid output-column ambiguity",
+);
+const boundaryTests = read("supabase/tests/001_production_boundaries.sql");
+assert(
+  boundaryTests.includes(
+    "select report_id from public.list_community_reports()",
+  ),
+  "Moderation tests must use the authorized report projection",
+);
+assert(
+  boundaryTests.includes("select circle_id from public.list_my_circles()"),
+  "Circle tests must use the authorized member projection",
+);
+const actionDialog = read("components/ui/action-dialog.tsx");
+assert(
+  actionDialog.includes("showModal()"),
+  "Critical actions must use a modal focus boundary",
+);
+assert(
+  actionDialog.includes('role="alert"'),
+  "Action validation must announce inline errors",
+);
+const adminDialogModules = [
+  "analytics-readiness",
+  "circle-manager",
+  "community-manager",
+  "community-moderation",
+  "event-checkin-console",
+  "event-feedback-manager",
+  "learning-manager",
+  "marketplace-moderation",
+  "membership-manager",
+  "moderation-queue",
+  "perks-manager",
+  "privacy-operations",
+  "referral-manager",
+  "registration-manager",
+];
+for (const module of adminDialogModules) {
+  const path = `components/admin/${module}.tsx`;
+  const content = read(path);
+  assert(
+    !/\b(?:window\.)?(?:prompt|confirm)\s*\(/.test(content),
+    `${path} must not regress to browser prompts`,
+  );
+  assert(
+    content.includes("useActionDialog"),
+    `${path} must use the shared accessible action dialog`,
+  );
+}
+const memberDialogModules = [
+  "account-settings",
+  "circles-hub",
+  "community-feed",
+  "learning-catalog",
+  "message-center",
+  "network-hub",
+  "opportunity-marketplace",
+  "order-history",
+  "perks-gallery",
+];
+for (const module of memberDialogModules) {
+  const path = `components/member/${module}.tsx`;
+  const content = read(path);
+  assert(
+    !/\b(?:window\.)?(?:prompt|confirm)\s*\(/.test(content),
+    `${path} must not regress to browser prompts`,
+  );
+  assert(
+    content.includes("useActionDialog"),
+    `${path} must use the shared accessible action dialog`,
+  );
+}
+const memberError = read("lib/member-error.ts");
+assert(
+  memberError.includes("technicalMessagePatterns"),
+  "Member errors must filter technical database details",
+);
+assert(
+  memberError.includes("contact support from your account"),
+  "Member errors must provide a recovery path",
+);
+const memberRecoveryModules = [
+  "account-settings",
+  "circles-hub",
+  "community-directory",
+  "community-feed",
+  "learning-catalog",
+  "membership-center",
+  "message-center",
+  "network-hub",
+  "notification-center",
+  "opportunity-marketplace",
+  "order-history",
+  "perks-gallery",
+  "referral-center",
+  "support-center",
+];
+for (const module of memberRecoveryModules) {
+  const path = `components/member/${module}.tsx`;
+  const content = read(path);
+  assert(
+    content.includes("memberErrorMessage"),
+    `${path} must use member-safe error recovery`,
+  );
+  assert(
+    !/\berror\.message\b/.test(content),
+    `${path} must not expose raw service errors`,
+  );
+}
+console.log(
+  `Repository contracts passed: ${tracked.length} tracked files, ${migrations.length} ordered migrations.`,
+);

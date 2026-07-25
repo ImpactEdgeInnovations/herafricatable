@@ -1,6 +1,203 @@
 "use client";
-import{FormEvent,useMemo,useState}from"react";import{createClient}from"@/lib/supabase/client";import{useActionDialog}from"@/components/ui/action-dialog";
+import { FormEvent, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useActionDialog } from "@/components/ui/action-dialog";
+import { memberErrorMessage } from "@/lib/member-error";
 
-export type CommunityPost={post_id:string;author_id:string;author_name:string;author_role:string|null;author_company:string|null;body:string;created_at:string};
+export type CommunityPost = {
+  post_id: string;
+  author_id: string;
+  author_name: string;
+  author_role: string | null;
+  author_company: string | null;
+  body: string;
+  created_at: string;
+};
 
-export function CommunityFeed({communityId,currentUserId,initialPosts}:{communityId:string;currentUserId:string;initialPosts:CommunityPost[]}){const supabase=useMemo(()=>createClient(),[]);const[busy,setBusy]=useState("");const[message,setMessage]=useState("");const{ask,dialog}=useActionDialog();async function publish(event:FormEvent<HTMLFormElement>){event.preventDefault();const form=event.currentTarget;const body=String(new FormData(form).get("body")||"");setBusy("publish");const{error}=await supabase.rpc("create_community_post",{p_body:body,p_community_id:communityId});setBusy("");setMessage(error?error.message:"Your post is live in this community.");if(!error){form.reset();window.location.reload()}}async function remove(id:string){const result=await ask({title:"Remove this post?",description:"This post will no longer be visible in the community.",confirmLabel:"Remove post",tone:"danger"});if(!result)return;setBusy(id);const{error}=await supabase.rpc("delete_community_post",{p_post_id:id});setBusy("");setMessage(error?error.message:"Post removed.");if(!error)window.location.reload()}async function report(id:string){const result=await ask({title:"Report this post privately",description:"Choose the concern and add enough context for the moderation team to review it safely.",confirmLabel:"Submit report",tone:"danger",fields:[{name:"category",label:"Reason",type:"select",initialValue:"safety",options:[{value:"harassment",label:"Harassment"},{value:"privacy",label:"Privacy"},{value:"spam",label:"Spam"},{value:"misinformation",label:"Misinformation"},{value:"safety",label:"Safety"},{value:"other",label:"Other"}]},{name:"details",label:"What happened?",type:"textarea",required:true,minLength:10,maxLength:2000}]});if(!result)return;const category=String(result.category);const details=String(result.details);setBusy(id);const{error}=await supabase.rpc("report_community_post",{p_category:category,p_details:details,p_post_id:id});setBusy("");setMessage(error?error.message:"Report sent privately to the moderation team.")}return <>{dialog}<form className="community-composer"onSubmit={event=>void publish(event)}><label htmlFor="community-post">Share with this community</label><textarea id="community-post"name="body"minLength={2}maxLength={3000}required placeholder="Offer a thoughtful update, question or resource…"/><div><small>Community posts are visible only to active members of this space.</small><button className="button button-primary"disabled={busy==="publish"}>{busy==="publish"?"Publishing…":"Publish"}</button></div></form><section className="community-feed">{initialPosts.length?initialPosts.map(post=><article key={post.post_id}><header><div><strong>{post.author_name}</strong><small>{[post.author_role,post.author_company].filter(Boolean).join(" · ")}</small></div><time>{new Intl.DateTimeFormat("en-KE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(post.created_at))}</time></header><p>{post.body}</p><footer>{post.author_id===currentUserId?<button disabled={busy===post.post_id}onClick={()=>void remove(post.post_id)}>Remove</button>:<button disabled={busy===post.post_id}onClick={()=>void report(post.post_id)}>Report privately</button>}</footer></article>):<div className="admin-empty"><strong>Begin the conversation</strong><p>This community has no posts yet. Share the first useful thought or resource.</p></div>}</section>{message?<p className="network-message"role="status">{message}</p>:null}</>}
+export function CommunityFeed({
+  communityId,
+  currentUserId,
+  initialPosts,
+}: {
+  communityId: string;
+  currentUserId: string;
+  initialPosts: CommunityPost[];
+}) {
+  const supabase = useMemo(() => createClient(), []);
+  const [busy, setBusy] = useState("");
+  const [message, setMessage] = useState("");
+  const { ask, dialog } = useActionDialog();
+  async function publish(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const body = String(new FormData(form).get("body") || "");
+    setBusy("publish");
+    const { error } = await supabase.rpc("create_community_post", {
+      p_body: body,
+      p_community_id: communityId,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "publish your community post")
+        : "Your post is live in this community.",
+    );
+    if (!error) {
+      form.reset();
+      window.location.reload();
+    }
+  }
+  async function remove(id: string) {
+    const result = await ask({
+      title: "Remove this post?",
+      description: "This post will no longer be visible in the community.",
+      confirmLabel: "Remove post",
+      tone: "danger",
+    });
+    if (!result) return;
+    setBusy(id);
+    const { error } = await supabase.rpc("delete_community_post", {
+      p_post_id: id,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "remove this community post")
+        : "Post removed.",
+    );
+    if (!error) window.location.reload();
+  }
+  async function report(id: string) {
+    const result = await ask({
+      title: "Report this post privately",
+      description:
+        "Choose the concern and add enough context for the moderation team to review it safely.",
+      confirmLabel: "Submit report",
+      tone: "danger",
+      fields: [
+        {
+          name: "category",
+          label: "Reason",
+          type: "select",
+          initialValue: "safety",
+          options: [
+            { value: "harassment", label: "Harassment" },
+            { value: "privacy", label: "Privacy" },
+            { value: "spam", label: "Spam" },
+            { value: "misinformation", label: "Misinformation" },
+            { value: "safety", label: "Safety" },
+            { value: "other", label: "Other" },
+          ],
+        },
+        {
+          name: "details",
+          label: "What happened?",
+          type: "textarea",
+          required: true,
+          minLength: 10,
+          maxLength: 2000,
+        },
+      ],
+    });
+    if (!result) return;
+    const category = String(result.category);
+    const details = String(result.details);
+    setBusy(id);
+    const { error } = await supabase.rpc("report_community_post", {
+      p_category: category,
+      p_details: details,
+      p_post_id: id,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "send this private report")
+        : "Report sent privately to the moderation team.",
+    );
+  }
+  return (
+    <>
+      {dialog}
+      <form
+        className="community-composer"
+        onSubmit={(event) => void publish(event)}
+      >
+        <label htmlFor="community-post">Share with this community</label>
+        <textarea
+          id="community-post"
+          name="body"
+          minLength={2}
+          maxLength={3000}
+          required
+          placeholder="Offer a thoughtful update, question or resource…"
+        />
+        <div>
+          <small>
+            Community posts are visible only to active members of this space.
+          </small>
+          <button
+            className="button button-primary"
+            disabled={busy === "publish"}
+          >
+            {busy === "publish" ? "Publishing…" : "Publish"}
+          </button>
+        </div>
+      </form>
+      <section className="community-feed">
+        {initialPosts.length ? (
+          initialPosts.map((post) => (
+            <article key={post.post_id}>
+              <header>
+                <div>
+                  <strong>{post.author_name}</strong>
+                  <small>
+                    {[post.author_role, post.author_company]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </small>
+                </div>
+                <time>
+                  {new Intl.DateTimeFormat("en-KE", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  }).format(new Date(post.created_at))}
+                </time>
+              </header>
+              <p>{post.body}</p>
+              <footer>
+                {post.author_id === currentUserId ? (
+                  <button
+                    disabled={busy === post.post_id}
+                    onClick={() => void remove(post.post_id)}
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <button
+                    disabled={busy === post.post_id}
+                    onClick={() => void report(post.post_id)}
+                  >
+                    Report privately
+                  </button>
+                )}
+              </footer>
+            </article>
+          ))
+        ) : (
+          <div className="admin-empty">
+            <strong>Begin the conversation</strong>
+            <p>
+              This community has no posts yet. Share the first useful thought or
+              resource.
+            </p>
+          </div>
+        )}
+      </section>
+      {message ? (
+        <p className="network-message" role="status">
+          {message}
+        </p>
+      ) : null}
+    </>
+  );
+}
