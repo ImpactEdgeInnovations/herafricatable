@@ -342,6 +342,57 @@ for (const module of memberRecoveryModules) {
     `${path} must not expose raw service errors`,
   );
 }
+const adminError = read("lib/admin-error.ts");
+assert(
+  adminError.includes("configurationPatterns"),
+  "Admin errors must filter configuration details",
+);
+assert(
+  adminError.includes("Admin support area"),
+  "Admin errors must provide an operational recovery path",
+);
+const adminRecoveryModules = [
+  "analytics-readiness",
+  "circle-manager",
+  "community-manager",
+  "community-moderation",
+  "event-checkin-console",
+  "event-content-manager",
+  "event-feedback-manager",
+  "event-gallery-manager",
+  "event-manager",
+  "event-menu-manager",
+  "learning-manager",
+  "marketplace-moderation",
+  "member-review",
+  "membership-manager",
+  "moderation-queue",
+  "notification-operations",
+  "perks-manager",
+  "privacy-operations",
+  "referral-manager",
+  "registration-manager",
+  "support-inbox",
+];
+for (const module of adminRecoveryModules) {
+  const path = `components/admin/${module}.tsx`;
+  const content = read(path);
+  assert(
+    content.includes("adminErrorMessage"),
+    `${path} must use Admin-safe error recovery`,
+  );
+  assert(
+    !/\berror\.message\b/.test(content),
+    `${path} must not expose raw service errors`,
+  );
+}
+const notificationOperations = read(
+  "components/admin/notification-operations.tsx",
+);
+assert(
+  /adminErrorMessage\(\s*job\.last_error/.test(notificationOperations),
+  "Notification operations must filter provider errors",
+);
 console.log(
   `Repository contracts passed: ${tracked.length} tracked files, ${migrations.length} ordered migrations.`,
 );

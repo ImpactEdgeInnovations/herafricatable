@@ -3,6 +3,7 @@ import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { PartnerPerk } from "@/components/member/perks-gallery";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { adminErrorMessage } from "@/lib/admin-error";
 export type AdminPartner = {
   id: string;
   slug: string;
@@ -61,7 +62,16 @@ export function PerksManager({
   const partner = partners.find((x) => x.id === partnerId);
   const perk = perks.find((x) => x.perk_id === perkId);
   async function toggle() {
-    const result = await ask({ title: enabled ? "Pause partner perk reservations?" : "Enable partner perk reservations?", description: enabled ? "Members will keep existing redemption codes, but no new reservations can be created until access is restored." : "Published, currently available benefits will become reservable by eligible members.", confirmLabel: enabled ? "Pause reservations" : "Enable reservations", tone: enabled ? "danger" : "default" });
+    const result = await ask({
+      title: enabled
+        ? "Pause partner perk reservations?"
+        : "Enable partner perk reservations?",
+      description: enabled
+        ? "Members will keep existing redemption codes, but no new reservations can be created until access is restored."
+        : "Published, currently available benefits will become reservable by eligible members.",
+      confirmLabel: enabled ? "Pause reservations" : "Enable reservations",
+      tone: enabled ? "danger" : "default",
+    });
     if (!result) return;
     setBusy("flag");
     const { error } = await supabase.rpc("set_feature_flag", {
@@ -71,7 +81,7 @@ export function PerksManager({
     setBusy("");
     setMessage(
       error
-        ? error.message
+        ? adminErrorMessage(error, "change partner benefit availability")
         : `Partner perks ${enabled ? "disabled" : "enabled"}.`,
     );
     if (!error) location.reload();
@@ -93,7 +103,11 @@ export function PerksManager({
       p_website_url: f.get("website_url"),
     });
     setBusy("");
-    setMessage(error ? error.message : "Partner saved and audited.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "save this partner")
+        : "Partner saved and audited.",
+    );
     if (!error) location.reload();
   }
   async function savePerk(event: FormEvent<HTMLFormElement>) {
@@ -115,11 +129,41 @@ export function PerksManager({
       p_title: f.get("title"),
     });
     setBusy("");
-    setMessage(error ? error.message : "Partner benefit saved and audited.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "save this partner benefit")
+        : "Partner benefit saved and audited.",
+    );
     if (!error) location.reload();
   }
   async function review(id: string, action: string) {
-    const result = await ask({ title: action === "redeem" ? "Mark this benefit redeemed?" : "Cancel this benefit reservation?", description: action === "redeem" ? "Confirm that the partner delivered the benefit linked to this private redemption code." : "The private code will be cancelled and reserved inventory may become available again.", confirmLabel: action === "redeem" ? "Mark redeemed" : "Cancel reservation", tone: action === "cancel" ? "danger" : "default", fields: [{ name: "note", label: action === "redeem" ? "Redemption note (optional)" : "Cancellation reason", type: "textarea", required: action === "cancel", minLength: action === "cancel" ? 5 : undefined, maxLength: 500, help: "Use a short operational note without payment or identity details." }] });
+    const result = await ask({
+      title:
+        action === "redeem"
+          ? "Mark this benefit redeemed?"
+          : "Cancel this benefit reservation?",
+      description:
+        action === "redeem"
+          ? "Confirm that the partner delivered the benefit linked to this private redemption code."
+          : "The private code will be cancelled and reserved inventory may become available again.",
+      confirmLabel:
+        action === "redeem" ? "Mark redeemed" : "Cancel reservation",
+      tone: action === "cancel" ? "danger" : "default",
+      fields: [
+        {
+          name: "note",
+          label:
+            action === "redeem"
+              ? "Redemption note (optional)"
+              : "Cancellation reason",
+          type: "textarea",
+          required: action === "cancel",
+          minLength: action === "cancel" ? 5 : undefined,
+          maxLength: 500,
+          help: "Use a short operational note without payment or identity details.",
+        },
+      ],
+    });
     if (!result) return;
     const note = String(result.note ?? "");
     setBusy(id);
@@ -129,7 +173,11 @@ export function PerksManager({
       p_redemption_id: id,
     });
     setBusy("");
-    setMessage(error ? error.message : `Reservation ${action}ed.`);
+    setMessage(
+      error
+        ? adminErrorMessage(error, `${action} this benefit reservation`)
+        : `Reservation ${action}ed.`,
+    );
     if (!error) location.reload();
   }
   async function reconcile() {
@@ -137,7 +185,9 @@ export function PerksManager({
     const { data, error } = await supabase.rpc("expire_perk_redemptions");
     setBusy("");
     setMessage(
-      error ? error.message : `${data} expired reservations released.`,
+      error
+        ? adminErrorMessage(error, "release expired benefit reservations")
+        : `${data} expired reservations released.`,
     );
     if (!error) location.reload();
   }

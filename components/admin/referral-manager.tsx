@@ -2,6 +2,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { adminErrorMessage } from "@/lib/admin-error";
 export type AdminReferralCampaign = {
   id: string;
   name: string;
@@ -55,7 +56,14 @@ export function ReferralManager({
   const [message, setMessage] = useState("");
   const campaign = campaigns.find((item) => item.id === selected);
   async function toggle() {
-    const result = await ask({ title: enabled ? "Pause member referrals?" : "Enable member referrals?", description: enabled ? "Members will no longer be able to submit new vouched invitations. Existing reviews remain available." : "Members will be able to submit vouched invitations under active campaign limits. Every invitation still requires Admin approval.", confirmLabel: enabled ? "Pause referrals" : "Enable referrals", tone: enabled ? "danger" : "default" });
+    const result = await ask({
+      title: enabled ? "Pause member referrals?" : "Enable member referrals?",
+      description: enabled
+        ? "Members will no longer be able to submit new vouched invitations. Existing reviews remain available."
+        : "Members will be able to submit vouched invitations under active campaign limits. Every invitation still requires Admin approval.",
+      confirmLabel: enabled ? "Pause referrals" : "Enable referrals",
+      tone: enabled ? "danger" : "default",
+    });
     if (!result) return;
     setBusy("flag");
     const { error } = await supabase.rpc("set_feature_flag", {
@@ -64,7 +72,9 @@ export function ReferralManager({
     });
     setBusy("");
     setMessage(
-      error ? error.message : `Referrals ${enabled ? "disabled" : "enabled"}.`,
+      error
+        ? adminErrorMessage(error, "change referral availability")
+        : `Referrals ${enabled ? "disabled" : "enabled"}.`,
     );
     if (!error) window.location.reload();
   }
@@ -88,11 +98,51 @@ export function ReferralManager({
       p_total_limit: Number(form.get("total_limit")) || null,
     });
     setBusy("");
-    setMessage(error ? error.message : "Referral campaign saved and audited.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "save this referral campaign")
+        : "Referral campaign saved and audited.",
+    );
     if (!error) window.location.reload();
   }
   async function review(id: string, action: string) {
-    const result = await ask({ title: action === "approve" ? "Approve this vouched invitation?" : action === "reject" ? "Decline this vouched invitation?" : "Revoke this invitation?", description: action === "approve" ? "Approval creates onboarding eligibility and queues the invitation email. It does not bypass member onboarding or Admin access controls." : action === "reject" ? "The invitee will not receive onboarding eligibility from this vouch." : "The approved invitation will no longer be claimable. Existing activated membership is not silently removed.", confirmLabel: action === "approve" ? "Approve invitation" : action === "reject" ? "Decline invitation" : "Revoke invitation", tone: action === "approve" ? "default" : "danger", fields: [{ name: "note", label: action === "approve" ? "Internal note (optional)" : action === "reject" ? "Reason for declining" : "Reason for revoking", type: "textarea", required: action !== "approve", minLength: action !== "approve" ? 5 : undefined, maxLength: 500, help: "Use at least 5 characters when a reason is required." }] });
+    const result = await ask({
+      title:
+        action === "approve"
+          ? "Approve this vouched invitation?"
+          : action === "reject"
+            ? "Decline this vouched invitation?"
+            : "Revoke this invitation?",
+      description:
+        action === "approve"
+          ? "Approval creates onboarding eligibility and queues the invitation email. It does not bypass member onboarding or Admin access controls."
+          : action === "reject"
+            ? "The invitee will not receive onboarding eligibility from this vouch."
+            : "The approved invitation will no longer be claimable. Existing activated membership is not silently removed.",
+      confirmLabel:
+        action === "approve"
+          ? "Approve invitation"
+          : action === "reject"
+            ? "Decline invitation"
+            : "Revoke invitation",
+      tone: action === "approve" ? "default" : "danger",
+      fields: [
+        {
+          name: "note",
+          label:
+            action === "approve"
+              ? "Internal note (optional)"
+              : action === "reject"
+                ? "Reason for declining"
+                : "Reason for revoking",
+          type: "textarea",
+          required: action !== "approve",
+          minLength: action !== "approve" ? 5 : undefined,
+          maxLength: 500,
+          help: "Use at least 5 characters when a reason is required.",
+        },
+      ],
+    });
     if (!result) return;
     const note = String(result.note ?? "");
     setBusy(id);
@@ -104,7 +154,7 @@ export function ReferralManager({
     setBusy("");
     setMessage(
       error
-        ? error.message
+        ? adminErrorMessage(error, `${action} this referral`)
         : action === "approve"
           ? "Invitation approved and queued for email delivery."
           : `Referral ${action}d.`,

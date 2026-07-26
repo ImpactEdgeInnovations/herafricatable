@@ -42,10 +42,10 @@ const phases = [
   {
     label: "Experience",
     range: "Every day",
-    progress: 86,
-    status: "Member recovery guidance",
+    progress: 91,
+    status: "Recovery guidance complete",
     detail:
-      "Critical actions are accessible, member service errors are filtered, and high-risk forms now explain what to enter. Admin error language, cross-browser QA and user testing remain.",
+      "Member and Admin service errors are filtered, critical actions are accessible, and high-risk forms explain operational consequences. Cross-browser QA and user testing remain.",
   },
 ];
 

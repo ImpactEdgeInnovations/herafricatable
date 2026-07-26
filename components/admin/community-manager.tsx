@@ -3,6 +3,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { CommunitySummary } from "@/components/member/community-directory";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { adminErrorMessage } from "@/lib/admin-error";
 export type CommunityMember = {
   community_id: string;
   membership_id: string;
@@ -40,7 +41,7 @@ export function CommunityManager({
     setBusy("");
     setMessage(
       error
-        ? error.message
+        ? adminErrorMessage(error, "change Community availability")
         : `Communities ${enabled ? "disabled" : "enabled"}.`,
     );
     if (!error) window.location.reload();
@@ -58,7 +59,11 @@ export function CommunityManager({
       p_type: form.get("type"),
     });
     setBusy("");
-    setMessage(error ? error.message : "Community saved and audited.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "save this Community")
+        : "Community saved and audited.",
+    );
     if (!error) window.location.reload();
   }
   async function invite(event: FormEvent<HTMLFormElement>) {
@@ -71,12 +76,22 @@ export function CommunityManager({
       p_role: form.get("role"),
     });
     setBusy("");
-    setMessage(error ? error.message : "Invitation sent to the member inbox.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "send this Community invitation")
+        : "Invitation sent to the member inbox.",
+    );
     if (!error) window.location.reload();
   }
   async function review(id: string, action: string) {
     if (action === "transfer_ownership") {
-      const result = await ask({ title: "Transfer community ownership?", description: "This member will become the community owner. The current owner will become a regular member and lose owner-only controls.", confirmLabel: "Transfer ownership", tone: "danger" });
+      const result = await ask({
+        title: "Transfer community ownership?",
+        description:
+          "This member will become the community owner. The current owner will become a regular member and lose owner-only controls.",
+        confirmLabel: "Transfer ownership",
+        tone: "danger",
+      });
       if (!result) return;
     }
     setBusy(id);
@@ -85,7 +100,11 @@ export function CommunityManager({
       p_membership_id: id,
     });
     setBusy("");
-    setMessage(error ? error.message : "Membership updated and audited.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "update this Community membership")
+        : "Membership updated and audited.",
+    );
     if (!error) window.location.reload();
   }
   if (!migrationReady)

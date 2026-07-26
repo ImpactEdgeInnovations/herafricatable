@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { adminErrorMessage } from "@/lib/admin-error";
 
 export type CheckinEvent = {
   ends_at: string;
@@ -106,7 +107,7 @@ export function EventCheckinConsole({
         attendee_name: null,
         checked_in_at: null,
         checkin_id: null,
-        message: error.message,
+        message: adminErrorMessage(error, "look up this event pass"),
         outcome: "error",
       });
       return;
@@ -169,7 +170,24 @@ export function EventCheckinConsole({
   }
   async function reverse(checkin: CheckinAttendee) {
     if (!checkin.checkin_id) return;
-    const confirmation = await ask({ title: "Reverse this attendee check-in?", description: "The attendee will return to the expected list and the reversal will be recorded in the event audit history.", confirmLabel: "Reverse check-in", tone: "danger", fields: [{ name: "reason", label: "Reason for reversal", type: "textarea", required: true, minLength: 6, maxLength: 500, help: "Use at least 6 characters. Do not add unrelated personal information." }] });
+    const confirmation = await ask({
+      title: "Reverse this attendee check-in?",
+      description:
+        "The attendee will return to the expected list and the reversal will be recorded in the event audit history.",
+      confirmLabel: "Reverse check-in",
+      tone: "danger",
+      fields: [
+        {
+          name: "reason",
+          label: "Reason for reversal",
+          type: "textarea",
+          required: true,
+          minLength: 6,
+          maxLength: 500,
+          help: "Use at least 6 characters. Do not add unrelated personal information.",
+        },
+      ],
+    });
     if (!confirmation) return;
     const reason = String(confirmation.reason ?? "");
     setBusy(true);
@@ -185,7 +203,7 @@ export function EventCheckinConsole({
             attendee_name: null,
             checked_in_at: null,
             checkin_id: null,
-            message: error.message,
+            message: adminErrorMessage(error, "check in this attendee"),
             outcome: "error",
           }
         : {

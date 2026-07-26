@@ -3,6 +3,7 @@ import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { CircleCycle } from "@/components/member/circles-hub";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { adminErrorMessage } from "@/lib/admin-error";
 export type CircleParticipant = {
   cycle_id: string;
   circle_id: string;
@@ -44,7 +45,16 @@ export function CircleManager({
   const cycle = cycles.find((item) => item.cycle_id === selected);
   const scoped = participants.filter((item) => item.cycle_id === selected);
   async function toggle() {
-    const result = await ask({ title: enabled ? "Pause Circles for every member?" : "Enable Circles for members?", description: enabled ? "Members will temporarily lose access to Circle cycles and private rooms. Existing assignments and responses remain stored." : "Published cycles and private Circle rooms will become available to eligible members.", confirmLabel: enabled ? "Pause Circles" : "Enable Circles", tone: enabled ? "danger" : "default" });
+    const result = await ask({
+      title: enabled
+        ? "Pause Circles for every member?"
+        : "Enable Circles for members?",
+      description: enabled
+        ? "Members will temporarily lose access to Circle cycles and private rooms. Existing assignments and responses remain stored."
+        : "Published cycles and private Circle rooms will become available to eligible members.",
+      confirmLabel: enabled ? "Pause Circles" : "Enable Circles",
+      tone: enabled ? "danger" : "default",
+    });
     if (!result) return;
     setBusy("flag");
     const { error } = await supabase.rpc("set_feature_flag", {
@@ -53,7 +63,9 @@ export function CircleManager({
     });
     setBusy("");
     setMessage(
-      error ? error.message : `Circles ${enabled ? "disabled" : "enabled"}.`,
+      error
+        ? adminErrorMessage(error, "change Circle availability")
+        : `Circles ${enabled ? "disabled" : "enabled"}.`,
     );
     if (!error) location.reload();
   }
@@ -73,12 +85,21 @@ export function CircleManager({
       p_status: form.get("status"),
     });
     setBusy("");
-    setMessage(error ? error.message : "Circle cycle saved and audited.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "save this Circle cycle")
+        : "Circle cycle saved and audited.",
+    );
     if (!error) location.reload();
   }
   async function match() {
     if (!selected) return;
-    const result = await ask({ title: "Refresh this cycle’s draft matching?", description: "This replaces any unpublished draft Circles using the deterministic matching rules. Published assignments are not changed and the new draft remains subject to human review.", confirmLabel: "Refresh draft matching" });
+    const result = await ask({
+      title: "Refresh this cycle’s draft matching?",
+      description:
+        "This replaces any unpublished draft Circles using the deterministic matching rules. Published assignments are not changed and the new draft remains subject to human review.",
+      confirmLabel: "Refresh draft matching",
+    });
     if (!result) return;
     setBusy("match");
     const { data, error } = await supabase.rpc("run_circle_matching", {
@@ -86,13 +107,20 @@ export function CircleManager({
     });
     setBusy("");
     setMessage(
-      error ? error.message : `${data} draft Circles created for human review.`,
+      error
+        ? adminErrorMessage(error, "create draft Circle matches")
+        : `${data} draft Circles created for human review.`,
     );
     if (!error) location.reload();
   }
   async function publish() {
     if (!selected) return;
-    const result = await ask({ title: "Publish these reviewed Circles?", description: "Every assigned member will gain access to her private Circle and notification jobs will be queued. Review all assignments before continuing.", confirmLabel: "Publish Circles" });
+    const result = await ask({
+      title: "Publish these reviewed Circles?",
+      description:
+        "Every assigned member will gain access to her private Circle and notification jobs will be queued. Review all assignments before continuing.",
+      confirmLabel: "Publish Circles",
+    });
     if (!result) return;
     setBusy("publish");
     const { error } = await supabase.rpc("publish_circle_cycle", {
@@ -101,7 +129,7 @@ export function CircleManager({
     setBusy("");
     setMessage(
       error
-        ? error.message
+        ? adminErrorMessage(error, "publish these Circles")
         : "Circles published and member notifications queued.",
     );
     if (!error) location.reload();
@@ -123,7 +151,9 @@ export function CircleManager({
     });
     setBusy("");
     setMessage(
-      error ? error.message : `Prompt published to ${data} private Circles.`,
+      error
+        ? adminErrorMessage(error, "publish this Circle prompt")
+        : `Prompt published to ${data} private Circles.`,
     );
     if (!error) (event.currentTarget as HTMLFormElement).reset();
   }

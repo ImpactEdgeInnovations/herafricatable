@@ -59,16 +59,19 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Add contextual help and examples to every unfamiliar form without crowding the page
   - [x] Membership payment review, referrals and support requests include concise,
         accessible examples and privacy guidance
-  - [ ] Complete the same form-level review across Admin configuration screens
+  - [x] High-risk Admin event, ticket, membership, learning and support forms explain
+        operational consequences before saving
+  - [ ] Complete the same review across lower-risk Admin content forms
 - [x] Replace browser prompts with accessible confirmation dialogs and inline validation
   - [x] All Admin payment, safety, privacy, event, membership and community
         decisions now use the shared accessible dialog pattern
   - [x] All member account, community, payment, networking and safety actions now use
         the shared accessible dialog pattern
-- [ ] Complete a content pass for jargon, technical errors and destructive-action wording
+- [x] Complete a content pass for jargon, technical errors and destructive-action wording
   - [x] All member workflows filter raw service errors and provide a clear retry,
         sign-in or support recovery path
-  - [ ] Complete the equivalent Admin error and terminology review
+  - [x] All Admin workflows filter database, storage and provider details, provide
+        operational recovery guidance and use member-safe action wording
 - [ ] Test the main member and administrator journeys with at least five non-technical users
 - [ ] Pass keyboard, screen-reader, contrast, 200% zoom and mobile usability acceptance
 - [ ] Confirm every core journey has clear loading, empty, success, error and recovery states

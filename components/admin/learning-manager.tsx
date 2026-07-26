@@ -3,6 +3,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { CourseSummary } from "@/components/member/learning-catalog";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { adminErrorMessage } from "@/lib/admin-error";
 export type AdminLesson = {
   id: string;
   course_id: string;
@@ -61,7 +62,9 @@ export function LearningManager({
     });
     setBusy("");
     setMessage(
-      error ? error.message : `Learning ${enabled ? "disabled" : "enabled"}.`,
+      error
+        ? adminErrorMessage(error, "change Learning availability")
+        : `Learning ${enabled ? "disabled" : "enabled"}.`,
     );
     if (!error) window.location.reload();
   }
@@ -87,7 +90,11 @@ export function LearningManager({
       p_title: form.get("title"),
     });
     setBusy("");
-    setMessage(error ? error.message : "Course saved and audited.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "save this course")
+        : "Course saved and audited.",
+    );
     if (!error) window.location.reload();
   }
   async function saveLesson(event: FormEvent<HTMLFormElement>) {
@@ -108,7 +115,7 @@ export function LearningManager({
         .upload(path, file, { upsert: false });
       if (upload.error) {
         setBusy("");
-        setMessage(upload.error.message);
+        setMessage(adminErrorMessage(upload.error, "upload this lesson file"));
         return;
       }
     }
@@ -127,7 +134,9 @@ export function LearningManager({
     });
     setBusy("");
     setMessage(
-      error ? error.message : "Lesson saved with protected delivery metadata.",
+      error
+        ? adminErrorMessage(error, "save this lesson")
+        : "Lesson saved with protected delivery metadata.",
     );
     if (!error) window.location.reload();
   }
@@ -141,11 +150,40 @@ export function LearningManager({
       p_user_email: form.get("email"),
     });
     setBusy("");
-    setMessage(error ? error.message : "Course access granted and audited.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "grant this course access")
+        : "Course access granted and audited.",
+    );
     if (!error) window.location.reload();
   }
   async function review(id: string, action: string) {
-    const result = await ask({ title: action === "approve" ? "Approve this course order?" : "Reject this course order?", description: action === "approve" ? "Confirm that the submitted manual payment evidence has been checked. Approval grants protected course access." : "Course access will not be granted. Record a clear reason for the audit history.", confirmLabel: action === "approve" ? "Approve order" : "Reject order", tone: action === "reject" ? "danger" : "default", fields: [{ name: "note", label: action === "approve" ? "Approval note (optional)" : "Reason for rejection", type: "textarea", required: action === "reject", minLength: action === "reject" ? 5 : undefined, maxLength: 500, help: "Do not include full card or bank account details." }] });
+    const result = await ask({
+      title:
+        action === "approve"
+          ? "Approve this course order?"
+          : "Reject this course order?",
+      description:
+        action === "approve"
+          ? "Confirm that the submitted manual payment evidence has been checked. Approval grants protected course access."
+          : "Course access will not be granted. Record a clear reason for the audit history.",
+      confirmLabel: action === "approve" ? "Approve order" : "Reject order",
+      tone: action === "reject" ? "danger" : "default",
+      fields: [
+        {
+          name: "note",
+          label:
+            action === "approve"
+              ? "Approval note (optional)"
+              : "Reason for rejection",
+          type: "textarea",
+          required: action === "reject",
+          minLength: action === "reject" ? 5 : undefined,
+          maxLength: 500,
+          help: "Do not include full card or bank account details.",
+        },
+      ],
+    });
     if (!result) return;
     const note = String(result.note ?? "");
     setBusy(id);
@@ -155,7 +193,11 @@ export function LearningManager({
       p_order_id: id,
     });
     setBusy("");
-    setMessage(error ? error.message : `Course order ${action}d.`);
+    setMessage(
+      error
+        ? adminErrorMessage(error, `${action} this course order`)
+        : `Course order ${action}d.`,
+    );
     if (!error) window.location.reload();
   }
   if (!migrationReady)
@@ -206,8 +248,15 @@ export function LearningManager({
         </label>
       </div>
       <div className="learning-admin-grid">
-        <form onSubmit={(event) => void saveCourse(event)}>
+        <form
+          onSubmit={(event) => void saveCourse(event)}
+          aria-describedby="course-form-guide"
+        >
           <h3>Course definition</h3>
+          <p className="admin-form-guide" id="course-form-guide">
+            Keep courses in draft until lessons and access rules are ready.
+            Purchased courses need a payment mode before members can enrol.
+          </p>
           <input type="hidden" name="id" value={course?.course_id ?? ""} />
           <label>
             Title

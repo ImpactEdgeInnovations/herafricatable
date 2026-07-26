@@ -3,6 +3,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { AdminEvent } from "@/components/admin/event-manager";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { adminErrorMessage } from "@/lib/admin-error";
 export type AdminEventFeedback = {
   connection_rating: number;
   feedback_id: string;
@@ -72,7 +73,11 @@ export function EventFeedbackManager({
       p_title: form.get("title"),
     });
     setBusy("");
-    setMessage(error ? error.message : "Event recap saved.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "save this event recap")
+        : "Event recap saved.",
+    );
     if (!error) window.location.reload();
   }
   async function review(
@@ -85,7 +90,29 @@ export function EventFeedbackManager({
   ) {
     let note = "";
     if (action.includes("followup")) {
-      const result = await ask({ title: action === "open_followup" ? "Open a private follow-up?" : "Resolve this private follow-up?", description: action === "open_followup" ? "Record what the team should follow up on. This note is internal and is never included in public recaps or testimonials." : "Record how the concern was handled before closing the follow-up.", confirmLabel: action === "open_followup" ? "Open follow-up" : "Resolve follow-up", fields: [{ name: "note", label: "Internal follow-up note", type: "textarea", required: true, minLength: 5, maxLength: 1000, help: "Use at least 5 characters. Include only information needed for this follow-up." }] });
+      const result = await ask({
+        title:
+          action === "open_followup"
+            ? "Open a private follow-up?"
+            : "Resolve this private follow-up?",
+        description:
+          action === "open_followup"
+            ? "Record what the team should follow up on. This note is internal and is never included in public recaps or testimonials."
+            : "Record how the concern was handled before closing the follow-up.",
+        confirmLabel:
+          action === "open_followup" ? "Open follow-up" : "Resolve follow-up",
+        fields: [
+          {
+            name: "note",
+            label: "Internal follow-up note",
+            type: "textarea",
+            required: true,
+            minLength: 5,
+            maxLength: 1000,
+            help: "Use at least 5 characters. Include only information needed for this follow-up.",
+          },
+        ],
+      });
       if (!result) return;
       note = String(result.note ?? "");
     }
@@ -96,7 +123,11 @@ export function EventFeedbackManager({
       p_note: note,
     });
     setBusy("");
-    setMessage(error ? error.message : "Feedback action recorded and audited.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "record this feedback action")
+        : "Feedback action recorded and audited.",
+    );
     if (!error) window.location.reload();
   }
   if (!migrationReady)

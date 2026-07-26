@@ -2,6 +2,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { adminErrorMessage } from "@/lib/admin-error";
 export type AdminMembershipPlan = {
   id: string;
   slug: string;
@@ -64,7 +65,16 @@ export function MembershipManager({
   const [message, setMessage] = useState("");
   const plan = plans.find((item) => item.id === selected);
   async function toggle() {
-    const result = await ask({ title: enabled ? "Pause membership checkout?" : "Enable membership checkout?", description: enabled ? "Members will no longer be able to start new membership payments. Existing terms and orders remain available for administration." : "Members will be able to use the payment mode configured on each published membership plan.", confirmLabel: enabled ? "Pause checkout" : "Enable checkout", tone: enabled ? "danger" : "default" });
+    const result = await ask({
+      title: enabled
+        ? "Pause membership checkout?"
+        : "Enable membership checkout?",
+      description: enabled
+        ? "Members will no longer be able to start new membership payments. Existing terms and orders remain available for administration."
+        : "Members will be able to use the payment mode configured on each published membership plan.",
+      confirmLabel: enabled ? "Pause checkout" : "Enable checkout",
+      tone: enabled ? "danger" : "default",
+    });
     if (!result) return;
     setBusy("flag");
     const { error } = await supabase.rpc("set_feature_flag", {
@@ -74,7 +84,7 @@ export function MembershipManager({
     setBusy("");
     setMessage(
       error
-        ? error.message
+        ? adminErrorMessage(error, "change membership availability")
         : `Memberships ${enabled ? "disabled" : "enabled"}.`,
     );
     if (!error) location.reload();
@@ -96,11 +106,40 @@ export function MembershipManager({
       p_status: form.get("status"),
     });
     setBusy("");
-    setMessage(error ? error.message : "Membership plan saved and audited.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "save this membership plan")
+        : "Membership plan saved and audited.",
+    );
     if (!error) location.reload();
   }
   async function review(id: string, action: string) {
-    const result = await ask({ title: action === "approve" ? "Approve this membership order?" : "Reject this membership order?", description: action === "approve" ? "Confirm that the manual payment evidence has been checked. Approval grants the configured membership term." : "The membership term will not be granted. Record a clear reason for the audit history.", confirmLabel: action === "approve" ? "Approve order" : "Reject order", tone: action === "reject" ? "danger" : "default", fields: [{ name: "note", label: action === "approve" ? "Approval note (optional)" : "Reason for rejection", type: "textarea", required: action === "reject", minLength: action === "reject" ? 5 : undefined, maxLength: 500, help: "Do not include full card or bank account details." }] });
+    const result = await ask({
+      title:
+        action === "approve"
+          ? "Approve this membership order?"
+          : "Reject this membership order?",
+      description:
+        action === "approve"
+          ? "Confirm that the manual payment evidence has been checked. Approval grants the configured membership term."
+          : "The membership term will not be granted. Record a clear reason for the audit history.",
+      confirmLabel: action === "approve" ? "Approve order" : "Reject order",
+      tone: action === "reject" ? "danger" : "default",
+      fields: [
+        {
+          name: "note",
+          label:
+            action === "approve"
+              ? "Approval note (optional)"
+              : "Reason for rejection",
+          type: "textarea",
+          required: action === "reject",
+          minLength: action === "reject" ? 5 : undefined,
+          maxLength: 500,
+          help: "Do not include full card or bank account details.",
+        },
+      ],
+    });
     if (!result) return;
     const note = String(result.note ?? "");
     setBusy(id);
@@ -110,7 +149,11 @@ export function MembershipManager({
       p_order_id: id,
     });
     setBusy("");
-    setMessage(error ? error.message : `Membership order ${action}d.`);
+    setMessage(
+      error
+        ? adminErrorMessage(error, `${action} this membership order`)
+        : `Membership order ${action}d.`,
+    );
     if (!error) location.reload();
   }
   async function grant(event: FormEvent<HTMLFormElement>) {
@@ -123,18 +166,27 @@ export function MembershipManager({
       p_user_email: form.get("email"),
     });
     setBusy("");
-    setMessage(error ? error.message : "Membership term granted and audited.");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "grant this membership term")
+        : "Membership term granted and audited.",
+    );
     if (!error) location.reload();
   }
   async function reconcile() {
-    const result = await ask({ title: "Reconcile membership states now?", description: "This applies scheduled starts, grace periods, expiries and dormant access using the current database time. Every resulting status change remains auditable.", confirmLabel: "Run reconciliation" });
+    const result = await ask({
+      title: "Reconcile membership states now?",
+      description:
+        "This applies scheduled starts, grace periods, expiries and dormant access using the current database time. Every resulting status change remains auditable.",
+      confirmLabel: "Run reconciliation",
+    });
     if (!result) return;
     setBusy("reconcile");
     const { data, error } = await supabase.rpc("reconcile_membership_periods");
     setBusy("");
     setMessage(
       error
-        ? error.message
+        ? adminErrorMessage(error, "reconcile membership lifecycles")
         : `Lifecycle reconciled: ${JSON.stringify(data?.[0] ?? {})}`,
     );
     if (!error) location.reload();
@@ -154,7 +206,11 @@ export function MembershipManager({
     });
     const body = (await response.json()) as { error?: string; email?: string };
     setBusy("");
-    setMessage(body.error ?? `Tagged test member created: ${body.email}`);
+    setMessage(
+      response.ok
+        ? `Tagged test member created: ${body.email}`
+        : adminErrorMessage(body.error, "create this tagged test member"),
+    );
     if (response.ok) (event.currentTarget as HTMLFormElement).reset();
   }
   if (!migrationReady)
@@ -189,7 +245,14 @@ export function MembershipManager({
         </button>
       </div>
       <div className="membership-admin-grid">
-        <form onSubmit={(event) => void save(event)}>
+        <form
+          onSubmit={(event) => void save(event)}
+          aria-describedby="membership-plan-guide"
+        >
+          <p className="admin-form-guide" id="membership-plan-guide">
+            Enter prices in the displayed currency. Manual review keeps access
+            pending until an administrator verifies the member&apos;s payment.
+          </p>
           <label>
             Plan
             <select
