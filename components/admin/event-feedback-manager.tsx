@@ -188,8 +188,16 @@ export function EventFeedbackManager({
             </article>
           </div>
           <div className="feedback-admin-layout">
-            <form onSubmit={(event) => void saveRecap(event)}>
+            <form
+              onSubmit={(event) => void saveRecap(event)}
+              aria-describedby="event-recap-guide"
+            >
               <p className="eyebrow">Public recap</p>
+              <p className="admin-form-guide" id="event-recap-guide">
+                Use only reviewed, consented insights. Publishing exposes this
+                recap publicly; private feedback and follow-up notes remain
+                separate.
+              </p>
               <label>
                 Title
                 <input

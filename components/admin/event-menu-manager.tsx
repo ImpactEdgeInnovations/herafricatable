@@ -241,8 +241,16 @@ export function EventMenuManager({
       </div>
 
       <div className="menu-admin-grid">
-        <form className="menu-narrative-form" onSubmit={saveMenu}>
+        <form
+          className="menu-narrative-form"
+          onSubmit={saveMenu}
+          aria-describedby="menu-narrative-guide"
+        >
           <p className="eyebrow">01 · Menu narrative</p>
+          <p className="admin-form-guide" id="menu-narrative-guide">
+            Draft the cultural story first. Publishing makes the menu and its
+            published dishes visible to event members.
+          </p>
           <div className="form-grid">
             <label className="form-wide">
               Menu title
@@ -350,7 +358,15 @@ export function EventMenuManager({
               Save the menu narrative, then add the first course and dish.
             </p>
           )}
-          <form className="menu-item-form" onSubmit={saveItem}>
+          <form
+            className="menu-item-form"
+            onSubmit={saveItem}
+            aria-describedby="menu-item-guide"
+          >
+            <p className="admin-form-guide" id="menu-item-guide">
+              List ingredients and allergens clearly. Dietary tags support
+              discovery but do not replace complete allergen notes.
+            </p>
             <div className="form-grid">
               <label>
                 Course name

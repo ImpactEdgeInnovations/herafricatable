@@ -189,7 +189,14 @@ export function CircleManager({
         </button>
       </div>
       <div className="circle-admin-grid">
-        <form onSubmit={(event) => void save(event)}>
+        <form
+          onSubmit={(event) => void save(event)}
+          aria-describedby="circle-cycle-guide"
+        >
+          <p className="admin-form-guide" id="circle-cycle-guide">
+            Keep the cycle in draft while dates and group size are reviewed.
+            Opening opt-in allows eligible members to join the matching pool.
+          </p>
           <label>
             Cycle
             <select
@@ -325,8 +332,15 @@ export function CircleManager({
               </button>
             </div>
           </div>
-          <form onSubmit={(event) => void publishPrompt(event)}>
+          <form
+            onSubmit={(event) => void publishPrompt(event)}
+            aria-describedby="circle-prompt-guide"
+          >
             <h3>Publish guided prompt</h3>
+            <p className="admin-form-guide" id="circle-prompt-guide">
+              This prompt is delivered to every Circle in the published cycle.
+              Avoid requesting sensitive personal or financial information.
+            </p>
             <label>
               Prompt title
               <input name="title" required minLength={3} />

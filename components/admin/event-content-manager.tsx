@@ -386,7 +386,16 @@ export function EventContentManager({
               );
             })}
           </div>
-          <form className="content-editor" onSubmit={saveSession}>
+          <form
+            className="content-editor"
+            onSubmit={saveSession}
+            aria-describedby="session-editor-guide"
+          >
+            <p className="admin-form-guide" id="session-editor-guide">
+              Published sessions appear in the member programme immediately.
+              Confirm the event timezone, speaker permission, and schedule
+              before publishing.
+            </p>
             <div className="form-grid">
               <label className="form-wide">
                 Session title
@@ -543,7 +552,15 @@ export function EventContentManager({
               </button>
             ))}
           </div>
-          <form className="content-editor" onSubmit={saveAnnouncement}>
+          <form
+            className="content-editor"
+            onSubmit={saveAnnouncement}
+            aria-describedby="announcement-editor-guide"
+          >
+            <p className="admin-form-guide" id="announcement-editor-guide">
+              Drafts stay private. Published announcements become visible to
+              event members, so remove private contact details before saving.
+            </p>
             <div className="form-grid">
               <label className="form-wide">
                 Title
@@ -633,7 +650,15 @@ export function EventContentManager({
               </button>
             ))}
           </div>
-          <form className="content-editor" onSubmit={saveSponsor}>
+          <form
+            className="content-editor"
+            onSubmit={saveSponsor}
+            aria-describedby="sponsor-editor-guide"
+          >
+            <p className="admin-form-guide" id="sponsor-editor-guide">
+              Confirm the partner name, logo rights, and destination website.
+              Only published partners appear in the event experience.
+            </p>
             <div className="form-grid">
               <label>
                 Sponsor name
@@ -722,7 +747,12 @@ export function EventContentManager({
               event.preventDefault();
               void changeStaff(staffEmail, "assign");
             }}
+            aria-describedby="event-staff-guide"
           >
+            <p className="admin-form-guide" id="event-staff-guide">
+              Assign only an existing team account. Event staff can manage this
+              event but cannot access membership administration.
+            </p>
             <label>
               Existing account email
               <input

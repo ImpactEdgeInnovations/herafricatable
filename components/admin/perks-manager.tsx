@@ -223,7 +223,14 @@ export function PerksManager({
         </button>
       </div>
       <div className="perks-admin-grid">
-        <form onSubmit={(event) => void savePartner(event)}>
+        <form
+          onSubmit={(event) => void savePartner(event)}
+          aria-describedby="perk-partner-guide"
+        >
+          <p className="admin-form-guide" id="perk-partner-guide">
+            Activate a partner only after verifying its identity, offer
+            authority, destination website, and member support contact.
+          </p>
           <label>
             Partner
             <select
@@ -336,7 +343,14 @@ export function PerksManager({
             Save partner
           </button>
         </form>
-        <form onSubmit={(event) => void savePerk(event)}>
+        <form
+          onSubmit={(event) => void savePerk(event)}
+          aria-describedby="perk-benefit-guide"
+        >
+          <p className="admin-form-guide" id="perk-benefit-guide">
+            Inventory and per-member limits are enforced when reservations open.
+            Confirm dates, terms, and redemption instructions before activation.
+          </p>
           <label>
             Benefit
             <select value={perkId} onChange={(e) => setPerkId(e.target.value)}>

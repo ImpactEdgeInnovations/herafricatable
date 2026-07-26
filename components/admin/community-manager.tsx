@@ -140,7 +140,15 @@ export function CommunityManager({
         </button>
       </div>
       <div className="community-admin-layout">
-        <form onSubmit={(event) => void save(event)}>
+        <form
+          onSubmit={(event) => void save(event)}
+          aria-describedby="community-editor-guide"
+        >
+          <p className="admin-form-guide" id="community-editor-guide">
+            Official communities allow active members to join immediately.
+            Private communities require host approval; publish only after a host
+            is ready.
+          </p>
           <input
             type="hidden"
             name="id"
@@ -227,7 +235,12 @@ export function CommunityManager({
               <form
                 className="community-invite"
                 onSubmit={(event) => void invite(event)}
+                aria-describedby="community-invite-guide"
               >
+                <p className="admin-form-guide" id="community-invite-guide">
+                  Invitations are limited to active members. Moderator access
+                  includes community membership and content-review controls.
+                </p>
                 <label>
                   Invite active member by email
                   <input name="email" type="email" required />

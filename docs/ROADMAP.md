@@ -56,12 +56,14 @@ Usability is part of production readiness and continues alongside feature delive
       navigation and three obvious first actions
 - [x] Simplify the Admin command centre into task groups with plain-language labels,
       queue counts and guided next steps
-- [ ] Add contextual help and examples to every unfamiliar form without crowding the page
+- [x] Add contextual help and examples to every unfamiliar form without crowding the page
   - [x] Membership payment review, referrals and support requests include concise,
         accessible examples and privacy guidance
   - [x] High-risk Admin event, ticket, membership, learning and support forms explain
         operational consequences before saving
-  - [ ] Complete the same review across lower-risk Admin content forms
+  - [x] Event programme, announcements, partners, gallery, menu, countdown,
+        recaps, communities, Circles, learning, perks and referral forms now include
+        concise, accessible publishing and privacy guidance
 - [x] Replace browser prompts with accessible confirmation dialogs and inline validation
   - [x] All Admin payment, safety, privacy, event, membership and community
         decisions now use the shared accessible dialog pattern

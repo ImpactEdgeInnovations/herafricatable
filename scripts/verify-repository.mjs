@@ -358,6 +358,7 @@ const adminRecoveryModules = [
   "community-moderation",
   "event-checkin-console",
   "event-content-manager",
+  "event-countdown-manager",
   "event-feedback-manager",
   "event-gallery-manager",
   "event-manager",
@@ -392,6 +393,39 @@ const notificationOperations = read(
 assert(
   /adminErrorMessage\(\s*job\.last_error/.test(notificationOperations),
   "Notification operations must filter provider errors",
+);
+const adminGuidanceContracts = {
+  "circle-manager": ["circle-cycle-guide", "circle-prompt-guide"],
+  "community-manager": ["community-editor-guide", "community-invite-guide"],
+  "event-content-manager": [
+    "session-editor-guide",
+    "announcement-editor-guide",
+    "sponsor-editor-guide",
+    "event-staff-guide",
+  ],
+  "event-countdown-manager": ["event-countdown-guide"],
+  "event-feedback-manager": ["event-recap-guide"],
+  "event-gallery-manager": ["gallery-album-guide", "gallery-asset-guide"],
+  "event-menu-manager": ["menu-narrative-guide", "menu-item-guide"],
+  "learning-manager": ["lesson-editor-guide", "course-grant-guide"],
+  "perks-manager": ["perk-partner-guide", "perk-benefit-guide"],
+  "referral-manager": ["referral-campaign-guide"],
+};
+for (const [module, guidanceIds] of Object.entries(adminGuidanceContracts)) {
+  const path = `components/admin/${module}.tsx`;
+  const content = read(path);
+  for (const guidanceId of guidanceIds) {
+    assert(
+      content.includes(`id="${guidanceId}"`) &&
+        content.includes(`aria-describedby="${guidanceId}"`),
+      `${path} must provide accessible guidance for ${guidanceId}`,
+    );
+  }
+}
+const qualityWorkflow = read(".github/workflows/ci.yml");
+assert(
+  qualityWorkflow.includes("supabase/setup-cli@v2"),
+  "CI must use the Node 24-compatible Supabase setup action",
 );
 console.log(
   `Repository contracts passed: ${tracked.length} tracked files, ${migrations.length} ordered migrations.`,

@@ -193,7 +193,15 @@ export function ReferralManager({
         </button>
       </div>
       <div className="referral-admin-layout">
-        <form onSubmit={(event) => void save(event)}>
+        <form
+          onSubmit={(event) => void save(event)}
+          aria-describedby="referral-campaign-guide"
+        >
+          <p className="admin-form-guide" id="referral-campaign-guide">
+            Activating a campaign lets eligible members submit vouched
+            invitations within these limits. Every referred applicant still
+            requires review.
+          </p>
           <label>
             Campaign
             <select

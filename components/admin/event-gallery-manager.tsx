@@ -325,8 +325,16 @@ export function EventGalleryManager({
         </button>
       </div>
       <div className="gallery-admin-grid">
-        <form className="gallery-album-form" onSubmit={saveAlbum}>
+        <form
+          className="gallery-album-form"
+          onSubmit={saveAlbum}
+          aria-describedby="gallery-album-guide"
+        >
           <p className="eyebrow">Album settings</p>
+          <p className="admin-form-guide" id="gallery-album-guide">
+            Keep the album in draft until every image has consent, an accessible
+            description, and any required credit.
+          </p>
           <div className="form-grid">
             <label className="form-wide">
               Album title
@@ -414,7 +422,15 @@ export function EventGalleryManager({
               </button>
             ))}
           </div>
-          <form className="gallery-asset-form" onSubmit={saveAsset}>
+          <form
+            className="gallery-asset-form"
+            onSubmit={saveAsset}
+            aria-describedby="gallery-asset-guide"
+          >
+            <p className="admin-form-guide" id="gallery-asset-guide">
+              Describe the image for members who cannot see it. Publishing makes
+              the image visible wherever this album is shown.
+            </p>
             {file ? (
               <p className="selected-file">Selected: {file.name}</p>
             ) : null}

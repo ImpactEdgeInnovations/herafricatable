@@ -390,8 +390,15 @@ export function LearningManager({
         <div>
           {courseId ? (
             <>
-              <form onSubmit={(event) => void saveLesson(event)}>
+              <form
+                onSubmit={(event) => void saveLesson(event)}
+                aria-describedby="lesson-editor-guide"
+              >
                 <h3>Add lesson</h3>
+                <p className="admin-form-guide" id="lesson-editor-guide">
+                  Published lessons are available to enrolled members. Upload
+                  only material the organization is permitted to distribute.
+                </p>
                 <label>
                   Title
                   <input name="title" required />
@@ -475,8 +482,13 @@ export function LearningManager({
               <form
                 className="course-grant"
                 onSubmit={(event) => void grant(event)}
+                aria-describedby="course-grant-guide"
               >
                 <h3>Manual access</h3>
+                <p className="admin-form-guide" id="course-grant-guide">
+                  Manual access bypasses the purchase flow and is audited.
+                  Confirm the active member and record a clear business reason.
+                </p>
                 <label>
                   Active member email
                   <input name="email" type="email" required />
