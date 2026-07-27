@@ -170,6 +170,9 @@ Usability is part of production readiness and continues alongside feature delive
       filtering, no private-contact projection and consent-gated connection requests
 - [x] Direct connection requests from founding-room introductions with pending and
       accepted relationship states visible inside the room
+- [x] Layperson-first core member shell with consistent current-page navigation,
+      compact five-action mobile dock, people-first directory ordering, simplified
+      empty messages and recoverable non-technical error states
 
 ### Heavy work remaining before production launch
 

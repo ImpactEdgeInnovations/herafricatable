@@ -152,7 +152,9 @@ export function MessageCenter({
     (x) => x.conversation_id === selectedConversation,
   );
   return (
-    <div className="message-shell">
+    <div
+      className={`message-shell${conversations.length ? "" : " is-empty"}`}
+    >
       {dialog}
       <aside className="conversation-list">
         <header>
@@ -185,10 +187,16 @@ export function MessageCenter({
             </Link>
           ))
         ) : (
-          <div className="admin-empty">
-            <strong>No conversations yet</strong>
-            <p>Message an accepted connection from the member network.</p>
-            <Link href="/network">Open network</Link>
+          <div className="message-empty">
+            <span aria-hidden="true">01</span>
+            <strong>Your conversations will appear here.</strong>
+            <p>
+              Find a member and send a connection request. Messaging opens only
+              after she accepts.
+            </p>
+            <Link className="button button-primary" href="/network">
+              Find members
+            </Link>
           </div>
         )}
       </aside>

@@ -54,12 +54,14 @@ export function NetworkHub({
   connectionCode,
   contacts,
   blockedMembers,
+  searchQuery,
 }: {
   members: DirectoryMember[];
   connections: NetworkConnection[];
   connectionCode: string;
   contacts: ConnectionContact[];
   blockedMembers: BlockedMember[];
+  searchQuery: string;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -223,35 +225,6 @@ export function NetworkHub({
   return (
     <>
       {dialog}
-      <section className="network-identity">
-        <div>
-          <p className="eyebrow">Your connection code</p>
-          <strong>{connectionCode}</strong>
-          <span>
-            Share this code in person. It identifies your profile but never
-            reveals private contact details.
-          </span>
-        </div>
-        <form onSubmit={submitCode}>
-          <label>
-            Connect with a code
-            <input
-              value={code}
-              maxLength={8}
-              onChange={(e) =>
-                setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
-              }
-              placeholder="AB12CD34"
-            />
-          </label>
-          <button
-            className="button button-primary"
-            disabled={busy !== "" || code.length !== 8}
-          >
-            Find member
-          </button>
-        </form>
-      </section>
       {connections.length ? (
         <section className="network-connections">
           <div>
@@ -384,11 +357,23 @@ export function NetworkHub({
       <section className="member-directory">
         <header>
           <div>
-            <p className="eyebrow">Member directory</p>
-            <h2>Meet women building across Africa.</h2>
+            <p className="eyebrow">Discover members</p>
+            <h2>Find someone to connect with.</h2>
+            <p>
+              Search by name, role, company, industry, or city.
+            </p>
           </div>
           <form method="get">
-            <input name="q" placeholder="Search role, company or industry" />
+            <label className="sr-only" htmlFor="member-search">
+              Search members
+            </label>
+            <input
+              aria-label="Search members"
+              defaultValue={searchQuery}
+              id="member-search"
+              name="q"
+              placeholder="Try “finance” or “Nairobi”"
+            />
             <button type="submit">Search</button>
           </form>
         </header>
@@ -446,6 +431,46 @@ export function NetworkHub({
           </div>
         )}
       </section>
+      <details className="network-code-tools">
+        <summary>
+          <span>
+            <strong>Met someone in person?</strong>
+            <small>Use a private eight-character code to connect.</small>
+          </span>
+          <span>Open connection codes</span>
+        </summary>
+        <div className="network-identity">
+          <div>
+            <p className="eyebrow">Your connection code</p>
+            <strong>{connectionCode}</strong>
+            <span>
+              Share this only with someone you intend to connect with. It
+              identifies your profile but never reveals private details.
+            </span>
+          </div>
+          <form onSubmit={submitCode}>
+            <label>
+              Enter her code
+              <input
+                value={code}
+                maxLength={8}
+                onChange={(e) =>
+                  setCode(
+                    e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
+                  )
+                }
+                placeholder="AB12CD34"
+              />
+            </label>
+            <button
+              className="button button-primary"
+              disabled={busy !== "" || code.length !== 8}
+            >
+              Send request
+            </button>
+          </form>
+        </div>
+      </details>
       {blockedMembers.length ? (
         <section className="blocked-members">
           <p className="eyebrow">Blocked members</p>

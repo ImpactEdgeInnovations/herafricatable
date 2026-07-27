@@ -5,6 +5,7 @@ import {
   OrderHistory,
   type MemberOrder,
 } from "@/components/member/order-history";
+import { MemberHeader } from "@/components/member/member-header";
 
 export const dynamic = "force-dynamic";
 
@@ -316,31 +317,7 @@ export default async function MemberHomePage() {
 
   return (
     <main className="member-home-page">
-      <header className="member-home-header">
-        <Link className="brand" href="/home">
-          <span className="brand-mark">H</span>
-          <span>
-            Her Africa Table<small>Member home</small>
-          </span>
-        </Link>
-        <nav aria-label="Member navigation">
-          <Link aria-current="page" href="/home">
-            Home
-          </Link>
-          {accessStatus === "active" ? (
-            <Link href="/network">Members</Link>
-          ) : null}
-          <Link href="/events">Events</Link>
-          {accessStatus === "active" ? (
-            <Link href="/messages">Messages</Link>
-          ) : null}
-          <Link href="/notifications">Notifications</Link>
-          {accessStatus === "active" ? (
-            <Link href="/profile">Profile</Link>
-          ) : null}
-          <Link href="/settings">Account</Link>
-        </nav>
-      </header>
+      <MemberHeader active="home" label="Member home" />
       <section className="member-welcome">
         <p className="member-state">
           <span aria-hidden="true" />
@@ -434,11 +411,11 @@ export default async function MemberHomePage() {
             <div>
               <p className="eyebrow">Your first steps</p>
               <h2 id="member-activation-title">
-                Take your place at the table.
+                Set up your member experience.
               </h2>
               <p>
-                A few intentional actions make the room useful without opening
-                private access before consent.
+                Complete one step at a time. Every connection and private room
+                still requires your consent.
               </p>
             </div>
             <span>

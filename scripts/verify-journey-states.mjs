@@ -215,6 +215,43 @@ for (const contract of [
     `Member home next-event journey must include ${contract}`,
   );
 }
+const memberHeader = read("components/member/member-header.tsx");
+for (const contract of [
+  "member-mobile-dock",
+  'aria-label="Member shortcuts"',
+  'aria-current={active === destination.key ? "page" : undefined}',
+  "/notifications",
+]) {
+  assert(
+    memberHeader.includes(contract),
+    `Shared member navigation must include ${contract}`,
+  );
+}
+for (const path of [
+  "app/home/page.tsx",
+  "app/network/page.tsx",
+  "app/messages/page.tsx",
+  "app/profile/page.tsx",
+  "app/settings/page.tsx",
+]) {
+  assert(
+    read(path).includes("MemberHeader"),
+    `${path} must use the shared member navigation shell`,
+  );
+}
+const networkHub = read("components/member/network-hub.tsx");
+assert(
+  networkHub.indexOf('className="member-directory"') <
+    networkHub.indexOf('className="network-code-tools"') &&
+    networkHub.includes("Search members"),
+  "Member discovery must appear before optional in-person connection codes",
+);
+const messageCenter = read("components/member/message-center.tsx");
+assert(
+  messageCenter.includes("message-shell${conversations.length") &&
+    messageCenter.includes("Messaging opens only"),
+  "Empty messages must explain the accepted-connection next step once",
+);
 
 const cohortMigration = read(
   "supabase/migrations/20260727110000_founding_cohort_activation.sql",
@@ -326,5 +363,5 @@ assert(
 );
 
 console.log(
-  `Journey-state contracts passed: ${Object.keys(boundaryContracts).length} route boundaries, ${refreshModules.length} non-destructive refresh workflows, lightweight Admin cockpit, editable member profiles, opt-in attendee discovery, consent-based founding cohort, and 5 guided operations groups.`,
+  `Journey-state contracts passed: ${Object.keys(boundaryContracts).length} route boundaries, ${refreshModules.length} non-destructive refresh workflows, responsive shared member navigation, people-first discovery, lightweight Admin cockpit, editable profiles, opt-in attendee discovery, consent-based founding cohort, and 5 guided operations groups.`,
 );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { MemberHeader } from "@/components/member/member-header";
 
 export const dynamic = "force-dynamic";
 
@@ -23,17 +24,33 @@ export default async function EventsPage() {
     .eq("status", "published")
     .order("starts_at", { ascending: true });
   const events = (data as unknown as PublicEvent[] | null) ?? [];
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: memberProfile } = user
+    ? await supabase
+        .from("profiles")
+        .select("access_status")
+        .eq("id", user.id)
+        .maybeSingle()
+    : { data: null };
+  const isActiveMember = memberProfile?.access_status === "active";
 
   return (
     <main className="events-page">
-      <header className="legal-header">
-        <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></Link>
-        <div className="event-header-actions"><Link href="/events/past">Past events</Link><Link className="button button-small button-outline" href="/sign-in">Member sign in</Link></div>
-      </header>
+      {isActiveMember ? (
+        <MemberHeader active="events" label="Events" />
+      ) : (
+        <header className="legal-header">
+          <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></Link>
+          <div className="event-header-actions"><Link href="/events/past">Past events</Link><Link className="button button-small button-outline" href="/sign-in">Member sign in</Link></div>
+        </header>
+      )}
       <section className="events-intro">
         <p className="eyebrow">Gather with intention</p>
-        <h1>Upcoming tables.</h1>
-        <p>Curated gatherings where professional trust begins—and where every introduction can continue inside the network.</p>
+        <h1>Events and gatherings.</h1>
+        <p>See what is coming next, request your place, and return to gatherings you have already attended.</p>
+        {isActiveMember ? <Link className="events-past-link" href="/events/past">View your past events →</Link> : null}
       </section>
       <section className="public-event-list" aria-label="Published events">
         {events.length ? events.map((event) => (
@@ -42,7 +59,7 @@ export default async function EventsPage() {
             <div className="public-event-copy"><span>{event.format.replace("_", " ")} · {event.venues ? `${event.venues.city}, ${event.venues.country}` : "Online"}</span><h2>{event.title}</h2><p>{event.summary || "Event details will be shared with approved members."}</p></div>
             <Link href={`/events/${event.slug}`}>View event <span aria-hidden="true">→</span></Link>
           </article>
-        )) : <div className="events-empty"><strong>The next table is being prepared.</strong><p>Published event details will appear here. Join the founding network to hear first.</p><Link className="button button-primary" href="/sign-in">Request membership</Link></div>}
+        )) : <div className="events-empty"><strong>The next table is being prepared.</strong><p>{isActiveMember ? "We will notify you when the date, venue, and registration window are ready." : "Published event details will appear here. Join the founding network to hear first."}</p><Link className="button button-primary" href={isActiveMember ? "/home" : "/sign-in"}>{isActiveMember ? "Return to member home" : "Request membership"}</Link></div>}
       </section>
     </main>
   );

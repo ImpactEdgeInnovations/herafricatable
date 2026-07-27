@@ -5,6 +5,7 @@ import {
   type EditableMemberProfile,
 } from "@/components/member/profile-editor";
 import { createClient } from "@/lib/supabase/server";
+import { MemberHeader } from "@/components/member/member-header";
 
 export const dynamic = "force-dynamic";
 
@@ -48,14 +49,7 @@ export default async function ProfilePage() {
   if (!profile) {
     return (
       <main className="profile-page">
-        <header className="member-home-header">
-          <Link className="brand" href="/home">
-            <span className="brand-mark">H</span>
-            <span>
-              Her Africa Table<small>Your profile</small>
-            </span>
-          </Link>
-        </header>
+        <MemberHeader active="account" label="Your profile" />
         <section className="admin-empty network-error" role="alert">
           <strong>Your profile could not be loaded</strong>
           <p>Please try again or contact support if the problem continues.</p>
@@ -96,19 +90,7 @@ export default async function ProfilePage() {
 
   return (
     <main className="profile-page">
-      <header className="member-home-header">
-        <Link className="brand" href="/home">
-          <span className="brand-mark">H</span>
-          <span>
-            Her Africa Table<small>Your profile</small>
-          </span>
-        </Link>
-        <nav aria-label="Profile navigation">
-          <Link href="/home">Member home</Link>
-          <Link href="/network">Members</Link>
-          <Link href="/settings">Account</Link>
-        </nav>
-      </header>
+      <MemberHeader active="account" label="Your profile" />
       {profileResult.error ||
       privateResult.error ||
       interestsResult.error ||
