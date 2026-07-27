@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -114,6 +115,7 @@ export function EventContentManager({
   speakerLinks: SpeakerLink[];
   isSuperAdmin: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [eventId, setEventId] = useState(events[0]?.id ?? "");
   const [panel, setPanel] = useState<Panel>("programme");
@@ -193,7 +195,7 @@ export function EventContentManager({
     if (handleError(error)) return;
     setMessage("Programme session saved and audit logged.");
     setBusy(false);
-    window.location.reload();
+    router.refresh();
   }
 
   async function saveAnnouncement(event: FormEvent) {
@@ -210,7 +212,7 @@ export function EventContentManager({
     if (handleError(error)) return;
     setMessage("Announcement saved and audit logged.");
     setBusy(false);
-    window.location.reload();
+    router.refresh();
   }
 
   async function saveSponsor(event: FormEvent) {
@@ -230,7 +232,7 @@ export function EventContentManager({
     if (handleError(error)) return;
     setMessage("Partner saved and audit logged.");
     setBusy(false);
-    window.location.reload();
+    router.refresh();
   }
 
   async function changeStaff(email: string, action: "assign" | "remove") {

@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { CourseSummary } from "@/components/member/learning-catalog";
@@ -48,6 +49,7 @@ export function LearningManager({
   enabled: boolean;
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [courseId, setCourseId] = useState(courses[0]?.course_id ?? "");
@@ -66,7 +68,7 @@ export function LearningManager({
         ? adminErrorMessage(error, "change Learning availability")
         : `Learning ${enabled ? "disabled" : "enabled"}.`,
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function saveCourse(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -95,7 +97,7 @@ export function LearningManager({
         ? adminErrorMessage(error, "save this course")
         : "Course saved and audited.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function saveLesson(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -138,7 +140,7 @@ export function LearningManager({
         ? adminErrorMessage(error, "save this lesson")
         : "Lesson saved with protected delivery metadata.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function grant(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -155,7 +157,7 @@ export function LearningManager({
         ? adminErrorMessage(error, "grant this course access")
         : "Course access granted and audited.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function review(id: string, action: string) {
     const result = await ask({
@@ -198,7 +200,7 @@ export function LearningManager({
         ? adminErrorMessage(error, `${action} this course order`)
         : `Course order ${action}d.`,
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   if (!migrationReady)
     return (

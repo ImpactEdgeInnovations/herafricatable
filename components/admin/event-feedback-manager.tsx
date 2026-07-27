@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { AdminEvent } from "@/components/admin/event-manager";
@@ -52,6 +53,7 @@ export function EventFeedbackManager({
   recaps: EventRecap[];
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [eventId, setEventId] = useState(events[0]?.id ?? "");
@@ -78,7 +80,7 @@ export function EventFeedbackManager({
         ? adminErrorMessage(error, "save this event recap")
         : "Event recap saved.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function review(
     id: string,
@@ -128,7 +130,7 @@ export function EventFeedbackManager({
         ? adminErrorMessage(error, "record this feedback action")
         : "Feedback action recorded and audited.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   if (!migrationReady)
     return (

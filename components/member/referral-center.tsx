@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -30,6 +31,7 @@ export function ReferralCenter({
   campaigns: ReferralCampaign[];
   referrals: MemberReferral[];
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -49,7 +51,7 @@ export function ReferralCenter({
         ? memberErrorMessage(error, "submit this referral")
         : "Your vouch has been submitted for private review. No access is granted until approval.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   return (
     <>

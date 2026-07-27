@@ -24,6 +24,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run verify
+      - run: npm run test:journeys
       - run: npm run typecheck
       - run: npm run build
         env:

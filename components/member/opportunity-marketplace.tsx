@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -57,6 +58,7 @@ export function OpportunityMarketplace({
   initialPosts: MarketplacePost[];
   initialResponses: MarketplaceResponse[];
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [posts] = useState(initialPosts);
@@ -91,7 +93,7 @@ export function OpportunityMarketplace({
           ? "Post updated."
           : "Your post is live.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function respond(post: MarketplacePost) {
     const result = await ask({
@@ -122,7 +124,7 @@ export function OpportunityMarketplace({
         ? memberErrorMessage(error, "send your private response")
         : "Your private response was sent.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function status(
     post: MarketplacePost,
@@ -139,7 +141,7 @@ export function OpportunityMarketplace({
         ? memberErrorMessage(error, `${next} this marketplace post`)
         : `Post marked ${next}.`,
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function review(
     response: MarketplaceResponse,

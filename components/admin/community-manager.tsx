@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { CommunitySummary } from "@/components/member/community-directory";
@@ -26,6 +27,7 @@ export function CommunityManager({
   enabled: boolean;
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [selected, setSelected] = useState(communities[0]?.community_id ?? "");
@@ -44,7 +46,7 @@ export function CommunityManager({
         ? adminErrorMessage(error, "change Community availability")
         : `Communities ${enabled ? "disabled" : "enabled"}.`,
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,7 +66,7 @@ export function CommunityManager({
         ? adminErrorMessage(error, "save this Community")
         : "Community saved and audited.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,7 +83,7 @@ export function CommunityManager({
         ? adminErrorMessage(error, "send this Community invitation")
         : "Invitation sent to the member inbox.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function review(id: string, action: string) {
     if (action === "transfer_ownership") {
@@ -105,7 +107,7 @@ export function CommunityManager({
         ? adminErrorMessage(error, "update this Community membership")
         : "Membership updated and audited.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   if (!migrationReady)
     return (

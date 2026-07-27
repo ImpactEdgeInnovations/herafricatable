@@ -42,10 +42,10 @@ const phases = [
   {
     label: "Experience",
     range: "Every day",
-    progress: 93,
-    status: "Contextual guidance complete",
+    progress: 96,
+    status: "Journey resilience complete",
     detail:
-      "Member and Admin errors are filtered, critical actions are accessible, and unfamiliar Admin forms explain publishing, privacy, and operational consequences. Cross-browser QA and user testing remain.",
+      "Core routes now provide loading, empty, success, safe-error and recovery states without discarding action feedback. Cross-browser QA and non-technical user testing remain.",
   },
 ];
 

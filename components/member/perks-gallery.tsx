@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
@@ -29,6 +30,7 @@ export type PartnerPerk = {
   own_expires_at: string | null;
 };
 export function PerksGallery({ perks }: { perks: PartnerPerk[] }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -51,7 +53,7 @@ export function PerksGallery({ perks }: { perks: PartnerPerk[] }) {
         ? memberErrorMessage(error, "reserve this benefit")
         : "Your private redemption code is ready.",
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   return (
     <section className="perks-grid">

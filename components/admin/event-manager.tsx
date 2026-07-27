@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -130,6 +131,7 @@ export function EventManager({
   canCreate: boolean;
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [events, setEvents] = useState(initialEvents);
   const [form, setForm] = useState<EventForm>(() =>
@@ -192,7 +194,7 @@ export function EventManager({
     );
     setSaving(false);
     if (!form.id && data) {
-      window.location.reload();
+      router.refresh();
     } else {
       setEvents((current) =>
         current.map((item) =>

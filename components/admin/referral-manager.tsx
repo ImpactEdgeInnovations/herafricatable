@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
@@ -49,6 +50,7 @@ export function ReferralManager({
   enabled: boolean;
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [selected, setSelected] = useState("");
@@ -76,7 +78,7 @@ export function ReferralManager({
         ? adminErrorMessage(error, "change referral availability")
         : `Referrals ${enabled ? "disabled" : "enabled"}.`,
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -103,7 +105,7 @@ export function ReferralManager({
         ? adminErrorMessage(error, "save this referral campaign")
         : "Referral campaign saved and audited.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function review(id: string, action: string) {
     const result = await ask({
@@ -159,7 +161,7 @@ export function ReferralManager({
           ? "Invitation approved and queued for email delivery."
           : `Referral ${action}d.`,
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   if (!migrationReady)
     return (

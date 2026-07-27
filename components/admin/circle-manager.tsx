@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { CircleCycle } from "@/components/member/circles-hub";
@@ -37,6 +38,7 @@ export function CircleManager({
   enabled: boolean;
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = createClient();
   const { ask, dialog } = useActionDialog();
   const [selected, setSelected] = useState(cycles[0]?.cycle_id ?? "");
@@ -67,7 +69,7 @@ export function CircleManager({
         ? adminErrorMessage(error, "change Circle availability")
         : `Circles ${enabled ? "disabled" : "enabled"}.`,
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -90,7 +92,7 @@ export function CircleManager({
         ? adminErrorMessage(error, "save this Circle cycle")
         : "Circle cycle saved and audited.",
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function match() {
     if (!selected) return;
@@ -111,7 +113,7 @@ export function CircleManager({
         ? adminErrorMessage(error, "create draft Circle matches")
         : `${data} draft Circles created for human review.`,
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function publish() {
     if (!selected) return;
@@ -132,7 +134,7 @@ export function CircleManager({
         ? adminErrorMessage(error, "publish these Circles")
         : "Circles published and member notifications queued.",
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function publishPrompt(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

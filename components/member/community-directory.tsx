@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -22,6 +23,7 @@ export function CommunityDirectory({
 }: {
   communities: CommunitySummary[];
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -44,7 +46,7 @@ export function CommunityDirectory({
           ? "Welcome to the community."
           : "Your request has been sent to the hosts.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   return (
     <>

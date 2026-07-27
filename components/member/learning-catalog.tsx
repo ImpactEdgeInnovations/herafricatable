@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -27,6 +28,7 @@ const money = (amount: number, currency: string) =>
     maximumFractionDigits: 0,
   }).format(amount / 100);
 export function LearningCatalog({ courses }: { courses: CourseSummary[] }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -99,7 +101,7 @@ export function LearningCatalog({ courses }: { courses: CourseSummary[] }) {
           ? memberErrorMessage(error, "submit your course payment for review")
           : "Your course purchase is awaiting admin review.",
       );
-      if (!error) window.location.reload();
+      if (!error) router.refresh();
       return;
     }
     const { error } = await supabase.rpc("enroll_in_course", {
@@ -111,7 +113,7 @@ export function LearningCatalog({ courses }: { courses: CourseSummary[] }) {
         ? memberErrorMessage(error, "open this course")
         : "Course access is ready.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   return (
     <>

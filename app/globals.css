@@ -3875,6 +3875,78 @@ body {
   border: 1px solid var(--line);
   background: var(--paper);
 }
+.admin-work-group {
+  width: min(1240px, calc(100% - 56px));
+  margin: 0 auto 22px;
+  border: 1px solid var(--line);
+  background: rgba(252, 251, 248, 0.76);
+}
+.admin-work-group > summary {
+  display: grid;
+  min-height: 150px;
+  align-items: center;
+  padding: 30px 34px;
+  list-style: none;
+  cursor: pointer;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 24px;
+}
+.admin-work-group > summary::-webkit-details-marker {
+  display: none;
+}
+.admin-work-group > summary:hover {
+  background: #fff;
+}
+.admin-work-group-index {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--wine);
+  font-size: 1.1rem;
+  transition: transform 180ms ease;
+  place-items: center;
+}
+.admin-work-group[open] .admin-work-group-index {
+  transform: rotate(45deg);
+}
+.admin-work-group > summary h2 {
+  margin: 5px 0 8px;
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+.admin-work-group > summary p:last-child {
+  max-width: 720px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.65;
+}
+.admin-work-group-action {
+  color: var(--wine);
+  font-size: 0.62rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.admin-work-group .when-open,
+.admin-work-group[open] .when-closed {
+  display: none;
+}
+.admin-work-group[open] .when-open {
+  display: inline;
+}
+.admin-work-group-content {
+  padding: 0 22px 22px;
+  border-top: 1px solid var(--line);
+}
+.admin-work-group-content > .admin-section,
+.admin-work-group-content > section.admin-section {
+  width: 100%;
+  margin: 22px 0 0;
+}
 .admin-section-heading {
   display: flex;
   align-items: flex-end;
@@ -4003,6 +4075,150 @@ body {
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.6;
+}
+.route-state-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 48px 24px;
+  background:
+    radial-gradient(
+      circle at 82% 16%,
+      rgba(180, 139, 73, 0.12),
+      transparent 28%
+    ),
+    var(--paper);
+}
+.route-state-admin {
+  background:
+    linear-gradient(rgba(246, 243, 237, 0.92), rgba(246, 243, 237, 0.92)),
+    var(--paper);
+}
+.journey-state {
+  display: grid;
+  width: min(760px, 100%);
+  align-items: start;
+  padding: clamp(32px, 6vw, 68px);
+  border: 1px solid var(--line);
+  background: rgba(252, 251, 248, 0.96);
+  box-shadow: 0 28px 80px rgba(42, 35, 31, 0.08);
+  grid-template-columns: auto 1fr;
+  gap: clamp(22px, 4vw, 42px);
+}
+.journey-state-mark {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  color: var(--wine);
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  place-items: center;
+}
+.journey-state-mark i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--wine);
+  animation: journey-pulse 1.15s ease-in-out infinite alternate;
+}
+.journey-state h1 {
+  max-width: 600px;
+  margin: 10px 0 18px;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  font-weight: 400;
+  letter-spacing: -0.05em;
+  line-height: 0.96;
+}
+.journey-state > div > p:not(.eyebrow) {
+  max-width: 580px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.journey-state-actions {
+  display: flex;
+  align-items: center;
+  margin-top: 30px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.journey-state-actions button {
+  cursor: pointer;
+}
+.journey-state-support {
+  padding: 12px;
+  color: var(--wine);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+.journey-state-progress {
+  width: min(360px, 100%);
+  height: 2px;
+  margin-top: 30px;
+  overflow: hidden;
+  background: var(--sand);
+}
+.journey-state-progress span {
+  display: block;
+  width: 45%;
+  height: 100%;
+  background: var(--wine);
+  animation: journey-progress 1.4s ease-in-out infinite alternate;
+}
+.journey-state-error .journey-state-mark {
+  border-color: #bd7b75;
+  color: #8f2730;
+}
+@keyframes journey-pulse {
+  from {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes journey-progress {
+  from {
+    transform: translateX(-15%);
+  }
+  to {
+    transform: translateX(135%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .journey-state-mark i,
+  .journey-state-progress span {
+    animation: none;
+  }
+}
+@media (max-width: 620px) {
+  .route-state-page {
+    padding: 16px;
+  }
+  .journey-state {
+    padding: 32px 24px;
+    grid-template-columns: 1fr;
+  }
+  .journey-state-mark {
+    width: 40px;
+    height: 40px;
+  }
+  .journey-state-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .journey-state-actions .button,
+  .journey-state-support {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
 }
 .roadmap-list {
   display: grid;
@@ -8117,7 +8333,13 @@ body {
   font-size: 0.76rem;
   line-height: 1.8;
 }
-.lesson-list > article > button {
+.lesson-progress-control {
+  display: grid;
+  align-self: start;
+  justify-items: start;
+  gap: 8px;
+}
+.lesson-progress-control > button {
   align-self: start;
   padding: 9px 12px;
   border: 1px solid var(--line);
@@ -8126,9 +8348,15 @@ body {
   font-size: 0.58rem;
   cursor: pointer;
 }
-.lesson-list > article > button.lesson-complete {
+.lesson-progress-control > button.lesson-complete {
   border-color: var(--gold);
   color: var(--gold);
+}
+.lesson-progress-control > span {
+  max-width: 220px;
+  color: var(--muted);
+  font-size: 0.58rem;
+  line-height: 1.5;
 }
 .learning-admin-tabs {
   margin-bottom: 30px;
@@ -9034,24 +9262,66 @@ body {
     gap: 12px;
   }
 }
-.member-launchpad {
+.member-more-tools {
   width: min(1120px, calc(100% - 48px));
   margin: 0 auto 70px;
-  padding: 35px 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
+.member-more-tools > summary {
+  display: flex;
+  min-height: 150px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 0;
+  list-style: none;
+  cursor: pointer;
+  gap: 40px;
+}
+.member-more-tools > summary::-webkit-details-marker {
+  display: none;
+}
+.member-more-tools > summary h2 {
+  margin: 6px 0 10px;
+  font-family: var(--serif);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+.member-more-tools > summary p:last-child {
+  max-width: 680px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.65;
+}
+.member-more-tools > summary > span {
+  color: var(--wine);
+  font-size: 0.62rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.member-more-tools .when-open,
+.member-more-tools[open] .when-closed {
+  display: none;
+}
+.member-more-tools[open] .when-open {
+  display: inline;
+}
+.member-launchpad {
+  width: 100%;
+  margin: 0;
+  padding: 0 0 35px;
+}
 .member-launchpad > header {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
 }
-.member-launchpad h2 {
-  margin: 6px 0 0;
-  font-family: var(--serif);
-  font-size: 2rem;
-  font-weight: 400;
+.member-launchpad > header > strong {
+  color: var(--ink);
+  font-size: 0.7rem;
 }
 .member-launchpad > header > span {
   color: var(--muted);
@@ -9363,10 +9633,20 @@ body {
     white-space: normal;
   }
   .member-quickstart,
-  .member-launchpad,
+  .member-more-tools,
   .perks-hero,
   .perks-grid {
     width: calc(100% - 32px);
+  }
+  .member-more-tools > summary {
+    min-height: 0;
+    align-items: flex-start;
+    padding: 28px 0;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .member-launchpad {
+    width: 100%;
   }
   .member-launchpad > header {
     align-items: flex-start;
@@ -10222,8 +10502,25 @@ body {
   }
   .admin-hero,
   .admin-section,
+  .admin-work-group,
   .admin-footer {
     width: calc(100% - 32px);
+  }
+  .admin-work-group > summary {
+    min-height: 0;
+    padding: 24px 20px;
+    grid-template-columns: 32px 1fr;
+    gap: 16px;
+  }
+  .admin-work-group-index {
+    width: 30px;
+    height: 30px;
+  }
+  .admin-work-group-action {
+    grid-column: 2;
+  }
+  .admin-work-group-content {
+    padding: 0 8px 8px;
   }
   .admin-section {
     padding: 32px 20px;

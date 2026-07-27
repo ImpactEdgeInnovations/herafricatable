@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { AdminEvent } from "@/components/admin/event-manager";
@@ -95,6 +96,7 @@ export function RegistrationManager({
   paystackConfigured: boolean;
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [eventId, setEventId] = useState(events[0]?.id ?? "");
@@ -133,7 +135,7 @@ export function RegistrationManager({
     if (fail(error)) return;
     setBusy(false);
     setMessage("Ticket saved in minor units and audit logged.");
-    window.location.reload();
+    router.refresh();
   }
   async function review(orderId: string, action: "approve" | "reject") {
     const result = await ask({
@@ -177,7 +179,7 @@ export function RegistrationManager({
     if (fail(error)) return;
     setBusy(false);
     setMessage(`Registration ${action}d and audit logged.`);
-    window.location.reload();
+    router.refresh();
   }
   async function reviewRefund(refundId: string, action: "approve" | "reject") {
     const result = await ask({
@@ -221,7 +223,7 @@ export function RegistrationManager({
         ? "Refund approved. Manual orders are complete; Paystack orders now await provider processing."
         : "Refund request rejected and audit logged.",
     );
-    window.location.reload();
+    router.refresh();
   }
   if (!migrationReady)
     return (

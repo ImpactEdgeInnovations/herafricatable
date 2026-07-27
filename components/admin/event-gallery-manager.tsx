@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import type { AdminEvent } from "@/components/admin/event-manager";
@@ -80,6 +81,7 @@ export function EventGalleryManager({
   initialAssets: AdminMediaAsset[];
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [eventId, setEventId] = useState(events[0]?.id ?? "");
   const eventAlbums = initialAlbums.filter(
@@ -163,7 +165,7 @@ export function EventGalleryManager({
     if (showError(error)) return;
     setBusy(false);
     setMessage("Gallery album saved and audit logged.");
-    window.location.reload();
+    router.refresh();
   }
 
   async function chooseFile(event: ChangeEvent<HTMLInputElement>) {
@@ -252,7 +254,7 @@ export function EventGalleryManager({
     }
     setBusy(false);
     setMessage("Media saved securely and audit logged.");
-    window.location.reload();
+    router.refresh();
   }
 
   if (!migrationReady)

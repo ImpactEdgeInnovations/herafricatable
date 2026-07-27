@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +25,7 @@ export function MarketplaceModeration({
   reports: MarketplaceReport[];
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState("");
@@ -77,7 +79,7 @@ export function MarketplaceModeration({
           )
         : "Marketplace moderation decision recorded.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
 
   if (!migrationReady) return null;

@@ -1,3 +1,68 @@
-import Link from "next/link";import{redirect}from"next/navigation";import{createClient}from"@/lib/supabase/server";import{MembershipCenter,type MembershipPlan}from"@/components/member/membership-center";
-export const dynamic="force-dynamic";
-export default async function MembershipPage(){const supabase=await createClient();const{data:{user}}=await supabase.auth.getUser();if(!user)redirect("/sign-in");const{data:profile}=await supabase.from("profiles").select("access_status").eq("id",user.id).maybeSingle();if(!profile||!["active","dormant"].includes(profile.access_status))redirect("/home");const{data,error}=await supabase.rpc("list_membership_catalog");return <main className="membership-page"><header className="member-home-header"><Link className="brand"href="/"><span className="brand-mark">H</span><span>Her Africa Table<small>Membership</small></span></Link><nav><Link href="/home">Home</Link><Link href="/settings">Settings</Link></nav></header><section className="membership-hero"><p className="eyebrow">Belong with intention</p><h1>Your place<br/>at the table.</h1><p>A clear, auditable membership record—designed for continuity, trust and thoughtful renewal.</p></section>{error?<section className="network-error"><strong>Membership is not open yet.</strong><p>{error.message}</p><Link href="/home">Return home</Link></section>:<MembershipCenter plans={(data as MembershipPlan[]|null)??[]}/>}</main>}
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { memberErrorMessage } from "@/lib/member-error";
+import {
+  MembershipCenter,
+  type MembershipPlan,
+} from "@/components/member/membership-center";
+export const dynamic = "force-dynamic";
+export default async function MembershipPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in");
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("access_status")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!profile || !["active", "dormant"].includes(profile.access_status))
+    redirect("/home");
+  const { data, error } = await supabase.rpc("list_membership_catalog");
+  return (
+    <main className="membership-page">
+      <header className="member-home-header">
+        <Link className="brand" href="/">
+          <span className="brand-mark">H</span>
+          <span>
+            Her Africa Table<small>Membership</small>
+          </span>
+        </Link>
+        <nav>
+          <Link href="/home">Home</Link>
+          <Link href="/settings">Settings</Link>
+        </nav>
+      </header>
+      <section className="membership-hero">
+        <p className="eyebrow">Belong with intention</p>
+        <h1>
+          Your place
+          <br />
+          at the table.
+        </h1>
+        <p>
+          A clear, auditable membership record—designed for continuity, trust
+          and thoughtful renewal.
+        </p>
+      </section>
+      {error ? (
+        <section className="network-error" role="alert">
+          <strong>Membership is not open yet.</strong>
+          <p>{memberErrorMessage(error, "load membership options")}</p>
+          <div className="journey-state-actions">
+            <Link className="button button-primary" href="/membership">
+              Try again
+            </Link>
+            <Link className="button button-outline" href="/support">
+              Contact support
+            </Link>
+          </div>
+        </section>
+      ) : (
+        <MembershipCenter plans={(data as MembershipPlan[] | null) ?? []} />
+      )}
+    </main>
+  );
+}

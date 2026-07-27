@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -28,6 +29,7 @@ export function OrderHistory({
   orders: MemberOrder[];
   refundOrderIds: string[];
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export function OrderHistory({
         ? memberErrorMessage(error, "cancel this registration")
         : "Registration cancelled.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function refund(order: MemberOrder) {
     const result = await ask({
@@ -93,7 +95,7 @@ export function OrderHistory({
         ? memberErrorMessage(error, "submit this refund request")
         : "Refund request submitted for review.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   return (
     <section className="member-orders">

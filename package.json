@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verify-repository.mjs",
-    "test": "npm run verify && npm run typecheck",
+    "test:journeys": "node scripts/verify-journey-states.mjs",
+    "test": "npm run verify && npm run test:journeys && npm run typecheck",
     "test:live": "node scripts/smoke-live.mjs"
   },
   "dependencies": {

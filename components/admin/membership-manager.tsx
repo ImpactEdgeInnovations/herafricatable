@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
@@ -58,6 +59,7 @@ export function MembershipManager({
   enabled: boolean;
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [selected, setSelected] = useState("");
@@ -87,7 +89,7 @@ export function MembershipManager({
         ? adminErrorMessage(error, "change membership availability")
         : `Memberships ${enabled ? "disabled" : "enabled"}.`,
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -111,7 +113,7 @@ export function MembershipManager({
         ? adminErrorMessage(error, "save this membership plan")
         : "Membership plan saved and audited.",
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function review(id: string, action: string) {
     const result = await ask({
@@ -154,7 +156,7 @@ export function MembershipManager({
         ? adminErrorMessage(error, `${action} this membership order`)
         : `Membership order ${action}d.`,
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function grant(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -171,7 +173,7 @@ export function MembershipManager({
         ? adminErrorMessage(error, "grant this membership term")
         : "Membership term granted and audited.",
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function reconcile() {
     const result = await ask({
@@ -189,7 +191,7 @@ export function MembershipManager({
         ? adminErrorMessage(error, "reconcile membership lifecycles")
         : `Lifecycle reconciled: ${JSON.stringify(data?.[0] ?? {})}`,
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function createTestUser(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

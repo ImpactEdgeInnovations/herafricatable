@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -22,6 +23,7 @@ export type MembershipPlan = {
 };
 
 export function MembershipCenter({ plans }: { plans: MembershipPlan[] }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -63,7 +65,7 @@ export function MembershipCenter({ plans }: { plans: MembershipPlan[] }) {
         ? memberErrorMessage(error, "submit your membership payment for review")
         : "Your payment details are awaiting private admin review.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   return (
     <>

@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
@@ -60,6 +61,7 @@ export function NetworkHub({
   contacts: ConnectionContact[];
   blockedMembers: BlockedMember[];
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState("");
@@ -81,7 +83,7 @@ export function NetworkHub({
         ? memberErrorMessage(error, "send this connection request")
         : "Connection request sent.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function respond(id: string, action: "accept" | "ignore") {
     setBusy(id);
@@ -95,7 +97,7 @@ export function NetworkHub({
         ? memberErrorMessage(error, `${action} this connection request`)
         : `Request ${action}ed.`,
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function startMessage(connectionId: string) {
     setBusy(connectionId);
@@ -212,7 +214,7 @@ export function NetworkHub({
           ? "Report submitted privately to the moderation team."
           : `Member ${action}ed.`,
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   function submitCode(e: FormEvent) {
     e.preventDefault();

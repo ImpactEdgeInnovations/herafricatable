@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { PartnerPerk } from "@/components/member/perks-gallery";
@@ -53,6 +54,7 @@ export function PerksManager({
   enabled: boolean;
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = createClient();
   const { ask, dialog } = useActionDialog();
   const [partnerId, setPartnerId] = useState("");
@@ -84,7 +86,7 @@ export function PerksManager({
         ? adminErrorMessage(error, "change partner benefit availability")
         : `Partner perks ${enabled ? "disabled" : "enabled"}.`,
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function savePartner(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -108,7 +110,7 @@ export function PerksManager({
         ? adminErrorMessage(error, "save this partner")
         : "Partner saved and audited.",
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function savePerk(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -134,7 +136,7 @@ export function PerksManager({
         ? adminErrorMessage(error, "save this partner benefit")
         : "Partner benefit saved and audited.",
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function review(id: string, action: string) {
     const result = await ask({
@@ -178,7 +180,7 @@ export function PerksManager({
         ? adminErrorMessage(error, `${action} this benefit reservation`)
         : `Reservation ${action}ed.`,
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function reconcile() {
     setBusy("reconcile");
@@ -189,7 +191,7 @@ export function PerksManager({
         ? adminErrorMessage(error, "release expired benefit reservations")
         : `${data} expired reservations released.`,
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   if (!migrationReady)
     return (

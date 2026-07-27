@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { FormEvent, useMemo, useState } from "react";
 import type { AdminEvent } from "@/components/admin/event-manager";
@@ -84,6 +85,7 @@ export function EventMenuManager({
   initialFeedback: AdminMenuFeedback[];
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [eventId, setEventId] = useState(events[0]?.id ?? "");
   const selectedMenu = initialMenus.find((menu) => menu.event_id === eventId);
@@ -148,7 +150,7 @@ export function EventMenuManager({
     if (errorMessage(error)) return;
     setMessage("Menu narrative saved and audit logged.");
     setBusy(false);
-    window.location.reload();
+    router.refresh();
   }
 
   async function saveItem(event: FormEvent) {
@@ -174,7 +176,7 @@ export function EventMenuManager({
     if (errorMessage(error)) return;
     setMessage("Dish saved and audit logged.");
     setBusy(false);
-    window.location.reload();
+    router.refresh();
   }
 
   async function moderate(
@@ -193,7 +195,7 @@ export function EventMenuManager({
     setMessage(
       `Comment ${action === "approve" ? "approved" : "hidden"} and audit logged.`,
     );
-    window.location.reload();
+    router.refresh();
   }
 
   if (!migrationReady)

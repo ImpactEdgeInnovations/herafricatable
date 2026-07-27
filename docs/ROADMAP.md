@@ -56,6 +56,10 @@ Usability is part of production readiness and continues alongside feature delive
       navigation and three obvious first actions
 - [x] Simplify the Admin command centre into task groups with plain-language labels,
       queue counts and guided next steps
+  - [x] Collapse specialist Admin modules into five plain-language work groups while
+        preserving direct links to the correct tool
+- [x] Keep the member home focused on three primary actions and progressively disclose
+      secondary membership, community, learning, benefits and support tools
 - [x] Add contextual help and examples to every unfamiliar form without crowding the page
   - [x] Membership payment review, referrals and support requests include concise,
         accessible examples and privacy guidance
@@ -76,12 +80,19 @@ Usability is part of production readiness and continues alongside feature delive
         operational recovery guidance and use member-safe action wording
 - [ ] Test the main member and administrator journeys with at least five non-technical users
 - [ ] Pass keyboard, screen-reader, contrast, 200% zoom and mobile usability acceptance
-- [ ] Confirm every core journey has clear loading, empty, success, error and recovery states
+- [x] Confirm every core journey has clear loading, empty, success, error and recovery states
+  - [x] Global and Admin route boundaries provide accessible loading, retry, support and
+        not-found recovery without exposing technical details
+  - [x] Core member and Admin mutations preserve visible outcomes while refreshing server
+        data instead of discarding feedback through full-page reloads
+  - [x] Event registration, onboarding, feedback and lesson progress use member-safe
+        service errors and announced success or recovery states
+  - [x] CI enforces route-boundary, safe-error and non-destructive-refresh contracts
 - [ ] Run final visual QA across Safari, Chrome and common phone/tablet sizes
 
 ## Release scope
 
-## Current delivery status — 25 July 2026
+## Current delivery status — 26 July 2026
 
 ### Completed foundation
 
@@ -149,6 +160,31 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Repeatable production smoke suite, anonymous route-boundary checks, mobile public
       UAT, deployment health diagnostics and a manually gated live-smoke workflow
 
+### Heavy work remaining before production launch
+
+1. **Production authentication and email delivery**
+   - Configure the Supabase six-digit OTP template, production SMTP, verified sender
+     domain and Resend worker schedule.
+   - Retire temporary password access after member and Admin OTP pass end to end.
+2. **Production database and environment parity**
+   - Verify every forward-only migration is present in production rather than relying
+     on manual recollection.
+   - Confirm Vercel Production variables, Paystack webhook secrets, notification
+     credentials and scheduled jobs against the readiness checklist.
+3. **Real-account acceptance**
+   - Run pending → onboarding → active with two real member accounts and one scoped
+     staff account.
+   - Complete the event, registration, manual payment, connection, messaging, support,
+     privacy and renewal loops using auditable production-safe test identities.
+4. **Release controls and incident readiness**
+   - Require both application and database checks before production deployment.
+   - Rehearse payment reconciliation, notification retry, backup/restore, account
+     deletion and incident escalation.
+5. **Human usability and device acceptance**
+   - Test with at least five non-technical users.
+   - Complete keyboard, screen-reader, 200% zoom, iPhone Safari, Android Chrome and
+     tablet acceptance with recorded evidence.
+
 ### Immediate release gate
 
 - [ ] Configure the Supabase email template with `{{ .Token }}` and disable magic-link
@@ -190,6 +226,9 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Apply `20260726170000_privacy_safe_analytics.sql` in production Supabase
 - [ ] Review readiness targets and complete a tagged-test versus real-member metric pass
 - [ ] Complete the non-technical-user UI workstream and record usability acceptance evidence
+  - [x] Implement layperson-first task grouping, progressive disclosure, plain-language
+        form guidance and recoverable journey states
+  - [ ] Record acceptance evidence from five non-technical users and address findings
 - [ ] Verify the Resend sending domain and configure the production email worker schedule
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [x] Add automated authentication, authorization and migration tests to CI

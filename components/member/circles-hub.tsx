@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -71,6 +72,7 @@ export function CirclesHub({
   prompts: CirclePrompt[];
   responses: Record<string, CircleResponse[]>;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -109,7 +111,7 @@ export function CirclesHub({
           ? "You are in the matching pool."
           : "You have withdrawn from this cycle.",
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   async function respond(event: FormEvent<HTMLFormElement>, promptId: string) {
     event.preventDefault();
@@ -125,7 +127,7 @@ export function CirclesHub({
         ? memberErrorMessage(error, "save your Circle reflection")
         : "Your reflection is now visible to your Circle.",
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
   return (
     <>

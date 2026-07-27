@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
@@ -23,6 +24,7 @@ export function CommunityFeed({
   currentUserId: string;
   initialPosts: CommunityPost[];
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -44,7 +46,7 @@ export function CommunityFeed({
     );
     if (!error) {
       form.reset();
-      window.location.reload();
+      router.refresh();
     }
   }
   async function remove(id: string) {
@@ -65,7 +67,7 @@ export function CommunityFeed({
         ? memberErrorMessage(error, "remove this community post")
         : "Post removed.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
   async function report(id: string) {
     const result = await ask({

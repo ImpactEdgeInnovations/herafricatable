@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +25,7 @@ export function CommunityModeration({
   reports: CommunityReport[];
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState("");
@@ -74,7 +76,7 @@ export function CommunityModeration({
         ? adminErrorMessage(error, "record this community moderation decision")
         : "Community moderation decision recorded.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
 
   if (!migrationReady) return null;

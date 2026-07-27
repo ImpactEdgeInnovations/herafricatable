@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -27,6 +28,7 @@ export function ModerationQueue({
   reports: MemberReport[];
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState("");
@@ -77,7 +79,7 @@ export function ModerationQueue({
         ? adminErrorMessage(error, "update this member report")
         : "Report updated and audit logged.",
     );
-    if (!error) window.location.reload();
+    if (!error) router.refresh();
   }
 
   if (!migrationReady)

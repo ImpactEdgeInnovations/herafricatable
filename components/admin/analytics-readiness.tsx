@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -44,6 +45,7 @@ export function AnalyticsReadiness({
   analytics: ProductAnalytic[];
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState("");
@@ -86,7 +88,7 @@ export function AnalyticsReadiness({
         ? adminErrorMessage(error, "update this readiness target")
         : "Readiness target updated and audited.",
     );
-    if (!error) location.reload();
+    if (!error) router.refresh();
   }
 
   if (!migrationReady)
