@@ -217,6 +217,9 @@ for (const contract of [
 const cohortMigration = read(
   "supabase/migrations/20260727110000_founding_cohort_activation.sql",
 );
+const cohortCorrection = read(
+  "supabase/migrations/20260727120000_founding_cohort_corrections.sql",
+);
 for (const contract of [
   "community_cohorts",
   "community_introductions",
@@ -231,6 +234,11 @@ for (const contract of [
     `Founding cohort lifecycle must include ${contract}`,
   );
 }
+assert(
+  cohortCorrection.includes("membership.user_id = auth.uid()") &&
+    cohortCorrection.includes("membership.status = 'active'"),
+  "Cohort introduction membership checks must use unambiguous qualified columns",
+);
 assert(
   read("components/member/community-directory.tsx").includes(
     "respond_to_community_invitation",
