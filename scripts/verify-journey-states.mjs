@@ -164,6 +164,7 @@ for (const specialist of [
 for (const route of [
   "/admin/members",
   "/admin/events",
+  "/admin/cohort",
   "/admin/safety",
   "/admin/operations",
 ]) {
@@ -203,6 +204,9 @@ for (const contract of [
   "Your next table",
   "Seat confirmed",
   "Request your seat",
+  "get_my_activation_journey",
+  'className="member-activation"',
+  "Build two mutual connections",
 ]) {
   assert(
     memberHome.includes(contract),
@@ -210,6 +214,52 @@ for (const contract of [
   );
 }
 
+const cohortMigration = read(
+  "supabase/migrations/20260727110000_founding_cohort_activation.sql",
+);
+for (const contract of [
+  "community_cohorts",
+  "community_introductions",
+  "sync_cohort_invitations",
+  "'invited'",
+  "not public.is_blocked_pair",
+  "follow_up_until <= now()",
+  "list_cohort_health",
+]) {
+  assert(
+    cohortMigration.includes(contract),
+    `Founding cohort lifecycle must include ${contract}`,
+  );
+}
+assert(
+  read("components/member/community-directory.tsx").includes(
+    "respond_to_community_invitation",
+  ),
+  "Cohort invitations must require an explicit member acceptance action",
+);
+const cohortMemberExperience = read(
+  "components/member/cohort-activation.tsx",
+);
+for (const contract of [
+  "Who are you?",
+  "What are you building?",
+  "What can you offer?",
+  "What are you seeking?",
+  "Only accepted members",
+]) {
+  assert(
+    cohortMemberExperience.includes(contract),
+    `Guided cohort introduction must include ${contract}`,
+  );
+}
+const cohortAdmin = read("components/admin/cohort-activation-manager.tsx");
+assert(
+  cohortAdmin.includes("Nobody enters the room until she accepts") &&
+    cohortAdmin.includes("Invite eligible members") &&
+    cohortAdmin.includes("Cohort health"),
+  "Admin cohort operations must explain and preserve consent boundaries",
+);
+
 console.log(
-  `Journey-state contracts passed: ${Object.keys(boundaryContracts).length} route boundaries, ${refreshModules.length} non-destructive refresh workflows, lightweight Admin cockpit, personalized next-event state, and 5 guided operations groups.`,
+  `Journey-state contracts passed: ${Object.keys(boundaryContracts).length} route boundaries, ${refreshModules.length} non-destructive refresh workflows, lightweight Admin cockpit, personalized next-event state, consent-based founding cohort, and 5 guided operations groups.`,
 );

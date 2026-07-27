@@ -34,18 +34,18 @@ const phases = [
   {
     label: "Network",
     range: "Days 16–30",
-    progress: 98,
+    progress: 99,
     status: "Production acceptance",
     detail:
-      "Marketplace, feedback, Communities, Learning, referrals, renewals, Circles and controlled partner perks are built; production acceptance remains.",
+      "Marketplace, feedback, governed Communities, consent-based founding cohort activation, Learning, referrals, renewals, Circles and controlled partner perks are built; production acceptance remains.",
   },
   {
     label: "Experience",
     range: "Every day",
-    progress: 97,
-    status: "Core journeys simplified",
+    progress: 98,
+    status: "Cohort activation complete",
     detail:
-      "Member Home now leads with the next event and personal seat status, while Admin opens to a lightweight decision cockpit. Cross-browser QA and non-technical user testing remain.",
+      "Member Home now guides activation, the Nairobi room uses explicit invitations and structured introductions, and Admin can monitor cohort health without opening private conversations. Cross-browser QA and non-technical user testing remain.",
   },
 ];
 

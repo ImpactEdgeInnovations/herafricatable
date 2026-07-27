@@ -26,6 +26,18 @@ type RegistrationStatus =
   | "rejected"
   | "waitlisted";
 
+type ActivationJourney = {
+  accepted_connections: number;
+  cohort_id: string | null;
+  cohort_membership_status: "active" | "invited" | null;
+  cohort_name: string | null;
+  cohort_slug: string | null;
+  confirmed_events: number;
+  guidelines_accepted: boolean;
+  introduction_complete: boolean;
+  profile_complete: boolean;
+};
+
 export default async function MemberHomePage() {
   const supabase = await createClient();
   const {
@@ -188,6 +200,12 @@ export default async function MemberHomePage() {
     accessStatus === "active"
       ? await supabase.rpc("list_my_past_events")
       : { data: [], error: null };
+  const activationResult =
+    accessStatus === "active"
+      ? await supabase.rpc("get_my_activation_journey")
+      : { data: [], error: null };
+  const activation = ((activationResult.data as ActivationJourney[] | null) ??
+    [])[0];
   const feedbackPrompt = (
     (pastEventResult.data as
       | { feedback_id: string | null; slug: string; title: string }[]
@@ -404,6 +422,142 @@ export default async function MemberHomePage() {
           </div>
         )}
       </section>
+      {accessStatus === "active" && activation && !activationResult.error ? (
+        <section
+          className="member-activation"
+          aria-labelledby="member-activation-title"
+        >
+          <header>
+            <div>
+              <p className="eyebrow">Your first steps</p>
+              <h2 id="member-activation-title">
+                Take your place at the table.
+              </h2>
+              <p>
+                A few intentional actions make the room useful without opening
+                private access before consent.
+              </p>
+            </div>
+            <span>
+              {
+                [
+                  activation.profile_complete && activation.guidelines_accepted,
+                  Number(activation.confirmed_events) > 0,
+                  activation.cohort_membership_status === "active",
+                  activation.introduction_complete,
+                  Number(activation.accepted_connections) >= 2,
+                ].filter(Boolean).length
+              }
+              /5 complete
+            </span>
+          </header>
+          <ol>
+            <li
+              className={
+                activation.profile_complete && activation.guidelines_accepted
+                  ? "is-complete"
+                  : ""
+              }
+            >
+              <span>01</span>
+              <div>
+                <strong>Complete your profile and agreements</strong>
+                <p>
+                  Help trusted members understand your professional context.
+                </p>
+              </div>
+              <Link href="/onboarding">
+                {activation.profile_complete && activation.guidelines_accepted
+                  ? "Complete"
+                  : "Finish profile"}
+              </Link>
+            </li>
+            <li
+              className={
+                Number(activation.confirmed_events) > 0 ? "is-complete" : ""
+              }
+            >
+              <span>02</span>
+              <div>
+                <strong>Confirm your place at an event</strong>
+                <p>Event approval remains separate from network membership.</p>
+              </div>
+              <Link href="/events">
+                {Number(activation.confirmed_events) > 0
+                  ? "Confirmed"
+                  : "View events"}
+              </Link>
+            </li>
+            <li
+              className={
+                activation.cohort_membership_status === "active"
+                  ? "is-complete"
+                  : ""
+              }
+            >
+              <span>03</span>
+              <div>
+                <strong>Accept your founding-room invitation</strong>
+                <p>
+                  Invitations grant no access until you deliberately accept.
+                </p>
+              </div>
+              <Link
+                href={
+                  activation.cohort_membership_status === "active" &&
+                  activation.cohort_slug
+                    ? `/communities/${activation.cohort_slug}`
+                    : "/communities"
+                }
+              >
+                {activation.cohort_membership_status === "active"
+                  ? "Room joined"
+                  : activation.cohort_membership_status === "invited"
+                    ? "Review invitation"
+                    : "Awaiting invitation"}
+              </Link>
+            </li>
+            <li
+              className={activation.introduction_complete ? "is-complete" : ""}
+            >
+              <span>04</span>
+              <div>
+                <strong>Share a guided introduction</strong>
+                <p>Say what you are building, offering and seeking.</p>
+              </div>
+              <Link
+                href={
+                  activation.cohort_slug
+                    ? `/communities/${activation.cohort_slug}`
+                    : "/communities"
+                }
+              >
+                {activation.introduction_complete
+                  ? "Introduction shared"
+                  : "Introduce yourself"}
+              </Link>
+            </li>
+            <li
+              className={
+                Number(activation.accepted_connections) >= 2
+                  ? "is-complete"
+                  : ""
+              }
+            >
+              <span>05</span>
+              <div>
+                <strong>Build two mutual connections</strong>
+                <p>Private messaging opens only after both members consent.</p>
+              </div>
+              <Link href="/network">
+                {Number(activation.accepted_connections) >= 2
+                  ? "Complete"
+                  : "Discover members"}
+              </Link>
+            </li>
+          </ol>
+        </section>
+      ) : null}
       {accessStatus === "active" ? (
         <section
           className="member-quickstart"

@@ -19,10 +19,14 @@ export function CommunityFeed({
   communityId,
   currentUserId,
   initialPosts,
+  readOnly = false,
+  prompt,
 }: {
   communityId: string;
   currentUserId: string;
   initialPosts: CommunityPost[];
+  readOnly?: boolean;
+  prompt?: string;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -120,31 +124,39 @@ export function CommunityFeed({
   return (
     <>
       {dialog}
-      <form
-        className="community-composer"
-        onSubmit={(event) => void publish(event)}
-      >
-        <label htmlFor="community-post">Share with this community</label>
-        <textarea
-          id="community-post"
-          name="body"
-          minLength={2}
-          maxLength={3000}
-          required
-          placeholder="Offer a thoughtful update, question or resource…"
-        />
-        <div>
-          <small>
-            Community posts are visible only to active members of this space.
-          </small>
-          <button
-            className="button button-primary"
-            disabled={busy === "publish"}
-          >
-            {busy === "publish" ? "Publishing…" : "Publish"}
-          </button>
-        </div>
-      </form>
+      {readOnly ? null : (
+        <form
+          className="community-composer"
+          onSubmit={(event) => void publish(event)}
+        >
+          <label htmlFor="community-post">
+            {prompt ?? "Share with this community"}
+          </label>
+          <textarea
+            id="community-post"
+            name="body"
+            minLength={2}
+            maxLength={3000}
+            required
+            placeholder={
+              prompt
+                ? "Make one focused ask, offer a useful resource, or share a commitment from the table…"
+                : "Offer a thoughtful update, question or resource…"
+            }
+          />
+          <div>
+            <small>
+              Community posts are visible only to active members of this space.
+            </small>
+            <button
+              className="button button-primary"
+              disabled={busy === "publish"}
+            >
+              {busy === "publish" ? "Publishing…" : "Publish"}
+            </button>
+          </div>
+        </form>
+      )}
       <section className="community-feed">
         {initialPosts.length ? (
           initialPosts.map((post) => (

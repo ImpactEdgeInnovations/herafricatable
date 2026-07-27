@@ -6,6 +6,11 @@ import {
   CommunityFeed,
   type CommunityPost,
 } from "@/components/member/community-feed";
+import {
+  CohortActivation,
+  type CohortIntroduction,
+  type CohortRoom,
+} from "@/components/member/cohort-activation";
 import type { CommunitySummary } from "@/components/member/community-directory";
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
@@ -31,11 +36,20 @@ export default async function CommunityPage({
   ).find((item) => item.slug === slug);
   if (!community) notFound();
   if (community.membership_status !== "active") redirect("/communities");
-  const postsResult = await supabase.rpc("list_community_posts", {
-    p_community_id: community.community_id,
-    p_limit: 30,
-    p_offset: 0,
-  });
+  const [postsResult, cohortResult, introductionResult] = await Promise.all([
+    supabase.rpc("list_community_posts", {
+      p_community_id: community.community_id,
+      p_limit: 30,
+      p_offset: 0,
+    }),
+    supabase.rpc("get_community_cohort", {
+      p_community_id: community.community_id,
+    }),
+    supabase.rpc("list_community_introductions", {
+      p_community_id: community.community_id,
+    }),
+  ]);
+  const cohort = ((cohortResult.data as CohortRoom[] | null) ?? [])[0];
   return (
     <main className="community-page">
       <header className="member-home-header">
@@ -58,6 +72,15 @@ export default async function CommunityPage({
         </div>
         <span>{community.member_count} members</span>
       </section>
+      {cohort ? (
+        <CohortActivation
+          currentUserId={user.id}
+          introductions={
+            (introductionResult.data as CohortIntroduction[] | null) ?? []
+          }
+          room={cohort}
+        />
+      ) : null}
       {postsResult.error ? (
         <section className="admin-empty opportunity-error" role="alert">
           <strong>Community feed unavailable</strong>
@@ -79,6 +102,12 @@ export default async function CommunityPage({
           communityId={community.community_id}
           currentUserId={user.id}
           initialPosts={(postsResult.data as CommunityPost[] | null) ?? []}
+          prompt={
+            cohort
+              ? "Continue the table with one focused Ask, Offer or follow-up"
+              : undefined
+          }
+          readOnly={cohort?.cohort_status === "read_only"}
         />
       )}
     </main>

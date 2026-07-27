@@ -161,6 +161,9 @@ Usability is part of production readiness and continues alongside feature delive
       UAT, deployment health diagnostics and a manually gated live-smoke workflow
 - [x] Launch-spine UX with a personalized next-event seat state on Member Home and a
       lightweight Admin decision cockpit that defers specialist operations until opened
+- [x] Consent-based founding cohort activation with event eligibility, deliberate
+      invitations, guided introductions, blocked-pair filtering, focused Ask & Offer
+      follow-up, automatic read-only closure and Admin cohort-health operations
 
 ### Heavy work remaining before production launch
 

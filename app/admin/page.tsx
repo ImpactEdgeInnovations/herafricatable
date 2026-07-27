@@ -239,6 +239,13 @@ export default async function AdminHomePage() {
             </Link>
           ) : null}
           {role === "super_admin" ? (
+            <Link href="/admin/cohort">
+              <small>Founding cohort</small>
+              <strong>Activate the Nairobi community</strong>
+              <span>Invite, orient and follow cohort health →</span>
+            </Link>
+          ) : null}
+          {role === "super_admin" ? (
             <Link href="/admin/programs">
               <small>Member value</small>
               <strong>Programmes and benefits</strong>

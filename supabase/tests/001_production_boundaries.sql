@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(135);
+select plan(149);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -47,6 +47,8 @@ insert into public.community_memberships(community_id,user_id,role,status,joined
  ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','owner','active',now()),
  ('70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','owner','active',now()),
  ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','member','active',now());
+insert into public.community_cohorts(community_id,event_id,eligibility_scope,status,welcome_message,introduction_prompt,follow_up_until,created_by)values
+ ('70000000-0000-4000-8000-000000000002','50000000-0000-4000-8000-000000000002','confirmed_event','active','A private cohort boundary used to prove that eligibility and accepted room access remain separate permissions.','Share who you are, what you are building, what you can offer and what you are seeking from this cohort.',now()+interval'60 days','10000000-0000-4000-8000-000000000001');
 insert into public.community_posts(id,community_id,author_id,body)values
  ('71000000-0000-4000-8000-000000000001','70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','A community post captured for report-scoped moderation testing.');
 update public.feature_flags set enabled=true where key='learning';
@@ -77,7 +79,7 @@ select is((select count(*)from public.support_tickets),1::bigint,'member reads o
 select is((select subject from public.support_tickets limit 1),'Member A request','member support row is the correct owner row');
 select is((select count(*)from public.support_messages),1::bigint,'member reads only replies on own support ticket');
 select is((select count(*)from public.privacy_requests),1::bigint,'member reads only own privacy requests');
-select is((select count(*)from public.notifications),1::bigint,'member reads only own notifications');
+select is((select count(*)from public.notifications),2::bigint,'member reads only own notification and approval welcome');
 select lives_ok($$select public.mark_notification_read('40000000-0000-4000-8000-000000000001')$$,'member may mark own notification read');
 select throws_ok($$select public.mark_notification_read('40000000-0000-4000-8000-000000000002')$$,'P0001','Notification not found','member cannot mutate another notification');
 select throws_ok($$select *from public.list_admin_support_tickets()$$,'P0001','Super admin required','member cannot list admin support queue');
@@ -96,6 +98,10 @@ select is((select count(*)from public.list_communities()),2::bigint,'active memb
 select lives_ok($$select public.request_community_access('70000000-0000-4000-8000-000000000002')$$,'active member requests access to a private community');
 select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000002'and user_id='10000000-0000-4000-8000-000000000002'),'requested','private community request remains pending');
 select throws_ok($$select *from public.list_community_posts('70000000-0000-4000-8000-000000000002',30,0)$$,'P0001','Active community membership required','pending member cannot read private community feed');
+select throws_ok($$select *from public.get_community_cohort('70000000-0000-4000-8000-000000000002')$$,'P0001','Active community membership required','pending member cannot read private cohort controls');
+select throws_ok($$select *from public.list_cohort_overview()$$,'P0001','Super admin required','member cannot read cohort operations overview');
+select throws_ok($$select *from public.list_cohort_health('70000000-0000-4000-8000-000000000002')$$,'P0001','Super admin required','member cannot read cohort health identities');
+select throws_ok($$select public.sync_cohort_invitations('70000000-0000-4000-8000-000000000002')$$,'P0001','Super admin required','member cannot issue cohort invitations');
 select lives_ok($$select public.request_community_access('70000000-0000-4000-8000-000000000001')$$,'active member joins an official community');
 select lives_ok($$select public.create_community_post('70000000-0000-4000-8000-000000000001','A useful update shared only with this trusted community.')$$,'active community member creates a rate-limited post');
 select lives_ok($$select public.report_community_post('71000000-0000-4000-8000-000000000001','other','Report-scoped community moderation boundary test.')$$,'community member reports a visible post with evidence');
@@ -175,6 +181,11 @@ select is((select count(*)from public.list_community_reports()),1::bigint,'super
 select lives_ok($$select public.review_community_report((select report_id from public.list_community_reports()limit 1),'hide','Reported post removed after boundary test review.')$$,'super admin resolves community report through the authorized moderation projection');
 select lives_ok($$select public.invite_community_member('70000000-0000-4000-8000-000000000002','staff@test.invalid','moderator')$$,'super admin invites an active member into a private community role');
 select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000002'and user_id='10000000-0000-4000-8000-000000000004'),'invited','community invitation remains consent-based until accepted');
+select lives_ok($$select public.ensure_founding_cohort('50000000-0000-4000-8000-000000000001')$$,'super admin prepares the event-linked founding room');
+select is((select public.sync_cohort_invitations((select id from public.communities where slug='founding-table-nairobi'))),1,'eligibility sync creates one consent-based guest invitation');
+select is((select status from public.community_memberships where community_id=(select id from public.communities where slug='founding-table-nairobi')and user_id='10000000-0000-4000-8000-000000000002'),'invited','eligible attendee remains invited until she accepts');
+select is((select count(*)from public.list_cohort_overview()where community_slug='founding-table-nairobi'),1::bigint,'super admin sees the founding room in cohort operations');
+select is((select count(*)from public.list_cohort_health((select id from public.communities where slug='founding-table-nairobi'))),1::bigint,'cohort health lists the invited attendee without unrelated active members');
 select is((select count(*)from public.list_course_orders()),1::bigint,'super admin lists the pending course order');
 select lives_ok($$select public.review_course_order((select id from public.orders where order_type='course'limit 1),'approve','Verified manual payment during boundary test.')$$,'super admin approves and fulfills a manual course purchase');
 select is((select count(*)from public.course_enrollments where course_id='80000000-0000-4000-8000-000000000002'and status='active'),1::bigint,'approved course order grants one active enrollment');
@@ -209,6 +220,11 @@ select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001'
 select is((select test_events from public.get_product_analytics(30)where event_name='support_requested'),2::bigint,'tagged identity reclassification and new test activity remain separately visible to Super Admin');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select lives_ok($$select public.respond_to_community_invitation((select id from public.communities where slug='founding-table-nairobi'),true)$$,'invited attendee deliberately accepts founding-room access');
+select is((select status from public.community_memberships where community_id=(select id from public.communities where slug='founding-table-nairobi')and user_id='10000000-0000-4000-8000-000000000002'),'active','accepted cohort invitation becomes active');
+select lives_ok($$select public.save_community_introduction((select id from public.communities where slug='founding-table-nairobi'),'I lead a growing East African enterprise.','I am building a trusted regional partner network.','I can offer commercial strategy and warm introductions.','I am seeking values-aligned distribution partners.')$$,'accepted cohort member saves a structured introduction');
+select is((select count(*)from public.list_community_introductions((select id from public.communities where slug='founding-table-nairobi'))),1::bigint,'cohort member sees introductions only after accepting room access');
+select is((select introduction_complete from public.get_my_activation_journey()),true,'member activation journey records the completed cohort introduction');
 select is((select count(*)from public.list_my_circles()),1::bigint,'assigned member enters only her published Circle');
 select is((select count(*)from public.list_circle_members((select circle_id from public.list_my_circles()limit 1))),3::bigint,'Circle member sees the blocked-safe cohort roster through the authorized member projection');
 select lives_ok($$select public.save_circle_response((select id from public.circle_prompts limit 1),'I will secure two qualified partner conversations before our next reflection.')$$,'Circle member shares a private cohort reflection');
