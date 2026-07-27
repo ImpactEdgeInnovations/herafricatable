@@ -149,6 +149,30 @@ assert(
 );
 
 const adminPage = read("app/admin/page.tsx");
+for (const specialist of [
+  "EventContentManager",
+  "EventMenuManager",
+  "EventGalleryManager",
+  "LearningManager",
+  "CircleManager",
+]) {
+  assert(
+    !adminPage.includes(specialist),
+    `Admin cockpit must not eagerly load ${specialist}`,
+  );
+}
+for (const route of [
+  "/admin/members",
+  "/admin/events",
+  "/admin/safety",
+  "/admin/operations",
+]) {
+  assert(
+    adminPage.includes(`href="${route}"`),
+    `Admin cockpit must link to ${route}`,
+  );
+}
+const adminOperations = read("app/admin/operations/page.tsx");
 for (const group of [
   "people-and-launch",
   "event-work",
@@ -157,8 +181,8 @@ for (const group of [
   "release-tools",
 ]) {
   assert(
-    adminPage.includes(`id="${group}"`),
-    `Admin must retain the plain-language ${group} work group`,
+    adminOperations.includes(`id="${group}"`),
+    `Admin operations must retain the plain-language ${group} work group`,
   );
 }
 const adminWorkGroup = read("components/admin/admin-work-group.tsx");
@@ -173,7 +197,19 @@ assert(
     memberHome.includes("Open your member tools"),
   "Member home must progressively disclose secondary tools",
 );
+for (const contract of [
+  'className="member-next-event"',
+  '"registration_requests"',
+  "Your next table",
+  "Seat confirmed",
+  "Request your seat",
+]) {
+  assert(
+    memberHome.includes(contract),
+    `Member home next-event journey must include ${contract}`,
+  );
+}
 
 console.log(
-  `Journey-state contracts passed: ${Object.keys(boundaryContracts).length} route boundaries, ${refreshModules.length} non-destructive refresh workflows, 5 guided Admin work groups.`,
+  `Journey-state contracts passed: ${Object.keys(boundaryContracts).length} route boundaries, ${refreshModules.length} non-destructive refresh workflows, lightweight Admin cockpit, personalized next-event state, and 5 guided operations groups.`,
 );

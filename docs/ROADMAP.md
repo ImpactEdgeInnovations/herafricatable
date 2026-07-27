@@ -159,6 +159,8 @@ Usability is part of production readiness and continues alongside feature delive
       editable audited launch thresholds and a production readiness scorecard
 - [x] Repeatable production smoke suite, anonymous route-boundary checks, mobile public
       UAT, deployment health diagnostics and a manually gated live-smoke workflow
+- [x] Launch-spine UX with a personalized next-event seat state on Member Home and a
+      lightweight Admin decision cockpit that defers specialist operations until opened
 
 ### Heavy work remaining before production launch
 

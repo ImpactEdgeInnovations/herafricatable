@@ -32,13 +32,13 @@ export function AdminActionCentre({
       description: pendingMembers
         ? "Approve or decline new membership access."
         : "No new membership decisions are waiting.",
-      href: "#members",
+      href: "/admin/members",
       label: "Membership requests",
     });
   }
 
   if (role !== "moderator") {
-    const registrationHref = hasEvents ? "#registrations" : "#events";
+    const registrationHref = "/admin/events";
     actions.push(
       {
         count: pendingRegistrations,
@@ -65,7 +65,7 @@ export function AdminActionCentre({
         description: draftEvents
           ? "Finish event details before publishing."
           : "There are no draft events requiring attention.",
-        href: "#events",
+        href: "/admin/events",
         label: "Draft events",
       },
     );
@@ -77,7 +77,7 @@ export function AdminActionCentre({
       description: openReports
         ? "Review member, marketplace and community reports."
         : "All safety report queues are clear.",
-      href: "#moderation",
+      href: "/admin/safety",
       label: "Safety reports",
     });
   }

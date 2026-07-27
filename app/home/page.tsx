@@ -8,6 +8,24 @@ import {
 
 export const dynamic = "force-dynamic";
 
+type NextEvent = {
+  format: string;
+  id: string;
+  registration_mode: string;
+  slug: string;
+  starts_at: string;
+  title: string;
+  venues: { city: string; country: string; name: string } | null;
+};
+
+type RegistrationStatus =
+  | "approved"
+  | "cancelled"
+  | "pending_payment"
+  | "pending_review"
+  | "rejected"
+  | "waitlisted";
+
 export default async function MemberHomePage() {
   const supabase = await createClient();
   const {
@@ -34,6 +52,28 @@ export default async function MemberHomePage() {
   }
   const isApproved = ["onboarding", "active", "dormant"].includes(accessStatus);
   const isSuspended = accessStatus === "suspended";
+  const { data: nextEventRow } = await supabase
+    .from("events")
+    .select(
+      "id,slug,title,format,starts_at,registration_mode,venues(name,city,country)",
+    )
+    .eq("status", "published")
+    .gte("starts_at", new Date().toISOString())
+    .order("starts_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const nextEvent = nextEventRow as unknown as NextEvent | null;
+  const { data: nextRegistration } = nextEvent
+    ? await supabase
+        .from("registration_requests")
+        .select("status")
+        .eq("event_id", nextEvent.id)
+        .eq("user_id", user.id)
+        .maybeSingle()
+    : { data: null };
+  const nextRegistrationStatus = nextRegistration?.status as
+    | RegistrationStatus
+    | undefined;
   const { data: orderRows } = await supabase
     .from("orders")
     .select(
@@ -194,6 +234,67 @@ export default async function MemberHomePage() {
               action: "Explore events",
               href: "/events",
             };
+  const registrationState = nextRegistrationStatus
+    ? ({
+        approved: {
+          label: "Seat confirmed",
+          description:
+            "Your place at the table is confirmed. Event updates will appear in your notifications.",
+          action: "View event details",
+        },
+        pending_payment: {
+          label: "Payment needed",
+          description:
+            "Your place is being held. Complete payment to confirm your seat.",
+          action: "Complete registration",
+        },
+        pending_review: {
+          label: "Under review",
+          description:
+            "The team has your registration and payment details. We will notify you after review.",
+          action: "View registration",
+        },
+        waitlisted: {
+          label: "Waitlist joined",
+          description:
+            "You are on the guest list waitlist. We will notify you as soon as a seat opens.",
+          action: "View event details",
+        },
+        rejected: {
+          label: "Registration not approved",
+          description:
+            "This registration was not approved. Contact support if you would like help.",
+          action: "View event details",
+        },
+        cancelled: {
+          label: "Registration cancelled",
+          description:
+            "Your previous registration is closed. You can review the event for current options.",
+          action: "View event details",
+        },
+      }[nextRegistrationStatus] ?? {
+        label: "Registration received",
+        description: "Your registration is recorded for this event.",
+        action: "View event details",
+      })
+    : {
+        label:
+          nextEvent?.registration_mode === "waitlist"
+            ? "Waitlist open"
+            : nextEvent?.registration_mode === "closed"
+              ? "Registration closed"
+              : "Registration open",
+        description:
+          nextEvent?.registration_mode === "closed"
+            ? "Registration is currently closed. View the event for updates."
+            : "Request your place at the next table and follow your confirmation here.",
+        action:
+          nextEvent?.registration_mode === "closed"
+            ? "View event details"
+            : nextEvent?.registration_mode === "waitlist"
+              ? "Join the waitlist"
+              : "Request your seat",
+      };
 
   return (
     <main className="member-home-page">
@@ -242,6 +343,66 @@ export default async function MemberHomePage() {
             </Link>
           ) : null}
         </div>
+      </section>
+      <section className="member-next-event" aria-labelledby="next-event-title">
+        {nextEvent ? (
+          <>
+            <div className="member-next-event-date" aria-hidden="true">
+              <strong>
+                {new Intl.DateTimeFormat("en-KE", {
+                  day: "2-digit",
+                }).format(new Date(nextEvent.starts_at))}
+              </strong>
+              <span>
+                {new Intl.DateTimeFormat("en-KE", {
+                  month: "short",
+                  year: "numeric",
+                }).format(new Date(nextEvent.starts_at))}
+              </span>
+            </div>
+            <div className="member-next-event-copy">
+              <p className="eyebrow">Your next table</p>
+              <h2 id="next-event-title">{nextEvent.title}</h2>
+              <p>
+                {new Intl.DateTimeFormat("en-KE", {
+                  dateStyle: "full",
+                  timeStyle: "short",
+                  timeZone: "Africa/Nairobi",
+                }).format(new Date(nextEvent.starts_at))}
+                {" · "}
+                {nextEvent.venues
+                  ? `${nextEvent.venues.name}, ${nextEvent.venues.city}`
+                  : nextEvent.format.replace("_", " ")}
+              </p>
+            </div>
+            <div className="member-next-event-action">
+              <span>{registrationState.label}</span>
+              <p>{registrationState.description}</p>
+              <Link
+                className="button button-primary"
+                href={
+                  nextRegistrationStatus === "pending_payment" ||
+                  (!nextRegistration &&
+                    nextEvent.registration_mode !== "closed")
+                    ? `/events/${nextEvent.slug}/register`
+                    : `/events/${nextEvent.slug}`
+                }
+              >
+                {registrationState.action}
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="member-next-event-empty">
+            <p className="eyebrow">Your next table</p>
+            <h2 id="next-event-title">The next gathering is being prepared.</h2>
+            <p>
+              We will place the date, venue and your registration status here as
+              soon as the next table is published.
+            </p>
+            <Link href="/events">View all events →</Link>
+          </div>
+        )}
       </section>
       {accessStatus === "active" ? (
         <section

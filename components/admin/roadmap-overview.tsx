@@ -42,10 +42,10 @@ const phases = [
   {
     label: "Experience",
     range: "Every day",
-    progress: 96,
-    status: "Journey resilience complete",
+    progress: 97,
+    status: "Core journeys simplified",
     detail:
-      "Core routes now provide loading, empty, success, safe-error and recovery states without discarding action feedback. Cross-browser QA and non-technical user testing remain.",
+      "Member Home now leads with the next event and personal seat status, while Admin opens to a lightweight decision cockpit. Cross-browser QA and non-technical user testing remain.",
   },
 ];
 
