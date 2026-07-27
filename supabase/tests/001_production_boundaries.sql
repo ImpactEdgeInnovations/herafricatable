@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(149);
+select plan(159);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -8,10 +8,27 @@ values
  ('10000000-0000-4000-8000-000000000002','member-a@test.invalid','authenticated','authenticated','{}','{}',now()),
  ('10000000-0000-4000-8000-000000000003','member-b@test.invalid','authenticated','authenticated','{}','{}',now()),
  ('10000000-0000-4000-8000-000000000004','staff@test.invalid','authenticated','authenticated','{}','{}',now());
-update public.profiles set access_status='active',display_name=case id
+update public.profiles set
+ access_status='active',
+ display_name=case id
  when'10000000-0000-4000-8000-000000000001'then'Admin'
  when'10000000-0000-4000-8000-000000000002'then'Member A'
- when'10000000-0000-4000-8000-000000000003'then'Member B'else'Staff'end;
+ when'10000000-0000-4000-8000-000000000003'then'Member B'else'Staff'end,
+ job_title='Founder',
+ company=case when id='10000000-0000-4000-8000-000000000003'then'Member B Studio'else'Test Enterprise'end,
+ industry='Technology',
+ country='Kenya',
+ city='Nairobi',
+ languages=array['English'],
+ bio='A complete profile used to verify production member boundaries.',
+ avatar_path=id::text||'/profile',
+ profile_completion=100;
+insert into public.profile_interests(user_id,interest)values
+ ('10000000-0000-4000-8000-000000000002','Entrepreneurship'),
+ ('10000000-0000-4000-8000-000000000003','Entrepreneurship');
+insert into public.member_goals(user_id,goal_key)values
+ ('10000000-0000-4000-8000-000000000002','build_business'),
+ ('10000000-0000-4000-8000-000000000003','build_business');
 insert into public.user_roles(user_id,role,granted_by)values
  ('10000000-0000-4000-8000-000000000001','super_admin','10000000-0000-4000-8000-000000000001'),
  ('10000000-0000-4000-8000-000000000004','event_staff','10000000-0000-4000-8000-000000000001');
@@ -36,7 +53,10 @@ insert into public.event_staff_scopes(user_id,event_id,granted_by)values
 insert into public.event_memberships(event_id,user_id,status,confirmed_at)values
  ('50000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','confirmed',now()),
  ('50000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','confirmed',now()),
+ ('50000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003','confirmed',now()),
  ('50000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000002','attended',now());
+insert into public.event_attendee_preferences(event_id,user_id,discoverable,show_company,introduction)values
+ ('50000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003',true,true,'I would enjoy meeting women building trusted regional businesses.');
 insert into public.marketplace_posts(id,author_id,post_type,category,title,body,delivery_mode,status)values
  ('60000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','offer','mentorship','Test mentorship office hours','I can offer a focused thirty minute mentoring conversation.','online','published');
 update public.feature_flags set enabled=true where key='communities';
@@ -84,6 +104,14 @@ select lives_ok($$select public.mark_notification_read('40000000-0000-4000-8000-
 select throws_ok($$select public.mark_notification_read('40000000-0000-4000-8000-000000000002')$$,'P0001','Notification not found','member cannot mutate another notification');
 select throws_ok($$select *from public.list_admin_support_tickets()$$,'P0001','Super admin required','member cannot list admin support queue');
 select throws_ok($$select *from public.claim_notification_jobs(10)$$,'P0001','Service role required','member cannot claim email jobs');
+select lives_ok($$select public.update_member_profile('Member A','Managing Director','Test Enterprise','Technology','Kenya','Nairobi',array['English','Kiswahili'],'A complete profile updated through the active member editor.','Test Enterprise','https://example.test',null,'+254700000001','+254700000001','https://linkedin.example/member-a',null,true,array['Entrepreneurship','Trade'],array['build_business','mentor'])$$,'active member updates her complete profile through the audited editor');
+select is((select job_title from public.profiles where id='10000000-0000-4000-8000-000000000002'),'Managing Director','profile update persists public professional context');
+select is((select count(*)from public.list_event_attendee_directory('50000000-0000-4000-8000-000000000002',30,0)),1::bigint,'confirmed guest discovers an opted-in guest at the same event');
+select is((select company from public.list_event_attendee_directory('50000000-0000-4000-8000-000000000002',30,0)limit 1),'Member B Studio','attendee controls may deliberately include public company context');
+select is((select connection_status from public.list_event_attendee_directory('50000000-0000-4000-8000-000000000002',30,0)limit 1),null::text,'attendee discovery returns only relationship state before a request');
+select is((select count(*)from public.event_attendee_preferences),0::bigint,'member cannot directly read another guest discovery preference');
+select lives_ok($$select public.save_event_attendee_visibility('50000000-0000-4000-8000-000000000002',true,true,'I am open to thoughtful conversations about regional growth.')$$,'confirmed guest deliberately opts into event discovery');
+select is((select discoverable from public.event_attendee_preferences where event_id='50000000-0000-4000-8000-000000000002'),true,'member reads only her own persisted event preference');
 select is((select count(*)from public.get_my_event_pass('50000000-0000-4000-8000-000000000001')),1::bigint,'confirmed member can issue own first event pass');
 select is((select count(*)from public.get_my_event_pass('50000000-0000-4000-8000-000000000002')),1::bigint,'confirmed member can issue own second event pass');
 select is((select count(*)from public.event_checkin_credentials),2::bigint,'member reads only own event credentials');
@@ -146,6 +174,8 @@ select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004'
 select is((select count(*)from public.support_tickets),0::bigint,'event staff cannot read support tickets');
 select throws_ok($$select *from public.list_admin_privacy_requests()$$,'P0001','Super admin required','event staff cannot list privacy queue');
 select throws_ok($$select *from public.list_admin_notification_jobs()$$,'P0001','Super admin required','event staff cannot list delivery queue');
+select throws_ok($$select *from public.list_event_attendee_directory('50000000-0000-4000-8000-000000000002',30,0)$$,'P0001','Confirmed event attendance required','non-attendee staff cannot list a private event attendee directory');
+select throws_ok($$select public.save_event_attendee_visibility('50000000-0000-4000-8000-000000000002',true,true,'This identity is not an attendee.')$$,'P0001','Confirmed event attendance required','non-attendee staff cannot opt into event discovery');
 select is((select count(*)from public.event_checkin_credentials),1::bigint,'event staff reads credentials only for assigned event');
 select is((select count(*)from public.list_event_checkins('50000000-0000-4000-8000-000000000001')),1::bigint,'event staff lists assigned event roster');
 select throws_ok($$select *from public.list_event_checkins('50000000-0000-4000-8000-000000000002')$$,'P0001','Not authorized','event staff cannot list another event roster');

@@ -2,6 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MenuFeedbackControls } from "@/components/events/menu-feedback-controls";
+import {
+  EventAttendeeDirectory,
+  type EventAttendee,
+  type EventAttendeePreference,
+} from "@/components/events/event-attendee-directory";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +60,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     : { data: [] };
   const { data: { user } } = await supabase.auth.getUser();
   const { data: memberProfile } = user ? await supabase.from("profiles").select("access_status").eq("id", user.id).maybeSingle() : { data: null };
+  const { data: ownMembership } = user && memberProfile?.access_status === "active"
+    ? await supabase.from("event_memberships").select("status").eq("event_id", event.id).eq("user_id", user.id).maybeSingle()
+    : { data: null };
+  const isConfirmedGuest = ["confirmed", "attended"].includes(ownMembership?.status ?? "");
+  const [{ data: attendeePreference }, attendeeDirectoryResult] = isConfirmedGuest
+    ? await Promise.all([
+        supabase.from("event_attendee_preferences").select("discoverable, show_company, introduction").eq("event_id", event.id).eq("user_id", user!.id).maybeSingle(),
+        supabase.rpc("list_event_attendee_directory", { p_event_id: event.id, p_limit: 30, p_offset: 0 }),
+      ])
+    : [{ data: null }, { data: [] }];
   const menuItemIds = menuItems?.map((item) => item.id) ?? [];
   const { data: ownFeedback } = user && memberProfile?.access_status === "active" && menuItemIds.length
     ? await supabase.from("menu_item_feedback").select("item_id, rating, is_favorite, comment").eq("user_id", user.id).in("item_id", menuItemIds)
@@ -95,6 +110,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       {galleryAlbums?.length && galleryAssets.some((asset) => asset.signed_url) ? <section className="event-gallery-section"><header><p className="eyebrow">In the room</p><h2>Moments from the table.</h2></header>{galleryAlbums.map((album) => { const albumAssets = galleryAssets.filter((asset) => asset.album_id === album.id && asset.signed_url); return albumAssets.length ? <article className="public-gallery-album" key={album.id}><div><h3>{album.title}</h3><p>{album.introduction}</p></div><div className="public-gallery-grid">{albumAssets.map((asset) => <figure className={asset.is_featured ? "featured" : ""} key={asset.id}><img src={asset.signed_url!} alt={asset.alt_text} width={asset.width ?? undefined} height={asset.height ?? undefined} loading="lazy" /><figcaption><span>{asset.caption}</span>{asset.credit ? <small>Photo: {asset.credit}</small> : null}</figcaption></figure>)}</div></article> : null; })}</section> : null}
 
       {sponsors?.length ? <section className="event-content-section sponsor-section"><div><p className="eyebrow">With thanks</p><h2>Event partners</h2></div><div>{sponsors.map((sponsor) => <article key={sponsor.id}><span>{sponsor.tier || "Partner"}</span><strong>{sponsor.name}</strong></article>)}</div></section> : null}
+      {isConfirmedGuest ? (
+        <EventAttendeeDirectory
+          attendees={(attendeeDirectoryResult.data as EventAttendee[] | null) ?? []}
+          eventId={event.id}
+          initialPreference={(attendeePreference as EventAttendeePreference | null) ?? null}
+        />
+      ) : null}
     </main>
   );
 }

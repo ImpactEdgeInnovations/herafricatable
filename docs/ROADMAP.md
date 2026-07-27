@@ -164,6 +164,12 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Consent-based founding cohort activation with event eligibility, deliberate
       invitations, guided introductions, blocked-pair filtering, focused Ask & Offer
       follow-up, automatic read-only closure and Admin cohort-health operations
+- [x] Active-member profile editing with required-completion preservation, avatar
+      replacement, audited updates and private-contact sharing preferences
+- [x] Confirmed-guest attendee discovery with explicit per-event opt-in, blocked-pair
+      filtering, no private-contact projection and consent-gated connection requests
+- [x] Direct connection requests from founding-room introductions with pending and
+      accepted relationship states visible inside the room
 
 ### Heavy work remaining before production launch
 
@@ -249,7 +255,7 @@ email delivery is configured. Email OTP must still pass end to end before public
 - Ticket/payment registration and admin-controlled manual registration
 - Member onboarding and public/private profile fields
 - Event home, programme, announcements, menu, gallery, sponsors
-- Event attendee directory and cross-event network directory
+- [x] Event attendee directory and cross-event network directory
 - QR and manual-code connection requests
 - Accepted connections and private messaging
 - Membership status, renewal state, visibility pause, blocking and reporting

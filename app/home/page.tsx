@@ -335,6 +335,9 @@ export default async function MemberHomePage() {
             <Link href="/messages">Messages</Link>
           ) : null}
           <Link href="/notifications">Notifications</Link>
+          {accessStatus === "active" ? (
+            <Link href="/profile">Profile</Link>
+          ) : null}
           <Link href="/settings">Account</Link>
         </nav>
       </header>
@@ -466,9 +469,16 @@ export default async function MemberHomePage() {
                   Help trusted members understand your professional context.
                 </p>
               </div>
-              <Link href="/onboarding">
+              <Link
+                href={
+                  activation.profile_complete &&
+                  activation.guidelines_accepted
+                    ? "/profile"
+                    : "/onboarding"
+                }
+              >
                 {activation.profile_complete && activation.guidelines_accepted
-                  ? "Complete"
+                  ? "Edit profile"
                   : "Finish profile"}
               </Link>
             </li>

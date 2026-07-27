@@ -21,6 +21,7 @@ export type CohortIntroduction = {
   building: string;
   can_offer: string;
   company: string | null;
+  connection_status: string | null;
   display_name: string;
   identity: string;
   introduction_id: string;
@@ -42,6 +43,7 @@ export function CohortActivation({
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState(false);
+  const [connectingId, setConnectingId] = useState("");
   const [message, setMessage] = useState("");
   const own = introductions.find((item) => item.user_id === currentUserId);
 
@@ -62,6 +64,22 @@ export function CohortActivation({
       error
         ? memberErrorMessage(error, "save your introduction")
         : "Your introduction is now visible inside this private room.",
+    );
+    if (!error) router.refresh();
+  }
+
+  async function connect(memberId: string) {
+    setConnectingId(memberId);
+    setMessage("");
+    const { error } = await supabase.rpc("request_connection", {
+      p_connection_code: null,
+      p_member_id: memberId,
+    });
+    setConnectingId("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "send this connection request")
+        : "Connection request sent. Private contact details remain hidden until she accepts.",
     );
     if (!error) router.refresh();
   }
@@ -210,9 +228,25 @@ export function CohortActivation({
                       </div>
                     </dl>
                     {introduction.user_id !== currentUserId ? (
-                      <Link href="/network">
-                        View in the member directory →
-                      </Link>
+                      <button
+                        className="cohort-connect"
+                        disabled={
+                          connectingId === introduction.user_id ||
+                          ["pending", "accepted"].includes(
+                            introduction.connection_status ?? "",
+                          )
+                        }
+                        onClick={() => void connect(introduction.user_id)}
+                        type="button"
+                      >
+                        {introduction.connection_status === "accepted"
+                          ? "Connected"
+                          : introduction.connection_status === "pending"
+                            ? "Request pending"
+                            : connectingId === introduction.user_id
+                              ? "Sending…"
+                              : "Connect thoughtfully →"}
+                      </button>
                     ) : (
                       <span>Your introduction</span>
                     )}

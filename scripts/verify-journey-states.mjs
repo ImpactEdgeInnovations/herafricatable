@@ -90,12 +90,14 @@ const refreshModules = [
   "components/member/circles-hub.tsx",
   "components/member/community-directory.tsx",
   "components/member/community-feed.tsx",
+  "components/events/event-attendee-directory.tsx",
   "components/member/learning-catalog.tsx",
   "components/member/membership-center.tsx",
   "components/member/network-hub.tsx",
   "components/member/opportunity-marketplace.tsx",
   "components/member/order-history.tsx",
   "components/member/perks-gallery.tsx",
+  "components/member/profile-editor.tsx",
   "components/member/referral-center.tsx",
 ];
 for (const path of refreshModules) {
@@ -260,6 +262,61 @@ for (const contract of [
     `Guided cohort introduction must include ${contract}`,
   );
 }
+assert(
+  cohortMemberExperience.includes("request_connection") &&
+    cohortMemberExperience.includes("Private contact details remain hidden"),
+  "Founding-room introductions must support direct consent-gated connections",
+);
+const profileEditor = read("components/member/profile-editor.tsx");
+for (const contract of [
+  "update_member_profile",
+  "mutually accepted",
+  "share_phone",
+  "memberErrorMessage",
+  'role="status"',
+]) {
+  assert(
+    profileEditor.includes(contract),
+    `Editable member profile must include ${contract}`,
+  );
+}
+const attendeeDirectory = read(
+  "components/events/event-attendee-directory.tsx",
+);
+for (const contract of [
+  "save_event_attendee_visibility",
+  "request_connection",
+  "Joining is optional",
+  "private contact details are never shown",
+  "memberErrorMessage",
+]) {
+  assert(
+    attendeeDirectory.includes(contract),
+    `Event attendee discovery must include ${contract}`,
+  );
+}
+const attendeeMigration = read(
+  "supabase/migrations/20260727130000_member_profile_attendee_discovery.sql",
+);
+for (const contract of [
+  "event_attendee_preferences",
+  "Confirmed event attendance required",
+  "not public.is_blocked_pair",
+  "profile.visibility_paused",
+  "'member.profile_updated'",
+]) {
+  assert(
+    attendeeMigration.includes(contract),
+    `Profile and attendee boundaries must include ${contract}`,
+  );
+}
+assert(
+  !attendeeMigration
+    .split("create or replace function public.list_event_attendee_directory")[1]
+    .split("revoke all on function")[0]
+    .includes("profile_private"),
+  "Event attendee discovery must never project private profile contacts",
+);
 const cohortAdmin = read("components/admin/cohort-activation-manager.tsx");
 assert(
   cohortAdmin.includes("Nobody enters the room until she accepts") &&
@@ -269,5 +326,5 @@ assert(
 );
 
 console.log(
-  `Journey-state contracts passed: ${Object.keys(boundaryContracts).length} route boundaries, ${refreshModules.length} non-destructive refresh workflows, lightweight Admin cockpit, personalized next-event state, consent-based founding cohort, and 5 guided operations groups.`,
+  `Journey-state contracts passed: ${Object.keys(boundaryContracts).length} route boundaries, ${refreshModules.length} non-destructive refresh workflows, lightweight Admin cockpit, editable member profiles, opt-in attendee discovery, consent-based founding cohort, and 5 guided operations groups.`,
 );
