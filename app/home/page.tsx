@@ -207,6 +207,30 @@ export default async function MemberHomePage() {
       : { data: [], error: null };
   const activation = ((activationResult.data as ActivationJourney[] | null) ??
     [])[0];
+  const [conversationResult, unreadNotificationResult] =
+    accessStatus === "active"
+      ? await Promise.all([
+          supabase.rpc("list_my_conversations"),
+          supabase
+            .from("notifications")
+            .select("id", { count: "exact", head: true })
+            .is("read_at", null),
+        ])
+      : [{ data: [] }, { count: 0 }];
+  const unreadMessages = (
+    (conversationResult.data as { unread_count: number }[] | null) ?? []
+  ).reduce((total, conversation) => total + Number(conversation.unread_count), 0);
+  const unreadNotifications = unreadNotificationResult.count ?? 0;
+  const acceptedConnections = Number(activation?.accepted_connections ?? 0);
+  const activationComplete = activation
+    ? [
+        activation.profile_complete && activation.guidelines_accepted,
+        Number(activation.confirmed_events) > 0,
+        activation.cohort_membership_status === "active",
+        activation.introduction_complete,
+        acceptedConnections >= 2,
+      ].filter(Boolean).length
+    : 0;
   const feedbackPrompt = (
     (pastEventResult.data as
       | { feedback_id: string | null; slug: string; title: string }[]
@@ -319,29 +343,76 @@ export default async function MemberHomePage() {
     <main className="member-home-page">
       <MemberHeader active="home" label="Member home" />
       <section className="member-welcome">
-        <p className="member-state">
-          <span aria-hidden="true" />
-          {memberState.label}
-        </p>
-        <h1>{memberState.title}</h1>
-        <p>{memberState.description}</p>
-        <div className="portal-actions">
-          {memberState.href.startsWith("mailto:") ? (
-            <a className="button button-primary" href={memberState.href}>
-              {memberState.action}
-            </a>
-          ) : (
-            <Link className="button button-primary" href={memberState.href}>
-              {memberState.action}
-            </Link>
-          )}
-          {accessStatus === "active" ? (
-            <Link className="button button-outline" href="/events">
-              View events
-            </Link>
-          ) : null}
+        <div className="member-welcome-copy">
+          <p className="member-state">
+            <span aria-hidden="true" />
+            {memberState.label}
+          </p>
+          <h1>{memberState.title}</h1>
+          <p>{memberState.description}</p>
+          <div className="portal-actions">
+            {memberState.href.startsWith("mailto:") ? (
+              <a className="button button-primary" href={memberState.href}>
+                {memberState.action}
+              </a>
+            ) : (
+              <Link className="button button-primary" href={memberState.href}>
+                {memberState.action}
+              </Link>
+            )}
+            {accessStatus === "active" ? (
+              <Link className="button button-outline" href="/events">
+                View events
+              </Link>
+            ) : null}
+          </div>
         </div>
+        {accessStatus === "active" ? (
+          <aside className="member-welcome-note">
+            <span>Member promise</span>
+            <p>
+              A trusted space for purposeful introductions, useful exchange,
+              and rooms where consent comes first.
+            </p>
+          </aside>
+        ) : null}
       </section>
+      {accessStatus === "active" ? (
+        <section className="member-pulse" aria-label="Your member activity">
+          <header>
+            <p className="eyebrow">At a glance</p>
+            <span>Your private member activity</span>
+          </header>
+          <div>
+            <Link href="/network">
+              <span>Connections</span>
+              <strong>{acceptedConnections}</strong>
+              <small>View your network</small>
+            </Link>
+            <Link href="/messages">
+              <span>Unread messages</span>
+              <strong>{unreadMessages}</strong>
+              <small>
+                {unreadMessages ? "Continue conversations" : "You are all caught up"}
+              </small>
+            </Link>
+            <Link href="/notifications">
+              <span>New alerts</span>
+              <strong>{unreadNotifications}</strong>
+              <small>
+                {unreadNotifications ? "See what changed" : "Nothing needs attention"}
+              </small>
+            </Link>
+            <Link href="/home#member-activation-title">
+              <span>Getting started</span>
+              <strong>{activationComplete}/5</strong>
+              <small>
+                {activationComplete === 5 ? "Setup complete" : "Continue your next step"}
+              </small>
+            </Link>
+          </div>
+        </section>
+      ) : null}
       <section className="member-next-event" aria-labelledby="next-event-title">
         {nextEvent ? (
           <>
@@ -419,16 +490,7 @@ export default async function MemberHomePage() {
               </p>
             </div>
             <span>
-              {
-                [
-                  activation.profile_complete && activation.guidelines_accepted,
-                  Number(activation.confirmed_events) > 0,
-                  activation.cohort_membership_status === "active",
-                  activation.introduction_complete,
-                  Number(activation.accepted_connections) >= 2,
-                ].filter(Boolean).length
-              }
-              /5 complete
+              {activationComplete}/5 complete
             </span>
           </header>
           <ol>

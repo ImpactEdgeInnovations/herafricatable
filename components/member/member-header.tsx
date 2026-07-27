@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
 type MemberDestination = "account" | "events" | "home" | "members" | "messages";
 
@@ -58,7 +59,7 @@ function MemberIcon({ destination }: { destination: MemberDestination }) {
   );
 }
 
-export function MemberHeader({
+export async function MemberHeader({
   active,
   accountHref = "/profile",
   accountLabel = "My profile",
@@ -69,11 +70,30 @@ export function MemberHeader({
   accountLabel?: "Account" | "My profile";
   label: string;
 }) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const [{ data: profile }, { count: unreadAlerts }] = user
+    ? await Promise.all([
+        supabase
+          .from("profiles")
+          .select("display_name, avatar_url")
+          .eq("id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .is("read_at", null),
+      ])
+    : [{ data: null }, { count: 0 }];
   const navigation = destinations.map((destination) =>
     destination.key === "account"
       ? { ...destination, href: accountHref, label: accountLabel }
       : destination,
   );
+  const memberName = profile?.display_name?.trim() || "Member";
+  const memberInitial = memberName.charAt(0).toUpperCase();
   return (
     <>
       <header className="member-home-header member-shell-header">
@@ -89,6 +109,7 @@ export function MemberHeader({
           {navigation.map((destination) => (
             <Link
               aria-current={active === destination.key ? "page" : undefined}
+              className={`member-nav-${destination.key}`}
               href={destination.href}
               key={destination.key}
             >
@@ -96,13 +117,38 @@ export function MemberHeader({
             </Link>
           ))}
         </nav>
-        <Link
-          aria-current={active === "alerts" ? "page" : undefined}
-          className="member-alert-link"
-          href="/notifications"
-        >
-          Alerts
-        </Link>
+        <div className="member-header-actions">
+          <Link
+            aria-current={active === "alerts" ? "page" : undefined}
+            aria-label={
+              unreadAlerts
+                ? `${unreadAlerts} unread notification${unreadAlerts === 1 ? "" : "s"}`
+                : "Notifications"
+            }
+            className="member-alert-link"
+            href="/notifications"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+              <path d="M10 21h4" />
+            </svg>
+            <span>Alerts</span>
+            {unreadAlerts ? (
+              <b>{unreadAlerts > 9 ? "9+" : unreadAlerts}</b>
+            ) : null}
+          </Link>
+          <Link
+            aria-label={`${memberName}, open profile`}
+            className="member-account-link"
+            href={accountHref}
+          >
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" />
+            ) : (
+              <span aria-hidden="true">{memberInitial}</span>
+            )}
+          </Link>
+        </div>
       </header>
       <nav className="member-mobile-dock" aria-label="Member shortcuts">
         {navigation.map((destination) => (
