@@ -99,6 +99,10 @@ import {
   type ProductAnalytic,
   type ReadinessMetric,
 } from "@/components/admin/analytics-readiness";
+import {
+  LaunchGateControl,
+  type LaunchGateCheck,
+} from "@/components/admin/launch-gate-control";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { AdminWorkGroup } from "@/components/admin/admin-work-group";
 
@@ -310,6 +314,7 @@ export default async function AdminOperationsPage({
     perkFlagResult,
     readinessResult,
     analyticsResult,
+    launchGateResult,
   ] = await Promise.all([
     canModerate && loadSafety
       ? supabase.rpc("list_member_reports")
@@ -418,6 +423,9 @@ export default async function AdminOperationsPage({
       : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadPeople
       ? supabase.rpc("get_product_analytics", { p_days: 30 })
+      : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadRelease
+      ? supabase.rpc("list_launch_gate_checks")
       : Promise.resolve({ data: [], error: null }),
   ]);
   const communities = (communityResult.data as CommunitySummary[] | null) ?? [];
@@ -923,11 +931,43 @@ export default async function AdminOperationsPage({
       {loadRelease ? (
         <AdminWorkGroup
           defaultOpen
-          description="Use these less often: review delivery progress and control the public landing-page event timer."
+          description="Record launch evidence, review delivery progress and control the public landing-page event timer."
           id="release-tools"
           label="Release controls"
-          title="Roadmap and public countdown"
+          title="Launch evidence and public controls"
         >
+          {role.role === "super_admin" ? (
+            <LaunchGateControl
+              checks={
+                (launchGateResult.data as LaunchGateCheck[] | null) ?? []
+              }
+              environmentSignals={[
+                {
+                  label: "Server integration",
+                  ready: Boolean(process.env.SUPABASE_SECRET_KEY),
+                },
+                {
+                  label: "Online payments",
+                  ready: Boolean(
+                    process.env.PAYSTACK_SECRET_KEY &&
+                      process.env.NEXT_PUBLIC_SITE_URL,
+                  ),
+                },
+                {
+                  label: "Email delivery",
+                  ready: Boolean(
+                    process.env.RESEND_API_KEY &&
+                      process.env.EMAIL_FROM &&
+                      process.env.CRON_SECRET,
+                  ),
+                },
+              ]}
+              migrationReady={!launchGateResult.error}
+              release={
+                process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local"
+              }
+            />
+          ) : null}
           <RoadmapOverview />
           <section className="admin-section" id="event">
             <EventCountdownManager

@@ -227,6 +227,30 @@ assert(
     adminOperations.includes("requestedArea"),
   "Admin operations must provide a focused work-area picker",
 );
+for (const contract of [
+  "LaunchGateControl",
+  "list_launch_gate_checks",
+  "environmentSignals",
+  "launchGateResult.error",
+]) {
+  assert(
+    adminOperations.includes(contract),
+    `Admin release controls must include ${contract}`,
+  );
+}
+const launchGateControl = read("components/admin/launch-gate-control.tsx");
+for (const contract of [
+  "Auditable go-live control",
+  "save_launch_gate_check",
+  "Launch blocked",
+  "Record evidence",
+  "passwords, OTPs",
+]) {
+  assert(
+    launchGateControl.includes(contract),
+    `Launch gate experience must include ${contract}`,
+  );
+}
 for (const [route, area] of Object.entries({
   "app/admin/events/page.tsx": "event-work",
   "app/admin/members/page.tsx": "people-and-launch",

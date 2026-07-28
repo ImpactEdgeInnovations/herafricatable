@@ -219,6 +219,28 @@ assert(
   analyticsMigration.includes("t.status='on_sale'"),
   "Readiness must use the live ticket status contract",
 );
+const launchGateMigration = read(
+  "supabase/migrations/20260728130000_launch_gate_evidence.sql",
+);
+for (const contract of [
+  "launch_gate_checks",
+  "list_launch_gate_checks",
+  "save_launch_gate_check",
+  "Super admin required",
+  "Passed checks require concise evidence",
+  "'launch.gate_updated'",
+]) {
+  assert(
+    launchGateMigration.includes(contract),
+    `Operational launch evidence must include ${contract}`,
+  );
+}
+assert(
+  !launchGateMigration.includes(
+    "jsonb_build_object('check_key', p_check_key, 'status', p_status, 'evidence'",
+  ),
+  "Launch audit metadata must not duplicate operational evidence text",
+);
 const databaseCorrections = read(
   "supabase/migrations/20260726210000_ci_database_corrections.sql",
 );

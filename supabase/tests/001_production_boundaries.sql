@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(159);
+select plan(168);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -165,6 +165,9 @@ select throws_ok($$select *from public.list_perk_redemptions_admin()$$,'P0001','
 select is((select count(*)from public.product_events),0::bigint,'member cannot read raw privacy-safe analytics events');
 select throws_ok($$select *from public.get_product_analytics(30)$$,'P0001','Super admin required','member cannot read aggregate product analytics');
 select throws_ok($$select *from public.get_launch_readiness_metrics()$$,'P0001','Super admin required','member cannot read operational readiness metrics');
+select is((select count(*)from public.launch_gate_checks),0::bigint,'member cannot directly read launch gate evidence');
+select throws_ok($$select *from public.list_launch_gate_checks()$$,'P0001','Super admin required','member cannot list launch gate evidence');
+select throws_ok($$select public.save_launch_gate_check('member_email_otp','passed',null,'A member must not be able to close a production launch gate.')$$,'P0001','Super admin required','member cannot update a launch gate');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
 select is((select count(*)from public.list_my_past_events()),1::bigint,'attendee lists own eligible past event');
 select lives_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,4,5,true,'The facilitated introductions were valuable.','Allow more time for table conversations.','A thoughtful room where meaningful professional connections began.','named')$$,'eligible attendee saves private feedback with named testimonial consent');
@@ -192,6 +195,7 @@ select lives_ok($$select public.set_circle_opt_in('92000000-0000-4000-8000-00000
 select throws_ok($$select *from public.list_perk_redemptions_admin()$$,'P0001','Super admin required','event staff cannot access partner redemption operations');
 select throws_ok($$select *from public.get_product_analytics(30)$$,'P0001','Super admin required','event staff cannot access product analytics');
 select throws_ok($$select *from public.get_launch_readiness_metrics()$$,'P0001','Super admin required','event staff cannot access launch readiness');
+select throws_ok($$select *from public.list_launch_gate_checks()$$,'P0001','Super admin required','event staff cannot access launch evidence');
 select throws_ok($$select *from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')$$,'P0001','Not authorized','event staff cannot read feedback outside assigned event scope');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
@@ -238,6 +242,11 @@ select is((select count(*)from public.list_perk_redemptions_admin()),1::bigint,'
 select lives_ok($$select public.review_perk_redemption((select id from public.perk_redemptions limit 1),'redeem','Partner confirmed the benefit was delivered.')$$,'super admin marks a verified code redeemed');
 select is((select status from public.perk_redemptions limit 1),'redeemed','redemption lifecycle records final delivery state');
 select is((select count(*)from public.get_launch_readiness_metrics()),10::bigint,'super admin receives every configured readiness gate');
+select is((select count(*)from public.list_launch_gate_checks()),12::bigint,'super admin receives every required operational launch gate');
+select throws_ok($$select public.save_launch_gate_check('member_email_otp','passed','Operations lead','Too short')$$,'P0001','Passed checks require concise evidence','launch gates cannot pass without useful evidence');
+select lives_ok($$select public.save_launch_gate_check('member_email_otp','passed','Operations lead','Production six-digit OTP received, verified and expiry recovery confirmed.')$$,'super admin records auditable launch evidence');
+select is((select status from public.launch_gate_checks where check_key='member_email_otp'),'passed','launch gate status is persisted');
+select is((select count(*)from public.audit_events where action='launch.gate_updated'and metadata->>'check_key'='member_email_otp'),1::bigint,'launch gate update creates an audit event without copying evidence');
 select ok((select coalesce(sum(real_events),0)from public.get_product_analytics(30))>0,'server triggers produce aggregate real-member product activity');
 select lives_ok($$select public.save_launch_readiness_target('real_active_members',11)$$,'super admin updates an auditable launch threshold');
 select is((select target_value from public.launch_readiness_targets where metric_key='real_active_members'),11::bigint,'readiness threshold update is persisted');

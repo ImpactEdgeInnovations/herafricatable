@@ -74,6 +74,8 @@ Usability is part of production readiness and continues alongside feature delive
       in one plain-language Activity centre
 - [x] Complete a compact member visual pass for mobile hierarchy, touch targets,
       readable cards, restrained density and consistent page widths
+- [x] Add a Super Admin-only, audited Launch Gate workspace for assigning owners,
+      recording acceptance evidence and preventing metrics from masking operational blockers
 - [x] Add contextual help and examples to every unfamiliar form without crowding the page
   - [x] Membership payment review, referrals and support requests include concise,
         accessible examples and privacy guidance
@@ -210,6 +212,7 @@ Usability is part of production readiness and continues alongside feature delive
    - Require both application and database checks before production deployment.
    - Rehearse payment reconciliation, notification retry, backup/restore, account
      deletion and incident escalation.
+   - [x] Implement auditable launch-gate ownership, evidence and no-go status controls.
 5. **Human usability and device acceptance**
    - Test with at least five non-technical users.
    - Complete keyboard, screen-reader, 200% zoom, iPhone Safari, Android Chrome and
@@ -263,6 +266,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [x] Add automated authentication, authorization and migration tests to CI
 - [ ] Require both application and database GitHub checks before production deployment
+- [ ] Apply `20260728130000_launch_gate_evidence.sql` in production Supabase
+- [x] Add the Super Admin Launch Gate workspace and evidence runbook
 
 Temporary password access allows administrator testing to continue while production
 email delivery is configured. Email OTP must still pass end to end before public beta.
