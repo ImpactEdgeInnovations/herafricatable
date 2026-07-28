@@ -64,6 +64,16 @@ Usability is part of production readiness and continues alongside feature delive
         each visit loads only the data and controls needed for the selected job
 - [x] Keep the member home focused on three primary actions and progressively disclose
       secondary membership, community, learning, benefits and support tools
+- [x] Add a personalized next-best action to Member Home using feedback, messages,
+      activity, onboarding progress and event-registration state
+- [x] Upgrade member discovery with purpose, city and keyword filters, clearer
+      introductions and explicit consent guidance before messaging
+- [x] Create a private post-event journey joining feedback, recap, attendee
+      reconnection, opportunities and ongoing conversation
+- [x] Unify notifications, requests, unread conversations and event/account updates
+      in one plain-language Activity centre
+- [x] Complete a compact member visual pass for mobile hierarchy, touch targets,
+      readable cards, restrained density and consistent page widths
 - [x] Add contextual help and examples to every unfamiliar form without crowding the page
   - [x] Membership payment review, referrals and support requests include concise,
         accessible examples and privacy guidance

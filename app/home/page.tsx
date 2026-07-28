@@ -338,6 +338,95 @@ export default async function MemberHomePage() {
               ? "Join the waitlist"
               : "Request your seat",
       };
+  const activationNext =
+    activation && activationComplete < 5
+      ? !activation.profile_complete || !activation.guidelines_accepted
+        ? {
+            action: "Finish your profile",
+            description:
+              "Complete the details that help trusted members understand your work.",
+            href: "/onboarding",
+            label: "Complete your setup",
+          }
+        : Number(activation.confirmed_events) === 0
+          ? {
+              action: "Find your next event",
+              description:
+                "Choose a gathering before moving into attendee introductions.",
+              href: "/events",
+              label: "Confirm a table",
+            }
+          : activation.cohort_membership_status !== "active"
+            ? {
+                action:
+                  activation.cohort_membership_status === "invited"
+                    ? "Review your invitation"
+                    : "View communities",
+                description:
+                  "Your private room opens only after you deliberately accept.",
+                href: "/communities",
+                label: "Join your room",
+              }
+            : !activation.introduction_complete
+              ? {
+                  action: "Introduce yourself",
+                  description:
+                    "Share what you are building, offering and looking for.",
+                  href: activation.cohort_slug
+                    ? `/communities/${activation.cohort_slug}`
+                    : "/communities",
+                  label: "Share your context",
+                }
+              : {
+                  action: "Discover members",
+                  description:
+                    "Build two mutual connections before starting private conversations.",
+                  href: "/network",
+                  label: "Meet the right people",
+                }
+      : null;
+  const nextBestAction =
+    accessStatus !== "active"
+      ? null
+      : feedbackPrompt
+        ? {
+            action: "Share private feedback",
+            description: `Reflect on ${feedbackPrompt.title}. Nothing becomes public without separate permission.`,
+            href: `/events/${feedbackPrompt.slug}/feedback`,
+            label: "After the table",
+          }
+        : unreadMessages > 0
+          ? {
+              action: "Open conversations",
+              description: `${unreadMessages} unread message${unreadMessages === 1 ? "" : "s"} waiting for your response.`,
+              href: "/messages",
+              label: "Continue a conversation",
+            }
+          : unreadNotifications > 0
+            ? {
+                action: "Review activity",
+                description: `${unreadNotifications} new update${unreadNotifications === 1 ? "" : "s"} across your network and events.`,
+                href: "/notifications",
+                label: "See what changed",
+              }
+            : activationNext ??
+              (nextEvent && !nextRegistrationStatus
+                ? {
+                    action: registrationState.action,
+                    description: registrationState.description,
+                    href:
+                      nextEvent.registration_mode === "closed"
+                        ? `/events/${nextEvent.slug}`
+                        : `/events/${nextEvent.slug}/register`,
+                    label: "Your next table",
+                  }
+                : {
+                    action: "Explore members",
+                    description:
+                      "Find someone relevant by her work, location, interests or current goals.",
+                    href: "/network",
+                    label: "Your network is ready",
+                  });
 
   return (
     <main className="member-home-page">
@@ -368,12 +457,13 @@ export default async function MemberHomePage() {
           </div>
         </div>
         {accessStatus === "active" ? (
-          <aside className="member-welcome-note">
-            <span>Member promise</span>
-            <p>
-              A trusted space for purposeful introductions, useful exchange,
-              and rooms where consent comes first.
-            </p>
+          <aside className="member-welcome-note member-next-action">
+            <span>Recommended next</span>
+            <strong>{nextBestAction?.label}</strong>
+            <p>{nextBestAction?.description}</p>
+            <Link href={nextBestAction?.href ?? "/network"}>
+              {nextBestAction?.action} <span aria-hidden="true">→</span>
+            </Link>
           </aside>
         ) : null}
       </section>
@@ -397,7 +487,7 @@ export default async function MemberHomePage() {
               </small>
             </Link>
             <Link href="/notifications">
-              <span>New alerts</span>
+              <span>New activity</span>
               <strong>{unreadNotifications}</strong>
               <small>
                 {unreadNotifications ? "See what changed" : "Nothing needs attention"}

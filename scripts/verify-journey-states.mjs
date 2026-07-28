@@ -260,6 +260,9 @@ for (const contract of [
   "get_my_activation_journey",
   'className="member-activation"',
   "Build two mutual connections",
+  "nextBestAction",
+  "member-next-action",
+  "Recommended next",
 ]) {
   assert(
     memberHome.includes(contract),
@@ -294,9 +297,27 @@ const networkHub = read("components/member/network-hub.tsx");
 assert(
   networkHub.indexOf('className="member-directory"') <
     networkHub.indexOf('className="network-code-tools"') &&
-    networkHub.includes("Search members"),
+    networkHub.includes("Find members"),
   "Member discovery must appear before optional in-person connection codes",
 );
+for (const contract of [
+  "directory-filters",
+  "Current goal",
+  "Request introduction",
+  "Messaging opens only after she accepts",
+]) {
+  assert(
+    networkHub.includes(contract),
+    `Member discovery v2 must include ${contract}`,
+  );
+}
+const networkPage = read("app/network/page.tsx");
+for (const contract of ["p_city:", "p_goal:", "cityFilter=", "goalFilter="]) {
+  assert(
+    networkPage.includes(contract),
+    `Member discovery filters must preserve ${contract}`,
+  );
+}
 const messageCenter = read("components/member/message-center.tsx");
 assert(
   messageCenter.includes("message-shell${conversations.length") &&
@@ -381,6 +402,41 @@ for (const contract of [
   assert(
     attendeeDirectory.includes(contract),
     `Event attendee discovery must include ${contract}`,
+  );
+}
+const eventFollowUp = read("app/events/[slug]/follow-up/page.tsx");
+for (const contract of [
+  "list_my_past_events",
+  "list_event_attendee_directory",
+  'mode="after"',
+  "Your private event follow-up",
+]) {
+  assert(
+    eventFollowUp.includes(contract),
+    `Post-event member journey must include ${contract}`,
+  );
+}
+const activityPage = read("app/notifications/page.tsx");
+for (const contract of [
+  "list_my_conversations",
+  "list_my_network",
+  'label="Activity"',
+]) {
+  assert(
+    activityPage.includes(contract),
+    `Unified Activity page must include ${contract}`,
+  );
+}
+const activityCenter = read("components/member/notification-center.tsx");
+for (const contract of [
+  "activity-overview",
+  "activity-filters",
+  "Unread conversations",
+  "Connection requests",
+]) {
+  assert(
+    activityCenter.includes(contract),
+    `Unified Activity centre must include ${contract}`,
   );
 }
 const attendeeMigration = read(

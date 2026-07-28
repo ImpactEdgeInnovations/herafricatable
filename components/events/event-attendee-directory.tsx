@@ -27,10 +27,12 @@ export function EventAttendeeDirectory({
   attendees,
   eventId,
   initialPreference,
+  mode = "before",
 }: {
   attendees: EventAttendee[];
   eventId: string;
   initialPreference: EventAttendeePreference | null;
+  mode?: "after" | "before";
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -90,10 +92,15 @@ export function EventAttendeeDirectory({
       <header>
         <div>
           <p className="eyebrow">For confirmed guests</p>
-          <h2 id="event-attendee-title">Meet before the table.</h2>
+          <h2 id="event-attendee-title">
+            {mode === "after"
+              ? "Continue with people from the room."
+              : "Meet before the table."}
+          </h2>
           <p>
-            Choose whether to introduce yourself to other confirmed guests.
-            Joining is optional, and private contact details are never shown here.
+            {mode === "after"
+              ? "Reconnect with attendees who chose to remain discoverable. Participation stays optional and private contact details remain protected."
+              : "Choose whether to introduce yourself to other confirmed guests. Joining is optional, and private contact details are never shown here."}
           </p>
         </div>
         <span>{attendees.length} opted in</span>
@@ -101,7 +108,11 @@ export function EventAttendeeDirectory({
 
       <div className="event-attendee-layout">
         <form onSubmit={(event) => void savePreference(event)}>
-          <h3>Your event introduction</h3>
+          <h3>
+            {mode === "after"
+              ? "Your follow-up introduction"
+              : "Your event introduction"}
+          </h3>
           <label className="attendee-discovery-toggle">
             <input
               checked={discoverable}
@@ -120,7 +131,11 @@ export function EventAttendeeDirectory({
               maxLength={500}
               minLength={2}
               name="introduction"
-              placeholder="What would you enjoy discussing or building at this table?"
+              placeholder={
+                mode === "after"
+                  ? "What conversation, collaboration or follow-up would you welcome after this table?"
+                  : "What would you enjoy discussing or building at this table?"
+              }
               required={discoverable}
               rows={5}
             />

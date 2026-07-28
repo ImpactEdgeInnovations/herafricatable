@@ -21,6 +21,27 @@ export type NotificationPreference = {
   email_events: boolean;
   email_support: boolean;
 };
+export type ActivityConversation = {
+  conversation_id: string;
+  display_name: string | null;
+  last_message: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+};
+export type ActivityRequest = {
+  connection_id: string;
+  direction: "incoming" | "outgoing";
+  display_name: string | null;
+  job_title: string | null;
+  company: string | null;
+  status: "accepted" | "pending";
+};
+type ActivityFilter =
+  | "account"
+  | "all"
+  | "communities"
+  | "events"
+  | "requests";
 const date = (value: string) =>
   new Intl.DateTimeFormat("en-KE", {
     day: "numeric",
@@ -32,17 +53,44 @@ export function NotificationCenter({
   userId,
   notifications,
   initialPreferences,
+  conversations,
+  requests,
 }: {
   userId: string;
   notifications: MemberNotification[];
   initialPreferences: NotificationPreference;
+  conversations: ActivityConversation[];
+  requests: ActivityRequest[];
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const [preferences, setPreferences] = useState(initialPreferences);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [filter, setFilter] = useState<ActivityFilter>("all");
   const unreadCount = notifications.filter((item) => !item.read_at).length;
+  const unreadMessages = conversations.reduce(
+    (total, item) => total + Number(item.unread_count),
+    0,
+  );
+  const categories: {
+    key: ActivityFilter;
+    label: string;
+  }[] = [
+    { key: "all", label: "All activity" },
+    { key: "requests", label: "Requests" },
+    { key: "events", label: "Events" },
+    { key: "communities", label: "Communities" },
+    { key: "account", label: "Account" },
+  ];
+  const filteredNotifications = notifications.filter((item) => {
+    if (filter === "all") return true;
+    if (filter === "requests") return item.kind === "network";
+    if (filter === "events")
+      return ["event", "registration"].includes(item.kind);
+    if (filter === "communities") return item.kind === "community";
+    return ["privacy", "support", "system"].includes(item.kind);
+  });
   useEffect(() => {
     const channel = supabase
       .channel(`notifications:${userId}`)
@@ -100,11 +148,71 @@ export function NotificationCenter({
   }
   return (
     <div className="notification-layout">
+      <section className="activity-overview" aria-labelledby="activity-title">
+        <header>
+          <p className="eyebrow">Your private activity</p>
+          <h1 id="activity-title">What needs your attention.</h1>
+          <p>
+            Requests, conversations, events and account updates in one place.
+          </p>
+        </header>
+        <div>
+          <Link href="/network">
+            <span>Connection requests</span>
+            <strong>{requests.length}</strong>
+            <small>
+              {requests.length
+                ? `From ${requests
+                    .slice(0, 2)
+                    .map((item) => item.display_name ?? "a member")
+                    .join(" and ")}`
+                : "No requests waiting"}
+            </small>
+          </Link>
+          <Link href="/messages">
+            <span>Unread conversations</span>
+            <strong>{unreadMessages}</strong>
+            <small>
+              {unreadMessages
+                ? "Continue where you left off"
+                : conversations.length
+                  ? "Your conversations are up to date"
+                  : "Messaging opens after a connection"}
+            </small>
+          </Link>
+          <button type="button" onClick={() => setFilter("events")}>
+            <span>Event updates</span>
+            <strong>
+              {
+                notifications.filter(
+                  (item) =>
+                    !item.read_at &&
+                    ["event", "registration"].includes(item.kind),
+                ).length
+              }
+            </strong>
+            <small>Registration, programme and guest information</small>
+          </button>
+          <button type="button" onClick={() => setFilter("account")}>
+            <span>Account and support</span>
+            <strong>
+              {
+                notifications.filter(
+                  (item) =>
+                    !item.read_at &&
+                    ["privacy", "support", "system"].includes(item.kind),
+                ).length
+              }
+            </strong>
+            <small>Private account, privacy and support updates</small>
+          </button>
+        </div>
+      </section>
       <section className="notification-feed">
         <header>
           <div>
-            <p className="eyebrow">Your updates</p>
-            <h1>What’s new.</h1>
+            <p className="eyebrow">Activity history</p>
+            <h2>Recent updates</h2>
             <p>
               {unreadCount
                 ? `${unreadCount} update${unreadCount === 1 ? "" : "s"} waiting for you.`
@@ -117,9 +225,21 @@ export function NotificationCenter({
             </button>
           ) : null}
         </header>
-        {notifications.length ? (
+        <nav className="activity-filters" aria-label="Filter activity">
+          {categories.map((category) => (
+            <button
+              aria-pressed={filter === category.key}
+              key={category.key}
+              onClick={() => setFilter(category.key)}
+              type="button"
+            >
+              {category.label}
+            </button>
+          ))}
+        </nav>
+        {filteredNotifications.length ? (
           <div>
-            {notifications.map((item) => (
+            {filteredNotifications.map((item) => (
               <article className={item.read_at ? "" : "unread"} key={item.id}>
                 <span className="notification-kind">{item.kind}</span>
                 <div>
@@ -139,10 +259,16 @@ export function NotificationCenter({
           </div>
         ) : (
           <div className="admin-empty">
-            <strong>You are all caught up</strong>
+            <strong>
+              {filter === "all"
+                ? "You are all caught up"
+                : `No ${categories
+                    .find((category) => category.key === filter)
+                    ?.label.toLowerCase()} yet`}
+            </strong>
             <p>
-              Connections, registrations, events and support updates will appear
-              here.
+              New activity will appear here when something needs your
+              attention.
             </p>
           </div>
         )}

@@ -48,12 +48,26 @@ export type BlockedMember = {
   user_id: string;
 };
 
+const goalLabels: Record<string, string> = {
+  be_mentored: "Find a mentor",
+  build_business: "Build a business",
+  find_clients: "Find clients or collaborators",
+  invest: "Invest or find investment",
+  learn: "Learn and grow",
+  make_friends: "Build meaningful friendships",
+  mentor: "Mentor other women",
+  shop_african_brands: "Discover African brands",
+  travel: "Connect through travel",
+};
+
 export function NetworkHub({
   members,
   connections,
   connectionCode,
   contacts,
   blockedMembers,
+  cityFilter,
+  goalFilter,
   searchQuery,
 }: {
   members: DirectoryMember[];
@@ -61,6 +75,8 @@ export function NetworkHub({
   connectionCode: string;
   contacts: ConnectionContact[];
   blockedMembers: BlockedMember[];
+  cityFilter: string;
+  goalFilter: string;
   searchQuery: string;
 }) {
   const router = useRouter();
@@ -363,18 +379,41 @@ export function NetworkHub({
               Search by name, role, company, industry, or city.
             </p>
           </div>
-          <form method="get">
-            <label className="sr-only" htmlFor="member-search">
-              Search members
+          <form className="directory-filters" method="get">
+            <label>
+              <span>Search</span>
+              <input
+                defaultValue={searchQuery}
+                id="member-search"
+                name="q"
+                placeholder="Role, company or industry"
+              />
             </label>
-            <input
-              aria-label="Search members"
-              defaultValue={searchQuery}
-              id="member-search"
-              name="q"
-              placeholder="Try “finance” or “Nairobi”"
-            />
-            <button type="submit">Search</button>
+            <label>
+              <span>City</span>
+              <input
+                defaultValue={cityFilter}
+                name="city"
+                placeholder="For example, Nairobi"
+              />
+            </label>
+            <label>
+              <span>Current goal</span>
+              <select defaultValue={goalFilter} name="goal">
+                <option value="">Any goal</option>
+                {Object.entries(goalLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div>
+              <button type="submit">Find members</button>
+              {searchQuery || cityFilter || goalFilter ? (
+                <a href="/network">Clear</a>
+              ) : null}
+            </div>
           </form>
         </header>
         {members.length ? (
@@ -399,6 +438,17 @@ export function NetworkHub({
                       .join(" · ")}
                   </strong>
                   <p>{member.bio}</p>
+                  {member.goals.length ? (
+                    <div className="directory-intent">
+                      <small>Here for</small>
+                      <strong>
+                        {member.goals
+                          .slice(0, 2)
+                          .map((goal) => goalLabels[goal] ?? goal)
+                          .join(" · ")}
+                      </strong>
+                    </div>
+                  ) : null}
                   {member.interests.length ? (
                     <div className="directory-tags">
                       {member.interests.slice(0, 3).map((x) => (
@@ -419,8 +469,11 @@ export function NetworkHub({
                     ? "Connected"
                     : member.connection_status === "pending"
                       ? "Request pending"
-                      : "Connect"}
+                      : "Request introduction"}
                 </button>
+                <small className="directory-privacy-note">
+                  Messaging opens only after she accepts.
+                </small>
               </article>
             ))}
           </div>
