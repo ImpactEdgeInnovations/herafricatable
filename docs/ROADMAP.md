@@ -64,6 +64,8 @@ Usability is part of production readiness and continues alongside feature delive
         each visit loads only the data and controls needed for the selected job
 - [x] Keep the member home focused on three primary actions and progressively disclose
       secondary membership, community, learning, benefits and support tools
+  - [x] Remove repeated action cards and empty order clutter; reduce onboarding to one
+        recommended checkpoint with the full five-step journey available on demand
 - [x] Add a personalized next-best action to Member Home using feedback, messages,
       activity, onboarding progress and event-registration state
 - [x] Upgrade member discovery with purpose, city and keyword filters, clearer

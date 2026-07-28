@@ -276,6 +276,22 @@ for (const [route, area] of Object.entries({
 }
 const adminWorkGroup = read("components/admin/admin-work-group.tsx");
 const memberHome = read("app/home/page.tsx");
+for (const contract of [
+  "member-activation-compact",
+  "member-activation-progress",
+  "Recommended now",
+  "View every setup step",
+  "{orders.length ?",
+]) {
+  assert(
+    memberHome.includes(contract),
+    `Compact member Home must include ${contract}`,
+  );
+}
+assert(
+  !memberHome.includes('className="member-quickstart"'),
+  "Member Home must not repeat its primary actions in oversized quick-start cards",
+);
 assert(
   adminWorkGroup.includes("hashchange") &&
     adminWorkGroup.includes("detailsRef.current.open = true"),
@@ -293,7 +309,7 @@ for (const contract of [
   "Seat confirmed",
   "Request your seat",
   "get_my_activation_journey",
-  'className="member-activation"',
+  "member-activation",
   "Build two mutual connections",
   "nextBestAction",
   "member-next-action",

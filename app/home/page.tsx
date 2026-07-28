@@ -582,27 +582,58 @@ export default async function MemberHomePage() {
           </div>
         )}
       </section>
-      {accessStatus === "active" && activation && !activationResult.error ? (
+      {accessStatus === "active" &&
+      activation &&
+      activationComplete < 5 &&
+      !activationResult.error ? (
         <section
-          className="member-activation"
+          className="member-activation member-activation-compact"
           aria-labelledby="member-activation-title"
         >
           <header>
             <div>
-              <p className="eyebrow">Your first steps</p>
+              <p className="eyebrow">Getting started</p>
               <h2 id="member-activation-title">
-                Set up your member experience.
+                One step at a time.
               </h2>
               <p>
-                Complete one step at a time. Every connection and private room
-                still requires your consent.
+                Your profile, rooms and connections always remain under your
+                control.
               </p>
             </div>
             <span>
               {activationComplete}/5 complete
             </span>
           </header>
-          <ol>
+          <div
+            aria-label={`${activationComplete} of 5 setup steps complete`}
+            className="member-activation-progress"
+            role="progressbar"
+            aria-valuemax={5}
+            aria-valuemin={0}
+            aria-valuenow={activationComplete}
+          >
+            <i style={{ width: `${(activationComplete / 5) * 100}%` }} />
+          </div>
+          <div className="member-activation-focus">
+            <div>
+              <span>Recommended now</span>
+              <strong>{activationNext?.label ?? "Continue your setup"}</strong>
+              <p>{activationNext?.description}</p>
+            </div>
+            <Link
+              className="button button-primary"
+              href={activationNext?.href ?? "/network"}
+            >
+              {activationNext?.action ?? "Continue"}
+            </Link>
+          </div>
+          <details className="member-activation-steps">
+            <summary>
+              <span>View every setup step</span>
+              <small>{5 - activationComplete} remaining</small>
+            </summary>
+            <ol>
             <li
               className={
                 activation.profile_complete && activation.guidelines_accepted
@@ -713,40 +744,8 @@ export default async function MemberHomePage() {
                   : "Discover members"}
               </Link>
             </li>
-          </ol>
-        </section>
-      ) : null}
-      {accessStatus === "active" ? (
-        <section
-          className="member-quickstart"
-          aria-labelledby="quickstart-title"
-        >
-          <header>
-            <p className="eyebrow">Start here</p>
-            <h2 id="quickstart-title">What would you like to do?</h2>
-          </header>
-          <div>
-            <Link href="/network">
-              <span>01</span>
-              <strong>Meet members</strong>
-              <p>
-                Find women by location, industry or what they can help with.
-              </p>
-              <small>Open member directory →</small>
-            </Link>
-            <Link href="/events">
-              <span>02</span>
-              <strong>Join an event</strong>
-              <p>See what is coming up and manage your registration.</p>
-              <small>Browse events →</small>
-            </Link>
-            <Link href="/messages">
-              <span>03</span>
-              <strong>Continue a conversation</strong>
-              <p>Message people who have accepted your connection.</p>
-              <small>Open messages →</small>
-            </Link>
-          </div>
+            </ol>
+          </details>
         </section>
       ) : null}
       {isApproved ? (
@@ -882,10 +881,12 @@ export default async function MemberHomePage() {
           )}
         </section>
       ) : null}
-      <OrderHistory
-        orders={orders}
-        refundOrderIds={(refunds ?? []).map((refund) => refund.order_id)}
-      />
+      {orders.length ? (
+        <OrderHistory
+          orders={orders}
+          refundOrderIds={(refunds ?? []).map((refund) => refund.order_id)}
+        />
+      ) : null}
     </main>
   );
 }

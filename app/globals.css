@@ -13134,6 +13134,101 @@ body {
   flex: 0 0 auto;
   margin-top: 0;
 }
+.member-activation.member-activation-compact {
+  margin-bottom: 44px;
+  padding: 30px 0 0;
+}
+.member-activation-compact > header {
+  align-items: center;
+  margin-bottom: 17px;
+}
+.member-activation-compact h2 {
+  margin: 4px 0 7px;
+  font-size: clamp(1.8rem, 3vw, 2.45rem);
+}
+.member-activation-compact > header p:last-child {
+  font-size: 0.64rem;
+}
+.member-activation-progress {
+  overflow: hidden;
+  width: 100%;
+  height: 5px;
+  border-radius: 100px;
+  background: #e7e0d5;
+}
+.member-activation-progress > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gold);
+}
+.member-activation-focus {
+  display: flex;
+  min-height: 120px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 0;
+  gap: 32px;
+}
+.member-activation-focus > div {
+  display: grid;
+  gap: 5px;
+}
+.member-activation-focus span {
+  color: var(--gold);
+  font-size: 0.5rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.member-activation-focus strong {
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+.member-activation-focus p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.55;
+}
+.member-activation-focus > a {
+  flex: 0 0 auto;
+}
+.member-activation-steps {
+  border-top: 1px solid var(--line);
+}
+.member-activation-steps > summary {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--wine);
+  cursor: pointer;
+  font-size: 0.6rem;
+  font-weight: 850;
+  list-style: none;
+}
+.member-activation-steps > summary::-webkit-details-marker {
+  display: none;
+}
+.member-activation-steps > summary small {
+  color: var(--muted);
+  font-size: 0.54rem;
+  font-weight: 650;
+}
+.member-activation-steps > summary span::after {
+  display: inline-block;
+  margin-left: 7px;
+  content: "+";
+}
+.member-activation-steps[open] > summary span::after {
+  content: "−";
+}
+.member-activation-steps > ol {
+  border-top: 1px solid var(--line);
+}
 .member-quickstart a {
   min-height: 210px;
 }
@@ -13312,6 +13407,30 @@ body {
   }
   .member-next-event-empty > a {
     margin-top: 7px;
+  }
+  .member-activation.member-activation-compact {
+    margin-bottom: 32px;
+    padding-top: 25px;
+  }
+  .member-activation-compact > header {
+    align-items: flex-start;
+    margin-bottom: 15px;
+  }
+  .member-activation-compact h2 {
+    font-size: 2rem;
+  }
+  .member-activation-focus {
+    min-height: 0;
+    align-items: stretch;
+    padding: 20px 0;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .member-activation-focus > a {
+    align-self: flex-start;
+  }
+  .member-activation-steps > summary {
+    min-height: 54px;
   }
   .network-hero {
     padding: 42px 0 32px;
