@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-type MemberDestination = "account" | "events" | "home" | "members" | "messages";
+type MemberDestination =
+  | "account"
+  | "events"
+  | "explore"
+  | "home"
+  | "members"
+  | "messages";
 
 const destinations: {
   href: string;
@@ -18,6 +24,12 @@ const destinations: {
     label: "Messages",
     shortLabel: "Messages",
   },
+  {
+    href: "/explore",
+    key: "explore",
+    label: "Explore",
+    shortLabel: "Explore",
+  },
   { href: "/profile", key: "account", label: "My profile", shortLabel: "Me" },
 ];
 
@@ -33,6 +45,12 @@ function MemberIcon({ destination }: { destination: MemberDestination }) {
       <>
         <rect x="4" y="5" width="16" height="15" rx="2" />
         <path d="M8 3v4M16 3v4M4 10h16" />
+      </>
+    ),
+    explore: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="m15.5 8.5-2.1 4.9-4.9 2.1 2.1-4.9 4.9-2.1Z" />
       </>
     ),
     home: (
@@ -91,6 +109,9 @@ export async function MemberHeader({
     destination.key === "account"
       ? { ...destination, href: accountHref, label: accountLabel }
       : destination,
+  );
+  const mobileNavigation = navigation.filter(
+    (destination) => destination.key !== "explore",
   );
   const memberName = profile?.display_name?.trim() || "Member";
   const memberInitial = memberName.charAt(0).toUpperCase();
@@ -151,7 +172,7 @@ export async function MemberHeader({
         </div>
       </header>
       <nav className="member-mobile-dock" aria-label="Member shortcuts">
-        {navigation.map((destination) => (
+        {mobileNavigation.map((destination) => (
           <Link
             aria-current={active === destination.key ? "page" : undefined}
             href={destination.href}

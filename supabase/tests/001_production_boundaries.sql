@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(262);
+select plan(266);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -469,6 +469,20 @@ select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002'
 select throws_ok($$select public.request_connection_with_context('96000000-0000-4000-8000-000000000011',null,'A request beyond the daily safety limit must be rejected.')$$,'P0001','Daily connection request limit reached','member cannot exceed twenty successful requests in a rolling day');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select count(*)from public.audit_events where actor_id='10000000-0000-4000-8000-000000000002'and action='connection.requested'and created_at>now()-interval'24 hours'),20::bigint,'blocked attempts do not create misleading successful-request audit events');
+
+set local role postgres;
+update public.user_roles
+set expires_at=now()-interval'1 minute'
+where user_id='10000000-0000-4000-8000-000000000004'
+  and role='event_staff';
+set local role authenticated;
+select set_config('request.jwt.claim.role','authenticated',true);
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',true);
+select is(public.is_admin(array['event_staff']::public.app_role[]),false,'expired staff roles stop authorizing at the database boundary');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select lives_ok($$select public.grant_time_bounded_admin_access('member-b@test.invalid','moderator',now()+interval'60 days','Temporary production boundary review access')$$,'Super Admin can grant audited time-bounded team access');
+select is((select expires_at>now()from public.user_roles where user_id='10000000-0000-4000-8000-000000000003'and role='moderator'),true,'time-bounded team access records a future hard expiry');
+select lives_ok($$select public.revoke_admin_access('10000000-0000-4000-8000-000000000003','moderator','Temporary review access is complete')$$,'Super Admin can immediately revoke delegated team access');
 
 select *from finish();
 rollback;

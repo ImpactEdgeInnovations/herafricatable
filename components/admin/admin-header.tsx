@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
 export type AdminRole = "super_admin" | "event_staff" | "moderator";
 
@@ -95,7 +96,7 @@ function AdminIcon({ destination }: { destination: AdminDestination | "member" }
   );
 }
 
-export function AdminHeader({
+export async function AdminHeader({
   active,
   label,
   role,
@@ -104,6 +105,17 @@ export function AdminHeader({
   label: string;
   role: AdminRole;
 }) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const betaExpiry =
+    typeof user?.user_metadata?.beta_admin_expires_at === "string"
+      ? new Date(user.user_metadata.beta_admin_expires_at)
+      : null;
+  const hasBetaExpiry = Boolean(
+    betaExpiry && !Number.isNaN(betaExpiry.getTime()),
+  );
   const canManageEvents = role === "super_admin" || role === "event_staff";
   const canModerate = role === "super_admin" || role === "moderator";
   const primary: NavigationItem[] = [
@@ -233,7 +245,19 @@ export function AdminHeader({
             </details>
           ) : null}
         </nav>
-        <span className="admin-role">{role.replace("_", " ")}</span>
+        <span className="admin-role">
+          {role.replace("_", " ")}
+          {hasBetaExpiry ? (
+            <small>
+              Beta until{" "}
+              {new Intl.DateTimeFormat("en-KE", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              }).format(betaExpiry!)}
+            </small>
+          ) : null}
+        </span>
       </header>
       <nav
         className="admin-mobile-dock"

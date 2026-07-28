@@ -135,6 +135,35 @@ assert(
   membershipMigration.includes("is_test_account"),
   "Production test identities must be explicitly tagged",
 );
+const expiringAdminMigration = read(
+  "supabase/migrations/20260730210000_expiring_admin_access.sql",
+);
+for (const contract of [
+  "expires_at is null or expires_at > now()",
+  "grant_time_bounded_admin_access",
+  "revoke_admin_access",
+  "You cannot revoke your own Super Admin access",
+  "admin_access.granted",
+  "admin_access.revoked",
+]) {
+  assert(
+    expiringAdminMigration.includes(contract),
+    `Temporary Admin access must include ${contract}`,
+  );
+}
+const betaAdminProvisioning = read("scripts/provision-beta-admin.mjs");
+for (const contract of [
+  "HAT_BETA_ADMIN_PASSWORD",
+  "beta_admin_expires_at",
+  "is_test_account: true",
+  "signInWithPassword",
+  "expiryEnforced",
+]) {
+  assert(
+    betaAdminProvisioning.includes(contract),
+    `Beta Admin provisioning must include ${contract}`,
+  );
+}
 assert(
   paymentInitialize.includes("create_membership_order"),
   "Membership checkout must use the shared payment initializer",

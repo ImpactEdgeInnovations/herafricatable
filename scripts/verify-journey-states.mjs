@@ -278,6 +278,12 @@ const adminWorkGroup = read("components/admin/admin-work-group.tsx");
 const memberHome = read("app/home/page.tsx");
 const upcomingEvents = read("app/events/page.tsx");
 const pastEvents = read("app/events/past/page.tsx");
+const memberExplore = read("app/explore/page.tsx");
+const memberHeader = read("components/member/member-header.tsx");
+const opportunityMarketplace = read(
+  "components/member/opportunity-marketplace.tsx",
+);
+const membershipCenter = read("components/member/membership-center.tsx");
 for (const contract of [
   "member-activation-compact",
   "member-activation-progress",
@@ -304,6 +310,17 @@ for (const [content, contract, description] of [
   [pastEvents, "Continue connections", "retain attendee follow-up actions"],
 ]) {
   assert(content.includes(contract), `Event experience must ${description}`);
+}
+for (const [content, contract, description] of [
+  [memberExplore, "More ways to use the table.", "give members one plain-language tool directory"],
+  [memberExplore, "Nothing needed from you", "explain gated tools without creating false work"],
+  [memberHeader, 'href: "/explore"', "link the Explore hub from desktop member navigation"],
+  [opportunityMarketplace, "initialComposerOpen", "keep the Ask/Offer composer closed until requested"],
+  [opportunityMarketplace, "aria-expanded={composerOpen}", "expose composer state accessibly"],
+  [membershipCenter, 'className="membership-empty"', "replace an unpublished-plan void with guidance"],
+  [membershipCenter, "Your current platform access is unchanged.", "protect members from ambiguous membership messaging"],
+]) {
+  assert(content.includes(contract), `Member experience must ${description}`);
 }
 assert(
   adminWorkGroup.includes("hashchange") &&
@@ -333,7 +350,6 @@ for (const contract of [
     `Member home next-event journey must include ${contract}`,
   );
 }
-const memberHeader = read("components/member/member-header.tsx");
 for (const contract of [
   "member-mobile-dock",
   'aria-label="Member shortcuts"',

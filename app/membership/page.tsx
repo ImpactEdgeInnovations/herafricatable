@@ -51,7 +51,10 @@ export default async function MembershipPage() {
           </div>
         </section>
       ) : (
-        <MembershipCenter plans={(data as MembershipPlan[] | null) ?? []} />
+        <MembershipCenter
+          accessStatus={profile.access_status}
+          plans={(data as MembershipPlan[] | null) ?? []}
+        />
       )}
     </main>
   );

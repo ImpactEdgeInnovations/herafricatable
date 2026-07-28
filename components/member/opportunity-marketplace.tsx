@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -51,21 +51,27 @@ const categories = [
 
 export function OpportunityMarketplace({
   currentUserId,
+  initialComposerOpen = false,
   initialPosts,
   initialResponses,
 }: {
   currentUserId: string;
+  initialComposerOpen?: boolean;
   initialPosts: MarketplacePost[];
   initialResponses: MarketplaceResponse[];
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
-  const [posts] = useState(initialPosts);
+  const posts = initialPosts;
   const [responses, setResponses] = useState(initialResponses);
   const [busy, setBusy] = useState("");
+  const [composerOpen, setComposerOpen] = useState(initialComposerOpen);
   const [message, setMessage] = useState("");
   const [editing, setEditing] = useState<MarketplacePost | null>(null);
+  useEffect(() => {
+    setResponses(initialResponses);
+  }, [initialResponses]);
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -93,7 +99,11 @@ export function OpportunityMarketplace({
           ? "Post updated."
           : "Your post is live.",
     );
-    if (!error) router.refresh();
+    if (!error) {
+      setComposerOpen(false);
+      setEditing(null);
+      router.refresh();
+    }
   }
   async function respond(post: MarketplacePost) {
     const result = await ask({
@@ -219,15 +229,31 @@ export function OpportunityMarketplace({
     <>
       {dialog}
       <section className="opportunity-create" id="create-opportunity">
-        <header>
-          <p className="eyebrow">Publish with purpose</p>
-          <h2>{editing ? "Refine your post" : "What can the table unlock?"}</h2>
-          <p>
-            Be specific, protect confidential information, and move sensitive
-            details into a private conversation only after trust is established.
-          </p>
+        <header className="opportunity-create-heading">
+          <div>
+            <p className="eyebrow">Publish with purpose</p>
+            <h2>{editing ? "Refine your post" : "Share one focused ask or offer"}</h2>
+            <p>
+              Be specific and keep confidential details for a trusted private
+              conversation.
+            </p>
+          </div>
+          <button
+            aria-expanded={composerOpen}
+            className={composerOpen ? "button button-outline" : "button button-primary"}
+            onClick={() => {
+              setEditing(null);
+              setComposerOpen((open) => !open);
+            }}
+            type="button"
+          >
+            {composerOpen ? "Close form" : "Create a post"}
+          </button>
         </header>
-        <form onSubmit={(event) => void save(event)}>
+        {composerOpen ? <form
+          key={editing?.post_id ?? "new"}
+          onSubmit={(event) => void save(event)}
+        >
           <div className="opportunity-form-grid">
             <label>
               Post type
@@ -332,7 +358,7 @@ export function OpportunityMarketplace({
               </button>
             ) : null}
           </div>
-        </form>
+        </form> : null}
       </section>
       <section className="opportunity-feed">
         <header>
@@ -415,6 +441,7 @@ export function OpportunityMarketplace({
                         <button
                           onClick={() => {
                             setEditing(post);
+                            setComposerOpen(true);
                             document
                               .getElementById("create-opportunity")
                               ?.scrollIntoView();

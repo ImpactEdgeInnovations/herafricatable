@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -22,7 +23,13 @@ export type MembershipPlan = {
   grace_ends_at: string | null;
 };
 
-export function MembershipCenter({ plans }: { plans: MembershipPlan[] }) {
+export function MembershipCenter({
+  accessStatus,
+  plans,
+}: {
+  accessStatus: string;
+  plans: MembershipPlan[];
+}) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
@@ -73,11 +80,16 @@ export function MembershipCenter({ plans }: { plans: MembershipPlan[] }) {
         <div>
           <p className="eyebrow">Membership standing</p>
           <h2>
-            {current ? current.replace("_", " ") : "Choose your membership"}
+            {current
+              ? current.replace("_", " ")
+              : accessStatus === "active"
+                ? "Your member access is active"
+                : "Membership renewal is needed"}
           </h2>
           <p>
-            Membership periods are recorded individually, renewals are added
-            after your current term, and grace status remains visible to you.
+            {plans.length
+              ? "Membership periods are recorded individually, renewals are added after your current term, and grace status remains visible to you."
+              : "The team is preparing the first membership plans. Nothing is required from you until an option is published."}
           </p>
         </div>
         {plans.find((plan) => plan.current_period_id)?.current_ends_at ? (
@@ -95,7 +107,7 @@ export function MembershipCenter({ plans }: { plans: MembershipPlan[] }) {
           </dl>
         ) : null}
       </section>
-      <section className="membership-grid">
+      {plans.length ? <section className="membership-grid">
         {plans.map((plan) => (
           <article key={plan.plan_id}>
             <span>{plan.duration_months} month term</span>
@@ -165,7 +177,22 @@ export function MembershipCenter({ plans }: { plans: MembershipPlan[] }) {
             )}
           </article>
         ))}
-      </section>
+      </section> : (
+        <section className="membership-empty">
+          <span className="membership-empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 3 4 7v5c0 4.8 3.2 7.7 8 9 4.8-1.3 8-4.2 8-9V7l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg>
+          </span>
+          <div>
+            <p className="eyebrow">No plan to choose yet</p>
+            <h2>We will let you know when membership opens.</h2>
+            <p>Your current platform access is unchanged. Published plans, pricing and renewal dates will appear here before any action is required.</p>
+            <div>
+              <Link className="button button-primary" href="/home">Return home</Link>
+              <Link className="button button-outline" href="/support">Ask a membership question</Link>
+            </div>
+          </div>
+        </section>
+      )}
       {message ? (
         <p className="network-message" role="status">
           {message}

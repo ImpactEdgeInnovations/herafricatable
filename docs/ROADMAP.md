@@ -66,6 +66,8 @@ Usability is part of production readiness and continues alongside feature delive
       secondary membership, community, learning, benefits and support tools
   - [x] Remove repeated action cards and empty order clutter; reduce onboarding to one
         recommended checkpoint with the full five-step journey available on demand
+  - [x] Add a plain-language Explore hub so members can understand every available
+        and preparing benefit without expanding the Home page
 - [x] Add a personalized next-best action to Member Home using feedback, messages,
       activity, onboarding progress and event-registration state
 - [x] Upgrade member discovery with purpose, city and keyword filters, clearer
@@ -96,6 +98,8 @@ Usability is part of production readiness and continues alongside feature delive
   - [x] Refine Upcoming and Past Events into a clear two-view journey, prevent
         completed events from reappearing as upcoming, and give empty/error
         archives a calm explanation with an obvious recovery path
+- [x] Keep optional member tools calm when content is sparse: collapse the Ask/Offer
+      composer until requested and explain unpublished membership plans without blank space
 - [x] Unify notifications, requests, unread conversations and event/account updates
       in one plain-language Activity centre
 - [x] Complete a compact member visual pass for mobile hierarchy, touch targets,
@@ -104,6 +108,8 @@ Usability is part of production readiness and continues alongside feature delive
         history views with plain-language empty states and progressively disclosed safety tools
 - [x] Add a Super Admin-only, audited Launch Gate workspace for assigning owners,
       recording acceptance evidence and preventing metrics from masking operational blockers
+- [x] Add database-enforced expiry, audited grants and immediate revocation for
+      temporary Admin access; label time-bounded beta sessions in the Admin shell
 - [x] Add contextual help and examples to every unfamiliar form without crowding the page
   - [x] Membership payment review, referrals and support requests include concise,
         accessible examples and privacy guidance
@@ -263,6 +269,7 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Apply `20260721200000_event_content_operations.sql` in production Supabase
 - [ ] Apply `20260721230000_event_menu_operations.sql` in production Supabase
 - [ ] Apply `20260722090000_event_gallery_operations.sql` in production Supabase
+- [ ] Apply `20260730210000_expiring_admin_access.sql` in production Supabase
 - [ ] Apply `20260722130000_registration_commerce_foundation.sql` in production Supabase
 - [ ] Apply `20260722170000_paystack_processing.sql` in production Supabase
 - [ ] Apply `20260722200000_registration_lifecycle.sql` in production Supabase

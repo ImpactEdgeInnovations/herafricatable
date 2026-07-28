@@ -15616,3 +15616,284 @@ body {
     justify-content: center;
   }
 }
+
+/* Member experience v6: quieter value tools and honest empty states */
+.opportunity-create {
+  display: block;
+  padding: 30px 0 34px;
+}
+.opportunity-create-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+}
+.opportunity-create-heading > div {
+  min-width: 0;
+}
+.opportunity-create-heading h2 {
+  font-size: clamp(1.9rem, 3vw, 2.55rem);
+}
+.opportunity-create-heading > div > p:last-child {
+  max-width: 610px;
+  margin: 8px 0 0;
+}
+.opportunity-create-heading > .button {
+  flex: 0 0 auto;
+}
+.opportunity-create > form {
+  max-width: 860px;
+  margin: 30px 0 0 auto;
+  padding: 30px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.5);
+}
+.membership-empty {
+  display: grid;
+  align-items: center;
+  width: min(820px, calc(100% - 48px));
+  min-height: 230px;
+  margin: 38px auto 0;
+  padding: 40px 44px;
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(244, 240, 232, 0.72), rgba(255, 253, 249, 0.82));
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 30px;
+}
+.membership-empty-icon {
+  display: grid;
+  width: 60px;
+  height: 60px;
+  place-items: center;
+  border: 1px solid rgba(101, 28, 40, 0.18);
+  border-radius: 50%;
+  color: var(--wine);
+}
+.membership-empty-icon svg {
+  width: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.35;
+}
+.membership-empty h2 {
+  max-width: 600px;
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(2rem, 3.4vw, 2.8rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1.03;
+}
+.membership-empty p:not(.eyebrow) {
+  max-width: 590px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.65;
+}
+.membership-empty > div > div {
+  display: flex;
+  margin-top: 22px;
+  gap: 10px;
+}
+.admin-role {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+}
+.admin-role small {
+  color: var(--muted);
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@media (max-width: 620px) {
+  .opportunity-create-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .opportunity-create-heading > .button {
+    align-self: flex-start;
+  }
+  .opportunity-create > form {
+    margin-top: 22px;
+    padding: 22px;
+  }
+  .membership-empty {
+    width: calc(100% - 32px);
+    min-height: 0;
+    padding: 28px 22px;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .membership-empty-icon {
+    width: 52px;
+    height: 52px;
+  }
+  .membership-empty > div > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .membership-empty .button {
+    justify-content: center;
+  }
+}
+
+.member-explore-page {
+  min-height: 100vh;
+  padding-bottom: 110px;
+  background: var(--paper);
+}
+.member-explore-hero,
+.member-explore-groups {
+  width: min(1120px, calc(100% - 48px));
+  margin-right: auto;
+  margin-left: auto;
+}
+.member-explore-hero {
+  display: grid;
+  align-items: end;
+  padding: 62px 0 48px;
+  border-bottom: 1px solid var(--line);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
+  gap: 64px;
+}
+.member-explore-hero h1 {
+  max-width: 720px;
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(3.4rem, 5.6vw, 5.15rem);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+.member-explore-hero > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.7;
+}
+.member-explore-groups > section {
+  display: grid;
+  padding: 46px 0;
+  border-bottom: 1px solid var(--line);
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 54px;
+}
+.member-explore-groups > section > header h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.8rem;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+.member-explore-groups > section > header p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.65rem;
+  line-height: 1.65;
+}
+.member-explore-groups > section > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.member-explore-groups a,
+.member-explore-groups article {
+  display: grid;
+  min-height: 190px;
+  align-content: start;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.48);
+  color: var(--ink);
+  text-decoration: none;
+  gap: 9px;
+}
+.member-explore-groups a {
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+.member-explore-groups a:hover {
+  border-color: rgba(101, 28, 40, 0.32);
+  transform: translateY(-2px);
+}
+.member-explore-groups article {
+  opacity: 0.58;
+}
+.member-explore-groups a > span,
+.member-explore-groups article > span {
+  width: fit-content;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgba(101, 28, 40, 0.06);
+  color: var(--wine);
+  font-size: 0.48rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.member-explore-groups strong {
+  margin-top: 9px;
+  font-family: var(--serif);
+  font-size: 1.48rem;
+  font-weight: 400;
+  line-height: 1.06;
+}
+.member-explore-groups p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.64rem;
+  line-height: 1.6;
+}
+.member-explore-groups small {
+  align-self: end;
+  margin-top: 10px;
+  color: var(--wine);
+  font-size: 0.53rem;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .member-explore-groups > section {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 720px) {
+  .member-explore-hero {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .member-explore-groups > section > div {
+    grid-template-columns: 1fr;
+  }
+  .member-explore-groups a,
+  .member-explore-groups article {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .member-explore-page {
+    padding-bottom: 88px;
+  }
+  .member-explore-hero,
+  .member-explore-groups {
+    width: calc(100% - 32px);
+  }
+  .member-explore-hero {
+    padding: 42px 0 32px;
+  }
+  .member-explore-hero h1 {
+    font-size: clamp(2.85rem, 14vw, 3.8rem);
+  }
+  .member-explore-groups > section {
+    padding: 34px 0;
+  }
+}
