@@ -105,6 +105,10 @@ import {
 } from "@/components/admin/launch-gate-control";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { AdminWorkGroup } from "@/components/admin/admin-work-group";
+import {
+  CuratedIntroductionManager,
+  type AdminCuratedIntroduction,
+} from "@/components/admin/curated-introduction-manager";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -315,6 +319,7 @@ export default async function AdminOperationsPage({
     readinessResult,
     analyticsResult,
     launchGateResult,
+    curatedIntroductionResult,
   ] = await Promise.all([
     canModerate && loadSafety
       ? supabase.rpc("list_member_reports")
@@ -426,6 +431,9 @@ export default async function AdminOperationsPage({
       : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadRelease
       ? supabase.rpc("list_launch_gate_checks")
+      : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadPeople
+      ? supabase.rpc("list_curated_introductions_admin")
       : Promise.resolve({ data: [], error: null }),
   ]);
   const communities = (communityResult.data as CommunitySummary[] | null) ?? [];
@@ -705,6 +713,15 @@ export default async function AdminOperationsPage({
             initialMembers={members}
             currentUserId={user.id}
             migrationReady={!memberResult.error}
+          />
+          <CuratedIntroductionManager
+            introductions={
+              (curatedIntroductionResult.data as
+                | AdminCuratedIntroduction[]
+                | null) ?? []
+            }
+            members={members}
+            migrationReady={!curatedIntroductionResult.error}
           />
         </AdminWorkGroup>
       ) : null}

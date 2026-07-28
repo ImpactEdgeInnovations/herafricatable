@@ -316,6 +316,29 @@ for (const contract of [
     `Explainable member recommendations must include ${contract}`,
   );
 }
+const curatedIntroductionsMigration = read(
+  "supabase/migrations/20260729090000_curated_introductions.sql",
+);
+for (const contract of [
+  "curated_introductions",
+  "create_curated_introduction",
+  "respond_to_curated_introduction",
+  "cancel_curated_introduction",
+  "list_my_curated_introductions",
+  "list_curated_introductions_admin",
+  "You both accepted",
+  "public.is_blocked_pair",
+  "'curated_introduction.created'",
+]) {
+  assert(
+    curatedIntroductionsMigration.includes(contract),
+    `Consent-based curated introductions must include ${contract}`,
+  );
+}
+assert(
+  !curatedIntroductionsMigration.includes("'reason', clean_reason"),
+  "Curated-introduction audit metadata must not duplicate the visible reason",
+);
 const databaseCorrections = read(
   "supabase/migrations/20260726210000_ci_database_corrections.sql",
 );

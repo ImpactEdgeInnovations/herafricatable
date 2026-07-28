@@ -76,6 +76,8 @@ Usability is part of production readiness and continues alongside feature delive
       can revisit relevant people without sending premature connection requests
 - [x] Add explainable member suggestions using only public goals, interests, location
       and industry, with transparent reasons and blocked-safe deterministic ranking
+- [x] Add Super Admin-curated introductions with shared context, independent member
+      consent, private decline handling, audit trails and messaging only after both accept
 - [x] Create a private post-event journey joining feedback, recap, attendee
       reconnection, opportunities and ongoing conversation
 - [x] Unify notifications, requests, unread conversations and event/account updates

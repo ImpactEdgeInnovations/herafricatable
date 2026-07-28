@@ -76,6 +76,21 @@ export type SuggestedMember = {
   shared_interests: string[];
   user_id: string;
 };
+export type CuratedIntroduction = {
+  avatar_url: string | null;
+  city: string | null;
+  company: string | null;
+  country: string | null;
+  created_at: string;
+  display_name: string | null;
+  introduction_id: string;
+  job_title: string | null;
+  my_decision: "pending" | "accepted" | "declined";
+  other_user_id: string;
+  reason: string;
+  status: "pending" | "accepted" | "declined" | "cancelled";
+  updated_at: string;
+};
 
 const goalLabels: Record<string, string> = {
   be_mentored: "Find a mentor",
@@ -97,6 +112,7 @@ export function NetworkHub({
   blockedMembers,
   savedMembers,
   suggestedMembers,
+  curatedIntroductions,
   cityFilter,
   goalFilter,
   searchQuery,
@@ -108,6 +124,7 @@ export function NetworkHub({
   blockedMembers: BlockedMember[];
   savedMembers: SavedMemberProfile[];
   suggestedMembers: SuggestedMember[];
+  curatedIntroductions: CuratedIntroduction[];
   cityFilter: string;
   goalFilter: string;
   searchQuery: string;
@@ -166,6 +183,41 @@ export function NetworkHub({
       error
         ? memberErrorMessage(error, `${action} this connection request`)
         : `Request ${action}ed.`,
+    );
+    if (!error) router.refresh();
+  }
+  async function respondToCuratedIntroduction(
+    introductionId: string,
+    action: "accept" | "decline",
+  ) {
+    if (action === "decline") {
+      const result = await ask({
+        title: "Decline this introduction?",
+        description:
+          "No contact details will be shared. The other member will only see that the introduction is not moving forward.",
+        confirmLabel: "Decline privately",
+        tone: "danger",
+      });
+      if (!result) return;
+    }
+    setBusy(`curated:${introductionId}`);
+    setMessage("");
+    const { data, error } = await supabase.rpc(
+      "respond_to_curated_introduction",
+      {
+        p_action: action,
+        p_introduction_id: introductionId,
+      },
+    );
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, `${action} this introduction`)
+        : data === "accepted"
+          ? "You both accepted. Your connection and private messaging are ready."
+          : action === "accept"
+            ? "Accepted privately. We will let you know if she also accepts."
+            : "Introduction declined privately.",
     );
     if (!error) router.refresh();
   }
@@ -481,6 +533,85 @@ export function NetworkHub({
                 </article>
               );
             })}
+          </div>
+        </section>
+      ) : null}
+      {curatedIntroductions.some((item) => item.status === "pending") ? (
+        <section
+          className="curated-introductions"
+          id="curated-introductions"
+        >
+          <header>
+            <p className="eyebrow">Introduced by Her Africa Table</p>
+            <h2>A thoughtful person to meet</h2>
+            <p>
+              Both of you decide independently. Contact details and messaging
+              remain private until you both accept.
+            </p>
+          </header>
+          <div>
+            {curatedIntroductions
+              .filter((item) => item.status === "pending")
+              .map((item) => (
+                <article key={item.introduction_id}>
+                  <span className="directory-avatar">
+                    {item.avatar_url ? (
+                      <img src={item.avatar_url} alt="" />
+                    ) : (
+                      (item.display_name?.[0] ?? "H")
+                    )}
+                  </span>
+                  <div>
+                    <p className="eyebrow">
+                      {[item.city, item.country].filter(Boolean).join(", ")}
+                    </p>
+                    <h3>
+                      <Link href={`/members/${item.other_user_id}`}>
+                        {item.display_name}
+                      </Link>
+                    </h3>
+                    <strong>
+                      {[item.job_title, item.company]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </strong>
+                    <blockquote>
+                      <span>Why we thought of you both</span>
+                      {item.reason}
+                    </blockquote>
+                  </div>
+                  {item.my_decision === "accepted" ? (
+                    <span className="curated-waiting">
+                      You accepted · waiting privately
+                    </span>
+                  ) : (
+                    <div className="curated-introduction-actions">
+                      <button
+                        disabled={busy !== ""}
+                        onClick={() =>
+                          void respondToCuratedIntroduction(
+                            item.introduction_id,
+                            "accept",
+                          )
+                        }
+                      >
+                        I would like to meet
+                      </button>
+                      <button
+                        disabled={busy !== ""}
+                        onClick={() =>
+                          void respondToCuratedIntroduction(
+                            item.introduction_id,
+                            "decline",
+                          )
+                        }
+                      >
+                        Not this time
+                      </button>
+                    </div>
+                  )}
+                </article>
+              ))}
           </div>
         </section>
       ) : null}
