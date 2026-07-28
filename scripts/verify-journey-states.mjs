@@ -340,6 +340,10 @@ for (const contract of [
   "Your private plan",
   "save_connection_followup",
   "complete_connection_followup",
+  "Record outcome",
+  "record_connection_outcome",
+  "Counted anonymously",
+  "Completely private",
   "Why she would like to connect",
   "Messaging opens only after she accepts",
   'href={`/members/${member.user_id}`}',
@@ -408,6 +412,25 @@ assert(
   memberHome.includes("list_due_connection_followups") &&
     memberHome.includes("A relationship to nurture"),
   "Member Home must calmly surface due private relationship follow-ups",
+);
+const communityOutcomeSummary = read(
+  "components/admin/community-outcome-summary.tsx",
+);
+for (const contract of [
+  "What the community made possible",
+  "category totals only",
+  "never names",
+  "excludes every tagged test identity",
+]) {
+  assert(
+    communityOutcomeSummary.includes(contract),
+    `Admin anonymous outcome summary must include ${contract}`,
+  );
+}
+assert(
+  networkPage.includes("list_my_connection_outcomes") &&
+    networkPage.includes("outcomes="),
+  "Member Network must load private connection outcomes through its scoped function",
 );
 
 const cohortMigration = read(

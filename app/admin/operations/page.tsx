@@ -110,6 +110,10 @@ import {
   type AdminConnectionAvailability,
   type AdminCuratedIntroduction,
 } from "@/components/admin/curated-introduction-manager";
+import {
+  CommunityOutcomeSummary,
+  type CommunityOutcome,
+} from "@/components/admin/community-outcome-summary";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -322,6 +326,7 @@ export default async function AdminOperationsPage({
     launchGateResult,
     curatedIntroductionResult,
     connectionAvailabilityResult,
+    connectionOutcomeResult,
   ] = await Promise.all([
     canModerate && loadSafety
       ? supabase.rpc("list_member_reports")
@@ -439,6 +444,9 @@ export default async function AdminOperationsPage({
       : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadPeople
       ? supabase.rpc("list_connection_availability_admin")
+      : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadPeople
+      ? supabase.rpc("get_connection_outcome_summary", { p_days: 365 })
       : Promise.resolve({ data: [], error: null }),
   ]);
   const communities = (communityResult.data as CommunitySummary[] | null) ?? [];
@@ -735,6 +743,12 @@ export default async function AdminOperationsPage({
               !curatedIntroductionResult.error &&
               !connectionAvailabilityResult.error
             }
+          />
+          <CommunityOutcomeSummary
+            outcomes={
+              (connectionOutcomeResult.data as CommunityOutcome[] | null) ?? []
+            }
+            migrationReady={!connectionOutcomeResult.error}
           />
         </AdminWorkGroup>
       ) : null}

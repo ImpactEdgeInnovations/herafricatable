@@ -381,6 +381,30 @@ assert(
   !relationshipFollowupsMigration.includes("'private_note', clean_note"),
   "Relationship follow-up audit metadata must not copy private notes",
 );
+const connectionOutcomesMigration = read(
+  "supabase/migrations/20260729210000_connection_outcomes.sql",
+);
+for (const contract of [
+  "connection_outcomes",
+  "record_connection_outcome",
+  "list_my_connection_outcomes",
+  "remove_connection_outcome",
+  "get_connection_outcome_summary",
+  "share_anonymously",
+  "not owner_profile.is_test_account",
+  "not low_profile.is_test_account",
+  "not high_profile.is_test_account",
+  "Accepted connection required",
+]) {
+  assert(
+    connectionOutcomesMigration.includes(contract),
+    `Privacy-safe connection outcomes must include ${contract}`,
+  );
+}
+assert(
+  !connectionOutcomesMigration.includes("'private_detail', clean_detail"),
+  "Connection outcome audit metadata must not copy private details",
+);
 const databaseCorrections = read(
   "supabase/migrations/20260726210000_ci_database_corrections.sql",
 );

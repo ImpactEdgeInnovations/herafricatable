@@ -82,6 +82,8 @@ Usability is part of production readiness and continues alongside feature delive
       curated-only and paused modes respected by direct requests and Admin curation
 - [x] Add private relationship notes, next steps and due follow-ups for accepted
       connections, surfaced on Member Home without exposing personal context to Admin
+- [x] Let members privately record connection outcomes with voluntary anonymous
+      category reporting, test-account exclusion and no Admin access to names or notes
 - [x] Create a private post-event journey joining feedback, recap, attendee
       reconnection, opportunities and ongoing conversation
 - [x] Unify notifications, requests, unread conversations and event/account updates

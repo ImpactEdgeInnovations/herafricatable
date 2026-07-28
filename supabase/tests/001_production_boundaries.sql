@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(230);
+select plan(247);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -362,6 +362,28 @@ select is((select count(*)from public.list_due_connection_followups(3)),0::bigin
 select is((select private_note from public.list_my_connection_followups()limit 1),'Values careful regional partnerships.','completing a next step preserves the owners private relationship context');
 select lives_ok($$select public.remove_connection_followup((select connection_id from public.list_my_connection_followups()limit 1))$$,'member may delete her private relationship plan completely');
 select is((select count(*)from public.list_my_connection_followups()),0::bigint,'removed relationship plan leaves no private follow-up row');
+
+select lives_ok($$select public.record_connection_outcome((select id from public.connections where user_low=least('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000004'::uuid)and user_high=greatest('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000004'::uuid)),'collaboration',current_date,'We agreed to test a joint supplier programme in Nairobi.',true)$$,'member privately records a real outcome from an accepted connection');
+select is((select count(*)from public.list_my_connection_outcomes()),1::bigint,'member lists only her own recorded relationship outcome');
+select is((select private_detail from public.list_my_connection_outcomes()limit 1),'We agreed to test a joint supplier programme in Nairobi.','private outcome detail remains available to its owner');
+select is((select count(*)from public.audit_events where action='connection.outcome_recorded'and metadata::text like'%joint supplier programme%'),0::bigint,'outcome audit metadata never copies the private detail');
+select lives_ok($$select public.record_connection_outcome((select id from public.connections where user_low=least('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000004'::uuid)and user_high=greatest('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000004'::uuid)),'mentorship',current_date,'A private mentoring relationship began after our introduction.',false)$$,'member may keep an outcome completely private from aggregate reporting');
+select is((select count(*)from public.list_my_connection_outcomes()),2::bigint,'owner sees both anonymously shared and completely private outcomes');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
+select is((select count(*)from public.connection_outcomes),0::bigint,'the other connected member cannot read the owners private outcomes');
+select lives_ok($$select public.record_connection_outcome((select id from public.connections where user_low=least('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000003'::uuid)and user_high=greatest('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000003'::uuid)),'referral',current_date,'A useful supplier referral followed our first conversation.',true)$$,'tagged test member may exercise the same private outcome workflow');
+select is((select count(*)from public.list_my_connection_outcomes()),1::bigint,'test member still reads only her own outcome');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',true);
+select is((select count(*)from public.connection_outcomes),0::bigint,'event staff cannot browse member relationship outcomes');
+select throws_ok($$select *from public.get_connection_outcome_summary(365)$$,'P0001','Super admin required','non-admin members cannot access anonymous community aggregates');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select is((select count(*)from public.connection_outcomes),0::bigint,'super admin cannot directly browse outcome identities or private notes');
+select is((select count(*)from public.get_connection_outcome_summary(365)),1::bigint,'aggregate reporting includes only voluntarily shared real-member outcomes');
+select is((select outcome_type from public.get_connection_outcome_summary(365)limit 1),'collaboration','private and test-account outcomes are excluded from the aggregate category');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select lives_ok($$select public.remove_connection_outcome((select outcome_id from public.list_my_connection_outcomes()where outcome_type='mentorship'limit 1))$$,'member can delete her completely private outcome');
+select is((select count(*)from public.list_my_connection_outcomes()),1::bigint,'deleting one outcome preserves the owners remaining relationship history');
+select is((select count(*)from public.audit_events where action='connection.outcome_removed'),1::bigint,'outcome deletion is auditable without exposing its content');
 
 select *from finish();
 rollback;

@@ -109,6 +109,26 @@ export type ConnectionFollowup = {
   remind_on: string | null;
   updated_at: string;
 };
+export type ConnectionOutcome = {
+  company: string | null;
+  connection_id: string;
+  created_at: string;
+  display_name: string | null;
+  occurred_on: string;
+  other_user_id: string;
+  outcome_id: string;
+  outcome_type:
+    | "collaboration"
+    | "referral"
+    | "mentorship"
+    | "client"
+    | "investment"
+    | "friendship"
+    | "knowledge"
+    | "other";
+  private_detail: string;
+  share_anonymously: boolean;
+};
 
 const goalLabels: Record<string, string> = {
   be_mentored: "Find a mentor",
@@ -120,6 +140,16 @@ const goalLabels: Record<string, string> = {
   mentor: "Mentor other women",
   shop_african_brands: "Discover African brands",
   travel: "Connect through travel",
+};
+const outcomeLabels: Record<ConnectionOutcome["outcome_type"], string> = {
+  client: "Client conversation",
+  collaboration: "Collaboration",
+  friendship: "Friendship",
+  investment: "Investment conversation",
+  knowledge: "Knowledge shared",
+  mentorship: "Mentorship",
+  other: "Another meaningful outcome",
+  referral: "Referral or introduction",
 };
 
 export function NetworkHub({
@@ -133,6 +163,7 @@ export function NetworkHub({
   curatedIntroductions,
   connectionAvailability,
   followups,
+  outcomes,
   cityFilter,
   goalFilter,
   searchQuery,
@@ -147,6 +178,7 @@ export function NetworkHub({
   curatedIntroductions: CuratedIntroduction[];
   connectionAvailability: ConnectionAvailability[];
   followups: ConnectionFollowup[];
+  outcomes: ConnectionOutcome[];
   cityFilter: string;
   goalFilter: string;
   searchQuery: string;
@@ -398,6 +430,93 @@ export function NetworkHub({
     );
     if (!error) router.refresh();
   }
+  async function recordOutcome(
+    connectionId: string,
+    displayName: string,
+  ) {
+    const result = await ask({
+      title: `What came from connecting with ${displayName}?`,
+      description:
+        "Keep a private record of the value this relationship created. Your note and both members’ identities always stay private.",
+      confirmLabel: "Save outcome",
+      fields: [
+        {
+          initialValue: "collaboration",
+          label: "Type of outcome",
+          name: "outcomeType",
+          options: Object.entries(outcomeLabels).map(([value, label]) => ({
+            label,
+            value,
+          })),
+          type: "select",
+        },
+        {
+          initialValue: new Date().toISOString().slice(0, 10),
+          label: "When did it happen?",
+          name: "occurredOn",
+          required: true,
+          type: "date",
+        },
+        {
+          help: "This is visible only to you—not the other member or Admin.",
+          label: "Private detail",
+          maxLength: 2000,
+          minLength: 10,
+          name: "detail",
+          placeholder:
+            "For example: We agreed to test a joint supplier programme in Nairobi.",
+          required: true,
+          type: "textarea",
+        },
+        {
+          help: "Admin receives only one anonymous category count—never your note, name, or the other member’s identity.",
+          initialValue: true,
+          label: "Include this in anonymous community totals",
+          name: "shareAnonymously",
+          type: "checkbox",
+        },
+      ],
+    });
+    if (!result) return;
+    setBusy(`outcome:${connectionId}`);
+    setMessage("");
+    const { error } = await supabase.rpc("record_connection_outcome", {
+      p_connection_id: connectionId,
+      p_occurred_on: String(result.occurredOn),
+      p_outcome_type: String(result.outcomeType),
+      p_private_detail: String(result.detail),
+      p_share_anonymously: Boolean(result.shareAnonymously),
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "record this connection outcome")
+        : "Your private outcome has been recorded.",
+    );
+    if (!error) router.refresh();
+  }
+  async function removeOutcome(outcomeId: string) {
+    const result = await ask({
+      title: "Delete this private outcome?",
+      description:
+        "The private note and its anonymous contribution will be removed. Your connection is unchanged.",
+      confirmLabel: "Delete outcome",
+      tone: "danger",
+    });
+    if (!result) return;
+    setBusy(`outcome:${outcomeId}`);
+    setMessage("");
+    const { error } = await supabase.rpc("remove_connection_outcome", {
+      p_outcome_id: outcomeId,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "delete this connection outcome")
+        : "Private outcome deleted.",
+    );
+    if (!error) router.refresh();
+  }
   async function safety(
     memberId: string,
     action: "remove" | "block" | "unblock" | "report",
@@ -524,6 +643,9 @@ export function NetworkHub({
               const followup = followups.find(
                 (x) => x.connection_id === item.connection_id,
               );
+              const connectionOutcomes = outcomes.filter(
+                (x) => x.connection_id === item.connection_id,
+              );
               return (
                 <article key={item.connection_id}>
                   <span className="network-avatar">
@@ -613,6 +735,45 @@ export function NetworkHub({
                         ) : null}
                       </div>
                     ) : null}
+                    {item.status === "accepted" &&
+                    connectionOutcomes.length ? (
+                      <div className="connection-outcomes">
+                        <span>What this connection led to</span>
+                        {connectionOutcomes.map((outcome) => (
+                          <div
+                            className="connection-outcome"
+                            key={outcome.outcome_id}
+                          >
+                            <div>
+                              <strong>
+                                {outcomeLabels[outcome.outcome_type]}
+                              </strong>
+                              <small>
+                                {new Intl.DateTimeFormat("en-KE", {
+                                  dateStyle: "medium",
+                                }).format(
+                                  new Date(`${outcome.occurred_on}T12:00:00`),
+                                )}
+                                {" · "}
+                                {outcome.share_anonymously
+                                  ? "Counted anonymously"
+                                  : "Completely private"}
+                              </small>
+                              <p>{outcome.private_detail}</p>
+                            </div>
+                            <button
+                              aria-label={`Delete ${outcomeLabels[outcome.outcome_type].toLowerCase()} outcome`}
+                              disabled={busy !== ""}
+                              onClick={() =>
+                                void removeOutcome(outcome.outcome_id)
+                              }
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                   <span className="member-status">
                     {item.status}
@@ -668,6 +829,17 @@ export function NetworkHub({
                         }
                       >
                         {followup ? "Edit follow-up" : "Plan follow-up"}
+                      </button>
+                      <button
+                        disabled={busy !== ""}
+                        onClick={() =>
+                          void recordOutcome(
+                            item.connection_id,
+                            item.display_name || "this member",
+                          )
+                        }
+                      >
+                        Record outcome
                       </button>
                       {followup?.next_step ? (
                         <button
