@@ -124,13 +124,16 @@ export function SupportCenter({
     router.refresh();
   }
   return (
-    <div className="support-shell">
+    <div
+      className={`support-shell${tickets.length ? "" : " is-empty"}${selected ? " has-selection" : ""}`}
+    >
       <aside className="support-sidebar">
         <header>
           <p className="eyebrow">Private support</p>
-          <h1>Help centre</h1>
+          <h1>How can we help?</h1>
           <p>
-            Requests are visible only to you and the authorized support team.
+            Tell us what happened in plain language. Only you and the authorized
+            support team can see your request.
           </p>
         </header>
         <details className="support-new" open={!tickets.length}>
@@ -215,6 +218,13 @@ export function SupportCenter({
         {selected ? (
           <>
             <header>
+              <Link
+                aria-label="Back to support requests"
+                className="support-back"
+                href="/support"
+              >
+                ←
+              </Link>
               <div>
                 <p className="eyebrow">
                   {selected.reference} · {label(selected.category)}
@@ -280,10 +290,9 @@ export function SupportCenter({
         ) : (
           <div className="conversation-placeholder">
             <p className="eyebrow">Here when you need us</p>
-            <h2>Select a request.</h2>
+            <h2>Your support requests.</h2>
             <p>
-              Account, payment, event, privacy and safety support all begin
-              here.
+              Open a new private request or select an earlier conversation.
             </p>
           </div>
         )}

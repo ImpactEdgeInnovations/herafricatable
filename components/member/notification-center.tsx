@@ -42,6 +42,7 @@ export function NotificationCenter({
   const [preferences, setPreferences] = useState(initialPreferences);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const unreadCount = notifications.filter((item) => !item.read_at).length;
   useEffect(() => {
     const channel = supabase
       .channel(`notifications:${userId}`)
@@ -103,9 +104,14 @@ export function NotificationCenter({
         <header>
           <div>
             <p className="eyebrow">Your updates</p>
-            <h1>Notifications</h1>
+            <h1>What’s new.</h1>
+            <p>
+              {unreadCount
+                ? `${unreadCount} update${unreadCount === 1 ? "" : "s"} waiting for you.`
+                : "Nothing needs your attention right now."}
+            </p>
           </div>
-          {notifications.some((item) => !item.read_at) ? (
+          {unreadCount ? (
             <button disabled={busy} onClick={() => void readAll()}>
               Mark all read
             </button>
@@ -141,14 +147,21 @@ export function NotificationCenter({
           </div>
         )}
       </section>
-      <aside className="notification-preferences">
-        <p className="eyebrow">Delivery choices</p>
-        <h2>Stay meaningfully informed.</h2>
-        <p>
-          Essential account, payment and privacy messages remain enabled. Choose
-          how we contact you about everything else.
-        </p>
+      <details className="notification-preferences">
+        <summary>
+          <span>
+            <small>Delivery choices</small>
+            <strong>Notification settings</strong>
+            <em>
+              Choose which optional updates also reach your email.
+            </em>
+          </span>
+          <b>Manage</b>
+        </summary>
         <form onSubmit={save}>
+          <p>
+            Essential account, payment, and privacy messages remain enabled.
+          </p>
           <label>
             <input
               type="checkbox"
@@ -217,7 +230,7 @@ export function NotificationCenter({
             Save preferences
           </button>
         </form>
-      </aside>
+      </details>
       {notice ? (
         <p className="network-message" role="status">
           {notice}

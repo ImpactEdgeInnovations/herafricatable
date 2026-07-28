@@ -12771,3 +12771,376 @@ body {
     white-space: nowrap;
   }
 }
+
+/* Member experience v4: updates, privacy and care */
+.notification-layout {
+  width: min(980px, calc(100% - 48px));
+  margin-top: 54px;
+  grid-template-columns: 1fr;
+  gap: 34px;
+}
+.notification-feed > header {
+  align-items: center;
+  margin-bottom: 26px;
+}
+.notification-feed h1 {
+  font-size: clamp(3.3rem, 5.8vw, 5rem);
+}
+.notification-feed > header > div > p:last-child {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+.notification-feed > .admin-empty {
+  min-height: 150px;
+  padding: 34px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #f4f0e8, #faf8f4);
+}
+.notification-preferences {
+  position: static;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+}
+.notification-preferences > summary {
+  display: flex;
+  min-height: 100px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 26px;
+  cursor: pointer;
+  list-style: none;
+  gap: 24px;
+}
+.notification-preferences > summary::-webkit-details-marker {
+  display: none;
+}
+.notification-preferences > summary > span {
+  display: grid;
+  gap: 4px;
+}
+.notification-preferences > summary small {
+  color: var(--gold);
+  font-size: 0.53rem;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.notification-preferences > summary strong {
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-weight: 400;
+}
+.notification-preferences > summary em {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-style: normal;
+}
+.notification-preferences > summary > b {
+  color: var(--wine);
+  font-size: 0.58rem;
+}
+.notification-preferences[open] > summary > b {
+  font-size: 0;
+}
+.notification-preferences[open] > summary > b::after {
+  font-size: 0.58rem;
+  content: "Close";
+}
+.notification-preferences form {
+  margin: 0;
+  padding: 24px 26px 28px;
+  border-top: 1px solid var(--line);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.notification-preferences form > p,
+.notification-preferences form > button {
+  grid-column: 1 / -1;
+}
+.notification-preferences form > p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.62rem;
+}
+.notification-preferences form > label {
+  min-height: 70px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.notification-preferences form > button {
+  justify-self: start;
+  margin-top: 8px;
+}
+.account-settings-shell {
+  width: min(1040px, calc(100% - 48px));
+  padding: 62px 0 90px;
+}
+.account-settings-shell > header {
+  display: grid;
+  max-width: none;
+  align-items: end;
+  margin-bottom: 38px;
+  padding-bottom: 38px;
+  border-bottom: 1px solid var(--line);
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 70px;
+}
+.account-settings-shell > header h1 {
+  font-size: clamp(3.4rem, 5.8vw, 5.2rem);
+  line-height: 0.95;
+}
+.account-settings-shell > header > div > p:last-child {
+  max-width: 610px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+.account-settings-shell > header > aside {
+  display: grid;
+  padding: 20px 0 3px 24px;
+  border-left: 1px solid var(--line);
+  gap: 6px;
+}
+.account-settings-shell > header > aside span {
+  color: var(--gold);
+  font-size: 0.53rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.account-settings-shell > header > aside strong {
+  font-family: var(--serif);
+  font-size: 1.7rem;
+  font-weight: 400;
+}
+.account-settings-shell > header > aside small {
+  color: var(--muted);
+  font-size: 0.58rem;
+  line-height: 1.55;
+}
+.settings-card {
+  padding: 30px 0;
+  gap: 50px;
+}
+.settings-card h2 {
+  font-size: 1.75rem;
+}
+.settings-card p {
+  font-size: 0.68rem;
+}
+.deletion-zone {
+  display: block;
+  padding: 0;
+}
+.deletion-zone > summary {
+  display: flex;
+  min-height: 104px;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  list-style: none;
+  gap: 24px;
+}
+.deletion-zone > summary::-webkit-details-marker {
+  display: none;
+}
+.deletion-zone > summary > span {
+  display: grid;
+  gap: 5px;
+}
+.deletion-zone > summary small {
+  color: #8a5660;
+  font-size: 0.52rem;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.deletion-zone > summary strong {
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-weight: 400;
+}
+.deletion-zone > summary em {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-style: normal;
+}
+.deletion-zone > summary > b {
+  color: var(--wine);
+  font-size: 0.58rem;
+}
+.deletion-zone[open] > summary > b {
+  font-size: 0;
+}
+.deletion-zone[open] > summary > b::after {
+  font-size: 0.58rem;
+  content: "Close";
+}
+.deletion-zone-content {
+  max-width: 680px;
+  padding: 4px 0 34px;
+}
+.support-shell {
+  width: min(1120px, calc(100% - 48px));
+  height: calc(100vh - 114px);
+  min-height: 610px;
+  margin-top: 24px;
+  border-radius: 4px;
+  box-shadow: 0 18px 55px rgba(55, 31, 34, 0.045);
+  grid-template-columns: 340px minmax(0, 1fr);
+}
+.support-shell.is-empty {
+  width: min(720px, calc(100% - 48px));
+  height: auto;
+  min-height: 0;
+  grid-template-columns: 1fr;
+}
+.support-shell.is-empty .support-sidebar {
+  overflow: visible;
+  border-right: 0;
+}
+.support-shell.is-empty .support-panel {
+  display: none;
+}
+.support-sidebar > header {
+  padding: 27px 24px 22px;
+}
+.support-sidebar h1 {
+  font-size: 2.3rem;
+}
+.support-new summary {
+  padding: 16px 24px;
+}
+.support-shell.is-empty .support-new form {
+  padding: 4px 28px 30px;
+}
+.support-shell.is-empty .support-new {
+  border-bottom: 0;
+}
+.support-back {
+  display: none;
+}
+.support-panel > header {
+  min-height: 84px;
+}
+
+@media (max-width: 820px) {
+  .account-settings-shell > header {
+    align-items: start;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .account-settings-shell > header > aside {
+    padding: 18px 0 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .support-page {
+    padding-bottom: 88px;
+  }
+  .notification-layout,
+  .account-settings-shell {
+    width: calc(100% - 32px);
+  }
+  .notification-layout {
+    margin-top: 40px;
+    gap: 26px;
+  }
+  .notification-feed h1 {
+    font-size: clamp(3rem, 14vw, 3.9rem);
+  }
+  .notification-feed > header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .notification-preferences > summary {
+    min-height: 92px;
+    padding: 19px 20px;
+  }
+  .notification-preferences > summary em {
+    max-width: 230px;
+  }
+  .notification-preferences form {
+    padding: 20px;
+    grid-template-columns: 1fr;
+  }
+  .notification-preferences form > p,
+  .notification-preferences form > button {
+    grid-column: auto;
+  }
+  .account-settings-shell {
+    padding: 42px 0 80px;
+  }
+  .account-settings-shell > header {
+    margin-bottom: 24px;
+    padding-bottom: 28px;
+  }
+  .account-settings-shell > header h1 {
+    font-size: clamp(3rem, 14vw, 3.9rem);
+  }
+  .settings-card {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+    gap: 21px;
+  }
+  .settings-action > button {
+    justify-self: start;
+  }
+  .deletion-zone > summary {
+    min-height: 112px;
+    align-items: flex-start;
+    padding: 20px 0;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .support-shell,
+  .support-shell.is-empty {
+    width: calc(100% - 32px);
+    height: calc(100vh - 160px);
+    min-height: 520px;
+    margin-top: 16px;
+  }
+  .support-shell.is-empty {
+    height: auto;
+    min-height: 0;
+  }
+  .support-shell.has-selection {
+    display: block;
+  }
+  .support-shell.has-selection .support-sidebar {
+    display: none;
+  }
+  .support-shell.has-selection .support-panel {
+    display: grid;
+    height: 100%;
+  }
+  .support-sidebar {
+    max-height: none;
+    border-right: 0;
+  }
+  .support-back {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    color: var(--wine);
+    text-decoration: none;
+  }
+  .support-shell.is-empty .support-new form {
+    padding: 4px 20px 24px;
+  }
+}

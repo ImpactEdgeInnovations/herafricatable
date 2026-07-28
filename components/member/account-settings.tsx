@@ -124,16 +124,23 @@ export function AccountSettings({
     <div className="account-settings-shell">
       {dialog}
       <header>
-        <p className="eyebrow">Privacy and control</p>
-        <h1>
-          Your account,
-          <br />
-          on your terms.
-        </h1>
-        <p>
-          Manage discovery, obtain a portable copy of your information, or begin
-          a reviewed account-deletion process.
-        </p>
+        <div>
+          <p className="eyebrow">Privacy and control</p>
+          <h1>Account &amp; privacy.</h1>
+          <p>
+            Control how members find you, download your information, and manage
+            important account decisions.
+          </p>
+        </div>
+        <aside>
+          <span>Directory status</span>
+          <strong>{visibilityPaused ? "Hidden" : "Visible"}</strong>
+          <small>
+            {visibilityPaused
+              ? "Other members cannot currently discover your profile."
+              : "Active members can discover your public profile."}
+          </small>
+        </aside>
       </header>
       <section className="settings-card">
         <div>
@@ -187,14 +194,24 @@ export function AccountSettings({
           {busy === "export" ? "Preparing…" : "Download my data"}
         </button>
       </section>
-      <section className="settings-card deletion-zone">
-        <div>
-          <p className="eyebrow">Account deletion</p>
-          <h2>
-            {activeDeletion
-              ? "Deletion review in progress"
-              : "Request account deletion"}
-          </h2>
+      <details className="settings-card deletion-zone" open={Boolean(activeDeletion)}>
+        <summary>
+          <span>
+            <small>Account deletion</small>
+            <strong>
+              {activeDeletion
+                ? "Deletion review in progress"
+                : "Close your account"}
+            </strong>
+            <em>
+              {activeDeletion
+                ? `Request ${activeDeletion.reference} requires your attention.`
+                : "A reviewed process with a seven-day waiting period."}
+            </em>
+          </span>
+          <b>{activeDeletion ? "Review request" : "View options"}</b>
+        </summary>
+        <div className="deletion-zone-content">
           {activeDeletion ? (
             <>
               <p>
@@ -251,7 +268,7 @@ export function AccountSettings({
             </>
           )}
         </div>
-      </section>
+      </details>
       {requests.length ? (
         <section className="settings-history">
           <p className="eyebrow">Request history</p>
