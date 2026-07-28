@@ -58,7 +58,7 @@ function ActionDialog({ pending, settle }: { pending: PendingDialog; settle: (re
       if (field.type === "checkbox") continue;
       const value = String(values[field.name] ?? "").trim();
       if (field.required && !value) nextErrors[field.name] = `${field.label} is required.`;
-      else if (field.minLength && value.length < field.minLength) nextErrors[field.name] = `Enter at least ${field.minLength} characters.`;
+      else if (field.minLength && value.length > 0 && value.length < field.minLength) nextErrors[field.name] = `Enter at least ${field.minLength} characters.`;
       else if (field.matchValue !== undefined && value !== field.matchValue) nextErrors[field.name] = "The value does not match. Check it and try again.";
       else if (field.type === "number") {
         const number = Number(value);

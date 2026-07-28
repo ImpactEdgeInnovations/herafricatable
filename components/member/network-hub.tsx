@@ -32,6 +32,7 @@ export type NetworkConnection = {
   direction: "incoming" | "outgoing";
   display_name: string | null;
   job_title: string | null;
+  introduction_note: string | null;
   other_user_id: string;
   status: "pending" | "accepted";
   updated_at: string;
@@ -90,10 +91,29 @@ export function NetworkHub({
     memberId: string | null,
     connectionCode: string | null,
   ) {
+    const result = await ask({
+      title: "Add context to your introduction",
+      description:
+        "A short note helps her decide whether this connection feels relevant. It is visible only to the two of you.",
+      confirmLabel: "Send request",
+      fields: [
+        {
+          name: "note",
+          label: "Why would you like to connect? (optional)",
+          type: "textarea",
+          minLength: 10,
+          maxLength: 500,
+          placeholder:
+            "For example: I would value comparing notes on growing a women-led logistics business in Nairobi.",
+        },
+      ],
+    });
+    if (!result) return;
     setBusy(memberId ?? connectionCode ?? "code");
     setMessage("");
-    const { error } = await supabase.rpc("request_connection", {
+    const { error } = await supabase.rpc("request_connection_with_context", {
       p_connection_code: connectionCode,
+      p_introduction_note: String(result.note ?? ""),
       p_member_id: memberId,
     });
     setBusy("");
@@ -274,6 +294,16 @@ export function NetworkHub({
                         .filter(Boolean)
                         .join(" · ")}
                     </small>
+                    {item.introduction_note ? (
+                      <blockquote className="network-introduction-note">
+                        <span>
+                          {item.direction === "incoming"
+                            ? "Why she would like to connect"
+                            : "Your introduction"}
+                        </span>
+                        {item.introduction_note}
+                      </blockquote>
+                    ) : null}
                     {item.status === "accepted" && contact ? (
                       <p>
                         {contact.linkedin_url ? (

@@ -9,11 +9,13 @@ import { useActionDialog } from "@/components/ui/action-dialog";
 export function MemberProfileActions({
   connectionDirection,
   connectionId,
+  introductionNote,
   connectionStatus,
   memberId,
 }: {
   connectionDirection: string | null;
   connectionId: string | null;
+  introductionNote: string | null;
   connectionStatus: string | null;
   memberId: string;
 }) {
@@ -24,10 +26,29 @@ export function MemberProfileActions({
   const [message, setMessage] = useState("");
 
   async function request() {
+    const result = await ask({
+      title: "Add context to your introduction",
+      description:
+        "A short note helps her decide whether this connection feels relevant. It is visible only to the two of you.",
+      confirmLabel: "Send request",
+      fields: [
+        {
+          name: "note",
+          label: "Why would you like to connect? (optional)",
+          type: "textarea",
+          minLength: 10,
+          maxLength: 500,
+          placeholder:
+            "For example: I would value comparing notes on growing a women-led logistics business in Nairobi.",
+        },
+      ],
+    });
+    if (!result) return;
     setBusy("request");
     setMessage("");
-    const { error } = await supabase.rpc("request_connection", {
+    const { error } = await supabase.rpc("request_connection_with_context", {
       p_connection_code: null,
+      p_introduction_note: String(result.note ?? ""),
       p_member_id: memberId,
     });
     setBusy("");
@@ -151,6 +172,16 @@ export function MemberProfileActions({
   return (
     <>
       <div className="member-profile-actions">
+        {connectionStatus === "pending" && introductionNote ? (
+          <blockquote className="member-profile-introduction">
+            <span>
+              {connectionDirection === "incoming"
+                ? "Why she would like to connect"
+                : "Your introduction"}
+            </span>
+            {introductionNote}
+          </blockquote>
+        ) : null}
         {connectionStatus === "accepted" ? (
           <button
             className="button button-primary"

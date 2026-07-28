@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(171);
+select plan(176);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -171,6 +171,9 @@ select throws_ok($$select public.save_launch_gate_check('member_email_otp','pass
 select is((select count(*)from public.get_member_profile('10000000-0000-4000-8000-000000000003')),1::bigint,'active member can open another visible active member profile');
 select is((select phone from public.get_member_profile('10000000-0000-4000-8000-000000000003')),null::text,'member profile keeps private phone hidden before mutual acceptance');
 select throws_ok($$select *from public.get_member_profile('10000000-0000-4000-8000-000000000002')$$,'P0001','Member is unavailable','member profile view does not duplicate the own-profile editor');
+select throws_ok($$select public.request_connection_with_context('10000000-0000-4000-8000-000000000003',null,'Too short')$$,'P0001','An introduction must be between 10 and 500 characters','connection context rejects an unhelpfully short note');
+select lives_ok($$select public.request_connection_with_context('10000000-0000-4000-8000-000000000003',null,'I would value comparing notes on growing a trusted regional business.')$$,'active member sends a purposeful private introduction');
+select is((select introduction_note from public.list_my_network_with_context()limit 1),'I would value comparing notes on growing a trusted regional business.','requester sees her own private introduction context');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
 select is((select count(*)from public.list_my_past_events()),1::bigint,'attendee lists own eligible past event');
 select lives_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,4,5,true,'The facilitated introductions were valuable.','Allow more time for table conversations.','A thoughtful room where meaningful professional connections began.','named')$$,'eligible attendee saves private feedback with named testimonial consent');
@@ -202,6 +205,8 @@ select throws_ok($$select *from public.list_launch_gate_checks()$$,'P0001','Supe
 select throws_ok($$select *from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')$$,'P0001','Not authorized','event staff cannot read feedback outside assigned event scope');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
+select is((select introduction_note from public.list_my_network_with_context()where direction='incoming'limit 1),'I would value comparing notes on growing a trusted regional business.','recipient sees the private introduction before deciding');
+select lives_ok($$select public.respond_to_connection((select connection_id from public.list_my_network_with_context()where direction='incoming'limit 1),'accept')$$,'recipient deliberately accepts the contextual connection request');
 select is((select count(*)from public.list_marketplace_responses('60000000-0000-4000-8000-000000000001')),1::bigint,'post owner reads private responses to own post');
 select lives_ok($$select public.review_marketplace_response((select id from public.marketplace_responses where post_id='60000000-0000-4000-8000-000000000001'),'accepted')$$,'post owner can accept a private response');
 select throws_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,5,5,true,'Not eligible for this event feedback.','No improvement note.',null,'none')$$,'P0001','Confirmed event attendance required','non-attendee cannot submit event feedback');

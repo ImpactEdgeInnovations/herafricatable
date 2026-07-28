@@ -5623,6 +5623,27 @@ body {
   font-size: 0.59rem;
   font-weight: 750;
 }
+.network-introduction-note,
+.member-profile-introduction {
+  margin: 8px 0 0;
+  padding: 11px 13px;
+  border-left: 2px solid var(--gold);
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 0.62rem;
+  font-style: normal;
+  line-height: 1.55;
+}
+.network-introduction-note span,
+.member-profile-introduction span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.48rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 .member-directory > header {
   display: flex;
   align-items: end;
@@ -14289,6 +14310,11 @@ body {
   align-items: center;
   margin-top: 28px;
   gap: 9px;
+}
+.member-profile-introduction {
+  flex: 1 0 100%;
+  max-width: 680px;
+  margin: 0 0 10px;
 }
 .member-profile-actions .member-profile-safety {
   min-height: 42px;

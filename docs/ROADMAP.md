@@ -70,6 +70,8 @@ Usability is part of production readiness and continues alongside feature delive
       introductions and explicit consent guidance before messaging
 - [x] Add privacy-safe full member profiles so members can understand professional
       context before connecting, with private contacts revealed only after mutual consent
+- [x] Make introductions intentional with an optional private context note that helps
+      recipients decide before accepting, without exposing it to Admin or the directory
 - [x] Create a private post-event journey joining feedback, recap, attendee
       reconnection, opportunities and ongoing conversation
 - [x] Unify notifications, requests, unread conversations and event/account updates

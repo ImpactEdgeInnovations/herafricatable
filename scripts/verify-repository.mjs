@@ -256,6 +256,27 @@ for (const contract of [
     `Privacy-safe member profile view must include ${contract}`,
   );
 }
+const intentionalIntroductionsMigration = read(
+  "supabase/migrations/20260728210000_intentional_introductions.sql",
+);
+for (const contract of [
+  "introduction_note",
+  "request_connection_with_context",
+  "list_my_network_with_context",
+  "get_connection_introduction",
+  "'introduction_provided', clean_note is not null",
+]) {
+  assert(
+    intentionalIntroductionsMigration.includes(contract),
+    `Intentional introductions must include ${contract}`,
+  );
+}
+assert(
+  !intentionalIntroductionsMigration.includes(
+    "'introduction_note', clean_note",
+  ),
+  "Private introduction text must not be duplicated into audit metadata",
+);
 const databaseCorrections = read(
   "supabase/migrations/20260726210000_ci_database_corrections.sql",
 );

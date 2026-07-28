@@ -39,7 +39,7 @@ export default async function NetworkPage({
         p_offset: 0,
         p_search: q || null,
       }),
-      supabase.rpc("list_my_network"),
+      supabase.rpc("list_my_network_with_context"),
       supabase.rpc("list_my_blocks"),
     ]);
   const connections = (networkResult.data as NetworkConnection[] | null) ?? [];

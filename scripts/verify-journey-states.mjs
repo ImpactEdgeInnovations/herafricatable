@@ -328,6 +328,8 @@ for (const contract of [
   "directory-filters",
   "Current goal",
   "Request introduction",
+  "request_connection_with_context",
+  "Why she would like to connect",
   "Messaging opens only after she accepts",
   'href={`/members/${member.user_id}`}',
 ]) {
@@ -352,7 +354,7 @@ const memberProfileActions = read(
   "components/member/member-profile-actions.tsx",
 );
 for (const contract of [
-  "request_connection",
+  "request_connection_with_context",
   "respond_to_connection",
   "ensure_conversation",
   "report_member",

@@ -85,6 +85,10 @@ export default async function MemberProfilePage({
   }
   if (!profile) notFound();
 
+  const { data: introductionNote } = await supabase.rpc(
+    "get_connection_introduction",
+    { p_member_id: id },
+  );
   const location = [profile.city, profile.country].filter(Boolean).join(", ");
   const accepted = profile.connection_status === "accepted";
 
@@ -111,6 +115,7 @@ export default async function MemberProfilePage({
             <MemberProfileActions
               connectionDirection={profile.connection_direction}
               connectionId={profile.connection_id}
+              introductionNote={(introductionNote as string | null) ?? null}
               connectionStatus={profile.connection_status}
               memberId={profile.user_id}
             />
