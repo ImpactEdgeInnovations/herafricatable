@@ -6,6 +6,7 @@ import {
   PerksGallery,
   type PartnerPerk,
 } from "@/components/member/perks-gallery";
+import { MemberHeader } from "@/components/member/member-header";
 export const dynamic = "force-dynamic";
 export default async function PerksPage() {
   const supabase = await createClient();
@@ -27,17 +28,7 @@ export default async function PerksPage() {
   if (!flag?.enabled)
     return (
       <main className="perks-page">
-        <header className="member-home-header">
-          <Link className="brand" href="/">
-            <span className="brand-mark">H</span>
-            <span>
-              Her Africa Table<small>Partner benefits</small>
-            </span>
-          </Link>
-          <nav>
-            <Link href="/home">Member home</Link>
-          </nav>
-        </header>
+        <MemberHeader label="Partner benefits" />
         <section className="community-hold">
           <p className="eyebrow">Useful, carefully negotiated</p>
           <h1>Partner benefits are being curated.</h1>
@@ -54,18 +45,7 @@ export default async function PerksPage() {
   const { data, error } = await supabase.rpc("list_partner_perks");
   return (
     <main className="perks-page">
-      <header className="member-home-header">
-        <Link className="brand" href="/">
-          <span className="brand-mark">H</span>
-          <span>
-            Her Africa Table<small>Partner benefits</small>
-          </span>
-        </Link>
-        <nav>
-          <Link href="/home">Home</Link>
-          <Link href="/support">Support</Link>
-        </nav>
-      </header>
+      <MemberHeader label="Partner benefits" />
       <section className="perks-hero">
         <p className="eyebrow">Value beyond the gathering</p>
         <h1>

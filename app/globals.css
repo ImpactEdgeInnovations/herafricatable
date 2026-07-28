@@ -13144,3 +13144,158 @@ body {
     padding: 4px 20px 24px;
   }
 }
+
+/* Member experience v5: one coherent home for every member tool */
+.community-hero,
+.learning-hero,
+.referral-hero,
+.membership-hero,
+.circles-hero,
+.perks-hero,
+.opportunity-hero {
+  padding-top: 62px;
+  padding-bottom: 48px;
+}
+.community-hero h1,
+.learning-hero h1,
+.referral-hero h1,
+.membership-hero h1,
+.circles-hero h1,
+.perks-hero h1,
+.opportunity-hero h1 {
+  font-size: clamp(3.4rem, 5.6vw, 5.15rem);
+  line-height: 0.95;
+}
+.community-hero > p:last-child,
+.learning-hero > p:last-child,
+.referral-hero > p:last-child,
+.membership-hero > p:last-child,
+.circles-hero > p:last-child,
+.perks-hero > p:last-child,
+.opportunity-hero > div > p:last-child {
+  max-width: 620px;
+  margin-top: 18px;
+  font-size: 0.74rem;
+  line-height: 1.7;
+}
+.opportunity-hero {
+  align-items: end;
+}
+.opportunity-hero > .button {
+  margin-bottom: 4px;
+}
+.community-hold {
+  width: min(760px, calc(100% - 48px));
+  min-height: 0;
+  margin: 64px auto 100px;
+  padding: 46px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: linear-gradient(135deg, #f4f0e8, #faf8f4);
+}
+.community-hold h1 {
+  max-width: 640px;
+  font-size: clamp(2.8rem, 5.5vw, 4.5rem);
+  line-height: 0.98;
+}
+.community-hold p:not(.eyebrow) {
+  max-width: 560px;
+  margin-top: 17px;
+  font-size: 0.72rem;
+  line-height: 1.7;
+}
+.community-hold .button {
+  margin-top: 21px;
+}
+.community-room-hero,
+.course-hero {
+  min-height: 0;
+  padding-top: 58px;
+  padding-bottom: 45px;
+}
+.community-room-hero h1,
+.course-hero h1 {
+  font-size: clamp(3.3rem, 5.5vw, 5rem);
+}
+.community-room-hero > div > a,
+.course-hero > div > a {
+  display: inline-block;
+  margin-top: 18px;
+  color: var(--wine);
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.community-grid,
+.learning-grid,
+.referral-intro,
+.referral-history,
+.membership-status,
+.membership-grid,
+.circle-cycle-list,
+.perks-grid,
+.opportunity-create,
+.opportunity-feed {
+  scroll-margin-top: 24px;
+}
+.opportunity-error {
+  border-radius: 4px;
+  background: linear-gradient(135deg, #f4f0e8, #faf8f4);
+}
+
+@media (max-width: 620px) {
+  .community-page,
+  .learning-page,
+  .referrals-page,
+  .membership-page,
+  .circles-page,
+  .perks-page,
+  .opportunity-page {
+    padding-bottom: 88px;
+  }
+  .community-hero,
+  .learning-hero,
+  .referral-hero,
+  .membership-hero,
+  .circles-hero,
+  .perks-hero,
+  .opportunity-hero {
+    padding-top: 42px;
+    padding-bottom: 32px;
+  }
+  .community-hero h1,
+  .learning-hero h1,
+  .referral-hero h1,
+  .membership-hero h1,
+  .circles-hero h1,
+  .perks-hero h1,
+  .opportunity-hero h1 {
+    font-size: clamp(2.85rem, 14vw, 3.8rem);
+  }
+  .community-hero > p:last-child,
+  .learning-hero > p:last-child,
+  .referral-hero > p:last-child,
+  .membership-hero > p:last-child,
+  .circles-hero > p:last-child,
+  .perks-hero > p:last-child,
+  .opportunity-hero > div > p:last-child {
+    font-size: 0.7rem;
+  }
+  .community-hold {
+    width: calc(100% - 32px);
+    margin: 34px auto 60px;
+    padding: 30px 24px;
+  }
+  .community-hold h1 {
+    font-size: clamp(2.65rem, 13vw, 3.65rem);
+  }
+  .community-room-hero,
+  .course-hero {
+    padding-top: 40px;
+    padding-bottom: 32px;
+  }
+  .community-room-hero h1,
+  .course-hero h1 {
+    font-size: clamp(2.8rem, 13vw, 3.7rem);
+  }
+}

@@ -65,7 +65,7 @@ export async function MemberHeader({
   accountLabel = "My profile",
   label,
 }: {
-  active: MemberDestination | "alerts";
+  active?: MemberDestination | "alerts";
   accountHref?: "/profile" | "/settings";
   accountLabel?: "Account" | "My profile";
   label: string;

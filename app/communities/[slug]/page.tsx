@@ -12,6 +12,7 @@ import {
   type CohortRoom,
 } from "@/components/member/cohort-activation";
 import type { CommunitySummary } from "@/components/member/community-directory";
+import { MemberHeader } from "@/components/member/member-header";
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
   params,
@@ -52,23 +53,13 @@ export default async function CommunityPage({
   const cohort = ((cohortResult.data as CohortRoom[] | null) ?? [])[0];
   return (
     <main className="community-page">
-      <header className="member-home-header">
-        <Link className="brand" href="/">
-          <span className="brand-mark">H</span>
-          <span>
-            Her Africa Table<small>{community.name}</small>
-          </span>
-        </Link>
-        <nav>
-          <Link href="/communities">All communities</Link>
-          <Link href="/home">Member home</Link>
-        </nav>
-      </header>
+      <MemberHeader label={community.name} />
       <section className="community-room-hero">
         <div>
           <p className="eyebrow">{community.community_type} community</p>
           <h1>{community.name}</h1>
           <p>{community.description}</p>
+          <Link href="/communities">← All communities</Link>
         </div>
         <span>{community.member_count} members</span>
       </section>

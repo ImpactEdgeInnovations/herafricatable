@@ -10,6 +10,7 @@ import {
   type CirclePrompt,
   type CircleResponse,
 } from "@/components/member/circles-hub";
+import { MemberHeader } from "@/components/member/member-header";
 export const dynamic = "force-dynamic";
 export default async function CirclesPage({
   searchParams,
@@ -35,17 +36,7 @@ export default async function CirclesPage({
   if (!flag?.enabled)
     return (
       <main className="circles-page">
-        <header className="member-home-header">
-          <Link className="brand" href="/">
-            <span className="brand-mark">H</span>
-            <span>
-              Her Africa Table<small>Circles</small>
-            </span>
-          </Link>
-          <nav>
-            <Link href="/home">Member home</Link>
-          </nav>
-        </header>
+        <MemberHeader label="Circles" />
         <section className="community-hold">
           <p className="eyebrow">Small rooms, deliberate chemistry</p>
           <h1>Circles are being prepared.</h1>
@@ -89,19 +80,7 @@ export default async function CirclesPage({
   const journeyError = cycleResult.error ?? circleResult.error;
   return (
     <main className="circles-page">
-      <header className="member-home-header">
-        <Link className="brand" href="/">
-          <span className="brand-mark">H</span>
-          <span>
-            Her Africa Table<small>Circles</small>
-          </span>
-        </Link>
-        <nav>
-          <Link href="/home">Home</Link>
-          <Link href="/network">Network</Link>
-          <Link href="/messages">Messages</Link>
-        </nav>
-      </header>
+      <MemberHeader label="Circles" />
       <section className="circles-hero">
         <p className="eyebrow">Deterministic, human-reviewed matching</p>
         <h1>

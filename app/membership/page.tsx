@@ -6,6 +6,7 @@ import {
   MembershipCenter,
   type MembershipPlan,
 } from "@/components/member/membership-center";
+import { MemberHeader } from "@/components/member/member-header";
 export const dynamic = "force-dynamic";
 export default async function MembershipPage() {
   const supabase = await createClient();
@@ -23,18 +24,7 @@ export default async function MembershipPage() {
   const { data, error } = await supabase.rpc("list_membership_catalog");
   return (
     <main className="membership-page">
-      <header className="member-home-header">
-        <Link className="brand" href="/">
-          <span className="brand-mark">H</span>
-          <span>
-            Her Africa Table<small>Membership</small>
-          </span>
-        </Link>
-        <nav>
-          <Link href="/home">Home</Link>
-          <Link href="/settings">Settings</Link>
-        </nav>
-      </header>
+      <MemberHeader label="Membership" />
       <section className="membership-hero">
         <p className="eyebrow">Belong with intention</p>
         <h1>
