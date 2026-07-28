@@ -5644,6 +5644,43 @@ body {
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+.connection-followup {
+  display: grid;
+  max-width: 620px;
+  margin-top: 9px;
+  padding: 12px 14px;
+  border-left: 2px solid var(--line);
+  background: var(--cream);
+  gap: 5px;
+}
+.connection-followup.is-due {
+  border-left-color: var(--gold);
+}
+.connection-followup > span {
+  color: var(--muted);
+  font-size: 0.47rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.connection-followup > strong {
+  font-family: var(--serif);
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+.network-connections article .connection-followup > p {
+  display: block;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.59rem;
+  line-height: 1.5;
+}
+.connection-followup > small {
+  color: var(--wine);
+  font-size: 0.5rem;
+  font-weight: 800;
+}
 .member-directory > header {
   display: flex;
   align-items: end;

@@ -95,6 +95,20 @@ export type ConnectionAvailability = {
   request_mode: "open" | "curated_only" | "paused";
   user_id: string;
 };
+export type ConnectionFollowup = {
+  avatar_url: string | null;
+  company: string | null;
+  connection_id: string;
+  display_name: string | null;
+  is_due: boolean;
+  job_title: string | null;
+  last_completed_at: string | null;
+  next_step: string | null;
+  other_user_id: string;
+  private_note: string | null;
+  remind_on: string | null;
+  updated_at: string;
+};
 
 const goalLabels: Record<string, string> = {
   be_mentored: "Find a mentor",
@@ -118,6 +132,7 @@ export function NetworkHub({
   suggestedMembers,
   curatedIntroductions,
   connectionAvailability,
+  followups,
   cityFilter,
   goalFilter,
   searchQuery,
@@ -131,6 +146,7 @@ export function NetworkHub({
   suggestedMembers: SuggestedMember[];
   curatedIntroductions: CuratedIntroduction[];
   connectionAvailability: ConnectionAvailability[];
+  followups: ConnectionFollowup[];
   cityFilter: string;
   goalFilter: string;
   searchQuery: string;
@@ -289,6 +305,99 @@ export function NetworkHub({
     }
     window.location.assign(`/messages?conversation=${data}`);
   }
+  async function planFollowup(
+    connectionId: string,
+    displayName: string,
+  ) {
+    const existing = followups.find(
+      (item) => item.connection_id === connectionId,
+    );
+    const result = await ask({
+      title: `Plan your follow-up with ${displayName}`,
+      description:
+        "This note and reminder are private to you. The member and Admin cannot see them.",
+      confirmLabel: existing ? "Update private plan" : "Save private plan",
+      fields: [
+        {
+          initialValue: existing?.private_note ?? "",
+          maxLength: 1000,
+          minLength: 3,
+          name: "note",
+          label: "Private note (optional)",
+          placeholder:
+            "For example: Interested in regional distribution and values careful partnerships.",
+          type: "textarea",
+        },
+        {
+          initialValue: existing?.next_step ?? "",
+          maxLength: 300,
+          minLength: 3,
+          name: "nextStep",
+          label: "Your next step (optional)",
+          placeholder: "Send the supplier introduction we discussed.",
+          type: "textarea",
+        },
+        {
+          initialValue: existing?.remind_on ?? "",
+          name: "remindOn",
+          label: "Remind me on (optional)",
+          type: "date",
+        },
+      ],
+    });
+    if (!result) return;
+    setBusy(`followup:${connectionId}`);
+    setMessage("");
+    const { error } = await supabase.rpc("save_connection_followup", {
+      p_connection_id: connectionId,
+      p_next_step: String(result.nextStep ?? ""),
+      p_private_note: String(result.note ?? ""),
+      p_remind_on: String(result.remindOn ?? "") || null,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "save this private follow-up")
+        : "Your private follow-up plan is saved.",
+    );
+    if (!error) router.refresh();
+  }
+  async function completeFollowup(connectionId: string) {
+    setBusy(`followup:${connectionId}`);
+    setMessage("");
+    const { error } = await supabase.rpc("complete_connection_followup", {
+      p_connection_id: connectionId,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "complete this follow-up")
+        : "Follow-up marked complete.",
+    );
+    if (!error) router.refresh();
+  }
+  async function removeFollowup(connectionId: string) {
+    const result = await ask({
+      title: "Remove this private plan?",
+      description:
+        "Your personal note, next step and reminder will be deleted. The connection itself is unchanged.",
+      confirmLabel: "Remove private plan",
+      tone: "danger",
+    });
+    if (!result) return;
+    setBusy(`followup:${connectionId}`);
+    setMessage("");
+    const { error } = await supabase.rpc("remove_connection_followup", {
+      p_connection_id: connectionId,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "remove this private follow-up")
+        : "Private follow-up plan removed.",
+    );
+    if (!error) router.refresh();
+  }
   async function safety(
     memberId: string,
     action: "remove" | "block" | "unblock" | "report",
@@ -412,6 +521,9 @@ export function NetworkHub({
               const contact = contacts.find(
                 (x) => x.user_id === item.other_user_id,
               );
+              const followup = followups.find(
+                (x) => x.connection_id === item.connection_id,
+              );
               return (
                 <article key={item.connection_id}>
                   <span className="network-avatar">
@@ -477,6 +589,30 @@ export function NetworkHub({
                         ) : null}
                       </p>
                     ) : null}
+                    {item.status === "accepted" && followup ? (
+                      <div
+                        className={`connection-followup${followup.is_due ? " is-due" : ""}`}
+                      >
+                        <span>
+                          {followup.is_due
+                            ? "Follow-up due"
+                            : "Your private plan"}
+                        </span>
+                        {followup.next_step ? (
+                          <strong>{followup.next_step}</strong>
+                        ) : null}
+                        {followup.private_note ? (
+                          <p>{followup.private_note}</p>
+                        ) : null}
+                        {followup.remind_on ? (
+                          <small>
+                            {new Intl.DateTimeFormat("en-KE", {
+                              dateStyle: "medium",
+                            }).format(new Date(`${followup.remind_on}T12:00:00`))}
+                          </small>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
                   <span className="member-status">
                     {item.status}
@@ -522,6 +658,37 @@ export function NetworkHub({
                       >
                         Remove
                       </button>
+                      <button
+                        disabled={busy !== ""}
+                        onClick={() =>
+                          void planFollowup(
+                            item.connection_id,
+                            item.display_name || "this member",
+                          )
+                        }
+                      >
+                        {followup ? "Edit follow-up" : "Plan follow-up"}
+                      </button>
+                      {followup?.next_step ? (
+                        <button
+                          disabled={busy !== ""}
+                          onClick={() =>
+                            void completeFollowup(item.connection_id)
+                          }
+                        >
+                          Mark done
+                        </button>
+                      ) : null}
+                      {followup ? (
+                        <button
+                          disabled={busy !== ""}
+                          onClick={() =>
+                            void removeFollowup(item.connection_id)
+                          }
+                        >
+                          Clear plan
+                        </button>
+                      ) : null}
                       <button
                         disabled={busy !== ""}
                         onClick={() =>

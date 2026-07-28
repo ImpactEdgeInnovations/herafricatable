@@ -264,12 +264,12 @@ for (const [route, area] of Object.entries({
   );
 }
 const adminWorkGroup = read("components/admin/admin-work-group.tsx");
+const memberHome = read("app/home/page.tsx");
 assert(
   adminWorkGroup.includes("hashchange") &&
     adminWorkGroup.includes("detailsRef.current.open = true"),
   "Admin deep links must reveal their collapsed work group",
 );
-const memberHome = read("app/home/page.tsx");
 assert(
   memberHome.includes('className="member-more-tools"') &&
     memberHome.includes("Open your member tools"),
@@ -336,6 +336,10 @@ for (const contract of [
   "A thoughtful person to meet",
   "Both of you decide independently",
   "respond_to_curated_introduction",
+  "Plan follow-up",
+  "Your private plan",
+  "save_connection_followup",
+  "complete_connection_followup",
   "Why she would like to connect",
   "Messaging opens only after she accepts",
   'href={`/members/${member.user_id}`}',
@@ -399,6 +403,11 @@ assert(
   messageCenter.includes("message-shell${conversations.length") &&
     messageCenter.includes("Messaging opens only"),
   "Empty messages must explain the accepted-connection next step once",
+);
+assert(
+  memberHome.includes("list_due_connection_followups") &&
+    memberHome.includes("A relationship to nurture"),
+  "Member Home must calmly surface due private relationship follow-ups",
 );
 
 const cohortMigration = read(

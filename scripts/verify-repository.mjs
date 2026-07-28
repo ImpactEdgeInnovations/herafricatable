@@ -359,6 +359,28 @@ for (const contract of [
     `Member-controlled connection availability must include ${contract}`,
   );
 }
+const relationshipFollowupsMigration = read(
+  "supabase/migrations/20260729170000_relationship_followups.sql",
+);
+for (const contract of [
+  "connection_followups",
+  "save_connection_followup",
+  "complete_connection_followup",
+  "remove_connection_followup",
+  "list_my_connection_followups",
+  "list_due_connection_followups",
+  "Accepted connection required",
+  "'has_private_note', clean_note is not null",
+]) {
+  assert(
+    relationshipFollowupsMigration.includes(contract),
+    `Private relationship follow-ups must include ${contract}`,
+  );
+}
+assert(
+  !relationshipFollowupsMigration.includes("'private_note', clean_note"),
+  "Relationship follow-up audit metadata must not copy private notes",
+);
 const databaseCorrections = read(
   "supabase/migrations/20260726210000_ci_database_corrections.sql",
 );

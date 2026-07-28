@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(218);
+select plan(230);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -344,6 +344,24 @@ select is((select request_mode from public.list_connection_availability_admin()w
 select throws_ok($$select public.create_curated_introduction('10000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000004','Both members could otherwise exchange regional operating experience.')$$,'P0001','One or both members are not accepting curated introductions','paused preference blocks even an Admin-curated proposal');
 select throws_ok($$select public.create_curated_introduction('10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000004','An existing accepted relationship must not be introduced again.')$$,'P0001','A connection journey already exists','accepted connections cannot receive duplicate curated introductions');
 select is((select count(*)from public.audit_events where action='curated_introduction.created'),1::bigint,'curated introduction creation is auditable without copying its reason');
+
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select lives_ok($$select public.save_connection_followup((select id from public.connections where user_low=least('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000003'::uuid)and user_high=greatest('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000003'::uuid)),'Values careful regional partnerships.','Send the supplier introduction discussed at the table.',current_date)$$,'member saves a private next step for an accepted relationship');
+select is((select count(*)from public.list_my_connection_followups()),1::bigint,'member lists only her own relationship follow-up');
+select is((select private_note from public.list_my_connection_followups()limit 1),'Values careful regional partnerships.','private relationship note remains available to its owner');
+select is((select count(*)from public.list_due_connection_followups(3)),1::bigint,'due relationship follow-up surfaces through the focused home projection');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
+select is((select count(*)from public.connection_followups),0::bigint,'the other connected member cannot read a private relationship note');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',true);
+select throws_ok($$select public.save_connection_followup((select id from public.connections where user_low=least('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000003'::uuid)and user_high=greatest('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000003'::uuid)),'Unauthorized private note.','Attempt a follow-up outside my relationship.',current_date)$$,'P0001','Accepted connection required','non-participant cannot attach a follow-up to another relationship');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select is((select count(*)from public.connection_followups),0::bigint,'super admin cannot browse private relationship notes');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select lives_ok($$select public.complete_connection_followup((select connection_id from public.list_my_connection_followups()limit 1))$$,'member deliberately completes her next step');
+select is((select count(*)from public.list_due_connection_followups(3)),0::bigint,'completed follow-up no longer appears due');
+select is((select private_note from public.list_my_connection_followups()limit 1),'Values careful regional partnerships.','completing a next step preserves the owners private relationship context');
+select lives_ok($$select public.remove_connection_followup((select connection_id from public.list_my_connection_followups()limit 1))$$,'member may delete her private relationship plan completely');
+select is((select count(*)from public.list_my_connection_followups()),0::bigint,'removed relationship plan leaves no private follow-up row');
 
 select *from finish();
 rollback;

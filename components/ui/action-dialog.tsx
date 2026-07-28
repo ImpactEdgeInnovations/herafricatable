@@ -20,7 +20,7 @@ type DialogField = {
   placeholder?: string;
   required?: boolean;
   step?: number;
-  type?: "checkbox" | "number" | "select" | "text" | "textarea";
+  type?: "checkbox" | "date" | "number" | "select" | "text" | "textarea";
 };
 
 type DialogOptions = {

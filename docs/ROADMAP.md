@@ -80,6 +80,8 @@ Usability is part of production readiness and continues alongside feature delive
       consent, private decline handling, audit trails and messaging only after both accept
 - [x] Give members database-enforced control over new connection availability with open,
       curated-only and paused modes respected by direct requests and Admin curation
+- [x] Add private relationship notes, next steps and due follow-ups for accepted
+      connections, surfaced on Member Home without exposing personal context to Admin
 - [x] Create a private post-event journey joining feedback, recap, attendee
       reconnection, opportunities and ongoing conversation
 - [x] Unify notifications, requests, unread conversations and event/account updates

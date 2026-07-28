@@ -38,6 +38,12 @@ type ActivationJourney = {
   introduction_complete: boolean;
   profile_complete: boolean;
 };
+type DueConnectionFollowup = {
+  connection_id: string;
+  display_name: string;
+  next_step: string;
+  remind_on: string;
+};
 
 export default async function MemberHomePage() {
   const supabase = await createClient();
@@ -207,7 +213,7 @@ export default async function MemberHomePage() {
       : { data: [], error: null };
   const activation = ((activationResult.data as ActivationJourney[] | null) ??
     [])[0];
-  const [conversationResult, unreadNotificationResult] =
+  const [conversationResult, unreadNotificationResult, dueFollowupResult] =
     accessStatus === "active"
       ? await Promise.all([
           supabase.rpc("list_my_conversations"),
@@ -215,12 +221,15 @@ export default async function MemberHomePage() {
             .from("notifications")
             .select("id", { count: "exact", head: true })
             .is("read_at", null),
+          supabase.rpc("list_due_connection_followups", { p_limit: 3 }),
         ])
-      : [{ data: [] }, { count: 0 }];
+      : [{ data: [] }, { count: 0 }, { data: [] }];
   const unreadMessages = (
     (conversationResult.data as { unread_count: number }[] | null) ?? []
   ).reduce((total, conversation) => total + Number(conversation.unread_count), 0);
   const unreadNotifications = unreadNotificationResult.count ?? 0;
+  const dueFollowups =
+    (dueFollowupResult.data as DueConnectionFollowup[] | null) ?? [];
   const acceptedConnections = Number(activation?.accepted_connections ?? 0);
   const activationComplete = activation
     ? [
@@ -402,6 +411,16 @@ export default async function MemberHomePage() {
               href: "/messages",
               label: "Continue a conversation",
             }
+          : dueFollowups.length > 0
+            ? {
+                action: "Review your follow-up",
+                description:
+                  dueFollowups.length === 1
+                    ? `${dueFollowups[0].next_step} — ${dueFollowups[0].display_name}`
+                    : `${dueFollowups.length} private relationship follow-ups are ready for your attention.`,
+                href: "/network",
+                label: "A relationship to nurture",
+              }
           : unreadNotifications > 0
             ? {
                 action: "Review activity",

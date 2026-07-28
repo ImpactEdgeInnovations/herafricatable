@@ -6,6 +6,7 @@ import {
   type ConnectionContact,
   type CuratedIntroduction,
   type ConnectionAvailability,
+  type ConnectionFollowup,
   type DirectoryMember,
   type NetworkConnection,
   type SavedMemberProfile,
@@ -42,6 +43,7 @@ export default async function NetworkPage({
     suggestionsResult,
     introductionResult,
     availabilityResult,
+    followupResult,
   ] = await Promise.all([
       supabase.rpc("ensure_connection_code"),
       supabase.rpc("list_member_directory", {
@@ -57,6 +59,7 @@ export default async function NetworkPage({
       supabase.rpc("list_member_recommendations", { p_limit: 6 }),
       supabase.rpc("list_my_curated_introductions"),
       supabase.rpc("list_connection_availability"),
+      supabase.rpc("list_my_connection_followups"),
     ]);
   const connections = (networkResult.data as NetworkConnection[] | null) ?? [];
   const accepted = connections.filter((item) => item.status === "accepted");
@@ -105,7 +108,8 @@ export default async function NetworkPage({
       savedResult.error ||
       suggestionsResult.error ||
       introductionResult.error ||
-      availabilityResult.error ? (
+      availabilityResult.error ||
+      followupResult.error ? (
         <section className="admin-empty network-error">
           <strong>The member directory is temporarily unavailable</strong>
           <p>Please try again or contact support if the problem continues.</p>
@@ -136,6 +140,9 @@ export default async function NetworkPage({
           }
           connectionAvailability={
             (availabilityResult.data as ConnectionAvailability[] | null) ?? []
+          }
+          followups={
+            (followupResult.data as ConnectionFollowup[] | null) ?? []
           }
           cityFilter={city ?? ""}
           goalFilter={goal ?? ""}
