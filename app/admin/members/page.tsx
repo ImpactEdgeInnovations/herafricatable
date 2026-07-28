@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function AdminMembersPage() {
-  redirect("/admin/operations#people-and-launch");
+  redirect("/admin/operations?area=people-and-launch#people-and-launch");
 }

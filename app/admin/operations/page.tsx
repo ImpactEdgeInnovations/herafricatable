@@ -99,7 +99,6 @@ import {
   type ProductAnalytic,
   type ReadinessMetric,
 } from "@/components/admin/analytics-readiness";
-import { AdminActionCentre } from "@/components/admin/admin-action-centre";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { AdminWorkGroup } from "@/components/admin/admin-work-group";
 
@@ -113,9 +112,70 @@ type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   venue_name: string | null;
 };
 
+type WorkArea =
+  | "event-work"
+  | "member-programs"
+  | "people-and-launch"
+  | "release-tools"
+  | "safety-work";
+
+const workAreas: {
+  description: string;
+  id: WorkArea;
+  label: string;
+  roles: string[];
+  title: string;
+}[] = [
+  {
+    description:
+      "Review applications, member readiness and privacy-safe launch health.",
+    id: "people-and-launch",
+    label: "People",
+    roles: ["super_admin"],
+    title: "Membership and readiness",
+  },
+  {
+    description:
+      "Create events, publish content, manage registration and welcome guests.",
+    id: "event-work",
+    label: "Events",
+    roles: ["super_admin", "event_staff"],
+    title: "Events and registrations",
+  },
+  {
+    description:
+      "Review submitted concerns without exposing unrelated private activity.",
+    id: "safety-work",
+    label: "Safety",
+    roles: ["super_admin", "moderator"],
+    title: "Trust and moderation",
+  },
+  {
+    description:
+      "Manage membership plans and carefully gated community benefits.",
+    id: "member-programs",
+    label: "Programmes",
+    roles: ["super_admin"],
+    title: "Programmes and benefits",
+  },
+  {
+    description:
+      "Review the delivery roadmap and control the public event countdown.",
+    id: "release-tools",
+    label: "Release",
+    roles: ["super_admin", "event_staff", "moderator"],
+    title: "Launch controls",
+  },
+];
+
 export const dynamic = "force-dynamic";
 
-export default async function AdminOperationsPage() {
+export default async function AdminOperationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ area?: string }>;
+}) {
+  const { area: requestedArea } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -157,16 +217,38 @@ export default async function AdminOperationsPage() {
   const canManageEvents =
     role.role === "super_admin" || role.role === "event_staff";
   const canModerate = role.role === "super_admin" || role.role === "moderator";
+  const availableAreas = workAreas.filter((area) =>
+    area.roles.includes(role.role),
+  );
+  const fallbackArea =
+    role.role === "event_staff"
+      ? "event-work"
+      : role.role === "moderator"
+        ? "safety-work"
+        : "people-and-launch";
+  const activeArea =
+    availableAreas.find((area) => area.id === requestedArea)?.id ??
+    fallbackArea;
+  const activeAreaDetails =
+    availableAreas.find((area) => area.id === activeArea) ?? availableAreas[0];
+  const loadPeople = activeArea === "people-and-launch";
+  const loadEvents = activeArea === "event-work";
+  const loadSafety = activeArea === "safety-work";
+  const loadPrograms = activeArea === "member-programs";
+  const loadRelease = activeArea === "release-tools";
+  const loadEventList = loadEvents || loadPrograms;
   const [{ data: countdown }, memberResult, eventResult] = await Promise.all([
-    supabase
-      .from("site_event_countdown")
-      .select("event_name, city, starts_at, is_published")
-      .eq("id", true)
-      .maybeSingle(),
-    role.role === "super_admin"
+    loadRelease
+      ? supabase
+          .from("site_event_countdown")
+          .select("event_name, city, starts_at, is_published")
+          .eq("id", true)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    role.role === "super_admin" && loadPeople
       ? supabase.rpc("list_admin_members_v2")
       : Promise.resolve({ data: [], error: null }),
-    canManageEvents
+    canManageEvents && loadEventList
       ? supabase.rpc("list_managed_events")
       : Promise.resolve({ data: [], error: null }),
   ]);
@@ -203,185 +285,192 @@ export default async function AdminOperationsPage() {
   }));
   const canManageCountdown =
     role.role === "super_admin" || role.role === "event_staff";
-  const reportResult = canModerate
-    ? await supabase.rpc("list_member_reports")
-    : { data: [], error: null };
-  const marketplaceReportResult = canModerate
-    ? await supabase.rpc("list_marketplace_reports")
-    : { data: [], error: null };
-  const communityResult =
-    role.role === "super_admin"
-      ? await supabase.rpc("list_communities")
-      : { data: [], error: null };
-  const communities = (communityResult.data as CommunitySummary[] | null) ?? [];
-  const communityMemberResults =
-    role.role === "super_admin"
-      ? await Promise.all(
-          communities.map((item) =>
-            supabase.rpc("list_community_members", {
-              p_community_id: item.community_id,
-            }),
-          ),
-        )
-      : [];
-  const communityMembers = communityMemberResults.flatMap((result, index) =>
-    ((result.data as Omit<CommunityMember, "community_id">[] | null) ?? []).map(
-      (item) => ({ ...item, community_id: communities[index].community_id }),
-    ),
-  );
-  const communityReportResult = canModerate
-    ? await supabase.rpc("list_community_reports")
-    : { data: [], error: null };
-  const featureFlagResult =
-    role.role === "super_admin"
-      ? await supabase
+  const isProgramAdmin = role.role === "super_admin" && loadPrograms;
+  const [
+    reportResult,
+    marketplaceReportResult,
+    communityReportResult,
+    communityResult,
+    featureFlagResult,
+    learningCourseResult,
+    courseOrderResult,
+    learningFlagResult,
+    referralCampaignResult,
+    referralResult,
+    referralFlagResult,
+    membershipPlanResult,
+    membershipPeriodResult,
+    membershipOrderResult,
+    membershipFlagResult,
+    circleCycleResult,
+    circleFlagResult,
+    partnerResult,
+    perkResult,
+    perkRedemptionResult,
+    perkFlagResult,
+    readinessResult,
+    analyticsResult,
+  ] = await Promise.all([
+    canModerate && loadSafety
+      ? supabase.rpc("list_member_reports")
+      : Promise.resolve({ data: [], error: null }),
+    canModerate && loadSafety
+      ? supabase.rpc("list_marketplace_reports")
+      : Promise.resolve({ data: [], error: null }),
+    canModerate && loadSafety
+      ? supabase.rpc("list_community_reports")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_communities")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase
           .from("feature_flags")
           .select("enabled")
           .eq("key", "communities")
           .maybeSingle()
-      : { data: null, error: null };
-  const learningCourseResult =
-    role.role === "super_admin"
-      ? await supabase.rpc("list_courses")
-      : { data: [], error: null };
-  const adminCourses =
-    (learningCourseResult.data as CourseSummary[] | null) ?? [];
-  const learningCourseIds = adminCourses.map((item) => item.course_id);
-  const lessonResult =
-    role.role === "super_admin" && learningCourseIds.length
-      ? await supabase
-          .from("course_lessons")
-          .select(
-            "id,course_id,title,summary,lesson_type,content,asset_path,external_url,duration_minutes,status,sort_order",
-          )
-          .in("course_id", learningCourseIds)
-          .order("sort_order")
-      : { data: [], error: null };
-  const courseOrderResult =
-    role.role === "super_admin"
-      ? await supabase.rpc("list_course_orders")
-      : { data: [], error: null };
-  const learningFlagResult =
-    role.role === "super_admin"
-      ? await supabase
+      : Promise.resolve({ data: null, error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_courses")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_course_orders")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase
           .from("feature_flags")
           .select("enabled")
           .eq("key", "learning")
           .maybeSingle()
-      : { data: null, error: null };
-  const referralCampaignResult =
-    role.role === "super_admin"
-      ? await supabase
+      : Promise.resolve({ data: null, error: null }),
+    isProgramAdmin
+      ? supabase
           .from("referral_campaigns")
           .select(
             "id,name,slug,description,status,starts_at,ends_at,max_referrals_per_member,max_total_referrals",
           )
           .order("created_at", { ascending: false })
-      : { data: [], error: null };
-  const referralResult =
-    role.role === "super_admin"
-      ? await supabase.rpc("list_referrals_admin")
-      : { data: [], error: null };
-  const referralFlagResult =
-    role.role === "super_admin"
-      ? await supabase
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_referrals_admin")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase
           .from("feature_flags")
           .select("enabled")
           .eq("key", "referrals")
           .maybeSingle()
-      : { data: null, error: null };
-  const membershipPlanResult =
-    role.role === "super_admin"
-      ? await supabase
+      : Promise.resolve({ data: null, error: null }),
+    isProgramAdmin
+      ? supabase
           .from("membership_plans")
           .select(
             "id,slug,name,description,price_minor,currency,duration_months,grace_days,payment_mode,status",
           )
           .order("created_at")
-      : { data: [], error: null };
-  const membershipPeriodResult =
-    role.role === "super_admin"
-      ? await supabase.rpc("list_memberships_admin")
-      : { data: [], error: null };
-  const membershipOrderResult =
-    role.role === "super_admin"
-      ? await supabase.rpc("list_membership_orders")
-      : { data: [], error: null };
-  const membershipFlagResult =
-    role.role === "super_admin"
-      ? await supabase
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_memberships_admin")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_membership_orders")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase
           .from("feature_flags")
           .select("enabled")
           .eq("key", "memberships")
           .maybeSingle()
-      : { data: null, error: null };
-  const circleCycleResult =
-    role.role === "super_admin"
-      ? await supabase.rpc("list_circle_cycles")
-      : { data: [], error: null };
-  const circleCycles = (circleCycleResult.data as CircleCycle[] | null) ?? [];
-  const circleParticipantResults =
-    role.role === "super_admin"
-      ? await Promise.all(
-          circleCycles.map((item) =>
-            supabase.rpc("list_circle_participants_admin", {
-              p_cycle_id: item.cycle_id,
-            }),
-          ),
-        )
-      : [];
-  const circleParticipants = circleParticipantResults.flatMap((result, index) =>
-    ((result.data as Omit<CircleParticipant, "cycle_id">[] | null) ?? []).map(
-      (item) => ({ ...item, cycle_id: circleCycles[index].cycle_id }),
-    ),
-  );
-  const circleFlagResult =
-    role.role === "super_admin"
-      ? await supabase
+      : Promise.resolve({ data: null, error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_circle_cycles")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase
           .from("feature_flags")
           .select("enabled")
           .eq("key", "circles")
           .maybeSingle()
-      : { data: null, error: null };
-  const partnerResult =
-    role.role === "super_admin"
-      ? await supabase
+      : Promise.resolve({ data: null, error: null }),
+    isProgramAdmin
+      ? supabase
           .from("partners")
           .select(
             "id,slug,name,description,website_url,logo_url,category,city,country,status",
           )
           .order("created_at")
-      : { data: [], error: null };
-  const perkResult =
-    role.role === "super_admin"
-      ? await supabase.rpc("list_partner_perks")
-      : { data: [], error: null };
-  const perkRedemptionResult =
-    role.role === "super_admin"
-      ? await supabase.rpc("list_perk_redemptions_admin")
-      : { data: [], error: null };
-  const perkFlagResult =
-    role.role === "super_admin"
-      ? await supabase
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_partner_perks")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_perk_redemptions_admin")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase
           .from("feature_flags")
           .select("enabled")
           .eq("key", "partner_perks")
           .maybeSingle()
-      : { data: null, error: null };
-  const readinessResult =
-    role.role === "super_admin"
-      ? await supabase.rpc("get_launch_readiness_metrics")
-      : { data: [], error: null };
-  const analyticsResult =
-    role.role === "super_admin"
-      ? await supabase.rpc("get_product_analytics", { p_days: 30 })
-      : { data: [], error: null };
+      : Promise.resolve({ data: null, error: null }),
+    role.role === "super_admin" && loadPeople
+      ? supabase.rpc("get_launch_readiness_metrics")
+      : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadPeople
+      ? supabase.rpc("get_product_analytics", { p_days: 30 })
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  const communities = (communityResult.data as CommunitySummary[] | null) ?? [];
+  const adminCourses =
+    (learningCourseResult.data as CourseSummary[] | null) ?? [];
+  const learningCourseIds = adminCourses.map((item) => item.course_id);
+  const circleCycles = (circleCycleResult.data as CircleCycle[] | null) ?? [];
+  const [communityMemberResults, lessonResult, circleParticipantResults] =
+    await Promise.all([
+      isProgramAdmin
+        ? Promise.all(
+            communities.map((item) =>
+              supabase.rpc("list_community_members", {
+                p_community_id: item.community_id,
+              }),
+            ),
+          )
+        : Promise.resolve([]),
+      isProgramAdmin && learningCourseIds.length
+        ? supabase
+            .from("course_lessons")
+            .select(
+              "id,course_id,title,summary,lesson_type,content,asset_path,external_url,duration_minutes,status,sort_order",
+            )
+            .in("course_id", learningCourseIds)
+            .order("sort_order")
+        : Promise.resolve({ data: [], error: null }),
+      isProgramAdmin
+        ? Promise.all(
+            circleCycles.map((item) =>
+              supabase.rpc("list_circle_participants_admin", {
+                p_cycle_id: item.cycle_id,
+              }),
+            ),
+          )
+        : Promise.resolve([]),
+    ]);
+  const communityMembers = communityMemberResults.flatMap((result, index) =>
+    ((result.data as Omit<CommunityMember, "community_id">[] | null) ?? []).map(
+      (item) => ({ ...item, community_id: communities[index].community_id }),
+    ),
+  );
+  const circleParticipants = circleParticipantResults.flatMap((result, index) =>
+    ((result.data as Omit<CircleParticipant, "cycle_id">[] | null) ?? []).map(
+      (item) => ({ ...item, cycle_id: circleCycles[index].cycle_id }),
+    ),
+  );
   const eventIds = events.map((event) => event.id);
   const [
     { data: sessionData },
     { data: announcementData },
     { data: sponsorData },
-  ] = eventIds.length
+  ] = loadEvents && eventIds.length
     ? await Promise.all([
         supabase
           .from("programme_sessions")
@@ -406,14 +495,14 @@ export default async function AdminOperationsPage() {
     : [{ data: [] }, { data: [] }, { data: [] }];
   const sessions = (sessionData as AdminSession[] | null) ?? [];
   const sessionIds = sessions.map((session) => session.id);
-  const { data: speakerLinks } = sessionIds.length
+  const { data: speakerLinks } = loadEvents && sessionIds.length
     ? await supabase
         .from("session_speakers")
         .select("session_id, event_speakers(name, job_title, company)")
         .in("session_id", sessionIds)
         .order("sort_order", { ascending: true })
     : { data: [] };
-  const menuResult = eventIds.length
+  const menuResult = loadEvents && eventIds.length
     ? await supabase
         .from("event_menus")
         .select("id, event_id, title, introduction, embassy_note, status")
@@ -421,7 +510,7 @@ export default async function AdminOperationsPage() {
     : { data: [], error: null };
   const menus = (menuResult.data as AdminMenu[] | null) ?? [];
   const menuIds = menus.map((menu) => menu.id);
-  const courseResult = menuIds.length
+  const courseResult = loadEvents && menuIds.length
     ? await supabase
         .from("menu_courses")
         .select("id, menu_id, name, description, sort_order")
@@ -430,7 +519,7 @@ export default async function AdminOperationsPage() {
     : { data: [], error: null };
   const courses = (courseResult.data as AdminMenuCourse[] | null) ?? [];
   const courseIds = courses.map((course) => course.id);
-  const itemResult = courseIds.length
+  const itemResult = loadEvents && courseIds.length
     ? await supabase
         .from("menu_items")
         .select(
@@ -441,7 +530,7 @@ export default async function AdminOperationsPage() {
     : { data: [], error: null };
   const menuItems = (itemResult.data as AdminMenuItem[] | null) ?? [];
   const itemIds = menuItems.map((item) => item.id);
-  const feedbackResult = itemIds.length
+  const feedbackResult = loadEvents && itemIds.length
     ? await supabase
         .from("menu_item_feedback")
         .select(
@@ -450,7 +539,7 @@ export default async function AdminOperationsPage() {
         .in("item_id", itemIds)
         .order("updated_at", { ascending: false })
     : { data: [], error: null };
-  const albumResult = eventIds.length
+  const albumResult = loadEvents && eventIds.length
     ? await supabase
         .from("gallery_albums")
         .select("id, event_id, title, introduction, status, sort_order")
@@ -459,7 +548,7 @@ export default async function AdminOperationsPage() {
     : { data: [], error: null };
   const albums = (albumResult.data as AdminGalleryAlbum[] | null) ?? [];
   const albumIds = albums.map((album) => album.id);
-  const assetResult = albumIds.length
+  const assetResult = loadEvents && albumIds.length
     ? await supabase
         .from("media_assets")
         .select(
@@ -483,7 +572,7 @@ export default async function AdminOperationsPage() {
       return { ...asset, signed_url: signed.data?.signedUrl ?? null };
     }),
   );
-  const ticketResult = eventIds.length
+  const ticketResult = loadEvents && eventIds.length
     ? await supabase
         .from("ticket_types")
         .select(
@@ -493,7 +582,7 @@ export default async function AdminOperationsPage() {
         .order("sort_order", { ascending: true })
     : { data: [], error: null };
   const registrationResults = await Promise.all(
-    eventIds.map((eventId) =>
+    (loadEvents ? eventIds : []).map((eventId) =>
       supabase.rpc("list_event_registrations", { p_event_id: eventId }),
     ),
   );
@@ -503,7 +592,7 @@ export default async function AdminOperationsPage() {
   const registrationOrderIds = registrations.map(
     (registration) => registration.order_id,
   );
-  const paymentResult = registrationOrderIds.length
+  const paymentResult = loadEvents && registrationOrderIds.length
     ? await supabase
         .from("payment_attempts")
         .select(
@@ -513,7 +602,7 @@ export default async function AdminOperationsPage() {
         .order("created_at", { ascending: false })
     : { data: [], error: null };
   const refundResults = await Promise.all(
-    eventIds.map((eventId) =>
+    (loadEvents ? eventIds : []).map((eventId) =>
       supabase.rpc("list_event_refund_requests", { p_event_id: eventId }),
     ),
   );
@@ -521,7 +610,7 @@ export default async function AdminOperationsPage() {
     (result) => (result.data as AdminRefund[] | null) ?? [],
   );
   const checkinResults = await Promise.all(
-    eventIds.map((eventId) =>
+    (loadEvents ? eventIds : []).map((eventId) =>
       supabase.rpc("list_event_checkins", { p_event_id: eventId }),
     ),
   );
@@ -531,7 +620,7 @@ export default async function AdminOperationsPage() {
     ),
   );
   const feedbackResults = await Promise.all(
-    eventIds.map((eventId) =>
+    (loadEvents ? eventIds : []).map((eventId) =>
       supabase.rpc("list_event_feedback_admin", { p_event_id: eventId }),
     ),
   );
@@ -542,7 +631,7 @@ export default async function AdminOperationsPage() {
     })),
   );
   const feedbackSummaryResults = await Promise.all(
-    eventIds.map((eventId) =>
+    (loadEvents ? eventIds : []).map((eventId) =>
       supabase.rpc("get_event_feedback_summary", { p_event_id: eventId }),
     ),
   );
@@ -551,7 +640,7 @@ export default async function AdminOperationsPage() {
       (result.data as Omit<EventFeedbackSummary, "event_id">[] | null) ?? []
     ).map((entry) => ({ ...entry, event_id: eventIds[index] })),
   );
-  const recapResult = eventIds.length
+  const recapResult = loadEvents && eventIds.length
     ? await supabase
         .from("event_recaps")
         .select("event_id,title,summary,highlights,status")
@@ -562,12 +651,6 @@ export default async function AdminOperationsPage() {
     (marketplaceReportResult.data as MarketplaceReport[] | null) ?? [];
   const communityReports =
     (communityReportResult.data as CommunityReport[] | null) ?? [];
-  const openReportCount = [
-    ...memberReports,
-    ...marketplaceReports,
-    ...communityReports,
-  ].filter((report) => ["open", "reviewing"].includes(report.status)).length;
-
   return (
     <main className="admin-command-center">
       <AdminHeader
@@ -575,66 +658,29 @@ export default async function AdminOperationsPage() {
         label="Full operations workspace"
         role={role.role}
       />
-      <section className="admin-hero" id="overview">
+      <section className="admin-area-hero" id="overview">
         <div>
-          <p className="eyebrow">Authorized team access</p>
-          <h1>
-            Build the table.
-            <br />
-            Protect its trust.
-          </h1>
-          <p>
-            Review membership, track launch readiness, and manage the public
-            event experience from one place.
-          </p>
+          <p className="eyebrow">Focused workspace</p>
+          <h1>{activeAreaDetails.title}</h1>
+          <p>{activeAreaDetails.description}</p>
         </div>
-        <div className="admin-metrics">
-          <article>
-            <strong>{members.length}</strong>
-            <span>Accounts</span>
-          </article>
-          <article>
-            <strong>
-              {
-                members.filter((member) => member.access_status === "pending")
-                  .length
-              }
-            </strong>
-            <span>Pending</span>
-          </article>
-          <article>
-            <strong>
-              {
-                members.filter((member) => member.access_status === "active")
-                  .length
-              }
-            </strong>
-            <span>Active</span>
-          </article>
-          <article>
-            <strong>{events.length}</strong>
-            <span>Events</span>
-          </article>
-        </div>
+        <Link className="button button-outline" href="/admin">
+          Return to today
+        </Link>
       </section>
-      <AdminActionCentre
-        draftEvents={events.filter((event) => event.status === "draft").length}
-        hasEvents={events.length > 0}
-        openReports={openReportCount}
-        pendingMembers={
-          members.filter((member) => member.access_status === "pending").length
-        }
-        pendingRefunds={
-          refunds.filter((refund) => refund.status === "requested").length
-        }
-        pendingRegistrations={
-          registrations.filter(
-            (registration) => registration.status === "pending_review",
-          ).length
-        }
-        role={role.role}
-      />
-      {role.role === "super_admin" ? (
+      <nav className="admin-area-picker" aria-label="Choose a work area">
+        {availableAreas.map((area) => (
+          <Link
+            aria-current={area.id === activeArea ? "page" : undefined}
+            href={`/admin/operations?area=${area.id}#${area.id}`}
+            key={area.id}
+          >
+            <span>{area.label}</span>
+            <small>{area.title}</small>
+          </Link>
+        ))}
+      </nav>
+      {role.role === "super_admin" && loadPeople ? (
         <AdminWorkGroup
           defaultOpen
           description="Check launch health and make member access decisions. Most daily work starts here."
@@ -654,9 +700,9 @@ export default async function AdminOperationsPage() {
           />
         </AdminWorkGroup>
       ) : null}
-      {canManageEvents ? (
+      {canManageEvents && loadEvents ? (
         <AdminWorkGroup
-          defaultOpen={role.role === "event_staff"}
+          defaultOpen
           description="Create the event first, then open only the tool needed for tickets, content, guest arrival, or follow-up."
           id="event-work"
           label="Event work"
@@ -764,9 +810,9 @@ export default async function AdminOperationsPage() {
           ) : null}
         </AdminWorkGroup>
       ) : null}
-      {canModerate ? (
+      {canModerate && loadSafety ? (
         <AdminWorkGroup
-          defaultOpen={role.role === "moderator"}
+          defaultOpen
           description="Review reported activity only. Private content stays unavailable unless it is part of a submitted report."
           id="safety-work"
           label="Trust and safety"
@@ -786,8 +832,9 @@ export default async function AdminOperationsPage() {
           />
         </AdminWorkGroup>
       ) : null}
-      {role.role === "super_admin" ? (
+      {role.role === "super_admin" && loadPrograms ? (
         <AdminWorkGroup
+          defaultOpen
           description="These tools support ongoing member value. Keep each feature off until its content and operations have passed acceptance."
           id="member-programs"
           label="Member programmes"
@@ -873,21 +920,24 @@ export default async function AdminOperationsPage() {
           />
         </AdminWorkGroup>
       ) : null}
-      <AdminWorkGroup
-        description="Use these less often: review delivery progress and control the public landing-page event timer."
-        id="release-tools"
-        label="Release controls"
-        title="Roadmap and public countdown"
-      >
-        <RoadmapOverview />
-        <section className="admin-section" id="event">
-          <EventCountdownManager
-            canManage={canManageCountdown}
-            initialSettings={(countdown as CountdownSettings | null) ?? null}
-            userId={user.id}
-          />
-        </section>
-      </AdminWorkGroup>
+      {loadRelease ? (
+        <AdminWorkGroup
+          defaultOpen
+          description="Use these less often: review delivery progress and control the public landing-page event timer."
+          id="release-tools"
+          label="Release controls"
+          title="Roadmap and public countdown"
+        >
+          <RoadmapOverview />
+          <section className="admin-section" id="event">
+            <EventCountdownManager
+              canManage={canManageCountdown}
+              initialSettings={(countdown as CountdownSettings | null) ?? null}
+              userId={user.id}
+            />
+          </section>
+        </AdminWorkGroup>
+      ) : null}
       <footer className="admin-footer">
         <span>Her Africa Table · Production workspace</span>
         <Link href="/">View public site</Link>

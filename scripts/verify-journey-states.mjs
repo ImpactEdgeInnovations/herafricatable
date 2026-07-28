@@ -210,6 +210,35 @@ for (const group of [
     `Admin operations must retain the plain-language ${group} work group`,
   );
 }
+for (const area of [
+  "loadPeople",
+  "loadEvents",
+  "loadSafety",
+  "loadPrograms",
+  "loadRelease",
+]) {
+  assert(
+    adminOperations.includes(area),
+    `Admin operations must load only the selected ${area} workspace`,
+  );
+}
+assert(
+  adminOperations.includes("admin-area-picker") &&
+    adminOperations.includes("requestedArea"),
+  "Admin operations must provide a focused work-area picker",
+);
+for (const [route, area] of Object.entries({
+  "app/admin/events/page.tsx": "event-work",
+  "app/admin/members/page.tsx": "people-and-launch",
+  "app/admin/programs/page.tsx": "member-programs",
+  "app/admin/release/page.tsx": "release-tools",
+  "app/admin/safety/page.tsx": "safety-work",
+})) {
+  assert(
+    read(route).includes(`?area=${area}#${area}`),
+    `${route} must preserve its focused operations deep link`,
+  );
+}
 const adminWorkGroup = read("components/admin/admin-work-group.tsx");
 assert(
   adminWorkGroup.includes("hashchange") &&

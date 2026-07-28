@@ -3965,6 +3965,76 @@ body {
   border: 1px solid var(--line);
   background: var(--paper);
 }
+.admin-area-hero {
+  display: flex;
+  width: min(1240px, calc(100% - 56px));
+  min-height: 250px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin: 0 auto;
+  padding: 62px 0 42px;
+  border-bottom: 1px solid var(--line);
+  gap: 40px;
+}
+.admin-area-hero h1 {
+  max-width: 780px;
+  margin: 8px 0 14px;
+  font-family: var(--serif);
+  font-size: clamp(3.2rem, 6vw, 5.4rem);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+.admin-area-hero p:last-child {
+  max-width: 660px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.7;
+}
+.admin-area-hero > .button {
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+.admin-area-picker {
+  display: grid;
+  width: min(1240px, calc(100% - 56px));
+  margin: 24px auto 28px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.admin-area-picker a {
+  display: grid;
+  min-height: 82px;
+  align-content: center;
+  padding: 15px 17px;
+  border: 1px solid var(--line);
+  background: rgba(252, 251, 248, 0.72);
+  color: var(--muted);
+  text-decoration: none;
+  gap: 4px;
+}
+.admin-area-picker a:hover {
+  border-color: rgba(111, 32, 56, 0.35);
+  background: #fff;
+}
+.admin-area-picker a[aria-current="page"] {
+  border-color: var(--wine);
+  background: var(--wine);
+  color: #fff;
+}
+.admin-area-picker span {
+  font-size: 0.65rem;
+  font-weight: 850;
+}
+.admin-area-picker small {
+  overflow: hidden;
+  font-size: 0.54rem;
+  font-weight: 550;
+  opacity: 0.76;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .admin-work-group {
   width: min(1240px, calc(100% - 56px));
   margin: 0 auto 22px;
@@ -4379,6 +4449,33 @@ body {
   }
   .admin-support-page.support-page {
     padding-bottom: 104px;
+  }
+  .admin-area-hero {
+    width: calc(100% - 32px);
+    min-height: 0;
+    align-items: flex-start;
+    padding: 38px 0 30px;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .admin-area-hero h1 {
+    font-size: clamp(2.8rem, 13vw, 3.8rem);
+  }
+  .admin-area-picker {
+    width: calc(100% - 32px);
+    margin-top: 18px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    grid-auto-columns: minmax(132px, 42vw);
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    scrollbar-width: none;
+  }
+  .admin-area-picker::-webkit-scrollbar {
+    display: none;
+  }
+  .admin-area-picker a {
+    min-height: 76px;
   }
 }
 .roadmap-list {

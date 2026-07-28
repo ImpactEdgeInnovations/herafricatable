@@ -60,6 +60,8 @@ Usability is part of production readiness and continues alongside feature delive
         preserving direct links to the correct tool
   - [x] Unify daily and specialist Admin workspaces behind one role-aware navigation
         shell, current-location cues and a five-action mobile dock
+  - [x] Split the full operations workspace into permission-aware work areas so
+        each visit loads only the data and controls needed for the selected job
 - [x] Keep the member home focused on three primary actions and progressively disclose
       secondary membership, community, learning, benefits and support tools
 - [x] Add contextual help and examples to every unfamiliar form without crowding the page

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function AdminProgramsPage() {
-  redirect("/admin/operations#member-programs");
+  redirect("/admin/operations?area=member-programs#member-programs");
 }
