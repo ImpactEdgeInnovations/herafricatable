@@ -3459,6 +3459,7 @@ body {
 /* Admin command center */
 .admin-command-center {
   min-height: 100vh;
+  overflow-x: clip;
   padding-bottom: 40px;
   background: #f6f3ed;
 }
@@ -3490,6 +3491,16 @@ body {
 }
 .admin-header nav a:hover {
   color: var(--wine);
+}
+.admin-shell-header nav a[aria-current="page"],
+.admin-shell-header .admin-tools-menu summary.is-current {
+  color: var(--wine);
+}
+.admin-shell-header nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
 }
 .admin-tools-menu {
   position: relative;
@@ -3554,6 +3565,15 @@ body {
   font-weight: 850;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+.admin-mobile-dock {
+  display: none;
+}
+.admin-command-center .member-table-wrap {
+  contain: inline-size;
+}
+.admin-command-center .member-table-wrap .sr-only {
+  left: 0;
 }
 .admin-hero {
   display: grid;
@@ -4288,6 +4308,77 @@ body {
     width: 100%;
     justify-content: center;
     text-align: center;
+  }
+}
+
+/* Admin experience v2 — one calm shell for every operational workspace. */
+@media (max-width: 760px) {
+  .admin-command-center {
+    padding-bottom: 104px;
+  }
+  .admin-shell-header {
+    min-height: 68px;
+    padding: 10px 16px;
+    grid-template-columns: 1fr auto;
+  }
+  .admin-shell-header .brand small {
+    display: block;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .admin-shell-header .admin-primary-nav {
+    display: none;
+  }
+  .admin-shell-header .admin-role {
+    font-size: 0.48rem;
+  }
+  .admin-mobile-dock {
+    position: fixed;
+    z-index: 30;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    left: 10px;
+    display: grid;
+    min-height: 68px;
+    padding: 7px;
+    border: 1px solid rgba(111, 32, 56, 0.16);
+    border-radius: 18px;
+    background: rgba(252, 251, 248, 0.96);
+    box-shadow: 0 18px 50px rgba(42, 35, 31, 0.2);
+    backdrop-filter: blur(20px);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .admin-mobile-dock a {
+    display: flex;
+    min-width: 0;
+    min-height: 52px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    color: var(--muted);
+    font-size: 0.52rem;
+    font-weight: 750;
+    text-decoration: none;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .admin-mobile-dock a > svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.6;
+  }
+  .admin-mobile-dock a[aria-current="page"] {
+    background: var(--wine);
+    color: #fff;
+  }
+  .admin-support-page.support-page {
+    padding-bottom: 104px;
   }
 }
 .roadmap-list {

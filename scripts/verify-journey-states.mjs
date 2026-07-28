@@ -151,6 +151,7 @@ assert(
 );
 
 const adminPage = read("app/admin/page.tsx");
+const adminHeader = read("components/admin/admin-header.tsx");
 for (const specialist of [
   "EventContentManager",
   "EventMenuManager",
@@ -169,12 +170,33 @@ for (const route of [
   "/admin/cohort",
   "/admin/safety",
   "/admin/operations",
+  "/admin/support",
+  "/admin/privacy",
+  "/admin/notifications",
 ]) {
   assert(
-    adminPage.includes(`href="${route}"`),
-    `Admin cockpit must link to ${route}`,
+    adminHeader.includes(`href: "${route}"`),
+    `Shared Admin shell must link to ${route}`,
   );
 }
+for (const path of [
+  "app/admin/page.tsx",
+  "app/admin/operations/page.tsx",
+  "app/admin/cohort/page.tsx",
+  "app/admin/support/page.tsx",
+  "app/admin/privacy/page.tsx",
+  "app/admin/notifications/page.tsx",
+]) {
+  assert(
+    read(path).includes("<AdminHeader"),
+    `${path} must use the shared Admin shell`,
+  );
+}
+assert(
+  adminHeader.includes("admin-mobile-dock") &&
+    adminHeader.includes('aria-current={active === item.key'),
+  "Shared Admin shell must provide mobile navigation and current-page context",
+);
 const adminOperations = read("app/admin/operations/page.tsx");
 for (const group of [
   "people-and-launch",

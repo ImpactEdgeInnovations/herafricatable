@@ -1,8 +1,75 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { SupportInbox, type AdminSupportTicket } from "@/components/admin/support-inbox";
+import { AdminHeader } from "@/components/admin/admin-header";
+import {
+  SupportInbox,
+  type AdminSupportTicket,
+} from "@/components/admin/support-inbox";
 import type { SupportMessage } from "@/components/member/support-center";
 import { createClient } from "@/lib/supabase/server";
 
-export const dynamic="force-dynamic";
-export default async function AdminSupportPage({searchParams}:{searchParams:Promise<{ticket?:string}>}) {const {ticket}=await searchParams;const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)redirect("/admin/sign-in");const {data:role}=await supabase.from("user_roles").select("role").eq("user_id",user.id).eq("role","super_admin").maybeSingle();if(!role)redirect("/admin");const result=await supabase.rpc("list_admin_support_tickets");const tickets=(result.data as AdminSupportTicket[]|null)??[];const selected=ticket&&tickets.some(item=>item.ticket_id===ticket)?ticket:tickets[0]?.ticket_id??null;let messages:SupportMessage[]=[];if(selected){const {data}=await supabase.from("support_messages").select("id,ticket_id,author_id,body,is_staff,created_at").eq("ticket_id",selected).order("created_at",{ascending:true});messages=(data as SupportMessage[]|null)??[]}return <main className="support-page admin-support-page"><header className="member-home-header"><Link className="brand" href="/"><span className="brand-mark">H</span><span>Her Africa Table<small>Support operations</small></span></Link><nav><Link href="/admin">Command centre</Link><Link href="/home">Member view</Link></nav></header>{result.error?<section className="admin-empty network-error"><strong>Support database update required</strong><p>Apply <code>20260723170000_support_operations.sql</code>.</p></section>:<SupportInbox adminEmail={user.email??""} tickets={tickets} messages={messages} selectedTicketId={selected}/>}</main>}
+export const dynamic = "force-dynamic";
+
+export default async function AdminSupportPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ticket?: string }>;
+}) {
+  const { ticket } = await searchParams;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/admin/sign-in");
+  const { data: role } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("role", "super_admin")
+    .maybeSingle();
+  if (!role) redirect("/admin");
+
+  const result = await supabase.rpc("list_admin_support_tickets");
+  const tickets = (result.data as AdminSupportTicket[] | null) ?? [];
+  const selected =
+    ticket && tickets.some((item) => item.ticket_id === ticket)
+      ? ticket
+      : (tickets[0]?.ticket_id ?? null);
+  let messages: SupportMessage[] = [];
+  if (selected) {
+    const { data } = await supabase
+      .from("support_messages")
+      .select("id,ticket_id,author_id,body,is_staff,created_at")
+      .eq("ticket_id", selected)
+      .order("created_at", { ascending: true });
+    messages = (data as SupportMessage[] | null) ?? [];
+  }
+
+  return (
+    <main className="admin-command-center support-page admin-support-page">
+      <AdminHeader
+        active="support"
+        label="Member support"
+        role="super_admin"
+      />
+      {result.error ? (
+        <section className="admin-empty network-error" role="alert">
+          <strong>Support requests are temporarily unavailable</strong>
+          <p>
+            Reload this page in a moment. If the problem continues, check
+            platform health from All tools before responding to members.
+          </p>
+          <a className="button button-outline" href="/admin/support">
+            Try again
+          </a>
+        </section>
+      ) : (
+        <SupportInbox
+          adminEmail={user.email ?? ""}
+          tickets={tickets}
+          messages={messages}
+          selectedTicketId={selected}
+        />
+      )}
+    </main>
+  );
+}

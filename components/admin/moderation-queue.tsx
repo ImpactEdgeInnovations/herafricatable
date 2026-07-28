@@ -86,9 +86,10 @@ export function ModerationQueue({
     return (
       <section className="admin-section" id="moderation">
         <div className="admin-empty">
-          <strong>Safety migration required</strong>
+          <strong>Safety reports are temporarily unavailable</strong>
           <p>
-            Apply <code>20260723090000_network_safety_foundation.sql</code>.
+            No report has been dismissed or resolved. Reload this workspace in
+            a moment before making a moderation decision.
           </p>
         </div>
       </section>

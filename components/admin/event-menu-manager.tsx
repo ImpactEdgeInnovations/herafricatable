@@ -202,10 +202,10 @@ export function EventMenuManager({
     return (
       <section className="admin-section" id="menu">
         <div className="admin-empty">
-          <strong>Menu database update required</strong>
+          <strong>Event menu controls are temporarily unavailable</strong>
           <p>
-            Apply <code>20260721230000_event_menu_operations.sql</code> to
-            enable the dining CMS.
+            No menu, dietary note or cultural context has been changed. Reload
+            this workspace in a moment.
           </p>
         </div>
       </section>

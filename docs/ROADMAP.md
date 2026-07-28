@@ -58,6 +58,8 @@ Usability is part of production readiness and continues alongside feature delive
       queue counts and guided next steps
   - [x] Collapse specialist Admin modules into five plain-language work groups while
         preserving direct links to the correct tool
+  - [x] Unify daily and specialist Admin workspaces behind one role-aware navigation
+        shell, current-location cues and a five-action mobile dock
 - [x] Keep the member home focused on three primary actions and progressively disclose
       secondary membership, community, learning, benefits and support tools
 - [x] Add contextual help and examples to every unfamiliar form without crowding the page
@@ -78,6 +80,8 @@ Usability is part of production readiness and continues alongside feature delive
         sign-in or support recovery path
   - [x] All Admin workflows filter database, storage and provider details, provide
         operational recovery guidance and use member-safe action wording
+  - [x] Remove schema and migration instructions from operator-facing recovery states;
+        retain implementation detail only in engineering runbooks
 - [ ] Test the main member and administrator journeys with at least five non-technical users
 - [ ] Pass keyboard, screen-reader, contrast, 200% zoom and mobile usability acceptance
 - [x] Confirm every core journey has clear loading, empty, success, error and recovery states

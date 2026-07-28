@@ -40,10 +40,10 @@ export default async function OnboardingPage() {
     return (
       <main className="portal-page">
         <section className="portal-card">
-          <p className="eyebrow">Database update required</p>
-          <h1>Onboarding v2 is ready.</h1>
-          <p>Apply <code>20260721120000_onboarding_v2.sql</code> in the Supabase SQL Editor, then reload this page. Your existing onboarding migration remains unchanged.</p>
-          <div className="portal-actions"><Link className="button button-primary" href="/admin">Return to admin</Link><Link className="button button-outline" href="/home">View status</Link></div>
+          <p className="eyebrow">We could not open your profile</p>
+          <h1>Your progress is safe.</h1>
+          <p>Reload in a moment. If this continues, contact support and we will help you finish joining the table.</p>
+          <div className="portal-actions"><Link className="button button-primary" href="/onboarding">Try again</Link><Link className="button button-outline" href="/support">Contact support</Link></div>
         </section>
       </main>
     );

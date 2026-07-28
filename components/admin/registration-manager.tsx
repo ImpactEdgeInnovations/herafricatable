@@ -229,10 +229,10 @@ export function RegistrationManager({
     return (
       <section className="admin-section" id="registrations">
         <div className="admin-empty">
-          <strong>Registration database update required</strong>
+          <strong>Registration reviews are temporarily unavailable</strong>
           <p>
-            Apply{" "}
-            <code>20260722130000_registration_commerce_foundation.sql</code>.
+            No registration or payment decision has been changed. Reload this
+            workspace in a moment.
           </p>
         </div>
       </section>

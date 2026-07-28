@@ -136,10 +136,10 @@ export function CohortActivationManager({
     return (
       <section className="admin-section">
         <div className="admin-empty">
-          <strong>Founding cohort migration required</strong>
+          <strong>Founding cohort controls are temporarily unavailable</strong>
           <p>
-            Apply <code>20260727110000_founding_cohort_activation.sql</code> in
-            Supabase, then reload this page.
+            No invitation, introduction or cohort access has been changed.
+            Reload this workspace in a moment.
           </p>
         </div>
       </section>

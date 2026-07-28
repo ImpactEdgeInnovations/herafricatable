@@ -167,10 +167,10 @@ export function ReferralManager({
     return (
       <section className="admin-section" id="referrals-admin">
         <div className="admin-empty">
-          <strong>Referrals migration required</strong>
+          <strong>Referral controls are temporarily unavailable</strong>
           <p>
-            Apply the latest vouched invitations migration to activate these
-            controls.
+            No referral or invitation has been changed. Reload this workspace
+            in a moment.
           </p>
         </div>
       </section>

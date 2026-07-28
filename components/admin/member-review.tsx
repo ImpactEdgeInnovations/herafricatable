@@ -88,11 +88,10 @@ export function MemberReview({
 
       {!migrationReady ? (
         <div className="admin-empty">
-          <strong>Database update required</strong>
+          <strong>Member reviews are temporarily unavailable</strong>
           <p>
-            Apply migration{" "}
-            <code>20260721090000_member_onboarding_admin.sql</code> in Supabase
-            before using member review.
+            No member status has been changed. Reload this workspace in a
+            moment before making an access decision.
           </p>
         </div>
       ) : members.length === 0 ? (

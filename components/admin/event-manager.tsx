@@ -235,10 +235,10 @@ export function EventManager({
     return (
       <section className="admin-section" id="events">
         <div className="admin-empty">
-          <strong>Events database update required</strong>
+          <strong>Event controls are temporarily unavailable</strong>
           <p>
-            Apply <code>20260721160000_events_foundation.sql</code> before using
-            event operations.
+            No event has been changed. Reload this workspace in a moment or
+            check platform health before publishing.
           </p>
         </div>
       </section>

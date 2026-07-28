@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminActionCentre } from "@/components/admin/admin-action-centre";
+import {
+  AdminHeader,
+  type AdminRole,
+} from "@/components/admin/admin-header";
 import { createClient } from "@/lib/supabase/server";
-
-type AdminRole = "super_admin" | "event_staff" | "moderator";
 
 type MemberRow = {
   access_status: string;
@@ -127,28 +129,7 @@ export default async function AdminHomePage() {
 
   return (
     <main className="admin-command-center admin-cockpit">
-      <header className="admin-header">
-        <Link className="brand" href="/admin">
-          <span className="brand-mark" aria-hidden="true">
-            H
-          </span>
-          <span>
-            Her Africa Table<small>Admin workspace</small>
-          </span>
-        </Link>
-        <nav className="admin-primary-nav" aria-label="Admin navigation">
-          <Link aria-current="page" href="/admin">
-            Today
-          </Link>
-          {role === "super_admin" ? (
-            <Link href="/admin/members">Members</Link>
-          ) : null}
-          {canManageEvents ? <Link href="/admin/events">Events</Link> : null}
-          {canModerate ? <Link href="/admin/safety">Safety</Link> : null}
-          <Link href="/admin/operations">All tools</Link>
-        </nav>
-        <span className="admin-role">{role.replace("_", " ")}</span>
-      </header>
+      <AdminHeader active="today" label="Admin workspace" role={role} />
 
       <section className="admin-hero" id="overview">
         <div>

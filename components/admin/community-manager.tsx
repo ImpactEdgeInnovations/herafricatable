@@ -113,10 +113,10 @@ export function CommunityManager({
     return (
       <section className="admin-section" id="communities-admin">
         <div className="admin-empty">
-          <strong>Communities migration required</strong>
+          <strong>Community controls are temporarily unavailable</strong>
           <p>
-            Apply the latest communities foundation migration to activate
-            management controls.
+            No community or membership has been changed. Reload this workspace
+            in a moment.
           </p>
         </div>
       </section>

@@ -221,9 +221,10 @@ export function EventCheckinConsole({
     return (
       <section className="admin-section" id="check-in">
         <div className="admin-empty">
-          <strong>Check-in migration required</strong>
+          <strong>Guest check-in is temporarily unavailable</strong>
           <p>
-            Run the event check-in migration in Supabase, then reload this page.
+            Do not mark guests manually in another system. Reload this workspace
+            in a moment so the attendance record stays complete.
           </p>
         </div>
       </section>

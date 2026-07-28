@@ -206,10 +206,10 @@ export function LearningManager({
     return (
       <section className="admin-section" id="learning-admin">
         <div className="admin-empty">
-          <strong>Learning migration required</strong>
+          <strong>Learning controls are temporarily unavailable</strong>
           <p>
-            Apply the latest learning foundation migration to activate course
-            operations.
+            No course, lesson or learner access has been changed. Reload this
+            workspace in a moment.
           </p>
         </div>
       </section>

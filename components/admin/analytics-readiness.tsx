@@ -95,10 +95,10 @@ export function AnalyticsReadiness({
     return (
       <section className="admin-section" id="analytics">
         <div className="admin-empty">
-          <strong>Analytics migration required</strong>
+          <strong>Launch reporting is temporarily unavailable</strong>
           <p>
-            Apply the privacy-safe analytics migration to activate launch
-            readiness reporting.
+            Reload this workspace in a moment. No readiness settings have been
+            changed.
           </p>
         </div>
       </section>

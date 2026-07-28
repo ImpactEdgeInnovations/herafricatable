@@ -163,10 +163,10 @@ export function CircleManager({
     return (
       <section className="admin-section" id="circles-admin">
         <div className="admin-empty">
-          <strong>Circles migration required</strong>
+          <strong>Circle controls are temporarily unavailable</strong>
           <p>
-            Apply the deterministic Circles migration to activate cohort
-            operations.
+            No matching cycle or participant has been changed. Reload this
+            workspace in a moment.
           </p>
         </div>
       </section>

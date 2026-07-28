@@ -100,6 +100,7 @@ import {
   type ReadinessMetric,
 } from "@/components/admin/analytics-readiness";
 import { AdminActionCentre } from "@/components/admin/admin-action-centre";
+import { AdminHeader } from "@/components/admin/admin-header";
 import { AdminWorkGroup } from "@/components/admin/admin-work-group";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
@@ -569,63 +570,11 @@ export default async function AdminOperationsPage() {
 
   return (
     <main className="admin-command-center">
-      <header className="admin-header">
-        <Link className="brand" href="/admin">
-          <span className="brand-mark" aria-hidden="true">
-            H
-          </span>
-          <span>
-            Her Africa Table<small>Full operations workspace</small>
-          </span>
-        </Link>
-        <nav className="admin-primary-nav" aria-label="Admin navigation">
-          <Link href="/admin">Today</Link>
-          {role.role === "super_admin" ? (
-            <Link href="/admin/members">Members</Link>
-          ) : null}
-          {canManageEvents ? <Link href="/admin/events">Events</Link> : null}
-          {canModerate ? <Link href="/admin/safety">Safety</Link> : null}
-          <details className="admin-tools-menu">
-            <summary>More tools</summary>
-            <div>
-              {role.role === "super_admin" ? (
-                <a href="#analytics">Launch readiness</a>
-              ) : null}
-              {canManageEvents ? (
-                <>
-                  <a href="#event-content">Programme &amp; publishing</a>
-                  <a href="#menu">Event menu</a>
-                  <a href="#gallery">Event gallery</a>
-                  <a href="#check-in">Event check-in</a>
-                  <a href="#event-feedback">Event feedback</a>
-                </>
-              ) : null}
-              {canModerate ? (
-                <>
-                  <a href="#marketplace-moderation">Marketplace safety</a>
-                  <a href="#community-moderation">Community safety</a>
-                </>
-              ) : null}
-              {role.role === "super_admin" ? (
-                <>
-                  <a href="#memberships-admin">Membership plans</a>
-                  <a href="#circles-admin">Circles</a>
-                  <a href="#perks-admin">Partner perks</a>
-                  <a href="#communities-admin">Communities</a>
-                  <a href="#learning-admin">Learning</a>
-                  <a href="#referrals-admin">Referrals</a>
-                  <Link href="/admin/support">Member support</Link>
-                  <Link href="/admin/privacy">Privacy requests</Link>
-                  <Link href="/admin/notifications">Message delivery</Link>
-                </>
-              ) : null}
-              <a href="#event">Homepage countdown</a>
-              <a href="#roadmap">Delivery roadmap</a>
-            </div>
-          </details>
-        </nav>
-        <span className="admin-role">{role.role.replace("_", " ")}</span>
-      </header>
+      <AdminHeader
+        active="operations"
+        label="Full operations workspace"
+        role={role.role}
+      />
       <section className="admin-hero" id="overview">
         <div>
           <p className="eyebrow">Authorized team access</p>

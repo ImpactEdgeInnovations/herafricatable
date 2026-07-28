@@ -197,10 +197,10 @@ export function PerksManager({
     return (
       <section className="admin-section" id="perks-admin">
         <div className="admin-empty">
-          <strong>Partner perks migration required</strong>
+          <strong>Partner benefit controls are temporarily unavailable</strong>
           <p>
-            Apply the partner perks and redemption migration to activate
-            operations.
+            No benefit, inventory or redemption has been changed. Reload this
+            workspace in a moment.
           </p>
         </div>
       </section>

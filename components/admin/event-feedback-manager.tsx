@@ -136,8 +136,11 @@ export function EventFeedbackManager({
     return (
       <section className="admin-section" id="event-feedback">
         <div className="admin-empty">
-          <strong>Post-event feedback migration required</strong>
-          <p>Apply the latest post-event migration in Supabase.</p>
+          <strong>Event feedback is temporarily unavailable</strong>
+          <p>
+            No feedback or recap has been changed. Reload this workspace in a
+            moment.
+          </p>
         </div>
       </section>
     );

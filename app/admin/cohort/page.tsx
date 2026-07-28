@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminHeader } from "@/components/admin/admin-header";
 import {
   CohortActivationManager,
   type CohortEvent,
@@ -63,26 +64,11 @@ export default async function AdminCohortPage({
 
   return (
     <main className="admin-command-center cohort-admin-page">
-      <header className="admin-header">
-        <Link className="brand" href="/admin">
-          <span className="brand-mark" aria-hidden="true">
-            H
-          </span>
-          <span>
-            Her Africa Table<small>Founding cohort</small>
-          </span>
-        </Link>
-        <nav className="admin-primary-nav" aria-label="Admin navigation">
-          <Link href="/admin">Today</Link>
-          <Link href="/admin/members">Members</Link>
-          <Link href="/admin/events">Events</Link>
-          <Link aria-current="page" href="/admin/cohort">
-            Cohort
-          </Link>
-          <Link href="/admin/safety">Safety</Link>
-        </nav>
-        <span className="admin-role">super admin</span>
-      </header>
+      <AdminHeader
+        active="cohort"
+        label="Founding cohort"
+        role="super_admin"
+      />
       <CohortActivationManager
         cohorts={cohorts}
         events={events}

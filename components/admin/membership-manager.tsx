@@ -219,10 +219,10 @@ export function MembershipManager({
     return (
       <section className="admin-section" id="memberships-admin">
         <div className="admin-empty">
-          <strong>Membership migration required</strong>
+          <strong>Membership controls are temporarily unavailable</strong>
           <p>
-            Apply the membership renewal lifecycle migration to activate these
-            controls.
+            No plan, payment or member access has been changed. Reload this
+            workspace in a moment.
           </p>
         </div>
       </section>

@@ -261,10 +261,10 @@ export function EventGalleryManager({
     return (
       <section className="admin-section" id="gallery">
         <div className="admin-empty">
-          <strong>Gallery database update required</strong>
+          <strong>Gallery controls are temporarily unavailable</strong>
           <p>
-            Apply <code>20260722090000_event_gallery_operations.sql</code> to
-            enable private media operations.
+            No album or image has been changed. Reload this workspace in a
+            moment before publishing media.
           </p>
         </div>
       </section>
