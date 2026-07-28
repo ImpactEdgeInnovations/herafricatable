@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
@@ -73,6 +74,17 @@ export function ProfileEditor({
   const [message, setMessage] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(initial.avatar_url ?? "");
   const [goals, setGoals] = useState(initial.goals);
+  const completedProfileFields = [
+    initial.display_name,
+    initial.job_title,
+    initial.industry,
+    initial.city,
+    initial.country,
+    initial.bio,
+    initial.interests.length,
+    initial.goals.length,
+  ].filter(Boolean).length;
+  const profileCompletion = Math.round((completedProfileFields / 8) * 100);
 
   function splitList(value: FormDataEntryValue | null) {
     return String(value ?? "")
@@ -159,28 +171,40 @@ export function ProfileEditor({
       <header>
         <div>
           <p className="eyebrow">Your member identity</p>
-          <h1>Keep your profile current.</h1>
+          <h1>Your profile.</h1>
           <p>
-            This context helps members make thoughtful introductions. Private
-            contact details stay hidden until a connection is mutually accepted.
+            Help trusted members understand who you are and what brings you to
+            the table. Private contact details remain protected until a
+            connection is mutually accepted.
           </p>
         </div>
-        <div className="profile-editor-avatar">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" />
-          ) : (
-            <span>{initial.display_name?.slice(0, 1) ?? "H"}</span>
-          )}
-          <label>
-            <strong>{uploading ? "Uploading…" : "Replace photo"}</strong>
-            <small>JPG, PNG or WebP · up to 5 MB</small>
-            <input
-              accept="image/jpeg,image/png,image/webp"
-              disabled={uploading}
-              onChange={(event) => void uploadAvatar(event)}
-              type="file"
-            />
-          </label>
+        <div className="profile-editor-summary">
+          <div className="profile-editor-avatar">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" />
+            ) : (
+              <span>{initial.display_name?.slice(0, 1) ?? "H"}</span>
+            )}
+            <label>
+              <strong>{uploading ? "Uploading…" : "Change photo"}</strong>
+              <small>JPG, PNG or WebP · up to 5 MB</small>
+              <input
+                accept="image/jpeg,image/png,image/webp"
+                disabled={uploading}
+                onChange={(event) => void uploadAvatar(event)}
+                type="file"
+              />
+            </label>
+          </div>
+          <div className="profile-completion">
+            <span>
+              <strong>{profileCompletion}%</strong> profile ready
+            </span>
+            <i aria-hidden="true">
+              <b style={{ width: `${profileCompletion}%` }} />
+            </i>
+          </div>
+          <Link href="/settings">Account and privacy settings →</Link>
         </div>
       </header>
 

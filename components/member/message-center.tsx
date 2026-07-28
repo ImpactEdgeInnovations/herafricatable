@@ -153,7 +153,7 @@ export function MessageCenter({
   );
   return (
     <div
-      className={`message-shell${conversations.length ? "" : " is-empty"}`}
+      className={`message-shell${conversations.length ? "" : " is-empty"}${selectedConversation ? " has-selection" : ""}`}
     >
       {dialog}
       <aside className="conversation-list">
@@ -188,14 +188,20 @@ export function MessageCenter({
           ))
         ) : (
           <div className="message-empty">
-            <span aria-hidden="true">01</span>
-            <strong>Your conversations will appear here.</strong>
+            <span className="message-empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 5h16v12H9l-5 4V5Z" />
+                <path d="M8 9h8M8 13h5" />
+              </svg>
+            </span>
+            <strong>Start with a connection.</strong>
             <p>
-              Find a member and send a connection request. Messaging opens only
-              after she accepts.
+              Find someone in the member directory and send a thoughtful
+              connection request. Messaging opens only after she accepts, so
+              every conversation begins with mutual consent.
             </p>
             <Link className="button button-primary" href="/network">
-              Find members
+              Explore members
             </Link>
           </div>
         )}
@@ -204,6 +210,13 @@ export function MessageCenter({
         {selectedConversation && selected ? (
           <>
             <header>
+              <Link
+                aria-label="Back to conversations"
+                className="conversation-back"
+                href="/messages"
+              >
+                ←
+              </Link>
               <span className="network-avatar">
                 {selected.avatar_url ? (
                   <img src={selected.avatar_url} alt="" />
@@ -257,7 +270,7 @@ export function MessageCenter({
               <label>
                 <span className="sr-only">Message</span>
                 <textarea
-                  rows={3}
+                  rows={2}
                   maxLength={4000}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}

@@ -12415,3 +12415,359 @@ body {
     min-width: 0;
   }
 }
+
+/* Member experience v3: events, messages and profile */
+.events-intro {
+  display: grid;
+  align-items: end;
+  padding: 66px 0 50px;
+  border-bottom: 1px solid var(--line);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.58fr);
+  gap: 70px;
+}
+.events-intro h1 {
+  font-size: clamp(3.5rem, 5.7vw, 5.3rem);
+}
+.events-intro-guide > p {
+  max-width: 460px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+.events-intro-guide > div {
+  display: flex;
+  margin-top: 20px;
+  gap: 22px;
+}
+.events-intro-guide a {
+  color: var(--wine);
+  font-size: 0.58rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+.public-event-list {
+  padding-top: 24px;
+}
+.public-event-list > article {
+  min-height: 178px;
+  padding: 27px 0;
+}
+.events-empty {
+  display: grid;
+  min-height: 250px;
+  align-items: center;
+  padding: 42px 48px;
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, #f4f0e8 0%, #faf8f4 100%);
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 32px;
+}
+.events-empty-icon {
+  display: grid;
+  width: 70px;
+  height: 70px;
+  place-items: center;
+  border: 1px solid rgba(101, 28, 40, 0.18);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.64);
+  color: var(--wine);
+}
+.events-empty-icon svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+}
+.events-empty .eyebrow {
+  margin: 0 0 12px;
+}
+.events-empty strong {
+  font-size: clamp(1.7rem, 2.7vw, 2.35rem);
+}
+.events-empty p:not(.eyebrow) {
+  margin: 10px 0 0;
+}
+.events-empty-actions {
+  display: flex;
+  margin-top: 23px;
+  gap: 10px;
+}
+.events-empty .button {
+  margin-top: 0;
+}
+.message-shell {
+  width: min(1120px, calc(100% - 48px));
+  height: calc(100vh - 114px);
+  min-height: 590px;
+  margin-top: 24px;
+  border-radius: 4px;
+  box-shadow: 0 18px 55px rgba(55, 31, 34, 0.045);
+  grid-template-columns: 310px minmax(0, 1fr);
+}
+.message-shell.is-empty {
+  height: auto;
+  min-height: 0;
+}
+.conversation-list > header {
+  padding: 27px 24px 20px;
+}
+.conversation-list h1 {
+  font-size: 2.25rem;
+}
+.conversation-list > a {
+  min-height: 76px;
+}
+.conversation-back {
+  display: none;
+}
+.message-empty {
+  margin: 8px 22px 26px;
+  padding: 30px 26px;
+  border: 0;
+  border-radius: 4px;
+  background: #f5f1e9;
+}
+.message-empty-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--wine) !important;
+}
+.message-empty-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+.message-empty > strong {
+  margin-top: 9px;
+  font-size: 1.55rem;
+}
+.message-empty > p {
+  margin-bottom: 8px;
+  font-size: 0.63rem;
+}
+.message-composer {
+  padding: 14px 16px;
+}
+.message-composer textarea {
+  min-height: 52px;
+  border-radius: 3px;
+}
+.profile-editor {
+  width: min(1080px, calc(100% - 48px));
+  padding: 58px 0 100px;
+}
+.profile-editor > header {
+  align-items: center;
+  padding-bottom: 34px;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 70px;
+}
+.profile-editor > header h1 {
+  font-size: clamp(3.5rem, 5.8vw, 5.1rem);
+}
+.profile-editor > header > div:first-child > p:last-child {
+  max-width: 570px;
+  margin-top: 16px;
+}
+.profile-editor-summary {
+  display: grid;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.58);
+  gap: 17px;
+}
+.profile-editor-avatar > img,
+.profile-editor-avatar > span {
+  width: 68px;
+  height: 68px;
+}
+.profile-completion {
+  display: grid;
+  gap: 8px;
+}
+.profile-completion > span {
+  color: var(--muted);
+  font-size: 0.56rem;
+}
+.profile-completion > span strong {
+  margin-right: 3px;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 400;
+}
+.profile-completion > i {
+  display: block;
+  overflow: hidden;
+  height: 4px;
+  border-radius: 20px;
+  background: #e5ded3;
+}
+.profile-completion > i > b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gold);
+}
+.profile-editor-summary > a {
+  color: var(--wine);
+  font-size: 0.56rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.profile-editor > section {
+  padding: 40px 0;
+  grid-template-columns: 225px minmax(0, 1fr);
+  gap: 46px;
+}
+.profile-editor > footer {
+  position: sticky;
+  z-index: 20;
+  bottom: 14px;
+  min-height: 0;
+  margin-top: 18px;
+  padding: 13px 14px 13px 20px;
+  border: 1px solid rgba(101, 28, 40, 0.14);
+  border-radius: 5px;
+  background: rgba(255, 253, 249, 0.94);
+  box-shadow: 0 14px 38px rgba(55, 31, 34, 0.1);
+  backdrop-filter: blur(14px);
+}
+.profile-editor > footer p:empty::before {
+  content: "Changes are only visible after you save.";
+}
+
+@media (max-width: 820px) {
+  .events-intro {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .events-intro-guide > p {
+    max-width: 620px;
+  }
+  .profile-editor > header {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .profile-editor > section {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .profile-editor-summary {
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 620px) {
+  .events-intro {
+    width: calc(100% - 32px);
+    padding: 42px 0 30px;
+    gap: 17px;
+  }
+  .events-intro h1 {
+    font-size: clamp(3rem, 14vw, 3.9rem);
+  }
+  .events-intro-guide > p {
+    font-size: 0.7rem;
+  }
+  .events-intro-guide > div {
+    margin-top: 14px;
+  }
+  .public-event-list {
+    width: calc(100% - 32px);
+    padding-top: 16px;
+  }
+  .events-empty {
+    min-height: 0;
+    padding: 28px 22px;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .events-empty-icon {
+    width: 54px;
+    height: 54px;
+  }
+  .events-empty-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .events-empty-actions .button {
+    justify-content: center;
+  }
+  .message-shell {
+    width: calc(100% - 32px);
+    height: calc(100vh - 164px);
+    min-height: 540px;
+    margin-top: 16px;
+  }
+  .message-shell.has-selection {
+    display: block;
+  }
+  .message-shell.has-selection .conversation-list {
+    display: none;
+  }
+  .message-shell.has-selection .conversation-panel {
+    display: grid;
+    height: 100%;
+  }
+  .conversation-back {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    color: var(--wine);
+    font-size: 0.8rem;
+    text-decoration: none;
+  }
+  .conversation-list {
+    max-height: none;
+    border-bottom: 0;
+  }
+  .message-empty {
+    margin: 6px 14px 20px;
+    padding: 26px 22px;
+  }
+  .profile-editor {
+    width: calc(100% - 32px);
+    padding: 38px 0 112px;
+  }
+  .profile-editor > header h1 {
+    font-size: clamp(3rem, 14vw, 3.85rem);
+  }
+  .profile-editor-summary {
+    max-width: none;
+    padding: 17px;
+  }
+  .profile-editor > section {
+    padding: 31px 0;
+  }
+  .profile-editor > footer {
+    bottom: 84px;
+    align-items: center;
+    padding: 12px;
+    flex-direction: row;
+  }
+  .profile-editor > footer p {
+    max-width: 145px;
+    font-size: 0.54rem;
+  }
+  .profile-editor > footer .button {
+    margin-left: auto;
+    white-space: nowrap;
+  }
+}
