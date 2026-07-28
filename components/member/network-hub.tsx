@@ -469,7 +469,7 @@ export function NetworkHub({
           type: "textarea",
         },
         {
-          help: "Admin receives only one anonymous category count—never your note, name, or the other member’s identity.",
+          help: "Admin receives only an anonymous category total—never your note, name, or the other member’s identity. The category stays hidden until at least three different real members contribute.",
           initialValue: true,
           label: "Include this in anonymous community totals",
           name: "shareAnonymously",
@@ -756,7 +756,7 @@ export function NetworkHub({
                                 )}
                                 {" · "}
                                 {outcome.share_anonymously
-                                  ? "Counted anonymously"
+                                  ? "Eligible for anonymous totals"
                                   : "Completely private"}
                               </small>
                               <p>{outcome.private_detail}</p>

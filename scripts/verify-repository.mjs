@@ -405,6 +405,21 @@ assert(
   !connectionOutcomesMigration.includes("'private_detail', clean_detail"),
   "Connection outcome audit metadata must not copy private details",
 );
+const connectionOutcomeThresholdMigration = read(
+  "supabase/migrations/20260730090000_connection_outcome_privacy_threshold.sql",
+);
+for (const contract of [
+  "get_connection_outcome_summary",
+  "having count(distinct outcome.owner_id) >= 3",
+  "not owner_profile.is_test_account",
+  "not low_profile.is_test_account",
+  "not high_profile.is_test_account",
+]) {
+  assert(
+    connectionOutcomeThresholdMigration.includes(contract),
+    `Small-cohort outcome suppression must include ${contract}`,
+  );
+}
 const databaseCorrections = read(
   "supabase/migrations/20260726210000_ci_database_corrections.sql",
 );

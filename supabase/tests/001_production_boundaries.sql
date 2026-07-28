@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(247);
+select plan(249);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -378,8 +378,19 @@ select is((select count(*)from public.connection_outcomes),0::bigint,'event staf
 select throws_ok($$select *from public.get_connection_outcome_summary(365)$$,'P0001','Super admin required','non-admin members cannot access anonymous community aggregates');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select count(*)from public.connection_outcomes),0::bigint,'super admin cannot directly browse outcome identities or private notes');
-select is((select count(*)from public.get_connection_outcome_summary(365)),1::bigint,'aggregate reporting includes only voluntarily shared real-member outcomes');
-select is((select outcome_type from public.get_connection_outcome_summary(365)limit 1),'collaboration','private and test-account outcomes are excluded from the aggregate category');
+select is((select count(*)from public.get_connection_outcome_summary(365)),0::bigint,'a category reported by fewer than three real members remains suppressed');
+set local role postgres;
+insert into public.connections(id,user_low,user_high,requester_id,recipient_id,status,responded_at)values
+ ('95000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000004','accepted',now());
+insert into public.connection_outcomes(owner_id,connection_id,outcome_type,occurred_on,private_detail,share_anonymously)values
+ ('10000000-0000-4000-8000-000000000004',(select id from public.connections where user_low='10000000-0000-4000-8000-000000000002'and user_high='10000000-0000-4000-8000-000000000004'),'collaboration',current_date,'Staff records a distinct real-member collaboration outcome.',true),
+ ('10000000-0000-4000-8000-000000000001','95000000-0000-4000-8000-000000000001','collaboration',current_date,'Admin records a distinct real-member collaboration outcome.',true);
+set local role authenticated;
+select set_config('request.jwt.claim.role','authenticated',true);
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select is((select count(*)from public.get_connection_outcome_summary(365)),1::bigint,'a category becomes reportable only after three different real members contribute');
+select is((select outcome_type from public.get_connection_outcome_summary(365)limit 1),'collaboration','private and test-account outcomes remain excluded from the reportable category');
+select is((select outcome_count from public.get_connection_outcome_summary(365)limit 1),3::bigint,'the thresholded aggregate includes only the three eligible real-member reports');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 select lives_ok($$select public.remove_connection_outcome((select outcome_id from public.list_my_connection_outcomes()where outcome_type='mentorship'limit 1))$$,'member can delete her completely private outcome');
 select is((select count(*)from public.list_my_connection_outcomes()),1::bigint,'deleting one outcome preserves the owners remaining relationship history');

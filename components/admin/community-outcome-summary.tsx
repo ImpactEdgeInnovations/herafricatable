@@ -48,7 +48,9 @@ export function CommunityOutcomeSummary({
           <p>
             Members choose whether to contribute each outcome. This report
             contains category totals only—never names, relationship pairs, or
-            private notes—and excludes every tagged test identity.
+            private notes—and excludes every tagged test identity. A category
+            stays hidden until at least three different real members have
+            contributed to it.
           </p>
         </div>
         <div className="outcome-total">
@@ -71,8 +73,9 @@ export function CommunityOutcomeSummary({
         <div className="admin-empty">
           <strong>No anonymous outcomes recorded yet</strong>
           <p>
-            Totals will appear after real members voluntarily record what their
-            accepted connections led to.
+            A category appears only after at least three different real members
+            voluntarily record that type of outcome. Smaller groups remain
+            suppressed to protect member privacy.
           </p>
         </div>
       )}

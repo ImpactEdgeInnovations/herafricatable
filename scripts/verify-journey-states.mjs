@@ -342,7 +342,7 @@ for (const contract of [
   "complete_connection_followup",
   "Record outcome",
   "record_connection_outcome",
-  "Counted anonymously",
+  "Eligible for anonymous totals",
   "Completely private",
   "Why she would like to connect",
   "Messaging opens only after she accepts",
@@ -421,6 +421,8 @@ for (const contract of [
   "category totals only",
   "never names",
   "excludes every tagged test identity",
+  "at least three different real members",
+  "suppressed to protect member privacy",
 ]) {
   assert(
     communityOutcomeSummary.includes(contract),
