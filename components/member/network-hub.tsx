@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -262,7 +263,12 @@ export function NetworkHub({
                     )}
                   </span>
                   <div>
-                    <strong>{item.display_name}</strong>
+                    <Link
+                      className="network-profile-link"
+                      href={`/members/${item.other_user_id}`}
+                    >
+                      {item.display_name}
+                    </Link>
                     <small>
                       {[item.job_title, item.company, item.city]
                         .filter(Boolean)
@@ -431,7 +437,11 @@ export function NetworkHub({
                   <p className="eyebrow">
                     {[member.city, member.country].filter(Boolean).join(", ")}
                   </p>
-                  <h3>{member.display_name}</h3>
+                  <h3>
+                    <Link href={`/members/${member.user_id}`}>
+                      {member.display_name}
+                    </Link>
+                  </h3>
                   <strong>
                     {[member.job_title, member.company]
                       .filter(Boolean)
@@ -457,6 +467,12 @@ export function NetworkHub({
                     </div>
                   ) : null}
                 </div>
+                <Link
+                  className="directory-profile-link"
+                  href={`/members/${member.user_id}`}
+                >
+                  View full profile
+                </Link>
                 <button
                   disabled={
                     busy !== "" ||

@@ -241,6 +241,21 @@ assert(
   ),
   "Launch audit metadata must not duplicate operational evidence text",
 );
+const memberProfileMigration = read(
+  "supabase/migrations/20260728170000_member_profile_view.sql",
+);
+for (const contract of [
+  "get_member_profile",
+  "public.is_blocked_pair(actor, p_member_id)",
+  "connection.status = 'accepted'",
+  "private_profile.share_phone_with_connections",
+  "Active visible membership required",
+]) {
+  assert(
+    memberProfileMigration.includes(contract),
+    `Privacy-safe member profile view must include ${contract}`,
+  );
+}
 const databaseCorrections = read(
   "supabase/migrations/20260726210000_ci_database_corrections.sql",
 );

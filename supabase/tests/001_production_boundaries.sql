@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(168);
+select plan(171);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -168,6 +168,9 @@ select throws_ok($$select *from public.get_launch_readiness_metrics()$$,'P0001',
 select is((select count(*)from public.launch_gate_checks),0::bigint,'member cannot directly read launch gate evidence');
 select throws_ok($$select *from public.list_launch_gate_checks()$$,'P0001','Super admin required','member cannot list launch gate evidence');
 select throws_ok($$select public.save_launch_gate_check('member_email_otp','passed',null,'A member must not be able to close a production launch gate.')$$,'P0001','Super admin required','member cannot update a launch gate');
+select is((select count(*)from public.get_member_profile('10000000-0000-4000-8000-000000000003')),1::bigint,'active member can open another visible active member profile');
+select is((select phone from public.get_member_profile('10000000-0000-4000-8000-000000000003')),null::text,'member profile keeps private phone hidden before mutual acceptance');
+select throws_ok($$select *from public.get_member_profile('10000000-0000-4000-8000-000000000002')$$,'P0001','Member is unavailable','member profile view does not duplicate the own-profile editor');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
 select is((select count(*)from public.list_my_past_events()),1::bigint,'attendee lists own eligible past event');
 select lives_ok($$select public.save_event_feedback('50000000-0000-4000-8000-000000000003',5,4,5,true,'The facilitated introductions were valuable.','Allow more time for table conversations.','A thoughtful room where meaningful professional connections began.','named')$$,'eligible attendee saves private feedback with named testimonial consent');

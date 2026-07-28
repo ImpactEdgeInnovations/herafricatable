@@ -68,6 +68,8 @@ Usability is part of production readiness and continues alongside feature delive
       activity, onboarding progress and event-registration state
 - [x] Upgrade member discovery with purpose, city and keyword filters, clearer
       introductions and explicit consent guidance before messaging
+- [x] Add privacy-safe full member profiles so members can understand professional
+      context before connecting, with private contacts revealed only after mutual consent
 - [x] Create a private post-event journey joining feedback, recap, attendee
       reconnection, opportunities and ongoing conversation
 - [x] Unify notifications, requests, unread conversations and event/account updates
@@ -268,6 +270,7 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Require both application and database GitHub checks before production deployment
 - [ ] Apply `20260728130000_launch_gate_evidence.sql` in production Supabase
 - [x] Add the Super Admin Launch Gate workspace and evidence runbook
+- [ ] Apply `20260728170000_member_profile_view.sql` in production Supabase
 
 Temporary password access allows administrator testing to continue while production
 email delivery is configured. Email OTP must still pass end to end before public beta.

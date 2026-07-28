@@ -329,10 +329,38 @@ for (const contract of [
   "Current goal",
   "Request introduction",
   "Messaging opens only after she accepts",
+  'href={`/members/${member.user_id}`}',
 ]) {
   assert(
     networkHub.includes(contract),
     `Member discovery v2 must include ${contract}`,
+  );
+}
+const memberProfilePage = read("app/members/[id]/page.tsx");
+for (const contract of [
+  "get_member_profile",
+  "Private by design",
+  "Connection comes first",
+  "MemberProfileActions",
+]) {
+  assert(
+    memberProfilePage.includes(contract),
+    `Privacy-safe member profile journey must include ${contract}`,
+  );
+}
+const memberProfileActions = read(
+  "components/member/member-profile-actions.tsx",
+);
+for (const contract of [
+  "request_connection",
+  "respond_to_connection",
+  "ensure_conversation",
+  "report_member",
+  "block_member",
+]) {
+  assert(
+    memberProfileActions.includes(contract),
+    `Member profile actions must retain ${contract}`,
   );
 }
 const networkPage = read("app/network/page.tsx");
