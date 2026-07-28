@@ -172,7 +172,7 @@ select is((select count(*)from public.get_member_profile('10000000-0000-4000-800
 select is((select phone from public.get_member_profile('10000000-0000-4000-8000-000000000003')),null::text,'member profile keeps private phone hidden before mutual acceptance');
 select throws_ok($$select *from public.get_member_profile('10000000-0000-4000-8000-000000000002')$$,'P0001','Member is unavailable','member profile view does not duplicate the own-profile editor');
 select throws_ok($$select public.request_connection_with_context('10000000-0000-4000-8000-000000000003',null,'Too short')$$,'P0001','An introduction must be between 10 and 500 characters','connection context rejects an unhelpfully short note');
-select is((select count(*)from public.list_member_recommendations(6)),1::bigint,'active member receives an unconnected visible recommendation');
+select is((select count(*)from public.list_member_recommendations(6)),3::bigint,'active member receives every eligible unconnected visible recommendation');
 select is((select match_score from public.list_member_recommendations(6)limit 1),12,'recommendation score reflects shared goal, interest, city and industry');
 select ok((select shared_goals from public.list_member_recommendations(6)limit 1)@>array['build_business'],'recommendation exposes the public shared goal used for matching');
 select ok((select match_reasons from public.list_member_recommendations(6)limit 1)@>array['Also in Nairobi'],'recommendation explains its location reason in plain language');
@@ -180,9 +180,9 @@ select lives_ok($$select public.save_member_profile('10000000-0000-4000-8000-000
 select is(public.is_member_profile_saved('10000000-0000-4000-8000-000000000003'),true,'saved-profile state is available to the owning member');
 select is((select private_note from public.list_my_saved_profiles()limit 1),'Revisit before the Nairobi event to discuss regional distribution.','owner can read her private saved-profile reminder');
 select lives_ok($$select public.remove_saved_member_profile('10000000-0000-4000-8000-000000000003')$$,'member can return a saved profile to active recommendations');
-select is((select count(*)from public.list_member_recommendations(6)),1::bigint,'removing a saved profile makes an eligible recommendation available again');
+select is((select count(*)from public.list_member_recommendations(6)),3::bigint,'removing a saved profile makes that eligible recommendation available again');
 select lives_ok($$select public.request_connection_with_context('10000000-0000-4000-8000-000000000003',null,'I would value comparing notes on growing a trusted regional business.')$$,'active member sends a purposeful private introduction');
-select is((select count(*)from public.list_member_recommendations(6)),0::bigint,'existing connection journeys are excluded from recommendations');
+select is((select count(*)from public.list_member_recommendations(6)),2::bigint,'existing connection journeys are excluded without hiding other eligible recommendations');
 select lives_ok($$select public.save_member_profile('10000000-0000-4000-8000-000000000003','Revisit before the Nairobi event to discuss regional distribution.')$$,'member may keep a private reminder after beginning a connection journey');
 select is((select introduction_note from public.list_my_network_with_context()limit 1),'I would value comparing notes on growing a trusted regional business.','requester sees her own private introduction context');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
