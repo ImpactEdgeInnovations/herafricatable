@@ -91,6 +91,10 @@ export type CuratedIntroduction = {
   status: "pending" | "accepted" | "declined" | "cancelled";
   updated_at: string;
 };
+export type ConnectionAvailability = {
+  request_mode: "open" | "curated_only" | "paused";
+  user_id: string;
+};
 
 const goalLabels: Record<string, string> = {
   be_mentored: "Find a mentor",
@@ -113,6 +117,7 @@ export function NetworkHub({
   savedMembers,
   suggestedMembers,
   curatedIntroductions,
+  connectionAvailability,
   cityFilter,
   goalFilter,
   searchQuery,
@@ -125,6 +130,7 @@ export function NetworkHub({
   savedMembers: SavedMemberProfile[];
   suggestedMembers: SuggestedMember[];
   curatedIntroductions: CuratedIntroduction[];
+  connectionAvailability: ConnectionAvailability[];
   cityFilter: string;
   goalFilter: string;
   searchQuery: string;
@@ -135,6 +141,9 @@ export function NetworkHub({
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const { ask, dialog } = useActionDialog();
+  const connectionModeFor = (memberId: string) =>
+    connectionAvailability.find((item) => item.user_id === memberId)
+      ?.request_mode ?? "open";
   async function request(
     memberId: string | null,
     connectionCode: string | null,
@@ -702,10 +711,17 @@ export function NetworkHub({
                 </div>
                 <div className="suggestion-actions">
                   <button
-                    disabled={busy !== ""}
+                    disabled={
+                      busy !== "" ||
+                      connectionModeFor(member.user_id) !== "open"
+                    }
                     onClick={() => void request(member.user_id, null)}
                   >
-                    Request introduction
+                    {connectionModeFor(member.user_id) === "open"
+                      ? "Request introduction"
+                      : connectionModeFor(member.user_id) === "curated_only"
+                        ? "Curated introductions only"
+                        : "Not accepting requests"}
                   </button>
                   <button
                     disabled={busy !== ""}
@@ -826,7 +842,8 @@ export function NetworkHub({
                     disabled={
                       busy !== "" ||
                       member.connection_status === "pending" ||
-                      member.connection_status === "accepted"
+                      member.connection_status === "accepted" ||
+                      connectionModeFor(member.user_id) !== "open"
                     }
                     onClick={() => void request(member.user_id, null)}
                   >
@@ -834,7 +851,12 @@ export function NetworkHub({
                       ? "Connected"
                       : member.connection_status === "pending"
                         ? "Request pending"
-                        : "Request introduction"}
+                        : connectionModeFor(member.user_id) === "open"
+                          ? "Request introduction"
+                          : connectionModeFor(member.user_id) ===
+                              "curated_only"
+                            ? "Curated introductions only"
+                            : "Not accepting requests"}
                   </button>
                   {savedMembers.some(
                     (saved) => saved.user_id === member.user_id,
@@ -860,7 +882,11 @@ export function NetworkHub({
                   )}
                 </div>
                 <small className="directory-privacy-note">
-                  Messaging opens only after she accepts.
+                  {connectionModeFor(member.user_id) === "open"
+                    ? "Messaging opens only after she accepts."
+                    : connectionModeFor(member.user_id) === "curated_only"
+                      ? "She welcomes only introductions proposed by Her Africa Table."
+                      : "She has paused new introductions for now."}
                 </small>
               </article>
             ))}

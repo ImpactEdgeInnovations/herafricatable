@@ -13566,6 +13566,44 @@ body {
 .settings-card p {
   font-size: 0.68rem;
 }
+.connection-preferences-card {
+  align-items: start;
+}
+.connection-preference-options {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+.connection-preference-options button {
+  display: grid;
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  gap: 5px;
+}
+.connection-preference-options button.is-selected {
+  border-color: var(--wine);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+.connection-preference-options button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.connection-preference-options strong {
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 400;
+}
+.connection-preference-options span {
+  color: var(--muted);
+  font-size: 0.56rem;
+  line-height: 1.5;
+}
 .deletion-zone {
   display: block;
   padding: 0;

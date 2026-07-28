@@ -16,6 +16,10 @@ export type PrivacyRequest = {
   reviewer_note: string | null;
   created_at: string;
 };
+export type ConnectionPreference = {
+  request_mode: "open" | "curated_only" | "paused";
+  updated_at: string | null;
+};
 const date = (value: string) =>
   new Intl.DateTimeFormat("en-KE", {
     day: "numeric",
@@ -25,10 +29,12 @@ const date = (value: string) =>
 
 export function AccountSettings({
   email,
+  connectionPreference,
   visibilityPaused,
   requests,
 }: {
   email: string;
+  connectionPreference: ConnectionPreference;
   visibilityPaused: boolean;
   requests: PrivacyRequest[];
 }) {
@@ -36,6 +42,9 @@ export function AccountSettings({
   const router = useRouter();
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
+  const [connectionMode, setConnectionMode] = useState(
+    connectionPreference.request_mode,
+  );
   const [confirmation, setConfirmation] = useState("");
   const [reason, setReason] = useState("");
   const activeDeletion = requests.find(
@@ -58,6 +67,29 @@ export function AccountSettings({
           : "Your profile is visible to active members again.",
     );
     if (!error) router.refresh();
+  }
+  async function updateConnectionMode(
+    mode: ConnectionPreference["request_mode"],
+  ) {
+    setBusy("connection-mode");
+    setNotice("");
+    const { error } = await supabase.rpc("set_my_connection_preferences", {
+      p_request_mode: mode,
+    });
+    setBusy("");
+    setNotice(
+      error
+        ? memberErrorMessage(error, "change your introduction preference")
+        : mode === "open"
+          ? "Members may now request an introduction directly."
+          : mode === "curated_only"
+            ? "Only Her Africa Table may propose new introductions."
+            : "New introductions are paused. Existing connections are unchanged.",
+    );
+    if (!error) {
+      setConnectionMode(mode);
+      router.refresh();
+    }
   }
   async function exportData() {
     setBusy("export");
@@ -175,6 +207,56 @@ export function AccountSettings({
         >
           {visibilityPaused ? "Restore visibility" : "Pause visibility"}
         </button>
+      </section>
+      <section className="settings-card connection-preferences-card">
+        <div>
+          <p className="eyebrow">Your boundaries</p>
+          <h2>How would you like to connect?</h2>
+          <p>
+            This controls new introductions only. Existing connections,
+            messages, and event participation are never removed.
+          </p>
+        </div>
+        <div
+          aria-label="Connection availability"
+          className="connection-preference-options"
+          role="group"
+        >
+          {[
+            {
+              description:
+                "Members may send thoughtful requests and Admin may suggest introductions.",
+              label: "Open to introductions",
+              value: "open" as const,
+            },
+            {
+              description:
+                "Only Her Africa Table may propose a match; you still decide privately.",
+              label: "Curated only",
+              value: "curated_only" as const,
+            },
+            {
+              description:
+                "No new direct or curated introductions until you reopen them.",
+              label: "Pause new introductions",
+              value: "paused" as const,
+            },
+          ].map((option) => (
+            <button
+              aria-pressed={connectionMode === option.value}
+              className={
+                connectionMode === option.value ? "is-selected" : undefined
+              }
+              disabled={busy === "connection-mode"}
+              key={option.value}
+              onClick={() => void updateConnectionMode(option.value)}
+              type="button"
+            >
+              <strong>{option.label}</strong>
+              <span>{option.description}</span>
+            </button>
+          ))}
+        </div>
       </section>
       <section className="settings-card settings-action">
         <div>

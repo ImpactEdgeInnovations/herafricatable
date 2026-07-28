@@ -85,9 +85,14 @@ export default async function MemberProfilePage({
   }
   if (!profile) notFound();
 
-  const [{ data: introductionNote }, { data: isSaved }] = await Promise.all([
+  const [
+    { data: introductionNote },
+    { data: isSaved },
+    { data: connectionMode },
+  ] = await Promise.all([
     supabase.rpc("get_connection_introduction", { p_member_id: id }),
     supabase.rpc("is_member_profile_saved", { p_member_id: id }),
+    supabase.rpc("get_member_connection_mode", { p_member_id: id }),
   ]);
   const location = [profile.city, profile.country].filter(Boolean).join(", ");
   const accepted = profile.connection_status === "accepted";
@@ -115,6 +120,13 @@ export default async function MemberProfilePage({
             <MemberProfileActions
               connectionDirection={profile.connection_direction}
               connectionId={profile.connection_id}
+              connectionMode={
+                (connectionMode as
+                  | "open"
+                  | "curated_only"
+                  | "paused"
+                  | null) ?? "open"
+              }
               introductionNote={(introductionNote as string | null) ?? null}
               isSaved={Boolean(isSaved)}
               connectionStatus={profile.connection_status}

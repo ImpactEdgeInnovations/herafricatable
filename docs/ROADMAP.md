@@ -78,6 +78,8 @@ Usability is part of production readiness and continues alongside feature delive
       and industry, with transparent reasons and blocked-safe deterministic ranking
 - [x] Add Super Admin-curated introductions with shared context, independent member
       consent, private decline handling, audit trails and messaging only after both accept
+- [x] Give members database-enforced control over new connection availability with open,
+      curated-only and paused modes respected by direct requests and Admin curation
 - [x] Create a private post-event journey joining feedback, recap, attendee
       reconnection, opportunities and ongoing conversation
 - [x] Unify notifications, requests, unread conversations and event/account updates

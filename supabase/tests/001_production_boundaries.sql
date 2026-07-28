@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(207);
+select plan(218);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -311,10 +311,18 @@ select is((select response_count from public.get_event_feedback_summary('5000000
 select lives_ok($$select public.review_event_feedback((select id from public.event_feedback where event_id='50000000-0000-4000-8000-000000000003'),'approve_testimonial','')$$,'super admin approves consented testimonial');
 select is((select count(*)from public.list_event_testimonials('50000000-0000-4000-8000-000000000003')),1::bigint,'approved consented testimonial enters public-safe projection');
 
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',true);
+select is((select request_mode from public.get_my_connection_preferences()),'open','member connection availability defaults to open');
+select lives_ok($$select public.set_my_connection_preferences('curated_only')$$,'member may limit new relationships to curated introductions');
+select is((select request_mode from public.get_my_connection_preferences()),'curated_only','curated-only preference persists for the owning member');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select is((select request_mode from public.list_connection_availability()where user_id='10000000-0000-4000-8000-000000000004'),'curated_only','member discovery receives a plain-language availability state');
+select throws_ok($$select public.request_connection_with_context('10000000-0000-4000-8000-000000000004',null,'I would value learning about your regional event operations experience.')$$,'P0001','Member accepts curated introductions only','direct requests cannot bypass a curated-only preference');
+select is((select count(*)from public.member_connection_preferences),0::bigint,'members cannot directly read another person connection preference row');
 select throws_ok($$select public.create_curated_introduction('10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000004','Both members can exchange practical regional growth experience.')$$,'P0001','Super admin required','member cannot curate introductions');
 select throws_ok($$select *from public.list_curated_introductions_admin()$$,'P0001','Super admin required','member cannot read curated introduction operations');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select is((select request_mode from public.list_connection_availability_admin()where user_id='10000000-0000-4000-8000-000000000004'),'curated_only','admin curation receives availability without opening private settings');
 select lives_ok($$select public.create_curated_introduction('10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000004','Both members can exchange practical regional growth experience.')$$,'super admin proposes a relevant introduction without opening contact access');
 select is((select count(*)from public.list_curated_introductions_admin()),1::bigint,'super admin sees the consent state for the curated introduction');
 select is((select count(*)from public.curated_introductions),0::bigint,'super admin cannot bypass the scoped operation to browse member introduction rows');
@@ -328,8 +336,12 @@ select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004'
 select is(public.respond_to_curated_introduction((select introduction_id from public.list_my_curated_introductions()limit 1),'accept'),'accepted','second consent completes the curated introduction');
 select is((select status from public.connections where user_low=least('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000004'::uuid)and user_high=greatest('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000004'::uuid)),'accepted','mutual consent opens exactly one accepted connection');
 select is((select count(*)from public.notifications where title='Your introduction is ready'),1::bigint,'second member receives her own ready notification');
+select lives_ok($$select public.set_my_connection_preferences('paused')$$,'member may pause every new introduction without affecting accepted connections');
+select is((select request_mode from public.get_my_connection_preferences()),'paused','paused connection preference persists');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select status from public.list_curated_introductions_admin()limit 1),'accepted','admin sees completion state without seeing private messages');
+select is((select request_mode from public.list_connection_availability_admin()where user_id='10000000-0000-4000-8000-000000000004'),'paused','admin selector receives the paused state and can exclude that member');
+select throws_ok($$select public.create_curated_introduction('10000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000004','Both members could otherwise exchange regional operating experience.')$$,'P0001','One or both members are not accepting curated introductions','paused preference blocks even an Admin-curated proposal');
 select throws_ok($$select public.create_curated_introduction('10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000004','An existing accepted relationship must not be introduced again.')$$,'P0001','A connection journey already exists','accepted connections cannot receive duplicate curated introductions');
 select is((select count(*)from public.audit_events where action='curated_introduction.created'),1::bigint,'curated introduction creation is auditable without copying its reason');
 

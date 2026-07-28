@@ -9,6 +9,7 @@ import { useActionDialog } from "@/components/ui/action-dialog";
 export function MemberProfileActions({
   connectionDirection,
   connectionId,
+  connectionMode,
   introductionNote,
   isSaved,
   connectionStatus,
@@ -16,6 +17,7 @@ export function MemberProfileActions({
 }: {
   connectionDirection: string | null;
   connectionId: string | null;
+  connectionMode: "open" | "curated_only" | "paused";
   introductionNote: string | null;
   isSaved: boolean;
   connectionStatus: string | null;
@@ -263,10 +265,16 @@ export function MemberProfileActions({
         ) : (
           <button
             className="button button-primary"
-            disabled={Boolean(busy)}
+            disabled={Boolean(busy) || connectionMode !== "open"}
             onClick={() => void request()}
           >
-            {busy === "request" ? "Sending…" : "Request introduction"}
+            {busy === "request"
+              ? "Sending…"
+              : connectionMode === "open"
+                ? "Request introduction"
+                : connectionMode === "curated_only"
+                  ? "Curated introductions only"
+                  : "Not accepting requests"}
           </button>
         )}
         <button

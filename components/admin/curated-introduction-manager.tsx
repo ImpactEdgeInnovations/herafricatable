@@ -23,14 +23,20 @@ export type AdminCuratedIntroduction = {
   status: "pending" | "accepted" | "declined" | "cancelled";
   updated_at: string;
 };
+export type AdminConnectionAvailability = {
+  request_mode: "open" | "curated_only" | "paused";
+  user_id: string;
+};
 
 export function CuratedIntroductionManager({
   introductions,
   members,
+  availability,
   migrationReady,
 }: {
   introductions: AdminCuratedIntroduction[];
   members: AdminMember[];
+  availability: AdminConnectionAvailability[];
   migrationReady: boolean;
 }) {
   const router = useRouter();
@@ -38,8 +44,14 @@ export function CuratedIntroductionManager({
   const { ask, dialog } = useActionDialog();
   const activeMembers = members.filter(
     (member) =>
-      member.access_status === "active" && Boolean(member.display_name),
+      member.access_status === "active" &&
+      Boolean(member.display_name) &&
+      availability.find((item) => item.user_id === member.user_id)
+        ?.request_mode !== "paused",
   );
+  const modeFor = (memberId: string) =>
+    availability.find((item) => item.user_id === memberId)?.request_mode ??
+    "open";
   const [memberA, setMemberA] = useState("");
   const [memberB, setMemberB] = useState("");
   const [reason, setReason] = useState("");
@@ -153,6 +165,9 @@ export function CuratedIntroductionManager({
                     {[member.job_title, member.company]
                       .filter(Boolean)
                       .join(", ")}
+                    {modeFor(member.user_id) === "curated_only"
+                      ? " · curated only"
+                      : ""}
                   </option>
                 ))}
               </select>
@@ -175,6 +190,9 @@ export function CuratedIntroductionManager({
                     {[member.job_title, member.company]
                       .filter(Boolean)
                       .join(", ")}
+                    {modeFor(member.user_id) === "curated_only"
+                      ? " · curated only"
+                      : ""}
                   </option>
                 ))}
               </select>

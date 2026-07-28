@@ -374,6 +374,19 @@ for (const contract of [
     `Member profile actions must retain ${contract}`,
   );
 }
+const accountSettings = read("components/member/account-settings.tsx");
+for (const contract of [
+  "How would you like to connect?",
+  "Open to introductions",
+  "Curated only",
+  "Pause new introductions",
+  "set_my_connection_preferences",
+]) {
+  assert(
+    accountSettings.includes(contract),
+    `Member connection boundaries must include ${contract}`,
+  );
+}
 const networkPage = read("app/network/page.tsx");
 for (const contract of ["p_city:", "p_goal:", "cityFilter=", "goalFilter="]) {
   assert(

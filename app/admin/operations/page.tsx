@@ -107,6 +107,7 @@ import { AdminHeader } from "@/components/admin/admin-header";
 import { AdminWorkGroup } from "@/components/admin/admin-work-group";
 import {
   CuratedIntroductionManager,
+  type AdminConnectionAvailability,
   type AdminCuratedIntroduction,
 } from "@/components/admin/curated-introduction-manager";
 
@@ -320,6 +321,7 @@ export default async function AdminOperationsPage({
     analyticsResult,
     launchGateResult,
     curatedIntroductionResult,
+    connectionAvailabilityResult,
   ] = await Promise.all([
     canModerate && loadSafety
       ? supabase.rpc("list_member_reports")
@@ -434,6 +436,9 @@ export default async function AdminOperationsPage({
       : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadPeople
       ? supabase.rpc("list_curated_introductions_admin")
+      : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadPeople
+      ? supabase.rpc("list_connection_availability_admin")
       : Promise.resolve({ data: [], error: null }),
   ]);
   const communities = (communityResult.data as CommunitySummary[] | null) ?? [];
@@ -715,13 +720,21 @@ export default async function AdminOperationsPage({
             migrationReady={!memberResult.error}
           />
           <CuratedIntroductionManager
+            availability={
+              (connectionAvailabilityResult.data as
+                | AdminConnectionAvailability[]
+                | null) ?? []
+            }
             introductions={
               (curatedIntroductionResult.data as
                 | AdminCuratedIntroduction[]
                 | null) ?? []
             }
             members={members}
-            migrationReady={!curatedIntroductionResult.error}
+            migrationReady={
+              !curatedIntroductionResult.error &&
+              !connectionAvailabilityResult.error
+            }
           />
         </AdminWorkGroup>
       ) : null}

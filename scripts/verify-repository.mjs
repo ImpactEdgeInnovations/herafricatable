@@ -339,6 +339,26 @@ assert(
   !curatedIntroductionsMigration.includes("'reason', clean_reason"),
   "Curated-introduction audit metadata must not duplicate the visible reason",
 );
+const connectionPreferencesMigration = read(
+  "supabase/migrations/20260729130000_connection_preferences.sql",
+);
+for (const contract of [
+  "member_connection_preferences",
+  "get_my_connection_preferences",
+  "set_my_connection_preferences",
+  "list_connection_availability",
+  "get_member_connection_mode",
+  "list_connection_availability_admin",
+  "enforce_direct_connection_preference",
+  "enforce_curated_connection_preference",
+  "Member accepts curated introductions only",
+  "One or both members are not accepting curated introductions",
+]) {
+  assert(
+    connectionPreferencesMigration.includes(contract),
+    `Member-controlled connection availability must include ${contract}`,
+  );
+}
 const databaseCorrections = read(
   "supabase/migrations/20260726210000_ci_database_corrections.sql",
 );
