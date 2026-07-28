@@ -85,6 +85,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Let members privately record connection outcomes with voluntary anonymous
       category reporting, three-member suppression, test-account exclusion and no
       Admin access to names or notes
+  - [x] Allow the owner to correct an outcome or withdraw anonymous sharing later
+        without exposing prior private content in the audit trail
 - [x] Create a private post-event journey joining feedback, recap, attendee
       reconnection, opportunities and ongoing conversation
 - [x] Unify notifications, requests, unread conversations and event/account updates

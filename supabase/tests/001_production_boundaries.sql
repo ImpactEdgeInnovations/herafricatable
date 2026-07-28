@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(249);
+select plan(256);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -369,6 +369,10 @@ select is((select private_detail from public.list_my_connection_outcomes()limit 
 select is((select count(*)from public.audit_events where action='connection.outcome_recorded'and metadata::text like'%joint supplier programme%'),0::bigint,'outcome audit metadata never copies the private detail');
 select lives_ok($$select public.record_connection_outcome((select id from public.connections where user_low=least('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000004'::uuid)and user_high=greatest('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000004'::uuid)),'mentorship',current_date,'A private mentoring relationship began after our introduction.',false)$$,'member may keep an outcome completely private from aggregate reporting');
 select is((select count(*)from public.list_my_connection_outcomes()),2::bigint,'owner sees both anonymously shared and completely private outcomes');
+select lives_ok($$select public.update_connection_outcome((select outcome_id from public.list_my_connection_outcomes()where outcome_type='mentorship'limit 1),'knowledge',current_date-1,'The corrected private record describes knowledge shared after our introduction.',false)$$,'owner may correct an outcome while keeping it completely private');
+select is((select outcome_type from public.list_my_connection_outcomes()where outcome_type='knowledge'),'knowledge','corrected outcome category persists for the owner');
+select is((select private_detail from public.list_my_connection_outcomes()where outcome_type='knowledge'),'The corrected private record describes knowledge shared after our introduction.','corrected private detail remains owner-only');
+select is((select share_anonymously from public.list_my_connection_outcomes()where outcome_type='knowledge'),false,'owner may explicitly keep a corrected outcome out of anonymous totals');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
 select is((select count(*)from public.connection_outcomes),0::bigint,'the other connected member cannot read the owners private outcomes');
 select lives_ok($$select public.record_connection_outcome((select id from public.connections where user_low=least('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000003'::uuid)and user_high=greatest('10000000-0000-4000-8000-000000000002'::uuid,'10000000-0000-4000-8000-000000000003'::uuid)),'referral',current_date,'A useful supplier referral followed our first conversation.',true)$$,'tagged test member may exercise the same private outcome workflow');
@@ -378,13 +382,15 @@ select is((select count(*)from public.connection_outcomes),0::bigint,'event staf
 select throws_ok($$select *from public.get_connection_outcome_summary(365)$$,'P0001','Super admin required','non-admin members cannot access anonymous community aggregates');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select count(*)from public.connection_outcomes),0::bigint,'super admin cannot directly browse outcome identities or private notes');
+select is((select count(*)from public.audit_events where action='connection.outcome_updated'),1::bigint,'outcome corrections are auditable');
+select is((select count(*)from public.audit_events where action='connection.outcome_updated'and metadata::text like'%corrected private record%'),0::bigint,'outcome correction audit metadata never copies private detail');
 select is((select count(*)from public.get_connection_outcome_summary(365)),0::bigint,'a category reported by fewer than three real members remains suppressed');
 set local role postgres;
 insert into public.connections(id,user_low,user_high,requester_id,recipient_id,status,responded_at)values
  ('95000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000004','accepted',now());
-insert into public.connection_outcomes(owner_id,connection_id,outcome_type,occurred_on,private_detail,share_anonymously)values
- ('10000000-0000-4000-8000-000000000004',(select id from public.connections where user_low='10000000-0000-4000-8000-000000000002'and user_high='10000000-0000-4000-8000-000000000004'),'collaboration',current_date,'Staff records a distinct real-member collaboration outcome.',true),
- ('10000000-0000-4000-8000-000000000001','95000000-0000-4000-8000-000000000001','collaboration',current_date,'Admin records a distinct real-member collaboration outcome.',true);
+insert into public.connection_outcomes(id,owner_id,connection_id,outcome_type,occurred_on,private_detail,share_anonymously)values
+ ('95000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000004',(select id from public.connections where user_low='10000000-0000-4000-8000-000000000002'and user_high='10000000-0000-4000-8000-000000000004'),'collaboration',current_date,'Staff records a distinct real-member collaboration outcome.',true),
+ ('95000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000001','95000000-0000-4000-8000-000000000001','collaboration',current_date,'Admin records a distinct real-member collaboration outcome.',true);
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
@@ -392,7 +398,8 @@ select is((select count(*)from public.get_connection_outcome_summary(365)),1::bi
 select is((select outcome_type from public.get_connection_outcome_summary(365)limit 1),'collaboration','private and test-account outcomes remain excluded from the reportable category');
 select is((select outcome_count from public.get_connection_outcome_summary(365)limit 1),3::bigint,'the thresholded aggregate includes only the three eligible real-member reports');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
-select lives_ok($$select public.remove_connection_outcome((select outcome_id from public.list_my_connection_outcomes()where outcome_type='mentorship'limit 1))$$,'member can delete her completely private outcome');
+select throws_ok($$select public.update_connection_outcome('95000000-0000-4000-8000-000000000002','collaboration',current_date,'Attempt to alter another members private outcome.',false)$$,'P0001','Connection outcome not found','member cannot alter another owners outcome or sharing choice');
+select lives_ok($$select public.remove_connection_outcome((select outcome_id from public.list_my_connection_outcomes()where outcome_type='knowledge'limit 1))$$,'member can delete her completely private outcome');
 select is((select count(*)from public.list_my_connection_outcomes()),1::bigint,'deleting one outcome preserves the owners remaining relationship history');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select count(*)from public.audit_events where action='connection.outcome_removed'),1::bigint,'outcome deletion is auditable without exposing its content');

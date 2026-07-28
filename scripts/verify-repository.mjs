@@ -420,6 +420,24 @@ for (const contract of [
     `Small-cohort outcome suppression must include ${contract}`,
   );
 }
+const connectionOutcomeEditsMigration = read(
+  "supabase/migrations/20260730130000_connection_outcome_edits.sql",
+);
+for (const contract of [
+  "update_connection_outcome",
+  "owner_id = actor",
+  "connection.outcome_updated",
+  "'shared_anonymously', coalesce(p_share_anonymously, false)",
+]) {
+  assert(
+    connectionOutcomeEditsMigration.includes(contract),
+    `Owner-controlled connection outcome edits must include ${contract}`,
+  );
+}
+assert(
+  !connectionOutcomeEditsMigration.includes("'private_detail', clean_detail"),
+  "Connection outcome edit audit metadata must not copy private details",
+);
 const databaseCorrections = read(
   "supabase/migrations/20260726210000_ci_database_corrections.sql",
 );

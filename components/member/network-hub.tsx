@@ -433,15 +433,18 @@ export function NetworkHub({
   async function recordOutcome(
     connectionId: string,
     displayName: string,
+    existing?: ConnectionOutcome,
   ) {
     const result = await ask({
-      title: `What came from connecting with ${displayName}?`,
+      title: existing
+        ? `Update your outcome with ${displayName}`
+        : `What came from connecting with ${displayName}?`,
       description:
-        "Keep a private record of the value this relationship created. Your note and both members’ identities always stay private.",
-      confirmLabel: "Save outcome",
+        "Your note and both members’ identities always stay private. You can change or withdraw anonymous sharing at any time.",
+      confirmLabel: existing ? "Update outcome" : "Save outcome",
       fields: [
         {
-          initialValue: "collaboration",
+          initialValue: existing?.outcome_type ?? "collaboration",
           label: "Type of outcome",
           name: "outcomeType",
           options: Object.entries(outcomeLabels).map(([value, label]) => ({
@@ -451,7 +454,8 @@ export function NetworkHub({
           type: "select",
         },
         {
-          initialValue: new Date().toISOString().slice(0, 10),
+          initialValue:
+            existing?.occurred_on ?? new Date().toISOString().slice(0, 10),
           label: "When did it happen?",
           name: "occurredOn",
           required: true,
@@ -459,6 +463,7 @@ export function NetworkHub({
         },
         {
           help: "This is visible only to you—not the other member or Admin.",
+          initialValue: existing?.private_detail ?? "",
           label: "Private detail",
           maxLength: 2000,
           minLength: 10,
@@ -470,7 +475,7 @@ export function NetworkHub({
         },
         {
           help: "Admin receives only an anonymous category total—never your note, name, or the other member’s identity. The category stays hidden until at least three different real members contribute.",
-          initialValue: true,
+          initialValue: existing?.share_anonymously ?? true,
           label: "Include this in anonymous community totals",
           name: "shareAnonymously",
           type: "checkbox",
@@ -480,18 +485,28 @@ export function NetworkHub({
     if (!result) return;
     setBusy(`outcome:${connectionId}`);
     setMessage("");
-    const { error } = await supabase.rpc("record_connection_outcome", {
-      p_connection_id: connectionId,
+    const payload = {
       p_occurred_on: String(result.occurredOn),
       p_outcome_type: String(result.outcomeType),
       p_private_detail: String(result.detail),
       p_share_anonymously: Boolean(result.shareAnonymously),
-    });
+    };
+    const { error } = existing
+      ? await supabase.rpc("update_connection_outcome", {
+          ...payload,
+          p_outcome_id: existing.outcome_id,
+        })
+      : await supabase.rpc("record_connection_outcome", {
+          ...payload,
+          p_connection_id: connectionId,
+        });
     setBusy("");
     setMessage(
       error
         ? memberErrorMessage(error, "record this connection outcome")
-        : "Your private outcome has been recorded.",
+        : existing
+          ? "Your outcome and sharing choice have been updated."
+          : "Your private outcome has been recorded.",
     );
     if (!error) router.refresh();
   }
@@ -761,15 +776,30 @@ export function NetworkHub({
                               </small>
                               <p>{outcome.private_detail}</p>
                             </div>
-                            <button
-                              aria-label={`Delete ${outcomeLabels[outcome.outcome_type].toLowerCase()} outcome`}
-                              disabled={busy !== ""}
-                              onClick={() =>
-                                void removeOutcome(outcome.outcome_id)
-                              }
-                            >
-                              Delete
-                            </button>
+                            <span className="connection-outcome-actions">
+                              <button
+                                aria-label={`Edit ${outcomeLabels[outcome.outcome_type].toLowerCase()} outcome`}
+                                disabled={busy !== ""}
+                                onClick={() =>
+                                  void recordOutcome(
+                                    item.connection_id,
+                                    item.display_name || "this member",
+                                    outcome,
+                                  )
+                                }
+                              >
+                                Edit
+                              </button>
+                              <button
+                                aria-label={`Delete ${outcomeLabels[outcome.outcome_type].toLowerCase()} outcome`}
+                                disabled={busy !== ""}
+                                onClick={() =>
+                                  void removeOutcome(outcome.outcome_id)
+                                }
+                              >
+                                Delete
+                              </button>
+                            </span>
                           </div>
                         ))}
                       </div>

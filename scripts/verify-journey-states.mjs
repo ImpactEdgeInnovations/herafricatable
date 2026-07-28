@@ -342,6 +342,8 @@ for (const contract of [
   "complete_connection_followup",
   "Record outcome",
   "record_connection_outcome",
+  "update_connection_outcome",
+  "You can change or withdraw anonymous sharing at any time",
   "Eligible for anonymous totals",
   "Completely private",
   "Why she would like to connect",

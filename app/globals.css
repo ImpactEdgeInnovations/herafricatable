@@ -5725,7 +5725,12 @@ body {
   font-size: 0.57rem;
   line-height: 1.5;
 }
-.connection-outcome button {
+.connection-outcome-actions {
+  display: flex;
+  align-items: start;
+  gap: 2px;
+}
+.connection-outcome-actions button {
   min-height: 32px;
   padding: 0 10px;
   border: 0;
