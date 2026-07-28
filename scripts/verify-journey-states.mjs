@@ -276,6 +276,8 @@ for (const [route, area] of Object.entries({
 }
 const adminWorkGroup = read("components/admin/admin-work-group.tsx");
 const memberHome = read("app/home/page.tsx");
+const upcomingEvents = read("app/events/page.tsx");
+const pastEvents = read("app/events/past/page.tsx");
 for (const contract of [
   "member-activation-compact",
   "member-activation-progress",
@@ -292,6 +294,17 @@ assert(
   !memberHome.includes('className="member-quickstart"'),
   "Member Home must not repeat its primary actions in oversized quick-start cards",
 );
+for (const [content, contract, description] of [
+  [upcomingEvents, '.gte("ends_at", new Date().toISOString())', "exclude completed events from Upcoming"],
+  [upcomingEvents, 'className="event-view-switcher"', "expose the Upcoming/Past switcher"],
+  [upcomingEvents, "Events are temporarily unavailable", "distinguish a service error from an empty calendar"],
+  [pastEvents, 'className="event-view-switcher"', "expose the Upcoming/Past switcher in the archive"],
+  [pastEvents, 'className="past-events-empty"', "use a dedicated readable archive state"],
+  [pastEvents, "Your event history will begin here.", "explain when event history appears"],
+  [pastEvents, "Continue connections", "retain attendee follow-up actions"],
+]) {
+  assert(content.includes(contract), `Event experience must ${description}`);
+}
 assert(
   adminWorkGroup.includes("hashchange") &&
     adminWorkGroup.includes("detailsRef.current.open = true"),

@@ -93,6 +93,9 @@ Usability is part of production readiness and continues alongside feature delive
         without exposing prior private content in the audit trail
 - [x] Create a private post-event journey joining feedback, recap, attendee
       reconnection, opportunities and ongoing conversation
+  - [x] Refine Upcoming and Past Events into a clear two-view journey, prevent
+        completed events from reappearing as upcoming, and give empty/error
+        archives a calm explanation with an obvious recovery path
 - [x] Unify notifications, requests, unread conversations and event/account updates
       in one plain-language Activity centre
 - [x] Complete a compact member visual pass for mobile hierarchy, touch targets,
