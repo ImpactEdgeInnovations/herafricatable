@@ -129,6 +129,7 @@ export type ConnectionOutcome = {
   private_detail: string;
   share_anonymously: boolean;
 };
+type NetworkView = "connections" | "history" | "requests";
 
 const goalLabels: Record<string, string> = {
   be_mentored: "Find a mentor",
@@ -188,6 +189,11 @@ export function NetworkHub({
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
+  const [networkView, setNetworkView] = useState<NetworkView>(() =>
+    connections.some((item) => item.status === "pending")
+      ? "requests"
+      : "connections",
+  );
   const { ask, dialog } = useActionDialog();
   const connectionModeFor = (memberId: string) =>
     connectionAvailability.find((item) => item.user_id === memberId)
@@ -641,6 +647,25 @@ export function NetworkHub({
     e.preventDefault();
     if (code.trim()) void request(null, code.trim());
   }
+  const requestConnections = connections.filter(
+    (item) => item.status === "pending",
+  );
+  const acceptedConnections = connections.filter(
+    (item) => item.status === "accepted",
+  );
+  const historyConnections = acceptedConnections.filter(
+    (item) =>
+      followups.some(
+        (followup) => followup.connection_id === item.connection_id,
+      ) ||
+      outcomes.some((outcome) => outcome.connection_id === item.connection_id),
+  );
+  const visibleConnections =
+    networkView === "requests"
+      ? requestConnections
+      : networkView === "history"
+        ? historyConnections
+        : acceptedConnections;
   return (
     <>
       {dialog}
@@ -648,10 +673,56 @@ export function NetworkHub({
         <section className="network-connections">
           <div>
             <p className="eyebrow">Your network</p>
-            <h2>Connections and requests</h2>
+            <h2>People and relationships</h2>
+            <p className="network-section-intro">
+              Keep requests, active conversations and your private follow-up
+              history easy to find.
+            </p>
           </div>
-          <div>
-            {connections.map((item) => {
+          <div className="network-connection-workspace">
+            <div
+              aria-label="Choose a network view"
+              className="network-view-tabs"
+            >
+              {(
+                [
+                  {
+                    count: requestConnections.length,
+                    id: "requests",
+                    label: "Requests",
+                  },
+                  {
+                    count: acceptedConnections.length,
+                    id: "connections",
+                    label: "Connections",
+                  },
+                  {
+                    count: historyConnections.length,
+                    id: "history",
+                    label: "Private history",
+                  },
+                ] as { count: number; id: NetworkView; label: string }[]
+              ).map((view) => (
+                <button
+                  aria-controls="network-view-panel"
+                  aria-pressed={networkView === view.id}
+                  id={`network-tab-${view.id}`}
+                  key={view.id}
+                  onClick={() => setNetworkView(view.id)}
+                  type="button"
+                >
+                  <span>{view.label}</span>
+                  <small>{view.count}</small>
+                </button>
+              ))}
+            </div>
+            <div
+              aria-live="polite"
+              className="network-view-panel"
+              id="network-view-panel"
+              tabIndex={0}
+            >
+            {visibleConnections.length ? visibleConnections.map((item) => {
               const contact = contacts.find(
                 (x) => x.user_id === item.other_user_id,
               );
@@ -806,8 +877,11 @@ export function NetworkHub({
                     ) : null}
                   </div>
                   <span className="member-status">
-                    {item.status}
-                    {item.status === "pending" ? ` · ${item.direction}` : ""}
+                    {item.status === "accepted"
+                      ? "Connected"
+                      : item.direction === "incoming"
+                        ? "Your response"
+                        : "Request sent"}
                   </span>
                   {item.status === "pending" &&
                   item.direction === "incoming" ? (
@@ -840,18 +914,6 @@ export function NetworkHub({
                       <button
                         disabled={busy !== ""}
                         onClick={() =>
-                          void safety(
-                            item.other_user_id,
-                            "remove",
-                            item.connection_id,
-                          )
-                        }
-                      >
-                        Remove
-                      </button>
-                      <button
-                        disabled={busy !== ""}
-                        onClick={() =>
                           void planFollowup(
                             item.connection_id,
                             item.display_name || "this member",
@@ -871,46 +933,83 @@ export function NetworkHub({
                       >
                         Record outcome
                       </button>
-                      {followup?.next_step ? (
-                        <button
-                          disabled={busy !== ""}
-                          onClick={() =>
-                            void completeFollowup(item.connection_id)
-                          }
-                        >
-                          Mark done
-                        </button>
-                      ) : null}
-                      {followup ? (
-                        <button
-                          disabled={busy !== ""}
-                          onClick={() =>
-                            void removeFollowup(item.connection_id)
-                          }
-                        >
-                          Clear plan
-                        </button>
-                      ) : null}
-                      <button
-                        disabled={busy !== ""}
-                        onClick={() =>
-                          void safety(item.other_user_id, "report")
-                        }
-                      >
-                        Report
-                      </button>
-                      <button
-                        className="danger-action"
-                        disabled={busy !== ""}
-                        onClick={() => void safety(item.other_user_id, "block")}
-                      >
-                        Block
-                      </button>
+                      <details className="network-more-actions">
+                        <summary>More options</summary>
+                        <div>
+                          {followup?.next_step ? (
+                            <button
+                              disabled={busy !== ""}
+                              onClick={() =>
+                                void completeFollowup(item.connection_id)
+                              }
+                            >
+                              Mark follow-up done
+                            </button>
+                          ) : null}
+                          {followup ? (
+                            <button
+                              disabled={busy !== ""}
+                              onClick={() =>
+                                void removeFollowup(item.connection_id)
+                              }
+                            >
+                              Clear private plan
+                            </button>
+                          ) : null}
+                          <button
+                            disabled={busy !== ""}
+                            onClick={() =>
+                              void safety(
+                                item.other_user_id,
+                                "remove",
+                                item.connection_id,
+                              )
+                            }
+                          >
+                            Remove connection
+                          </button>
+                          <button
+                            disabled={busy !== ""}
+                            onClick={() =>
+                              void safety(item.other_user_id, "report")
+                            }
+                          >
+                            Report privately
+                          </button>
+                          <button
+                            className="danger-action"
+                            disabled={busy !== ""}
+                            onClick={() =>
+                              void safety(item.other_user_id, "block")
+                            }
+                          >
+                            Block member
+                          </button>
+                        </div>
+                      </details>
                     </div>
                   ) : null}
                 </article>
               );
-            })}
+            }) : (
+              <div className="network-view-empty">
+                <strong>
+                  {networkView === "requests"
+                    ? "No requests waiting"
+                    : networkView === "history"
+                      ? "No private relationship history yet"
+                      : "No active connections yet"}
+                </strong>
+                <p>
+                  {networkView === "requests"
+                    ? "New requests you send or receive will stay together here."
+                    : networkView === "history"
+                      ? "Private plans and outcomes will appear here after you add them to a connection."
+                      : "Discover a relevant member below and send a thoughtful introduction."}
+                </p>
+              </div>
+            )}
+            </div>
           </div>
         </section>
       ) : null}

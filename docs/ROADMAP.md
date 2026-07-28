@@ -93,6 +93,8 @@ Usability is part of production readiness and continues alongside feature delive
       in one plain-language Activity centre
 - [x] Complete a compact member visual pass for mobile hierarchy, touch targets,
       readable cards, restrained density and consistent page widths
+  - [x] Split growing member networks into requests, active connections and private
+        history views with plain-language empty states and progressively disclosed safety tools
 - [x] Add a Super Admin-only, audited Launch Gate workspace for assigning owners,
       recording acceptance evidence and preventing metrics from masking operational blockers
 - [x] Add contextual help and examples to every unfamiliar form without crowding the page
