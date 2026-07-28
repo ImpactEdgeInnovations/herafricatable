@@ -10,12 +10,14 @@ export function MemberProfileActions({
   connectionDirection,
   connectionId,
   introductionNote,
+  isSaved,
   connectionStatus,
   memberId,
 }: {
   connectionDirection: string | null;
   connectionId: string | null;
   introductionNote: string | null;
+  isSaved: boolean;
   connectionStatus: string | null;
   memberId: string;
 }) {
@@ -91,6 +93,52 @@ export function MemberProfileActions({
       return;
     }
     router.push(`/messages?conversation=${data}`);
+  }
+  async function saveProfile() {
+    if (isSaved) {
+      setBusy("save");
+      const { error } = await supabase.rpc("remove_saved_member_profile", {
+        p_member_id: memberId,
+      });
+      setBusy("");
+      setMessage(
+        error
+          ? memberErrorMessage(error, "remove this saved profile")
+          : "Profile removed from your saved list.",
+      );
+      if (!error) router.refresh();
+      return;
+    }
+    const result = await ask({
+      title: "Save this profile for later?",
+      description:
+        "This is private. She will not be notified, and saving does not send a connection request.",
+      confirmLabel: "Save profile",
+      fields: [
+        {
+          name: "note",
+          label: "Private reminder (optional)",
+          type: "textarea",
+          minLength: 3,
+          maxLength: 500,
+          placeholder:
+            "For example: Revisit before the Nairobi event to discuss regional distribution.",
+        },
+      ],
+    });
+    if (!result) return;
+    setBusy("save");
+    const { error } = await supabase.rpc("save_member_profile", {
+      p_member_id: memberId,
+      p_private_note: String(result.note ?? ""),
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "save this profile")
+        : "Profile saved privately for later.",
+    );
+    if (!error) router.refresh();
   }
 
   async function safety(action: "block" | "report") {
@@ -221,6 +269,13 @@ export function MemberProfileActions({
             {busy === "request" ? "Sending…" : "Request introduction"}
           </button>
         )}
+        <button
+          className="button button-outline"
+          disabled={Boolean(busy)}
+          onClick={() => void saveProfile()}
+        >
+          {isSaved ? "Saved · remove" : "Save for later"}
+        </button>
         <button
           className="member-profile-safety"
           disabled={Boolean(busy)}

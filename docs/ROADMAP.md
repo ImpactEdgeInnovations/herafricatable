@@ -72,6 +72,8 @@ Usability is part of production readiness and continues alongside feature delive
       context before connecting, with private contacts revealed only after mutual consent
 - [x] Make introductions intentional with an optional private context note that helps
       recipients decide before accepting, without exposing it to Admin or the directory
+- [x] Add a private saved-profiles shortlist with optional personal reminders so members
+      can revisit relevant people without sending premature connection requests
 - [x] Create a private post-event journey joining feedback, recap, attendee
       reconnection, opportunities and ongoing conversation
 - [x] Unify notifications, requests, unread conversations and event/account updates

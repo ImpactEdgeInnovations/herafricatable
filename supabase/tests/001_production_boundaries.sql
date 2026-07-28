@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(176);
+select plan(183);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -172,6 +172,9 @@ select is((select count(*)from public.get_member_profile('10000000-0000-4000-800
 select is((select phone from public.get_member_profile('10000000-0000-4000-8000-000000000003')),null::text,'member profile keeps private phone hidden before mutual acceptance');
 select throws_ok($$select *from public.get_member_profile('10000000-0000-4000-8000-000000000002')$$,'P0001','Member is unavailable','member profile view does not duplicate the own-profile editor');
 select throws_ok($$select public.request_connection_with_context('10000000-0000-4000-8000-000000000003',null,'Too short')$$,'P0001','An introduction must be between 10 and 500 characters','connection context rejects an unhelpfully short note');
+select lives_ok($$select public.save_member_profile('10000000-0000-4000-8000-000000000003','Revisit before the Nairobi event to discuss regional distribution.')$$,'member privately saves a relevant profile for later');
+select is(public.is_member_profile_saved('10000000-0000-4000-8000-000000000003'),true,'saved-profile state is available to the owning member');
+select is((select private_note from public.list_my_saved_profiles()limit 1),'Revisit before the Nairobi event to discuss regional distribution.','owner can read her private saved-profile reminder');
 select lives_ok($$select public.request_connection_with_context('10000000-0000-4000-8000-000000000003',null,'I would value comparing notes on growing a trusted regional business.')$$,'active member sends a purposeful private introduction');
 select is((select introduction_note from public.list_my_network_with_context()limit 1),'I would value comparing notes on growing a trusted regional business.','requester sees her own private introduction context');
 select is((select count(*)from public.list_public_past_events(24,0)),1::bigint,'public-safe past event projection includes completed event');
@@ -205,6 +208,7 @@ select throws_ok($$select *from public.list_launch_gate_checks()$$,'P0001','Supe
 select throws_ok($$select *from public.list_event_feedback_admin('50000000-0000-4000-8000-000000000003')$$,'P0001','Not authorized','event staff cannot read feedback outside assigned event scope');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
+select is((select count(*)from public.member_saved_profiles),0::bigint,'another member cannot read a private saved-profile shortlist');
 select is((select introduction_note from public.list_my_network_with_context()where direction='incoming'limit 1),'I would value comparing notes on growing a trusted regional business.','recipient sees the private introduction before deciding');
 select lives_ok($$select public.respond_to_connection((select connection_id from public.list_my_network_with_context()where direction='incoming'limit 1),'accept')$$,'recipient deliberately accepts the contextual connection request');
 select is((select count(*)from public.list_marketplace_responses('60000000-0000-4000-8000-000000000001')),1::bigint,'post owner reads private responses to own post');
@@ -215,6 +219,7 @@ select is((select count(*)from public.perk_redemptions),0::bigint,'another membe
 select is((select count(*)from public.list_partner_perks()),1::bigint,'another active member sees the catalog without another member code');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select is((select count(*)from public.member_saved_profiles),0::bigint,'super admin cannot browse member saved-profile notes');
 select is((select count(*)from public.support_tickets),2::bigint,'super admin reads support tickets');
 select is((select count(*)from public.list_admin_privacy_requests()),2::bigint,'super admin lists privacy requests');
 select ok((select count(*)from public.list_admin_notification_jobs())>=2,'super admin lists notification jobs');
@@ -267,6 +272,8 @@ select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001'
 select is((select test_events from public.get_product_analytics(30)where event_name='support_requested'),2::bigint,'tagged identity reclassification and new test activity remain separately visible to Super Admin');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select lives_ok($$select public.remove_saved_member_profile('10000000-0000-4000-8000-000000000003')$$,'member removes a profile from her private shortlist');
+select is(public.is_member_profile_saved('10000000-0000-4000-8000-000000000003'),false,'removed profile no longer appears saved');
 select lives_ok($$select public.respond_to_community_invitation((select id from public.communities where slug='founding-table-nairobi'),true)$$,'invited attendee deliberately accepts founding-room access');
 select is((select status from public.community_memberships where community_id=(select id from public.communities where slug='founding-table-nairobi')and user_id='10000000-0000-4000-8000-000000000002'),'active','accepted cohort invitation becomes active');
 select lives_ok($$select public.save_community_introduction((select id from public.communities where slug='founding-table-nairobi'),'I lead a growing East African enterprise.','I am building a trusted regional partner network.','I can offer commercial strategy and warm introductions.','I am seeking values-aligned distribution partners.')$$,'accepted cohort member saves a structured introduction');

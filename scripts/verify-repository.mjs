@@ -277,6 +277,27 @@ assert(
   ),
   "Private introduction text must not be duplicated into audit metadata",
 );
+const savedProfilesMigration = read(
+  "supabase/migrations/20260729010000_saved_member_profiles.sql",
+);
+for (const contract of [
+  "member_saved_profiles",
+  "save_member_profile",
+  "remove_saved_member_profile",
+  "is_member_profile_saved",
+  "list_my_saved_profiles",
+  "'private_note_provided', clean_note is not null",
+  "Saved profile limit reached",
+]) {
+  assert(
+    savedProfilesMigration.includes(contract),
+    `Private saved profiles must include ${contract}`,
+  );
+}
+assert(
+  !savedProfilesMigration.includes("'private_note', clean_note"),
+  "Private saved-profile notes must not be duplicated into audit metadata",
+);
 const databaseCorrections = read(
   "supabase/migrations/20260726210000_ci_database_corrections.sql",
 );

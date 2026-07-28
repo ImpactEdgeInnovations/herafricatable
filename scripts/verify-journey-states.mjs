@@ -329,6 +329,8 @@ for (const contract of [
   "Current goal",
   "Request introduction",
   "request_connection_with_context",
+  "save_member_profile",
+  "Saved for later",
   "Why she would like to connect",
   "Messaging opens only after she accepts",
   'href={`/members/${member.user_id}`}',
@@ -359,6 +361,8 @@ for (const contract of [
   "ensure_conversation",
   "report_member",
   "block_member",
+  "save_member_profile",
+  "remove_saved_member_profile",
 ]) {
   assert(
     memberProfileActions.includes(contract),

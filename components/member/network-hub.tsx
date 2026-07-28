@@ -49,6 +49,18 @@ export type BlockedMember = {
   display_name: string | null;
   user_id: string;
 };
+export type SavedMemberProfile = {
+  avatar_url: string | null;
+  city: string | null;
+  company: string | null;
+  connection_status: string | null;
+  country: string | null;
+  display_name: string | null;
+  job_title: string | null;
+  private_note: string | null;
+  saved_at: string;
+  user_id: string;
+};
 
 const goalLabels: Record<string, string> = {
   be_mentored: "Find a mentor",
@@ -68,6 +80,7 @@ export function NetworkHub({
   connectionCode,
   contacts,
   blockedMembers,
+  savedMembers,
   cityFilter,
   goalFilter,
   searchQuery,
@@ -77,6 +90,7 @@ export function NetworkHub({
   connectionCode: string;
   contacts: ConnectionContact[];
   blockedMembers: BlockedMember[];
+  savedMembers: SavedMemberProfile[];
   cityFilter: string;
   goalFilter: string;
   searchQuery: string;
@@ -135,6 +149,53 @@ export function NetworkHub({
       error
         ? memberErrorMessage(error, `${action} this connection request`)
         : `Request ${action}ed.`,
+    );
+    if (!error) router.refresh();
+  }
+  async function saveProfile(memberId: string, displayName: string) {
+    const result = await ask({
+      title: `Save ${displayName} for later?`,
+      description:
+        "This is private. She will not be notified, and saving does not send a connection request.",
+      confirmLabel: "Save profile",
+      fields: [
+        {
+          name: "note",
+          label: "Private reminder (optional)",
+          type: "textarea",
+          minLength: 3,
+          maxLength: 500,
+          placeholder:
+            "For example: Revisit before the Nairobi event to discuss regional distribution.",
+        },
+      ],
+    });
+    if (!result) return;
+    setBusy(`save:${memberId}`);
+    setMessage("");
+    const { error } = await supabase.rpc("save_member_profile", {
+      p_member_id: memberId,
+      p_private_note: String(result.note ?? ""),
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "save this profile")
+        : "Profile saved privately for later.",
+    );
+    if (!error) router.refresh();
+  }
+  async function removeSavedProfile(memberId: string) {
+    setBusy(`save:${memberId}`);
+    setMessage("");
+    const { error } = await supabase.rpc("remove_saved_member_profile", {
+      p_member_id: memberId,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "remove this saved profile")
+        : "Profile removed from your saved list.",
     );
     if (!error) router.refresh();
   }
@@ -406,6 +467,47 @@ export function NetworkHub({
           </div>
         </section>
       ) : null}
+      {savedMembers.length ? (
+        <section className="saved-member-profiles">
+          <header>
+            <div>
+              <p className="eyebrow">Private to you</p>
+              <h2>Saved for later</h2>
+            </div>
+            <span>{savedMembers.length} saved</span>
+          </header>
+          <div>
+            {savedMembers.map((member) => (
+              <article key={member.user_id}>
+                <span className="network-avatar">
+                  {member.avatar_url ? (
+                    <img src={member.avatar_url} alt="" />
+                  ) : (
+                    (member.display_name?.[0] ?? "H")
+                  )}
+                </span>
+                <div>
+                  <Link href={`/members/${member.user_id}`}>
+                    {member.display_name}
+                  </Link>
+                  <small>
+                    {[member.job_title, member.company, member.city]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </small>
+                  {member.private_note ? <p>{member.private_note}</p> : null}
+                </div>
+                <button
+                  disabled={busy !== ""}
+                  onClick={() => void removeSavedProfile(member.user_id)}
+                >
+                  Remove
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <section className="member-directory">
         <header>
           <div>
@@ -503,20 +605,44 @@ export function NetworkHub({
                 >
                   View full profile
                 </Link>
-                <button
-                  disabled={
-                    busy !== "" ||
-                    member.connection_status === "pending" ||
-                    member.connection_status === "accepted"
-                  }
-                  onClick={() => void request(member.user_id, null)}
-                >
-                  {member.connection_status === "accepted"
-                    ? "Connected"
-                    : member.connection_status === "pending"
-                      ? "Request pending"
-                      : "Request introduction"}
-                </button>
+                <div className="directory-card-actions">
+                  <button
+                    disabled={
+                      busy !== "" ||
+                      member.connection_status === "pending" ||
+                      member.connection_status === "accepted"
+                    }
+                    onClick={() => void request(member.user_id, null)}
+                  >
+                    {member.connection_status === "accepted"
+                      ? "Connected"
+                      : member.connection_status === "pending"
+                        ? "Request pending"
+                        : "Request introduction"}
+                  </button>
+                  {savedMembers.some(
+                    (saved) => saved.user_id === member.user_id,
+                  ) ? (
+                    <button
+                      disabled={busy !== ""}
+                      onClick={() => void removeSavedProfile(member.user_id)}
+                    >
+                      Saved
+                    </button>
+                  ) : (
+                    <button
+                      disabled={busy !== ""}
+                      onClick={() =>
+                        void saveProfile(
+                          member.user_id,
+                          member.display_name || "this member",
+                        )
+                      }
+                    >
+                      Save for later
+                    </button>
+                  )}
+                </div>
                 <small className="directory-privacy-note">
                   Messaging opens only after she accepts.
                 </small>
