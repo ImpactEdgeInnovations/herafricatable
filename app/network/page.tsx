@@ -7,6 +7,7 @@ import {
   type DirectoryMember,
   type NetworkConnection,
   type SavedMemberProfile,
+  type SuggestedMember,
 } from "@/components/member/network-hub";
 import { MemberHeader } from "@/components/member/member-header";
 import { createClient } from "@/lib/supabase/server";
@@ -30,8 +31,14 @@ export default async function NetworkPage({
     .eq("id", user.id)
     .maybeSingle();
   if (profile?.access_status !== "active") redirect("/home");
-  const [codeResult, directoryResult, networkResult, blocksResult, savedResult] =
-    await Promise.all([
+  const [
+    codeResult,
+    directoryResult,
+    networkResult,
+    blocksResult,
+    savedResult,
+    suggestionsResult,
+  ] = await Promise.all([
       supabase.rpc("ensure_connection_code"),
       supabase.rpc("list_member_directory", {
         p_city: city || null,
@@ -43,6 +50,7 @@ export default async function NetworkPage({
       supabase.rpc("list_my_network_with_context"),
       supabase.rpc("list_my_blocks"),
       supabase.rpc("list_my_saved_profiles"),
+      supabase.rpc("list_member_recommendations", { p_limit: 6 }),
     ]);
   const connections = (networkResult.data as NetworkConnection[] | null) ?? [];
   const accepted = connections.filter((item) => item.status === "accepted");
@@ -88,7 +96,8 @@ export default async function NetworkPage({
       {directoryResult.error ||
       networkResult.error ||
       codeResult.error ||
-      savedResult.error ? (
+      savedResult.error ||
+      suggestionsResult.error ? (
         <section className="admin-empty network-error">
           <strong>The member directory is temporarily unavailable</strong>
           <p>Please try again or contact support if the problem continues.</p>
@@ -110,6 +119,9 @@ export default async function NetworkPage({
           blockedMembers={(blocksResult.data as BlockedMember[] | null) ?? []}
           savedMembers={
             (savedResult.data as SavedMemberProfile[] | null) ?? []
+          }
+          suggestedMembers={
+            (suggestionsResult.data as SuggestedMember[] | null) ?? []
           }
           cityFilter={city ?? ""}
           goalFilter={goal ?? ""}

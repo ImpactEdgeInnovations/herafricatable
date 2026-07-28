@@ -331,6 +331,8 @@ for (const contract of [
   "request_connection_with_context",
   "save_member_profile",
   "Saved for later",
+  "People you may want to meet",
+  "Why this suggestion",
   "Why she would like to connect",
   "Messaging opens only after she accepts",
   'href={`/members/${member.user_id}`}',

@@ -5812,6 +5812,98 @@ body {
   font-weight: 800;
   cursor: pointer;
 }
+.member-suggestions {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 58px 0;
+  border-top: 1px solid var(--line);
+}
+.member-suggestions > header {
+  max-width: 700px;
+  margin-bottom: 28px;
+}
+.member-suggestions h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 2.75rem;
+  font-weight: 400;
+}
+.member-suggestions > header p:last-child {
+  color: var(--muted);
+  font-size: 0.67rem;
+  line-height: 1.6;
+}
+.member-suggestions > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.member-suggestions article {
+  display: grid;
+  min-height: 345px;
+  align-content: start;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.member-suggestions h3 {
+  margin: 7px 0;
+  font-family: var(--serif);
+  font-size: 1.55rem;
+  font-weight: 400;
+}
+.member-suggestions h3 a {
+  color: inherit;
+  text-decoration-color: transparent;
+}
+.member-suggestions article > div > strong {
+  font-size: 0.65rem;
+}
+.suggestion-reasons {
+  display: flex;
+  align-self: end;
+  flex-wrap: wrap;
+  margin-top: 26px;
+  gap: 6px;
+}
+.suggestion-reasons small {
+  flex: 1 0 100%;
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 0.48rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.suggestion-reasons span {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  color: var(--wine);
+  font-size: 0.52rem;
+}
+.suggestion-actions {
+  display: flex;
+  align-self: end;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  gap: 8px;
+}
+.suggestion-actions button {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--wine);
+  background: transparent;
+  color: var(--wine);
+  font: inherit;
+  font-size: 0.55rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.suggestion-actions button:last-child {
+  border-color: var(--line);
+  color: var(--muted);
+}
 .network-message {
   position: fixed;
   right: 24px;
@@ -10849,6 +10941,15 @@ body {
   .saved-member-profiles article button {
     width: fit-content;
     grid-column: 2;
+  }
+  .member-suggestions {
+    width: calc(100% - 32px);
+  }
+  .member-suggestions > div {
+    grid-template-columns: 1fr;
+  }
+  .member-suggestions article {
+    min-height: 0;
   }
   .network-identity form {
     align-items: stretch;

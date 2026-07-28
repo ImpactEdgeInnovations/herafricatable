@@ -74,6 +74,8 @@ Usability is part of production readiness and continues alongside feature delive
       recipients decide before accepting, without exposing it to Admin or the directory
 - [x] Add a private saved-profiles shortlist with optional personal reminders so members
       can revisit relevant people without sending premature connection requests
+- [x] Add explainable member suggestions using only public goals, interests, location
+      and industry, with transparent reasons and blocked-safe deterministic ranking
 - [x] Create a private post-event journey joining feedback, recap, attendee
       reconnection, opportunities and ongoing conversation
 - [x] Unify notifications, requests, unread conversations and event/account updates

@@ -61,6 +61,21 @@ export type SavedMemberProfile = {
   saved_at: string;
   user_id: string;
 };
+export type SuggestedMember = {
+  avatar_url: string | null;
+  bio: string | null;
+  city: string | null;
+  company: string | null;
+  country: string | null;
+  display_name: string | null;
+  industry: string | null;
+  job_title: string | null;
+  match_reasons: string[];
+  match_score: number;
+  shared_goals: string[];
+  shared_interests: string[];
+  user_id: string;
+};
 
 const goalLabels: Record<string, string> = {
   be_mentored: "Find a mentor",
@@ -81,6 +96,7 @@ export function NetworkHub({
   contacts,
   blockedMembers,
   savedMembers,
+  suggestedMembers,
   cityFilter,
   goalFilter,
   searchQuery,
@@ -91,6 +107,7 @@ export function NetworkHub({
   contacts: ConnectionContact[];
   blockedMembers: BlockedMember[];
   savedMembers: SavedMemberProfile[];
+  suggestedMembers: SuggestedMember[];
   cityFilter: string;
   goalFilter: string;
   searchQuery: string;
@@ -503,6 +520,74 @@ export function NetworkHub({
                 >
                   Remove
                 </button>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      {suggestedMembers.length ? (
+        <section className="member-suggestions">
+          <header>
+            <div>
+              <p className="eyebrow">A thoughtful starting point</p>
+              <h2>People you may want to meet</h2>
+              <p>
+                Suggestions use the goals and professional details members
+                choose to share. They are not endorsements or popularity
+                rankings.
+              </p>
+            </div>
+          </header>
+          <div>
+            {suggestedMembers.map((member) => (
+              <article key={member.user_id}>
+                <span className="directory-avatar">
+                  {member.avatar_url ? (
+                    <img src={member.avatar_url} alt="" />
+                  ) : (
+                    (member.display_name?.[0] ?? "H")
+                  )}
+                </span>
+                <div>
+                  <p className="eyebrow">
+                    {[member.city, member.country].filter(Boolean).join(", ")}
+                  </p>
+                  <h3>
+                    <Link href={`/members/${member.user_id}`}>
+                      {member.display_name}
+                    </Link>
+                  </h3>
+                  <strong>
+                    {[member.job_title, member.company]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </strong>
+                </div>
+                <div className="suggestion-reasons">
+                  <small>Why this suggestion</small>
+                  {member.match_reasons.map((reason) => (
+                    <span key={reason}>{reason}</span>
+                  ))}
+                </div>
+                <div className="suggestion-actions">
+                  <button
+                    disabled={busy !== ""}
+                    onClick={() => void request(member.user_id, null)}
+                  >
+                    Request introduction
+                  </button>
+                  <button
+                    disabled={busy !== ""}
+                    onClick={() =>
+                      void saveProfile(
+                        member.user_id,
+                        member.display_name || "this member",
+                      )
+                    }
+                  >
+                    Save for later
+                  </button>
+                </div>
               </article>
             ))}
           </div>

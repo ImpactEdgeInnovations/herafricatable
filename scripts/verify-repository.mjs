@@ -298,6 +298,24 @@ assert(
   !savedProfilesMigration.includes("'private_note', clean_note"),
   "Private saved-profile notes must not be duplicated into audit metadata",
 );
+const memberRecommendationsMigration = read(
+  "supabase/migrations/20260729050000_member_recommendations.sql",
+);
+for (const contract of [
+  "list_member_recommendations",
+  "shared_goals",
+  "shared_interests",
+  "match_reasons",
+  "public.is_blocked_pair(auth.uid(), profile.id)",
+  "connection.status in ('pending', 'accepted')",
+  "member_saved_profiles",
+  "A new perspective for your network",
+]) {
+  assert(
+    memberRecommendationsMigration.includes(contract),
+    `Explainable member recommendations must include ${contract}`,
+  );
+}
 const databaseCorrections = read(
   "supabase/migrations/20260726210000_ci_database_corrections.sql",
 );
