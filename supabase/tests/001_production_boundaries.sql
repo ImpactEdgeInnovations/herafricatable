@@ -383,6 +383,7 @@ select is((select outcome_type from public.get_connection_outcome_summary(365)li
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 select lives_ok($$select public.remove_connection_outcome((select outcome_id from public.list_my_connection_outcomes()where outcome_type='mentorship'limit 1))$$,'member can delete her completely private outcome');
 select is((select count(*)from public.list_my_connection_outcomes()),1::bigint,'deleting one outcome preserves the owners remaining relationship history');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select count(*)from public.audit_events where action='connection.outcome_removed'),1::bigint,'outcome deletion is auditable without exposing its content');
 
 select *from finish();
