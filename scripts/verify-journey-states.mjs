@@ -149,6 +149,17 @@ assert(
   authPanel.includes("safeMessage("),
   "Authentication errors must pass through the auth-safe message filter",
 );
+const memberErrors = read("lib/member-error.ts");
+for (const contract of [
+  "Give this member some time before requesting another introduction.",
+  "You have several introductions awaiting a response.",
+  "You’ve reached today’s introduction limit.",
+]) {
+  assert(
+    memberErrors.includes(contract),
+    `Member-safe request boundary errors must include ${contract}`,
+  );
+}
 
 const adminPage = read("app/admin/page.tsx");
 const adminHeader = read("components/admin/admin-header.tsx");

@@ -423,6 +423,24 @@ for (const contract of [
 const connectionOutcomeEditsMigration = read(
   "supabase/migrations/20260730130000_connection_outcome_edits.sql",
 );
+const connectionRequestBoundariesMigration = read(
+  "supabase/migrations/20260730170000_connection_request_boundaries.sql",
+);
+for (const contract of [
+  "enforce_connection_request_boundaries",
+  "outstanding_count >= 10",
+  "daily_count >= 20",
+  "old.status = 'ignored'",
+  "interval '30 days'",
+  "old.status = 'cancelled'",
+  "interval '7 days'",
+  "before insert or update of status, requester_id, recipient_id",
+]) {
+  assert(
+    connectionRequestBoundariesMigration.includes(contract),
+    `Database-enforced connection request boundaries must include ${contract}`,
+  );
+}
 for (const contract of [
   "update_connection_outcome",
   "owner_id = actor",

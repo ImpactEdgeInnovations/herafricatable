@@ -46,6 +46,18 @@ export function memberErrorMessage(error: unknown, action: string) {
     return "Your session has expired. Sign in again, then retry this action.";
   }
 
+  if (/please wait before requesting this connection again/i.test(message)) {
+    return "Give this member some time before requesting another introduction.";
+  }
+
+  if (/outstanding connection request limit/i.test(message)) {
+    return "You have several introductions awaiting a response. Give members time to reply before sending more.";
+  }
+
+  if (/daily connection request limit/i.test(message)) {
+    return "You’ve reached today’s introduction limit. You can send more tomorrow.";
+  }
+
   if (/rate limit|too many requests/i.test(message)) {
     return "Too many attempts were made. Wait a moment, then try again.";
   }

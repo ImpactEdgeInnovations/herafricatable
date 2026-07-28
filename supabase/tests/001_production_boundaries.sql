@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(256);
+select plan(262);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -403,6 +403,72 @@ select lives_ok($$select public.remove_connection_outcome((select outcome_id fro
 select is((select count(*)from public.list_my_connection_outcomes()),1::bigint,'deleting one outcome preserves the owners remaining relationship history');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 select is((select count(*)from public.audit_events where action='connection.outcome_removed'),1::bigint,'outcome deletion is auditable without exposing its content');
+
+set local role postgres;
+insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
+select
+  ('96000000-0000-4000-8000-'||lpad(sequence::text,12,'0'))::uuid,
+  'request-boundary-'||sequence||'@test.invalid',
+  'authenticated',
+  'authenticated',
+  '{}',
+  '{}',
+  now()
+from generate_series(1,11)sequence;
+update public.profiles
+set access_status='active',visibility_paused=false,display_name='Request boundary member'
+where id::text like '96000000-0000-4000-8000-%';
+update public.connections
+set status='ignored',responded_at=now(),updated_at=now()
+where user_low='10000000-0000-4000-8000-000000000002'
+  and user_high='10000000-0000-4000-8000-000000000003';
+set local role authenticated;
+select set_config('request.jwt.claim.role','authenticated',true);
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select throws_ok($$select public.request_connection_with_context('10000000-0000-4000-8000-000000000003',null,'A retry inside the quiet period must remain unavailable.')$$,'P0001','Please wait before requesting this connection again','ignored requests receive a quiet retry cooldown without revealing the response');
+select throws_ok($$select public.request_connection('10000000-0000-4000-8000-000000000003',null)$$,'P0001','Please wait before requesting this connection again','legacy request RPC cannot bypass the quiet retry cooldown');
+set local role postgres;
+update public.connections
+set updated_at=now()-interval'31 days'
+where user_low='10000000-0000-4000-8000-000000000002'
+  and user_high='10000000-0000-4000-8000-000000000003';
+set local role authenticated;
+select set_config('request.jwt.claim.role','authenticated',true);
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select lives_ok($$select public.request_connection_with_context('10000000-0000-4000-8000-000000000003',null,'A respectful retry is available after the quiet period ends.')$$,'member may retry an introduction after the quiet cooldown expires');
+set local role postgres;
+insert into public.connections(user_low,user_high,requester_id,recipient_id,status)
+select
+  '10000000-0000-4000-8000-000000000002',
+  ('96000000-0000-4000-8000-'||lpad(sequence::text,12,'0'))::uuid,
+  '10000000-0000-4000-8000-000000000002',
+  ('96000000-0000-4000-8000-'||lpad(sequence::text,12,'0'))::uuid,
+  'pending'
+from generate_series(1,9)sequence;
+set local role authenticated;
+select set_config('request.jwt.claim.role','authenticated',true);
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select throws_ok($$select public.request_connection_with_context('96000000-0000-4000-8000-000000000010',null,'An excessive outstanding request must not reach another member.')$$,'P0001','Outstanding connection request limit reached','member cannot accumulate more than ten unanswered requests');
+set local role postgres;
+update public.connections
+set status='accepted',responded_at=now(),updated_at=now()
+where requester_id='10000000-0000-4000-8000-000000000002'
+  and status='pending';
+insert into public.audit_events(actor_id,action,target_type)
+select
+  '10000000-0000-4000-8000-000000000002',
+  'connection.requested',
+  'connection'
+from generate_series(
+  1,
+  20-(select count(*)::integer from public.audit_events where actor_id='10000000-0000-4000-8000-000000000002'and action='connection.requested'and created_at>now()-interval'24 hours')
+);
+set local role authenticated;
+select set_config('request.jwt.claim.role','authenticated',true);
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select throws_ok($$select public.request_connection_with_context('96000000-0000-4000-8000-000000000011',null,'A request beyond the daily safety limit must be rejected.')$$,'P0001','Daily connection request limit reached','member cannot exceed twenty successful requests in a rolling day');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select is((select count(*)from public.audit_events where actor_id='10000000-0000-4000-8000-000000000002'and action='connection.requested'and created_at>now()-interval'24 hours'),20::bigint,'blocked attempts do not create misleading successful-request audit events');
 
 select *from finish();
 rollback;
