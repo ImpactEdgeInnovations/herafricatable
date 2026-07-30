@@ -122,8 +122,21 @@ export function CommunityFeed({
     );
   }
   return (
-    <>
+    <section
+      aria-labelledby="community-conversations-title"
+      className="community-conversation-shell"
+      id="conversations"
+    >
       {dialog}
+      <header className="community-conversation-heading">
+        <div>
+          <p className="eyebrow">Conversations</p>
+          <h2 id="community-conversations-title">Exchange something useful.</h2>
+        </div>
+        <p>
+          Be specific, protect private context and move one another forward.
+        </p>
+      </header>
       {readOnly ? null : (
         <form
           className="community-composer"
@@ -212,6 +225,6 @@ export function CommunityFeed({
           {message}
         </p>
       ) : null}
-    </>
+    </section>
   );
 }

@@ -13,6 +13,10 @@ import {
 } from "@/components/member/cohort-activation";
 import type { CommunitySummary } from "@/components/member/community-directory";
 import { MemberHeader } from "@/components/member/member-header";
+import {
+  CommunityMemberRoster,
+  type CommunityRosterMember,
+} from "@/components/member/community-member-roster";
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
   params,
@@ -37,24 +41,30 @@ export default async function CommunityPage({
   ).find((item) => item.slug === slug);
   if (!community) notFound();
   if (community.membership_status !== "active") redirect("/communities");
-  const [postsResult, cohortResult, introductionResult] = await Promise.all([
-    supabase.rpc("list_community_posts", {
-      p_community_id: community.community_id,
-      p_limit: 30,
-      p_offset: 0,
-    }),
-    supabase.rpc("get_community_cohort", {
-      p_community_id: community.community_id,
-    }),
-    supabase.rpc("list_community_introductions", {
-      p_community_id: community.community_id,
-    }),
-  ]);
+  const [postsResult, cohortResult, introductionResult, memberResult] =
+    await Promise.all([
+      supabase.rpc("list_community_posts", {
+        p_community_id: community.community_id,
+        p_limit: 30,
+        p_offset: 0,
+      }),
+      supabase.rpc("get_community_cohort", {
+        p_community_id: community.community_id,
+      }),
+      supabase.rpc("list_community_introductions", {
+        p_community_id: community.community_id,
+      }),
+      supabase.rpc("list_community_member_directory", {
+        p_community_id: community.community_id,
+        p_limit: 8,
+        p_offset: 0,
+      }),
+    ]);
   const cohort = ((cohortResult.data as CohortRoom[] | null) ?? [])[0];
   return (
     <main className="community-page">
-      <MemberHeader label={community.name} />
-      <section className="community-room-hero">
+      <MemberHeader active="community" label={community.name} />
+      <section className="community-room-hero" id="overview">
         <div>
           <p className="eyebrow">{community.community_type} community</p>
           <h1>{community.name}</h1>
@@ -63,6 +73,42 @@ export default async function CommunityPage({
         </div>
         <span>{community.member_count} members</span>
       </section>
+      <nav className="community-room-navigation" aria-label="Community areas">
+        <a aria-current="page" href="#overview">
+          Overview
+        </a>
+        <a href="#conversations">Conversations</a>
+        <a href="#members">Members</a>
+        <Link href="/events">Gatherings</Link>
+        <Link href="/learning">Resources</Link>
+      </nav>
+      <section className="community-room-overview">
+        <header>
+          <p className="eyebrow">Begin where you are</p>
+          <h2>Your relationships continue here.</h2>
+          <p>
+            Use this room for thoughtful context and practical support. Private
+            conversations still begin only after both members choose to connect.
+          </p>
+        </header>
+        <div>
+          <a href="#conversations">
+            <span>01</span>
+            <strong>Join the conversation</strong>
+            <small>Share one useful Ask, Offer, resource or follow-up.</small>
+          </a>
+          <Link href="/network">
+            <span>02</span>
+            <strong>Meet relevant members</strong>
+            <small>Understand her context before requesting a connection.</small>
+          </Link>
+          <Link href="/events">
+            <span>03</span>
+            <strong>Gather around the table</strong>
+            <small>See the next event and carry the relationship forward.</small>
+          </Link>
+        </div>
+      </section>
       {cohort ? (
         <CohortActivation
           currentUserId={user.id}
@@ -70,6 +116,13 @@ export default async function CommunityPage({
             (introductionResult.data as CohortIntroduction[] | null) ?? []
           }
           room={cohort}
+        />
+      ) : null}
+      {!memberResult.error ? (
+        <CommunityMemberRoster
+          members={
+            (memberResult.data as CommunityRosterMember[] | null) ?? []
+          }
         />
       ) : null}
       {postsResult.error ? (

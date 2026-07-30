@@ -314,7 +314,7 @@ for (const [content, contract, description] of [
 for (const [content, contract, description] of [
   [memberExplore, "More ways to use the table.", "give members one plain-language tool directory"],
   [memberExplore, "Nothing needed from you", "explain gated tools without creating false work"],
-  [memberHeader, 'href: "/explore"', "link the Explore hub from desktop member navigation"],
+  [memberHeader, 'href: "/communities"', "make Community a primary member destination"],
   [opportunityMarketplace, "initialComposerOpen", "keep the Ask/Offer composer closed until requested"],
   [opportunityMarketplace, "aria-expanded={composerOpen}", "expose composer state accessibly"],
   [membershipCenter, 'className="membership-empty"', "replace an unpublished-plan void with guidance"],
@@ -359,6 +359,35 @@ for (const contract of [
   assert(
     memberHeader.includes(contract),
     `Shared member navigation must include ${contract}`,
+  );
+}
+const communityRoom = read("app/communities/[slug]/page.tsx");
+const communityRoster = read(
+  "components/member/community-member-roster.tsx",
+);
+for (const contract of [
+  'active="community"',
+  "community-room-navigation",
+  "Overview",
+  "Conversations",
+  "Members",
+  "Gatherings",
+  "Resources",
+  "list_community_member_directory",
+]) {
+  assert(
+    communityRoom.includes(contract),
+    `Community Hub must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Meet with context.",
+  "Private contact details remain protected",
+  'href={`/members/${member.user_id}`}',
+]) {
+  assert(
+    communityRoster.includes(contract),
+    `Privacy-safe community roster must include ${contract}`,
   );
 }
 for (const path of [

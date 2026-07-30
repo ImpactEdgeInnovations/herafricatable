@@ -151,6 +151,23 @@ for (const contract of [
     `Temporary Admin access must include ${contract}`,
   );
 }
+const communityHubMigration = read(
+  "supabase/migrations/20260730230000_community_hub_foundation.sql",
+);
+for (const contract of [
+  "list_community_member_directory",
+  "public.communities_enabled()",
+  "membership.user_id = auth.uid()",
+  "membership.status = 'active'",
+  "profile.access_status = 'active'",
+  "not profile.visibility_paused",
+  "public.is_blocked_pair(auth.uid(), profile.id)",
+]) {
+  assert(
+    communityHubMigration.includes(contract),
+    `Community member roster must include ${contract}`,
+  );
+}
 const betaAdminProvisioning = read("scripts/provision-beta-admin.mjs");
 for (const contract of [
   "HAT_BETA_ADMIN_PASSWORD",

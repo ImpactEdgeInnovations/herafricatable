@@ -6,11 +6,13 @@ them to members: the `communities` feature flag starts disabled.
 ## Release sequence
 
 1. Apply `supabase/migrations/20260725090000_communities_foundation.sql`.
-2. Open the Admin command center and create at least one draft community.
-3. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
+2. Apply `supabase/migrations/20260730230000_community_hub_foundation.sql` to
+   enable the privacy-safe member roster inside each room.
+3. Open the Admin command center and create at least one draft community.
+4. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
    posting, reporting, and blocking boundaries with non-production accounts.
-4. Publish the approved community.
-5. A Super Admin may select **Enable after sign-off** only when moderation coverage
+5. Publish the approved community.
+6. A Super Admin may select **Enable after sign-off** only when moderation coverage
    and the support escalation owner are confirmed.
 
 Disabling the flag immediately removes member navigation and blocks feed/list/write

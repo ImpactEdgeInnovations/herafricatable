@@ -9128,6 +9128,203 @@ body {
   font-size: 0.6rem;
   white-space: nowrap;
 }
+.community-room-navigation {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: flex;
+  width: min(1120px, calc(100% - 48px));
+  min-height: 58px;
+  align-items: center;
+  margin: 0 auto;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  background: rgba(250, 248, 244, 0.94);
+  backdrop-filter: blur(14px);
+  gap: 28px;
+}
+.community-room-navigation a {
+  position: relative;
+  display: grid;
+  min-height: 58px;
+  flex: 0 0 auto;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.community-room-navigation a:hover,
+.community-room-navigation a:focus-visible,
+.community-room-navigation a[aria-current="page"] {
+  color: var(--ink);
+}
+.community-room-navigation a[aria-current="page"]::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background: var(--gold);
+  content: "";
+}
+.community-room-overview {
+  display: grid;
+  width: min(1120px, calc(100% - 48px));
+  margin: 58px auto 0;
+  padding-bottom: 58px;
+  border-bottom: 1px solid var(--line);
+  grid-template-columns: minmax(250px, 0.8fr) minmax(0, 1.5fr);
+  gap: 70px;
+}
+.community-room-overview h2,
+.community-conversation-heading h2 {
+  max-width: 470px;
+  margin: 8px 0 15px;
+  font-family: var(--serif);
+  font-size: clamp(2rem, 3.6vw, 3.25rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+.community-room-overview header > p:last-child,
+.community-conversation-heading > p {
+  max-width: 520px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.7;
+}
+.community-room-overview > div {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+.community-room-overview > div > a {
+  display: grid;
+  min-height: 104px;
+  align-items: center;
+  padding: 17px 6px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  grid-template-columns: 36px minmax(150px, 0.75fr) minmax(190px, 1fr);
+  gap: 18px;
+}
+.community-room-overview > div > a:hover strong,
+.community-room-overview > div > a:focus-visible strong {
+  color: var(--wine);
+}
+.community-room-overview > div span {
+  color: var(--gold);
+  font-size: 0.55rem;
+  font-weight: 850;
+}
+.community-room-overview > div strong {
+  font-family: var(--serif);
+  font-size: 1.12rem;
+  font-weight: 400;
+}
+.community-room-overview > div small {
+  color: var(--muted);
+  font-size: 0.6rem;
+  line-height: 1.55;
+}
+.community-conversation-shell {
+  scroll-margin-top: 76px;
+}
+.community-conversation-heading {
+  display: flex;
+  width: min(820px, calc(100% - 48px));
+  align-items: flex-end;
+  justify-content: space-between;
+  margin: 60px auto 0;
+  gap: 40px;
+}
+.community-conversation-heading h2 {
+  margin-bottom: 0;
+}
+.community-conversation-heading > p {
+  max-width: 280px;
+  padding-bottom: 4px;
+}
+.community-member-roster {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 62px 0;
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: 76px;
+}
+.community-member-roster > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+}
+.community-member-roster h2 {
+  margin: 8px 0 0;
+  font-family: var(--serif);
+  font-size: clamp(2.1rem, 3.7vw, 3.35rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+.community-member-roster > header > p {
+  max-width: 430px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.7;
+}
+.community-member-roster > div {
+  display: grid;
+  margin-top: 34px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.community-member-roster > div > a {
+  display: grid;
+  min-height: 220px;
+  align-content: end;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+}
+.community-member-roster > div > a:hover,
+.community-member-roster > div > a:focus-visible {
+  border-color: var(--gold);
+}
+.community-member-roster img,
+.community-member-roster > div > a > span {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.community-member-roster > div > a > span {
+  display: grid;
+  place-items: center;
+  background: var(--wine);
+  color: #fff;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+}
+.community-member-roster strong {
+  font-family: var(--serif);
+  font-size: 1.18rem;
+  font-weight: 400;
+}
+.community-member-roster small {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 0.55rem;
+  line-height: 1.5;
+}
+.community-member-roster > footer {
+  margin-top: 24px;
+}
 .community-composer,
 .community-feed {
   width: min(820px, calc(100% - 48px));
@@ -9290,6 +9487,26 @@ body {
     align-items: flex-start;
     flex-direction: column;
   }
+  .community-room-overview {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .community-member-roster > header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .community-member-roster > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .community-conversation-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .community-conversation-heading > p {
+    max-width: 520px;
+  }
   .community-admin-layout {
     grid-template-columns: 1fr;
   }
@@ -9311,8 +9528,44 @@ body {
   .community-hold,
   .community-grid,
   .community-composer,
-  .community-feed {
+  .community-feed,
+  .community-room-navigation,
+  .community-room-overview,
+  .community-conversation-heading,
+  .community-member-roster {
     width: calc(100% - 32px);
+  }
+  .community-room-navigation {
+    min-height: 52px;
+    gap: 22px;
+  }
+  .community-room-navigation a {
+    min-height: 52px;
+  }
+  .community-room-overview {
+    margin-top: 38px;
+    padding-bottom: 38px;
+  }
+  .community-room-overview > div > a {
+    min-height: 0;
+    padding: 20px 0;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 5px 12px;
+  }
+  .community-room-overview > div small {
+    grid-column: 2;
+  }
+  .community-conversation-heading {
+    margin-top: 40px;
+  }
+  .community-member-roster {
+    padding: 42px 0;
+  }
+  .community-member-roster > div {
+    grid-template-columns: 1fr;
+  }
+  .community-member-roster > div > a {
+    min-height: 180px;
   }
   .community-grid > article {
     min-height: 300px;

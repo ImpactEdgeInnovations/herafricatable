@@ -118,7 +118,7 @@ export default async function ExplorePage() {
 
   return (
     <main className="member-explore-page">
-      <MemberHeader active="explore" label="Explore" />
+      <MemberHeader label="Explore" />
       <section className="member-explore-hero">
         <div>
           <p className="eyebrow">Your wider membership</p>

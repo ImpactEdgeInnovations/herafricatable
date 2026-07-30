@@ -3,8 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 
 type MemberDestination =
   | "account"
+  | "community"
   | "events"
-  | "explore"
   | "home"
   | "members"
   | "messages";
@@ -16,6 +16,12 @@ const destinations: {
   shortLabel: string;
 }[] = [
   { href: "/home", key: "home", label: "Home", shortLabel: "Home" },
+  {
+    href: "/communities",
+    key: "community",
+    label: "Community",
+    shortLabel: "Community",
+  },
   { href: "/network", key: "members", label: "Members", shortLabel: "Members" },
   { href: "/events", key: "events", label: "Events", shortLabel: "Events" },
   {
@@ -23,12 +29,6 @@ const destinations: {
     key: "messages",
     label: "Messages",
     shortLabel: "Messages",
-  },
-  {
-    href: "/explore",
-    key: "explore",
-    label: "Explore",
-    shortLabel: "Explore",
   },
   { href: "/profile", key: "account", label: "My profile", shortLabel: "Me" },
 ];
@@ -41,16 +41,16 @@ function MemberIcon({ destination }: { destination: MemberDestination }) {
         <path d="M5.5 20c.8-4 3-6 6.5-6s5.7 2 6.5 6" />
       </>
     ),
+    community: (
+      <>
+        <path d="M4 6.5h16v11H8l-4 3v-14Z" />
+        <path d="M8 10h8M8 13.5h5" />
+      </>
+    ),
     events: (
       <>
         <rect x="4" y="5" width="16" height="15" rx="2" />
         <path d="M8 3v4M16 3v4M4 10h16" />
-      </>
-    ),
-    explore: (
-      <>
-        <circle cx="12" cy="12" r="9" />
-        <path d="m15.5 8.5-2.1 4.9-4.9 2.1 2.1-4.9 4.9-2.1Z" />
       </>
     ),
     home: (
@@ -111,7 +111,7 @@ export async function MemberHeader({
       : destination,
   );
   const mobileNavigation = navigation.filter(
-    (destination) => destination.key !== "explore",
+    (destination) => destination.key !== "account",
   );
   const memberName = profile?.display_name?.trim() || "Member";
   const memberInitial = memberName.charAt(0).toUpperCase();

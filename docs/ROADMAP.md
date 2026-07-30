@@ -6,9 +6,13 @@ Her Africa Table is a trust-gated professional network for African women. Curate
 events establish trust and introduce members; the platform preserves the network,
 relationships, learning, and opportunities between events.
 
-The first production release must prove this complete loop:
+Community is the product's retention layer. The first production release must
+prove this complete loop:
 
-`registration → verification → onboarding → event access → discovery → connection → ongoing value`
+`event or referral → approved member → home community → introduction → Ask or Offer → relationship → outcome → trusted referral`
+
+The community operating model and its staged expansion are maintained in
+[`docs/COMMUNITY_PRODUCT_VISION.md`](./COMMUNITY_PRODUCT_VISION.md).
 
 The refined production process map is maintained in
 [`docs/HAT_Process_Map_Developer_Spec.html`](./HAT_Process_Map_Developer_Spec.html).
@@ -225,6 +229,24 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Layperson-first core member shell with consistent current-page navigation,
       compact five-action mobile dock, people-first directory ordering, simplified
       empty messages and recoverable non-technical error states
+- [x] Align the product vision around a trust-led Community operating system,
+      staged from the Nairobi Founding Table to chapters, Circles, interest
+      communities and eventually approved member-led communities
+
+### Community operating system — current workstream
+
+- [x] Make Community a first-class member destination on desktop and mobile
+- [x] Establish an Overview, Conversations, Members, Gatherings and Resources
+      information architecture for every community
+- [ ] Add structured conversation categories, comments, thoughtful reactions,
+      pinned content, saved posts and thread following
+- [x] Add a privacy-safe community member roster with consent-based profile and
+      connection paths
+- [ ] Connect relevant events, Circles and learning resources to each community
+- [ ] Add community-level notification preferences and a restrained weekly briefing
+- [ ] Add Host operations for admission, incomplete introductions, unanswered
+      requests, reports, gatherings, participation, retention and outcomes
+- [ ] Complete Nairobi Founding Table acceptance before opening another chapter
 
 ### Heavy work remaining before production launch
 
