@@ -90,6 +90,7 @@ const refreshModules = [
   "components/member/circles-hub.tsx",
   "components/member/community-directory.tsx",
   "components/member/community-feed.tsx",
+  "components/member/community-host-workspace.tsx",
   "components/events/event-attendee-directory.tsx",
   "components/member/learning-catalog.tsx",
   "components/member/membership-center.tsx",
@@ -366,6 +367,13 @@ const communityRoster = read(
   "components/member/community-member-roster.tsx",
 );
 const communityFeed = read("components/member/community-feed.tsx");
+const communityProgramming = read(
+  "components/member/community-programming.tsx",
+);
+const communityHostPage = read("app/communities/[slug]/host/page.tsx");
+const communityHostWorkspace = read(
+  "components/member/community-host-workspace.tsx",
+);
 for (const contract of [
   'active="community"',
   "community-room-navigation",
@@ -397,6 +405,47 @@ for (const contract of [
   assert(
     communityFeed.includes(contract),
     `Structured Community conversation UX must include ${contract}`,
+  );
+}
+for (const contract of [
+  'id="gatherings"',
+  'id="resources"',
+  "Meet with shared context.",
+  "A small, host-curated shelf",
+  "Open host workspace",
+]) {
+  assert(
+    communityProgramming.includes(contract),
+    `Community programming UX must include ${contract}`,
+  );
+}
+for (const contract of [
+  "get_community_host_health",
+  "list_community_members",
+  "list_community_programming_options",
+  'active="community"',
+  "Private host workspace",
+]) {
+  assert(
+    communityHostPage.includes(contract),
+    `Community Host route must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Awaiting admission",
+  "Asks needing care",
+  "Safety signals",
+  "review_community_membership",
+  "invite_community_member",
+  "set_community_event_link",
+  "set_community_course_link",
+  "Community admission is separate from platform approval",
+  "Contact platform safety",
+  "memberErrorMessage",
+]) {
+  assert(
+    communityHostWorkspace.includes(contract),
+    `Community Host workspace must include ${contract}`,
   );
 }
 for (const contract of [

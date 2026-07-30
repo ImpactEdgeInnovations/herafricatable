@@ -18,6 +18,11 @@ import {
   CommunityMemberRoster,
   type CommunityRosterMember,
 } from "@/components/member/community-member-roster";
+import {
+  CommunityProgramming,
+  type CommunityGathering,
+  type CommunityResource,
+} from "@/components/member/community-programming";
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
   params,
@@ -49,6 +54,8 @@ export default async function CommunityPage({
     cohortResult,
     introductionResult,
     memberResult,
+    gatheringResult,
+    resourceResult,
   ] = await Promise.all([
       supabase.rpc("list_community_posts", {
         p_community_id: community.community_id,
@@ -76,9 +83,19 @@ export default async function CommunityPage({
         p_limit: 8,
         p_offset: 0,
       }),
+      supabase.rpc("list_community_gatherings", {
+        p_community_id: community.community_id,
+      }),
+      supabase.rpc("list_community_resources", {
+        p_community_id: community.community_id,
+      }),
     ]);
   const structuredConversationsReady =
     !structuredPostsResult.error && !commentResult.error;
+  const programmingReady = !gatheringResult.error && !resourceResult.error;
+  const canManage = ["owner", "moderator"].includes(
+    community.membership_role ?? "",
+  );
   const cohort = ((cohortResult.data as CohortRoom[] | null) ?? [])[0];
   return (
     <main className="community-page">
@@ -98,8 +115,18 @@ export default async function CommunityPage({
         </a>
         <a href="#conversations">Conversations</a>
         <a href="#members">Members</a>
-        <Link href="/events">Gatherings</Link>
-        <Link href="/learning">Resources</Link>
+        {programmingReady ? (
+          <>
+            <a href="#gatherings">Gatherings</a>
+            <a href="#resources">Resources</a>
+          </>
+        ) : (
+          <>
+            <Link href="/events">Gatherings</Link>
+            <Link href="/learning">Resources</Link>
+          </>
+        )}
+        {canManage ? <Link href={`/communities/${slug}/host`}>Host</Link> : null}
       </nav>
       <section className="community-room-overview">
         <header>
@@ -144,6 +171,16 @@ export default async function CommunityPage({
           }
         />
       ) : null}
+      {programmingReady ? (
+        <CommunityProgramming
+          canManage={canManage}
+          gatherings={
+            (gatheringResult.data as CommunityGathering[] | null) ?? []
+          }
+          resources={(resourceResult.data as CommunityResource[] | null) ?? []}
+          slug={slug}
+        />
+      ) : null}
       {postsResult.error && !structuredConversationsReady ? (
         <section className="admin-empty opportunity-error" role="alert">
           <strong>Community feed unavailable</strong>
@@ -162,9 +199,7 @@ export default async function CommunityPage({
         </section>
       ) : (
         <CommunityFeed
-          canManage={["owner", "moderator"].includes(
-            community.membership_role ?? "",
-          )}
+          canManage={canManage}
           enhanced={structuredConversationsReady}
           communityId={community.community_id}
           currentUserId={user.id}

@@ -242,10 +242,14 @@ Usability is part of production readiness and continues alongside feature delive
       host pinning, private saved posts and member-controlled thread following
 - [x] Add a privacy-safe community member roster with consent-based profile and
       connection paths
-- [ ] Connect relevant events, Circles and learning resources to each community
+- [x] Connect host-curated events and learning resources to each community with
+      member-only projections and audited Host controls
+- [ ] Connect relevant Circles to each community after Circle launch acceptance
 - [ ] Add community-level notification preferences and a restrained weekly briefing
-- [ ] Add Host operations for admission, incomplete introductions, unanswered
-      requests, reports, gatherings, participation, retention and outcomes
+- [x] Add the first Host workspace for admission, member roles, unanswered Asks,
+      safety counts, gatherings, resources and seven-day participation signals
+- [ ] Extend Host operations with incomplete introductions, retention and
+      privacy-thresholded outcome trends
 - [ ] Complete Nairobi Founding Table acceptance before opening another chapter
 
 ### Heavy work remaining before production launch

@@ -12,11 +12,17 @@ them to members: the `communities` feature flag starts disabled.
    `supabase/migrations/20260731010000_structured_community_conversations.sql`
    to enable conversation categories, comments, appreciation, private saves,
    thread following and host pinning.
-4. Open the Admin command center and create at least one draft community.
-5. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
+4. Apply
+   `supabase/migrations/20260731050000_community_programming_and_host_health.sql`
+   to add host-curated Gatherings and Resources plus privacy-safe Host health
+   signals.
+5. Open the Admin command center and create at least one draft community.
+6. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
    posting, reporting, and blocking boundaries with non-production accounts.
-6. Publish the approved community.
-7. A Super Admin may select **Enable after sign-off** only when moderation coverage
+7. Publish the approved community.
+8. From the community room, the owner or moderator opens **Host** and links only
+   the published events and learning resources relevant to that room.
+9. A Super Admin may select **Enable after sign-off** only when moderation coverage
    and the support escalation owner are confirmed.
 
 Disabling the flag immediately removes member navigation and blocks feed/list/write
@@ -38,6 +44,23 @@ operations at the database layer. It does not delete memberships, posts, or repo
   individual's saved list.
 - Following a conversation is voluntary. Creating a comment follows that
   conversation until the member turns notifications off.
+- Host health is aggregate-only. It excludes tagged test accounts and never reads
+  private saved conversations or exposes conversation bodies.
+- A safety count tells a host that escalation exists, but report evidence remains
+  in the permission-gated platform moderation workflow.
+
+## Host operating rhythm
+
+The Host workspace is deliberately narrow:
+
+1. Review admission requests and outstanding invitations.
+2. Notice unanswered Asks and help the right members respond without exposing
+   private contact details.
+3. Escalate open safety signals through the platform moderation owner.
+4. Link a small number of relevant Gatherings and Resources; use **Host pick**
+   only for the clearest current priority.
+5. Review seven-day conversation and reply signals as context, never as a member
+   performance score.
 
 Before enabling a third-party hosted or paid community, separately approve host
 offboarding/export, billing, analytics, content ownership, and data-retention terms.

@@ -199,6 +199,38 @@ assert(
   !structuredCommunityMigration.includes("'body', trim(p_body)"),
   "Community audit metadata must not copy conversation or comment bodies",
 );
+const communityProgrammingMigration = read(
+  "supabase/migrations/20260731050000_community_programming_and_host_health.sql",
+);
+for (const contract of [
+  "community_event_links",
+  "community_course_links",
+  "list_community_gatherings",
+  "list_community_resources",
+  "set_community_event_link",
+  "set_community_course_link",
+  "list_community_programming_options",
+  "get_community_host_health",
+  "public.can_manage_community(p_community_id)",
+  "membership.user_id = auth.uid()",
+  "membership.status = 'active'",
+  "not coalesce(profile.is_test_account, false)",
+  "post.parent_post_id is null",
+  "report.status in ('open', 'reviewing')",
+]) {
+  assert(
+    communityProgrammingMigration.includes(contract),
+    `Community programming and Host health must include ${contract}`,
+  );
+}
+assert(
+  !communityProgrammingMigration.includes("community_saved_posts"),
+  "Host health must not inspect members' private saved conversations",
+);
+assert(
+  !communityProgrammingMigration.includes("select post.body"),
+  "Host health must not project community conversation bodies",
+);
 const betaAdminProvisioning = read("scripts/provision-beta-admin.mjs");
 for (const contract of [
   "HAT_BETA_ADMIN_PASSWORD",
