@@ -40,13 +40,13 @@ export function CommunityModeration({
       const result = await ask({
         title:
           action === "hide"
-            ? "Hide this community post?"
+            ? "Hide this community content?"
             : "Dismiss this community report?",
         description:
           action === "hide"
-            ? "The post will be removed from the private community feed while its captured evidence remains available for audit."
+            ? "The reported post or comment will be removed from the private community while its captured evidence remains available for audit."
             : "Dismiss only when the captured evidence does not require further action.",
-        confirmLabel: action === "hide" ? "Hide post" : "Dismiss report",
+        confirmLabel: action === "hide" ? "Hide content" : "Dismiss report",
         tone: "danger",
         fields: [
           {
@@ -91,7 +91,7 @@ export function CommunityModeration({
             <p className="eyebrow">Report-scoped access</p>
             <h2>Community safety</h2>
             <p>
-              Moderators receive only captured evidence from reported posts,
+              Moderators receive only captured evidence from reported content,
               never general access to private community feeds.
             </p>
           </div>
@@ -138,7 +138,7 @@ export function CommunityModeration({
                       disabled={busy === report.report_id}
                       onClick={() => void review(report.report_id, "hide")}
                     >
-                      Hide post
+                      Hide content
                     </button>
                     <button
                       disabled={busy === report.report_id}
@@ -154,7 +154,7 @@ export function CommunityModeration({
         ) : (
           <div className="admin-empty">
             <strong>No community reports</strong>
-            <p>Reported post snapshots will appear here for bounded review.</p>
+            <p>Reported post and comment snapshots appear here for bounded review.</p>
           </div>
         )}
         {message ? (

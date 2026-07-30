@@ -365,6 +365,7 @@ const communityRoom = read("app/communities/[slug]/page.tsx");
 const communityRoster = read(
   "components/member/community-member-roster.tsx",
 );
+const communityFeed = read("components/member/community-feed.tsx");
 for (const contract of [
   'active="community"',
   "community-room-navigation",
@@ -378,6 +379,24 @@ for (const contract of [
   assert(
     communityRoom.includes(contract),
     `Community Hub must include ${contract}`,
+  );
+}
+for (const contract of [
+  "create_structured_community_post",
+  "create_community_comment",
+  "set_community_post_appreciation",
+  "set_community_post_saved",
+  "set_community_post_followed",
+  "set_community_post_pinned",
+  "Conversation type",
+  "Save privately",
+  "Follow replies",
+  "Report privately",
+  'aria-pressed={filter === item.value}',
+]) {
+  assert(
+    communityFeed.includes(contract),
+    `Structured Community conversation UX must include ${contract}`,
   );
 }
 for (const contract of [

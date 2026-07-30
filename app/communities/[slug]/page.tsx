@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { memberErrorMessage } from "@/lib/member-error";
 import {
   CommunityFeed,
+  type CommunityComment,
   type CommunityPost,
 } from "@/components/member/community-feed";
 import {
@@ -41,12 +42,28 @@ export default async function CommunityPage({
   ).find((item) => item.slug === slug);
   if (!community) notFound();
   if (community.membership_status !== "active") redirect("/communities");
-  const [postsResult, cohortResult, introductionResult, memberResult] =
-    await Promise.all([
+  const [
+    postsResult,
+    structuredPostsResult,
+    commentResult,
+    cohortResult,
+    introductionResult,
+    memberResult,
+  ] = await Promise.all([
       supabase.rpc("list_community_posts", {
         p_community_id: community.community_id,
         p_limit: 30,
         p_offset: 0,
+      }),
+      supabase.rpc("list_community_conversations", {
+        p_category: null,
+        p_community_id: community.community_id,
+        p_limit: 30,
+        p_offset: 0,
+      }),
+      supabase.rpc("list_community_comments", {
+        p_community_id: community.community_id,
+        p_limit: 200,
       }),
       supabase.rpc("get_community_cohort", {
         p_community_id: community.community_id,
@@ -60,6 +77,8 @@ export default async function CommunityPage({
         p_offset: 0,
       }),
     ]);
+  const structuredConversationsReady =
+    !structuredPostsResult.error && !commentResult.error;
   const cohort = ((cohortResult.data as CohortRoom[] | null) ?? [])[0];
   return (
     <main className="community-page">
@@ -125,7 +144,7 @@ export default async function CommunityPage({
           }
         />
       ) : null}
-      {postsResult.error ? (
+      {postsResult.error && !structuredConversationsReady ? (
         <section className="admin-empty opportunity-error" role="alert">
           <strong>Community feed unavailable</strong>
           <p>{memberErrorMessage(postsResult.error, "load this community")}</p>
@@ -143,9 +162,22 @@ export default async function CommunityPage({
         </section>
       ) : (
         <CommunityFeed
+          canManage={["owner", "moderator"].includes(
+            community.membership_role ?? "",
+          )}
+          enhanced={structuredConversationsReady}
           communityId={community.community_id}
           currentUserId={user.id}
-          initialPosts={(postsResult.data as CommunityPost[] | null) ?? []}
+          initialComments={
+            structuredConversationsReady
+              ? ((commentResult.data as CommunityComment[] | null) ?? [])
+              : []
+          }
+          initialPosts={
+            structuredConversationsReady
+              ? ((structuredPostsResult.data as CommunityPost[] | null) ?? [])
+              : ((postsResult.data as CommunityPost[] | null) ?? [])
+          }
           prompt={
             cohort
               ? "Continue the table with one focused Ask, Offer or follow-up"

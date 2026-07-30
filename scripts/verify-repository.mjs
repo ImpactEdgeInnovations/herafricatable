@@ -168,6 +168,37 @@ for (const contract of [
     `Community member roster must include ${contract}`,
   );
 }
+const structuredCommunityMigration = read(
+  "supabase/migrations/20260731010000_structured_community_conversations.sql",
+);
+for (const contract of [
+  "parent_post_id",
+  "community_post_appreciations",
+  "community_saved_posts",
+  "community_followed_posts",
+  "list_community_conversations",
+  "post.parent_post_id is null",
+  "list_community_comments",
+  "create_structured_community_post",
+  "create_community_comment",
+  "set_community_post_appreciation",
+  "set_community_post_saved",
+  "set_community_post_followed",
+  "set_community_post_pinned",
+  "public.can_manage_community(target.community_id)",
+  "'content_kind'",
+  "not public.is_blocked_pair",
+  "Hourly community comment limit reached",
+]) {
+  assert(
+    structuredCommunityMigration.includes(contract),
+    `Structured community conversations must include ${contract}`,
+  );
+}
+assert(
+  !structuredCommunityMigration.includes("'body', trim(p_body)"),
+  "Community audit metadata must not copy conversation or comment bodies",
+);
 const betaAdminProvisioning = read("scripts/provision-beta-admin.mjs");
 for (const contract of [
   "HAT_BETA_ADMIN_PASSWORD",

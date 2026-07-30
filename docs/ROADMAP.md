@@ -238,8 +238,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Make Community a first-class member destination on desktop and mobile
 - [x] Establish an Overview, Conversations, Members, Gatherings and Resources
       information architecture for every community
-- [ ] Add structured conversation categories, comments, thoughtful reactions,
-      pinned content, saved posts and thread following
+- [x] Add structured conversation categories, comments, thoughtful appreciation,
+      host pinning, private saved posts and member-controlled thread following
 - [x] Add a privacy-safe community member roster with consent-based profile and
       connection paths
 - [ ] Connect relevant events, Circles and learning resources to each community
