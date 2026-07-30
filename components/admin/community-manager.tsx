@@ -148,8 +148,9 @@ export function CommunityManager({
         >
           <p className="admin-form-guide" id="community-editor-guide">
             Official communities allow active members to join immediately.
-            Private communities require host approval; publish only after a host
-            is ready.
+            Private communities require host approval. Create new rooms as
+            Draft; publication is controlled by the audited acceptance gate in
+            the Founding cohort workspace.
           </p>
           <input
             type="hidden"
@@ -222,7 +223,9 @@ export function CommunityManager({
                 key={`status-${selected}`}
               >
                 <option value="draft">Draft</option>
-                <option value="published">Published</option>
+                {community?.status === "published" ? (
+                  <option value="published">Published — acceptance passed</option>
+                ) : null}
                 <option value="archived">Archived</option>
               </select>
             </label>

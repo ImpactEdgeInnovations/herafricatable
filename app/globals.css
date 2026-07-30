@@ -13522,7 +13522,8 @@ body {
 .cohort-admin-launch,
 .cohort-admin-summary,
 .cohort-admin-grid,
-.cohort-admin-empty {
+.cohort-admin-empty,
+.community-release-gate {
   width: min(1240px, calc(100% - 56px));
   margin-right: auto;
   margin-left: auto;
@@ -13714,6 +13715,196 @@ body {
 .cohort-admin-empty {
   margin-bottom: 100px;
 }
+.community-release-gate {
+  padding: 62px 0 96px;
+  border-top: 1px solid var(--line);
+}
+.community-release-gate > header {
+  display: grid;
+  align-items: end;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  gap: 60px;
+}
+.community-release-gate > header h2 {
+  margin: 7px 0 14px;
+  font-family: var(--serif);
+  font-size: clamp(2.5rem, 4vw, 4rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+}
+.community-release-gate > header > div > p:last-child {
+  max-width: 670px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.65;
+}
+.community-release-gate > header > aside {
+  display: grid;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: #fff;
+  gap: 4px;
+}
+.community-release-gate > header > aside.ready {
+  border-color: rgba(53, 99, 70, 0.38);
+}
+.community-release-gate > header > aside.blocked {
+  border-color: rgba(104, 24, 39, 0.38);
+}
+.community-release-gate > header > aside strong {
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 400;
+}
+.community-release-gate > header > aside span,
+.community-release-gate > header > aside small {
+  color: var(--muted);
+  font-size: 0.55rem;
+  line-height: 1.45;
+}
+.community-release-hosts {
+  display: grid;
+  align-items: center;
+  margin-top: 30px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  background: #fff;
+  grid-template-columns: 180px 180px minmax(0, 1fr);
+  gap: 22px;
+}
+.community-release-hosts > div {
+  display: grid;
+  gap: 4px;
+}
+.community-release-hosts span {
+  color: var(--muted);
+  font-size: 0.53rem;
+}
+.community-release-hosts strong {
+  font-size: 0.62rem;
+}
+.community-release-hosts > div.ready strong {
+  color: #356346;
+}
+.community-release-hosts p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.58rem;
+  line-height: 1.55;
+}
+.community-release-checks {
+  display: grid;
+  margin-top: 28px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.community-release-checks article {
+  display: grid;
+  min-height: 310px;
+  align-content: start;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.community-release-checks article.passed {
+  border-top: 2px solid #547a5f;
+}
+.community-release-checks article.blocked {
+  border-top: 2px solid var(--wine);
+}
+.community-release-checks article.in_progress {
+  border-top: 2px solid var(--gold);
+}
+.community-release-checks article > header,
+.community-release-checks article > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.community-release-checks article > header span,
+.community-release-checks article > header small {
+  color: var(--muted);
+  font-size: 0.51rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.community-release-checks article h3 {
+  margin: 24px 0 9px;
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  font-weight: 400;
+}
+.community-release-checks article > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.61rem;
+  line-height: 1.6;
+}
+.community-release-checks blockquote,
+.community-release-checks article > div {
+  margin: 18px 0;
+  padding: 14px;
+  border-left: 2px solid var(--gold);
+  background: var(--cream);
+  color: var(--muted);
+  font-size: 0.57rem;
+  line-height: 1.55;
+}
+.community-release-checks article > footer {
+  align-self: end;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.community-release-checks footer > span {
+  display: grid;
+  gap: 3px;
+}
+.community-release-checks footer strong,
+.community-release-checks footer small {
+  font-size: 0.54rem;
+}
+.community-release-checks footer small {
+  color: var(--muted);
+}
+.community-release-checks button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  background: transparent;
+  font-size: 0.54rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.community-release-checks button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.community-release-decision {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding: 24px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  gap: 30px;
+}
+.community-release-decision strong {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+.community-release-decision p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.58rem;
+}
+.community-release-decision a {
+  color: var(--wine);
+}
 
 @media (max-width: 900px) {
   .cohort-welcome,
@@ -13731,6 +13922,19 @@ body {
   .cohort-health article {
     grid-template-columns: 1fr;
   }
+  .community-release-gate > header {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .community-release-gate > header > aside {
+    max-width: 260px;
+  }
+  .community-release-hosts {
+    grid-template-columns: 1fr 1fr;
+  }
+  .community-release-hosts p {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 680px) {
@@ -13739,7 +13943,8 @@ body {
   .cohort-admin-launch,
   .cohort-admin-summary,
   .cohort-admin-grid,
-  .cohort-admin-empty {
+  .cohort-admin-empty,
+  .community-release-gate {
     width: calc(100% - 32px);
   }
   .member-activation > header,
@@ -13787,6 +13992,27 @@ body {
   }
   .cohort-health dl {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .community-release-checks {
+    grid-template-columns: 1fr;
+  }
+  .community-release-checks article {
+    min-height: 0;
+  }
+  .community-release-hosts {
+    grid-template-columns: 1fr;
+  }
+  .community-release-hosts p {
+    grid-column: auto;
+  }
+  .community-release-decision,
+  .community-release-checks article > footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .community-release-decision .button,
+  .community-release-checks button {
+    width: 100%;
   }
 }
 

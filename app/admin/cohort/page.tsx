@@ -7,6 +7,10 @@ import {
   type CohortHealthMember,
   type CohortOverview,
 } from "@/components/admin/cohort-activation-manager";
+import {
+  CommunityReleaseGate,
+  type CommunityReleaseCheck,
+} from "@/components/admin/community-release-gate";
 import { createClient } from "@/lib/supabase/server";
 
 type ManagedEvent = {
@@ -53,6 +57,11 @@ export default async function AdminCohortPage({
         p_community_id: selectedId,
       })
     : { data: [], error: null };
+  const releaseResult = selectedId
+    ? await supabase.rpc("list_community_release_checks", {
+        p_community_id: selectedId,
+      })
+    : { data: [], error: null };
   const events: CohortEvent[] = (
     (eventResult.data as ManagedEvent[] | null) ?? []
   ).map((event) => ({
@@ -75,6 +84,17 @@ export default async function AdminCohortPage({
         health={(healthResult.data as CohortHealthMember[] | null) ?? []}
         migrationReady={!overviewResult.error}
         selectedId={selectedId}
+      />
+      <CommunityReleaseGate
+        checks={
+          (releaseResult.data as CommunityReleaseCheck[] | null) ?? []
+        }
+        communityId={selectedId}
+        communityName={
+          cohorts.find((cohort) => cohort.community_id === selectedId)
+            ?.community_name ?? null
+        }
+        migrationReady={!releaseResult.error}
       />
       <footer className="admin-footer">
         <span>Consent-based cohort operations</span>

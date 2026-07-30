@@ -400,6 +400,55 @@ for (const privateProjection of [
     `Member Community start path must not project ${privateProjection}`,
   );
 }
+const communityReleaseMigration = read(
+  "supabase/migrations/20260731190000_community_release_acceptance.sql",
+);
+for (const contract of [
+  "community_release_checks",
+  "seed_community_release_checks",
+  "list_community_release_checks",
+  "save_community_release_check",
+  "community_release_ready",
+  "publish_community_after_acceptance",
+  "enforce_community_publish_acceptance",
+  "count(*) = 8",
+  "membership.role = 'owner'",
+  "membership.role = 'moderator'",
+  "Every published community must pass release acceptance",
+  "community.release_guard_applied",
+  "'draft'",
+  "'release_state', 'controlled'",
+]) {
+  assert(
+    communityReleaseMigration.includes(contract),
+    `Database-enforced Community acceptance must include ${contract}`,
+  );
+}
+const releaseEvidenceFunction = communityReleaseMigration.slice(
+  communityReleaseMigration.indexOf(
+    "create or replace function public.save_community_release_check",
+  ),
+  communityReleaseMigration.indexOf(
+    "create or replace function public.community_release_ready",
+  ),
+);
+assert(
+  !releaseEvidenceFunction.includes("'evidence_note', clean_evidence") &&
+    releaseEvidenceFunction.includes("'has_evidence'"),
+  "Community acceptance audit metadata must never copy evidence text",
+);
+const controlledCohortFunction = communityReleaseMigration.slice(
+  communityReleaseMigration.indexOf(
+    "create or replace function public.ensure_founding_cohort",
+  ),
+  communityReleaseMigration.indexOf(
+    "revoke all on function public.seed_community_release_checks",
+  ),
+);
+assert(
+  !controlledCohortFunction.includes("set enabled = true"),
+  "Preparing a founding room must not enable Communities",
+);
 const betaAdminProvisioning = read("scripts/provision-beta-admin.mjs");
 for (const contract of [
   "HAT_BETA_ADMIN_PASSWORD",
@@ -773,6 +822,7 @@ const adminDialogModules = [
   "analytics-readiness",
   "circle-manager",
   "community-manager",
+  "community-release-gate",
   "community-moderation",
   "event-checkin-console",
   "event-feedback-manager",
@@ -870,6 +920,7 @@ const adminRecoveryModules = [
   "analytics-readiness",
   "circle-manager",
   "community-manager",
+  "community-release-gate",
   "community-moderation",
   "event-checkin-console",
   "event-content-manager",

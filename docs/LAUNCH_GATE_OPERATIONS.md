@@ -45,3 +45,8 @@ blocked checks require an accountable owner.
   does not deploy or enable feature flags automatically.
 - Rolling back a release does not erase evidence. Update affected checks and record
   the new rehearsal or decision.
+
+Feature-specific acceptance remains separate from the platform launch gate.
+Communities use the eight-check workflow in **Admin → Founding cohort**. Its
+database guard controls Community publication and prevents a published room with
+incomplete evidence from being exposed through the global feature flag.

@@ -182,8 +182,8 @@ export function CohortActivationManager({
               : "Prepare founding room"}
           </button>
           <small>
-            This enables Communities and prepares the private room. It does not
-            automatically enrol members.
+            This prepares a controlled private room. It does not enable member
+            access, publish the community or automatically enrol anyone.
           </small>
         </form>
       </section>

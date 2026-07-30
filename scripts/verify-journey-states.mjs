@@ -787,6 +787,32 @@ assert(
     cohortAdmin.includes("Cohort health"),
   "Admin cohort operations must explain and preserve consent boundaries",
 );
+const communityReleaseGate = read(
+  "components/admin/community-release-gate.tsx",
+);
+for (const contract of [
+  "Nairobi release acceptance",
+  "Evidence—not activity volume—controls publication",
+  "Backup moderator",
+  "Publishing is database-blocked",
+  "save_community_release_check",
+  "publish_community_after_acceptance",
+  "Publish accepted community",
+  "Return to controlled draft",
+  "adminErrorMessage",
+  "useActionDialog",
+]) {
+  assert(
+    communityReleaseGate.includes(contract),
+    `Community release acceptance UX must include ${contract}`,
+  );
+}
+const adminCohortPage = read("app/admin/cohort/page.tsx");
+assert(
+  adminCohortPage.includes("list_community_release_checks") &&
+    adminCohortPage.includes("CommunityReleaseGate"),
+  "Admin founding cohort must load the Community release gate",
+);
 
 console.log(
   `Journey-state contracts passed: ${Object.keys(boundaryContracts).length} route boundaries, ${refreshModules.length} non-destructive refresh workflows, responsive shared member navigation, people-first discovery, lightweight Admin cockpit, editable profiles, opt-in attendee discovery, consent-based founding cohort, and 5 guided operations groups.`,

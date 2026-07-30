@@ -26,13 +26,18 @@ them to members: the `communities` feature flag starts disabled.
 7. Apply
    `supabase/migrations/20260731160000_community_member_start_path.sql`
    to add the private, member-scoped recommended start path inside each room.
-8. Open the Admin command center and create at least one draft community.
-9. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
+8. Apply
+   `supabase/migrations/20260731190000_community_release_acceptance.sql`
+   to add database-enforced community publication acceptance.
+9. Open the Admin command center and create at least one draft community.
+10. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
    posting, reporting, and blocking boundaries with non-production accounts.
-10. Publish the approved community.
-11. From the community room, the owner or moderator opens **Host** and links only
+11. Record all eight checks in **Admin → Founding cohort → Nairobi release
+    acceptance**.
+12. Publish the approved community from that acceptance panel.
+13. From the community room, the owner or moderator opens **Host** and links only
    the published events and learning resources relevant to that room.
-12. A Super Admin may select **Enable after sign-off** only when moderation coverage
+14. A Super Admin may select **Enable after sign-off** only when moderation coverage
    and the support escalation owner are confirmed.
 
 Disabling the flag immediately removes member navigation and blocks feed/list/write
@@ -112,6 +117,31 @@ The Host workspace is deliberately narrow:
    because she has not posted.
 7. Treat anonymous outcome trends as evidence of collective value, not a quota.
    Categories below the three-sharer threshold must remain private.
+
+## Nairobi publication acceptance
+
+Community publication and global member availability are separate controls:
+
+- Preparing the founding room creates or updates a controlled cohort. It no
+  longer enables Communities or publishes a new room automatically.
+- New communities must begin as Draft. Direct publication is rejected by the
+  database until all eight checks pass.
+- Publication requires exactly one active owner and at least one active backup
+  moderator.
+- Enabling the global Communities feature is rejected when any published
+  community has incomplete acceptance.
+- Applying the release-acceptance migration fails closed: if Communities is
+  already enabled while a published room has incomplete checks, global member
+  access is returned to controlled/off and the change is recorded in the audit
+  log.
+- A Super Admin may return a published community to Draft without deleting its
+  memberships, conversations or audit history.
+
+The eight checks cover host coverage, consent/admission, conversations and
+blocking, safety escalation, member notification choices, privacy thresholds,
+non-technical usability and the Host operating rehearsal. Evidence notes must
+describe outcomes only—never credentials, OTPs, private member content or secret
+configuration.
 
 Before enabling a third-party hosted or paid community, separately approve host
 offboarding/export, billing, analytics, content ownership, and data-retention terms.
