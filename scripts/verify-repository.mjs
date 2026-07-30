@@ -285,6 +285,79 @@ assert(
     cron.includes("briefingMigrationPending"),
   "Notification worker must queue weekly Community briefings without breaking pre-migration delivery",
 );
+const communityContinuityMigration = read(
+  "supabase/migrations/20260731130000_community_continuity_and_outcome_signals.sql",
+);
+for (const contract of [
+  "community_member_nudges",
+  "get_community_continuity_summary",
+  "list_community_outcome_trends",
+  "list_community_introduction_followups",
+  "send_community_introduction_nudge",
+  "public.can_manage_community(p_community_id)",
+  "profile.access_status = 'active'",
+  "not profile.is_test_account",
+  "continuity.eligible_count >= 5",
+  "outcome.share_anonymously",
+  "having count(distinct outcome.owner_id) >= 3",
+  "now() - interval '7 days'",
+  "preference.in_app_enabled",
+]) {
+  assert(
+    communityContinuityMigration.includes(contract),
+    `Community continuity and privacy boundaries must include ${contract}`,
+  );
+}
+const continuitySummaryFunction = communityContinuityMigration.slice(
+  communityContinuityMigration.indexOf(
+    "create or replace function public.get_community_continuity_summary",
+  ),
+  communityContinuityMigration.indexOf(
+    "create or replace function public.list_community_outcome_trends",
+  ),
+);
+const outcomeTrendFunction = communityContinuityMigration.slice(
+  communityContinuityMigration.indexOf(
+    "create or replace function public.list_community_outcome_trends",
+  ),
+  communityContinuityMigration.indexOf(
+    "create or replace function public.list_community_introduction_followups",
+  ),
+);
+for (const privateProjection of [
+  "private_detail",
+  "profile.display_name",
+  "account.email",
+]) {
+  assert(
+    !continuitySummaryFunction.includes(privateProjection) &&
+      !outcomeTrendFunction.includes(privateProjection),
+    `Community continuity aggregates must not project ${privateProjection}`,
+  );
+}
+const introductionNudgeFunction = communityContinuityMigration.slice(
+  communityContinuityMigration.indexOf(
+    "create or replace function public.send_community_introduction_nudge",
+  ),
+  communityContinuityMigration.indexOf(
+    "revoke all on function public.get_community_continuity_summary",
+  ),
+);
+assert(
+  introductionNudgeFunction.includes("in_app_allowed") &&
+    introductionNudgeFunction.includes("insert into public.notifications"),
+  "Introduction reminders must use preference-aware in-app delivery",
+);
+for (const forbiddenDelivery of [
+  "notification_jobs",
+  "email_network",
+  "email_enabled",
+]) {
+  assert(
+    !introductionNudgeFunction.includes(forbiddenDelivery),
+    `Introduction reminders must not queue ${forbiddenDelivery}`,
+  );
+}
 const betaAdminProvisioning = read("scripts/provision-beta-admin.mjs");
 for (const contract of [
   "HAT_BETA_ADMIN_PASSWORD",

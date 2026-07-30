@@ -426,6 +426,9 @@ for (const contract of [
   "get_community_host_health",
   "list_community_members",
   "list_community_programming_options",
+  "get_community_continuity_summary",
+  "list_community_introduction_followups",
+  "list_community_outcome_trends",
   'active="community"',
   "Private host workspace",
 ]) {
@@ -444,6 +447,14 @@ for (const contract of [
   "set_community_course_link",
   "Community admission is separate from platform approval",
   "Contact platform safety",
+  'id="continuity"',
+  "These are shared room signals, not member scores",
+  "Building baseline",
+  "at least three different",
+  "Send gentle reminder",
+  "send_community_introduction_nudge",
+  "One reminder per week",
+  "never names, relationship",
   "memberErrorMessage",
 ]) {
   assert(

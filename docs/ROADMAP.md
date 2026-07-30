@@ -249,7 +249,7 @@ Usability is part of production readiness and continues alongside feature delive
       privacy-safe weekly briefing with idempotent delivery batches
 - [x] Add the first Host workspace for admission, member roles, unanswered Asks,
       safety counts, gatherings, resources and seven-day participation signals
-- [ ] Extend Host operations with incomplete introductions, retention and
+- [x] Extend Host operations with incomplete introductions, retention and
       privacy-thresholded outcome trends
 - [ ] Complete Nairobi Founding Table acceptance before opening another chapter
 
@@ -311,6 +311,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Apply `20260731010000_structured_community_conversations.sql` in production Supabase
 - [ ] Apply `20260731050000_community_programming_and_host_health.sql` in production Supabase
 - [ ] Apply `20260731100000_community_notification_preferences_and_briefings.sql`
+      in production Supabase
+- [ ] Apply `20260731130000_community_continuity_and_outcome_signals.sql`
       in production Supabase
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag
 - [ ] Apply `20260725130000_learning_foundation.sql` in production Supabase

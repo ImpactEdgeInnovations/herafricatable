@@ -5,8 +5,11 @@ import { MemberHeader } from "@/components/member/member-header";
 import type { CommunitySummary } from "@/components/member/community-directory";
 import {
   CommunityHostWorkspace,
+  type CommunityContinuitySummary,
   type CommunityHostHealth,
   type CommunityHostMember,
+  type CommunityIntroductionFollowup,
+  type CommunityOutcomeTrend,
   type CommunityProgrammingOption,
 } from "@/components/member/community-host-workspace";
 
@@ -38,7 +41,14 @@ export default async function CommunityHostPage({
     redirect(`/communities/${slug}`);
   }
 
-  const [healthResult, memberResult, programmingResult] = await Promise.all([
+  const [
+    healthResult,
+    memberResult,
+    programmingResult,
+    continuityResult,
+    introductionResult,
+    outcomeResult,
+  ] = await Promise.all([
     supabase.rpc("get_community_host_health", {
       p_community_id: community.community_id,
     }),
@@ -48,12 +58,26 @@ export default async function CommunityHostPage({
     supabase.rpc("list_community_programming_options", {
       p_community_id: community.community_id,
     }),
+    supabase.rpc("get_community_continuity_summary", {
+      p_community_id: community.community_id,
+    }),
+    supabase.rpc("list_community_introduction_followups", {
+      p_community_id: community.community_id,
+    }),
+    supabase.rpc("list_community_outcome_trends", {
+      p_community_id: community.community_id,
+    }),
   ]);
 
   const migrationReady =
     !healthResult.error && !memberResult.error && !programmingResult.error;
+  const continuityReady =
+    !continuityResult.error && !introductionResult.error && !outcomeResult.error;
   const health = (
     (healthResult.data as CommunityHostHealth[] | null) ?? []
+  )[0] ?? null;
+  const continuity = (
+    (continuityResult.data as CommunityContinuitySummary[] | null) ?? []
   )[0] ?? null;
 
   return (
@@ -76,6 +100,7 @@ export default async function CommunityHostPage({
         </aside>
       </section>
       <nav className="community-room-navigation" aria-label="Host workspace areas">
+        <a href="#continuity">Continuity</a>
         <a href="#admissions">Admissions</a>
         <a href="#people">People</a>
         <a href="#gatherings">Gatherings</a>
@@ -83,11 +108,20 @@ export default async function CommunityHostPage({
       </nav>
       <CommunityHostWorkspace
         communityId={community.community_id}
+        continuity={continuity}
+        continuityReady={continuityReady}
         health={health}
+        introductionFollowups={
+          (introductionResult.data as CommunityIntroductionFollowup[] | null) ??
+          []
+        }
         members={(memberResult.data as CommunityHostMember[] | null) ?? []}
         migrationReady={migrationReady}
         options={
           (programmingResult.data as CommunityProgrammingOption[] | null) ?? []
+        }
+        outcomeTrends={
+          (outcomeResult.data as CommunityOutcomeTrend[] | null) ?? []
         }
       />
     </main>

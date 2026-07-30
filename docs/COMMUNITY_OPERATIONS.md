@@ -19,13 +19,17 @@ them to members: the `communities` feature flag starts disabled.
 5. Apply
    `supabase/migrations/20260731100000_community_notification_preferences_and_briefings.sql`
    to add per-room delivery choices and the aggregate weekly briefing.
-6. Open the Admin command center and create at least one draft community.
-7. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
+6. Apply
+   `supabase/migrations/20260731130000_community_continuity_and_outcome_signals.sql`
+   to add the privacy-thresholded Host continuity view and gentle introduction
+   follow-ups.
+7. Open the Admin command center and create at least one draft community.
+8. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
    posting, reporting, and blocking boundaries with non-production accounts.
-8. Publish the approved community.
-9. From the community room, the owner or moderator opens **Host** and links only
+9. Publish the approved community.
+10. From the community room, the owner or moderator opens **Host** and links only
    the published events and learning resources relevant to that room.
-10. A Super Admin may select **Enable after sign-off** only when moderation coverage
+11. A Super Admin may select **Enable after sign-off** only when moderation coverage
    and the support escalation owner are confirmed.
 
 Disabling the flag immediately removes member navigation and blocks feed/list/write
@@ -57,6 +61,19 @@ operations at the database layer. It does not delete memberships, posts, or repo
 - Weekly briefings contain counts only. They exclude test accounts, respect
   bilateral blocks, never include post bodies or member names, and are not queued
   when there was no new room activity and no gathering is imminent.
+- The continuity view counts a member as participating when she posts, replies,
+  appreciates a contribution, or updates her published introduction in the last
+  30 days. It does not assign individual engagement scores.
+- The 30-day continuity rate is hidden until at least five established members
+  have been in the room for 30 days. It never produces a ranked list of members
+  who have not participated.
+- Outcome categories count only accepted connections where both people are active
+  real members of the room. A category appears only after at least three different
+  members choose anonymous sharing; names and private outcome details are never
+  projected.
+- Hosts may see the names of members missing the objective room-introduction step.
+  A gentle reminder can be recorded once per seven days, uses in-app delivery
+  only, and respects the member's global Activity preference.
 
 ## Host operating rhythm
 
@@ -70,6 +87,11 @@ The Host workspace is deliberately narrow:
    only for the clearest current priority.
 5. Review seven-day conversation and reply signals as context, never as a member
    performance score.
+6. Review the continuity panel monthly. Help members complete introductions, read
+   aggregate return signals as room-design feedback, and never pursue an individual
+   because she has not posted.
+7. Treat anonymous outcome trends as evidence of collective value, not a quota.
+   Categories below the three-sharer threshold must remain private.
 
 Before enabling a third-party hosted or paid community, separately approve host
 offboarding/export, billing, analytics, content ownership, and data-retention terms.

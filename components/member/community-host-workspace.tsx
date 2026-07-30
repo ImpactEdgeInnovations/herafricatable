@@ -27,6 +27,32 @@ export type CommunityHostMember = {
   created_at: string;
 };
 
+export type CommunityContinuitySummary = {
+  active_members: number;
+  introduced_members: number;
+  missing_introductions: number;
+  participating_30d: number;
+  returning_participants_30d: number;
+  retention_eligible_members: number;
+  retention_rate_30d: number | null;
+  shared_outcomes_365d: number | null;
+};
+
+export type CommunityIntroductionFollowup = {
+  user_id: string;
+  display_name: string;
+  job_title: string | null;
+  company: string | null;
+  joined_at: string;
+  last_nudged_at: string | null;
+  can_nudge: boolean;
+};
+
+export type CommunityOutcomeTrend = {
+  outcome_type: string;
+  outcome_count: number;
+};
+
 export type CommunityProgrammingOption = {
   item_type: "event" | "resource";
   item_id: string;
@@ -100,18 +126,33 @@ function optionMeta(option: CommunityProgrammingOption) {
   return "Member learning";
 }
 
+function outcomeLabel(value: string) {
+  return value
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export function CommunityHostWorkspace({
   communityId,
+  continuity,
+  continuityReady,
   health,
+  introductionFollowups,
   members,
   migrationReady,
   options,
+  outcomeTrends,
 }: {
   communityId: string;
+  continuity: CommunityContinuitySummary | null;
+  continuityReady: boolean;
   health: CommunityHostHealth | null;
+  introductionFollowups: CommunityIntroductionFollowup[];
   members: CommunityHostMember[];
   migrationReady: boolean;
   options: CommunityProgrammingOption[];
+  outcomeTrends: CommunityOutcomeTrend[];
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -197,6 +238,26 @@ export function CommunityHostWorkspace({
     if (!error) router.refresh();
   }
 
+  async function nudgeIntroduction(member: CommunityIntroductionFollowup) {
+    const action = `nudge-${member.user_id}`;
+    setBusy(action);
+    setMessage("");
+    const { error } = await supabase.rpc(
+      "send_community_introduction_nudge",
+      {
+        p_community_id: communityId,
+        p_user_id: member.user_id,
+      },
+    );
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "record this gentle reminder")
+        : "Gentle reminder recorded. Delivery follows the member’s Activity choices.",
+    );
+    if (!error) router.refresh();
+  }
+
   if (!migrationReady || !health) {
     return (
       <section className="community-host-unavailable" role="status">
@@ -255,6 +316,154 @@ export function CommunityHostWorkspace({
           {message}
         </p>
       ) : null}
+
+      <section
+        className="community-host-panel community-host-continuity"
+        id="continuity"
+      >
+        <header>
+          <div>
+            <p className="eyebrow">Continuity</p>
+            <h2>Help the room keep its promise.</h2>
+          </div>
+          <p>
+            These are shared room signals, not member scores. Use them to make
+            introductions easier, notice whether participation is returning,
+            and protect the privacy of relationship outcomes.
+          </p>
+        </header>
+        {continuityReady && continuity ? (
+          <>
+            <div
+              className="community-continuity-metrics"
+              aria-label="Community continuity signals"
+            >
+              <article>
+                <span>Introductions complete</span>
+                <strong>
+                  {continuity.introduced_members}
+                  <small> / {continuity.active_members}</small>
+                </strong>
+                <p>A clear first step into the room</p>
+              </article>
+              <article>
+                <span>Participating this month</span>
+                <strong>{continuity.participating_30d}</strong>
+                <p>Members who contributed in the last 30 days</p>
+              </article>
+              <article>
+                <span>Returning participants</span>
+                <strong>{continuity.returning_participants_30d}</strong>
+                <p>Established members who participated this month</p>
+              </article>
+              <article>
+                <span>30-day continuity</span>
+                <strong>
+                  {continuity.retention_rate_30d === null
+                    ? "Building baseline"
+                    : `${continuity.retention_rate_30d}%`}
+                </strong>
+                <p>
+                  Shown only when at least five established members are
+                  eligible
+                </p>
+              </article>
+            </div>
+
+            <div className="community-continuity-columns">
+              <section aria-labelledby="introduction-followups-title">
+                <div className="community-continuity-subhead">
+                  <div>
+                    <p className="eyebrow">A gentle first step</p>
+                    <h3 id="introduction-followups-title">
+                      {continuity.missing_introductions
+                        ? `${continuity.missing_introductions} introductions to welcome`
+                        : "Every active member has introduced herself"}
+                    </h3>
+                  </div>
+                  <span>One reminder per week</span>
+                </div>
+                {introductionFollowups.length ? (
+                  <div className="community-introduction-followups">
+                    {introductionFollowups.map((member) => (
+                      <article key={member.user_id}>
+                        <div>
+                          <strong>{member.display_name}</strong>
+                          <span>
+                            {[member.job_title, member.company]
+                              .filter(Boolean)
+                              .join(" · ") || "Community member"}
+                          </span>
+                        </div>
+                        {member.can_nudge ? (
+                          <button
+                            type="button"
+                            disabled={busy === `nudge-${member.user_id}`}
+                            onClick={() => void nudgeIntroduction(member)}
+                          >
+                            {busy === `nudge-${member.user_id}`
+                              ? "Recording…"
+                              : "Send gentle reminder"}
+                          </button>
+                        ) : (
+                          <small>Reminder recorded recently</small>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="community-host-empty">
+                    There is no introduction follow-up needed today.
+                  </p>
+                )}
+                <p className="community-continuity-note">
+                  Reminders are in-app only, respect the member’s global
+                  Activity preference, and never expose private contact details.
+                </p>
+              </section>
+
+              <section aria-labelledby="outcome-trends-title">
+                <div className="community-continuity-subhead">
+                  <div>
+                    <p className="eyebrow">What the room enabled</p>
+                    <h3 id="outcome-trends-title">Shared outcomes</h3>
+                  </div>
+                  <strong>
+                    {continuity.shared_outcomes_365d ?? "Private"}
+                  </strong>
+                </div>
+                {outcomeTrends.length ? (
+                  <div className="community-outcome-trends">
+                    {outcomeTrends.map((outcome) => (
+                      <div key={outcome.outcome_type}>
+                        <span>{outcomeLabel(outcome.outcome_type)}</span>
+                        <strong>{outcome.outcome_count}</strong>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="community-host-empty">
+                    Outcome trends stay private until at least three different
+                    members anonymously share the same outcome type.
+                  </p>
+                )}
+                <p className="community-continuity-note">
+                  Hosts see category totals only—never names, relationship
+                  details, or an individual member’s history.
+                </p>
+              </section>
+            </div>
+          </>
+        ) : (
+          <div className="community-continuity-awaiting" role="status">
+            <strong>Continuity signals are awaiting their database update.</strong>
+            <p>
+              Admissions, people and programming remain available below. Apply
+              the latest continuity migration to add this private Host view.
+            </p>
+          </div>
+        )}
+      </section>
 
       <section className="community-host-panel" id="admissions">
         <header>
