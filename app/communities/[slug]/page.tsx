@@ -27,6 +27,10 @@ import {
   CommunityNotificationPreferences,
   type CommunityNotificationPreference,
 } from "@/components/member/community-notification-preferences";
+import {
+  CommunityStartPath,
+  type CommunityStartPathState,
+} from "@/components/member/community-start-path";
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
   params,
@@ -61,6 +65,7 @@ export default async function CommunityPage({
     gatheringResult,
     resourceResult,
     notificationPreferenceResult,
+    startPathResult,
   ] = await Promise.all([
       supabase.rpc("list_community_posts", {
         p_community_id: community.community_id,
@@ -95,6 +100,9 @@ export default async function CommunityPage({
         p_community_id: community.community_id,
       }),
       supabase.rpc("get_community_notification_preferences", {
+        p_community_id: community.community_id,
+      }),
+      supabase.rpc("get_my_community_start_path", {
         p_community_id: community.community_id,
       }),
     ]);
@@ -136,33 +144,16 @@ export default async function CommunityPage({
         )}
         {canManage ? <Link href={`/communities/${slug}/host`}>Host</Link> : null}
       </nav>
-      <section className="community-room-overview">
-        <header>
-          <p className="eyebrow">Begin where you are</p>
-          <h2>Your relationships continue here.</h2>
-          <p>
-            Use this room for thoughtful context and practical support. Private
-            conversations still begin only after both members choose to connect.
-          </p>
-        </header>
-        <div>
-          <a href="#conversations">
-            <span>01</span>
-            <strong>Join the conversation</strong>
-            <small>Share one useful Ask, Offer, resource or follow-up.</small>
-          </a>
-          <Link href="/network">
-            <span>02</span>
-            <strong>Meet relevant members</strong>
-            <small>Understand her context before requesting a connection.</small>
-          </Link>
-          <Link href="/events">
-            <span>03</span>
-            <strong>Gather around the table</strong>
-            <small>See the next event and carry the relationship forward.</small>
-          </Link>
-        </div>
-      </section>
+      <CommunityStartPath
+        cohortActive={cohort?.cohort_status === "active"}
+        state={
+          startPathResult.error
+            ? null
+            : (
+                (startPathResult.data as CommunityStartPathState[] | null) ?? []
+              )[0] ?? null
+        }
+      />
       {!notificationPreferenceResult.error ? (
         <CommunityNotificationPreferences
           communityId={community.community_id}

@@ -251,6 +251,8 @@ Usability is part of production readiness and continues alongside feature delive
       safety counts, gatherings, resources and seven-day participation signals
 - [x] Extend Host operations with incomplete introductions, retention and
       privacy-thresholded outcome trends
+- [x] Replace static room guidance with a private member start path for
+      introductions, useful contributions, mutual relationships and gatherings
 - [ ] Complete Nairobi Founding Table acceptance before opening another chapter
 
 ### Heavy work remaining before production launch
@@ -314,6 +316,8 @@ Usability is part of production readiness and continues alongside feature delive
       in production Supabase
 - [ ] Apply `20260731130000_community_continuity_and_outcome_signals.sql`
       in production Supabase
+- [ ] Apply `20260731160000_community_member_start_path.sql` in production
+      Supabase
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag
 - [ ] Apply `20260725130000_learning_foundation.sql` in production Supabase
 - [ ] Complete Learning content/access/payment acceptance and deliberately enable its P1 flag

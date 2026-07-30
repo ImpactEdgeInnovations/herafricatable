@@ -23,13 +23,16 @@ them to members: the `communities` feature flag starts disabled.
    `supabase/migrations/20260731130000_community_continuity_and_outcome_signals.sql`
    to add the privacy-thresholded Host continuity view and gentle introduction
    follow-ups.
-7. Open the Admin command center and create at least one draft community.
-8. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
+7. Apply
+   `supabase/migrations/20260731160000_community_member_start_path.sql`
+   to add the private, member-scoped recommended start path inside each room.
+8. Open the Admin command center and create at least one draft community.
+9. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
    posting, reporting, and blocking boundaries with non-production accounts.
-9. Publish the approved community.
-10. From the community room, the owner or moderator opens **Host** and links only
+10. Publish the approved community.
+11. From the community room, the owner or moderator opens **Host** and links only
    the published events and learning resources relevant to that room.
-11. A Super Admin may select **Enable after sign-off** only when moderation coverage
+12. A Super Admin may select **Enable after sign-off** only when moderation coverage
    and the support escalation owner are confirmed.
 
 Disabling the flag immediately removes member navigation and blocks feed/list/write
@@ -74,6 +77,23 @@ operations at the database layer. It does not delete memberships, posts, or repo
 - Hosts may see the names of members missing the objective room-introduction step.
   A gentle reminder can be recorded once per seven days, uses in-app delivery
   only, and respects the member's global Activity preference.
+- The member start path reads only the signed-in member's own introduction,
+  contribution, accepted connection and confirmed upcoming gathering state. It
+  exposes no comparison, score, streak or other member's private activity.
+
+## Member room rhythm
+
+The first screen recommends one useful next action instead of presenting a dense
+feature menu:
+
+1. Add a guided introduction when the room has an active hosted cohort.
+2. Share one focused Ask, Offer, resource or thoughtful reply.
+3. Build one mutually accepted relationship with another active room member.
+4. Consider the next host-selected gathering when one is available.
+
+These are orientation cues, not participation requirements. When the path is
+established, the room explicitly says there is no activity quota. Members may
+return only when they have useful context, a clear ask or a relationship to nurture.
 
 ## Host operating rhythm
 

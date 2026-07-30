@@ -374,6 +374,9 @@ const communityHostPage = read("app/communities/[slug]/host/page.tsx");
 const communityHostWorkspace = read(
   "components/member/community-host-workspace.tsx",
 );
+const communityStartPath = read(
+  "components/member/community-start-path.tsx",
+);
 const communityNotificationPreferences = read(
   "components/member/community-notification-preferences.tsx",
 );
@@ -386,10 +389,27 @@ for (const contract of [
   "Gatherings",
   "Resources",
   "list_community_member_directory",
+  "get_my_community_start_path",
+  "CommunityStartPath",
 ]) {
   assert(
     communityRoom.includes(contract),
     `Community Hub must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Recommended now",
+  "Begin with context",
+  "Contribute something useful",
+  "Build one mutual connection",
+  "Continue around the table",
+  "mutual acceptance",
+  "There is no activity quota",
+  "has_accepted_connection",
+]) {
+  assert(
+    communityStartPath.includes(contract),
+    `Member Community start path must include ${contract}`,
   );
 }
 for (const contract of [

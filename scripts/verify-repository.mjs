@@ -358,6 +358,48 @@ for (const forbiddenDelivery of [
     `Introduction reminders must not queue ${forbiddenDelivery}`,
   );
 }
+const communityStartPathMigration = read(
+  "supabase/migrations/20260731160000_community_member_start_path.sql",
+);
+for (const contract of [
+  "get_my_community_start_path",
+  "public.communities_enabled()",
+  "public.is_active_member(actor)",
+  "membership.user_id = actor",
+  "introduction.user_id = actor",
+  "post.author_id = actor",
+  "connection.status = 'accepted'",
+  "other_membership.community_id = p_community_id",
+  "not public.is_blocked_pair(actor, other_membership.user_id)",
+  "event_member.user_id = actor",
+  "link.community_id = p_community_id",
+  "event.ends_at >= now()",
+  "no public score or member comparison",
+]) {
+  assert(
+    communityStartPathMigration.includes(contract),
+    `Private Community start path must include ${contract}`,
+  );
+}
+const communityStartPathFunction = communityStartPathMigration.slice(
+  communityStartPathMigration.indexOf(
+    "create or replace function public.get_my_community_start_path",
+  ),
+  communityStartPathMigration.indexOf(
+    "revoke all on function public.get_my_community_start_path",
+  ),
+);
+for (const privateProjection of [
+  "display_name",
+  "private_detail",
+  "profile_private",
+  "auth.users",
+]) {
+  assert(
+    !communityStartPathFunction.includes(privateProjection),
+    `Member Community start path must not project ${privateProjection}`,
+  );
+}
 const betaAdminProvisioning = read("scripts/provision-beta-admin.mjs");
 for (const contract of [
   "HAT_BETA_ADMIN_PASSWORD",

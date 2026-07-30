@@ -10108,6 +10108,17 @@ body {
   font-size: 0.68rem;
   line-height: 1.7;
 }
+.community-start-primary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  margin-top: 20px;
+  color: var(--wine);
+  font-size: 0.6rem;
+  font-weight: 850;
+  text-decoration: none;
+  gap: 8px;
+}
 .community-room-overview > div {
   display: grid;
   border-top: 1px solid var(--line);
@@ -10122,6 +10133,17 @@ body {
   text-decoration: none;
   grid-template-columns: 36px minmax(150px, 0.75fr) minmax(190px, 1fr);
   gap: 18px;
+}
+.community-start-path > div > a {
+  grid-template-columns:
+    36px minmax(150px, 0.75fr) minmax(190px, 1fr)
+    auto;
+}
+.community-start-path > div > a.is-recommended {
+  background: linear-gradient(90deg, rgba(184, 139, 49, 0.08), transparent);
+}
+.community-start-path > div > a.is-complete {
+  opacity: 0.62;
 }
 .community-room-overview > div > a:hover strong,
 .community-room-overview > div > a:focus-visible strong {
@@ -10141,6 +10163,18 @@ body {
   color: var(--muted);
   font-size: 0.6rem;
   line-height: 1.55;
+}
+.community-start-path > div em {
+  color: var(--wine);
+  font-size: 0.53rem;
+  font-style: normal;
+  font-weight: 850;
+  white-space: nowrap;
+}
+.community-start-path > div > a.is-complete > span::after {
+  margin-left: 4px;
+  color: #356346;
+  content: "✓";
 }
 .community-conversation-shell {
   scroll-margin-top: 76px;
@@ -10652,8 +10686,12 @@ body {
     grid-template-columns: 30px minmax(0, 1fr);
     gap: 5px 12px;
   }
-  .community-room-overview > div small {
+  .community-room-overview > div small,
+  .community-start-path > div em {
     grid-column: 2;
+  }
+  .community-start-path > div em {
+    margin-top: 6px;
   }
   .community-conversation-heading {
     margin-top: 40px;
