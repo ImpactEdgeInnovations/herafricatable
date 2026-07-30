@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AdminHeader } from "@/components/admin/admin-header";
 import {
   NotificationOperations,
+  type AdminCommunityBriefingBatch,
   type AdminNotificationJob,
 } from "@/components/admin/notification-operations";
 import { createClient } from "@/lib/supabase/server";
@@ -22,7 +23,10 @@ export default async function AdminNotificationsPage() {
     .maybeSingle();
   if (!role) redirect("/admin");
 
-  const result = await supabase.rpc("list_admin_notification_jobs");
+  const [result, briefingResult] = await Promise.all([
+    supabase.rpc("list_admin_notification_jobs"),
+    supabase.rpc("list_community_briefing_batches"),
+  ]);
   const configured = Boolean(
     process.env.RESEND_API_KEY &&
       process.env.EMAIL_FROM &&
@@ -50,6 +54,10 @@ export default async function AdminNotificationsPage() {
         </section>
       ) : (
         <NotificationOperations
+          briefingBatches={
+            (briefingResult.data as AdminCommunityBriefingBatch[] | null) ?? []
+          }
+          briefingMigrationReady={!briefingResult.error}
           jobs={(result.data as AdminNotificationJob[] | null) ?? []}
           providerConfigured={configured}
         />

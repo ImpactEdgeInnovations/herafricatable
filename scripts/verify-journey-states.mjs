@@ -374,6 +374,9 @@ const communityHostPage = read("app/communities/[slug]/host/page.tsx");
 const communityHostWorkspace = read(
   "components/member/community-host-workspace.tsx",
 );
+const communityNotificationPreferences = read(
+  "components/member/community-notification-preferences.tsx",
+);
 for (const contract of [
   'active="community"',
   "community-room-navigation",
@@ -446,6 +449,20 @@ for (const contract of [
   assert(
     communityHostWorkspace.includes(contract),
     `Community Host workspace must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Replies in Activity",
+  "Email me about replies",
+  "Weekly room briefing",
+  "Send the briefing by email",
+  "update_community_notification_preferences",
+  "Open main Activity settings",
+  "memberErrorMessage",
+]) {
+  assert(
+    communityNotificationPreferences.includes(contract),
+    `Community notification choices must include ${contract}`,
   );
 }
 for (const contract of [

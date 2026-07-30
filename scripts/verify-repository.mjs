@@ -231,6 +231,60 @@ assert(
   !communityProgrammingMigration.includes("select post.body"),
   "Host health must not project community conversation bodies",
 );
+const communityNotificationMigration = read(
+  "supabase/migrations/20260731100000_community_notification_preferences_and_briefings.sql",
+);
+for (const contract of [
+  "community_notification_preferences",
+  "email_replies boolean not null default false",
+  "weekly_briefing_email boolean not null default false",
+  "community_briefing_email_requires_briefing",
+  "get_community_notification_preferences",
+  "update_community_notification_preferences",
+  "enqueue_community_notification",
+  "global_preference.in_app_enabled",
+  "global_preference.email_network",
+  "queue_community_weekly_briefings",
+  "community_briefing_batches",
+  "on conflict (week_start) do nothing",
+  "profile.access_status = 'active'",
+  "not profile.is_test_account",
+  "not public.is_blocked_pair",
+  "activity.post_count > 0",
+  "activity.comment_count > 0",
+  "activity.upcoming_gatherings > 0",
+  "Service role required",
+]) {
+  assert(
+    communityNotificationMigration.includes(contract),
+    `Community briefing delivery must include ${contract}`,
+  );
+}
+const weeklyBriefingFunction = communityNotificationMigration.slice(
+  communityNotificationMigration.indexOf(
+    "create or replace function public.queue_community_weekly_briefings",
+  ),
+  communityNotificationMigration.indexOf(
+    "create or replace function public.list_community_briefing_batches",
+  ),
+);
+for (const privateProjection of [
+  "post.body",
+  "comment.body",
+  "ask.body",
+  "profile.display_name",
+  "account.email",
+]) {
+  assert(
+    !weeklyBriefingFunction.includes(privateProjection),
+    `Weekly Community briefing must not project ${privateProjection}`,
+  );
+}
+assert(
+  cron.includes("queue_community_weekly_briefings") &&
+    cron.includes("briefingMigrationPending"),
+  "Notification worker must queue weekly Community briefings without breaking pre-migration delivery",
+);
 const betaAdminProvisioning = read("scripts/provision-beta-admin.mjs");
 for (const contract of [
   "HAT_BETA_ADMIN_PASSWORD",

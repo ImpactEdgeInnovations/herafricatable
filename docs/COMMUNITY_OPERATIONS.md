@@ -16,13 +16,16 @@ them to members: the `communities` feature flag starts disabled.
    `supabase/migrations/20260731050000_community_programming_and_host_health.sql`
    to add host-curated Gatherings and Resources plus privacy-safe Host health
    signals.
-5. Open the Admin command center and create at least one draft community.
-6. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
+5. Apply
+   `supabase/migrations/20260731100000_community_notification_preferences_and_briefings.sql`
+   to add per-room delivery choices and the aggregate weekly briefing.
+6. Open the Admin command center and create at least one draft community.
+7. Transfer ownership to the named host, assign a backup moderator, then test request, invitation, removal,
    posting, reporting, and blocking boundaries with non-production accounts.
-7. Publish the approved community.
-8. From the community room, the owner or moderator opens **Host** and links only
+8. Publish the approved community.
+9. From the community room, the owner or moderator opens **Host** and links only
    the published events and learning resources relevant to that room.
-9. A Super Admin may select **Enable after sign-off** only when moderation coverage
+10. A Super Admin may select **Enable after sign-off** only when moderation coverage
    and the support escalation owner are confirmed.
 
 Disabling the flag immediately removes member navigation and blocks feed/list/write
@@ -48,6 +51,12 @@ operations at the database layer. It does not delete memberships, posts, or repo
   private saved conversations or exposes conversation bodies.
 - A safety count tells a host that escalation exists, but report evidence remains
   in the permission-gated platform moderation workflow.
+- Room reply and weekly briefing emails default off. Members can independently
+  choose Activity replies, reply email, weekly briefing and weekly briefing email
+  for each room.
+- Weekly briefings contain counts only. They exclude test accounts, respect
+  bilateral blocks, never include post bodies or member names, and are not queued
+  when there was no new room activity and no gathering is imminent.
 
 ## Host operating rhythm
 

@@ -316,8 +316,11 @@ export function NotificationCenter({
               }
             />
             <span>
-              <strong>Network email</strong>
-              <small>Connection requests and accepted introductions.</small>
+              <strong>Network and community email</strong>
+              <small>
+                Connection requests and the community emails you allow inside
+                each room.
+              </small>
             </span>
           </label>
           <label>

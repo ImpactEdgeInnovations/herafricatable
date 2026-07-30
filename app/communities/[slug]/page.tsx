@@ -23,6 +23,10 @@ import {
   type CommunityGathering,
   type CommunityResource,
 } from "@/components/member/community-programming";
+import {
+  CommunityNotificationPreferences,
+  type CommunityNotificationPreference,
+} from "@/components/member/community-notification-preferences";
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
   params,
@@ -56,6 +60,7 @@ export default async function CommunityPage({
     memberResult,
     gatheringResult,
     resourceResult,
+    notificationPreferenceResult,
   ] = await Promise.all([
       supabase.rpc("list_community_posts", {
         p_community_id: community.community_id,
@@ -87,6 +92,9 @@ export default async function CommunityPage({
         p_community_id: community.community_id,
       }),
       supabase.rpc("list_community_resources", {
+        p_community_id: community.community_id,
+      }),
+      supabase.rpc("get_community_notification_preferences", {
         p_community_id: community.community_id,
       }),
     ]);
@@ -155,6 +163,23 @@ export default async function CommunityPage({
           </Link>
         </div>
       </section>
+      {!notificationPreferenceResult.error ? (
+        <CommunityNotificationPreferences
+          communityId={community.community_id}
+          initialPreferences={
+            (
+              notificationPreferenceResult.data as
+                | CommunityNotificationPreference[]
+                | null
+            )?.[0] ?? {
+              email_replies: false,
+              in_app_replies: true,
+              weekly_briefing: true,
+              weekly_briefing_email: false,
+            }
+          }
+        />
+      ) : null}
       {cohort ? (
         <CohortActivation
           currentUserId={user.id}

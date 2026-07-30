@@ -245,7 +245,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Connect host-curated events and learning resources to each community with
       member-only projections and audited Host controls
 - [ ] Connect relevant Circles to each community after Circle launch acceptance
-- [ ] Add community-level notification preferences and a restrained weekly briefing
+- [x] Add per-community reply and briefing preferences plus a restrained,
+      privacy-safe weekly briefing with idempotent delivery batches
 - [x] Add the first Host workspace for admission, member roles, unanswered Asks,
       safety counts, gatherings, resources and seven-day participation signals
 - [ ] Extend Host operations with incomplete introductions, retention and
@@ -306,6 +307,11 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Apply `20260723210000_privacy_account_lifecycle.sql` in production Supabase
 - [ ] Apply `20260724090000_notification_operations.sql` in production Supabase
 - [ ] Apply `20260725090000_communities_foundation.sql` in production Supabase
+- [ ] Apply `20260730230000_community_hub_foundation.sql` in production Supabase
+- [ ] Apply `20260731010000_structured_community_conversations.sql` in production Supabase
+- [ ] Apply `20260731050000_community_programming_and_host_health.sql` in production Supabase
+- [ ] Apply `20260731100000_community_notification_preferences_and_briefings.sql`
+      in production Supabase
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag
 - [ ] Apply `20260725130000_learning_foundation.sql` in production Supabase
 - [ ] Complete Learning content/access/payment acceptance and deliberately enable its P1 flag

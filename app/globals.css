@@ -2341,6 +2341,176 @@ svg {
   margin: 8px 0 0;
   line-height: 1.65;
 }
+.community-update-preferences {
+  width: min(1120px, calc(100% - 48px));
+  margin: 22px auto 0;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.community-update-preferences > summary {
+  display: flex;
+  min-height: 104px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 23px 28px;
+  cursor: pointer;
+  list-style: none;
+  gap: 30px;
+}
+.community-update-preferences > summary::-webkit-details-marker {
+  display: none;
+}
+.community-update-preferences > summary > span {
+  display: grid;
+  gap: 4px;
+}
+.community-update-preferences > summary small {
+  color: var(--gold);
+  font-size: 0.52rem;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.community-update-preferences > summary strong {
+  font-family: var(--serif);
+  font-size: 1.38rem;
+  font-weight: 400;
+}
+.community-update-preferences > summary em {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-style: normal;
+  line-height: 1.45;
+}
+.community-update-preferences > summary b {
+  color: var(--wine);
+  font-size: 0.57rem;
+  white-space: nowrap;
+}
+.community-update-preferences[open] > summary b {
+  font-size: 0;
+}
+.community-update-preferences[open] > summary b::after {
+  font-size: 0.57rem;
+  content: "Close";
+}
+.community-update-preferences form {
+  display: grid;
+  margin: 0;
+  padding: 25px 28px 28px;
+  border-top: 1px solid var(--line);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+.community-update-preferences form > div,
+.community-update-preferences form > footer {
+  grid-column: 1 / -1;
+}
+.community-update-preferences form > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  gap: 25px;
+}
+.community-update-preferences form > div p {
+  max-width: 660px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.61rem;
+  line-height: 1.6;
+}
+.community-update-preferences form > div a {
+  color: var(--wine);
+  font-size: 0.56rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.community-update-preferences form > label {
+  display: grid;
+  min-height: 86px;
+  align-items: start;
+  padding: 16px;
+  border: 1px solid var(--line);
+  grid-template-columns: auto 1fr;
+  gap: 11px;
+}
+.community-update-preferences form > label.is-disabled {
+  opacity: 0.55;
+}
+.community-update-preferences input {
+  margin-top: 3px;
+  accent-color: var(--wine);
+}
+.community-update-preferences label span {
+  display: grid;
+  gap: 4px;
+}
+.community-update-preferences label strong {
+  font-size: 0.64rem;
+}
+.community-update-preferences label small {
+  color: var(--muted);
+  font-size: 0.56rem;
+  line-height: 1.5;
+}
+.community-update-preferences footer {
+  display: flex;
+  align-items: center;
+  margin-top: 9px;
+  gap: 20px;
+}
+.community-update-preferences footer p {
+  margin: 0;
+  color: var(--wine);
+  font-size: 0.59rem;
+}
+.community-briefing-operations {
+  display: grid;
+  align-items: end;
+  margin: 24px 0 30px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, #fffdf8, #fff);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 40px;
+}
+.community-briefing-operations h3 {
+  margin: 5px 0;
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-weight: 400;
+}
+.community-briefing-operations p:last-child,
+.community-briefing-operations > span {
+  max-width: 650px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.59rem;
+  line-height: 1.6;
+}
+.community-briefing-operations dl {
+  display: flex;
+  margin: 0;
+  gap: 28px;
+}
+.community-briefing-operations dl > div {
+  display: grid;
+  gap: 5px;
+}
+.community-briefing-operations dt {
+  color: var(--muted);
+  font-size: 0.51rem;
+}
+.community-briefing-operations dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
 
 @media (max-width: 850px) {
   .community-resource-grid {
@@ -2355,6 +2525,11 @@ svg {
   .community-host-invite {
     grid-template-columns: 1fr;
   }
+  .community-briefing-operations {
+    align-items: start;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
 }
 
 @media (max-width: 620px) {
@@ -2365,6 +2540,29 @@ svg {
   .community-host-unavailable,
   .community-host-message {
     width: calc(100% - 32px);
+  }
+  .community-update-preferences {
+    width: calc(100% - 32px);
+  }
+  .community-update-preferences > summary {
+    align-items: flex-start;
+    padding: 20px;
+  }
+  .community-update-preferences > summary em {
+    max-width: 250px;
+  }
+  .community-update-preferences form {
+    padding: 20px;
+    grid-template-columns: 1fr;
+  }
+  .community-update-preferences form > div,
+  .community-update-preferences form > footer {
+    align-items: flex-start;
+    flex-direction: column;
+    grid-column: auto;
+  }
+  .community-update-preferences footer .button {
+    width: 100%;
   }
   .community-host-safety {
     width: calc(100% - 32px);
@@ -2416,6 +2614,12 @@ svg {
   .community-host-health article {
     min-height: 140px;
     padding: 17px;
+  }
+  .community-briefing-operations dl {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
   }
   .community-host-member-list article > div:last-child,
   .community-host-programming article > div:last-child {

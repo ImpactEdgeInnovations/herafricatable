@@ -5,6 +5,14 @@ Business actions only enqueue delivery jobs. A protected worker claims jobs with
 locks, sends them through Resend, records each attempt, and retries failures with
 exponential backoff. Provider keys and recipient data stay server-side.
 
+The same worker also starts the idempotent weekly Community briefing batch. It
+creates an in-app update and optional email only for members who permit it and only
+when a room had new conversations or replies in the preceding seven days, or has a
+linked gathering in the next seven days. The briefing contains aggregate counts,
+never post bodies, member names, private saved state or test-account activity.
+Community reply and briefing email both default off until the member enables them
+inside that room.
+
 ## Required Vercel environment variables
 
 Add these to **Production** and the appropriate Preview environment only:
@@ -33,6 +41,9 @@ idempotency header per outbox job.
 
 The worker route is `GET /api/cron/notifications`. Vercel automatically sends
 `CRON_SECRET` as a bearer authorization header when invoking a configured cron.
+The first authenticated worker call in each Nairobi calendar week creates that
+week's Community briefing batch. Subsequent calls are no-ops for the batch while
+continuing to process ordinary delivery jobs.
 
 Do not add a frequent `vercel.json` schedule until the Vercel plan is confirmed:
 
@@ -44,6 +55,11 @@ Do not add a frequent `vercel.json` schedule until the Vercel plan is confirmed:
 ## Operational acceptance
 
 - Confirm duplicate event delivery cannot create duplicate emails.
+- Confirm repeated worker calls create only one Community briefing batch per week.
+- Confirm a quiet Community creates no member briefing and reply email defaults off.
+- Confirm room preferences, global Activity preferences and bilateral member blocks
+  are all respected.
+- Confirm Community briefing payloads contain counts and a room link only.
 - Force a provider failure and verify queued retries, attempt records, and final failure.
 - Confirm member preferences suppress only network, event and support email; account,
   payment and privacy messages remain transactional.

@@ -17,6 +17,13 @@ export type AdminNotificationJob = {
   created_at: string;
   updated_at: string;
 };
+export type AdminCommunityBriefingBatch = {
+  week_start: string;
+  status: string;
+  queued_recipients: number;
+  started_at: string;
+  completed_at: string | null;
+};
 const date = (value: string) =>
   new Intl.DateTimeFormat("en-KE", {
     day: "numeric",
@@ -25,9 +32,13 @@ const date = (value: string) =>
     minute: "2-digit",
   }).format(new Date(value));
 export function NotificationOperations({
+  briefingBatches,
+  briefingMigrationReady,
   jobs,
   providerConfigured,
 }: {
+  briefingBatches: AdminCommunityBriefingBatch[];
+  briefingMigrationReady: boolean;
   jobs: AdminNotificationJob[];
   providerConfigured: boolean;
 }) {
@@ -92,6 +103,45 @@ export function NotificationOperations({
           <span>Attempts</span>
         </article>
       </div>
+      {briefingMigrationReady ? (
+        <section className="community-briefing-operations">
+          <div>
+            <p className="eyebrow">Community rhythm</p>
+            <h3>Weekly briefing</h3>
+            <p>
+              One privacy-safe aggregate per active room member, queued only
+              when a room moved or a linked gathering is within seven days.
+            </p>
+          </div>
+          {briefingBatches[0] ? (
+            <dl>
+              <div>
+                <dt>Latest week</dt>
+                <dd>
+                  {new Intl.DateTimeFormat("en-KE", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  }).format(new Date(`${briefingBatches[0].week_start}T12:00:00Z`))}
+                </dd>
+              </div>
+              <div>
+                <dt>Recipients queued</dt>
+                <dd>{briefingBatches[0].queued_recipients}</dd>
+              </div>
+              <div>
+                <dt>State</dt>
+                <dd>{briefingBatches[0].status}</dd>
+              </div>
+            </dl>
+          ) : (
+            <span>
+              No weekly batch yet. The next authenticated worker run will create
+              the first idempotent batch.
+            </span>
+          )}
+        </section>
+      ) : null}
       {jobs.length ? (
         <div className="notification-job-list">
           <header>
