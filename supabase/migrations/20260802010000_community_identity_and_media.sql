@@ -2,7 +2,9 @@ begin;
 
 alter table public.communities
   add column if not exists tagline text
-    check (tagline is null or char_length(tagline) between 3 and 140),
+    check (tagline is null or char_length(tagline) between 3 and 140);
+
+alter table public.communities
   add column if not exists accent_key text not null default 'wine'
     check (accent_key in ('wine', 'gold', 'forest', 'ocean', 'terracotta'));
 
@@ -77,7 +79,9 @@ create index if not exists community_media_assets_room_idx
 
 alter table public.communities
   add column if not exists icon_asset_id uuid
-    references public.community_media_assets(id) on delete set null,
+    references public.community_media_assets(id) on delete set null;
+
+alter table public.communities
   add column if not exists cover_asset_id uuid
     references public.community_media_assets(id) on delete set null;
 
