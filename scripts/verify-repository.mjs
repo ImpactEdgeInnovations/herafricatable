@@ -54,6 +54,11 @@ assert(
   "Cron authorization must use constant-time comparison",
 );
 assert(cron.includes("CRON_SECRET"), "Cron route must require CRON_SECRET");
+assert(
+  cron.includes("reconcile_community_host_subscriptions") &&
+    cron.includes("hostLifecycleMigrationPending"),
+  "Cron must safely reconcile host subscription lifecycles",
+);
 const privacy = read("app/api/admin/privacy/delete/route.ts");
 assert(
   privacy.includes('eq("role","super_admin")'),
@@ -601,6 +606,54 @@ for (const boundary of [
 assert(
   !hostPlanOrderFunction.includes("insert into public.community_memberships"),
   "Host plan checkout must never create or transfer community ownership",
+);
+const communityHostLifecycleMigration = read(
+  "supabase/migrations/20260801090000_community_host_subscription_lifecycle.sql",
+);
+for (const contract of [
+  "order_kind",
+  "'renewal'",
+  "'plan_change'",
+  "'scheduled'",
+  "grace_ends_at",
+  "renewed_from_id",
+  "community_one_scheduled_host_plan_idx",
+  "reconcile_community_host_subscriptions",
+  "handle_host_plan_order_reversal",
+  "community-host-renewal-reminder:",
+  "status = 'paused'",
+  "Service or Super Admin required",
+]) {
+  assert(
+    communityHostLifecycleMigration.includes(contract),
+    `Host subscription lifecycle must include ${contract}`,
+  );
+}
+const lifecycleOrderFunction = communityHostLifecycleMigration.slice(
+  communityHostLifecycleMigration.indexOf(
+    "create or replace function public.create_community_host_plan_order",
+  ),
+  communityHostLifecycleMigration.indexOf(
+    "create or replace function public.fulfill_community_host_plan_order",
+  ),
+);
+for (const boundary of [
+  "pg_advisory_xact_lock",
+  "An upcoming host plan is already scheduled",
+  "A current host plan order already exists",
+  "current_subscription.plan_id = selected_plan.id",
+  "public.is_community_owner(p_community_id)",
+]) {
+  assert(
+    lifecycleOrderFunction.includes(boundary),
+    `Host renewal checkout must include ${boundary}`,
+  );
+}
+assert(
+  !communityHostLifecycleMigration.includes(
+    "delete from public.community_memberships",
+  ),
+  "Host subscription lifecycle must never delete community membership",
 );
 const hardenedCommunityOrderFunction = communityHostBillingMigration.slice(
   communityHostBillingMigration.indexOf(

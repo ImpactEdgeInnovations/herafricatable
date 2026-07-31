@@ -71,6 +71,19 @@ for (const contract of [
     `Admin creator-commerce operations must include ${contract}`,
   );
 }
+const hostBillingOperations = read(
+  "components/admin/community-host-billing-manager.tsx",
+);
+for (const contract of [
+  "reconcile_community_host_subscriptions",
+  "Renewals and expiry protection",
+  "lapsed_paid_offers",
+]) {
+  assert(
+    hostBillingOperations.includes(contract),
+    `Admin host lifecycle operations must include ${contract}`,
+  );
+}
 
 const authenticatedSmoke = read("scripts/smoke-authenticated.mjs");
 for (const contract of [

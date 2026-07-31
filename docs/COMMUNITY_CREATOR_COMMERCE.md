@@ -40,6 +40,11 @@ operating controls have passed acceptance.
   and a `community_host_tools` entitlement exactly once.
 - Reversal revokes the purchased host tools and pauses any published paid offer
   for that community.
+- An active owner can renew the current plan or select a next-term plan change;
+  verified payment creates one scheduled period and never shortens the current
+  paid term.
+- Scheduled reconciliation promotes due renewals, queues seven-day reminders,
+  applies the configured grace period and pauses paid offers after final expiry.
 
 ## Safety and money boundaries
 
@@ -54,6 +59,12 @@ operating controls have passed acceptance.
    completed before automatic host payouts are released.
 8. Disabling the creator-commerce flag or setting an offer to Closed prevents new
    checkout without removing existing community approvals or entitlements.
+9. Renewal is host-initiated and one period at a time. The platform does not
+   create an automatic recurring debit without separate provider authority and
+   explicit host consent.
+10. Grace preserves host access temporarily but blocks new paid member checkout;
+    final expiry pauses the paid offer without removing existing community
+    memberships.
 
 ## Operating sequence
 
@@ -72,7 +83,9 @@ operating controls have passed acceptance.
 ## Next slices
 
 - [x] Approved-owner self-service plan selection and platform-plan checkout
-- [ ] Recurring-billing authority and renewal/grace reconciliation
+- [x] Host-initiated renewal, next-term plan change and renewal/grace
+  reconciliation
+- [ ] Provider-authorized automatic recurring billing with explicit host consent
 - [ ] Paystack split/subaccount settlement after merchant and country acceptance
 - [ ] Provider-fee, tax, refund, chargeback, and reserve allocation
 - [ ] Audited payout batches, settlement statements, and downloadable invoices
@@ -84,6 +97,7 @@ operating controls have passed acceptance.
 
 - Apply `20260801010000_community_creator_commerce.sql`.
 - Apply `20260801050000_community_host_self_service_billing.sql`.
+- Apply `20260801090000_community_host_subscription_lifecycle.sql`.
 - Keep `community_creator_commerce` disabled until all checks pass.
 - Test free, Automatic, Manual review, Closed, failed, duplicate, reversed, and
   expired-host-plan paths.
@@ -94,5 +108,10 @@ operating controls have passed acceptance.
 - Confirm host-plan payment cannot create or transfer community ownership.
 - Confirm disabling host billing prevents new orders without removing an active
   plan or community.
+- Confirm duplicate renewal attempts cannot create overlapping scheduled plans.
+- Confirm current-plan renewal and next-term plan change preserve the active
+  period, promote once, and issue host tools once.
+- Confirm grace blocks new paid orders, final expiry pauses the paid offer, and
+  a reversed scheduled plan leaves the current plan unchanged.
 - Complete legal review of host terms, refunds, tax, payout, and platform-fee
   disclosures before public monetization.

@@ -49,12 +49,18 @@ export type CommunityHostPlanOption = {
 export type CommunityHostBilling = {
   self_service_enabled: boolean;
   payment_mode: "automatic" | "manual_review" | "closed";
+  grace_days: number;
   pending_order_id: string | null;
   pending_order_reference: string | null;
   pending_order_status: string | null;
+  pending_order_kind: "new" | "renewal" | "plan_change" | null;
   pending_plan_name: string | null;
   pending_total_minor: number | null;
   pending_currency: string | null;
+  scheduled_plan_name: string | null;
+  scheduled_starts_at: string | null;
+  scheduled_ends_at: string | null;
+  scheduled_order_reference: string | null;
 };
 
 function money(amount: number, currency = "KES") {
@@ -84,7 +90,9 @@ export function CommunityCommercePanel({
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
-  const [selectedPlanId, setSelectedPlanId] = useState(plans[0]?.id ?? "");
+  const [selectedPlanId, setSelectedPlanId] = useState(
+    commerce?.host_plan_id ?? plans[0]?.id ?? "",
+  );
 
   async function startPlanCheckout(plan: CommunityHostPlanOption) {
     setBusy(`plan-${plan.id}`);
@@ -304,6 +312,25 @@ export function CommunityCommercePanel({
   const payoutReady = commerce.payout_status === "verified";
   const releaseReady = commerce.commerce_enabled;
   const paidPublishReady = termsReady && payoutReady && releaseReady;
+  const pendingPlanOrder = Boolean(billing?.pending_order_id);
+  const scheduledPlan = Boolean(billing?.scheduled_plan_name);
+  const selfServiceOpen =
+    billingReady &&
+    billing?.self_service_enabled &&
+    billing.payment_mode !== "closed";
+  const selectedLifecyclePlan =
+    plans.find((plan) => plan.id === selectedPlanId) ??
+    plans.find((plan) => plan.id === commerce.host_plan_id) ??
+    plans[0];
+  const planEndsAt = commerce.host_plan_ends_at
+    ? new Date(commerce.host_plan_ends_at)
+    : null;
+  const planDaysRemaining = planEndsAt
+    ? Math.max(
+        0,
+        Math.ceil((planEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+      )
+    : null;
 
   async function acceptTerms(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -399,6 +426,184 @@ export function CommunityCommercePanel({
           <small>Not yet available for payout</small>
         </article>
       </div>
+
+      <section className="community-host-lifecycle">
+        <div className="community-host-lifecycle-heading">
+          <div>
+            <p className="eyebrow">Plan continuity</p>
+            <h3>Keep your host workspace uninterrupted.</h3>
+            <p>
+              Renew your current plan or choose the plan that should begin when
+              this period ends. There is never more than one upcoming plan.
+            </p>
+          </div>
+          <span
+            className={`community-commerce-status ${
+              commerce.host_plan_status === "active" ? "ready" : ""
+            }`}
+          >
+            {commerce.host_plan_status === "grace"
+              ? "Renewal grace"
+              : `${planDaysRemaining ?? "—"} days left`}
+          </span>
+        </div>
+
+        {commerce.host_plan_status === "grace" ? (
+          <div className="community-plan-attention">
+            <strong>Paid member checkout is safely paused.</strong>
+            <p>
+              Your community and existing members remain intact. Complete a
+              verified renewal during the {billing?.grace_days ?? 7}-day grace
+              window to restore the next host period.
+            </p>
+          </div>
+        ) : null}
+
+        {scheduledPlan ? (
+          <div className="community-plan-scheduled">
+            <div>
+              <span>Next plan secured</span>
+              <strong>{billing?.scheduled_plan_name}</strong>
+              <p>
+                Starts{" "}
+                {billing?.scheduled_starts_at
+                  ? new Date(
+                      billing.scheduled_starts_at,
+                    ).toLocaleDateString("en-KE", { dateStyle: "long" })
+                  : "after your current period"}
+                . Your current plan remains active until then.
+              </p>
+            </div>
+            <small>{billing?.scheduled_order_reference}</small>
+          </div>
+        ) : pendingPlanOrder ? (
+          <div className="community-plan-pending">
+            <span>
+              {billing?.pending_order_kind === "plan_change"
+                ? "Plan change awaiting verification"
+                : "Renewal awaiting verification"}
+            </span>
+            <strong>{billing?.pending_plan_name}</strong>
+            <p>
+              {billing?.pending_order_status === "pending_payment"
+                ? "Secure checkout is awaiting confirmation."
+                : "Your payment reference is with Admin for verification."}
+            </p>
+            <small>
+              {billing?.pending_order_reference} ·{" "}
+              {money(
+                billing?.pending_total_minor ?? 0,
+                billing?.pending_currency ?? "KES",
+              )}
+            </small>
+          </div>
+        ) : selfServiceOpen && plans.length ? (
+          <div className="community-lifecycle-checkout">
+            <div className="community-lifecycle-plans">
+              {plans.map((plan) => {
+                const isCurrent = plan.id === commerce.host_plan_id;
+                return (
+                  <button
+                    aria-pressed={selectedLifecyclePlan?.id === plan.id}
+                    className={
+                      selectedLifecyclePlan?.id === plan.id ? "selected" : ""
+                    }
+                    key={plan.id}
+                    onClick={() => setSelectedPlanId(plan.id)}
+                    type="button"
+                  >
+                    <span>{isCurrent ? "Current plan" : "Change next term"}</span>
+                    <strong>{plan.name}</strong>
+                    <b>{money(plan.price_minor, plan.currency)}</b>
+                    <small>
+                      {plan.duration_months} month
+                      {plan.duration_months === 1 ? "" : "s"}
+                    </small>
+                  </button>
+                );
+              })}
+            </div>
+            {selectedLifecyclePlan ? (
+              <div className="community-plan-checkout">
+                <div>
+                  <span>
+                    {selectedLifecyclePlan.id === commerce.host_plan_id
+                      ? "Renew current plan"
+                      : "Schedule a plan change"}
+                  </span>
+                  <strong>{selectedLifecyclePlan.name}</strong>
+                  <p>
+                    {selectedLifecyclePlan.id === commerce.host_plan_id
+                      ? "The next period begins when this one ends."
+                      : "Your current plan stays active through its paid period; the new plan begins afterward."}
+                  </p>
+                </div>
+                {billing?.payment_mode === "automatic" ? (
+                  <button
+                    className="button button-primary"
+                    disabled={busy === `plan-${selectedLifecyclePlan.id}`}
+                    onClick={() => void startPlanCheckout(selectedLifecyclePlan)}
+                  >
+                    {busy === `plan-${selectedLifecyclePlan.id}`
+                      ? "Opening secure checkout…"
+                      : selectedLifecyclePlan.id === commerce.host_plan_id
+                        ? `Renew for ${money(selectedLifecyclePlan.price_minor, selectedLifecyclePlan.currency)}`
+                        : `Choose ${selectedLifecyclePlan.name}`}
+                  </button>
+                ) : (
+                  <form
+                    className="community-manual-payment"
+                    onSubmit={(event) =>
+                      void submitManualPlan(event, selectedLifecyclePlan)
+                    }
+                  >
+                    <label>
+                      Payment reference
+                      <input
+                        maxLength={120}
+                        minLength={3}
+                        name="reference"
+                        placeholder="e.g. M-PESA code"
+                        required
+                      />
+                    </label>
+                    <label>
+                      Verification note
+                      <textarea
+                        maxLength={500}
+                        minLength={5}
+                        name="note"
+                        placeholder="How and when did you pay?"
+                        required
+                      />
+                    </label>
+                    <button
+                      className="button button-primary"
+                      disabled={
+                        busy === `manual-plan-${selectedLifecyclePlan.id}`
+                      }
+                    >
+                      {busy === `manual-plan-${selectedLifecyclePlan.id}`
+                        ? "Submitting…"
+                        : selectedLifecyclePlan.id === commerce.host_plan_id
+                          ? "Submit renewal payment"
+                          : "Submit plan-change payment"}
+                    </button>
+                  </form>
+                )}
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <div className="community-commerce-locked">
+            <strong>Online plan changes are currently closed.</strong>
+            <p>
+              Your active period is unchanged. Admin can renew the plan
+              directly, or reopen secure plan billing after operational review.
+            </p>
+          </div>
+        )}
+      </section>
 
       <div className="community-commerce-layout">
         <div className="community-commerce-readiness">

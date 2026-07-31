@@ -11330,6 +11330,127 @@ body {
 .community-plan-checkout > .button {
   justify-self: end;
 }
+.community-host-lifecycle {
+  margin: 34px 0;
+  padding: 30px;
+  border: 1px solid rgba(111, 32, 56, 0.12);
+  border-radius: 16px;
+  background: #fff;
+}
+.community-host-lifecycle-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 30px;
+}
+.community-host-lifecycle-heading h3,
+.host-lifecycle-admin h3 {
+  margin: 5px 0 8px;
+  font-family: var(--serif);
+  font-size: 1.75rem;
+  font-weight: 400;
+}
+.community-host-lifecycle-heading p,
+.host-lifecycle-admin > div:first-child > p:last-child {
+  max-width: 660px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+.community-plan-attention,
+.community-plan-scheduled {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 22px;
+  padding: 20px;
+  border-radius: 12px;
+  gap: 24px;
+}
+.community-plan-attention {
+  display: grid;
+  border: 1px solid rgba(176, 120, 34, 0.28);
+  background: #fbf7ee;
+  gap: 5px;
+}
+.community-plan-scheduled {
+  border: 1px solid rgba(55, 111, 83, 0.2);
+  background: #f3f8f4;
+}
+.community-plan-scheduled > div {
+  display: grid;
+  gap: 4px;
+}
+.community-plan-attention strong,
+.community-plan-scheduled strong {
+  color: var(--ink);
+  font-size: 0.86rem;
+}
+.community-plan-attention p,
+.community-plan-scheduled p,
+.community-plan-scheduled small {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+.community-plan-scheduled span {
+  color: #376f53;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.community-lifecycle-checkout {
+  margin-top: 24px;
+}
+.community-lifecycle-plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.community-lifecycle-plans > button {
+  display: grid;
+  min-height: 128px;
+  align-content: start;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fbfaf7;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  gap: 5px;
+}
+.community-lifecycle-plans > button:hover,
+.community-lifecycle-plans > button.selected {
+  border-color: var(--wine);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--wine);
+}
+.community-lifecycle-plans span {
+  color: var(--wine);
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.community-lifecycle-plans strong {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+.community-lifecycle-plans b {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 0.8rem;
+}
+.community-lifecycle-plans small {
+  color: var(--muted);
+  font-size: 0.65rem;
+}
 .host-billing-layout {
   display: grid;
   margin-top: 24px;
@@ -11418,6 +11539,58 @@ body {
 .host-plan-order-queue article p {
   margin: 4px 0 0;
 }
+.host-plan-order-queue article em {
+  width: fit-content;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #f3efe8;
+  color: var(--wine);
+  font-size: 0.58rem;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.host-lifecycle-admin {
+  display: grid;
+  align-items: end;
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfaf7;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr) auto;
+  gap: 24px;
+}
+.host-lifecycle-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.host-lifecycle-metrics article {
+  display: grid;
+  min-height: 74px;
+  align-content: center;
+  padding: 10px;
+  border-radius: 9px;
+  background: #fff;
+  text-align: center;
+  gap: 3px;
+}
+.host-lifecycle-metrics article.attention {
+  background: #fbf1e6;
+  color: #8a4b20;
+}
+.host-lifecycle-metrics strong {
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  font-weight: 400;
+}
+.host-lifecycle-metrics span {
+  color: var(--muted);
+  font-size: 0.56rem;
+  line-height: 1.35;
+}
 
 @media (max-width: 900px) {
   .community-commerce-layout,
@@ -11444,6 +11617,10 @@ body {
   }
   .creator-plan-numbers {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .host-lifecycle-admin {
+    align-items: stretch;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -11499,6 +11676,18 @@ body {
   .host-plan-order-queue > article {
     align-items: flex-start;
     flex-direction: column;
+  }
+  .community-host-lifecycle {
+    padding: 20px;
+  }
+  .community-host-lifecycle-heading,
+  .community-plan-scheduled {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .community-lifecycle-plans,
+  .host-lifecycle-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

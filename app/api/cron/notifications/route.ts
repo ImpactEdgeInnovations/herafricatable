@@ -35,12 +35,38 @@ function briefingMigrationPending(error: RpcError | null) {
   );
 }
 
+function hostLifecycleMigrationPending(error: RpcError | null) {
+  if (!error) return false;
+  return (
+    ["42883", "PGRST202"].includes(error.code ?? "") ||
+    /(?:could not find|does not exist).*reconcile_community_host_subscriptions/i.test(
+      error.message ?? "",
+    )
+  );
+}
+
 async function processQueue(request: Request) {
   if (!authorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const admin = createAdminClient();
+  const { data: lifecycleData, error: lifecycleError } = await admin.rpc(
+    "reconcile_community_host_subscriptions",
+  );
+  if (
+    lifecycleError &&
+    !hostLifecycleMigrationPending(lifecycleError as RpcError)
+  ) {
+    return NextResponse.json(
+      { error: "Community host lifecycle unavailable" },
+      { status: 503 },
+    );
+  }
+  const hostLifecycle = lifecycleError
+    ? null
+    : ((lifecycleData as Record<string, number>[] | null) ?? [])[0] ?? null;
+
   const { data: briefingData, error: briefingError } = await admin.rpc(
     "queue_community_weekly_briefings",
   );
@@ -57,6 +83,7 @@ async function processQueue(request: Request) {
       {
         briefingsQueued,
         error: "Email provider not configured",
+        hostLifecycle,
       },
       { status: 503 },
     );
@@ -103,6 +130,7 @@ async function processQueue(request: Request) {
     briefingsQueued,
     claimed: jobs.length,
     failed,
+    hostLifecycle,
     sent,
   });
 }

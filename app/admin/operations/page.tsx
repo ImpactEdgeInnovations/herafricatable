@@ -1020,7 +1020,15 @@ export default async function AdminOperationsPage({
                 | null) ?? [])[0] ?? null
             }
             migrationReady={
-              !hostBillingConfigResult.error && !hostPlanOrderResult.error
+              !hostBillingConfigResult.error &&
+              !hostPlanOrderResult.error &&
+              Number.isInteger(
+                (
+                  (hostBillingConfigResult.data as
+                    | CommunityHostBillingAdmin[]
+                    | null) ?? []
+                )[0]?.grace_days,
+              )
             }
             orders={
               (hostPlanOrderResult.data as

@@ -9,6 +9,12 @@ import { useActionDialog } from "@/components/ui/action-dialog";
 export type CommunityHostBillingAdmin = {
   self_service_enabled: boolean;
   payment_mode: "automatic" | "manual_review" | "closed";
+  grace_days: number;
+  active_subscriptions: number;
+  grace_subscriptions: number;
+  scheduled_subscriptions: number;
+  ending_soon: number;
+  lapsed_paid_offers: number;
 };
 
 export type CommunityHostPlanOrderAdmin = {
@@ -18,6 +24,7 @@ export type CommunityHostPlanOrderAdmin = {
   community_name: string;
   plan_id: string;
   plan_name: string;
+  order_kind: "new" | "renewal" | "plan_change";
   owner_email: string;
   owner_name: string | null;
   status: string;
@@ -74,6 +81,7 @@ export function CommunityHostBillingManager({
       "set_community_host_billing_configuration",
       {
         p_enabled: form.get("enabled") === "on",
+        p_grace_days: Number(form.get("graceDays")),
         p_payment_mode: form.get("paymentMode"),
       },
     );
@@ -82,6 +90,28 @@ export function CommunityHostBillingManager({
       error
         ? adminErrorMessage(error, "save host billing controls")
         : "Host billing controls saved and audited.",
+    );
+    if (!error) router.refresh();
+  }
+
+  async function reconcileLifecycle() {
+    const confirmed = await ask({
+      title: "Reconcile host subscriptions now?",
+      description:
+        "This promotes due renewals, starts grace periods, expires lapsed plans, pauses unsafe paid offers and queues owner reminders.",
+      confirmLabel: "Run lifecycle check",
+    });
+    if (!confirmed) return;
+    setBusy("reconcile");
+    setMessage("");
+    const { data, error } = await supabase.rpc(
+      "reconcile_community_host_subscriptions",
+    );
+    setBusy("");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "reconcile host subscription lifecycles")
+        : `Host lifecycle reconciled: ${JSON.stringify(data?.[0] ?? {})}`,
     );
     if (!error) router.refresh();
   }
@@ -178,6 +208,19 @@ export function CommunityHostBillingManager({
               <option value="automatic">Automatic with Paystack</option>
             </select>
           </label>
+          <label>
+            Renewal grace period
+            <select
+              defaultValue={configuration?.grace_days ?? 7}
+              name="graceDays"
+            >
+              <option value="0">No grace period</option>
+              <option value="3">3 days</option>
+              <option value="7">7 days</option>
+              <option value="14">14 days</option>
+              <option value="30">30 days</option>
+            </select>
+          </label>
           <button
             className="button button-primary"
             disabled={busy === "configuration"}
@@ -203,6 +246,13 @@ export function CommunityHostBillingManager({
                   <span>
                     {order.owner_name ?? order.owner_email} · {order.plan_name}
                   </span>
+                  <em>
+                    {order.order_kind === "plan_change"
+                      ? "Plan change"
+                      : order.order_kind === "renewal"
+                        ? "Renewal"
+                        : "New plan"}
+                  </em>
                   <small>
                     {money(order.total_minor, order.currency)} ·{" "}
                     {order.submitted_reference}
@@ -236,6 +286,49 @@ export function CommunityHostBillingManager({
             </div>
           )}
         </div>
+      </div>
+      <div className="host-lifecycle-admin">
+        <div>
+          <p className="eyebrow">Subscription lifecycle</p>
+          <h3>Renewals and expiry protection</h3>
+          <p>
+            The scheduled job runs this safely alongside notification delivery.
+            Run it here after a support decision or during acceptance testing.
+          </p>
+        </div>
+        <div className="host-lifecycle-metrics">
+          <article>
+            <strong>{configuration?.active_subscriptions ?? 0}</strong>
+            <span>Active</span>
+          </article>
+          <article>
+            <strong>{configuration?.scheduled_subscriptions ?? 0}</strong>
+            <span>Scheduled</span>
+          </article>
+          <article>
+            <strong>{configuration?.grace_subscriptions ?? 0}</strong>
+            <span>In grace</span>
+          </article>
+          <article>
+            <strong>{configuration?.ending_soon ?? 0}</strong>
+            <span>Ending in 7 days</span>
+          </article>
+          <article
+            className={
+              (configuration?.lapsed_paid_offers ?? 0) > 0 ? "attention" : ""
+            }
+          >
+            <strong>{configuration?.lapsed_paid_offers ?? 0}</strong>
+            <span>Offers needing pause</span>
+          </article>
+        </div>
+        <button
+          className="button button-outline"
+          disabled={busy === "reconcile"}
+          onClick={() => void reconcileLifecycle()}
+        >
+          {busy === "reconcile" ? "Reconciling…" : "Run lifecycle check"}
+        </button>
       </div>
       {message ? (
         <p className="manager-message content-manager-message" role="status">

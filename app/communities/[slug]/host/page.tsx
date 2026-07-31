@@ -108,6 +108,9 @@ export default async function CommunityHostPage({
   const continuity = (
     (continuityResult.data as CommunityContinuitySummary[] | null) ?? []
   )[0] ?? null;
+  const hostBilling = (
+    (hostBillingResult.data as CommunityHostBilling[] | null) ?? []
+  )[0] ?? null;
 
   return (
     <main className="community-page community-host-page">
@@ -140,11 +143,12 @@ export default async function CommunityHostPage({
       </nav>
       {community.membership_role === "owner" ? (
         <CommunityCommercePanel
-          billing={
-            ((hostBillingResult.data as CommunityHostBilling[] | null) ??
-              [])[0] ?? null
+          billing={hostBilling}
+          billingReady={
+            !hostPlanResult.error &&
+            !hostBillingResult.error &&
+            Number.isInteger(hostBilling?.grace_days)
           }
-          billingReady={!hostPlanResult.error && !hostBillingResult.error}
           commerce={
             ((commerceResult.data as CommunityHostCommerce[] | null) ?? [])[0] ??
             null

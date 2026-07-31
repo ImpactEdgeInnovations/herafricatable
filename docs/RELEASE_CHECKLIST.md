@@ -70,6 +70,14 @@
       entitlement
 - [ ] Host-plan reversal revokes the purchased entitlement and pauses published
       paid access without removing the community or owner
+- [ ] Host renewal creates only one scheduled next period and does not shorten
+      the current paid period
+- [ ] Plan change activates only after the current period; duplicate scheduled
+      plans are rejected at the database boundary
+- [ ] Scheduled host lifecycle reconciliation runs with `CRON_SECRET`, queues
+      renewal reminders and exposes counts in Admin Operations
+- [ ] Grace blocks new paid member checkout; final host-plan expiry revokes host
+      tools and pauses the paid offer without removing community members
 
 ## Privacy, trust and safety
 

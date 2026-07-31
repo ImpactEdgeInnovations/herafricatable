@@ -516,6 +516,7 @@ for (const contract of [
   "get_community_host_commerce",
   "CommunityCommercePanel",
   'href="#commerce"',
+  "hostBilling?.grace_days",
 ]) {
   assert(
     communityHostPage.includes(contract),
@@ -537,6 +538,12 @@ for (const contract of [
   "communityHostPlanId",
   "Payment in review",
   "Host plan selection is not open yet.",
+  "Plan continuity",
+  "Keep your host workspace uninterrupted.",
+  "Renew current plan",
+  "Schedule a plan change",
+  "Next plan secured",
+  "Paid member checkout is safely paused.",
 ]) {
   assert(
     communityCommercePanel.includes(contract),
@@ -551,6 +558,10 @@ for (const contract of [
   "Manual Admin verification",
   "Closed — no new plan orders",
   "It never removes an",
+  "Renewal grace period",
+  "reconcile_community_host_subscriptions",
+  "Renewals and expiry protection",
+  "Offers needing pause",
 ]) {
   assert(
     communityHostBillingAdmin.includes(contract),
