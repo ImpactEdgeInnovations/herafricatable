@@ -62,6 +62,12 @@ import {
   type CommunityMember,
 } from "@/components/admin/community-manager";
 import {
+  CommunityCreatorCommerceManager,
+  type CommunityCommerceAdmin,
+  type CommunityHostPlan,
+  type CommunityOrderAdmin,
+} from "@/components/admin/community-creator-commerce-manager";
+import {
   CommunityModeration,
   type CommunityReport,
 } from "@/components/admin/community-moderation";
@@ -315,6 +321,10 @@ export default async function AdminOperationsPage({
     communityReportResult,
     communityResult,
     featureFlagResult,
+    communityHostPlanResult,
+    communityCommerceResult,
+    communityOrderResult,
+    communityCommerceFlagResult,
     learningCourseResult,
     courseOrderResult,
     learningFlagResult,
@@ -355,6 +365,22 @@ export default async function AdminOperationsPage({
           .from("feature_flags")
           .select("enabled")
           .eq("key", "communities")
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_community_host_plans")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_community_commerce_admin")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_community_orders_admin")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase
+          .from("feature_flags")
+          .select("enabled")
+          .eq("key", "community_creator_commerce")
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     isProgramAdmin
@@ -952,6 +978,26 @@ export default async function AdminOperationsPage({
               !communityResult.error &&
               !featureFlagResult.error &&
               communityMemberResults.every((result) => !result.error)
+            }
+          />
+          <CommunityCreatorCommerceManager
+            communities={
+              (communityCommerceResult.data as
+                | CommunityCommerceAdmin[]
+                | null) ?? []
+            }
+            enabled={Boolean(communityCommerceFlagResult.data?.enabled)}
+            migrationReady={
+              !communityHostPlanResult.error &&
+              !communityCommerceResult.error &&
+              !communityOrderResult.error &&
+              !communityCommerceFlagResult.error
+            }
+            orders={
+              (communityOrderResult.data as CommunityOrderAdmin[] | null) ?? []
+            }
+            plans={
+              (communityHostPlanResult.data as CommunityHostPlan[] | null) ?? []
             }
           />
           <LearningManager

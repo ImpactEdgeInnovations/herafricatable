@@ -78,6 +78,11 @@ assert(
   "Course checkout must use the shared payment initializer",
 );
 assert(
+  paymentInitialize.includes("create_community_order") &&
+    paymentInitialize.includes("community_offer_id"),
+  "Community checkout must use the shared server payment initializer",
+);
+assert(
   paymentInitialize.includes("order_type"),
   "Payment metadata must identify fulfillment context",
 );
@@ -85,6 +90,11 @@ const paymentCallback = read("app/api/payments/paystack/callback/route.ts");
 assert(
   paymentCallback.includes("/learning/"),
   "Verified course checkout must return to Learning",
+);
+assert(
+  paymentCallback.includes('order?.order_type==="community"') &&
+    paymentCallback.includes("/communities/"),
+  "Verified community checkout must return to its community",
 );
 const learningMigration = read(
   "supabase/migrations/20260725130000_learning_foundation.sql",
@@ -448,6 +458,86 @@ const controlledCohortFunction = communityReleaseMigration.slice(
 assert(
   !controlledCohortFunction.includes("set enabled = true"),
   "Preparing a founding room must not enable Communities",
+);
+const communityCreatorCommerceMigration = read(
+  "supabase/migrations/20260801010000_community_creator_commerce.sql",
+);
+for (const contract of [
+  "community_creator_commerce",
+  "community_host_plans",
+  "community_host_subscriptions",
+  "community_host_accounts",
+  "community_offers",
+  "community_access_periods",
+  "community_revenue_ledger",
+  "approved_pending_payment",
+  "save_community_host_plan",
+  "grant_community_host_plan",
+  "accept_community_host_terms",
+  "review_community_host_payout",
+  "save_community_offer",
+  "create_community_order",
+  "fulfill_community_order",
+  "review_community_order",
+  "get_community_host_commerce",
+  "list_community_commerce_admin",
+  "list_community_orders_admin",
+  "pg_advisory_xact_lock",
+  "p_signature_verified",
+  "set status = 'fulfilled', fulfilled_at = now()",
+  "settlement_status",
+  "'held'",
+]) {
+  assert(
+    communityCreatorCommerceMigration.includes(contract),
+    `Community creator commerce must include ${contract}`,
+  );
+}
+const communityOrderFunction = communityCreatorCommerceMigration.slice(
+  communityCreatorCommerceMigration.indexOf(
+    "create or replace function public.create_community_order",
+  ),
+  communityCreatorCommerceMigration.indexOf(
+    "create or replace function public.issue_community_access_period",
+  ),
+);
+for (const boundary of [
+  "membership.status = 'approved_pending_payment'",
+  "offer.payment_mode = 'closed'",
+  "community_order.status in",
+  "'pending_payment'",
+  "'pending_review'",
+]) {
+  assert(
+    communityOrderFunction.includes(boundary),
+    `Community checkout boundary must include ${boundary}`,
+  );
+}
+const saveCommunityOfferFunction = communityCreatorCommerceMigration.slice(
+  communityCreatorCommerceMigration.indexOf(
+    "create or replace function public.save_community_offer",
+  ),
+  communityCreatorCommerceMigration.indexOf(
+    "drop function if exists public.list_communities",
+  ),
+);
+for (const boundary of [
+  "public.is_community_owner",
+  "public.community_creator_commerce_enabled",
+  "account.payout_status = 'verified'",
+  "subscription.status in ('active', 'grace')",
+  "p_payment_mode = 'closed'",
+]) {
+  assert(
+    saveCommunityOfferFunction.includes(boundary),
+    `Paid community publishing must include ${boundary}`,
+  );
+}
+assert(
+  communityCreatorCommerceMigration.includes(
+    "Provider reference only; bank account details must never be stored here",
+  ),
+  "Community payout records must not store bank account details",
 );
 const betaAdminProvisioning = read("scripts/provision-beta-admin.mjs");
 for (const contract of [

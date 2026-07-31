@@ -56,6 +56,18 @@ for (const contract of [
     `Admin release operations must include ${contract}`,
   );
 }
+for (const contract of [
+  "CommunityCreatorCommerceManager",
+  "list_community_host_plans",
+  "list_community_commerce_admin",
+  "list_community_orders_admin",
+  "community_creator_commerce",
+]) {
+  assert(
+    operations.includes(contract),
+    `Admin creator-commerce operations must include ${contract}`,
+  );
+}
 
 const authenticatedSmoke = read("scripts/smoke-authenticated.mjs");
 for (const contract of [

@@ -137,8 +137,14 @@ window, never as a lifetime registration count.
 
 - Validate the Nairobi founding cohort before opening additional chapters.
 - Introduce discovery only for approved members and release-ready communities.
-- Add paid host tools, tier entitlements, and community commerce only after the
-  trust, retention, support, and unit-economics gates pass.
+- Introduce approved Starter/Pro-style host plans, tier entitlements and
+  community commerce behind an independent release flag.
+- Keep admission before payment: a private community host approves the person,
+  then verified Automatic or audited Manual payment grants access.
+- Hold creator revenue in an order-linked ledger until payout identity,
+  settlement, refunds, provider fees, tax and dispute operations pass acceptance.
+- Add self-service recurring plans and automatic split settlement only after the
+  trust, retention, support, merchant and unit-economics gates pass.
 
 ## Current product alignment
 
@@ -148,6 +154,7 @@ discovery, connections, private messaging, Asks and Offers, official/private
 communities, event-linked founding cohorts, Circles, learning foundations,
 moderation, privacy-safe outcomes, and Admin operations.
 
-The next product task is to bring those capabilities together around Community
-as the member's everyday context while keeping incomplete functionality behind
-controlled release gates.
+The current build is bringing those capabilities together around Community as
+the member's everyday context. The next controlled expansion is approved-host
+creator commerce: simple plans and pricing for the host, with Her Africa Table's
+admission, moderation, payment and payout boundaries kept intact.

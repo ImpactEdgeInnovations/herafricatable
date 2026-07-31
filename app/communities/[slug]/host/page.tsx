@@ -4,6 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { MemberHeader } from "@/components/member/member-header";
 import type { CommunitySummary } from "@/components/member/community-directory";
 import {
+  CommunityCommercePanel,
+  type CommunityHostCommerce,
+} from "@/components/member/community-commerce-panel";
+import {
   CommunityHostWorkspace,
   type CommunityContinuitySummary,
   type CommunityHostHealth,
@@ -48,6 +52,7 @@ export default async function CommunityHostPage({
     continuityResult,
     introductionResult,
     outcomeResult,
+    commerceResult,
   ] = await Promise.all([
     supabase.rpc("get_community_host_health", {
       p_community_id: community.community_id,
@@ -67,6 +72,11 @@ export default async function CommunityHostPage({
     supabase.rpc("list_community_outcome_trends", {
       p_community_id: community.community_id,
     }),
+    community.membership_role === "owner"
+      ? supabase.rpc("get_community_host_commerce", {
+          p_community_id: community.community_id,
+        })
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   const migrationReady =
@@ -105,7 +115,20 @@ export default async function CommunityHostPage({
         <a href="#people">People</a>
         <a href="#gatherings">Gatherings</a>
         <a href="#resources">Resources</a>
+        {community.membership_role === "owner" ? (
+          <a href="#commerce">Commerce</a>
+        ) : null}
       </nav>
+      {community.membership_role === "owner" ? (
+        <CommunityCommercePanel
+          commerce={
+            ((commerceResult.data as CommunityHostCommerce[] | null) ?? [])[0] ??
+            null
+          }
+          communityId={community.community_id}
+          migrationReady={!commerceResult.error}
+        />
+      ) : null}
       <CommunityHostWorkspace
         communityId={community.community_id}
         continuity={continuity}

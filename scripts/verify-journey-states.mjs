@@ -74,6 +74,7 @@ const refreshModules = [
   "components/admin/analytics-readiness.tsx",
   "components/admin/circle-manager.tsx",
   "components/admin/community-manager.tsx",
+  "components/admin/community-creator-commerce-manager.tsx",
   "components/admin/community-moderation.tsx",
   "components/admin/event-content-manager.tsx",
   "components/admin/event-feedback-manager.tsx",
@@ -91,6 +92,7 @@ const refreshModules = [
   "components/member/community-directory.tsx",
   "components/member/community-feed.tsx",
   "components/member/community-host-workspace.tsx",
+  "components/member/community-commerce-panel.tsx",
   "components/events/event-attendee-directory.tsx",
   "components/member/learning-catalog.tsx",
   "components/member/membership-center.tsx",
@@ -374,6 +376,13 @@ const communityHostPage = read("app/communities/[slug]/host/page.tsx");
 const communityHostWorkspace = read(
   "components/member/community-host-workspace.tsx",
 );
+const communityCommercePanel = read(
+  "components/member/community-commerce-panel.tsx",
+);
+const communityDirectory = read("components/member/community-directory.tsx");
+const creatorCommerceAdmin = read(
+  "components/admin/community-creator-commerce-manager.tsx",
+);
 const communityStartPath = read(
   "components/member/community-start-path.tsx",
 );
@@ -474,10 +483,56 @@ for (const contract of [
   "list_community_outcome_trends",
   'active="community"',
   "Private host workspace",
+  "get_community_host_commerce",
+  "CommunityCommercePanel",
+  'href="#commerce"',
 ]) {
   assert(
     communityHostPage.includes(contract),
     `Community Host route must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Community creator commerce",
+  "Three safeguards before paid access",
+  "accept_community_host_terms",
+  "save_community_offer",
+  "Automatic with Paystack",
+  "Manual admin verification",
+  "Closed — preserve approvals",
+  "Held for you",
+  "paidPublishReady",
+]) {
+  assert(
+    communityCommercePanel.includes(contract),
+    `Community host commerce UX must include ${contract}`,
+  );
+}
+for (const contract of [
+  "approved_pending_payment",
+  "Host approved",
+  "create_community_order",
+  "communityOfferId",
+  "Payment opening soon",
+  "Submit for verification",
+]) {
+  assert(
+    communityDirectory.includes(contract),
+    `Community member checkout UX must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Community creator commerce",
+  "save_community_host_plan",
+  "grant_community_host_plan",
+  "review_community_host_payout",
+  "review_community_order",
+  "Pause all checkout",
+  "Automatic host payouts are not enabled",
+]) {
+  assert(
+    creatorCommerceAdmin.includes(contract),
+    `Creator commerce Admin UX must include ${contract}`,
   );
 }
 for (const contract of [

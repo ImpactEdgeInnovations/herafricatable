@@ -13,6 +13,8 @@ prove this complete loop:
 
 The community operating model and its staged expansion are maintained in
 [`docs/COMMUNITY_PRODUCT_VISION.md`](./COMMUNITY_PRODUCT_VISION.md).
+The approved-host monetization task and its release boundaries are maintained in
+[`docs/COMMUNITY_CREATOR_COMMERCE.md`](./COMMUNITY_CREATOR_COMMERCE.md).
 
 The refined production process map is maintained in
 [`docs/HAT_Process_Map_Developer_Spec.html`](./HAT_Process_Map_Developer_Spec.html).
@@ -272,6 +274,31 @@ Usability is part of production readiness and continues alongside feature delive
       checks, required host coverage and a controlled Draft rollback
 - [ ] Complete Nairobi Founding Table acceptance before opening another chapter
 
+### Community creator commerce — controlled workstream
+
+- [x] Define approved host plans with price, duration, platform fee, moderator
+      limit, feature entitlements, status and audited Super Admin management
+- [x] Add per-community plan grants, versioned host agreement acceptance and
+      payout-readiness review
+- [x] Add free/paid member offers with Automatic, Manual review and Closed
+      processing modes
+- [x] Preserve host admission as a separate gate before paid checkout
+- [x] Extend the shared Paystack/manual order engine with idempotent community
+      access periods and entitlements
+- [x] Record platform fee and creator share in an order-linked held-revenue ledger
+- [x] Add a plain-language host workspace for pricing, readiness, paying members
+      and held earnings
+- [x] Add Super Admin plan, grant, payout-readiness and manual-payment controls
+- [ ] Apply `20260801010000_community_creator_commerce.sql` in production Supabase
+- [ ] Seed and review the Starter and Pro host plans
+- [ ] Complete two-member admission, Automatic, Manual review, Closed, duplicate
+      and reversal acceptance while the feature flag remains off
+- [ ] Complete host terms, refund, tax, payout and platform-fee legal review
+- [ ] Enable `community_creator_commerce` only after merchant and operating sign-off
+- [ ] Add host self-service plan checkout and recurring renewal reconciliation
+- [ ] Add provider fee, refund, dispute and settlement reconciliation
+- [ ] Add automatic Paystack split settlement only after payout acceptance passes
+
 ### Heavy work remaining before production launch
 
 1. **Production authentication and email delivery**
@@ -339,6 +366,10 @@ Usability is part of production readiness and continues alongside feature delive
       Supabase
 - [ ] Apply `20260731230000_community_comment_removal.sql` in production
       Supabase
+- [ ] Apply `20260801010000_community_creator_commerce.sql` in production
+      Supabase
+- [ ] Complete Creator Commerce admission/payment/entitlement/payout-boundary
+      acceptance and deliberately enable its feature flag
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag
 - [ ] Apply `20260725130000_learning_foundation.sql` in production Supabase
 - [ ] Complete Learning content/access/payment acceptance and deliberately enable its P1 flag

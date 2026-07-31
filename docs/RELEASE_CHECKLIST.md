@@ -54,6 +54,15 @@
 - [ ] Members can cancel only unpaid registrations and cannot self-approve refunds
 - [ ] Automatic refunds retain access until provider completion is verified
 - [ ] Real low-value end-to-end payment has been reconciled before public sale
+- [ ] Creator commerce remains disabled until a published host plan, accepted
+      host agreement and verified payout profile exist
+- [ ] Community admission is approved before a paid order can be created
+- [ ] Automatic, manual-review and closed community payment modes preserve the
+      same admission and entitlement boundaries
+- [ ] Community host earnings remain `held` until provider settlement, fees,
+      refunds, disputes and payout identity are reconciled
+- [ ] Community hosts cannot verify their own payout profile or mark held revenue
+      settled
 
 ## Privacy, trust and safety
 
