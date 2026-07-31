@@ -414,6 +414,9 @@ const communityPage = read("app/communities/page.tsx");
 const communityHostApplication = read(
   "components/member/community-host-application.tsx",
 );
+const communityHostCapabilities = read(
+  "components/member/community-host-capabilities.tsx",
+);
 const creatorCommerceAdmin = read(
   "components/admin/community-creator-commerce-manager.tsx",
 );
@@ -534,10 +537,30 @@ for (const contract of [
   "list_community_financial_statement",
   "CommunityFinancialStatement",
   'href="#statement"',
+  "get_community_host_capabilities",
+  "CommunityHostCapabilitiesPanel",
+  'href="#host-tools"',
+  "advancedAnalytics",
+  "automations",
 ]) {
   assert(
     communityHostPage.includes(contract),
     `Community Host route must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Your host tools",
+  "Core stewardship",
+  "Advanced insights",
+  "Host reminders",
+  "Paid community",
+  "Moderator seats",
+  "Choose a host plan",
+  "Review or change plan",
+]) {
+  assert(
+    communityHostCapabilities.includes(contract),
+    `Community host capability UX must include ${contract}`,
   );
 }
 for (const contract of [
@@ -704,6 +727,9 @@ for (const contract of [
   "One reminder per week",
   "never names, relationship",
   "memberErrorMessage",
+  "Advanced insights are not in this plan",
+  "Gentle host reminders are not included in the active host plan",
+  "Available with Host reminders",
 ]) {
   assert(
     communityHostWorkspace.includes(contract),

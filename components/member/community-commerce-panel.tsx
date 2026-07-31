@@ -216,6 +216,22 @@ export function CommunityCommercePanel({
                     <span>{plan.duration_months}-month access</span>
                     <strong>{plan.name}</strong>
                     <p>{plan.description}</p>
+                    <ul aria-label={`${plan.name} host tools`}>
+                      <li>
+                        {plan.max_moderators} moderator
+                        {plan.max_moderators === 1 ? "" : "s"}
+                      </li>
+                      <li>
+                        {plan.features.advanced_analytics
+                          ? "Advanced insights"
+                          : "Core health"}
+                      </li>
+                      <li>
+                        {plan.features.automations
+                          ? "Host reminders"
+                          : "Manual follow-up"}
+                      </li>
+                    </ul>
                     <div>
                       <b>{money(plan.price_minor, plan.currency)}</b>
                       <small>

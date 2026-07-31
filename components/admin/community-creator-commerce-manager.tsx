@@ -277,6 +277,19 @@ export function CommunityCreatorCommerceManager({
             <span>{plan.status}</span>
             <strong>{plan.name}</strong>
             <p>{plan.description}</p>
+            <ul aria-label={`${plan.name} capabilities`}>
+              <li>Up to {plan.max_moderators} moderators</li>
+              <li>
+                {plan.features.advanced_analytics
+                  ? "Advanced insights"
+                  : "Core health only"}
+              </li>
+              <li>
+                {plan.features.automations
+                  ? "Host reminders"
+                  : "Manual follow-up"}
+              </li>
+            </ul>
             <small>
               {money(plan.price_minor, plan.currency)} /{" "}
               {plan.duration_months === 1

@@ -134,6 +134,9 @@ function outcomeLabel(value: string) {
 }
 
 export function CommunityHostWorkspace({
+  advancedAnalytics,
+  automations,
+  capabilitiesReady,
   communityId,
   continuity,
   continuityReady,
@@ -144,6 +147,9 @@ export function CommunityHostWorkspace({
   options,
   outcomeTrends,
 }: {
+  advancedAnalytics: boolean;
+  automations: boolean;
+  capabilitiesReady: boolean;
   communityId: string;
   continuity: CommunityContinuitySummary | null;
   continuityReady: boolean;
@@ -239,6 +245,12 @@ export function CommunityHostWorkspace({
   }
 
   async function nudgeIntroduction(member: CommunityIntroductionFollowup) {
+    if (!automations) {
+      setMessage(
+        "Gentle host reminders are not included in the active host plan.",
+      );
+      return;
+    }
     const action = `nudge-${member.user_id}`;
     setBusy(action);
     setMessage("");
@@ -395,7 +407,7 @@ export function CommunityHostWorkspace({
                               .join(" · ") || "Community member"}
                           </span>
                         </div>
-                        {member.can_nudge ? (
+                        {automations && member.can_nudge ? (
                           <button
                             type="button"
                             disabled={busy === `nudge-${member.user_id}`}
@@ -405,8 +417,10 @@ export function CommunityHostWorkspace({
                               ? "Recording…"
                               : "Send gentle reminder"}
                           </button>
-                        ) : (
+                        ) : automations ? (
                           <small>Reminder recorded recently</small>
+                        ) : (
+                          <small>Available with Host reminders</small>
                         )}
                       </article>
                     ))}
@@ -454,6 +468,23 @@ export function CommunityHostWorkspace({
               </section>
             </div>
           </>
+        ) : capabilitiesReady && !advancedAnalytics ? (
+          <div className="community-entitlement-upgrade" role="status">
+            <div>
+              <span aria-hidden="true">↗</span>
+              <div>
+                <strong>Advanced insights are not in this plan.</strong>
+                <p>
+                  Core health, admissions, people and programming remain
+                  available. Upgrade to add 30-day continuity, participation
+                  and privacy-thresholded outcome trends.
+                </p>
+              </div>
+            </div>
+            <a className="button button-outline" href="#host-tools">
+              Review host tools
+            </a>
+          </div>
         ) : (
           <div className="community-continuity-awaiting" role="status">
             <strong>Continuity signals are awaiting their database update.</strong>

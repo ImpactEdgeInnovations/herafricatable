@@ -24,6 +24,10 @@ import {
   type CommunitySettlement,
   type CommunityStatementEntry,
 } from "@/components/member/community-financial-statement";
+import {
+  CommunityHostCapabilitiesPanel,
+  type CommunityHostCapabilities,
+} from "@/components/member/community-host-capabilities";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +57,16 @@ export default async function CommunityHostPage({
     redirect(`/communities/${slug}`);
   }
 
+  const capabilityResult = await supabase.rpc(
+    "get_community_host_capabilities",
+    { p_community_id: community.community_id },
+  );
+  const capabilities =
+    ((capabilityResult.data as CommunityHostCapabilities[] | null) ?? [])[0] ??
+    null;
+  const loadAdvancedInsights =
+    capabilityResult.error || Boolean(capabilities?.advanced_analytics);
+
   const [
     healthResult,
     memberResult,
@@ -76,15 +90,19 @@ export default async function CommunityHostPage({
     supabase.rpc("list_community_programming_options", {
       p_community_id: community.community_id,
     }),
-    supabase.rpc("get_community_continuity_summary", {
-      p_community_id: community.community_id,
-    }),
+    loadAdvancedInsights
+      ? supabase.rpc("get_community_continuity_summary", {
+          p_community_id: community.community_id,
+        })
+      : Promise.resolve({ data: [], error: null }),
     supabase.rpc("list_community_introduction_followups", {
       p_community_id: community.community_id,
     }),
-    supabase.rpc("list_community_outcome_trends", {
-      p_community_id: community.community_id,
-    }),
+    loadAdvancedInsights
+      ? supabase.rpc("list_community_outcome_trends", {
+          p_community_id: community.community_id,
+        })
+      : Promise.resolve({ data: [], error: null }),
     community.membership_role === "owner"
       ? supabase.rpc("get_community_host_commerce", {
           p_community_id: community.community_id,
@@ -127,7 +145,11 @@ export default async function CommunityHostPage({
   const migrationReady =
     !healthResult.error && !memberResult.error && !programmingResult.error;
   const continuityReady =
-    !continuityResult.error && !introductionResult.error && !outcomeResult.error;
+    !capabilityResult.error &&
+    Boolean(capabilities?.advanced_analytics) &&
+    !continuityResult.error &&
+    !introductionResult.error &&
+    !outcomeResult.error;
   const health = (
     (healthResult.data as CommunityHostHealth[] | null) ?? []
   )[0] ?? null;
@@ -166,6 +188,7 @@ export default async function CommunityHostPage({
         </aside>
       </section>
       <nav className="community-room-navigation" aria-label="Host workspace areas">
+        <a href="#host-tools">Host tools</a>
         <a href="#continuity">Continuity</a>
         <a href="#admissions">Admissions</a>
         <a href="#people">People</a>
@@ -178,6 +201,13 @@ export default async function CommunityHostPage({
           </>
         ) : null}
       </nav>
+      <div id="host-tools">
+        <CommunityHostCapabilitiesPanel
+          capabilities={capabilities}
+          migrationReady={!capabilityResult.error}
+          owner={community.membership_role === "owner"}
+        />
+      </div>
       {community.membership_role === "owner" ? (
         <CommunityCommercePanel
           billing={hostBilling}
@@ -226,6 +256,9 @@ export default async function CommunityHostPage({
       ) : null}
       <CommunityHostWorkspace
         communityId={community.community_id}
+        advancedAnalytics={Boolean(capabilities?.advanced_analytics)}
+        automations={Boolean(capabilities?.automations)}
+        capabilitiesReady={!capabilityResult.error}
         continuity={continuity}
         continuityReady={continuityReady}
         health={health}

@@ -319,6 +319,16 @@ Usability is part of production readiness and continues alongside feature delive
       Supabase
 - [ ] Complete submit → review → changes requested → resubmit → approve
       acceptance with one active member and one Super Admin
+- [x] Convert host-plan feature labels into database-enforced entitlements for
+      advanced insights, host reminders and moderator seats
+- [x] Add a plain-language Host tools panel with plan status, included
+      capabilities, moderator usage and upgrade paths
+- [x] Enforce moderator limits on invitation acceptance and every role/status
+      transition, defaulting safely to one moderator without an active plan
+- [ ] Apply `20260801210000_community_host_plan_entitlements.sql` in production
+      Supabase
+- [ ] Test Starter → Pro → grace → expired capability transitions, including
+      direct RPC attempts that bypass the interface
 - [x] Pause new paid checkout during grace, revoke expired host tools and pause
       published paid offers when the host plan lapses
 - [ ] Add provider-authorized automatic recurring charges only after merchant

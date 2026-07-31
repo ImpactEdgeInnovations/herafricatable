@@ -769,6 +769,43 @@ assert(
   ),
   "Host approval must never publish a community directly",
 );
+const communityHostEntitlementMigration = read(
+  "supabase/migrations/20260801210000_community_host_plan_entitlements.sql",
+);
+for (const contract of [
+  "community_host_has_feature",
+  "get_community_host_capabilities",
+  "enforce_community_moderator_entitlement",
+  "community_host_subscriptions",
+  "subscription.status in ('active', 'grace')",
+  "subscription.ends_at > now()",
+  "pg_advisory_xact_lock",
+  "'advanced_analytics'",
+  "'automations'",
+  "'multiple_moderators'",
+  "Advanced insights are not included in the active host plan",
+  "Host reminders are not included in the active host plan",
+  "Your host plan includes % moderator%",
+  "jsonb_typeof(feature.value) <> 'boolean'",
+  "'entitlement', 'automations'",
+]) {
+  assert(
+    communityHostEntitlementMigration.includes(contract),
+    `Community host entitlements must include ${contract}`,
+  );
+}
+assert(
+  communityHostEntitlementMigration.includes(
+    "before insert or update of role, status",
+  ),
+  "Moderator limits must be enforced for invitations, promotions and activation",
+);
+assert(
+  !communityHostEntitlementMigration.includes(
+    "delete from public.community_memberships",
+  ),
+  "Plan enforcement must never delete community membership",
+);
 const hardenedCommunityOrderFunction = communityHostBillingMigration.slice(
   communityHostBillingMigration.indexOf(
     "create or replace function public.create_community_order",
