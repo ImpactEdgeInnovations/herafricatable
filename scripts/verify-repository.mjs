@@ -726,6 +726,49 @@ assert(
   ),
   "Financial reconciliation must never delete community membership",
 );
+const communityHostApplicationMigration = read(
+  "supabase/migrations/20260801170000_community_host_applications.sql",
+);
+for (const contract of [
+  "community_host_applications",
+  "community_one_open_host_application_idx",
+  "save_community_host_application",
+  "withdraw_community_host_application",
+  "list_my_community_host_applications",
+  "list_community_host_applications_admin",
+  "review_community_host_application",
+  "public.is_active_member(target.applicant_id)",
+  "'community.host_application_submitted'",
+  "'community.host_application_' || p_action",
+  "'private'",
+  "'draft'",
+  "'owner'",
+  "'active'",
+  "public.enqueue_notification",
+]) {
+  assert(
+    communityHostApplicationMigration.includes(contract),
+    `Community host admission must include ${contract}`,
+  );
+}
+assert(
+  communityHostApplicationMigration.includes(
+    "grant select on table public.community_host_applications to authenticated",
+  ) &&
+    !communityHostApplicationMigration.includes(
+      "grant insert on table public.community_host_applications",
+    ) &&
+    !communityHostApplicationMigration.includes(
+      "grant update on table public.community_host_applications",
+    ),
+  "Community host applications must mutate only through audited functions",
+);
+assert(
+  !communityHostApplicationMigration.includes(
+    "insert into public.communities(\n      slug,\n      name,\n      description,\n      community_type,\n      status,\n      created_by\n    )\n    values (\n      clean_slug,\n      target.community_name,\n      target.purpose,\n      'private',\n      'published'",
+  ),
+  "Host approval must never publish a community directly",
+);
 const hardenedCommunityOrderFunction = communityHostBillingMigration.slice(
   communityHostBillingMigration.indexOf(
     "create or replace function public.create_community_order",

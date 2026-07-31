@@ -62,6 +62,10 @@ import {
   type CommunityMember,
 } from "@/components/admin/community-manager";
 import {
+  CommunityHostApplicationManager,
+  type CommunityHostApplicationAdmin,
+} from "@/components/admin/community-host-application-manager";
+import {
   CommunityCreatorCommerceManager,
   type CommunityCommerceAdmin,
   type CommunityHostPlan,
@@ -331,6 +335,7 @@ export default async function AdminOperationsPage({
     marketplaceReportResult,
     communityReportResult,
     communityResult,
+    communityHostApplicationResult,
     featureFlagResult,
     communityHostPlanResult,
     communityCommerceResult,
@@ -375,6 +380,9 @@ export default async function AdminOperationsPage({
       : Promise.resolve({ data: [], error: null }),
     isProgramAdmin
       ? supabase.rpc("list_communities")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_community_host_applications_admin")
       : Promise.resolve({ data: [], error: null }),
     isProgramAdmin
       ? supabase
@@ -1000,6 +1008,14 @@ export default async function AdminOperationsPage({
               !perkRedemptionResult.error &&
               !perkFlagResult.error
             }
+          />
+          <CommunityHostApplicationManager
+            applications={
+              (communityHostApplicationResult.data as
+                | CommunityHostApplicationAdmin[]
+                | null) ?? []
+            }
+            migrationReady={!communityHostApplicationResult.error}
           />
           <CommunityManager
             communities={communities}

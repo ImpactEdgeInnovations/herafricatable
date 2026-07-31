@@ -17471,6 +17471,508 @@ body {
 }
 
 /* Member experience v6: purposeful, connected and calm */
+.community-hero:has(> div) {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 48px;
+}
+.community-hero:has(> div) > div > p:last-child {
+  max-width: 620px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.7;
+}
+.community-hero:has(> div) > .button {
+  flex: 0 0 auto;
+  margin-bottom: 5px;
+}
+.community-host-application {
+  width: min(1120px, calc(100% - 48px));
+  margin: 70px auto 0;
+  padding-top: 66px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 28px;
+}
+.community-hold + .community-host-application {
+  margin-top: 0;
+}
+.community-host-entry {
+  display: grid;
+  align-items: end;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 45px;
+}
+.community-host-entry h2 {
+  margin: 10px 0 14px;
+  font-family: var(--serif);
+  font-size: clamp(2.7rem, 4.6vw, 4.5rem);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+.community-host-entry > div > p:last-child {
+  max-width: 680px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.75;
+}
+.community-host-entry-state {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.community-host-entry-state.is-approved {
+  border-color: rgba(55, 112, 78, 0.28);
+  background: rgba(55, 112, 78, 0.08);
+  color: #376f4e;
+}
+.community-host-entry-state.is-changes-requested {
+  border-color: rgba(162, 113, 37, 0.3);
+  background: rgba(186, 135, 52, 0.08);
+  color: #855c1d;
+}
+.community-host-steps {
+  display: grid;
+  margin: 42px 0 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.community-host-steps li {
+  display: flex;
+  min-height: 92px;
+  align-items: center;
+  padding: 20px 28px;
+  border: 1px solid var(--line);
+  border-right: 0;
+  background: rgba(255, 255, 255, 0.54);
+  gap: 15px;
+}
+.community-host-steps li:last-child {
+  border-right: 1px solid var(--line);
+}
+.community-host-steps li > span {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(111, 30, 50, 0.22);
+  border-radius: 50%;
+  color: var(--wine);
+  font-family: var(--serif);
+  font-size: 0.85rem;
+}
+.community-host-steps li > div {
+  display: grid;
+  gap: 4px;
+}
+.community-host-steps strong {
+  color: var(--ink);
+  font-size: 0.66rem;
+}
+.community-host-steps small {
+  color: var(--muted);
+  font-size: 0.58rem;
+  line-height: 1.5;
+}
+.community-host-status {
+  margin-top: 22px;
+  padding: 30px;
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, #fff, rgba(246, 241, 232, 0.68));
+}
+.community-host-status > div:first-child {
+  display: flex;
+  gap: 15px;
+}
+.community-status-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  margin-top: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 5px rgba(184, 139, 63, 0.12);
+}
+.community-host-status h3 {
+  margin: 4px 0 8px;
+  font-family: var(--serif);
+  font-size: 1.75rem;
+  font-weight: 400;
+}
+.community-host-status > div p:last-child,
+.community-host-status blockquote p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.7;
+}
+.community-host-status blockquote {
+  margin: 22px 0 0 23px;
+  padding: 18px 20px;
+  border-left: 2px solid var(--gold);
+  background: rgba(255, 255, 255, 0.66);
+}
+.community-host-status blockquote strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-size: 0.61rem;
+}
+.community-host-status footer,
+.community-host-form > footer {
+  display: flex;
+  align-items: center;
+  margin-top: 24px;
+  gap: 10px;
+}
+.community-host-form {
+  margin-top: 24px;
+  padding: 42px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.community-host-form > header {
+  max-width: 670px;
+  margin-bottom: 32px;
+}
+.community-host-form > header h3 {
+  margin: 8px 0 10px;
+  font-family: var(--serif);
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+.community-host-form > header > p:last-child {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.7;
+}
+.community-host-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+.community-host-form-grid label {
+  display: grid;
+  align-content: start;
+  color: var(--ink);
+  font-size: 0.61rem;
+  font-weight: 800;
+  gap: 8px;
+}
+.community-host-form-grid label > small {
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 500;
+}
+.community-host-form-grid .span-two {
+  grid-column: 1 / -1;
+}
+.community-host-form-grid input,
+.community-host-form-grid select,
+.community-host-form-grid textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  outline: none;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.community-host-form-grid textarea {
+  resize: vertical;
+}
+.community-host-form-grid input:focus,
+.community-host-form-grid select:focus,
+.community-host-form-grid textarea:focus {
+  border-color: var(--wine);
+  box-shadow: 0 0 0 3px rgba(111, 30, 50, 0.08);
+}
+.community-host-consent {
+  display: flex;
+  max-width: 790px;
+  align-items: flex-start;
+  margin-top: 26px;
+  color: var(--muted);
+  font-size: 0.64rem;
+  line-height: 1.65;
+  gap: 11px;
+}
+.community-host-consent input {
+  margin-top: 3px;
+  accent-color: var(--wine);
+}
+.community-host-consent a {
+  color: var(--wine);
+}
+.community-host-new-proposal {
+  margin-top: 24px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  color: var(--wine);
+  font-size: 0.62rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.community-host-applications-admin .admin-section-heading {
+  margin-bottom: 28px;
+}
+.community-host-review-summary {
+  display: grid;
+  margin-bottom: 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.community-host-review-summary article {
+  display: grid;
+  padding: 22px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.55);
+  gap: 5px;
+}
+.community-host-review-summary span,
+.community-host-review-summary small {
+  color: var(--muted);
+  font-size: 0.56rem;
+}
+.community-host-review-summary strong {
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 400;
+}
+.community-host-review-filters {
+  display: flex;
+  margin-bottom: 18px;
+  gap: 7px;
+}
+.community-host-review-filters button {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.community-host-review-filters button[aria-pressed="true"] {
+  border-color: var(--wine);
+  background: var(--wine);
+  color: #fff;
+}
+.community-host-review-list {
+  display: grid;
+  gap: 14px;
+}
+.community-host-review-list > article {
+  padding: 28px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.community-host-review-list > article > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 28px;
+}
+.community-host-review-list h3 {
+  margin: 9px 0 6px;
+  font-family: var(--serif);
+  font-size: 1.8rem;
+  font-weight: 400;
+}
+.community-host-review-list header p,
+.community-host-review-list header a {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.6rem;
+}
+.community-review-state {
+  color: var(--wine);
+  font-size: 0.54rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.community-review-state.is-approved {
+  color: #376f4e;
+}
+.community-host-review-list dl {
+  display: grid;
+  min-width: 245px;
+  margin: 0;
+  gap: 8px;
+}
+.community-host-review-list dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+.community-host-review-list dt,
+.community-host-review-list dd {
+  margin: 0;
+  font-size: 0.56rem;
+}
+.community-host-review-list dt {
+  color: var(--muted);
+}
+.community-host-review-list dd {
+  color: var(--ink);
+  font-weight: 750;
+  text-align: right;
+}
+.community-host-review-answers {
+  display: grid;
+  margin: 25px 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.community-host-review-answers section {
+  padding: 17px;
+  background: var(--paper);
+}
+.community-host-review-answers span {
+  color: var(--wine);
+  font-size: 0.54rem;
+  font-weight: 800;
+}
+.community-host-review-answers p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.65;
+}
+.community-host-review-fields {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.5fr);
+  gap: 14px;
+}
+.community-host-review-fields label {
+  display: grid;
+  align-content: start;
+  color: var(--ink);
+  font-size: 0.57rem;
+  font-weight: 800;
+  gap: 7px;
+}
+.community-host-review-fields label > div {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.community-host-review-fields label > div span {
+  padding-left: 12px;
+  color: var(--muted);
+  font-size: 0.58rem;
+}
+.community-host-review-fields input,
+.community-host-review-fields textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  outline: none;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.63rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.community-host-review-fields label > div input {
+  min-width: 0;
+  border: 0;
+}
+.community-host-review-list form > footer,
+.community-host-review-closed {
+  display: flex;
+  align-items: center;
+  margin-top: 18px;
+  gap: 8px;
+}
+.community-host-review-closed {
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.58rem;
+}
+
+@media (max-width: 760px) {
+  .community-hero:has(> div),
+  .community-host-entry {
+    display: grid;
+    align-items: start;
+    gap: 24px;
+  }
+  .community-hero:has(> div) > .button,
+  .community-host-entry > .button {
+    width: fit-content;
+    margin: 0;
+  }
+  .community-host-application {
+    width: calc(100% - 32px);
+    margin-top: 46px;
+    padding-top: 42px;
+  }
+  .community-host-steps,
+  .community-host-form-grid,
+  .community-host-review-summary,
+  .community-host-review-answers,
+  .community-host-review-fields {
+    grid-template-columns: 1fr;
+  }
+  .community-host-steps li,
+  .community-host-steps li:last-child {
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+  }
+  .community-host-steps li:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+  .community-host-form {
+    padding: 28px 22px;
+  }
+  .community-host-form-grid .span-two {
+    grid-column: auto;
+  }
+  .community-host-status footer,
+  .community-host-form > footer,
+  .community-host-review-list form > footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .community-host-status footer .button,
+  .community-host-form > footer .button,
+  .community-host-review-list form > footer .button {
+    width: 100%;
+    justify-content: center;
+  }
+  .community-host-review-list > article > header {
+    display: grid;
+  }
+  .community-host-review-list dl {
+    min-width: 0;
+  }
+}
+
 .member-next-action {
   display: grid;
   align-content: end;

@@ -410,8 +410,15 @@ const communityFinancialStatement = read(
   "components/member/community-financial-statement.tsx",
 );
 const communityDirectory = read("components/member/community-directory.tsx");
+const communityPage = read("app/communities/page.tsx");
+const communityHostApplication = read(
+  "components/member/community-host-application.tsx",
+);
 const creatorCommerceAdmin = read(
   "components/admin/community-creator-commerce-manager.tsx",
+);
+const communityHostApplicationAdmin = read(
+  "components/admin/community-host-application-manager.tsx",
 );
 const communityHostBillingAdmin = read(
   "components/admin/community-host-billing-manager.tsx",
@@ -618,6 +625,50 @@ for (const contract of [
   assert(
     communityDirectory.includes(contract),
     `Community member checkout UX must include ${contract}`,
+  );
+}
+for (const contract of [
+  'href="#create-community"',
+  "CommunityHostApplication",
+  "list_my_community_host_applications",
+]) {
+  assert(
+    communityPage.includes(contract),
+    `Community landing must expose host admission through ${contract}`,
+  );
+}
+for (const contract of [
+  "Create a community",
+  "Apply to create a community",
+  "Share the idea",
+  "Complete review",
+  "Prepare in private",
+  "save_community_host_application",
+  "withdraw_community_host_application",
+  "Update and resubmit",
+  "Open host workspace",
+  "Community Guidelines",
+  "private draft",
+  "memberErrorMessage",
+]) {
+  assert(
+    communityHostApplication.includes(contract),
+    `Member host application UX must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Community applications",
+  "review_community_host_application",
+  "Start review",
+  "Request changes",
+  "Approve and create draft",
+  "Approval never publishes a room",
+  "Open release checks",
+  "adminErrorMessage",
+]) {
+  assert(
+    communityHostApplicationAdmin.includes(contract),
+    `Community application Admin UX must include ${contract}`,
   );
 }
 for (const contract of [

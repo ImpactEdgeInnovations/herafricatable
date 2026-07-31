@@ -310,6 +310,15 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Add verified one-period renewal and next-term plan changes with a single
       scheduled subscription, configurable grace, owner reminders and audited
       reconciliation
+- [x] Add member-facing Community host applications with guided purpose,
+      audience, admission and safety questions; status tracking; revision and
+      withdrawal
+- [x] Add an audited Super Admin host review queue where approval creates a
+      private draft community and active owner without bypassing release checks
+- [ ] Apply `20260801170000_community_host_applications.sql` in production
+      Supabase
+- [ ] Complete submit → review → changes requested → resubmit → approve
+      acceptance with one active member and one Super Admin
 - [x] Pause new paid checkout during grace, revoke expired host tools and pause
       published paid offers when the host plan lapses
 - [ ] Add provider-authorized automatic recurring charges only after merchant
