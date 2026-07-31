@@ -17523,3 +17523,114 @@ body {
     padding: 34px 0;
   }
 }
+
+/* Accessibility release layer
+   Keep these rules last so every public, member and Admin journey shares the
+   same keyboard focus treatment and Community remains readable at a glance. */
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 12px;
+  left: 12px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: var(--wine-deep);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+  transform: translateY(calc(-100% - 24px));
+  transition: transform 0.16s ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+:focus-visible {
+  outline: 3px solid #b07822 !important;
+  outline-offset: 3px;
+}
+
+#hat-page-content:focus {
+  outline: 0;
+}
+
+.community-room-navigation a {
+  font-size: 0.72rem;
+}
+.community-room-overview header > p:last-child,
+.community-conversation-heading > p,
+.community-member-roster > header > p {
+  font-size: 0.8rem;
+}
+.community-start-primary,
+.community-room-overview > div small,
+.community-start-path > div em {
+  font-size: 0.72rem;
+}
+.community-member-roster small {
+  font-size: 0.7rem;
+}
+.community-composer-heading > label:last-child,
+.community-composer small,
+.community-comment-thread > summary,
+.community-post-more > summary {
+  font-size: 0.72rem;
+}
+.community-composer-heading select {
+  font-size: 0.78rem;
+}
+.community-composer textarea,
+.community-comments > article > p,
+.community-comment-form textarea {
+  font-size: 0.82rem;
+}
+.community-conversation-filters button,
+.community-post-actions button,
+.community-comment-form button {
+  min-height: 44px;
+  font-size: 0.7rem;
+}
+.community-comment-thread > summary,
+.community-post-more > summary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+}
+.community-feed article header strong {
+  font-size: 0.8rem;
+}
+.community-post-category {
+  font-size: 0.64rem;
+}
+.community-feed article header small,
+.community-feed time {
+  font-size: 0.68rem;
+}
+.community-feed article footer button {
+  min-height: 44px;
+  font-size: 0.7rem;
+}
+
+@media (max-width: 620px) {
+  .member-mobile-dock a,
+  .admin-mobile-dock a {
+    min-height: 52px;
+    font-size: 0.62rem;
+  }
+  .community-room-navigation a {
+    min-height: 52px;
+  }
+  .community-room-overview > div > a {
+    min-height: 76px;
+  }
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline-color: Highlight !important;
+  }
+  .skip-link {
+    border: 2px solid ButtonText;
+  }
+}

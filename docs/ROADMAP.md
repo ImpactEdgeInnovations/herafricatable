@@ -136,6 +136,13 @@ Usability is part of production readiness and continues alongside feature delive
         retain implementation detail only in engineering runbooks
 - [ ] Test the main member and administrator journeys with at least five non-technical users
 - [ ] Pass keyboard, screen-reader, contrast, 200% zoom and mobile usability acceptance
+  - [x] Add a CI accessibility preflight for keyboard order, image/frame text
+        alternatives, global bypass navigation, focus visibility, reduced motion,
+        high-contrast mode, mobile touch targets and Community landmarks
+  - [x] Raise the Community room’s smallest navigation, action, metadata and form
+        text to a readable baseline without increasing visual density
+  - [ ] Record human VoiceOver, keyboard-only, 200% zoom and launch-device results
+        using `docs/ACCESSIBILITY_ACCEPTANCE.md`
 - [x] Confirm every core journey has clear loading, empty, success, error and recovery states
   - [x] Global and Admin route boundaries provide accessible loading, retry, support and
         not-found recovery without exposing technical details

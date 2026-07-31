@@ -25,6 +25,7 @@ jobs:
       - run: npm ci
       - run: npm run verify
       - run: npm run test:journeys
+      - run: npm run test:accessibility
       - run: npm run typecheck
       - run: npm run build
         env:
