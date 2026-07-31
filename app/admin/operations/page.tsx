@@ -114,6 +114,8 @@ import {
   CommunityOutcomeSummary,
   type CommunityOutcome,
 } from "@/components/admin/community-outcome-summary";
+import { OperationalHealthPanel } from "@/components/admin/operational-health-panel";
+import { assessOperationalHealth } from "@/lib/operational-health";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -250,7 +252,12 @@ export default async function AdminOperationsPage({
   const loadPrograms = activeArea === "member-programs";
   const loadRelease = activeArea === "release-tools";
   const loadEventList = loadEvents || loadPrograms;
-  const [{ data: countdown }, memberResult, eventResult] = await Promise.all([
+  const [
+    { data: countdown },
+    memberResult,
+    eventResult,
+    operationalHealth,
+  ] = await Promise.all([
     loadRelease
       ? supabase
           .from("site_event_countdown")
@@ -264,6 +271,9 @@ export default async function AdminOperationsPage({
     canManageEvents && loadEventList
       ? supabase.rpc("list_managed_events")
       : Promise.resolve({ data: [], error: null }),
+    loadRelease
+      ? assessOperationalHealth()
+      : Promise.resolve(null),
   ]);
 
   const members = (memberResult.data as AdminMember[] | null) ?? [];
@@ -980,6 +990,9 @@ export default async function AdminOperationsPage({
           label="Release controls"
           title="Launch evidence and public controls"
         >
+          {operationalHealth ? (
+            <OperationalHealthPanel assessment={operationalHealth} />
+          ) : null}
           {role.role === "super_admin" ? (
             <LaunchGateControl
               checks={
@@ -988,22 +1001,24 @@ export default async function AdminOperationsPage({
               environmentSignals={[
                 {
                   label: "Server integration",
-                  ready: Boolean(process.env.SUPABASE_SECRET_KEY),
+                  ready:
+                    operationalHealth?.checks.find(
+                      (check) => check.key === "server",
+                    )?.status === "ready",
                 },
                 {
                   label: "Online payments",
-                  ready: Boolean(
-                    process.env.PAYSTACK_SECRET_KEY &&
-                      process.env.NEXT_PUBLIC_SITE_URL,
-                  ),
+                  ready:
+                    operationalHealth?.checks.find(
+                      (check) => check.key === "payments",
+                    )?.status === "ready",
                 },
                 {
                   label: "Email delivery",
-                  ready: Boolean(
-                    process.env.RESEND_API_KEY &&
-                      process.env.EMAIL_FROM &&
-                      process.env.CRON_SECRET,
-                  ),
+                  ready:
+                    operationalHealth?.checks.find(
+                      (check) => check.key === "email",
+                    )?.status === "ready",
                 },
               ]}
               migrationReady={!launchGateResult.error}

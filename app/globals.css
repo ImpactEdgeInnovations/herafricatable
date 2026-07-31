@@ -17524,9 +17524,7 @@ body {
   }
 }
 
-/* Accessibility release layer
-   Keep these rules last so every public, member and Admin journey shares the
-   same keyboard focus treatment and Community remains readable at a glance. */
+/* Shared accessibility release layer for public, member and Admin journeys. */
 .skip-link {
   position: fixed;
   z-index: 1000;
@@ -17632,5 +17630,142 @@ body {
   }
   .skip-link {
     border: 2px solid ButtonText;
+  }
+}
+
+/* Operator-friendly deployment health */
+.operational-health {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.46);
+}
+.operational-health-heading {
+  align-items: end;
+}
+.operational-health-decision {
+  display: grid;
+  min-width: 210px;
+  justify-items: end;
+  gap: 5px;
+}
+.operational-health-decision strong {
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 500;
+}
+.operational-health-decision span {
+  max-width: 230px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-align: right;
+}
+.operational-health-decision.ready strong {
+  color: var(--success);
+}
+.operational-health-decision.blocked strong {
+  color: var(--error);
+}
+.operational-health-meta {
+  display: flex;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.7rem;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+}
+.operational-health-grid {
+  display: grid;
+  margin-top: 26px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.operational-health-grid article {
+  display: grid;
+  min-height: 220px;
+  align-content: start;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  gap: 9px;
+}
+.operational-health-grid article > header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+.operational-health-grid article > header span,
+.operational-health-grid article > header small {
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+.operational-health-grid article > header span {
+  color: var(--muted);
+}
+.operational-health-grid article > header small {
+  color: var(--wine);
+}
+.operational-health-grid article.ready > header span {
+  color: var(--success);
+}
+.operational-health-grid article.unavailable > header span {
+  color: var(--error);
+}
+.operational-health-grid h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+.operational-health-grid article > strong {
+  font-size: 0.8rem;
+}
+.operational-health-grid article > p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+.operational-health-note {
+  display: grid;
+  margin-top: 18px;
+  padding: 20px 22px;
+  border-left: 3px solid var(--gold);
+  background: var(--cream);
+  gap: 5px;
+}
+.operational-health-note strong {
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 500;
+}
+.operational-health-note p {
+  max-width: 780px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+@media (max-width: 800px) {
+  .operational-health-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 620px) {
+  .operational-health-heading {
+    align-items: start;
+  }
+  .operational-health-decision {
+    min-width: 0;
+    justify-items: start;
+  }
+  .operational-health-decision span {
+    text-align: left;
+  }
+  .operational-health-grid article {
+    min-height: 0;
+    padding: 20px;
   }
 }

@@ -143,6 +143,11 @@ Usability is part of production readiness and continues alongside feature delive
         text to a readable baseline without increasing visual density
   - [ ] Record human VoiceOver, keyboard-only, 200% zoom and launch-device results
         using `docs/ACCESSIBILITY_ACCEPTANCE.md`
+- [x] Replace environment-presence release signals with a fail-closed operational
+      assessment that verifies public data, server authority, canonical URL,
+      automatic-payment exposure and queued-email risk
+- [x] Add a credential-safe authenticated Admin/member boundary smoke command that
+      requires a test-tagged identity and always signs out
 - [x] Confirm every core journey has clear loading, empty, success, error and recovery states
   - [x] Global and Admin route boundaries provide accessible loading, retry, support and
         not-found recovery without exposing technical details

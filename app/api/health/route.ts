@@ -1,6 +1,28 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { getSupabasePublicEnv } from "@/lib/env";
+import { assessOperationalHealth } from "@/lib/operational-health";
 
-export const dynamic="force-dynamic";
-export async function GET(){const started=Date.now();const release=process.env.VERCEL_GIT_COMMIT_SHA?.slice(0,7)??"local";try{const {url,publishableKey}=getSupabasePublicEnv();const publicClient=createClient(url,publishableKey,{auth:{autoRefreshToken:false,persistSession:false}});const {error:databaseError}=await publicClient.from("site_event_countdown").select("id",{head:true,count:"exact"}).limit(1);if(databaseError)throw databaseError;const adminKey=process.env.SUPABASE_SECRET_KEY;let adminIntegration:"ready"|"missing"|"invalid"="missing";if(adminKey){const adminClient=createClient(url,adminKey,{auth:{autoRefreshToken:false,persistSession:false}});const {error}=await adminClient.from("audit_events").select("id",{head:true,count:"exact"}).limit(1);adminIntegration=error?"invalid":"ready"}const status=adminIntegration==="ready"?"ok":"degraded";return NextResponse.json({status,database:"reachable",server_integration:adminIntegration,release,latency_ms:Date.now()-started},{status:status==="ok"?200:503,headers:{"cache-control":"no-store"}})}catch{return NextResponse.json({status:"degraded",database:"unavailable",server_integration:"unknown",release,latency_ms:Date.now()-started},{status:503,headers:{"cache-control":"no-store"}})}}
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  const assessment = await assessOperationalHealth();
+  const database = assessment.checks.find(
+    (check) => check.key === "database",
+  );
+  const server = assessment.checks.find((check) => check.key === "server");
+
+  return NextResponse.json(
+    {
+      status: assessment.status,
+      database:
+        database?.status === "ready" ? "reachable" : "unavailable",
+      server_integration:
+        server?.status === "ready" ? "ready" : "unavailable",
+      release: assessment.release,
+      latency_ms: assessment.latencyMs,
+    },
+    {
+      status: assessment.status === "ok" ? 200 : 503,
+      headers: { "cache-control": "no-store" },
+    },
+  );
+}

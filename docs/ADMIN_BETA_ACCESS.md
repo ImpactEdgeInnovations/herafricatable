@@ -45,3 +45,23 @@ Successful output must include:
 
 Do not share a temporary password in source files, screenshots, issue trackers,
 or chat channels. Revoke access immediately when testing is complete.
+
+## Rehearse authenticated boundaries
+
+Add the beta identity only to `.env.local`:
+
+```sh
+HAT_TEST_EMAIL=admin@example.com
+HAT_TEST_PASSWORD=
+```
+
+Then run:
+
+```sh
+npm run ops:auth-readiness
+```
+
+The smoke check signs in through Supabase, verifies the identity, test-account
+tag, active role boundary and Super Admin operations, then always signs out. It
+prints no email, password, token or private member content. A real member account
+must never be used for this check.

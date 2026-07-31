@@ -8,6 +8,7 @@
 - [ ] Main-branch protection requires the quality gate before deployment
 - [ ] Preview deployment was tested before merge
 - [ ] Production points to the intended commit
+- [ ] Admin Release shows `Core ready` for the exact production commit
 - [ ] No secret or `.env.local` file is tracked by Git
 - [ ] Production and Preview environment scopes contain the correct values
 - [ ] Custom domain, HTTPS and canonical URL are correct
@@ -35,6 +36,7 @@
 - [ ] Authenticated pending users cannot access member data
 - [ ] Active/dormant/suspended/deleted state tests pass
 - [ ] First Super Admin and scoped staff accounts are verified
+- [ ] `npm run ops:auth-readiness` passes with a time-bounded, test-tagged identity
 
 ## Payments and registration
 
