@@ -299,6 +299,8 @@ Usability is part of production readiness and continues alongside feature delive
       production Supabase
 - [ ] Apply `20260801090000_community_host_subscription_lifecycle.sql` in
       production Supabase
+- [ ] Apply `20260801130000_community_financial_reconciliation.sql` in
+      production Supabase
 - [ ] Seed and review the Starter and Pro host plans
 - [ ] Complete two-member admission, Automatic, Manual review, Closed, duplicate
       and reversal acceptance while the feature flag remains off
@@ -312,7 +314,10 @@ Usability is part of production readiness and continues alongside feature delive
       published paid offers when the host plan lapses
 - [ ] Add provider-authorized automatic recurring charges only after merchant
       recurring-billing approval and explicit host consent
-- [ ] Add provider fee, refund, dispute and settlement reconciliation
+- [x] Add append-only provider-fee, tax, refund, dispute, reserve and settlement
+      reconciliation with signed Paystack financial-event processing
+- [x] Add host-readable creator statements and audited Admin draft → approve →
+      paid settlement batches with balance revalidation
 - [ ] Add automatic Paystack split settlement only after payout acceptance passes
 
 ### Heavy work remaining before production launch

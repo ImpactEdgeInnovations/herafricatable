@@ -65,6 +65,10 @@ for (const contract of [
   "CommunityHostBillingManager",
   "get_community_host_billing_admin",
   "list_community_host_plan_orders_admin",
+  "CommunityFinanceManager",
+  "list_community_finance_admin",
+  "list_community_financial_cases_admin",
+  "list_community_settlements_admin",
 ]) {
   assert(
     operations.includes(contract),
@@ -82,6 +86,21 @@ for (const contract of [
   assert(
     hostBillingOperations.includes(contract),
     `Admin host lifecycle operations must include ${contract}`,
+  );
+}
+const creatorFinanceOperations = read(
+  "components/admin/community-finance-manager.tsx",
+);
+for (const contract of [
+  "record_community_financial_adjustment",
+  "review_community_financial_case",
+  "create_community_settlement_batch",
+  "mark_community_settlement_paid",
+  "Automatic payouts off",
+]) {
+  assert(
+    creatorFinanceOperations.includes(contract),
+    `Admin creator finance operations must include ${contract}`,
   );
 }
 

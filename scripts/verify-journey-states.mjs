@@ -406,12 +406,18 @@ const communityHostWorkspace = read(
 const communityCommercePanel = read(
   "components/member/community-commerce-panel.tsx",
 );
+const communityFinancialStatement = read(
+  "components/member/community-financial-statement.tsx",
+);
 const communityDirectory = read("components/member/community-directory.tsx");
 const creatorCommerceAdmin = read(
   "components/admin/community-creator-commerce-manager.tsx",
 );
 const communityHostBillingAdmin = read(
   "components/admin/community-host-billing-manager.tsx",
+);
+const communityFinanceAdmin = read(
+  "components/admin/community-finance-manager.tsx",
 );
 const communityStartPath = read(
   "components/member/community-start-path.tsx",
@@ -517,6 +523,10 @@ for (const contract of [
   "CommunityCommercePanel",
   'href="#commerce"',
   "hostBilling?.grace_days",
+  "get_community_financial_summary",
+  "list_community_financial_statement",
+  "CommunityFinancialStatement",
+  'href="#statement"',
 ]) {
   assert(
     communityHostPage.includes(contract),
@@ -551,6 +561,19 @@ for (const contract of [
   );
 }
 for (const contract of [
+  "Creator statement",
+  "Every movement, explained.",
+  "Available after reconciliation",
+  "Provider costs and refunds",
+  "Recent statement entries",
+  "Automatic payouts off",
+]) {
+  assert(
+    communityFinancialStatement.includes(contract),
+    `Creator statement UX must include ${contract}`,
+  );
+}
+for (const contract of [
   "Host plan billing",
   "set_community_host_billing_configuration",
   "review_community_host_plan_order",
@@ -566,6 +589,22 @@ for (const contract of [
   assert(
     communityHostBillingAdmin.includes(contract),
     `Host plan billing Admin UX must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Creator reconciliation",
+  "record_community_financial_adjustment",
+  "open_community_financial_case",
+  "review_community_financial_case",
+  "create_community_settlement_batch",
+  "review_community_settlement_batch",
+  "mark_community_settlement_paid",
+  "Automatic payouts off",
+  "Drafting never sends money",
+]) {
+  assert(
+    communityFinanceAdmin.includes(contract),
+    `Creator finance Admin UX must include ${contract}`,
   );
 }
 for (const contract of [

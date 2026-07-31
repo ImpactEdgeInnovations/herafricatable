@@ -78,6 +78,18 @@
       renewal reminders and exposes counts in Admin Operations
 - [ ] Grace blocks new paid member checkout; final host-plan expiry revokes host
       tools and pauses the paid offer without removing community members
+- [ ] Signed Paystack refund and dispute events are accepted only for matching
+      community orders, currency and amount
+- [ ] Pending, processing, needs-attention and failed refunds do not debit the
+      creator statement; only Processed does
+- [ ] Dispute create holds creator funds, Won releases once, and Lost preserves
+      the hold without double-counting a later refund
+- [ ] Creator statement entries and settlement items reject update and deletion
+- [ ] Settlement creation requires verified payout identity, no open cases and a
+      positive reconciled balance
+- [ ] Draft and Approved settlements never send money; Paid requires an external
+      provider reference and a final balance recheck
+- [ ] Automatic creator transfers and Paystack split settlement remain disabled
 
 ## Privacy, trust and safety
 

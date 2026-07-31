@@ -18,6 +18,12 @@ import {
   type CommunityOutcomeTrend,
   type CommunityProgrammingOption,
 } from "@/components/member/community-host-workspace";
+import {
+  CommunityFinancialStatement,
+  type CommunityFinancialSummary,
+  type CommunitySettlement,
+  type CommunityStatementEntry,
+} from "@/components/member/community-financial-statement";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +63,9 @@ export default async function CommunityHostPage({
     commerceResult,
     hostPlanResult,
     hostBillingResult,
+    financialSummaryResult,
+    financialStatementResult,
+    settlementResult,
   ] = await Promise.all([
     supabase.rpc("get_community_host_health", {
       p_community_id: community.community_id,
@@ -96,6 +105,23 @@ export default async function CommunityHostPage({
           p_community_id: community.community_id,
         })
       : Promise.resolve({ data: [], error: null }),
+    community.membership_role === "owner"
+      ? supabase.rpc("get_community_financial_summary", {
+          p_community_id: community.community_id,
+        })
+      : Promise.resolve({ data: [], error: null }),
+    community.membership_role === "owner"
+      ? supabase.rpc("list_community_financial_statement", {
+          p_community_id: community.community_id,
+          p_limit: 50,
+          p_offset: 0,
+        })
+      : Promise.resolve({ data: [], error: null }),
+    community.membership_role === "owner"
+      ? supabase.rpc("list_community_settlement_batches", {
+          p_community_id: community.community_id,
+        })
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   const migrationReady =
@@ -111,6 +137,14 @@ export default async function CommunityHostPage({
   const hostBilling = (
     (hostBillingResult.data as CommunityHostBilling[] | null) ?? []
   )[0] ?? null;
+  const commerce =
+    ((commerceResult.data as CommunityHostCommerce[] | null) ?? [])[0] ?? null;
+  const financialSummaries =
+    (financialSummaryResult.data as CommunityFinancialSummary[] | null) ?? [];
+  const primaryFinancialSummary =
+    financialSummaries.find(
+      (summary) => summary.currency === commerce?.offer_currency,
+    ) ?? financialSummaries[0];
 
   return (
     <main className="community-page community-host-page">
@@ -138,7 +172,10 @@ export default async function CommunityHostPage({
         <a href="#gatherings">Gatherings</a>
         <a href="#resources">Resources</a>
         {community.membership_role === "owner" ? (
-          <a href="#commerce">Commerce</a>
+          <>
+            <a href="#commerce">Commerce</a>
+            <a href="#statement">Statement</a>
+          </>
         ) : null}
       </nav>
       {community.membership_role === "owner" ? (
@@ -150,14 +187,41 @@ export default async function CommunityHostPage({
             Number.isInteger(hostBilling?.grace_days)
           }
           commerce={
-            ((commerceResult.data as CommunityHostCommerce[] | null) ?? [])[0] ??
-            null
+            commerce
+              ? {
+                  ...commerce,
+                  held_minor:
+                    primaryFinancialSummary?.available_minor ??
+                    commerce.held_minor,
+                  settled_minor:
+                    primaryFinancialSummary?.settled_minor ??
+                    commerce.settled_minor,
+                }
+              : null
           }
           communityId={community.community_id}
           migrationReady={!commerceResult.error}
           plans={
             (hostPlanResult.data as CommunityHostPlanOption[] | null) ?? []
           }
+        />
+      ) : null}
+      {community.membership_role === "owner" ? (
+        <CommunityFinancialStatement
+          entries={
+            (financialStatementResult.data as
+              | CommunityStatementEntry[]
+              | null) ?? []
+          }
+          migrationReady={
+            !financialSummaryResult.error &&
+            !financialStatementResult.error &&
+            !settlementResult.error
+          }
+          settlements={
+            (settlementResult.data as CommunitySettlement[] | null) ?? []
+          }
+          summaries={financialSummaries}
         />
       ) : null}
       <CommunityHostWorkspace

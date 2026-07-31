@@ -73,6 +73,12 @@ import {
   type CommunityHostPlanOrderAdmin,
 } from "@/components/admin/community-host-billing-manager";
 import {
+  CommunityFinanceManager,
+  type CommunityFinanceSummaryAdmin,
+  type CommunityFinancialCaseAdmin,
+  type CommunitySettlementAdmin,
+} from "@/components/admin/community-finance-manager";
+import {
   CommunityModeration,
   type CommunityReport,
 } from "@/components/admin/community-moderation";
@@ -332,6 +338,9 @@ export default async function AdminOperationsPage({
     communityCommerceFlagResult,
     hostBillingConfigResult,
     hostPlanOrderResult,
+    communityFinanceResult,
+    communityFinancialCaseResult,
+    communitySettlementResult,
     learningCourseResult,
     courseOrderResult,
     learningFlagResult,
@@ -395,6 +404,15 @@ export default async function AdminOperationsPage({
       : Promise.resolve({ data: [], error: null }),
     isProgramAdmin
       ? supabase.rpc("list_community_host_plan_orders_admin")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_community_finance_admin")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_community_financial_cases_admin")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_community_settlements_admin")
       : Promise.resolve({ data: [], error: null }),
     isProgramAdmin
       ? supabase.rpc("list_courses")
@@ -1033,6 +1051,31 @@ export default async function AdminOperationsPage({
             orders={
               (hostPlanOrderResult.data as
                 | CommunityHostPlanOrderAdmin[]
+                | null) ?? []
+            }
+          />
+          <CommunityFinanceManager
+            cases={
+              (communityFinancialCaseResult.data as
+                | CommunityFinancialCaseAdmin[]
+                | null) ?? []
+            }
+            migrationReady={
+              !communityFinanceResult.error &&
+              !communityFinancialCaseResult.error &&
+              !communitySettlementResult.error
+            }
+            orders={
+              (communityOrderResult.data as CommunityOrderAdmin[] | null) ?? []
+            }
+            settlements={
+              (communitySettlementResult.data as
+                | CommunitySettlementAdmin[]
+                | null) ?? []
+            }
+            summaries={
+              (communityFinanceResult.data as
+                | CommunityFinanceSummaryAdmin[]
                 | null) ?? []
             }
           />

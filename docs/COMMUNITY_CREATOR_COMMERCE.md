@@ -87,8 +87,9 @@ operating controls have passed acceptance.
   reconciliation
 - [ ] Provider-authorized automatic recurring billing with explicit host consent
 - [ ] Paystack split/subaccount settlement after merchant and country acceptance
-- [ ] Provider-fee, tax, refund, chargeback, and reserve allocation
-- [ ] Audited payout batches, settlement statements, and downloadable invoices
+- [x] Provider-fee, tax, refund, chargeback, and reserve allocation
+- [x] Audited payout batches and host-readable settlement statements
+- [ ] Downloadable tax invoices and statement exports after legal format review
 - [ ] Plan-entitlement enforcement for analytics, automations, and moderator limits
 - [ ] Creator acquisition, conversion, retention, and cohort analytics
 - [ ] Host application, review, suspension, offboarding, and member-migration flows
@@ -98,6 +99,7 @@ operating controls have passed acceptance.
 - Apply `20260801010000_community_creator_commerce.sql`.
 - Apply `20260801050000_community_host_self_service_billing.sql`.
 - Apply `20260801090000_community_host_subscription_lifecycle.sql`.
+- Apply `20260801130000_community_financial_reconciliation.sql`.
 - Keep `community_creator_commerce` disabled until all checks pass.
 - Test free, Automatic, Manual review, Closed, failed, duplicate, reversed, and
   expired-host-plan paths.
@@ -113,5 +115,9 @@ operating controls have passed acceptance.
   period, promote once, and issue host tools once.
 - Confirm grace blocks new paid orders, final expiry pauses the paid offer, and
   a reversed scheduled plan leaves the current plan unchanged.
+- Confirm signed refund and dispute events are idempotent, amount/currency
+  matched and represented as append-only statement entries.
+- Confirm payout batches require verified payout identity, no open cases and a
+  positive reconciled balance; Draft and Approved never send money.
 - Complete legal review of host terms, refunds, tax, payout, and platform-fee
   disclosures before public monetization.

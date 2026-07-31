@@ -77,6 +77,19 @@ assert(
   webhook.includes("timingSafeEqual"),
   "Paystack signature check must be constant-time",
 );
+for (const contract of [
+  "refund.processed",
+  "refund.needs-attention",
+  "charge.dispute.create",
+  "charge.dispute.resolve",
+  "process_community_financial_webhook",
+  "p_signature_verified: true",
+]) {
+  assert(
+    webhook.includes(contract),
+    `Paystack webhook must reconcile ${contract}`,
+  );
+}
 const paymentInitialize = read("app/api/payments/paystack/initialize/route.ts");
 assert(
   paymentInitialize.includes("create_course_order"),
@@ -654,6 +667,64 @@ assert(
     "delete from public.community_memberships",
   ),
   "Host subscription lifecycle must never delete community membership",
+);
+const communityFinanceMigration = read(
+  "supabase/migrations/20260801130000_community_financial_reconciliation.sql",
+);
+for (const contract of [
+  "community_reconciliation_entries",
+  "community_financial_cases",
+  "community_settlement_batches",
+  "community_settlement_items",
+  "prevent_community_financial_mutation",
+  "process_community_financial_webhook",
+  "capture_initial_community_provider_fee",
+  "record_community_financial_adjustment",
+  "review_community_financial_case",
+  "create_community_settlement_batch",
+  "mark_community_settlement_paid",
+  "list_community_financial_statement",
+  "list_community_finance_admin",
+  "pg_advisory_xact_lock",
+  "Provider signature required",
+  "Financial event amount or currency mismatch",
+  "Resolve open refunds and disputes before settlement",
+  "Creator balance changed; cancel and rebuild the batch",
+]) {
+  assert(
+    communityFinanceMigration.includes(contract),
+    `Community financial reconciliation must include ${contract}`,
+  );
+}
+for (const event of [
+  "'refund.pending'",
+  "'refund.processing'",
+  "'refund.needs-attention'",
+  "'refund.failed'",
+  "'refund.processed'",
+  "'charge.dispute.create'",
+  "'charge.dispute.remind'",
+  "'charge.dispute.resolve'",
+]) {
+  assert(
+    communityFinanceMigration.includes(event),
+    `Community financial webhook must include ${event}`,
+  );
+}
+assert(
+  communityFinanceMigration.includes(
+    "before update or delete on public.community_reconciliation_entries",
+  ) &&
+    communityFinanceMigration.includes(
+      "before update or delete on public.community_settlement_items",
+    ),
+  "Creator statement entries and settlement items must be append-only",
+);
+assert(
+  !communityFinanceMigration.includes(
+    "delete from public.community_memberships",
+  ),
+  "Financial reconciliation must never delete community membership",
 );
 const hardenedCommunityOrderFunction = communityHostBillingMigration.slice(
   communityHostBillingMigration.indexOf(
