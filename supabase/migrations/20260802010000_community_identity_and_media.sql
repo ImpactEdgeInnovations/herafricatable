@@ -1,12 +1,12 @@
 begin;
 
 alter table public.communities
-  add column tagline text
+  add column if not exists tagline text
     check (tagline is null or char_length(tagline) between 3 and 140),
-  add column accent_key text not null default 'wine'
+  add column if not exists accent_key text not null default 'wine'
     check (accent_key in ('wine', 'gold', 'forest', 'ocean', 'terracotta'));
 
-create table public.community_media_assets (
+create table if not exists public.community_media_assets (
   id uuid primary key default gen_random_uuid(),
   community_id uuid not null
     references public.communities(id) on delete cascade,
@@ -68,21 +68,23 @@ create table public.community_media_assets (
   )
 );
 
-create unique index community_one_active_post_attachment_idx
+create unique index if not exists community_one_active_post_attachment_idx
   on public.community_media_assets(post_id)
   where status = 'active' and post_id is not null;
 
-create index community_media_assets_room_idx
+create index if not exists community_media_assets_room_idx
   on public.community_media_assets(community_id, status, created_at desc);
 
 alter table public.communities
-  add column icon_asset_id uuid
+  add column if not exists icon_asset_id uuid
     references public.community_media_assets(id) on delete set null,
-  add column cover_asset_id uuid
+  add column if not exists cover_asset_id uuid
     references public.community_media_assets(id) on delete set null;
 
 alter table public.community_media_assets enable row level security;
 
+drop policy if exists "Members read permitted community media metadata"
+  on public.community_media_assets;
 create policy "Members read permitted community media metadata"
   on public.community_media_assets for select
   to authenticated
@@ -136,6 +138,8 @@ set
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
+drop policy if exists "Members read authorised community media"
+  on storage.objects;
 create policy "Members read authorised community media"
   on storage.objects for select
   to authenticated
@@ -166,6 +170,8 @@ create policy "Members read authorised community media"
     )
   );
 
+drop policy if exists "Owners upload draft community branding"
+  on storage.objects;
 create policy "Owners upload draft community branding"
   on storage.objects for insert
   to authenticated
@@ -183,6 +189,8 @@ create policy "Owners upload draft community branding"
     )
   );
 
+drop policy if exists "Members upload media for their own community posts"
+  on storage.objects;
 create policy "Members upload media for their own community posts"
   on storage.objects for insert
   to authenticated
