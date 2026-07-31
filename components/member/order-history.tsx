@@ -8,7 +8,9 @@ import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
 
 export type MemberOrder = {
+  community: { slug: string; name: string } | null;
   course: { slug: string; title: string } | null;
+  host_plan: { name: string } | null;
   membership: { slug: string; name: string } | null;
   created_at: string;
   currency: string;
@@ -101,7 +103,7 @@ export function OrderHistory({
     <section className="member-orders">
       {dialog}
       <div>
-        <p className="eyebrow">Your registrations</p>
+        <p className="eyebrow">Your payments</p>
         <h2>Orders and access</h2>
       </div>
       {orders.length ? (
@@ -112,6 +114,7 @@ export function OrderHistory({
                 <span>
                   {order.course?.title ??
                     order.membership?.name ??
+                    order.community?.name ??
                     order.event?.title ??
                     "Her Africa Table"}
                 </span>
@@ -151,6 +154,21 @@ export function OrderHistory({
                 {order.order_type === "membership" ? (
                   <Link href="/membership">Membership</Link>
                 ) : null}
+                {order.order_type === "community" &&
+                order.status === "fulfilled" &&
+                order.community ? (
+                  <Link href={`/communities/${order.community.slug}`}>
+                    Open community
+                  </Link>
+                ) : null}
+                {order.order_type === "community_host_plan" &&
+                order.community ? (
+                  <Link
+                    href={`/communities/${order.community.slug}/host#commerce`}
+                  >
+                    Host workspace
+                  </Link>
+                ) : null}
                 {order.order_type === "event" &&
                 ["pending_payment", "pending_review"].includes(order.status) ? (
                   <button
@@ -170,7 +188,12 @@ export function OrderHistory({
                     Request refund
                   </button>
                 ) : null}
-                {["course", "membership"].includes(order.order_type) &&
+                {[
+                  "course",
+                  "membership",
+                  "community",
+                  "community_host_plan",
+                ].includes(order.order_type) &&
                 ["pending_payment", "pending_review"].includes(order.status) ? (
                   <Link href="/support">Contact support</Link>
                 ) : null}
@@ -184,7 +207,10 @@ export function OrderHistory({
       ) : (
         <div className="admin-empty">
           <strong>No orders yet</strong>
-          <p>Browse upcoming tables and learning experiences.</p>
+          <p>
+            Event, learning, membership and community payments will appear
+            here.
+          </p>
           <Link className="button button-primary" href="/events">
             View events
           </Link>

@@ -83,6 +83,11 @@ assert(
   "Community checkout must use the shared server payment initializer",
 );
 assert(
+  paymentInitialize.includes("create_community_host_plan_order") &&
+    paymentInitialize.includes("community_host_plan_id"),
+  "Host plan checkout must use the shared server payment initializer",
+);
+assert(
   paymentInitialize.includes("order_type"),
   "Payment metadata must identify fulfillment context",
 );
@@ -95,6 +100,11 @@ assert(
   paymentCallback.includes('order?.order_type==="community"') &&
     paymentCallback.includes("/communities/"),
   "Verified community checkout must return to its community",
+);
+assert(
+  paymentCallback.includes('order?.order_type==="community_host_plan"') &&
+    paymentCallback.includes("/host?payment="),
+  "Verified host plan checkout must return to its Host workspace",
 );
 const learningMigration = read(
   "supabase/migrations/20260725130000_learning_foundation.sql",
@@ -539,6 +549,77 @@ assert(
   ),
   "Community payout records must not store bank account details",
 );
+const communityHostBillingMigration = read(
+  "supabase/migrations/20260801050000_community_host_self_service_billing.sql",
+);
+for (const contract of [
+  "community_host_self_service_billing",
+  "community_host_billing_settings",
+  "community_host_plan_orders",
+  "set_community_host_billing_configuration",
+  "get_community_host_billing",
+  "create_community_host_plan_order",
+  "fulfill_community_host_plan_order",
+  "review_community_host_plan_order",
+  "list_community_host_plan_orders_admin",
+  "community_host_tools",
+  "pg_advisory_xact_lock",
+  "Active community ownership required",
+  "p_signature_verified",
+  "'community_host_plan'",
+  "set status = 'fulfilled', fulfilled_at = now()",
+  "set status = 'cancelled', updated_at = now()",
+  "set status = 'paused', updated_at = now()",
+]) {
+  assert(
+    communityHostBillingMigration.includes(contract),
+    `Host self-service billing must include ${contract}`,
+  );
+}
+const hostPlanOrderFunction = communityHostBillingMigration.slice(
+  communityHostBillingMigration.indexOf(
+    "create or replace function public.create_community_host_plan_order",
+  ),
+  communityHostBillingMigration.indexOf(
+    "create or replace function public.fulfill_community_host_plan_order",
+  ),
+);
+for (const boundary of [
+  "public.is_community_owner(p_community_id)",
+  "billing_mode = 'closed'",
+  "plan.price_minor",
+  "subscription.ends_at > now()",
+  "host_order.status in",
+  "'pending_payment'",
+  "'pending_review'",
+]) {
+  assert(
+    hostPlanOrderFunction.includes(boundary),
+    `Host plan order boundary must include ${boundary}`,
+  );
+}
+assert(
+  !hostPlanOrderFunction.includes("insert into public.community_memberships"),
+  "Host plan checkout must never create or transfer community ownership",
+);
+const hardenedCommunityOrderFunction = communityHostBillingMigration.slice(
+  communityHostBillingMigration.indexOf(
+    "create or replace function public.create_community_order",
+  ),
+  communityHostBillingMigration.indexOf(
+    "create or replace function public.notify_order_event",
+  ),
+);
+for (const boundary of [
+  "subscription.ends_at > now()",
+  "account.payout_status = 'verified'",
+  "membership.status = 'approved_pending_payment'",
+]) {
+  assert(
+    hardenedCommunityOrderFunction.includes(boundary),
+    `Member community checkout must fail closed on ${boundary}`,
+  );
+}
 const betaAdminProvisioning = read("scripts/provision-beta-admin.mjs");
 for (const contract of [
   "HAT_BETA_ADMIN_PASSWORD",

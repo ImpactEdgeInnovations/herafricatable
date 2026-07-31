@@ -289,13 +289,21 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Add a plain-language host workspace for pricing, readiness, paying members
       and held earnings
 - [x] Add Super Admin plan, grant, payout-readiness and manual-payment controls
+- [x] Add approved-owner self-service Starter/Pro selection with independent
+      Automatic, Manual review and Closed host-billing controls
+- [x] Fulfill verified host-plan orders into an active subscription and
+      `community_host_tools` entitlement through the shared payment engine
+- [x] Revoke purchased host tools and pause paid offers on verified reversal
 - [ ] Apply `20260801010000_community_creator_commerce.sql` in production Supabase
+- [ ] Apply `20260801050000_community_host_self_service_billing.sql` in
+      production Supabase
 - [ ] Seed and review the Starter and Pro host plans
 - [ ] Complete two-member admission, Automatic, Manual review, Closed, duplicate
       and reversal acceptance while the feature flag remains off
 - [ ] Complete host terms, refund, tax, payout and platform-fee legal review
 - [ ] Enable `community_creator_commerce` only after merchant and operating sign-off
-- [ ] Add host self-service plan checkout and recurring renewal reconciliation
+- [x] Add host self-service plan selection and one-period checkout
+- [ ] Add recurring renewal and plan-change reconciliation
 - [ ] Add provider fee, refund, dispute and settlement reconciliation
 - [ ] Add automatic Paystack split settlement only after payout acceptance passes
 
@@ -368,6 +376,8 @@ Usability is part of production readiness and continues alongside feature delive
       Supabase
 - [ ] Apply `20260801010000_community_creator_commerce.sql` in production
       Supabase
+- [ ] Apply `20260801050000_community_host_self_service_billing.sql` in
+      production Supabase
 - [ ] Complete Creator Commerce admission/payment/entitlement/payout-boundary
       acceptance and deliberately enable its feature flag
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag

@@ -34,6 +34,29 @@ export type CommunityHostCommerce = {
   commerce_enabled: boolean;
 };
 
+export type CommunityHostPlanOption = {
+  id: string;
+  name: string;
+  description: string;
+  price_minor: number;
+  currency: string;
+  duration_months: number;
+  platform_fee_bps: number;
+  max_moderators: number;
+  features: Record<string, boolean>;
+};
+
+export type CommunityHostBilling = {
+  self_service_enabled: boolean;
+  payment_mode: "automatic" | "manual_review" | "closed";
+  pending_order_id: string | null;
+  pending_order_reference: string | null;
+  pending_order_status: string | null;
+  pending_plan_name: string | null;
+  pending_total_minor: number | null;
+  pending_currency: string | null;
+};
+
 function money(amount: number, currency = "KES") {
   return new Intl.NumberFormat("en-KE", {
     currency,
@@ -43,18 +66,77 @@ function money(amount: number, currency = "KES") {
 }
 
 export function CommunityCommercePanel({
+  billing,
+  billingReady,
   commerce,
   communityId,
   migrationReady,
+  plans,
 }: {
+  billing: CommunityHostBilling | null;
+  billingReady: boolean;
   commerce: CommunityHostCommerce | null;
   communityId: string;
   migrationReady: boolean;
+  plans: CommunityHostPlanOption[];
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
+  const [selectedPlanId, setSelectedPlanId] = useState(plans[0]?.id ?? "");
+
+  async function startPlanCheckout(plan: CommunityHostPlanOption) {
+    setBusy(`plan-${plan.id}`);
+    setMessage("");
+    try {
+      const response = await fetch("/api/payments/paystack/initialize", {
+        body: JSON.stringify({
+          communityHostPlanId: plan.id,
+          communityId,
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      });
+      const result = (await response.json()) as {
+        authorizationUrl?: string;
+        error?: string;
+      };
+      if (!response.ok || !result.authorizationUrl) {
+        throw new Error(result.error ?? "Checkout could not be started");
+      }
+      window.location.assign(result.authorizationUrl);
+    } catch (error) {
+      setBusy("");
+      setMessage(memberErrorMessage(error, "start secure host plan checkout"));
+    }
+  }
+
+  async function submitManualPlan(
+    event: FormEvent<HTMLFormElement>,
+    plan: CommunityHostPlanOption,
+  ) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setBusy(`manual-plan-${plan.id}`);
+    setMessage("");
+    const { error } = await supabase.rpc(
+      "create_community_host_plan_order",
+      {
+        p_community_id: communityId,
+        p_manual_note: form.get("note"),
+        p_manual_reference: form.get("reference"),
+        p_plan_id: plan.id,
+      },
+    );
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "submit this host plan payment")
+        : "Host plan payment submitted. Your community remains available while Admin verifies it.",
+    );
+    if (!error) router.refresh();
+  }
 
   if (!migrationReady) {
     return (
@@ -71,26 +153,148 @@ export function CommunityCommercePanel({
   }
 
   if (!commerce?.host_plan_id) {
+    const selectedPlan =
+      plans.find((plan) => plan.id === selectedPlanId) ?? plans[0];
+    const pending = Boolean(billing?.pending_order_id);
+    const selfServiceOpen =
+      billingReady &&
+      billing?.self_service_enabled &&
+      billing.payment_mode !== "closed";
     return (
       <section className="community-commerce-panel" id="commerce">
         <div className="community-commerce-intro">
           <div>
             <p className="eyebrow">Community creator commerce</p>
-            <h2>Build value before charging for access.</h2>
+            <h2>Choose the plan that fits your room.</h2>
+            <p>
+              Your community is already approved. A host plan adds paid access,
+              plan features and creator earnings without changing member safety.
+            </p>
           </div>
-          <span className="community-commerce-status">Approval required</span>
+          <span className="community-commerce-status">
+            {pending ? "Payment in review" : "Plan required"}
+          </span>
         </div>
-        <div className="community-commerce-locked">
-          <strong>Your community does not have an approved host plan yet.</strong>
-          <p>
-            Her Africa Table reviews the host, purpose, safety practice and
-            member promise before enabling a paid offer. Your current community
-            remains fully available.
+        {pending ? (
+          <div className="community-plan-pending">
+            <span>Current request</span>
+            <strong>{billing?.pending_plan_name}</strong>
+            <p>
+              {billing?.pending_order_status === "pending_payment"
+                ? "Secure checkout is awaiting confirmation."
+                : "Your reference is with Admin for verification."}
+            </p>
+            <small>
+              {billing?.pending_order_reference} ·{" "}
+              {money(
+                billing?.pending_total_minor ?? 0,
+                billing?.pending_currency ?? "KES",
+              )}
+            </small>
+          </div>
+        ) : selfServiceOpen && plans.length ? (
+          <>
+            <div className="community-host-plan-chooser">
+              {plans.map((plan) => (
+                <article
+                  className={selectedPlan?.id === plan.id ? "selected" : ""}
+                  key={plan.id}
+                >
+                  <button
+                    aria-pressed={selectedPlan?.id === plan.id}
+                    onClick={() => setSelectedPlanId(plan.id)}
+                    type="button"
+                  >
+                    <span>{plan.duration_months}-month access</span>
+                    <strong>{plan.name}</strong>
+                    <p>{plan.description}</p>
+                    <div>
+                      <b>{money(plan.price_minor, plan.currency)}</b>
+                      <small>
+                        {plan.platform_fee_bps / 100}% member-revenue fee
+                      </small>
+                    </div>
+                  </button>
+                </article>
+              ))}
+            </div>
+            {selectedPlan ? (
+              <div className="community-plan-checkout">
+                <div>
+                  <span>Selected plan</span>
+                  <strong>{selectedPlan.name}</strong>
+                  <p>
+                    Up to {selectedPlan.max_moderators} community moderator
+                    {selectedPlan.max_moderators === 1 ? "" : "s"}. The plan
+                    starts only after verified payment.
+                  </p>
+                </div>
+                {billing?.payment_mode === "automatic" ? (
+                  <button
+                    className="button button-primary"
+                    disabled={busy === `plan-${selectedPlan.id}`}
+                    onClick={() => void startPlanCheckout(selectedPlan)}
+                  >
+                    {busy === `plan-${selectedPlan.id}`
+                      ? "Opening secure checkout…"
+                      : `Continue with ${selectedPlan.name}`}
+                  </button>
+                ) : (
+                  <form
+                    className="community-manual-payment"
+                    onSubmit={(event) =>
+                      void submitManualPlan(event, selectedPlan)
+                    }
+                  >
+                    <label>
+                      Payment reference
+                      <input
+                        maxLength={120}
+                        minLength={3}
+                        name="reference"
+                        placeholder="e.g. M-PESA code"
+                        required
+                      />
+                    </label>
+                    <label>
+                      Verification note
+                      <textarea
+                        maxLength={500}
+                        minLength={5}
+                        name="note"
+                        placeholder="How and when did you pay?"
+                        required
+                      />
+                    </label>
+                    <button
+                      className="button button-primary"
+                      disabled={busy === `manual-plan-${selectedPlan.id}`}
+                    >
+                      {busy === `manual-plan-${selectedPlan.id}`
+                        ? "Submitting…"
+                        : `Submit ${selectedPlan.name} payment`}
+                    </button>
+                  </form>
+                )}
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <div className="community-commerce-locked">
+            <strong>Host plan selection is not open yet.</strong>
+            <p>
+              Your community remains fully available. Admin can assign a plan
+              directly, or open Automatic or Manual plan billing after payment
+              operations pass release review.
+            </p>
+            <small>No payment can be submitted while billing is closed.</small>
+          </div>
+        )}
+        {message ? (
+          <p className="manager-message" role="status">
+            {message}
           </p>
-          <small>
-            Ask the platform administrator to assign a Starter or Pro host plan.
-          </small>
-        </div>
+        ) : null}
       </section>
     );
   }

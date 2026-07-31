@@ -96,7 +96,7 @@ export default async function MemberHomePage() {
   const { data: orderRows } = await supabase
     .from("orders")
     .select(
-      "id,reference,status,processing_mode,currency,total_minor,created_at,order_type,events(title,slug),order_items(ticket_types(name),courses(title,slug),membership_plans(name,slug))",
+      "id,reference,status,processing_mode,currency,total_minor,created_at,order_type,events(title,slug),order_items(ticket_types(name),courses(title,slug),membership_plans(name,slug),community_offers(name,communities(name,slug)),community_host_plans(name)),community_host_plan_orders(communities(name,slug))",
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
@@ -113,10 +113,22 @@ export default async function MemberHomePage() {
         ticket_types: { name: string } | null;
         courses: { slug: string; title: string } | null;
         membership_plans: { slug: string; name: string } | null;
+        community_offers: {
+          name: string;
+          communities: { name: string; slug: string } | null;
+        } | null;
+        community_host_plans: { name: string } | null;
       }[]
     )[0];
+    const hostContext = order.community_host_plan_orders as unknown as {
+      communities: { name: string; slug: string } | null;
+    } | null;
+    const community =
+      item?.community_offers?.communities ?? hostContext?.communities ?? null;
     return {
+      community,
       course: item?.courses ?? null,
+      host_plan: item?.community_host_plans ?? null,
       membership: item?.membership_plans ?? null,
       created_at: order.created_at,
       currency: order.currency,
@@ -132,7 +144,11 @@ export default async function MemberHomePage() {
           ? "Course access"
           : item?.membership_plans
             ? "Membership term"
-            : "Event ticket"),
+            : item?.community_offers
+              ? item.community_offers.name
+              : item?.community_host_plans
+                ? `${item.community_host_plans.name} host plan`
+                : "Event ticket"),
       total_minor: order.total_minor,
     };
   });

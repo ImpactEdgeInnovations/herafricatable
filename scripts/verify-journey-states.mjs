@@ -75,6 +75,7 @@ const refreshModules = [
   "components/admin/circle-manager.tsx",
   "components/admin/community-manager.tsx",
   "components/admin/community-creator-commerce-manager.tsx",
+  "components/admin/community-host-billing-manager.tsx",
   "components/admin/community-moderation.tsx",
   "components/admin/event-content-manager.tsx",
   "components/admin/event-feedback-manager.tsx",
@@ -287,6 +288,8 @@ const opportunityMarketplace = read(
   "components/member/opportunity-marketplace.tsx",
 );
 const membershipCenter = read("components/member/membership-center.tsx");
+const orderHistory = read("components/member/order-history.tsx");
+const orderReceipt = read("app/orders/[reference]/page.tsx");
 for (const contract of [
   "member-activation-compact",
   "member-activation-progress",
@@ -313,6 +316,30 @@ for (const [content, contract, description] of [
   [pastEvents, "Continue connections", "retain attendee follow-up actions"],
 ]) {
   assert(content.includes(contract), `Event experience must ${description}`);
+}
+for (const contract of [
+  "community_host_plan_orders",
+  "community_host_plans",
+  "community_offers",
+]) {
+  assert(
+    memberHome.includes(contract),
+    `Member Home order history must load ${contract}`,
+  );
+}
+for (const contract of [
+  "community_host_plan",
+  "Host workspace",
+  "Open community",
+]) {
+  assert(
+    orderHistory.includes(contract),
+    `Member order history must include ${contract}`,
+  );
+  assert(
+    orderReceipt.includes(contract),
+    `Member order receipt must include ${contract}`,
+  );
 }
 for (const [content, contract, description] of [
   [memberExplore, "More ways to use the table.", "give members one plain-language tool directory"],
@@ -382,6 +409,9 @@ const communityCommercePanel = read(
 const communityDirectory = read("components/member/community-directory.tsx");
 const creatorCommerceAdmin = read(
   "components/admin/community-creator-commerce-manager.tsx",
+);
+const communityHostBillingAdmin = read(
+  "components/admin/community-host-billing-manager.tsx",
 );
 const communityStartPath = read(
   "components/member/community-start-path.tsx",
@@ -502,10 +532,29 @@ for (const contract of [
   "Closed — preserve approvals",
   "Held for you",
   "paidPublishReady",
+  "Choose the plan that fits your room.",
+  "create_community_host_plan_order",
+  "communityHostPlanId",
+  "Payment in review",
+  "Host plan selection is not open yet.",
 ]) {
   assert(
     communityCommercePanel.includes(contract),
     `Community host commerce UX must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Host plan billing",
+  "set_community_host_billing_configuration",
+  "review_community_host_plan_order",
+  "Automatic with Paystack",
+  "Manual Admin verification",
+  "Closed — no new plan orders",
+  "It never removes an",
+]) {
+  assert(
+    communityHostBillingAdmin.includes(contract),
+    `Host plan billing Admin UX must include ${contract}`,
   );
 }
 for (const contract of [

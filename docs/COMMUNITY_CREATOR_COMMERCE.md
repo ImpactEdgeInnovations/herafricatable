@@ -32,6 +32,14 @@ operating controls have passed acceptance.
   revenue ledger. The host share starts as `held`.
 - Hosts see plan, readiness, paying members, gross collection, and held earnings.
 - Super Admin sees plan assignment, payout readiness, and manual payment queues.
+- An already approved community owner can select a published paid host plan when
+  self-service billing is deliberately enabled.
+- Host-plan billing has its own Automatic, Manual review, or Closed platform
+  control; it does not share or silently enable member checkout.
+- Verified Paystack payment or audited manual approval activates the host plan
+  and a `community_host_tools` entitlement exactly once.
+- Reversal revokes the purchased host tools and pauses any published paid offer
+  for that community.
 
 ## Safety and money boundaries
 
@@ -52,7 +60,8 @@ operating controls have passed acceptance.
 1. Create and publish the host-plan catalogue.
 2. Confirm an active owner, moderation coverage, community purpose, and member
    promise.
-3. Grant the host plan with an approval note.
+3. Grant the host plan with an approval note, or enable approved-owner
+   self-service billing after payment acceptance passes.
 4. Host accepts the current agreement.
 5. Verify the provider subaccount/reference and record the review.
 6. Host saves the offer as Draft.
@@ -62,7 +71,7 @@ operating controls have passed acceptance.
 
 ## Next slices
 
-- [ ] Host self-service plan selection and platform-plan checkout
+- [x] Approved-owner self-service plan selection and platform-plan checkout
 - [ ] Recurring-billing authority and renewal/grace reconciliation
 - [ ] Paystack split/subaccount settlement after merchant and country acceptance
 - [ ] Provider-fee, tax, refund, chargeback, and reserve allocation
@@ -74,6 +83,7 @@ operating controls have passed acceptance.
 ## Production acceptance
 
 - Apply `20260801010000_community_creator_commerce.sql`.
+- Apply `20260801050000_community_host_self_service_billing.sql`.
 - Keep `community_creator_commerce` disabled until all checks pass.
 - Test free, Automatic, Manual review, Closed, failed, duplicate, reversed, and
   expired-host-plan paths.
@@ -81,5 +91,8 @@ operating controls have passed acceptance.
 - Confirm hosts cannot verify their own payout profile or settle ledger entries.
 - Confirm a member cannot create a paid order before host approval.
 - Confirm duplicate provider events cannot issue duplicate access or revenue.
+- Confirm host-plan payment cannot create or transfer community ownership.
+- Confirm disabling host billing prevents new orders without removing an active
+  plan or community.
 - Complete legal review of host terms, refunds, tax, payout, and platform-fee
   disclosures before public monetization.

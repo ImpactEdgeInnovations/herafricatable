@@ -63,6 +63,13 @@
       refunds, disputes and payout identity are reconciled
 - [ ] Community hosts cannot verify their own payout profile or mark held revenue
       settled
+- [ ] Host-plan self-service has an independent fail-closed feature flag and
+      Automatic, Manual review, or Closed processing control
+- [ ] Only an existing active community owner can create a host-plan order
+- [ ] A host-plan browser callback cannot grant a subscription or host-tools
+      entitlement
+- [ ] Host-plan reversal revokes the purchased entitlement and pauses published
+      paid access without removing the community or owner
 
 ## Privacy, trust and safety
 

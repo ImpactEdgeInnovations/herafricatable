@@ -5,7 +5,9 @@ import { MemberHeader } from "@/components/member/member-header";
 import type { CommunitySummary } from "@/components/member/community-directory";
 import {
   CommunityCommercePanel,
+  type CommunityHostBilling,
   type CommunityHostCommerce,
+  type CommunityHostPlanOption,
 } from "@/components/member/community-commerce-panel";
 import {
   CommunityHostWorkspace,
@@ -53,6 +55,8 @@ export default async function CommunityHostPage({
     introductionResult,
     outcomeResult,
     commerceResult,
+    hostPlanResult,
+    hostBillingResult,
   ] = await Promise.all([
     supabase.rpc("get_community_host_health", {
       p_community_id: community.community_id,
@@ -74,6 +78,21 @@ export default async function CommunityHostPage({
     }),
     community.membership_role === "owner"
       ? supabase.rpc("get_community_host_commerce", {
+          p_community_id: community.community_id,
+        })
+      : Promise.resolve({ data: [], error: null }),
+    community.membership_role === "owner"
+      ? supabase
+          .from("community_host_plans")
+          .select(
+            "id,name,description,price_minor,currency,duration_months,platform_fee_bps,max_moderators,features",
+          )
+          .eq("status", "published")
+          .gt("price_minor", 0)
+          .order("price_minor")
+      : Promise.resolve({ data: [], error: null }),
+    community.membership_role === "owner"
+      ? supabase.rpc("get_community_host_billing", {
           p_community_id: community.community_id,
         })
       : Promise.resolve({ data: [], error: null }),
@@ -121,12 +140,20 @@ export default async function CommunityHostPage({
       </nav>
       {community.membership_role === "owner" ? (
         <CommunityCommercePanel
+          billing={
+            ((hostBillingResult.data as CommunityHostBilling[] | null) ??
+              [])[0] ?? null
+          }
+          billingReady={!hostPlanResult.error && !hostBillingResult.error}
           commerce={
             ((commerceResult.data as CommunityHostCommerce[] | null) ?? [])[0] ??
             null
           }
           communityId={community.community_id}
           migrationReady={!commerceResult.error}
+          plans={
+            (hostPlanResult.data as CommunityHostPlanOption[] | null) ?? []
+          }
         />
       ) : null}
       <CommunityHostWorkspace

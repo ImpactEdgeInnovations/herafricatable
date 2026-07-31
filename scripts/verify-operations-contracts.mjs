@@ -62,6 +62,9 @@ for (const contract of [
   "list_community_commerce_admin",
   "list_community_orders_admin",
   "community_creator_commerce",
+  "CommunityHostBillingManager",
+  "get_community_host_billing_admin",
+  "list_community_host_plan_orders_admin",
 ]) {
   assert(
     operations.includes(contract),

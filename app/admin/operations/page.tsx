@@ -68,6 +68,11 @@ import {
   type CommunityOrderAdmin,
 } from "@/components/admin/community-creator-commerce-manager";
 import {
+  CommunityHostBillingManager,
+  type CommunityHostBillingAdmin,
+  type CommunityHostPlanOrderAdmin,
+} from "@/components/admin/community-host-billing-manager";
+import {
   CommunityModeration,
   type CommunityReport,
 } from "@/components/admin/community-moderation";
@@ -325,6 +330,8 @@ export default async function AdminOperationsPage({
     communityCommerceResult,
     communityOrderResult,
     communityCommerceFlagResult,
+    hostBillingConfigResult,
+    hostPlanOrderResult,
     learningCourseResult,
     courseOrderResult,
     learningFlagResult,
@@ -383,6 +390,12 @@ export default async function AdminOperationsPage({
           .eq("key", "community_creator_commerce")
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    isProgramAdmin
+      ? supabase.rpc("get_community_host_billing_admin")
+      : Promise.resolve({ data: [], error: null }),
+    isProgramAdmin
+      ? supabase.rpc("list_community_host_plan_orders_admin")
+      : Promise.resolve({ data: [], error: null }),
     isProgramAdmin
       ? supabase.rpc("list_courses")
       : Promise.resolve({ data: [], error: null }),
@@ -998,6 +1011,21 @@ export default async function AdminOperationsPage({
             }
             plans={
               (communityHostPlanResult.data as CommunityHostPlan[] | null) ?? []
+            }
+          />
+          <CommunityHostBillingManager
+            configuration={
+              ((hostBillingConfigResult.data as
+                | CommunityHostBillingAdmin[]
+                | null) ?? [])[0] ?? null
+            }
+            migrationReady={
+              !hostBillingConfigResult.error && !hostPlanOrderResult.error
+            }
+            orders={
+              (hostPlanOrderResult.data as
+                | CommunityHostPlanOrderAdmin[]
+                | null) ?? []
             }
           />
           <LearningManager
