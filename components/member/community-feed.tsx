@@ -43,6 +43,22 @@ const conversationTypeHints = new Map<string, string>([
 
 type ConversationOrder = "active" | "newest";
 type ConversationView = "all" | "following" | "mine" | "saved";
+type AttachmentMode = "none" | "image" | "document" | "link";
+
+export type CommunityPostAttachment = {
+  asset_id: string;
+  post_id: string;
+  attachment_type: "image" | "document" | "link";
+  storage_path: string | null;
+  external_url: string | null;
+  original_name: string | null;
+  mime_type: string | null;
+  size_bytes: number | null;
+  width: number | null;
+  height: number | null;
+  alt_text: string | null;
+  signed_url?: string | null;
+};
 
 export type CommunityPost = {
   appreciation_count?: number;
@@ -59,6 +75,7 @@ export type CommunityPost = {
   is_pinned?: boolean;
   post_id: string;
   saved_by_me?: boolean;
+  attachment?: CommunityPostAttachment | null;
 };
 
 export type CommunityComment = {
@@ -72,6 +89,44 @@ export type CommunityComment = {
   post_id: string;
 };
 
+function extensionFor(file: File) {
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/webp") return "webp";
+  if (file.type === "application/pdf") return "pdf";
+  return "jpg";
+}
+
+function inspectImage(file: File) {
+  return new Promise<{ height: number; width: number }>((resolve, reject) => {
+    const source = URL.createObjectURL(file);
+    const image = new window.Image();
+    image.onload = () => {
+      URL.revokeObjectURL(source);
+      resolve({ height: image.naturalHeight, width: image.naturalWidth });
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(source);
+      reject(new Error("The selected image could not be read."));
+    };
+    image.src = source;
+  });
+}
+
+function fileSize(size: number | null) {
+  if (!size) return "";
+  if (size < 1024 * 1024) return `${Math.ceil(size / 1024)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function linkHost(url: string | null) {
+  if (!url) return "";
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "Secure external link";
+  }
+}
+
 export function CommunityFeed({
   canManage,
   communityId,
@@ -79,6 +134,7 @@ export function CommunityFeed({
   enhanced,
   initialComments,
   initialPosts,
+  mediaReady = false,
   readOnly = false,
   prompt,
 }: {
@@ -88,12 +144,18 @@ export function CommunityFeed({
   enhanced: boolean;
   initialComments: CommunityComment[];
   initialPosts: CommunityPost[];
+  mediaReady?: boolean;
   readOnly?: boolean;
   prompt?: string;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
+  const [attachmentAlt, setAttachmentAlt] = useState("");
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachmentMode, setAttachmentMode] =
+    useState<AttachmentMode>("none");
+  const [attachmentUrl, setAttachmentUrl] = useState("");
   const [category, setCategory] = useState("all");
   const [composerType, setComposerType] = useState("discussion");
   const [message, setMessage] = useState("");
@@ -188,7 +250,48 @@ export function CommunityFeed({
     const body = String(form.get("body") || "");
     const selectedCategory = String(form.get("category") || "discussion");
     setBusy("publish");
-    const { error } = enhanced
+
+    let dimensions: { height: number; width: number } | null = null;
+    try {
+      if (attachmentMode === "image") {
+        if (
+          !attachmentFile ||
+          !["image/jpeg", "image/png", "image/webp"].includes(
+            attachmentFile.type,
+          ) ||
+          attachmentFile.size > 8 * 1024 * 1024
+        ) {
+          throw new Error("Choose a JPG, PNG or WebP image up to 8 MB.");
+        }
+        if (attachmentAlt.trim().length < 3) {
+          throw new Error("Describe the image for members who cannot see it.");
+        }
+        dimensions = await inspectImage(attachmentFile);
+        if (dimensions.width < 320 || dimensions.height < 180) {
+          throw new Error("The image must be at least 320 × 180 px.");
+        }
+      }
+      if (
+        attachmentMode === "document" &&
+        (!attachmentFile ||
+          attachmentFile.type !== "application/pdf" ||
+          attachmentFile.size > 10 * 1024 * 1024)
+      ) {
+        throw new Error("Choose a PDF document up to 10 MB.");
+      }
+      if (attachmentMode === "link") {
+        const parsed = new URL(attachmentUrl);
+        if (parsed.protocol !== "https:") {
+          throw new Error("Use a secure link beginning with https://.");
+        }
+      }
+    } catch (error) {
+      setBusy("");
+      setMessage(memberErrorMessage(error, "prepare this attachment"));
+      return;
+    }
+
+    const creation = enhanced
       ? await supabase.rpc("create_structured_community_post", {
           p_body: body,
           p_category: selectedCategory,
@@ -198,17 +301,68 @@ export function CommunityFeed({
           p_body: body,
           p_community_id: communityId,
         });
-    setBusy("");
-    announce(
-      error,
-      "publish your community post",
-      "Your conversation is live in this community.",
-    );
-    if (!error) {
-      formElement.reset();
-      setComposerType("discussion");
-      router.refresh();
+
+    if (creation.error || typeof creation.data !== "string") {
+      setBusy("");
+      setMessage(
+        memberErrorMessage(
+          creation.error ?? new Error("The post was not created."),
+          "publish your community post",
+        ),
+      );
+      return;
     }
+
+    const postId = creation.data;
+    try {
+      if (mediaReady && attachmentMode !== "none") {
+        let storagePath: string | null = null;
+        if (attachmentFile) {
+          storagePath = `${communityId}/posts/${postId}/${currentUserId}/${crypto.randomUUID()}.${extensionFor(attachmentFile)}`;
+          const upload = await supabase.storage
+            .from("community-media")
+            .upload(storagePath, attachmentFile, {
+              cacheControl: "31536000",
+              contentType: attachmentFile.type,
+              upsert: false,
+            });
+          if (upload.error) throw upload.error;
+        }
+
+        const attached = await supabase.rpc("attach_community_post_media", {
+          p_alt_text:
+            attachmentMode === "image" ? attachmentAlt.trim() : null,
+          p_attachment_type: attachmentMode,
+          p_external_url:
+            attachmentMode === "link" ? attachmentUrl.trim() : null,
+          p_height: dimensions?.height ?? null,
+          p_mime_type: attachmentFile?.type ?? null,
+          p_original_name: attachmentFile?.name ?? null,
+          p_post_id: postId,
+          p_size_bytes: attachmentFile?.size ?? null,
+          p_storage_path: storagePath,
+          p_width: dimensions?.width ?? null,
+        });
+        if (attached.error) throw attached.error;
+      }
+    } catch (error) {
+      await supabase.rpc("delete_community_post", { p_post_id: postId });
+      setBusy("");
+      setMessage(
+        `${memberErrorMessage(error, "attach this media")} The incomplete post was not published.`,
+      );
+      return;
+    }
+
+    setBusy("");
+    setMessage("Your conversation is live in this community.");
+    formElement.reset();
+    setAttachmentAlt("");
+    setAttachmentFile(null);
+    setAttachmentMode("none");
+    setAttachmentUrl("");
+    setComposerType("discussion");
+    router.refresh();
   }
 
   async function comment(
@@ -454,6 +608,85 @@ export function CommunityFeed({
                 : "Offer a thoughtful update, question or resource…"
             }
           />
+          {mediaReady ? (
+            <div className="community-attachment-composer">
+              <label>
+                Add something useful <small>Optional</small>
+                <select
+                  onChange={(event) => {
+                    setAttachmentMode(event.target.value as AttachmentMode);
+                    setAttachmentAlt("");
+                    setAttachmentFile(null);
+                    setAttachmentUrl("");
+                  }}
+                  value={attachmentMode}
+                >
+                  <option value="none">No attachment</option>
+                  <option value="image">Image</option>
+                  <option value="document">PDF document</option>
+                  <option value="link">Secure link</option>
+                </select>
+              </label>
+              {attachmentMode === "image" ? (
+                <>
+                  <label>
+                    Choose image
+                    <input
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(event) =>
+                        setAttachmentFile(event.target.files?.[0] ?? null)
+                      }
+                      required
+                      type="file"
+                    />
+                    <small>JPG, PNG or WebP · 8 MB maximum.</small>
+                  </label>
+                  <label>
+                    Image description
+                    <input
+                      maxLength={240}
+                      minLength={3}
+                      onChange={(event) => setAttachmentAlt(event.target.value)}
+                      placeholder="Describe what the image shows"
+                      required
+                      value={attachmentAlt}
+                    />
+                  </label>
+                </>
+              ) : attachmentMode === "document" ? (
+                <label>
+                  Choose PDF
+                  <input
+                    accept="application/pdf"
+                    onChange={(event) =>
+                      setAttachmentFile(event.target.files?.[0] ?? null)
+                    }
+                    required
+                    type="file"
+                  />
+                  <small>One PDF · 10 MB maximum.</small>
+                </label>
+              ) : attachmentMode === "link" ? (
+                <label>
+                  Secure link
+                  <input
+                    maxLength={2048}
+                    onChange={(event) => setAttachmentUrl(event.target.value)}
+                    placeholder="https://"
+                    required
+                    type="url"
+                    value={attachmentUrl}
+                  />
+                  <small>Members will see the destination before opening it.</small>
+                </label>
+              ) : (
+                <p>
+                  Keep the feed focused. Each conversation can include one
+                  image, PDF or secure link.
+                </p>
+              )}
+            </div>
+          ) : null}
           <div>
             <small>
               Visible only to active members of this room. Keep confidential
@@ -585,6 +818,59 @@ export function CommunityFeed({
                   </time>
                 </header>
                 <p>{post.body}</p>
+                {post.attachment?.attachment_type === "image" &&
+                post.attachment.signed_url ? (
+                  <figure className="community-post-image">
+                    <img
+                      alt={post.attachment.alt_text ?? ""}
+                      height={post.attachment.height ?? undefined}
+                      loading="lazy"
+                      src={post.attachment.signed_url}
+                      width={post.attachment.width ?? undefined}
+                    />
+                    {post.attachment.original_name ? (
+                      <figcaption>{post.attachment.original_name}</figcaption>
+                    ) : null}
+                  </figure>
+                ) : post.attachment?.attachment_type === "document" &&
+                  post.attachment.signed_url ? (
+                  <a
+                    className="community-post-document"
+                    href={post.attachment.signed_url}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <span aria-hidden="true">PDF</span>
+                    <div>
+                      <strong>
+                        {post.attachment.original_name ?? "Community document"}
+                      </strong>
+                      <small>
+                        Protected PDF
+                        {post.attachment.size_bytes
+                          ? ` · ${fileSize(post.attachment.size_bytes)}`
+                          : ""}
+                      </small>
+                    </div>
+                    <em>Open</em>
+                  </a>
+                ) : post.attachment?.attachment_type === "link" &&
+                  post.attachment.external_url ? (
+                  <a
+                    className="community-post-link"
+                    href={post.attachment.external_url}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <div>
+                      <span>Shared link</span>
+                      <strong>
+                        {linkHost(post.attachment.external_url)}
+                      </strong>
+                    </div>
+                    <em>Open securely ↗</em>
+                  </a>
+                ) : null}
 
                 {enhanced ? (
                   <div className="community-post-actions">

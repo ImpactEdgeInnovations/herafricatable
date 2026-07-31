@@ -28,6 +28,10 @@ import {
   CommunityHostCapabilitiesPanel,
   type CommunityHostCapabilities,
 } from "@/components/member/community-host-capabilities";
+import {
+  CommunityBrandingPanel,
+  type CommunityBrandIdentity,
+} from "@/components/member/community-branding-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -57,13 +61,38 @@ export default async function CommunityHostPage({
     redirect(`/communities/${slug}`);
   }
 
-  const capabilityResult = await supabase.rpc(
-    "get_community_host_capabilities",
-    { p_community_id: community.community_id },
-  );
+  const [capabilityResult, brandingResult] = await Promise.all([
+    supabase.rpc("get_community_host_capabilities", {
+      p_community_id: community.community_id,
+    }),
+    supabase.rpc("list_community_brand_identities", {
+      p_community_id: community.community_id,
+    }),
+  ]);
   const capabilities =
     ((capabilityResult.data as CommunityHostCapabilities[] | null) ?? [])[0] ??
     null;
+  const brandIdentity =
+    ((brandingResult.data as CommunityBrandIdentity[] | null) ?? [])[0] ?? null;
+  const [iconSigned, coverSigned] = await Promise.all([
+    brandIdentity?.icon_storage_path
+      ? supabase.storage
+          .from("community-media")
+          .createSignedUrl(brandIdentity.icon_storage_path, 3600)
+      : Promise.resolve({ data: null }),
+    brandIdentity?.cover_storage_path
+      ? supabase.storage
+          .from("community-media")
+          .createSignedUrl(brandIdentity.cover_storage_path, 3600)
+      : Promise.resolve({ data: null }),
+  ]);
+  const signedBrandIdentity = brandIdentity
+    ? {
+        ...brandIdentity,
+        cover_url: coverSigned.data?.signedUrl ?? null,
+        icon_url: iconSigned.data?.signedUrl ?? null,
+      }
+    : null;
   const loadAdvancedInsights =
     capabilityResult.error || Boolean(capabilities?.advanced_analytics);
 
@@ -189,6 +218,9 @@ export default async function CommunityHostPage({
       </section>
       <nav className="community-room-navigation" aria-label="Host workspace areas">
         <a href="#host-tools">Host tools</a>
+        {community.membership_role === "owner" ? (
+          <a href="#identity">Identity</a>
+        ) : null}
         <a href="#continuity">Continuity</a>
         <a href="#admissions">Admissions</a>
         <a href="#people">People</a>
@@ -208,6 +240,12 @@ export default async function CommunityHostPage({
           owner={community.membership_role === "owner"}
         />
       </div>
+      <CommunityBrandingPanel
+        communityId={community.community_id}
+        identity={signedBrandIdentity}
+        migrationReady={!brandingResult.error}
+        owner={community.membership_role === "owner"}
+      />
       {community.membership_role === "owner" ? (
         <CommunityCommercePanel
           billing={hostBilling}

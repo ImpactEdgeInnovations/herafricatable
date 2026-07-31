@@ -417,6 +417,9 @@ const communityHostApplication = read(
 const communityHostCapabilities = read(
   "components/member/community-host-capabilities.tsx",
 );
+const communityBranding = read(
+  "components/member/community-branding-panel.tsx",
+);
 const creatorCommerceAdmin = read(
   "components/admin/community-creator-commerce-manager.tsx",
 );
@@ -446,6 +449,11 @@ for (const contract of [
   "list_community_member_directory",
   "get_my_community_start_path",
   "CommunityStartPath",
+  "list_community_brand_identities",
+  "list_community_post_media",
+  "createSignedUrl",
+  "mediaReady",
+  "community-room-cover",
 ]) {
   assert(
     communityRoom.includes(contract),
@@ -487,6 +495,14 @@ for (const contract of [
   "Copy conversation link",
   'id={`conversation-${post.post_id}`}',
   "conversationTypeHints",
+  "attach_community_post_media",
+  'from("community-media")',
+  "Image description",
+  "PDF document",
+  "Secure link",
+  "community-post-image",
+  "community-post-document",
+  "community-post-link",
 ]) {
   assert(
     communityFeed.includes(contract),
@@ -542,10 +558,30 @@ for (const contract of [
   'href="#host-tools"',
   "advancedAnalytics",
   "automations",
+  "CommunityBrandingPanel",
+  'href="#identity"',
 ]) {
   assert(
     communityHostPage.includes(contract),
     `Community Host route must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Community identity",
+  "Make the room recognisable",
+  "Private identity preview",
+  "save_community_brand_identity",
+  'from("community-media")',
+  "Square icon",
+  "Wide cover",
+  "Accent",
+  "Private until release",
+  "p_remove_icon",
+  "p_remove_cover",
+]) {
+  assert(
+    communityBranding.includes(contract),
+    `Community brand identity UX must include ${contract}`,
   );
 }
 for (const contract of [
@@ -650,6 +686,8 @@ for (const contract of [
   "Find a room with purpose",
   "Search communities",
   "Clear search",
+  "community-directory-icon",
+  "item.tagline || item.description",
 ]) {
   assert(
     communityDirectory.includes(contract),

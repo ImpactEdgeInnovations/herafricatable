@@ -274,6 +274,14 @@ Usability is part of production readiness and continues alongside feature delive
       introductions, useful contributions, mutual relationships and gatherings
 - [x] Refine the Community landing and directory into separate “Your rooms” and
       discovery journeys, with compact host admission and search-ready empty states
+- [x] Add approved-owner Community identity controls for a square icon, wide
+      cover, short tagline and restrained platform-approved accent palette
+- [x] Add one-per-conversation private image, PDF or secure-link attachments
+      with accessible descriptions, immutable Storage objects and report evidence
+- [ ] Apply `20260802010000_community_identity_and_media.sql` in production
+      Supabase
+- [ ] Test owner-only branding, member-only signed delivery, blocked-member
+      filtering, failed-upload rollback and post-removal media revocation
 - [x] Add database-enforced Community publication acceptance with eight audited
       checks, required host coverage and a controlled Draft rollback
 - [ ] Complete Nairobi Founding Table acceptance before opening another chapter
@@ -414,6 +422,8 @@ Usability is part of production readiness and continues alongside feature delive
       Supabase
 - [ ] Apply `20260801050000_community_host_self_service_billing.sql` in
       production Supabase
+- [ ] Apply `20260802010000_community_identity_and_media.sql` in production
+      Supabase
 - [ ] Complete Creator Commerce admission/payment/entitlement/payout-boundary
       acceptance and deliberately enable its feature flag
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag

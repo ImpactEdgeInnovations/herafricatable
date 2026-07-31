@@ -269,6 +269,41 @@ assert(
   !communityProgrammingMigration.includes("select post.body"),
   "Host health must not project community conversation bodies",
 );
+const communityIdentityMediaMigration = read(
+  "supabase/migrations/20260802010000_community_identity_and_media.sql",
+);
+for (const contract of [
+  "community_media_assets",
+  "'community-media'",
+  "community_one_active_post_attachment_idx",
+  "Members read authorised community media",
+  "Owners upload draft community branding",
+  "Members upload media for their own community posts",
+  "list_community_brand_identities",
+  "save_community_brand_identity",
+  "membership.role = 'owner'",
+  "attach_community_post_media",
+  "list_community_post_media",
+  "https://%",
+  "'attachment'",
+  "media_revoked",
+  "community.brand_identity_saved",
+  "community.post_media_attached",
+]) {
+  assert(
+    communityIdentityMediaMigration.includes(contract),
+    `Community identity and media controls must include ${contract}`,
+  );
+}
+assert(
+  !communityIdentityMediaMigration.includes(
+    "on storage.objects for update",
+  ) &&
+    !communityIdentityMediaMigration.includes(
+      "on storage.objects for delete",
+    ),
+  "Registered community media objects must remain immutable to browser clients",
+);
 const communityNotificationMigration = read(
   "supabase/migrations/20260731100000_community_notification_preferences_and_briefings.sql",
 );

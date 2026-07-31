@@ -23,6 +23,10 @@ export type CommunitySummary = {
   offer_currency: string | null;
   offer_billing_interval: "one_time" | "monthly" | "annual" | null;
   offer_payment_mode: "automatic" | "manual_review" | "closed" | null;
+  tagline?: string | null;
+  accent_key?: "wine" | "gold" | "forest" | "ocean" | "terracotta";
+  icon_url?: string | null;
+  icon_alt_text?: string | null;
 };
 
 function money(amount: number | null, currency: string | null) {
@@ -173,7 +177,7 @@ export function CommunityDirectory({
 
     return (
       <article
-        className={`community-directory-card is-${context}`}
+        className={`community-directory-card is-${context} accent-${item.accent_key ?? "wine"}`}
         key={item.community_id}
       >
         <header>
@@ -184,9 +188,22 @@ export function CommunityDirectory({
           </span>
         </header>
         <div className="community-directory-title">
-          <div>
-            <small>{item.community_type} community</small>
-            <h3>{item.name}</h3>
+          <div className="community-directory-identity">
+            {item.icon_url ? (
+              <img
+                alt={item.icon_alt_text ?? ""}
+                className="community-directory-icon"
+                src={item.icon_url}
+              />
+            ) : (
+              <span className="community-directory-icon is-placeholder" aria-hidden="true">
+                {item.name.slice(0, 1)}
+              </span>
+            )}
+            <div>
+              <small>{item.community_type} community</small>
+              <h3>{item.name}</h3>
+            </div>
           </div>
           <div className={paid ? "community-price paid" : "community-price"}>
             <strong>
@@ -199,7 +216,7 @@ export function CommunityDirectory({
             ) : null}
           </div>
         </div>
-        <p>{item.description}</p>
+        <p>{item.tagline || item.description}</p>
         <footer>
           {item.membership_status === "active" ? (
             <Link

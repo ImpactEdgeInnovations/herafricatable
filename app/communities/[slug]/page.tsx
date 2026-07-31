@@ -6,6 +6,7 @@ import {
   CommunityFeed,
   type CommunityComment,
   type CommunityPost,
+  type CommunityPostAttachment,
 } from "@/components/member/community-feed";
 import {
   CohortActivation,
@@ -31,6 +32,7 @@ import {
   CommunityStartPath,
   type CommunityStartPathState,
 } from "@/components/member/community-start-path";
+import type { CommunityBrandIdentity } from "@/components/member/community-branding-panel";
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
   params,
@@ -66,6 +68,8 @@ export default async function CommunityPage({
     resourceResult,
     notificationPreferenceResult,
     startPathResult,
+    brandingResult,
+    mediaResult,
   ] = await Promise.all([
       supabase.rpc("list_community_posts", {
         p_community_id: community.community_id,
@@ -105,6 +109,13 @@ export default async function CommunityPage({
       supabase.rpc("get_my_community_start_path", {
         p_community_id: community.community_id,
       }),
+      supabase.rpc("list_community_brand_identities", {
+        p_community_id: community.community_id,
+      }),
+      supabase.rpc("list_community_post_media", {
+        p_community_id: community.community_id,
+        p_limit: 100,
+      }),
     ]);
   const structuredConversationsReady =
     !structuredPostsResult.error && !commentResult.error;
@@ -113,13 +124,82 @@ export default async function CommunityPage({
     community.membership_role ?? "",
   );
   const cohort = ((cohortResult.data as CohortRoom[] | null) ?? [])[0];
+  const brandIdentity =
+    ((brandingResult.data as CommunityBrandIdentity[] | null) ?? [])[0] ?? null;
+  const attachments =
+    (mediaResult.data as CommunityPostAttachment[] | null) ?? [];
+  const [iconSigned, coverSigned, signedAttachments] = await Promise.all([
+    brandIdentity?.icon_storage_path
+      ? supabase.storage
+          .from("community-media")
+          .createSignedUrl(brandIdentity.icon_storage_path, 3600)
+      : Promise.resolve({ data: null }),
+    brandIdentity?.cover_storage_path
+      ? supabase.storage
+          .from("community-media")
+          .createSignedUrl(brandIdentity.cover_storage_path, 3600)
+      : Promise.resolve({ data: null }),
+    Promise.all(
+      attachments.map(async (attachment) => {
+        if (!attachment.storage_path) return attachment;
+        const signed = await supabase.storage
+          .from("community-media")
+          .createSignedUrl(attachment.storage_path, 3600);
+        return {
+          ...attachment,
+          signed_url: signed.data?.signedUrl ?? null,
+        };
+      }),
+    ),
+  ]);
+  const attachmentByPost = new Map(
+    signedAttachments.map((attachment) => [attachment.post_id, attachment]),
+  );
+  const sourcePosts = structuredConversationsReady
+    ? ((structuredPostsResult.data as CommunityPost[] | null) ?? [])
+    : ((postsResult.data as CommunityPost[] | null) ?? []);
+  const posts = sourcePosts.map((post) => ({
+    ...post,
+    attachment: attachmentByPost.get(post.post_id) ?? null,
+  }));
   return (
     <main className="community-page">
       <MemberHeader active="community" label={community.name} />
-      <section className="community-room-hero" id="overview">
-        <div>
-          <p className="eyebrow">{community.community_type} community</p>
-          <h1>{community.name}</h1>
+      <section
+        className={`community-room-hero accent-${brandIdentity?.accent_key ?? "wine"}${coverSigned.data?.signedUrl ? " has-cover" : ""}`}
+        id="overview"
+      >
+        {coverSigned.data?.signedUrl ? (
+          <figure className="community-room-cover">
+            <img
+              alt={brandIdentity?.cover_alt_text ?? ""}
+              height={brandIdentity?.cover_height ?? undefined}
+              src={coverSigned.data.signedUrl}
+              width={brandIdentity?.cover_width ?? undefined}
+            />
+          </figure>
+        ) : null}
+        <div className="community-room-hero-copy">
+          <div className="community-room-title">
+            {iconSigned.data?.signedUrl ? (
+              <img
+                alt={brandIdentity?.icon_alt_text ?? ""}
+                className="community-room-icon"
+                height={brandIdentity?.icon_height ?? undefined}
+                src={iconSigned.data.signedUrl}
+                width={brandIdentity?.icon_width ?? undefined}
+              />
+            ) : null}
+            <div>
+              <p className="eyebrow">{community.community_type} community</p>
+              <h1>{community.name}</h1>
+            </div>
+          </div>
+          {brandIdentity?.tagline ? (
+            <strong className="community-room-tagline">
+              {brandIdentity.tagline}
+            </strong>
+          ) : null}
           <p>{community.description}</p>
           <Link href="/communities">← All communities</Link>
         </div>
@@ -182,10 +262,9 @@ export default async function CommunityPage({
               : []
           }
           initialPosts={
-            structuredConversationsReady
-              ? ((structuredPostsResult.data as CommunityPost[] | null) ?? [])
-              : ((postsResult.data as CommunityPost[] | null) ?? [])
+            posts
           }
+          mediaReady={!mediaResult.error}
           prompt={
             cohort
               ? "Continue the table with one focused Ask, Offer or follow-up"

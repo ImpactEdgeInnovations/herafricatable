@@ -8,6 +8,7 @@ import {
   CommunityHostApplication,
   type CommunityHostApplicationState,
 } from "@/components/member/community-host-application";
+import type { CommunityBrandIdentity } from "@/components/member/community-branding-panel";
 import { MemberHeader } from "@/components/member/member-header";
 import { createClient } from "@/lib/supabase/server";
 
@@ -117,7 +118,32 @@ export default async function CommunitiesPage() {
     );
   }
 
-  const communityResult = await supabase.rpc("list_communities");
+  const [communityResult, brandingResult] = await Promise.all([
+    supabase.rpc("list_communities"),
+    supabase.rpc("list_community_brand_identities", {
+      p_community_id: null,
+    }),
+  ]);
+  const communities =
+    (communityResult.data as CommunitySummary[] | null) ?? [];
+  const branding =
+    (brandingResult.data as CommunityBrandIdentity[] | null) ?? [];
+  const signedBranding = await Promise.all(
+    branding.map(async (identity) => {
+      const signed = identity.icon_storage_path
+        ? await supabase.storage
+            .from("community-media")
+            .createSignedUrl(identity.icon_storage_path, 3600)
+        : { data: null };
+      return {
+        ...identity,
+        icon_url: signed.data?.signedUrl ?? null,
+      };
+    }),
+  );
+  const brandingByCommunity = new Map(
+    signedBranding.map((identity) => [identity.community_id, identity]),
+  );
 
   return (
     <main className="community-page">
@@ -165,9 +191,10 @@ export default async function CommunitiesPage() {
         </section>
       ) : (
         <CommunityDirectory
-          communities={
-            (communityResult.data as CommunitySummary[] | null) ?? []
-          }
+          communities={communities.map((community) => ({
+            ...community,
+            ...(brandingByCommunity.get(community.community_id) ?? {}),
+          }))}
         />
       )}
 
