@@ -644,16 +644,26 @@ for (const contract of [
   "communityOfferId",
   "Payment opening soon",
   "Submit for verification",
+  'id="your-communities"',
+  "Continue where you belong",
+  'id="discover-communities"',
+  "Find a room with purpose",
+  "Search communities",
+  "Clear search",
 ]) {
   assert(
     communityDirectory.includes(contract),
-    `Community member checkout UX must include ${contract}`,
+    `Community member discovery and checkout UX must include ${contract}`,
   );
 }
 for (const contract of [
   'href="#create-community"',
   "CommunityHostApplication",
   "list_my_community_host_applications",
+  "community-landing-navigation",
+  "A quieter way",
+  "Private preview",
+  "community-preview-panel",
 ]) {
   assert(
     communityPage.includes(contract),

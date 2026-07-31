@@ -112,6 +112,8 @@ Usability is part of production readiness and continues alongside feature delive
       readable cards, restrained density and consistent page widths
   - [x] Split growing member networks into requests, active connections and private
         history views with plain-language empty states and progressively disclosed safety tools
+  - [x] Refine Community into a calm member hub with separate personal and discovery
+        areas, lightweight search, clear access states and a useful private-preview experience
 - [x] Add a Super Admin-only, audited Launch Gate workspace for assigning owners,
       recording acceptance evidence and preventing metrics from masking operational blockers
 - [x] Add database-enforced expiry, audited grants and immediate revocation for
@@ -270,6 +272,8 @@ Usability is part of production readiness and continues alongside feature delive
       privacy-thresholded outcome trends
 - [x] Replace static room guidance with a private member start path for
       introductions, useful contributions, mutual relationships and gatherings
+- [x] Refine the Community landing and directory into separate “Your rooms” and
+      discovery journeys, with compact host admission and search-ready empty states
 - [x] Add database-enforced Community publication acceptance with eight audited
       checks, required host coverage and a controlled Draft rollback
 - [ ] Complete Nairobi Founding Table acceptance before opening another chapter

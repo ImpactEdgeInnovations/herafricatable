@@ -184,6 +184,8 @@ export function CommunityHostApplication({
 
   const canBegin = !current || ["declined", "withdrawn"].includes(current.status);
   const showForm = open && (canBegin || editable);
+  const showJourney =
+    open || Boolean(current && current.status !== "approved");
   const defaults = editable ? current : null;
 
   return (
@@ -214,29 +216,40 @@ export function CommunityHostApplication({
         )}
       </div>
 
-      <ol className="community-host-steps" aria-label="Community approval steps">
-        <li>
-          <span>1</span>
-          <div>
-            <strong>Share the idea</strong>
-            <small>Purpose, people and the value you will create.</small>
-          </div>
-        </li>
-        <li>
-          <span>2</span>
-          <div>
-            <strong>Complete review</strong>
-            <small>We confirm fit, boundaries and host readiness.</small>
-          </div>
-        </li>
-        <li>
-          <span>3</span>
-          <div>
-            <strong>Prepare in private</strong>
-            <small>Your draft room opens before any member can join.</small>
-          </div>
-        </li>
-      </ol>
+      {showJourney ? (
+        <ol
+          className="community-host-steps"
+          aria-label="Community approval steps"
+        >
+          <li>
+            <span>1</span>
+            <div>
+              <strong>Share the idea</strong>
+              <small>Purpose, people and the value you will create.</small>
+            </div>
+          </li>
+          <li>
+            <span>2</span>
+            <div>
+              <strong>Complete review</strong>
+              <small>We confirm fit, boundaries and host readiness.</small>
+            </div>
+          </li>
+          <li>
+            <span>3</span>
+            <div>
+              <strong>Prepare in private</strong>
+              <small>Your draft room opens before any member can join.</small>
+            </div>
+          </li>
+        </ol>
+      ) : (
+        <div className="community-host-principles" aria-label="Host safeguards">
+          <span>Reviewed by the Community team</span>
+          <span>Private draft first</span>
+          <span>Published only after safety checks</span>
+        </div>
+      )}
 
       {current ? (
         <article className="community-host-status">

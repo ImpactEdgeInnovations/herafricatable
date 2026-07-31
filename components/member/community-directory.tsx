@@ -49,6 +49,7 @@ export function CommunityDirectory({
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
+  const [query, setQuery] = useState("");
 
   async function join(item: CommunitySummary) {
     setBusy(item.community_id);
@@ -129,125 +130,254 @@ export function CommunityDirectory({
     if (!error) router.refresh();
   }
 
+  const memberStates = [
+    "active",
+    "requested",
+    "invited",
+    "approved_pending_payment",
+  ];
+  const memberCommunities = communities.filter((item) =>
+    memberStates.includes(item.membership_status ?? ""),
+  );
+  const discoverCommunities = communities.filter(
+    (item) => !memberStates.includes(item.membership_status ?? ""),
+  );
+  const cleanQuery = query.trim().toLowerCase();
+  const visibleDiscover = discoverCommunities.filter((item) =>
+    cleanQuery
+      ? [item.name, item.description, item.community_type].some((value) =>
+          value.toLowerCase().includes(cleanQuery),
+        )
+      : true,
+  );
+
+  function renderCommunityCard(
+    item: CommunitySummary,
+    context: "discover" | "member",
+  ) {
+    const paid = item.offer_access_type === "paid";
+    const awaitingPayment =
+      item.membership_status === "approved_pending_payment";
+    const stateLabel =
+      item.membership_status === "active"
+        ? "Your community"
+        : item.membership_status === "requested"
+          ? "Awaiting host"
+          : item.membership_status === "invited"
+            ? "Invitation"
+            : awaitingPayment
+              ? "Host approved"
+              : item.community_type === "private"
+                ? "Host reviewed"
+                : "Open to members";
+
+    return (
+      <article
+        className={`community-directory-card is-${context}`}
+        key={item.community_id}
+      >
+        <header>
+          <span className="community-directory-state">{stateLabel}</span>
+          <span className="community-directory-members">
+            {item.member_count} member
+            {Number(item.member_count) === 1 ? "" : "s"}
+          </span>
+        </header>
+        <div className="community-directory-title">
+          <div>
+            <small>{item.community_type} community</small>
+            <h3>{item.name}</h3>
+          </div>
+          <div className={paid ? "community-price paid" : "community-price"}>
+            <strong>
+              {paid
+                ? money(item.offer_price_minor, item.offer_currency)
+                : "Free"}
+            </strong>
+            {paid ? (
+              <small>{intervalLabel(item.offer_billing_interval)}</small>
+            ) : null}
+          </div>
+        </div>
+        <p>{item.description}</p>
+        <footer>
+          {item.membership_status === "active" ? (
+            <Link
+              className="button button-primary"
+              href={`/communities/${item.slug}`}
+            >
+              Enter community
+            </Link>
+          ) : item.membership_status === "requested" ? (
+            <span className="community-membership-state">
+              <strong>Request with host</strong>
+              <small>You will hear from the host after review.</small>
+            </span>
+          ) : awaitingPayment ? (
+            <div className="community-checkout">
+              <div>
+                <strong>Complete your access</strong>
+                <small>Your place remains approved while you pay.</small>
+              </div>
+              {item.offer_payment_mode === "automatic" ? (
+                <button
+                  className="button button-primary"
+                  disabled={busy === `checkout-${item.community_id}`}
+                  onClick={() => void checkout(item)}
+                >
+                  {busy === `checkout-${item.community_id}`
+                    ? "Opening secure checkout…"
+                    : `Pay ${money(item.offer_price_minor, item.offer_currency)}`}
+                </button>
+              ) : item.offer_payment_mode === "manual_review" ? (
+                <form
+                  className="community-manual-payment"
+                  onSubmit={(event) => void submitManual(event, item)}
+                >
+                  <label>
+                    Payment reference
+                    <input
+                      maxLength={120}
+                      minLength={3}
+                      name="reference"
+                      placeholder="e.g. M-PESA code"
+                      required
+                    />
+                  </label>
+                  <label>
+                    Verification note
+                    <textarea
+                      maxLength={500}
+                      minLength={5}
+                      name="note"
+                      placeholder="How and when did you pay?"
+                      required
+                    />
+                  </label>
+                  <button
+                    className="button button-primary"
+                    disabled={busy === `manual-${item.community_id}`}
+                  >
+                    {busy === `manual-${item.community_id}`
+                      ? "Submitting…"
+                      : "Submit for verification"}
+                  </button>
+                </form>
+              ) : (
+                <span className="community-membership-state">
+                  <strong>Payment opening soon</strong>
+                  <small>Your approval is safely retained.</small>
+                </span>
+              )}
+            </div>
+          ) : (
+            <button
+              className="button button-outline"
+              disabled={busy === item.community_id}
+              onClick={() => void join(item)}
+            >
+              {item.membership_status === "invited"
+                ? "Accept invitation"
+                : item.community_type === "private"
+                  ? "Request access"
+                  : paid
+                    ? "Join and continue"
+                    : "Join community"}
+            </button>
+          )}
+        </footer>
+      </article>
+    );
+  }
+
   return (
     <>
-      <section className="community-grid">
-        {communities.map((item) => {
-          const paid = item.offer_access_type === "paid";
-          const awaitingPayment =
-            item.membership_status === "approved_pending_payment";
-          return (
-            <article key={item.community_id}>
-              <div className="community-card-meta">
-                <span>{item.community_type}</span>
-                <small>
-                  {item.member_count} member
-                  {Number(item.member_count) === 1 ? "" : "s"}
-                </small>
-              </div>
-              <div className="community-card-heading">
-                <h2>{item.name}</h2>
-                <div className={paid ? "community-price paid" : "community-price"}>
-                  <strong>
-                    {paid
-                      ? money(item.offer_price_minor, item.offer_currency)
-                      : "Free"}
-                  </strong>
-                  {paid ? (
-                    <small>{intervalLabel(item.offer_billing_interval)}</small>
-                  ) : null}
-                </div>
-              </div>
-              <p>{item.description}</p>
-              <footer>
-                {item.membership_status === "active" ? (
-                  <Link
-                    className="button button-primary"
-                    href={`/communities/${item.slug}`}
-                  >
-                    Enter community
-                  </Link>
-                ) : item.membership_status === "requested" ? (
-                  <span className="community-membership-state">
-                    <strong>Request with host</strong>
-                    <small>You will hear from the host after review.</small>
-                  </span>
-                ) : awaitingPayment ? (
-                  <div className="community-checkout">
-                    <div>
-                      <strong>Host approved</strong>
-                      <small>Complete access to enter this room.</small>
-                    </div>
-                    {item.offer_payment_mode === "automatic" ? (
-                      <button
-                        className="button button-primary"
-                        disabled={busy === `checkout-${item.community_id}`}
-                        onClick={() => void checkout(item)}
-                      >
-                        {busy === `checkout-${item.community_id}`
-                          ? "Opening secure checkout…"
-                          : `Pay ${money(item.offer_price_minor, item.offer_currency)}`}
-                      </button>
-                    ) : item.offer_payment_mode === "manual_review" ? (
-                      <form
-                        className="community-manual-payment"
-                        onSubmit={(event) => void submitManual(event, item)}
-                      >
-                        <label>
-                          Payment reference
-                          <input
-                            maxLength={120}
-                            minLength={3}
-                            name="reference"
-                            placeholder="e.g. M-PESA code"
-                            required
-                          />
-                        </label>
-                        <label>
-                          Verification note
-                          <textarea
-                            maxLength={500}
-                            minLength={5}
-                            name="note"
-                            placeholder="How and when did you pay?"
-                            required
-                          />
-                        </label>
-                        <button
-                          className="button button-primary"
-                          disabled={busy === `manual-${item.community_id}`}
-                        >
-                          {busy === `manual-${item.community_id}`
-                            ? "Submitting…"
-                            : "Submit for verification"}
-                        </button>
-                      </form>
-                    ) : (
-                      <span className="community-membership-state">
-                        <strong>Payment opening soon</strong>
-                        <small>Your approval is safely retained.</small>
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <button
-                    className="button button-outline"
-                    disabled={busy === item.community_id}
-                    onClick={() => void join(item)}
-                  >
-                    {item.membership_status === "invited"
-                      ? "Accept invitation"
-                      : item.community_type === "private"
-                        ? "Request access"
-                        : paid
-                          ? "Join and continue"
-                          : "Join community"}
-                  </button>
-                )}
-              </footer>
-            </article>
-          );
-        })}
+      <section className="community-directory" id="your-communities">
+        <header className="community-directory-heading">
+          <div>
+            <p className="eyebrow">Your rooms</p>
+            <h2>Continue where you belong.</h2>
+          </div>
+          <span>
+            {memberCommunities.length} communit
+            {memberCommunities.length === 1 ? "y" : "ies"}
+          </span>
+        </header>
+        {memberCommunities.length ? (
+          <div className="community-member-rooms">
+            {memberCommunities.map((item) =>
+              renderCommunityCard(item, "member"),
+            )}
+          </div>
+        ) : (
+          <div className="community-directory-empty">
+            <span aria-hidden="true">H</span>
+            <div>
+              <strong>Your first community is waiting.</strong>
+              <p>
+                Explore trusted rooms below. Private communities ask the host
+                to review every request.
+              </p>
+            </div>
+            <a className="button button-outline" href="#discover-communities">
+              Explore communities
+            </a>
+          </div>
+        )}
+      </section>
+
+      <section className="community-directory" id="discover-communities">
+        <header className="community-directory-heading is-discovery">
+          <div>
+            <p className="eyebrow">Discover</p>
+            <h2>Find a room with purpose.</h2>
+          </div>
+          {discoverCommunities.length > 3 ? (
+            <label className="community-directory-search">
+              <span>Search communities</span>
+              <input
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search by name or purpose"
+                type="search"
+                value={query}
+              />
+            </label>
+          ) : (
+            <span>
+              {discoverCommunities.length} available
+            </span>
+          )}
+        </header>
+        {visibleDiscover.length ? (
+          <div className="community-discovery-grid">
+            {visibleDiscover.map((item) =>
+              renderCommunityCard(item, "discover"),
+            )}
+          </div>
+        ) : (
+          <div className="community-directory-empty is-search">
+            <div>
+              <strong>
+                {cleanQuery
+                  ? "No communities match that search."
+                  : "No additional communities are open yet."}
+              </strong>
+              <p>
+                {cleanQuery
+                  ? "Try a broader word or clear the search."
+                  : "New rooms appear only after host and safety review."}
+              </p>
+            </div>
+            {cleanQuery ? (
+              <button
+                className="button button-outline"
+                onClick={() => setQuery("")}
+              >
+                Clear search
+              </button>
+            ) : null}
+          </div>
+        )}
       </section>
       {message ? (
         <p className="network-message" role="status">

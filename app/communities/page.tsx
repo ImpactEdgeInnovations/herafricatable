@@ -44,22 +44,70 @@ export default async function CommunitiesPage() {
     return (
       <main className="community-page">
         <MemberHeader active="community" label="Community" />
-        <section className="community-hold">
-          <p className="eyebrow">Your community home</p>
-          <h1>The first table is being prepared.</h1>
-          <p>
-            Private spaces open only after their host, safety boundaries and
-            member experience have passed release review. Your membership and
-            existing connections remain unchanged.
-          </p>
-          <div className="journey-state-actions">
-            <Link className="button button-primary" href="/events">
-              View gatherings
-            </Link>
-            <Link className="button button-outline" href="/home">
-              Return home
-            </Link>
+        <section className="community-hero community-preview-hero">
+          <div>
+            <p className="eyebrow">Your community home</p>
+            <h1>
+              A quieter way
+              <br />
+              to belong.
+            </h1>
+            <p>
+              Trusted rooms for thoughtful introductions, practical support and
+              relationships that continue beyond each gathering.
+            </p>
           </div>
+          <span className="community-preview-badge">Private preview</span>
+        </section>
+        <nav
+          className="community-landing-navigation"
+          aria-label="Community preview areas"
+        >
+          <a href="#community-preview">What opens first</a>
+          <a href="#create-community">Create a community</a>
+        </nav>
+        <section className="community-preview-panel" id="community-preview">
+          <div className="community-preview-copy">
+            <p className="eyebrow">Opening carefully</p>
+            <h2>The first rooms are passing final review.</h2>
+            <p>
+              Community access stays private until the host, backup moderator,
+              member boundaries and safety experience are ready. Nothing about
+              your wider membership or existing connections changes while we
+              prepare.
+            </p>
+            <div className="journey-state-actions">
+              <Link className="button button-primary" href="/events">
+                View gatherings
+              </Link>
+              <Link className="button button-outline" href="/network">
+                Meet members
+              </Link>
+            </div>
+          </div>
+          <ol aria-label="Community opening sequence">
+            <li>
+              <span>01</span>
+              <div>
+                <strong>Founding rooms</strong>
+                <p>Small, hosted spaces connected to real gatherings.</p>
+              </div>
+            </li>
+            <li>
+              <span>02</span>
+              <div>
+                <strong>Purpose-led communities</strong>
+                <p>Approved hosts bring members together around clear value.</p>
+              </div>
+            </li>
+            <li>
+              <span>03</span>
+              <div>
+                <strong>Member-led growth</strong>
+                <p>New rooms open only after trust and operating review.</p>
+              </div>
+            </li>
+          </ol>
         </section>
         <CommunityHostApplication
           applications={applications}
@@ -91,6 +139,14 @@ export default async function CommunitiesPage() {
           Create a community
         </a>
       </section>
+      <nav
+        className="community-landing-navigation"
+        aria-label="Community page areas"
+      >
+        <a href="#your-communities">Your communities</a>
+        <a href="#discover-communities">Discover</a>
+        <a href="#create-community">Create a community</a>
+      </nav>
 
       {communityResult.error ? (
         <section className="admin-empty opportunity-error">
