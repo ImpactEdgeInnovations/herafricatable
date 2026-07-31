@@ -154,49 +154,6 @@ export default async function CommunityPage({
               )[0] ?? null
         }
       />
-      {!notificationPreferenceResult.error ? (
-        <CommunityNotificationPreferences
-          communityId={community.community_id}
-          initialPreferences={
-            (
-              notificationPreferenceResult.data as
-                | CommunityNotificationPreference[]
-                | null
-            )?.[0] ?? {
-              email_replies: false,
-              in_app_replies: true,
-              weekly_briefing: true,
-              weekly_briefing_email: false,
-            }
-          }
-        />
-      ) : null}
-      {cohort ? (
-        <CohortActivation
-          currentUserId={user.id}
-          introductions={
-            (introductionResult.data as CohortIntroduction[] | null) ?? []
-          }
-          room={cohort}
-        />
-      ) : null}
-      {!memberResult.error ? (
-        <CommunityMemberRoster
-          members={
-            (memberResult.data as CommunityRosterMember[] | null) ?? []
-          }
-        />
-      ) : null}
-      {programmingReady ? (
-        <CommunityProgramming
-          canManage={canManage}
-          gatherings={
-            (gatheringResult.data as CommunityGathering[] | null) ?? []
-          }
-          resources={(resourceResult.data as CommunityResource[] | null) ?? []}
-          slug={slug}
-        />
-      ) : null}
       {postsResult.error && !structuredConversationsReady ? (
         <section className="admin-empty opportunity-error" role="alert">
           <strong>Community feed unavailable</strong>
@@ -237,6 +194,49 @@ export default async function CommunityPage({
           readOnly={cohort?.cohort_status === "read_only"}
         />
       )}
+      {programmingReady ? (
+        <CommunityProgramming
+          canManage={canManage}
+          gatherings={
+            (gatheringResult.data as CommunityGathering[] | null) ?? []
+          }
+          resources={(resourceResult.data as CommunityResource[] | null) ?? []}
+          slug={slug}
+        />
+      ) : null}
+      {cohort ? (
+        <CohortActivation
+          currentUserId={user.id}
+          introductions={
+            (introductionResult.data as CohortIntroduction[] | null) ?? []
+          }
+          room={cohort}
+        />
+      ) : null}
+      {!memberResult.error ? (
+        <CommunityMemberRoster
+          members={
+            (memberResult.data as CommunityRosterMember[] | null) ?? []
+          }
+        />
+      ) : null}
+      {!notificationPreferenceResult.error ? (
+        <CommunityNotificationPreferences
+          communityId={community.community_id}
+          initialPreferences={
+            (
+              notificationPreferenceResult.data as
+                | CommunityNotificationPreference[]
+                | null
+            )?.[0] ?? {
+              email_replies: false,
+              in_app_replies: true,
+              weekly_briefing: true,
+              weekly_briefing_email: false,
+            }
+          }
+        />
+      ) : null}
     </main>
   );
 }

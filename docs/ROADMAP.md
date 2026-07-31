@@ -252,6 +252,9 @@ Usability is part of production readiness and continues alongside feature delive
       information architecture for every community
 - [x] Add structured conversation categories, comments, thoughtful appreciation,
       host pinning, private saved posts and member-controlled thread following
+- [x] Make conversation the primary room experience with plain-language search,
+      topic and activity sorting, personal Following/Saved/My views, deep links,
+      useful composer guidance and a responsive recent-room snapshot
 - [x] Add a privacy-safe community member roster with consent-based profile and
       connection paths
 - [x] Connect host-curated events and learning resources to each community with
@@ -333,6 +336,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Apply `20260731160000_community_member_start_path.sql` in production
       Supabase
 - [ ] Apply `20260731190000_community_release_acceptance.sql` in production
+      Supabase
+- [ ] Apply `20260731230000_community_comment_removal.sql` in production
       Supabase
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag
 - [ ] Apply `20260725130000_learning_foundation.sql` in production Supabase

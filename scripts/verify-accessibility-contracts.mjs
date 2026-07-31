@@ -115,8 +115,13 @@ const communityFeed = read("components/member/community-feed.tsx");
 for (const contract of [
   'aria-labelledby="community-conversations-title"',
   'id="conversations"',
-  'aria-label="Filter conversations"',
+  'aria-label="Find and filter conversations"',
+  'aria-label="Conversation views"',
+  'aria-label="Community conversations"',
+  'aria-live="polite"',
   "aria-pressed=",
+  "dateTime={post.created_at}",
+  "tabIndex={-1}",
   'role="status"',
 ]) {
   assert(

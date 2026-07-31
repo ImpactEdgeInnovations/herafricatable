@@ -415,6 +415,7 @@ for (const contract of [
 for (const contract of [
   "create_structured_community_post",
   "create_community_comment",
+  "delete_community_comment",
   "set_community_post_appreciation",
   "set_community_post_saved",
   "set_community_post_followed",
@@ -423,13 +424,35 @@ for (const contract of [
   "Save privately",
   "Follow replies",
   "Report privately",
-  'aria-pressed={filter === item.value}',
+  "Find a conversation",
+  "Most active",
+  "My conversations",
+  "Clear filters",
+  "navigator.clipboard.writeText",
+  "Copy conversation link",
+  'id={`conversation-${post.post_id}`}',
+  "conversationTypeHints",
 ]) {
   assert(
     communityFeed.includes(contract),
     `Structured Community conversation UX must include ${contract}`,
   );
 }
+assert(
+  communityRoom.lastIndexOf("<CommunityFeed") <
+    communityRoom.lastIndexOf("<CommunityProgramming"),
+  "Community conversations must appear before programming in the active room flow",
+);
+assert(
+  communityRoom.lastIndexOf("<CommunityFeed") <
+    communityRoom.lastIndexOf("<CommunityMemberRoster"),
+  "Community conversations must appear before the member roster",
+);
+assert(
+  communityRoom.lastIndexOf("<CommunityNotificationPreferences") >
+    communityRoom.lastIndexOf("<CommunityMemberRoster"),
+  "Community notification preferences must remain secondary to room participation",
+);
 for (const contract of [
   'id="gatherings"',
   'id="resources"',
