@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   CommunityDirectory,
+  type CommunityActivitySummary,
   type CommunitySummary,
 } from "@/components/member/community-directory";
 import {
@@ -118,11 +119,12 @@ export default async function CommunitiesPage() {
     );
   }
 
-  const [communityResult, brandingResult] = await Promise.all([
+  const [communityResult, brandingResult, activityResult] = await Promise.all([
     supabase.rpc("list_communities"),
     supabase.rpc("list_community_brand_identities", {
       p_community_id: null,
     }),
+    supabase.rpc("list_my_community_activity"),
   ]);
   const communities =
     (communityResult.data as CommunitySummary[] | null) ?? [];
@@ -143,6 +145,11 @@ export default async function CommunitiesPage() {
   );
   const brandingByCommunity = new Map(
     signedBranding.map((identity) => [identity.community_id, identity]),
+  );
+  const activityByCommunity = new Map(
+    ((activityResult.data as CommunityActivitySummary[] | null) ?? []).map(
+      (activity) => [activity.community_id, activity],
+    ),
   );
 
   return (
@@ -194,6 +201,7 @@ export default async function CommunitiesPage() {
           communities={communities.map((community) => ({
             ...community,
             ...(brandingByCommunity.get(community.community_id) ?? {}),
+            ...(activityByCommunity.get(community.community_id) ?? {}),
           }))}
         />
       )}

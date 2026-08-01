@@ -16052,9 +16052,29 @@ body {
   gap: 28px;
 }
 .member-shell-header > nav a {
+  display: inline-flex;
+  align-items: center;
   color: #736b69;
   font-size: 0.64rem;
   letter-spacing: 0.015em;
+  gap: 6px;
+}
+.member-community-badge {
+  display: inline-grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: 100px;
+  background: rgba(111, 30, 50, 0.1);
+  color: var(--wine);
+  font-size: 0.54rem;
+  font-weight: 850;
+  line-height: 1;
+}
+.member-shell-header > nav a[aria-current="page"] .member-community-badge {
+  background: var(--wine);
+  color: #fff;
 }
 .member-shell-header .member-nav-account {
   display: none;
@@ -16440,6 +16460,26 @@ body {
 @media (max-width: 620px) {
   .member-shell-header {
     min-height: 68px;
+  }
+  .member-mobile-dock a {
+    position: relative;
+  }
+  .member-mobile-dock .member-community-badge {
+    position: absolute;
+    top: 5px;
+    left: calc(50% + 6px);
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border: 2px solid var(--paper);
+    background: var(--wine);
+    color: #fff;
+    font-size: 0.5rem;
+  }
+  .member-mobile-dock a[aria-current="page"] .member-community-badge {
+    border-color: var(--wine);
+    background: #fff;
+    color: var(--wine);
   }
   .member-shell-header .member-nav-account {
     display: none;
@@ -17672,6 +17712,20 @@ body {
     linear-gradient(135deg, rgba(111, 30, 50, 0.035), transparent 58%),
     #fff;
 }
+.community-directory-card.is-member.has-new-activity {
+  border-color: color-mix(
+    in srgb,
+    var(--community-accent, var(--wine)) 22%,
+    var(--line)
+  );
+  background:
+    radial-gradient(
+      circle at 92% 10%,
+      var(--community-accent-soft, rgba(111, 30, 50, 0.08)),
+      transparent 28%
+    ),
+    #fff;
+}
 .community-directory-card.is-member::before {
   position: absolute;
   top: 0;
@@ -17693,6 +17747,22 @@ body {
   font-weight: 850;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+.community-directory-state-group {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.community-directory-activity-badge {
+  padding: 4px 8px;
+  border-radius: 100px;
+  background: var(--community-accent-soft, rgba(111, 30, 50, 0.08));
+  color: var(--community-accent, var(--wine));
+  font-size: 0.56rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 .community-directory-members {
   color: var(--muted);

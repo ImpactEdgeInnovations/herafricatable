@@ -367,6 +367,27 @@ assert(
     ),
   "Community read state must remain available only through member-scoped functions",
 );
+const communityActivityNavigationMigration = read(
+  "supabase/migrations/20260802130000_community_activity_navigation.sql",
+);
+for (const contract of [
+  "list_my_community_activity",
+  "cross join lateral public.get_community_read_summary",
+  "membership.user_id = actor",
+  "membership.status = 'active'",
+  "summary.new_activity_count desc",
+  "revoke all on function public.list_my_community_activity()",
+]) {
+  assert(
+    communityActivityNavigationMigration.includes(contract),
+    `Global Community activity navigation must include ${contract}`,
+  );
+}
+assert(
+  !communityActivityNavigationMigration.includes("can_manage_community") &&
+    !communityActivityNavigationMigration.includes("is_admin"),
+  "Community navigation activity must never expose another member's read state to hosts or staff",
+);
 const communityNotificationMigration = read(
   "supabase/migrations/20260731100000_community_notification_preferences_and_briefings.sql",
 );

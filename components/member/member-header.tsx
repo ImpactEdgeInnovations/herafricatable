@@ -9,6 +9,10 @@ type MemberDestination =
   | "members"
   | "messages";
 
+type CommunityActivitySummary = {
+  new_activity_count: number;
+};
+
 const destinations: {
   href: string;
   key: MemberDestination;
@@ -92,7 +96,11 @@ export async function MemberHeader({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const [{ data: profile }, { count: unreadAlerts }] = user
+  const [
+    { data: profile },
+    { count: unreadAlerts },
+    { data: communityActivity },
+  ] = user
     ? await Promise.all([
         supabase
           .from("profiles")
@@ -103,8 +111,9 @@ export async function MemberHeader({
           .from("notifications")
           .select("id", { count: "exact", head: true })
           .is("read_at", null),
+        supabase.rpc("list_my_community_activity"),
       ])
-    : [{ data: null }, { count: 0 }];
+    : [{ data: null }, { count: 0 }, { data: null }];
   const navigation = destinations.map((destination) =>
     destination.key === "account"
       ? { ...destination, href: accountHref, label: accountLabel }
@@ -115,6 +124,12 @@ export async function MemberHeader({
   );
   const memberName = profile?.display_name?.trim() || "Member";
   const memberInitial = memberName.charAt(0).toUpperCase();
+  const newCommunityActivity = (
+    (communityActivity as CommunityActivitySummary[] | null) ?? []
+  ).reduce(
+    (total, item) => total + Number(item.new_activity_count ?? 0),
+    0,
+  );
   return (
     <>
       <header className="member-home-header member-shell-header">
@@ -129,12 +144,22 @@ export async function MemberHeader({
         <nav aria-label="Member navigation">
           {navigation.map((destination) => (
             <Link
+              aria-label={
+                destination.key === "community" && newCommunityActivity
+                  ? `Community, ${newCommunityActivity} new update${newCommunityActivity === 1 ? "" : "s"}`
+                  : destination.label
+              }
               aria-current={active === destination.key ? "page" : undefined}
               className={`member-nav-${destination.key}`}
               href={destination.href}
               key={destination.key}
             >
               {destination.label}
+              {destination.key === "community" && newCommunityActivity ? (
+                <b aria-hidden="true" className="member-community-badge">
+                  {newCommunityActivity > 9 ? "9+" : newCommunityActivity}
+                </b>
+              ) : null}
             </Link>
           ))}
         </nav>
@@ -174,12 +199,22 @@ export async function MemberHeader({
       <nav className="member-mobile-dock" aria-label="Member shortcuts">
         {mobileNavigation.map((destination) => (
           <Link
+            aria-label={
+              destination.key === "community" && newCommunityActivity
+                ? `Community, ${newCommunityActivity} new update${newCommunityActivity === 1 ? "" : "s"}`
+                : destination.shortLabel
+            }
             aria-current={active === destination.key ? "page" : undefined}
             href={destination.href}
             key={destination.key}
           >
             <MemberIcon destination={destination.key} />
             {destination.shortLabel}
+            {destination.key === "community" && newCommunityActivity ? (
+              <b aria-hidden="true" className="member-community-badge">
+                {newCommunityActivity > 9 ? "9+" : newCommunityActivity}
+              </b>
+            ) : null}
           </Link>
         ))}
       </nav>

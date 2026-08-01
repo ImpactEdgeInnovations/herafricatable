@@ -385,6 +385,9 @@ for (const contract of [
   'aria-label="Member shortcuts"',
   'aria-current={active === destination.key ? "page" : undefined}',
   "/notifications",
+  "list_my_community_activity",
+  "member-community-badge",
+  "newCommunityActivity",
 ]) {
   assert(
     memberHeader.includes(contract),
@@ -461,6 +464,28 @@ for (const contract of [
   assert(
     communityRoom.includes(contract),
     `Community Hub must include ${contract}`,
+  );
+}
+for (const contract of [
+  "CommunityActivitySummary",
+  "new_activity_count",
+  "has-new-activity",
+  "community-directory-activity-badge",
+  "Continue to community",
+  "statePriority",
+]) {
+  assert(
+    communityDirectory.includes(contract),
+    `Community return directory must include ${contract}`,
+  );
+}
+for (const contract of [
+  "list_my_community_activity",
+  "activityByCommunity",
+]) {
+  assert(
+    communityPage.includes(contract),
+    `Community landing must include ${contract}`,
   );
 }
 for (const contract of [

@@ -27,6 +27,20 @@ export type CommunitySummary = {
   accent_key?: "wine" | "gold" | "forest" | "ocean" | "terracotta";
   icon_url?: string | null;
   icon_alt_text?: string | null;
+  last_caught_up_at?: string | null;
+  latest_activity_at?: string | null;
+  new_activity_count?: number;
+  new_conversation_count?: number;
+  new_reply_count?: number;
+};
+
+export type CommunityActivitySummary = {
+  community_id: string;
+  last_caught_up_at: string | null;
+  latest_activity_at: string | null;
+  new_activity_count: number;
+  new_conversation_count: number;
+  new_reply_count: number;
 };
 
 function money(amount: number | null, currency: string | null) {
@@ -140,9 +154,25 @@ export function CommunityDirectory({
     "invited",
     "approved_pending_payment",
   ];
-  const memberCommunities = communities.filter((item) =>
-    memberStates.includes(item.membership_status ?? ""),
-  );
+  const memberCommunities = communities
+    .filter((item) => memberStates.includes(item.membership_status ?? ""))
+    .sort((left, right) => {
+      const statePriority = (item: CommunitySummary) => {
+        if (item.membership_status === "invited") return 0;
+        if (item.membership_status === "approved_pending_payment") return 1;
+        if (item.membership_status === "active" && item.new_activity_count)
+          return 2;
+        if (item.membership_status === "active") return 3;
+        return 4;
+      };
+      const priority = statePriority(left) - statePriority(right);
+      if (priority) return priority;
+      const activity =
+        Number(right.new_activity_count ?? 0) -
+        Number(left.new_activity_count ?? 0);
+      if (activity) return activity;
+      return left.name.localeCompare(right.name);
+    });
   const discoverCommunities = communities.filter(
     (item) => !memberStates.includes(item.membership_status ?? ""),
   );
@@ -160,6 +190,7 @@ export function CommunityDirectory({
     context: "discover" | "member",
   ) {
     const paid = item.offer_access_type === "paid";
+    const newActivity = Number(item.new_activity_count ?? 0);
     const awaitingPayment =
       item.membership_status === "approved_pending_payment";
     const stateLabel =
@@ -177,11 +208,18 @@ export function CommunityDirectory({
 
     return (
       <article
-        className={`community-directory-card is-${context} accent-${item.accent_key ?? "wine"}`}
+        className={`community-directory-card is-${context}${newActivity ? " has-new-activity" : ""} accent-${item.accent_key ?? "wine"}`}
         key={item.community_id}
       >
         <header>
-          <span className="community-directory-state">{stateLabel}</span>
+          <div className="community-directory-state-group">
+            <span className="community-directory-state">{stateLabel}</span>
+            {item.membership_status === "active" && newActivity ? (
+              <span className="community-directory-activity-badge">
+                {newActivity} new update{newActivity === 1 ? "" : "s"}
+              </span>
+            ) : null}
+          </div>
           <span className="community-directory-members">
             {item.member_count} member
             {Number(item.member_count) === 1 ? "" : "s"}
@@ -220,10 +258,15 @@ export function CommunityDirectory({
         <footer>
           {item.membership_status === "active" ? (
             <Link
+              aria-label={
+                newActivity
+                  ? `Continue to ${item.name}, ${newActivity} new update${newActivity === 1 ? "" : "s"}`
+                  : `Enter ${item.name}`
+              }
               className="button button-primary"
               href={`/communities/${item.slug}`}
             >
-              Enter community
+              {newActivity ? "Continue to community" : "Enter community"}
             </Link>
           ) : item.membership_status === "requested" ? (
             <span className="community-membership-state">

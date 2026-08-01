@@ -282,10 +282,14 @@ Usability is part of production readiness and continues alongside feature delive
       five-revision limit and prior-version access only inside report evidence
 - [x] Add private per-member Community read state, calm new-activity markers,
       a “New for you” view and an explicit member-controlled caught-up action
+- [x] Carry private Community activity into the global member shell and room
+      directory with restrained count badges, priority ordering and clear return actions
 - [ ] Apply `20260802010000_community_identity_and_media.sql` in production
       Supabase
 - [ ] Apply `20260802050000_community_post_editing.sql` in production Supabase
 - [ ] Apply `20260802090000_community_member_read_state.sql` in production
+      Supabase
+- [ ] Apply `20260802130000_community_activity_navigation.sql` in production
       Supabase
 - [ ] Test join-time baseline, own-activity exclusion, block filtering and
       caught-up behavior with two real member accounts
@@ -437,6 +441,8 @@ Usability is part of production readiness and continues alongside feature delive
       Supabase
 - [ ] Apply `20260802050000_community_post_editing.sql` in production Supabase
 - [ ] Apply `20260802090000_community_member_read_state.sql` in production
+      Supabase
+- [ ] Apply `20260802130000_community_activity_navigation.sql` in production
       Supabase
 - [ ] Complete Creator Commerce admission/payment/entitlement/payout-boundary
       acceptance and deliberately enable its feature flag
