@@ -10391,6 +10391,15 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+.community-post-new-label {
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 100px;
+  background: rgba(117, 35, 54, 0.08);
+  color: var(--wine) !important;
+  font-size: 0.62rem !important;
+  font-weight: 800;
+}
 .community-feed article header small,
 .community-feed time {
   color: var(--muted);
@@ -20228,6 +20237,44 @@ body {
   font-size: 1.65rem;
   line-height: 1;
 }
+.community-catchup-note {
+  display: flex;
+  width: min(900px, calc(100% - 48px));
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px auto 0;
+  padding: 13px 16px;
+  border: 1px solid rgba(117, 35, 54, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.68);
+  gap: 20px;
+}
+.community-catchup-note > div {
+  display: grid;
+  color: var(--ink);
+  font-size: 0.72rem;
+  gap: 3px;
+}
+.community-catchup-note span {
+  color: var(--muted);
+}
+.community-catchup-note button {
+  min-height: 40px;
+  flex: 0 0 auto;
+  padding: 8px 13px;
+  border: 1px solid rgba(117, 35, 54, 0.2);
+  border-radius: 100px;
+  background: #fff;
+  color: var(--wine);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.community-catchup-note button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
 .community-composer {
   margin-top: 32px;
   padding: 30px;
@@ -20434,11 +20481,21 @@ body {
   }
   .community-conversation-heading,
   .community-room-snapshot,
+  .community-catchup-note,
   .community-composer,
   .community-discovery,
   .community-feed,
   .community-conversation-shell > .network-message {
     width: calc(100% - 32px);
+  }
+  .community-catchup-note {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 14px;
+    gap: 12px;
+  }
+  .community-catchup-note button {
+    width: 100%;
   }
   .community-conversation-heading h2 {
     font-size: clamp(2.45rem, 12vw, 3.35rem);

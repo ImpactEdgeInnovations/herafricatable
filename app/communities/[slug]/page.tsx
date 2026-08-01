@@ -8,6 +8,7 @@ import {
   type CommunityPost,
   type CommunityPostAttachment,
   type CommunityPostEditState,
+  type CommunityPostReadState,
 } from "@/components/member/community-feed";
 import {
   CohortActivation,
@@ -72,6 +73,8 @@ export default async function CommunityPage({
     brandingResult,
     mediaResult,
     editStateResult,
+    readSummaryResult,
+    readStateResult,
   ] = await Promise.all([
       supabase.rpc("list_community_posts", {
         p_community_id: community.community_id,
@@ -122,6 +125,13 @@ export default async function CommunityPage({
         p_community_id: community.community_id,
         p_limit: 100,
       }),
+      supabase.rpc("get_community_read_summary", {
+        p_community_id: community.community_id,
+      }),
+      supabase.rpc("list_community_post_read_states", {
+        p_community_id: community.community_id,
+        p_limit: 100,
+      }),
     ]);
   const structuredConversationsReady =
     !structuredPostsResult.error && !commentResult.error;
@@ -166,6 +176,14 @@ export default async function CommunityPage({
       (state) => [state.post_id, state],
     ),
   );
+  const readStateByPost = new Map(
+    ((readStateResult.data as CommunityPostReadState[] | null) ?? []).map(
+      (state) => [state.post_id, state],
+    ),
+  );
+  const readSummary = (
+    (readSummaryResult.data as { new_activity_count: number }[] | null) ?? []
+  )[0];
   const sourcePosts = structuredConversationsReady
     ? ((structuredPostsResult.data as CommunityPost[] | null) ?? [])
     : ((postsResult.data as CommunityPost[] | null) ?? []);
@@ -173,6 +191,7 @@ export default async function CommunityPage({
     ...post,
     attachment: attachmentByPost.get(post.post_id) ?? null,
     ...editStateByPost.get(post.post_id),
+    ...readStateByPost.get(post.post_id),
   }));
   return (
     <main className="community-page">
@@ -273,10 +292,14 @@ export default async function CommunityPage({
               ? ((commentResult.data as CommunityComment[] | null) ?? [])
               : []
           }
+          initialNewActivityCount={Number(
+            readSummary?.new_activity_count ?? 0,
+          )}
           initialPosts={
             posts
           }
           mediaReady={!mediaResult.error}
+          readStateReady={!readSummaryResult.error && !readStateResult.error}
           prompt={
             cohort
               ? "Continue the table with one focused Ask, Offer or follow-up"

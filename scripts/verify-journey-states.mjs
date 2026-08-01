@@ -452,6 +452,8 @@ for (const contract of [
   "list_community_brand_identities",
   "list_community_post_media",
   "list_community_post_edit_states",
+  "get_community_read_summary",
+  "list_community_post_read_states",
   "createSignedUrl",
   "mediaReady",
   "community-room-cover",
@@ -509,6 +511,11 @@ for (const contract of [
   "Previous versions remain private",
   "Save changes",
   "Edited",
+  "mark_community_caught_up",
+  "New for you",
+  "Mark all as seen",
+  "is_new",
+  "new_reply_count",
 ]) {
   assert(
     communityFeed.includes(contract),

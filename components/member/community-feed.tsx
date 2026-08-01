@@ -42,7 +42,7 @@ const conversationTypeHints = new Map<string, string>([
 ]);
 
 type ConversationOrder = "active" | "newest";
-type ConversationView = "all" | "following" | "mine" | "saved";
+type ConversationView = "all" | "following" | "mine" | "new" | "saved";
 type AttachmentMode = "none" | "image" | "document" | "link";
 
 export type CommunityPostAttachment = {
@@ -67,6 +67,13 @@ export type CommunityPostEditState = {
   post_id: string;
 };
 
+export type CommunityPostReadState = {
+  is_new: boolean;
+  last_activity_at: string;
+  new_reply_count: number;
+  post_id: string;
+};
+
 export type CommunityPost = {
   appreciation_count?: number;
   appreciated_by_me?: boolean;
@@ -83,6 +90,9 @@ export type CommunityPost = {
   edit_expires_at?: string | null;
   followed_by_me?: boolean;
   is_pinned?: boolean;
+  is_new?: boolean;
+  last_activity_at?: string | null;
+  new_reply_count?: number;
   post_id: string;
   saved_by_me?: boolean;
   attachment?: CommunityPostAttachment | null;
@@ -143,8 +153,10 @@ export function CommunityFeed({
   currentUserId,
   enhanced,
   initialComments,
+  initialNewActivityCount = 0,
   initialPosts,
   mediaReady = false,
+  readStateReady = false,
   readOnly = false,
   prompt,
 }: {
@@ -153,8 +165,10 @@ export function CommunityFeed({
   currentUserId: string;
   enhanced: boolean;
   initialComments: CommunityComment[];
+  initialNewActivityCount?: number;
   initialPosts: CommunityPost[];
   mediaReady?: boolean;
+  readStateReady?: boolean;
   readOnly?: boolean;
   prompt?: string;
 }) {
@@ -192,6 +206,8 @@ export function CommunityFeed({
       const matchesView =
         view === "all" ||
         (view === "following" && post.followed_by_me) ||
+        (view === "new" &&
+          (post.is_new || Number(post.new_reply_count ?? 0) > 0)) ||
         (view === "saved" && post.saved_by_me) ||
         (view === "mine" && post.author_id === currentUserId);
       const matchesCategory =
@@ -552,6 +568,20 @@ export function CommunityFeed({
     if (!error) router.refresh();
   }
 
+  async function markCaughtUp() {
+    setBusy("catch-up");
+    const { error } = await supabase.rpc("mark_community_caught_up", {
+      p_community_id: communityId,
+    });
+    setBusy("");
+    announce(
+      error,
+      "mark these community updates as seen",
+      "You are caught up with this room.",
+    );
+    if (!error) router.refresh();
+  }
+
   async function copyConversationLink(postId: string) {
     const target = new URL(window.location.href);
     target.hash = `conversation-${postId}`;
@@ -598,10 +628,32 @@ export function CommunityFeed({
             <dd>{roomSnapshot.followed}</dd>
           </div>
           <div>
-            <dt>Saved privately</dt>
-            <dd>{roomSnapshot.saved}</dd>
+            <dt>{readStateReady ? "New for you" : "Saved privately"}</dt>
+            <dd>
+              {readStateReady ? initialNewActivityCount : roomSnapshot.saved}
+            </dd>
           </div>
         </dl>
+      ) : null}
+
+      {enhanced && readStateReady && initialNewActivityCount > 0 ? (
+        <div className="community-catchup-note">
+          <div>
+            <strong>
+              {initialNewActivityCount} new update
+              {initialNewActivityCount === 1 ? "" : "s"} since you last
+              caught up
+            </strong>
+            <span>New conversations and replies are marked below.</span>
+          </div>
+          <button
+            disabled={busy === "catch-up"}
+            onClick={() => void markCaughtUp()}
+            type="button"
+          >
+            {busy === "catch-up" ? "Updating…" : "Mark all as seen"}
+          </button>
+        </div>
       ) : null}
 
       {readOnly ? null : (
@@ -789,6 +841,9 @@ export function CommunityFeed({
           >
             {[
               { label: "Latest", value: "all" },
+              ...(readStateReady
+                ? [{ label: "New for you", value: "new" }]
+                : []),
               { label: "Following", value: "following" },
               { label: "Saved", value: "saved" },
               { label: "My conversations", value: "mine" },
@@ -830,7 +885,14 @@ export function CommunityFeed({
             const comments = commentsByPost.get(post.post_id) ?? [];
             return (
               <article
-                className={post.is_pinned ? "is-pinned" : ""}
+                className={[
+                  post.is_pinned ? "is-pinned" : "",
+                  post.is_new || Number(post.new_reply_count ?? 0) > 0
+                    ? "has-new-activity"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 id={`conversation-${post.post_id}`}
                 key={post.post_id}
                 tabIndex={-1}
@@ -842,6 +904,14 @@ export function CommunityFeed({
                       {categoryLabels.get(post.category ?? "discussion") ??
                         "Discussion"}
                     </span>
+                    {post.is_new || Number(post.new_reply_count ?? 0) > 0 ? (
+                      <span className="community-post-new-label">
+                        {post.is_new ? "New conversation" : "New activity"}
+                        {Number(post.new_reply_count ?? 0) > 0
+                          ? ` · ${post.new_reply_count} new repl${Number(post.new_reply_count) === 1 ? "y" : "ies"}`
+                          : ""}
+                      </span>
+                    ) : null}
                     <strong>{post.author_name}</strong>
                     <small>
                       {[post.author_role, post.author_company]

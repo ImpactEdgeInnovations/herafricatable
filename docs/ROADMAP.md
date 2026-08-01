@@ -280,9 +280,15 @@ Usability is part of production readiness and continues alongside feature delive
       with accessible descriptions, immutable Storage objects and report evidence
 - [x] Add controlled 30-minute conversation editing, a visible Edited marker,
       five-revision limit and prior-version access only inside report evidence
+- [x] Add private per-member Community read state, calm new-activity markers,
+      a “New for you” view and an explicit member-controlled caught-up action
 - [ ] Apply `20260802010000_community_identity_and_media.sql` in production
       Supabase
 - [ ] Apply `20260802050000_community_post_editing.sql` in production Supabase
+- [ ] Apply `20260802090000_community_member_read_state.sql` in production
+      Supabase
+- [ ] Test join-time baseline, own-activity exclusion, block filtering and
+      caught-up behavior with two real member accounts
 - [ ] Test edit expiry, pinned-conversation protection, revision limits and
       report-scoped prior-version evidence with two real member accounts
 - [ ] Test owner-only branding, member-only signed delivery, blocked-member
@@ -430,6 +436,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Apply `20260802010000_community_identity_and_media.sql` in production
       Supabase
 - [ ] Apply `20260802050000_community_post_editing.sql` in production Supabase
+- [ ] Apply `20260802090000_community_member_read_state.sql` in production
+      Supabase
 - [ ] Complete Creator Commerce admission/payment/entitlement/payout-boundary
       acceptance and deliberately enable its feature flag
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag

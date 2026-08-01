@@ -338,6 +338,35 @@ assert(
     !communityPostEditFunction.includes("'body', p_body"),
   "Community post edit audit metadata must never copy conversation text",
 );
+const communityMemberReadStateMigration = read(
+  "supabase/migrations/20260802090000_community_member_read_state.sql",
+);
+for (const contract of [
+  "community_member_read_states",
+  "revoke all on table public.community_member_read_states",
+  "get_community_read_summary",
+  "list_community_post_read_states",
+  "mark_community_caught_up",
+  "membership.joined_at",
+  "membership.created_at",
+  "post.author_id <> actor",
+  "reply.author_id <> actor",
+  "not public.is_blocked_pair",
+  "on conflict (community_id, user_id)",
+  "last_caught_up_at = greatest",
+]) {
+  assert(
+    communityMemberReadStateMigration.includes(contract),
+    `Private Community read state must include ${contract}`,
+  );
+}
+assert(
+  !communityMemberReadStateMigration.includes("create policy") &&
+    !communityMemberReadStateMigration.includes(
+      "grant select on table public.community_member_read_states",
+    ),
+  "Community read state must remain available only through member-scoped functions",
+);
 const communityNotificationMigration = read(
   "supabase/migrations/20260731100000_community_notification_preferences_and_briefings.sql",
 );
