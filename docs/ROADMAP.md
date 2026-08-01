@@ -283,6 +283,9 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Add a Community-scoped Host welcome queue for recent members with one
       confirmed, idempotent welcome, notification preferences, rate limits and
       no private contact, message, note or cross-Community visibility
+- [x] Turn Host-curated events into a clear Community calendar with exact
+      timezone display, standard calendar export, private one-day/one-hour
+      reminders, reschedule safety and production worker delivery
 - [x] Refine the Community landing and directory into separate “Your rooms” and
       discovery journeys, with compact host admission and search-ready empty states
 - [x] Add approved-owner Community identity controls for a square icon, wide
@@ -305,6 +308,9 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Apply `20260803130000_table_journey_and_host_welcome.sql` in production
       Supabase and complete member, Host, cross-Community and duplicate-welcome
       acceptance
+- [ ] Apply `20260803170000_community_event_reminders.sql` in production
+      Supabase and test reminder persistence, event rescheduling, cron delivery,
+      deduplication and registration separation
 - [ ] Apply `20260802010000_community_identity_and_media.sql` in production
       Supabase
 - [ ] Apply `20260802050000_community_post_editing.sql` in production Supabase

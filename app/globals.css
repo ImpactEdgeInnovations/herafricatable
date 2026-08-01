@@ -2366,6 +2366,56 @@ svg {
   text-decoration: none;
   white-space: nowrap;
 }
+.community-event-actions {
+  display: grid;
+  min-width: 158px;
+  justify-items: stretch;
+  gap: 8px;
+}
+.community-event-actions > a,
+.community-event-actions > button {
+  min-height: 34px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--wine);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.55rem;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+.community-event-actions > label {
+  display: grid;
+  gap: 5px;
+}
+.community-event-actions > label > span {
+  color: var(--muted);
+  font-size: 0.49rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.community-event-actions select {
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.54rem;
+}
+.community-event-actions > small,
+.community-event-actions > em {
+  color: var(--muted);
+  font-size: 0.49rem;
+  font-style: normal;
+  line-height: 1.45;
+}
+.community-event-actions > small {
+  color: var(--success);
+}
 .community-resource-grid {
   display: grid;
   margin-top: 34px;
@@ -3124,6 +3174,11 @@ svg {
     gap: 16px;
   }
   .community-gathering-list > article > a {
+    grid-column: 2;
+  }
+  .community-event-actions {
+    width: 100%;
+    min-width: 0;
     grid-column: 2;
   }
   .community-resource-grid > article {

@@ -45,6 +45,16 @@ function hostLifecycleMigrationPending(error: RpcError | null) {
   );
 }
 
+function eventReminderMigrationPending(error: RpcError | null) {
+  if (!error) return false;
+  return (
+    ["42883", "PGRST202"].includes(error.code ?? "") ||
+    /(?:could not find|does not exist).*queue_due_community_event_reminders/i.test(
+      error.message ?? "",
+    )
+  );
+}
+
 async function processQueue(request: Request) {
   if (!authorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -78,10 +88,22 @@ async function processQueue(request: Request) {
   }
   const briefingsQueued = Number(briefingData ?? 0);
 
+  const { data: reminderData, error: reminderError } = await admin.rpc(
+    "queue_due_community_event_reminders",
+  );
+  if (reminderError && !eventReminderMigrationPending(reminderError)) {
+    return NextResponse.json(
+      { error: "Community event reminders unavailable" },
+      { status: 503 },
+    );
+  }
+  const eventRemindersQueued = Number(reminderData ?? 0);
+
   if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
     return NextResponse.json(
       {
         briefingsQueued,
+        eventRemindersQueued,
         error: "Email provider not configured",
         hostLifecycle,
       },
@@ -131,6 +153,7 @@ async function processQueue(request: Request) {
     claimed: jobs.length,
     failed,
     hostLifecycle,
+    eventRemindersQueued,
     sent,
   });
 }

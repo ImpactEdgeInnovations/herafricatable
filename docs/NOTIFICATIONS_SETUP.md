@@ -45,7 +45,8 @@ The worker route is `GET /api/cron/notifications`. Vercel automatically sends
 `CRON_SECRET` as a bearer authorization header when invoking a configured cron.
 The first authenticated worker call in each Nairobi calendar week creates that
 week's Community briefing batch. Subsequent calls are no-ops for the batch while
-continuing to reconcile host plans and process ordinary delivery jobs.
+continuing to reconcile host plans, queue due member-controlled Community event
+reminders and process ordinary delivery jobs.
 
 Do not add a frequent `vercel.json` schedule until the Vercel plan is confirmed:
 
@@ -60,6 +61,8 @@ Do not add a frequent `vercel.json` schedule until the Vercel plan is confirmed:
 - Confirm repeated worker calls create only one Community briefing batch per week.
 - Confirm repeated worker calls cannot promote more than one host renewal or send
   duplicate expiry reminders.
+- Confirm repeated worker calls queue each Community event reminder revision once,
+  and that changing an event time recalculates a still-pending reminder.
 - Confirm a quiet Community creates no member briefing and reply email defaults off.
 - Confirm room preferences, global Activity preferences and bilateral member blocks
   are all respected.

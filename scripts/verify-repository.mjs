@@ -426,6 +426,30 @@ assert(
 const communityNotificationMigration = read(
   "supabase/migrations/20260731100000_community_notification_preferences_and_briefings.sql",
 );
+const communityEventReminderMigration = read(
+  "supabase/migrations/20260803170000_community_event_reminders.sql",
+);
+for (const contract of [
+  "community_event_reminders",
+  "list_my_community_event_preferences",
+  "set_my_community_event_reminder",
+  "queue_due_community_event_reminders",
+  "Service role required",
+  "for update of reminder skip locked",
+  "not profile.is_test_account",
+  "revision = reminder.revision + 1",
+  "foreign key (community_id, event_id)",
+]) {
+  assert(
+    communityEventReminderMigration.includes(contract),
+    `Community event reminders must enforce ${contract}`,
+  );
+}
+assert(
+  cron.includes("queue_due_community_event_reminders") &&
+    cron.includes("eventReminderMigrationPending"),
+  "Notification worker must queue Community event reminders without breaking pre-migration delivery",
+);
 for (const contract of [
   "community_notification_preferences",
   "email_replies boolean not null default false",

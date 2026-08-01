@@ -444,6 +444,9 @@ const communityFeed = read("components/member/community-feed.tsx");
 const communityProgramming = read(
   "components/member/community-programming.tsx",
 );
+const communityEventActions = read(
+  "components/member/community-event-actions.tsx",
+);
 const communityCircles = read("components/member/community-circles.tsx");
 const communityCircleHostPanel = read(
   "components/member/community-circle-host-panel.tsx",
@@ -503,6 +506,20 @@ for (const contract of [
   assert(
     communityHostPage.includes(contract),
     `Community Host page must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Add to calendar",
+  "One day before",
+  "One hour before",
+  "A reminder does not reserve a seat",
+  "set_my_community_event_reminder",
+  "text/calendar",
+  "BEGIN:VCALENDAR",
+]) {
+  assert(
+    communityEventActions.includes(contract),
+    `Community calendar member UX must include ${contract}`,
   );
 }
 for (const contract of [

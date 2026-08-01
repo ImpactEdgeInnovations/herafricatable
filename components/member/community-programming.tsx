@@ -1,4 +1,8 @@
 import Link from "next/link";
+import {
+  CommunityEventActions,
+  type CommunityEventPreference,
+} from "@/components/member/community-event-actions";
 
 export type CommunityGathering = {
   event_id: string;
@@ -26,12 +30,6 @@ export type CommunityResource = {
   is_featured: boolean;
 };
 
-const dateFormat = new Intl.DateTimeFormat("en-KE", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-
 function accessLabel(value: string) {
   if (value === "event_bundle") return "Included with an event";
   if (value === "manual") return "Host-approved access";
@@ -41,15 +39,24 @@ function accessLabel(value: string) {
 
 export function CommunityProgramming({
   canManage,
+  communityId,
   gatherings,
   resources,
   slug,
+  eventPreferences,
+  remindersReady,
 }: {
   canManage: boolean;
+  communityId: string;
   gatherings: CommunityGathering[];
   resources: CommunityResource[];
   slug: string;
+  eventPreferences: CommunityEventPreference[];
+  remindersReady: boolean;
 }) {
+  const preferenceByEvent = new Map(
+    eventPreferences.map((preference) => [preference.event_id, preference]),
+  );
   return (
     <section className="community-programming" aria-label="Community programming">
       <section id="gatherings" className="community-programming-section">
@@ -67,23 +74,37 @@ export function CommunityProgramming({
           <div className="community-gathering-list">
             {gatherings.map((gathering) => {
               const past = new Date(gathering.ends_at).getTime() < Date.now();
+              const preference = preferenceByEvent.get(gathering.event_id) ?? null;
+              const timezone = preference?.timezone ?? "Africa/Nairobi";
               return (
                 <article key={gathering.event_id}>
                   <div className="community-program-date">
                     <strong>
                       {new Intl.DateTimeFormat("en-KE", {
                         day: "2-digit",
+                        timeZone: timezone,
                       }).format(new Date(gathering.starts_at))}
                     </strong>
                     <span>
                       {new Intl.DateTimeFormat("en-KE", {
                         month: "short",
+                        timeZone: timezone,
                       }).format(new Date(gathering.starts_at))}
                     </span>
                   </div>
                   <div>
                     <span>
-                      {past ? "Past event" : dateFormat.format(new Date(gathering.starts_at))}
+                      {past
+                        ? "Past event"
+                        : new Intl.DateTimeFormat("en-KE", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                            timeZone: timezone,
+                            timeZoneName: "short",
+                          }).format(new Date(gathering.starts_at))}
                       {" · "}
                       {gathering.city
                         ? `${gathering.city}, ${gathering.country}`
@@ -95,9 +116,12 @@ export function CommunityProgramming({
                         "The community leader will share more details soon."}
                     </p>
                   </div>
-                  <Link href={`/events/${gathering.slug}`}>
-                    View event <span aria-hidden="true">→</span>
-                  </Link>
+                  <CommunityEventActions
+                    communityId={communityId}
+                    event={gathering}
+                    migrationReady={remindersReady}
+                    preference={preference}
+                  />
                 </article>
               );
             })}

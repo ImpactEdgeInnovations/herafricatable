@@ -40,6 +40,7 @@ import {
   CommunityCircles,
   type CommunityCircleProgram,
 } from "@/components/member/community-circles";
+import type { CommunityEventPreference } from "@/components/member/community-event-actions";
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
   params,
@@ -82,6 +83,7 @@ export default async function CommunityPage({
     editStateResult,
     readSummaryResult,
     readStateResult,
+    eventPreferenceResult,
   ] = await Promise.all([
       supabase.rpc("list_community_posts", {
         p_community_id: community.community_id,
@@ -148,6 +150,9 @@ export default async function CommunityPage({
       supabase.rpc("list_community_post_read_states", {
         p_community_id: community.community_id,
         p_limit: 100,
+      }),
+      supabase.rpc("list_my_community_event_preferences", {
+        p_community_id: community.community_id,
       }),
     ]);
   const paginatedPosts =
@@ -382,9 +387,14 @@ export default async function CommunityPage({
       {programmingReady ? (
         <CommunityProgramming
           canManage={canManage}
+          communityId={community.community_id}
+          eventPreferences={
+            (eventPreferenceResult.data as CommunityEventPreference[] | null) ?? []
+          }
           gatherings={
             (gatheringResult.data as CommunityGathering[] | null) ?? []
           }
+          remindersReady={!eventPreferenceResult.error}
           resources={(resourceResult.data as CommunityResource[] | null) ?? []}
           slug={slug}
         />
