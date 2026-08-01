@@ -277,6 +277,12 @@ Usability is part of production readiness and continues alongside feature delive
       privacy-thresholded outcome trends
 - [x] Replace static room guidance with a private member start path for
       introductions, useful contributions, mutual relationships and gatherings
+- [x] Add one private five-step Table Journey from profile and Community
+      introduction to a gathering, trusted connection and deliberate follow-up;
+      keep it free of public points, rankings and activity quotas
+- [x] Add a Community-scoped Host welcome queue for recent members with one
+      confirmed, idempotent welcome, notification preferences, rate limits and
+      no private contact, message, note or cross-Community visibility
 - [x] Refine the Community landing and directory into separate “Your rooms” and
       discovery journeys, with compact host admission and search-ready empty states
 - [x] Add approved-owner Community identity controls for a square icon, wide
@@ -296,6 +302,9 @@ Usability is part of production readiness and continues alongside feature delive
       keep posts, member identities, private event details and storage paths private
 - [ ] Apply `20260803090000_community_public_profiles.sql` in production Supabase
       and complete signed-out, member, owner and Draft-rollback acceptance
+- [ ] Apply `20260803130000_table_journey_and_host_welcome.sql` in production
+      Supabase and complete member, Host, cross-Community and duplicate-welcome
+      acceptance
 - [ ] Apply `20260802010000_community_identity_and_media.sql` in production
       Supabase
 - [ ] Apply `20260802050000_community_post_editing.sql` in production Supabase

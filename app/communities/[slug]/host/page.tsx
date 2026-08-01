@@ -40,6 +40,10 @@ import {
   CommunityPublicProfilePanel,
   type CommunityPublicProfile,
 } from "@/components/member/community-public-profile-panel";
+import {
+  CommunityWelcomeQueue,
+  type CommunityWelcomeMember,
+} from "@/components/member/community-welcome-queue";
 
 export const dynamic = "force-dynamic";
 
@@ -126,6 +130,7 @@ export default async function CommunityHostPage({
     financialSummaryResult,
     financialStatementResult,
     settlementResult,
+    welcomeQueueResult,
   ] = await Promise.all([
     supabase.rpc("get_community_host_health", {
       p_community_id: community.community_id,
@@ -189,6 +194,10 @@ export default async function CommunityHostPage({
           p_community_id: community.community_id,
         })
       : Promise.resolve({ data: [], error: null }),
+    supabase.rpc("list_community_welcome_queue", {
+      p_community_id: community.community_id,
+      p_limit: 12,
+    }),
   ]);
 
   const migrationReady =
@@ -240,6 +249,7 @@ export default async function CommunityHostPage({
       </section>
       <nav className="community-room-navigation" aria-label="Host workspace areas">
         <a href="#host-tools">Plan &amp; tools</a>
+        <a href="#welcome">Welcome</a>
         {community.membership_role === "owner" ? (
           <>
             <a href="#identity">Look &amp; feel</a>
@@ -266,6 +276,13 @@ export default async function CommunityHostPage({
           owner={community.membership_role === "owner"}
         />
       </div>
+      <CommunityWelcomeQueue
+        communityId={community.community_id}
+        members={
+          (welcomeQueueResult.data as CommunityWelcomeMember[] | null) ?? []
+        }
+        migrationReady={!welcomeQueueResult.error}
+      />
       <CommunityBrandingPanel
         communityId={community.community_id}
         identity={signedBrandIdentity}

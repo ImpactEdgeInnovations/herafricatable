@@ -6,6 +6,10 @@ import {
   type MemberOrder,
 } from "@/components/member/order-history";
 import { MemberHeader } from "@/components/member/member-header";
+import {
+  TableJourney,
+  type TableJourneyState,
+} from "@/components/member/table-journey";
 
 export const dynamic = "force-dynamic";
 
@@ -227,8 +231,15 @@ export default async function MemberHomePage() {
     accessStatus === "active"
       ? await supabase.rpc("get_my_activation_journey")
       : { data: [], error: null };
+  const tableJourneyResult =
+    accessStatus === "active"
+      ? await supabase.rpc("get_my_table_journey")
+      : { data: [], error: null };
   const activation = ((activationResult.data as ActivationJourney[] | null) ??
     [])[0];
+  const tableJourney = (
+    (tableJourneyResult.data as TableJourneyState[] | null) ?? []
+  )[0];
   const [conversationResult, unreadNotificationResult, dueFollowupResult] =
     accessStatus === "active"
       ? await Promise.all([
@@ -256,6 +267,9 @@ export default async function MemberHomePage() {
         acceptedConnections >= 2,
       ].filter(Boolean).length
     : 0;
+  const journeyComplete = tableJourney
+    ? Math.min(Number(tableJourney.completed_steps), 5)
+    : activationComplete;
   const feedbackPrompt = (
     (pastEventResult.data as
       | { feedback_id: string | null; slug: string; title: string }[]
@@ -410,6 +424,54 @@ export default async function MemberHomePage() {
                   label: "Meet the right people",
                 }
       : null;
+  const tableJourneyNext = tableJourney
+    ? !tableJourney.profile_ready
+      ? {
+          action: "Finish your profile",
+          description:
+            "Share enough context for the right women to understand your work.",
+          href: "/onboarding",
+          label: "Make your profile useful",
+        }
+      : !tableJourney.introduction_shared
+        ? {
+            action: tableJourney.community_joined
+              ? "Introduce yourself"
+              : "Find a Community",
+            description: tableJourney.community_joined
+              ? `Take your seat in ${tableJourney.community_name ?? "your Community"} with a short, useful introduction.`
+              : "Choose one focused Community where you can contribute and build trust.",
+            href: tableJourney.community_slug
+              ? `/communities/${tableJourney.community_slug}`
+              : "/communities",
+            label: "Enter the Community",
+          }
+        : !tableJourney.gathering_reserved
+          ? {
+              action: "Find a gathering",
+              description:
+                "Reserve one gathering where a useful conversation can begin.",
+              href: "/events",
+              label: "Join a real table",
+            }
+          : !tableJourney.trusted_connection_made
+            ? {
+                action: "Meet members",
+                description:
+                  "Choose one relevant woman. Conversation opens only after you both agree.",
+                href: "/network",
+                label: "Make one trusted connection",
+              }
+            : !tableJourney.follow_up_planned
+              ? {
+                  action: "Plan a follow-up",
+                  description:
+                    "Record one private next step so a valuable relationship keeps moving.",
+                  href: "/network",
+                  label: "Continue the relationship",
+                }
+              : null
+    : null;
   const nextBestAction =
     accessStatus !== "active"
       ? null
@@ -444,7 +506,7 @@ export default async function MemberHomePage() {
                 href: "/notifications",
                 label: "See what changed",
               }
-            : activationNext ??
+            : tableJourneyNext ?? activationNext ??
               (nextEvent && !nextRegistrationStatus
                 ? {
                     action: registrationState.action,
@@ -528,11 +590,13 @@ export default async function MemberHomePage() {
                 {unreadNotifications ? "See what changed" : "Nothing needs attention"}
               </small>
             </Link>
-            <Link href="/home#member-activation-title">
-              <span>Getting started</span>
-              <strong>{activationComplete}/5</strong>
+            <Link href="/home#table-journey">
+              <span>Your Table Journey</span>
+              <strong>{journeyComplete}/5</strong>
               <small>
-                {activationComplete === 5 ? "Setup complete" : "Continue your next step"}
+                {journeyComplete === 5
+                  ? "Journey established"
+                  : "Continue your next step"}
               </small>
             </Link>
           </div>
@@ -598,7 +662,9 @@ export default async function MemberHomePage() {
           </div>
         )}
       </section>
-      {accessStatus === "active" &&
+      {accessStatus === "active" && tableJourney && !tableJourneyResult.error ? (
+        <TableJourney journey={tableJourney} />
+      ) : accessStatus === "active" &&
       activation &&
       activationComplete < 5 &&
       !activationResult.error ? (

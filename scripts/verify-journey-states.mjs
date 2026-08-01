@@ -484,6 +484,13 @@ const communityFinanceAdmin = read(
 const communityStartPath = read(
   "components/member/community-start-path.tsx",
 );
+const tableJourney = read("components/member/table-journey.tsx");
+const communityWelcomeQueue = read(
+  "components/member/community-welcome-queue.tsx",
+);
+const tableJourneyMigration = read(
+  "supabase/migrations/20260803130000_table_journey_and_host_welcome.sql",
+);
 const communityNotificationPreferences = read(
   "components/member/community-notification-preferences.tsx",
 );
@@ -496,6 +503,49 @@ for (const contract of [
   assert(
     communityHostPage.includes(contract),
     `Community Host page must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Your first seven days",
+  "Your Table Journey",
+  "Make your profile useful",
+  "Take your seat in a Community",
+  "Join a gathering",
+  "Make one trusted connection",
+  "Continue the relationship",
+  "not a score, requirement or public ranking",
+]) {
+  assert(
+    tableJourney.includes(contract),
+    `Private Table Journey must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Welcome new members",
+  "Send welcome",
+  "send_community_member_welcome",
+  "member score",
+  "not private conversations, notes or contact details",
+  "useActionDialog",
+]) {
+  assert(
+    communityWelcomeQueue.includes(contract),
+    `Community welcome queue must include ${contract}`,
+  );
+}
+for (const contract of [
+  "get_my_table_journey",
+  "list_community_welcome_queue",
+  "send_community_member_welcome",
+  "public.can_manage_community",
+  "community_member_welcomes",
+  "interval '1 hour'",
+  "on conflict (community_id, user_id) do nothing",
+  "revoke all on table public.community_member_welcomes",
+]) {
+  assert(
+    tableJourneyMigration.includes(contract),
+    `Table Journey migration must enforce ${contract}`,
   );
 }
 const communityPublicProfilePanel = read(
