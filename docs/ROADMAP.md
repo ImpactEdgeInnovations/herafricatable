@@ -265,6 +265,10 @@ Usability is part of production readiness and continues alongside feature delive
       member-only projections and audited Host controls
 - [x] Connect released Circle cycles to relevant communities with audited Host
       curation, member-only own-assignment context and no roster or matching-data access
+- [x] Rewrite the Community journey in plain language across discovery, joining,
+      posting, events, learning, Circles, notifications and leader controls
+- [x] Refine Community mobile hierarchy with restrained headings, readable body
+      text, fully visible navigation and full-width primary actions
 - [x] Add per-community reply and briefing preferences plus a restrained,
       privacy-safe weekly briefing with idempotent delivery batches
 - [x] Add the first Host workspace for admission, member roles, unanswered Asks,

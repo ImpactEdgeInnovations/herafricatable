@@ -150,10 +150,10 @@ export function CommunityCommercePanel({
     return (
       <section className="community-commerce-panel" id="commerce">
         <div className="admin-empty">
-          <strong>Host commerce is being prepared</strong>
+          <strong>Community payments are not ready yet</strong>
           <p>
-            No pricing or payout setting has changed. This workspace will open
-            after the commerce migration is installed.
+            No pricing or payout setting has changed. Payment controls will
+            appear here when secure setup is complete.
           </p>
         </div>
       </section>
@@ -172,8 +172,8 @@ export function CommunityCommercePanel({
       <section className="community-commerce-panel" id="commerce">
         <div className="community-commerce-intro">
           <div>
-            <p className="eyebrow">Community creator commerce</p>
-            <h2>Choose the plan that fits your room.</h2>
+            <p className="eyebrow">Plans &amp; payments</p>
+            <h2>Choose the plan that fits your community.</h2>
             <p>
               Your community is already approved. A host plan adds paid access,
               plan features and creator earnings without changing member safety.
@@ -398,7 +398,7 @@ export function CommunityCommercePanel({
     <section className="community-commerce-panel" id="commerce">
       <div className="community-commerce-intro">
         <div>
-          <p className="eyebrow">Community creator commerce</p>
+          <p className="eyebrow">Plans &amp; payments</p>
           <h2>Set a clear promise and a fair price.</h2>
           <p>
             Access is approved before payment. Earnings remain held until
@@ -446,8 +446,8 @@ export function CommunityCommercePanel({
       <section className="community-host-lifecycle">
         <div className="community-host-lifecycle-heading">
           <div>
-            <p className="eyebrow">Plan continuity</p>
-            <h3>Keep your host workspace uninterrupted.</h3>
+            <p className="eyebrow">Plan renewal</p>
+            <h3>Keep your community controls available.</h3>
             <p>
               Renew your current plan or choose the plan that should begin when
               this period ends. There is never more than one upcoming plan.
@@ -624,8 +624,8 @@ export function CommunityCommercePanel({
       <div className="community-commerce-layout">
         <div className="community-commerce-readiness">
           <div>
-            <p className="eyebrow">Publishing readiness</p>
-            <h3>Three safeguards before paid access</h3>
+            <p className="eyebrow">Before payments open</p>
+            <h3>Three checks protect you and your members</h3>
           </div>
           <ol>
             <li className={termsReady ? "complete" : ""}>
@@ -653,7 +653,7 @@ export function CommunityCommercePanel({
             <li className={releaseReady ? "complete" : ""}>
               <span>{releaseReady ? "✓" : "3"}</span>
               <div>
-                <strong>Release approval</strong>
+                <strong>Community approval</strong>
                 <small>
                   {releaseReady
                     ? "Creator commerce is enabled."

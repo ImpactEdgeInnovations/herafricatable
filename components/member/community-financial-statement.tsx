@@ -61,26 +61,25 @@ export function CommunityFinancialStatement({
     <section className="community-financial-statement" id="statement">
       <div className="community-financial-heading">
         <div>
-          <p className="eyebrow">Creator statement</p>
-          <h2>Every movement, explained.</h2>
+          <p className="eyebrow">Community earnings</p>
+          <h2>See where every payment goes.</h2>
           <p>
-            Member earnings, provider fees, refunds, dispute holds and paid
-            settlements appear as separate entries. Available does not mean
-            transferred until a settlement is marked Paid.
+            Member payments, fees, refunds, held amounts and completed payouts
+            appear separately. “Available” means ready for payout—not yet sent.
           </p>
         </div>
-        <span>Automatic payouts off</span>
+        <span>Payouts reviewed manually</span>
       </div>
 
       {summaries.length ? (
         summaries.map((summary) => (
           <div className="community-financial-summary" key={summary.currency}>
             <article className="primary">
-              <span>Available after reconciliation</span>
+              <span>Available for payout</span>
               <strong>
                 {money(summary.available_minor, summary.currency)}
               </strong>
-              <small>{summary.currency} · awaiting settlement</small>
+              <small>{summary.currency} · not yet sent</small>
             </article>
             <article>
               <span>Gross member payments</span>
@@ -107,7 +106,7 @@ export function CommunityFinancialStatement({
               </small>
             </article>
             <article>
-              <span>Paid settlements</span>
+              <span>Paid out</span>
               <strong>{money(summary.settled_minor, summary.currency)}</strong>
               <small>
                 Holds{" "}
@@ -132,7 +131,7 @@ export function CommunityFinancialStatement({
         <div className="community-statement-entries">
           <div>
             <p className="eyebrow">Transaction history</p>
-            <h3>Recent statement entries</h3>
+            <h3>Recent payments and adjustments</h3>
           </div>
           {entries.length ? (
             <div className="community-statement-table">
@@ -170,8 +169,8 @@ export function CommunityFinancialStatement({
 
         <aside className="community-settlement-history">
           <div>
-            <p className="eyebrow">Settlements</p>
-            <h3>Approved and paid</h3>
+            <p className="eyebrow">Payouts</p>
+            <h3>Approved and completed</h3>
           </div>
           {settlements.length ? (
             settlements.map((settlement) => (
@@ -192,10 +191,10 @@ export function CommunityFinancialStatement({
             ))
           ) : (
             <div className="community-statement-empty compact">
-              <strong>No settlements yet</strong>
+              <strong>No payouts yet</strong>
               <p>
-                A settlement appears only after payout verification and Admin
-                approval.
+                A payout appears here after your details are verified and an
+                administrator approves it.
               </p>
             </div>
           )}

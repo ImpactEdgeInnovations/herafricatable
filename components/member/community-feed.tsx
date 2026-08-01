@@ -37,8 +37,8 @@ const conversationTypeHints = new Map<string, string>([
   ["resource", "Add why this resource matters, not only the link."],
   ["event_follow_up", "Continue a useful thread from a gathering."],
   ["win", "Share the outcome and acknowledge the people who helped."],
-  ["start_here", "Set the room context, boundaries and first useful action."],
-  ["announcement", "Publish an important host update for every member."],
+  ["start_here", "Explain the community purpose, rules and best first step."],
+  ["announcement", "Share an important update with every member."],
 ]);
 
 type ConversationOrder = "active" | "newest";
@@ -609,7 +609,7 @@ export function CommunityFeed({
     announce(
       error,
       "mark these community updates as seen",
-      "You are caught up with this room.",
+      "You are caught up with this community.",
     );
     if (!error) router.refresh();
   }
@@ -727,22 +727,22 @@ export function CommunityFeed({
       {dialog}
       <header className="community-conversation-heading">
         <div>
-          <p className="eyebrow">The room</p>
-          <h2 id="community-conversations-title">Exchange something useful.</h2>
+          <p className="eyebrow">Community posts</p>
+          <h2 id="community-conversations-title">Ask, share and support.</h2>
         </div>
         <p>
-          Ask clearly, offer generously and protect private context.
+          Start a conversation, reply to a member or share something useful.
         </p>
       </header>
 
       {enhanced ? (
         <dl className="community-room-snapshot" aria-label="Recent room snapshot">
           <div>
-            <dt>Recent conversations</dt>
+            <dt>Posts loaded</dt>
             <dd>{allPosts.length}</dd>
           </div>
           <div>
-            <dt>Asks &amp; opportunities</dt>
+            <dt>Questions &amp; opportunities</dt>
             <dd>{roomSnapshot.asksAndOpportunities}</dd>
           </div>
           <div>
@@ -785,11 +785,11 @@ export function CommunityFeed({
         >
           <div className="community-composer-heading">
             <label htmlFor="community-post">
-              {prompt ?? "Share with this community"}
+              {prompt ?? "Write a post"}
             </label>
             {enhanced ? (
               <label>
-                Conversation type
+                What are you sharing?
                 <select
                   name="category"
                   onChange={(event) => setComposerType(event.target.value)}
@@ -817,14 +817,14 @@ export function CommunityFeed({
             required
             placeholder={
               prompt
-                ? "Make one focused ask, offer a useful resource, or share a commitment from the table…"
-                : "Offer a thoughtful update, question or resource…"
+                ? "Ask a clear question, offer help or share what happened after the event…"
+                : "Write an update, ask a question or share something useful…"
             }
           />
           {mediaReady ? (
             <div className="community-attachment-composer">
               <label>
-                Add something useful <small>Optional</small>
+                Add to your post <small>Optional</small>
                 <select
                   onChange={(event) => {
                     setAttachmentMode(event.target.value as AttachmentMode);
@@ -902,14 +902,14 @@ export function CommunityFeed({
           ) : null}
           <div>
             <small>
-              Visible only to active members of this room. Keep confidential
-              details in mutual private conversations.
+              Only active members of this community can see this post. Share
+              confidential details only in a private message.
             </small>
             <button
               className="button button-primary"
               disabled={busy === "publish"}
             >
-              {busy === "publish" ? "Publishing…" : "Publish"}
+              {busy === "publish" ? "Posting…" : "Post to community"}
             </button>
           </div>
         </form>
@@ -922,10 +922,10 @@ export function CommunityFeed({
         >
           <div className="community-feed-toolbar">
             <label>
-              Find a conversation
+              Search posts
               <input
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search people, topics or words"
+                placeholder="Search by person, topic or word"
                 type="search"
                 value={query}
               />
@@ -936,7 +936,7 @@ export function CommunityFeed({
                 onChange={(event) => setCategory(event.target.value)}
                 value={category}
               >
-                <option value="all">All topics</option>
+                <option value="all">All post types</option>
                 {availableTypes.map((item) => (
                   <option key={item.value} value={item.value}>
                     {item.label}
@@ -986,8 +986,7 @@ export function CommunityFeed({
             role="status"
           >
             <span>
-              Showing {posts.length} of {allPosts.length} loaded
-              conversations
+              Showing {posts.length} of {allPosts.length} loaded posts
             </span>
             {query ||
             category !== "all" ||

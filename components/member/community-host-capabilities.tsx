@@ -36,11 +36,11 @@ export function CommunityHostCapabilitiesPanel({
     return (
       <section className="community-host-capabilities is-awaiting">
         <div>
-          <p className="eyebrow">Your host tools</p>
-          <h2>Plan controls are awaiting the latest update.</h2>
+          <p className="eyebrow">Plans &amp; tools</p>
+          <h2>Your plan details are not ready yet.</h2>
           <p>
-            Admissions and programming remain available. Apply the latest
-            entitlement migration before relying on plan limits.
+            You can still manage join requests, members, events and learning.
+            Plan limits will appear here when setup is complete.
           </p>
         </div>
       </section>
@@ -50,23 +50,23 @@ export function CommunityHostCapabilitiesPanel({
   const tools = [
     {
       active: true,
-      detail: "Admissions, member roles and room programming",
-      label: "Core stewardship",
+      detail: "Join requests, member roles, events and learning",
+      label: "Community management",
     },
     {
       active: Boolean(capabilities?.advanced_analytics),
-      detail: "Continuity, participation and privacy-safe outcomes",
-      label: "Advanced insights",
+      detail: "Return rates, participation and anonymous member results",
+      label: "Member health insights",
     },
     {
       active: Boolean(capabilities?.automations),
-      detail: "Gentle member reminders with rate limits",
-      label: "Host reminders",
+      detail: "Careful introduction reminders with sending limits",
+      label: "Member reminders",
     },
     {
       active: Boolean(capabilities?.paid_access),
-      detail: "Paid offers, member checkout and creator statements",
-      label: "Paid community",
+      detail: "Paid memberships, secure checkout and earnings",
+      label: "Paid memberships",
     },
   ];
 
@@ -74,23 +74,23 @@ export function CommunityHostCapabilitiesPanel({
     <section className="community-host-capabilities">
       <header>
         <div>
-          <p className="eyebrow">Your host tools</p>
-          <h2>{capabilities?.plan_name ?? "Core steward access"}</h2>
+          <p className="eyebrow">Plans &amp; tools</p>
+          <h2>{capabilities?.plan_name ?? "Community management"}</h2>
           <p>
             {capabilities?.host_tools_active
-              ? `Active${date(capabilities.plan_ends_at) ? ` until ${date(capabilities.plan_ends_at)}` : ""}. Your room keeps its core stewardship tools even when optional capabilities differ by plan.`
-              : "No paid host plan is active. You can prepare the room, review admissions and work with one moderator."}
+              ? `Active${date(capabilities.plan_ends_at) ? ` until ${date(capabilities.plan_ends_at)}` : ""}. Your essential community controls remain available even when optional tools differ by plan.`
+              : "No paid community plan is active. You can set up the community, review join requests and work with one moderator."}
           </p>
         </div>
         {owner ? (
           <a className="button button-outline" href="#commerce">
             {capabilities?.host_tools_active
               ? "Review or change plan"
-              : "Choose a host plan"}
+              : "Choose a community plan"}
           </a>
         ) : (
           <Link className="button button-outline" href="/support">
-            Ask about host tools
+            Ask about plans and tools
           </Link>
         )}
       </header>
@@ -109,7 +109,7 @@ export function CommunityHostCapabilitiesPanel({
       </div>
 
       <footer>
-        <span>Moderator seats</span>
+        <span>Moderator places</span>
         <strong>
           {capabilities?.current_moderators ?? 0} of{" "}
           {capabilities?.max_moderators ?? 1} used

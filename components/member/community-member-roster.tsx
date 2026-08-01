@@ -26,12 +26,12 @@ export function CommunityMemberRoster({
     >
       <header>
         <div>
-          <p className="eyebrow">People in this room</p>
-          <h2 id="community-members-title">Meet with context.</h2>
+          <p className="eyebrow">Members</p>
+          <h2 id="community-members-title">Meet the people here.</h2>
         </div>
         <p>
-          Understand what another member does before requesting a connection.
-          Private contact details remain protected until you both agree.
+          Read a member’s profile before asking to connect. Contact details
+          stay private until you both agree.
         </p>
       </header>
       <div>
@@ -60,7 +60,7 @@ export function CommunityMemberRoster({
       </div>
       <footer>
         <Link className="button button-outline" href="/network">
-          Explore the member network
+          Browse all members
         </Link>
       </footer>
     </section>

@@ -78,10 +78,10 @@ export function CommunityBrandingPanel({
     return (
       <section className="community-branding-panel" id="identity">
         <div className="community-host-unavailable" role="status">
-          <strong>Community identity is awaiting its database update.</strong>
+          <strong>Look and feel controls are not ready yet.</strong>
           <p>
-            No branding has changed. Apply the Community Identity and Media
-            migration before uploading private-draft assets.
+            Nothing has changed. Logo and cover image controls will appear here
+            when setup is complete.
           </p>
         </div>
       </section>
@@ -201,7 +201,7 @@ export function CommunityBrandingPanel({
       setCover(null);
       setIcon(null);
       setMessage(
-        "Community identity saved. Draft changes remain private until the room is published.",
+        "Community look and feel saved. Changes stay private until the community opens.",
       );
       router.refresh();
     } catch (error) {
@@ -215,12 +215,12 @@ export function CommunityBrandingPanel({
     <section className="community-branding-panel" id="identity">
       <header>
         <div>
-          <p className="eyebrow">Community identity</p>
-          <h2>Make the room recognisable.</h2>
+          <p className="eyebrow">Look &amp; feel</p>
+          <h2>Make the community recognisable.</h2>
         </div>
         <p>
-          Add a restrained identity within Her Africa Table’s visual system.
-          Assets stay private while the community is in draft.
+          Add a simple identity that still feels like Her Africa Table. Images
+          stay private while you prepare the community.
         </p>
       </header>
 
@@ -253,8 +253,8 @@ export function CommunityBrandingPanel({
             </span>
           )}
           <div>
-            <span>Private identity preview</span>
-            <strong>{identity?.tagline ?? "A purposeful room for members."}</strong>
+            <span>Private preview</span>
+            <strong>{identity?.tagline ?? "A purposeful community for members."}</strong>
           </div>
         </div>
       </div>
@@ -273,7 +273,7 @@ export function CommunityBrandingPanel({
         </label>
 
         <fieldset className="span-two community-accent-picker">
-          <legend>Accent</legend>
+          <legend>Accent colour</legend>
           <div>
             {accents.map((accent) => (
               <label key={accent.value}>
@@ -298,7 +298,7 @@ export function CommunityBrandingPanel({
 
         <div className="community-branding-upload">
           <label>
-            Square icon
+            Community logo
             <input
               accept="image/jpeg,image/png,image/webp"
               name="icon"
@@ -328,7 +328,7 @@ export function CommunityBrandingPanel({
 
         <div className="community-branding-upload">
           <label>
-            Wide cover
+            Cover image
             <input
               accept="image/jpeg,image/png,image/webp"
               name="cover"

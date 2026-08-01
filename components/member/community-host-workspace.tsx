@@ -74,41 +74,41 @@ const metrics: {
 }[] = [
   {
     key: "active_members",
-    label: "Active members",
-    detail: "Approved people in this room",
+    label: "Members",
+    detail: "People who can open this community",
   },
   {
     key: "pending_members",
-    label: "Awaiting admission",
-    detail: "Requests and invitations to review",
+    label: "Join requests",
+    detail: "Requests waiting for your decision",
     attention: true,
   },
   {
     key: "posts_7d",
-    label: "Conversations",
-    detail: "Started in the last seven days",
+    label: "New posts",
+    detail: "Posted in the last 7 days",
   },
   {
     key: "comments_7d",
-    label: "Thoughtful replies",
-    detail: "Added in the last seven days",
+    label: "Replies",
+    detail: "Added in the last 7 days",
   },
   {
     key: "unanswered_asks",
-    label: "Asks needing care",
-    detail: "Published Asks without a reply",
+    label: "Questions without replies",
+    detail: "Member questions that may need help",
     attention: true,
   },
   {
     key: "open_reports",
-    label: "Safety signals",
-    detail: "Open or under review",
+    label: "Safety reports",
+    detail: "Reports still being reviewed",
     attention: true,
   },
   {
     key: "upcoming_gatherings",
-    label: "Upcoming gatherings",
-    detail: "Linked and still ahead",
+    label: "Upcoming events",
+    detail: "Events added to this community",
   },
 ];
 
@@ -181,7 +181,7 @@ export function CommunityHostWorkspace({
     setMessage(
       error
         ? memberErrorMessage(error, "invite this member")
-        : "Invitation sent. The member must accept before entering the room.",
+        : "Invitation sent. The member must accept before opening the community.",
     );
     if (!error) {
       formElement.reset();
@@ -238,8 +238,8 @@ export function CommunityHostWorkspace({
       error
         ? memberErrorMessage(error, "update this community programming")
         : active
-          ? "Community programming updated."
-          : "Item removed from this room.",
+        ? "Community events or learning updated."
+        : "Item removed from this community.",
     );
     if (!error) router.refresh();
   }
@@ -247,7 +247,7 @@ export function CommunityHostWorkspace({
   async function nudgeIntroduction(member: CommunityIntroductionFollowup) {
     if (!automations) {
       setMessage(
-        "Gentle host reminders are not included in the active host plan.",
+        "Introduction reminders are not included in your current plan.",
       );
       return;
     }
@@ -265,7 +265,7 @@ export function CommunityHostWorkspace({
     setMessage(
       error
         ? memberErrorMessage(error, "record this gentle reminder")
-        : "Gentle reminder recorded. Delivery follows the member’s Activity choices.",
+        : "Reminder scheduled. The member’s notification choices will be respected.",
     );
     if (!error) router.refresh();
   }
@@ -273,10 +273,10 @@ export function CommunityHostWorkspace({
   if (!migrationReady || !health) {
     return (
       <section className="community-host-unavailable" role="status">
-        <strong>The host workspace is awaiting its database update.</strong>
+        <strong>Community controls are not ready yet.</strong>
         <p>
-          The community room remains available. Apply the latest migration, then
-          return here to manage programming and health signals.
+          Members can still use the community. These management controls will
+          appear when setup is complete.
         </p>
       </section>
     );
@@ -335,13 +335,13 @@ export function CommunityHostWorkspace({
       >
         <header>
           <div>
-            <p className="eyebrow">Continuity</p>
-            <h2>Help the room keep its promise.</h2>
+            <p className="eyebrow">Member health</p>
+            <h2>See how members are settling in.</h2>
           </div>
           <p>
-            These are shared room signals, not member scores. Use them to make
-            introductions easier, notice whether participation is returning,
-            and protect the privacy of relationship outcomes.
+            These numbers describe the community as a whole—not individual
+            member scores. Use them to welcome people and notice when support
+            may be needed.
           </p>
         </header>
         {continuityReady && continuity ? (
@@ -351,28 +351,28 @@ export function CommunityHostWorkspace({
               aria-label="Community continuity signals"
             >
               <article>
-                <span>Introductions complete</span>
+                <span>Introductions completed</span>
                 <strong>
                   {continuity.introduced_members}
                   <small> / {continuity.active_members}</small>
                 </strong>
-                <p>A clear first step into the room</p>
+                <p>Members who have introduced themselves</p>
               </article>
               <article>
-                <span>Participating this month</span>
+                <span>Active this month</span>
                 <strong>{continuity.participating_30d}</strong>
                 <p>Members who contributed in the last 30 days</p>
               </article>
               <article>
-                <span>Returning participants</span>
+                <span>Returning this month</span>
                 <strong>{continuity.returning_participants_30d}</strong>
                 <p>Established members who participated this month</p>
               </article>
               <article>
-                <span>30-day continuity</span>
+                <span>30-day return rate</span>
                 <strong>
                   {continuity.retention_rate_30d === null
-                    ? "Building baseline"
+                    ? "Not enough data yet"
                     : `${continuity.retention_rate_30d}%`}
                 </strong>
                 <p>
@@ -386,11 +386,11 @@ export function CommunityHostWorkspace({
               <section aria-labelledby="introduction-followups-title">
                 <div className="community-continuity-subhead">
                   <div>
-                    <p className="eyebrow">A gentle first step</p>
+                    <p className="eyebrow">Welcome new members</p>
                     <h3 id="introduction-followups-title">
                       {continuity.missing_introductions
-                        ? `${continuity.missing_introductions} introductions to welcome`
-                        : "Every active member has introduced herself"}
+                        ? `${continuity.missing_introductions} members have not introduced themselves`
+                        : "Every member has introduced herself"}
                     </h3>
                   </div>
                   <span>One reminder per week</span>
@@ -415,32 +415,32 @@ export function CommunityHostWorkspace({
                           >
                             {busy === `nudge-${member.user_id}`
                               ? "Recording…"
-                              : "Send gentle reminder"}
+                              : "Send reminder"}
                           </button>
                         ) : automations ? (
                           <small>Reminder recorded recently</small>
                         ) : (
-                          <small>Available with Host reminders</small>
+                          <small>Available on a plan with reminders</small>
                         )}
                       </article>
                     ))}
                   </div>
                 ) : (
                   <p className="community-host-empty">
-                    There is no introduction follow-up needed today.
+                    No one needs an introduction reminder today.
                   </p>
                 )}
                 <p className="community-continuity-note">
-                  Reminders are in-app only, respect the member’s global
-                  Activity preference, and never expose private contact details.
+                  Reminders stay inside the platform, follow each member’s
+                  notification choices and never reveal contact details.
                 </p>
               </section>
 
               <section aria-labelledby="outcome-trends-title">
                 <div className="community-continuity-subhead">
                   <div>
-                    <p className="eyebrow">What the room enabled</p>
-                    <h3 id="outcome-trends-title">Shared outcomes</h3>
+                    <p className="eyebrow">Member-reported results</p>
+                    <h3 id="outcome-trends-title">What members achieved</h3>
                   </div>
                   <strong>
                     {continuity.shared_outcomes_365d ?? "Private"}
@@ -457,13 +457,13 @@ export function CommunityHostWorkspace({
                   </div>
                 ) : (
                   <p className="community-host-empty">
-                    Outcome trends stay private until at least three different
-                    members anonymously share the same outcome type.
+                    Results appear only after at least three members privately
+                    report the same type of outcome.
                   </p>
                 )}
                 <p className="community-continuity-note">
-                  Hosts see category totals only—never names, relationship
-                  details, or an individual member’s history.
+                  You see totals only—never names, relationship details or an
+                  individual member’s history.
                 </p>
               </section>
             </div>
@@ -473,24 +473,24 @@ export function CommunityHostWorkspace({
             <div>
               <span aria-hidden="true">↗</span>
               <div>
-                <strong>Advanced insights are not in this plan.</strong>
+                <strong>Member health insights are not in your current plan.</strong>
                 <p>
-                  Core health, admissions, people and programming remain
-                  available. Upgrade to add 30-day continuity, participation
-                  and privacy-thresholded outcome trends.
+                  You can still manage join requests, members, events and
+                  learning. Another plan can add return rates and anonymous
+                  member outcome totals.
                 </p>
               </div>
             </div>
             <a className="button button-outline" href="#host-tools">
-              Review host tools
+              Review plans and tools
             </a>
           </div>
         ) : (
           <div className="community-continuity-awaiting" role="status">
-            <strong>Continuity signals are awaiting their database update.</strong>
+            <strong>Member health is not ready yet.</strong>
             <p>
-              Admissions, people and programming remain available below. Apply
-              the latest continuity migration to add this private Host view.
+              You can still manage join requests, members, events and learning
+              below. Member health will appear when setup is complete.
             </p>
           </div>
         )}
@@ -499,12 +499,12 @@ export function CommunityHostWorkspace({
       <section className="community-host-panel" id="admissions">
         <header>
           <div>
-            <p className="eyebrow">Admissions</p>
-            <h2>Know who enters the room.</h2>
+            <p className="eyebrow">Join requests</p>
+            <h2>Choose who joins this community.</h2>
           </div>
           <p>
-            Community admission is separate from platform approval. Invite only
-            active members whose participation fits this room.
+            Only approved Her Africa Table members can join. Invite members who
+            fit this community’s purpose.
           </p>
         </header>
         <form className="community-host-invite" onSubmit={(event) => void invite(event)}>
@@ -513,7 +513,7 @@ export function CommunityHostWorkspace({
             <input name="email" type="email" required />
           </label>
           <label>
-            Room role
+            Community role
             <select name="role" defaultValue="member">
               <option value="member">Member</option>
               <option value="moderator">Moderator</option>
@@ -524,7 +524,7 @@ export function CommunityHostWorkspace({
           </button>
         </form>
         <div className="community-host-member-list">
-          <h3>{pending.length ? "Needs attention" : "No admission decisions waiting"}</h3>
+          <h3>{pending.length ? "Waiting for your decision" : "No join requests are waiting"}</h3>
           {pending.map((member) => (
             <article key={member.membership_id}>
               <div>
@@ -559,8 +559,8 @@ export function CommunityHostWorkspace({
       <section className="community-host-panel" id="people">
         <header>
           <div>
-            <p className="eyebrow">People</p>
-            <h2>Steward roles with care.</h2>
+            <p className="eyebrow">Members</p>
+            <h2>Manage member access and roles.</h2>
           </div>
           <p>
             Moderators can manage members and conversations. Removing someone
@@ -600,7 +600,7 @@ export function CommunityHostWorkspace({
                   </button>
                 </div>
               ) : (
-                <span className="community-owner-label">Room owner</span>
+                <span className="community-owner-label">Community owner</span>
               )}
             </article>
           ))}
@@ -609,18 +609,20 @@ export function CommunityHostWorkspace({
 
       <ProgrammingPanel
         busy={busy}
-        eyebrow="Gatherings"
-        empty="Publish an event in Admin before linking it to this room."
+        eyebrow="Events"
+        empty="No published event is available to add yet."
         options={eventOptions}
-        title="Choose where this community meets."
+        sectionId="gatherings"
+        title="Choose events for this community."
         onUpdate={updateProgramming}
       />
       <ProgrammingPanel
         busy={busy}
-        eyebrow="Resources"
-        empty="Publish a course in Admin before adding it to this room."
+        eyebrow="Learning"
+        empty="No published course is available to add yet."
         options={resourceOptions}
-        title="Keep the shelf small and useful."
+        sectionId="resources"
+        title="Recommend useful learning."
         onUpdate={updateProgramming}
       />
       {dialog}
@@ -634,6 +636,7 @@ function ProgrammingPanel({
   eyebrow,
   onUpdate,
   options,
+  sectionId,
   title,
 }: {
   busy: string;
@@ -645,12 +648,13 @@ function ProgrammingPanel({
     featured: boolean,
   ) => Promise<void>;
   options: CommunityProgrammingOption[];
+  sectionId: string;
   title: string;
 }) {
   return (
     <section
       className="community-host-panel community-host-programming"
-      id={eyebrow.toLowerCase()}
+      id={sectionId}
     >
       <header>
         <div>
@@ -658,8 +662,8 @@ function ProgrammingPanel({
           <h2>{title}</h2>
         </div>
         <p>
-          Linked items appear inside the member room. A host pick is placed
-          first, but members still choose whether to participate.
+          Items you add appear in the community. A featured item appears first,
+          but members always choose whether to take part.
         </p>
       </header>
       {options.length ? (
@@ -680,14 +684,14 @@ function ProgrammingPanel({
                         void onUpdate(option, true, !option.is_featured)
                       }
                     >
-                      {option.is_featured ? "Remove host pick" : "Make host pick"}
+                      {option.is_featured ? "Remove featured status" : "Feature first"}
                     </button>
                     <button
                       className="danger-action"
                       disabled={busy === option.item_id}
                       onClick={() => void onUpdate(option, false, false)}
                     >
-                      Remove
+                      Remove from community
                     </button>
                   </>
                 ) : (
@@ -695,7 +699,7 @@ function ProgrammingPanel({
                     disabled={busy === option.item_id}
                     onClick={() => void onUpdate(option, true, false)}
                   >
-                    Add to room
+                    Add to community
                   </button>
                 )}
               </div>

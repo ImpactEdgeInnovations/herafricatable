@@ -48,65 +48,64 @@ export default async function CommunitiesPage() {
         <MemberHeader active="community" label="Community" />
         <section className="community-hero community-preview-hero">
           <div>
-            <p className="eyebrow">Your community home</p>
+            <p className="eyebrow">Community</p>
             <h1>
-              A quieter way
+              Find your people.
               <br />
-              to belong.
+              Grow together.
             </h1>
             <p>
-              Trusted rooms for thoughtful introductions, practical support and
-              relationships that continue beyond each gathering.
+              Join a private group of women who share an interest, goal or
+              location. Talk, exchange support and meet beyond the screen.
             </p>
           </div>
-          <span className="community-preview-badge">Private preview</span>
+          <span className="community-preview-badge">Opening soon</span>
         </section>
         <nav
           className="community-landing-navigation"
           aria-label="Community preview areas"
         >
-          <a href="#community-preview">What opens first</a>
-          <a href="#create-community">Create a community</a>
+          <a href="#community-preview">How it works</a>
+          <a href="#create-community">Start a community</a>
         </nav>
         <section className="community-preview-panel" id="community-preview">
           <div className="community-preview-copy">
-            <p className="eyebrow">Opening carefully</p>
-            <h2>The first rooms are passing final review.</h2>
+            <p className="eyebrow">How communities work</p>
+            <h2>Small groups with a clear purpose.</h2>
             <p>
-              Community access stays private until the host, backup moderator,
-              member boundaries and safety experience are ready. Nothing about
-              your wider membership or existing connections changes while we
-              prepare.
+              Each community has a trusted leader and its own members,
+              conversations, events and learning. We are checking the first
+              groups before opening them to members.
             </p>
             <div className="journey-state-actions">
               <Link className="button button-primary" href="/events">
-                View gatherings
+                Browse upcoming events
               </Link>
               <Link className="button button-outline" href="/network">
-                Meet members
+                Meet other members
               </Link>
             </div>
           </div>
-          <ol aria-label="Community opening sequence">
+          <ol aria-label="How communities work">
             <li>
               <span>01</span>
               <div>
-                <strong>Founding rooms</strong>
-                <p>Small, hosted spaces connected to real gatherings.</p>
+                <strong>Find your group</strong>
+                <p>Choose a community built around a purpose you share.</p>
               </div>
             </li>
             <li>
               <span>02</span>
               <div>
-                <strong>Purpose-led communities</strong>
-                <p>Approved hosts bring members together around clear value.</p>
+                <strong>Join safely</strong>
+                <p>Request to join or accept an invitation from the leader.</p>
               </div>
             </li>
             <li>
               <span>03</span>
               <div>
-                <strong>Member-led growth</strong>
-                <p>New rooms open only after trust and operating review.</p>
+                <strong>Take part</strong>
+                <p>Post, reply, meet members and join community events.</p>
               </div>
             </li>
           </ol>
@@ -157,19 +156,19 @@ export default async function CommunitiesPage() {
       <MemberHeader active="community" label="Community" />
       <section className="community-hero">
         <div>
-          <p className="eyebrow">Your community home</p>
-          <h1>
-            Belong with
+            <p className="eyebrow">Community</p>
+            <h1>
+            Find your people.
             <br />
-            shared purpose.
+            Build what matters.
           </h1>
           <p>
-            Enter a trusted room to introduce yourself, exchange practical
-            support and continue relationships beyond each gathering.
+            Join a private group, share what you need, offer what you know and
+            build relationships around a purpose you share.
           </p>
         </div>
         <a className="button button-outline" href="#create-community">
-          Create a community
+          Start a community
         </a>
       </section>
       <nav
@@ -177,8 +176,8 @@ export default async function CommunitiesPage() {
         aria-label="Community page areas"
       >
         <a href="#your-communities">Your communities</a>
-        <a href="#discover-communities">Discover</a>
-        <a href="#create-community">Create a community</a>
+        <a href="#discover-communities">Find a community</a>
+        <a href="#create-community">Start a community</a>
       </nav>
 
       {communityResult.error ? (

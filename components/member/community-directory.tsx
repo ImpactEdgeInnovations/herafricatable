@@ -88,13 +88,13 @@ export function CommunityDirectory({
         : item.membership_status === "invited"
           ? item.offer_access_type === "paid" &&
             item.membership_role === "member"
-            ? "Invitation accepted. Complete payment to enter the community."
-            : "Invitation accepted. Welcome to the community."
+            ? "Invitation accepted. Pay to finish joining this community."
+            : "Invitation accepted. You can now open the community."
           : item.community_type === "private"
-          ? "Your request has been sent to the host."
+          ? "Your request has been sent to the community leader."
           : item.offer_access_type === "paid"
-            ? "You are approved. Complete payment to enter the community."
-            : "Welcome to the community.",
+            ? "Your request was approved. Pay to finish joining."
+            : "You have joined the community.",
     );
     if (!error) router.refresh();
   }
@@ -195,15 +195,15 @@ export function CommunityDirectory({
       item.membership_status === "approved_pending_payment";
     const stateLabel =
       item.membership_status === "active"
-        ? "Your community"
+        ? "Member"
         : item.membership_status === "requested"
-          ? "Awaiting host"
+          ? "Request sent"
           : item.membership_status === "invited"
-            ? "Invitation"
+            ? "You’re invited"
             : awaitingPayment
-              ? "Host approved"
+              ? "Ready for payment"
               : item.community_type === "private"
-                ? "Host reviewed"
+                ? "Approval required"
                 : "Open to members";
 
     return (
@@ -239,7 +239,11 @@ export function CommunityDirectory({
               </span>
             )}
             <div>
-              <small>{item.community_type} community</small>
+              <small>
+                {item.community_type === "private"
+                  ? "Private community"
+                  : "Her Africa Table community"}
+              </small>
               <h3>{item.name}</h3>
             </div>
           </div>
@@ -266,18 +270,18 @@ export function CommunityDirectory({
               className="button button-primary"
               href={`/communities/${item.slug}`}
             >
-              {newActivity ? "Continue to community" : "Enter community"}
+              {newActivity ? "See new updates" : "Open community"}
             </Link>
           ) : item.membership_status === "requested" ? (
             <span className="community-membership-state">
-              <strong>Request with host</strong>
-              <small>You will hear from the host after review.</small>
+              <strong>Waiting for approval</strong>
+              <small>The community leader will review your request.</small>
             </span>
           ) : awaitingPayment ? (
             <div className="community-checkout">
               <div>
-                <strong>Complete your access</strong>
-                <small>Your place remains approved while you pay.</small>
+                <strong>One last step</strong>
+                <small>Pay to open your approved membership.</small>
               </div>
               {item.offer_payment_mode === "automatic" ? (
                 <button
@@ -295,7 +299,7 @@ export function CommunityDirectory({
                   onSubmit={(event) => void submitManual(event, item)}
                 >
                   <label>
-                    Payment reference
+                    Payment code or reference
                     <input
                       maxLength={120}
                       minLength={3}
@@ -305,7 +309,7 @@ export function CommunityDirectory({
                     />
                   </label>
                   <label>
-                    Verification note
+                    Anything we should know?
                     <textarea
                       maxLength={500}
                       minLength={5}
@@ -320,13 +324,13 @@ export function CommunityDirectory({
                   >
                     {busy === `manual-${item.community_id}`
                       ? "Submitting…"
-                      : "Submit for verification"}
+                      : "Send payment for review"}
                   </button>
                 </form>
               ) : (
                 <span className="community-membership-state">
-                  <strong>Payment opening soon</strong>
-                  <small>Your approval is safely retained.</small>
+                  <strong>Payment is not open yet</strong>
+                  <small>Your approved place is reserved.</small>
                 </span>
               )}
             </div>
@@ -339,9 +343,9 @@ export function CommunityDirectory({
               {item.membership_status === "invited"
                 ? "Accept invitation"
                 : item.community_type === "private"
-                  ? "Request access"
+                  ? "Ask to join"
                   : paid
-                    ? "Join and continue"
+                    ? "Join community"
                     : "Join community"}
             </button>
           )}
@@ -355,8 +359,8 @@ export function CommunityDirectory({
       <section className="community-directory" id="your-communities">
         <header className="community-directory-heading">
           <div>
-            <p className="eyebrow">Your rooms</p>
-            <h2>Continue where you belong.</h2>
+            <p className="eyebrow">Your communities</p>
+            <h2>Pick up where you left off.</h2>
           </div>
           <span>
             {memberCommunities.length} communit
@@ -373,10 +377,10 @@ export function CommunityDirectory({
           <div className="community-directory-empty">
             <span aria-hidden="true">H</span>
             <div>
-              <strong>Your first community is waiting.</strong>
+              <strong>Find your first community.</strong>
               <p>
-                Explore trusted rooms below. Private communities ask the host
-                to review every request.
+                Browse the groups below. A private community will ask its
+                leader to approve your request.
               </p>
             </div>
             <a className="button button-outline" href="#discover-communities">
@@ -389,8 +393,8 @@ export function CommunityDirectory({
       <section className="community-directory" id="discover-communities">
         <header className="community-directory-heading is-discovery">
           <div>
-            <p className="eyebrow">Discover</p>
-            <h2>Find a room with purpose.</h2>
+            <p className="eyebrow">Find a community</p>
+            <h2>Choose a purpose you share.</h2>
           </div>
           {discoverCommunities.length > 3 ? (
             <label className="community-directory-search">
@@ -420,12 +424,12 @@ export function CommunityDirectory({
               <strong>
                 {cleanQuery
                   ? "No communities match that search."
-                  : "No additional communities are open yet."}
+                  : "No new communities are open yet."}
               </strong>
               <p>
                 {cleanQuery
                   ? "Try a broader word or clear the search."
-                  : "New rooms appear only after host and safety review."}
+                  : "New communities appear after their leader and safety setup are approved."}
               </p>
             </div>
             {cleanQuery ? (

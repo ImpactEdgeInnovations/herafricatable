@@ -18,18 +18,18 @@ export type CommunityCircleProgram = {
 function programState(program: CommunityCircleProgram) {
   if (program.my_circle_id) {
     return program.cycle_status === "completed"
-      ? "Your completed Circle"
-      : "Your Circle is ready";
+      ? "Completed"
+      : "Your Circle is open";
   }
   if (program.cycle_status === "open") {
     return program.opt_in_status === "opted_in"
-      ? "In the matching pool"
-      : "Open for matching";
+      ? "You asked to join"
+      : "Open to join";
   }
-  if (program.cycle_status === "matched") return "Matching under review";
+  if (program.cycle_status === "matched") return "Your group is being prepared";
   return program.cycle_status === "completed"
-    ? "Cycle completed"
-    : "Cycle published";
+    ? "Completed"
+    : "Circle groups are open";
 }
 
 export function CommunityCircles({
@@ -43,12 +43,12 @@ export function CommunityCircles({
     <section className="community-circles" id="circles">
       <header>
         <div>
-          <p className="eyebrow">Smaller circles</p>
-          <h2>Go deeper with a few.</h2>
+          <p className="eyebrow">Small groups</p>
+          <h2>Get to know a few members better.</h2>
         </div>
         <p>
-          Time-bound, human-reviewed cohorts connected to this community. Your
-          Circle room remains visible only to assigned members.
+          Circles bring a small group together for a set period. Only people
+          assigned to your Circle can see its members and conversations.
         </p>
       </header>
       <div className="community-circle-grid">
@@ -56,13 +56,13 @@ export function CommunityCircles({
           <article key={program.cycle_id}>
             <div className="community-circle-state">
               <span>{programState(program)}</span>
-              <small>{program.group_size} women per Circle</small>
+              <small>Up to {program.group_size} members</small>
             </div>
             <h3>{program.my_circle_name ?? program.cycle_name}</h3>
             <p>{program.cycle_description}</p>
             <dl>
               <div>
-                <dt>Begins</dt>
+                <dt>Starts</dt>
                 <dd>
                   {new Intl.DateTimeFormat("en-KE", {
                     dateStyle: "medium",
@@ -79,7 +79,7 @@ export function CommunityCircles({
               </div>
               {program.my_circle_id ? (
                 <div>
-                  <dt>Your room</dt>
+                  <dt>Your group</dt>
                   <dd>
                     {program.my_circle_member_count} members ·{" "}
                     {program.my_circle_prompt_count} prompts
@@ -97,12 +97,12 @@ export function CommunityCircles({
             ) : program.cycle_status === "open" ? (
               <Link className="button button-outline" href="/circles">
                 {program.opt_in_status === "opted_in"
-                  ? "Review your opt-in"
-                  : "Review and opt in"}
+                  ? "View your request"
+                  : "Join this Circle"}
               </Link>
             ) : (
               <span className="community-circle-private-note">
-                Assignment details stay private until your Circle is published.
+                We’ll show your Circle after the group is confirmed.
               </span>
             )}
           </article>

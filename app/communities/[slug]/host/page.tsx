@@ -207,38 +207,40 @@ export default async function CommunityHostPage({
 
   return (
     <main className="community-page community-host-page">
-      <MemberHeader active="community" label={`${community.name} · Host`} />
+      <MemberHeader active="community" label={`${community.name} · Manage`} />
       <section className="community-host-hero">
         <div>
-          <p className="eyebrow">Private host workspace</p>
-          <h1>Steward the room,<br />not the noise.</h1>
+          <p className="eyebrow">Manage community</p>
+          <h1>Lead with clarity<br />and care.</h1>
           <p>
-            Make careful admission decisions, notice where members need support,
-            and connect only the programming that serves this community.
+            Review join requests, support members, add events and learning, and
+            keep this community safe—all from one private place.
           </p>
           <Link href={`/communities/${slug}`}>← Return to community</Link>
         </div>
         <aside>
-          <span>Your role</span>
-          <strong>{community.membership_role}</strong>
-          <small>Every access and programming change is audited.</small>
+          <span>Your access</span>
+          <strong>
+            {community.membership_role === "owner" ? "Owner" : "Moderator"}
+          </strong>
+          <small>Important changes are recorded for safety.</small>
         </aside>
       </section>
       <nav className="community-room-navigation" aria-label="Host workspace areas">
-        <a href="#host-tools">Host tools</a>
+        <a href="#host-tools">Plan &amp; tools</a>
         {community.membership_role === "owner" ? (
-          <a href="#identity">Identity</a>
+          <a href="#identity">Look &amp; feel</a>
         ) : null}
-        <a href="#continuity">Continuity</a>
-        <a href="#admissions">Admissions</a>
-        <a href="#people">People</a>
-        <a href="#gatherings">Gatherings</a>
-        <a href="#resources">Resources</a>
+        <a href="#continuity">Member health</a>
+        <a href="#admissions">Join requests</a>
+        <a href="#people">Members</a>
+        <a href="#gatherings">Events</a>
+        <a href="#resources">Learning</a>
         <a href="#circle-programming">Circles</a>
         {community.membership_role === "owner" ? (
           <>
-            <a href="#commerce">Commerce</a>
-            <a href="#statement">Statement</a>
+            <a href="#commerce">Payments</a>
+            <a href="#statement">Earnings</a>
           </>
         ) : null}
       </nav>

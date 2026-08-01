@@ -16,6 +16,13 @@ export type CommunityCircleOption = {
   is_linked: boolean;
 };
 
+function statusLabel(status: CommunityCircleOption["cycle_status"]) {
+  if (status === "open") return "Open to join";
+  if (status === "matched") return "Groups being prepared";
+  if (status === "published") return "Groups open";
+  return "Completed";
+}
+
 export function CommunityCircleHostPanel({
   communityId,
   migrationReady,
@@ -46,8 +53,8 @@ export function CommunityCircleHostPanel({
       error
         ? memberErrorMessage(error, "update this Circle connection")
         : option.is_linked
-          ? "Circle cycle removed from this community. Circle memberships are unchanged."
-          : "Circle cycle added to this community.",
+          ? "This Circle programme is now hidden from the community. Existing Circle groups are unchanged."
+          : "This Circle programme is now visible in the community.",
     );
     if (!error) router.refresh();
   }
@@ -56,20 +63,20 @@ export function CommunityCircleHostPanel({
     <section className="community-circle-host" id="circle-programming">
       <header>
         <div>
-          <p className="eyebrow">Circle programming</p>
-          <h2>Connect a smaller table.</h2>
+          <p className="eyebrow">Small-group programme</p>
+          <h2>Add a Circle programme.</h2>
         </div>
         <p>
-          Curate relevant Circle cycles without seeing matching notes, private
-          rosters or member reflections.
+          Choose which available Circle programme members can see. Matching,
+          member lists and private responses stay with the platform team.
         </p>
       </header>
       {!migrationReady ? (
         <div className="community-host-unavailable" role="status">
-          <strong>Circle linking is behind its release gate.</strong>
+          <strong>Circle options are not ready yet.</strong>
           <p>
-            This control appears after both Community and Circles pass their
-            database and privacy acceptance checks.
+            This section will open after the Community and Circles features
+            have completed their safety checks.
           </p>
         </div>
       ) : options.length ? (
@@ -78,7 +85,7 @@ export function CommunityCircleHostPanel({
             <article key={option.cycle_id}>
               <div>
                 <span>
-                  {option.cycle_status} · {option.group_size} per Circle
+                  {statusLabel(option.cycle_status)} · Up to {option.group_size} members
                 </span>
                 <strong>{option.cycle_name}</strong>
                 <p>{option.cycle_description}</p>
@@ -96,18 +103,18 @@ export function CommunityCircleHostPanel({
                 {busy === option.cycle_id
                   ? "Updating…"
                   : option.is_linked
-                    ? "Remove from community"
-                    : "Add to community"}
+                    ? "Hide from community"
+                    : "Show in community"}
               </button>
             </article>
           ))}
         </div>
       ) : (
         <div className="admin-empty">
-          <strong>No released Circle cycle is available.</strong>
+          <strong>No Circle programme is available.</strong>
           <p>
-            Circle cycles appear here only after the platform team opens or
-            publishes them.
+            An available Circle programme will appear here when the platform
+            team opens it.
           </p>
         </div>
       )}

@@ -21,25 +21,25 @@ type StartStep = {
 
 const fallbackSteps: StartStep[] = [
   {
-    action: "Open conversations",
+    action: "View posts",
     complete: false,
-    description: "Share one useful Ask, Offer, resource or follow-up.",
+    description: "Ask a question, share an update or offer something useful.",
     href: "#conversations",
-    label: "Join the conversation",
+    label: "Join a conversation",
   },
   {
     action: "Meet members",
     complete: false,
-    description: "Understand her context before requesting a connection.",
+    description: "View member profiles and choose someone relevant to meet.",
     href: "#members",
-    label: "Meet relevant members",
+    label: "Meet a member",
   },
   {
-    action: "View gatherings",
+    action: "View events",
     complete: false,
-    description: "See the next event and carry the relationship forward.",
+    description: "See what is coming up for this community.",
     href: "#gatherings",
-    label: "Gather around the table",
+    label: "Join an event",
   },
 ];
 
@@ -56,48 +56,48 @@ export function CommunityStartPath({
           ? [
               {
                 action: state.has_introduction
-                  ? "Review introduction"
+                  ? "View your introduction"
                   : "Introduce yourself",
                 complete: state.has_introduction,
                 description:
-                  "Give the room enough context to understand what you are building, offering and seeking.",
+                  "Tell members who you are, what you are working on and what support would help.",
                 href: "#cohort-welcome-title",
-                label: "Begin with context",
+                label: "Introduce yourself",
               },
             ]
           : []),
         {
           action: state.has_contribution
-            ? "Return to conversations"
-            : "Share with purpose",
+            ? "View conversations"
+            : "Write a post",
           complete: state.has_contribution,
           description:
-            "Add one focused Ask, Offer, useful resource or thoughtful reply.",
+            "Ask a clear question, share an update or offer useful support.",
           href: "#conversations",
-          label: "Contribute something useful",
+          label: "Join a conversation",
         },
         {
           action: state.has_accepted_connection
-            ? "Nurture relationships"
+            ? "View your connections"
             : "Meet members",
           complete: state.has_accepted_connection,
           description:
-            "Read her context first. Private conversation begins only after mutual acceptance.",
+            "Read a member’s profile first. You can message after you both agree to connect.",
           href: state.has_accepted_connection ? "/network" : "#members",
-          label: "Build one mutual connection",
+          label: "Meet a member",
         },
         ...(state.next_gathering_slug
           ? [
               {
                 action: state.has_upcoming_registration
-                  ? "View gathering"
-                  : "Consider your place",
+                  ? "View event"
+                  : "View event details",
                 complete: state.has_upcoming_registration,
                 description: state.next_gathering_title
-                  ? `${state.next_gathering_title} is the next gathering selected for this room.`
-                  : "Carry useful community context into the next gathering.",
+                  ? `${state.next_gathering_title} is the next event for this community.`
+                  : "See the next event chosen for this community.",
                 href: `/events/${state.next_gathering_slug}`,
-                label: "Continue around the table",
+                label: "Join the next event",
               },
             ]
           : []),
@@ -114,18 +114,18 @@ export function CommunityStartPath({
     >
       <header>
         <p className="eyebrow">
-          {allComplete ? "Your room rhythm" : "Recommended now"}
+          {allComplete ? "You’re all set" : "Your next step"}
         </p>
         <h2 id="community-start-title">
           {allComplete
-            ? "You have found your place here."
-            : recommended?.label ?? "Begin where you are."}
+            ? "Keep in touch when it matters."
+            : recommended?.label ?? "Choose where to begin."}
         </h2>
         <p>
           {allComplete
-            ? "Return when you have something useful to offer, a clear ask, or a relationship to nurture. There is no activity quota."
+            ? "Come back when you want to ask, share, meet someone or join an event. You never have to post just to stay active."
             : recommended?.description ??
-              "Use this room for thoughtful context and practical support. Private conversations begin only after both members choose to connect."}
+              "Use this community to ask questions, share useful ideas and meet members. Private messages open only after both people agree to connect."}
         </p>
         {recommended ? (
           <Link className="community-start-primary" href={recommended.href}>
@@ -133,7 +133,7 @@ export function CommunityStartPath({
           </Link>
         ) : (
           <a className="community-start-primary" href="#conversations">
-            Return to conversations <span aria-hidden="true">→</span>
+            View community posts <span aria-hidden="true">→</span>
           </a>
         )}
       </header>
@@ -148,8 +148,8 @@ export function CommunityStartPath({
           >
             <span>{String(index + 1).padStart(2, "0")}</span>
             <strong>{step.label}</strong>
-            <small>{step.complete ? "Available whenever useful" : step.description}</small>
-            <em>{step.complete ? "Established" : step.action}</em>
+            <small>{step.complete ? "You have completed this step." : step.description}</small>
+            <em>{step.complete ? "Done" : step.action}</em>
           </Link>
         ))}
       </div>

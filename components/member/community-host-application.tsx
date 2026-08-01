@@ -40,12 +40,12 @@ const statusCopy: Record<
   approved: {
     label: "Approved",
     summary:
-      "Your private draft room is ready. Set up the experience before inviting members.",
+      "Your private community is ready to set up. Members cannot see it until the final checks are complete.",
   },
   changes_requested: {
     label: "Update requested",
     summary:
-      "The Community team left guidance. Refine your application and send it back.",
+      "The Community team left a note. Update your application and send it back.",
   },
   declined: {
     label: "Reviewed",
@@ -55,12 +55,12 @@ const statusCopy: Record<
   pending: {
     label: "Submitted",
     summary:
-      "Your application is safely in the review queue. We will update you in Community and Activity.",
+      "We received your application. We will update you here and in Activity.",
   },
   under_review: {
     label: "In review",
     summary:
-      "The Community team is reviewing the purpose, audience and hosting boundaries.",
+      "The Community team is reviewing your idea, who it serves and how you will lead it.",
   },
   withdrawn: {
     label: "Withdrawn",
@@ -169,11 +169,11 @@ export function CommunityHostApplication({
       <section className="community-host-application" id="create-community">
         <div className="community-host-entry">
           <div>
-            <p className="eyebrow">Lead a trusted room</p>
-            <h2>Create a community</h2>
+            <p className="eyebrow">Bring people together</p>
+            <h2>Start a community</h2>
             <p>
-              Host applications will open here as soon as the latest production
-              database update is applied.
+              Applications are not open yet. You will be able to apply here
+              when community setup is ready.
             </p>
           </div>
           <span className="community-host-entry-state">Opening soon</span>
@@ -192,12 +192,12 @@ export function CommunityHostApplication({
     <section className="community-host-application" id="create-community">
       <div className="community-host-entry">
         <div>
-          <p className="eyebrow">Lead a trusted room</p>
-          <h2>Create a community</h2>
+          <p className="eyebrow">Bring people together</p>
+          <h2>Start a community</h2>
           <p>
-            Bring together women around a clear purpose. Every new community is
-            reviewed, created as a private draft and opened only after its host
-            and safety boundaries are ready.
+            Have a clear idea for a group? Apply to lead it. We review every
+            application, help you set up privately and open the community only
+            when it is ready for members.
           </p>
         </div>
         {current ? (
@@ -211,7 +211,7 @@ export function CommunityHostApplication({
             className="button button-primary"
             onClick={() => setOpen((value) => !value)}
           >
-            {open ? "Close application" : "Apply to create a community"}
+            {open ? "Close application" : "Apply to start a community"}
           </button>
         )}
       </div>
@@ -224,30 +224,30 @@ export function CommunityHostApplication({
           <li>
             <span>1</span>
             <div>
-              <strong>Share the idea</strong>
-              <small>Purpose, people and the value you will create.</small>
+              <strong>Tell us your idea</strong>
+              <small>Explain the purpose, the members and what they will gain.</small>
             </div>
           </li>
           <li>
             <span>2</span>
             <div>
-              <strong>Complete review</strong>
-              <small>We confirm fit, boundaries and host readiness.</small>
+              <strong>We review it</strong>
+              <small>We check the purpose, safety plan and your readiness to lead.</small>
             </div>
           </li>
           <li>
             <span>3</span>
             <div>
-              <strong>Prepare in private</strong>
-              <small>Your draft room opens before any member can join.</small>
+              <strong>Set up privately</strong>
+              <small>Prepare the community before members can see or join it.</small>
             </div>
           </li>
         </ol>
       ) : (
         <div className="community-host-principles" aria-label="Host safeguards">
-          <span>Reviewed by the Community team</span>
-          <span>Private draft first</span>
-          <span>Published only after safety checks</span>
+          <span>Every application is reviewed</span>
+          <span>Set up privately first</span>
+          <span>Open after safety checks</span>
         </div>
       )}
 
@@ -280,7 +280,7 @@ export function CommunityHostApplication({
                   className="button button-outline"
                   href={`/communities/${current.created_community_slug}/host`}
                 >
-                  Open host workspace
+                  Manage community
                 </Link>
               </>
             ) : editable ? (
@@ -315,12 +315,12 @@ export function CommunityHostApplication({
         >
           <header>
             <p className="eyebrow">
-              {editable ? "Refine your proposal" : "Host application"}
+              {editable ? "Update your application" : "Community leader application"}
             </p>
-            <h3>What will bring this room to life?</h3>
+            <h3>Tell us about the community you want to lead.</h3>
             <p>
-              Write as you would explain the idea to a future member. You can
-              refine a submitted application until review begins.
+              Use clear, everyday language. You can edit the application until
+              our review begins.
             </p>
           </header>
           <div className="community-host-form-grid">
@@ -377,7 +377,7 @@ export function CommunityHostApplication({
               />
             </label>
             <label>
-              Expected first-year members
+              How many members do you expect in the first year?
               <input
                 defaultValue={defaults?.expected_members ?? 20}
                 max={100000}
@@ -406,25 +406,25 @@ export function CommunityHostApplication({
               </select>
             </label>
             <label className="span-two">
-              What prepares you to host?
+              What experience will help you lead this community?
               <textarea
                 defaultValue={defaults?.host_experience ?? ""}
                 maxLength={1000}
                 minLength={20}
                 name="host_experience"
-                placeholder="Share relevant community, leadership, facilitation or subject experience."
+                placeholder="Tell us about relevant leadership, community or subject experience."
                 required
                 rows={3}
               />
             </label>
             <label className="span-two">
-              How will you keep the room useful and safe?
+              How will you keep the community useful and safe?
               <textarea
                 defaultValue={defaults?.safety_plan ?? ""}
                 maxLength={1200}
                 minLength={40}
                 name="safety_plan"
-                placeholder="Explain your moderation rhythm, boundaries and how you would respond to a concern."
+                placeholder="Explain the rules you will set, how you will check posts and how you will handle a concern."
                 required
                 rows={4}
               />
@@ -445,8 +445,8 @@ export function CommunityHostApplication({
             <span>
               I will follow the{" "}
               <Link href="/community-guidelines">Community Guidelines</Link> and
-              understand that approval creates a private draft, not an
-              automatically published community.
+              understand that approval creates a private community for setup.
+              It does not open to members automatically.
             </span>
           </label>
           <footer>
@@ -465,7 +465,7 @@ export function CommunityHostApplication({
               onClick={() => setOpen(false)}
               type="button"
             >
-              Save nothing and close
+              Cancel and close
             </button>
           </footer>
         </form>
@@ -476,7 +476,7 @@ export function CommunityHostApplication({
           className="community-host-new-proposal"
           onClick={() => setOpen(true)}
         >
-          Begin a new community proposal
+          Start a new community application
         </button>
       ) : null}
 

@@ -396,6 +396,7 @@ for (const contract of [
   );
 }
 const communityRoom = read("app/communities/[slug]/page.tsx");
+const communityStyles = read("app/globals.css");
 const communityRoster = read(
   "components/member/community-member-roster.tsx",
 );
@@ -449,11 +450,11 @@ const communityNotificationPreferences = read(
 for (const contract of [
   'active="community"',
   "community-room-navigation",
-  "Overview",
-  "Conversations",
+  "Start here",
+  "Posts",
   "Members",
-  "Gatherings",
-  "Resources",
+  "Events",
+  "Learning",
   "list_community_member_directory",
   "get_my_community_start_path",
   "CommunityStartPath",
@@ -483,7 +484,7 @@ for (const contract of [
   "new_activity_count",
   "has-new-activity",
   "community-directory-activity-badge",
-  "Continue to community",
+  "See new updates",
   "statePriority",
 ]) {
   assert(
@@ -501,13 +502,13 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Recommended now",
-  "Begin with context",
-  "Contribute something useful",
-  "Build one mutual connection",
-  "Continue around the table",
-  "mutual acceptance",
-  "There is no activity quota",
+  "Your next step",
+  "Introduce yourself",
+  "Join a conversation",
+  "Meet a member",
+  "Join the next event",
+  "both people agree to connect",
+  "never have to post just to stay active",
   "has_accepted_connection",
 ]) {
   assert(
@@ -523,11 +524,11 @@ for (const contract of [
   "set_community_post_saved",
   "set_community_post_followed",
   "set_community_post_pinned",
-  "Conversation type",
+  "What are you sharing?",
   "Save privately",
   "Follow replies",
   "Report privately",
-  "Find a conversation",
+  "Search posts",
   "Most active",
   "My conversations",
   "Clear filters",
@@ -582,9 +583,9 @@ assert(
 for (const contract of [
   'id="gatherings"',
   'id="resources"',
-  "Meet with shared context.",
-  "A small, host-curated shelf",
-  "Open host workspace",
+  "Meet in person or online.",
+  "chosen by the community leader",
+  "Open community controls",
 ]) {
   assert(
     communityProgramming.includes(contract),
@@ -599,7 +600,7 @@ for (const contract of [
   "list_community_introduction_followups",
   "list_community_outcome_trends",
   'active="community"',
-  "Private host workspace",
+  "Manage community",
   "get_community_host_commerce",
   "CommunityCommercePanel",
   'href="#commerce"',
@@ -625,12 +626,12 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Smaller circles",
-  "Go deeper with a few.",
-  "Circle room remains visible only to assigned members.",
+  "Small groups",
+  "Get to know a few members better.",
+  "assigned to your Circle can see its members and conversations.",
   "/circles?circle=",
-  "Review and opt in",
-  "Assignment details stay private",
+  "Join this Circle",
+  "show your Circle after the group is confirmed",
 ]) {
   assert(
     communityCircles.includes(contract),
@@ -639,9 +640,9 @@ for (const contract of [
 }
 for (const contract of [
   "set_community_circle_cycle_link",
-  "without seeing matching notes",
-  "Remove from community",
-  "Add to community",
+  "Matching,",
+  "Hide from community",
+  "Show in community",
   "migrationReady",
 ]) {
   assert(
@@ -650,14 +651,14 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Community identity",
-  "Make the room recognisable",
-  "Private identity preview",
+  "Look &amp; feel",
+  "Make the community recognisable",
+  "Private preview",
   "save_community_brand_identity",
   'from("community-media")',
-  "Square icon",
-  "Wide cover",
-  "Accent",
+  "Community logo",
+  "Cover image",
+  "Accent colour",
   "Private until release",
   "p_remove_icon",
   "p_remove_cover",
@@ -668,13 +669,13 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Your host tools",
-  "Core stewardship",
-  "Advanced insights",
-  "Host reminders",
-  "Paid community",
-  "Moderator seats",
-  "Choose a host plan",
+  "Plans &amp; tools",
+  "Community management",
+  "Member health insights",
+  "Member reminders",
+  "Paid memberships",
+  "Moderator places",
+  "Choose a community plan",
   "Review or change plan",
 ]) {
   assert(
@@ -683,8 +684,8 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Community creator commerce",
-  "Three safeguards before paid access",
+  "Plans &amp; payments",
+  "Three checks protect you and your members",
   "accept_community_host_terms",
   "save_community_offer",
   "Automatic with Paystack",
@@ -692,13 +693,13 @@ for (const contract of [
   "Closed — preserve approvals",
   "Held for you",
   "paidPublishReady",
-  "Choose the plan that fits your room.",
+  "Choose the plan that fits your community.",
   "create_community_host_plan_order",
   "communityHostPlanId",
   "Payment in review",
   "Host plan selection is not open yet.",
-  "Plan continuity",
-  "Keep your host workspace uninterrupted.",
+  "Plan renewal",
+  "Keep your community controls available.",
   "Renew current plan",
   "Schedule a plan change",
   "Next plan secured",
@@ -710,12 +711,12 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Creator statement",
-  "Every movement, explained.",
-  "Available after reconciliation",
+  "Community earnings",
+  "See where every payment goes.",
+  "Available for payout",
   "Provider costs and refunds",
-  "Recent statement entries",
-  "Automatic payouts off",
+  "Recent payments and adjustments",
+  "Payouts reviewed manually",
 ]) {
   assert(
     communityFinancialStatement.includes(contract),
@@ -758,15 +759,15 @@ for (const contract of [
 }
 for (const contract of [
   "approved_pending_payment",
-  "Host approved",
+  "Ready for payment",
   "create_community_order",
   "communityOfferId",
-  "Payment opening soon",
-  "Submit for verification",
+  "Payment is not open yet",
+  "Send payment for review",
   'id="your-communities"',
-  "Continue where you belong",
+  "Pick up where you left off",
   'id="discover-communities"',
-  "Find a room with purpose",
+  "Choose a purpose you share",
   "Search communities",
   "Clear search",
   "community-directory-icon",
@@ -782,8 +783,8 @@ for (const contract of [
   "CommunityHostApplication",
   "list_my_community_host_applications",
   "community-landing-navigation",
-  "A quieter way",
-  "Private preview",
+  "Find your people.",
+  "Opening soon",
   "community-preview-panel",
 ]) {
   assert(
@@ -792,17 +793,17 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Create a community",
-  "Apply to create a community",
-  "Share the idea",
-  "Complete review",
-  "Prepare in private",
+  "Start a community",
+  "Apply to start a community",
+  "Tell us your idea",
+  "We review it",
+  "Set up privately",
   "save_community_host_application",
   "withdraw_community_host_application",
   "Update and resubmit",
-  "Open host workspace",
+  "Manage community",
   "Community Guidelines",
-  "private draft",
+  "private community for setup",
   "memberErrorMessage",
 ]) {
   assert(
@@ -840,27 +841,27 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Awaiting admission",
-  "Asks needing care",
-  "Safety signals",
+  "Join requests",
+  "Questions without replies",
+  "Safety reports",
   "review_community_membership",
   "invite_community_member",
   "set_community_event_link",
   "set_community_course_link",
-  "Community admission is separate from platform approval",
+  "Only approved Her Africa Table members can join",
   "Contact platform safety",
   'id="continuity"',
-  "These are shared room signals, not member scores",
-  "Building baseline",
-  "at least three different",
-  "Send gentle reminder",
+  "numbers describe the community as a whole",
+  "Not enough data yet",
+  "at least three members",
+  "Send reminder",
   "send_community_introduction_nudge",
   "One reminder per week",
   "never names, relationship",
   "memberErrorMessage",
-  "Advanced insights are not in this plan",
-  "Gentle host reminders are not included in the active host plan",
-  "Available with Host reminders",
+  "Member health insights are not in your current plan",
+  "Introduction reminders are not included in your current plan",
+  "Available on a plan with reminders",
 ]) {
   assert(
     communityHostWorkspace.includes(contract),
@@ -868,10 +869,10 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Replies in Activity",
+  "Show replies in Activity",
   "Email me about replies",
-  "Weekly room briefing",
-  "Send the briefing by email",
+  "Weekly community summary",
+  "Email the weekly summary",
   "update_community_notification_preferences",
   "Open main Activity settings",
   "memberErrorMessage",
@@ -882,13 +883,25 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Meet with context.",
-  "Private contact details remain protected",
+  "Meet the people here.",
+  "Contact details",
   'href={`/members/${member.user_id}`}',
 ]) {
   assert(
     communityRoster.includes(contract),
     `Privacy-safe community roster must include ${contract}`,
+  );
+}
+for (const contract of [
+  "overflow-x: clip",
+  "grid-template-columns: repeat(auto-fit, minmax(108px, 1fr))",
+  "font-size: clamp(2.75rem, 12vw, 3.35rem)",
+  ".community-preview-copy .journey-state-actions .button",
+  ".community-directory-card > footer > .button",
+]) {
+  assert(
+    communityStyles.includes(contract),
+    `Community mobile clarity layer must include ${contract}`,
   );
 }
 for (const path of [

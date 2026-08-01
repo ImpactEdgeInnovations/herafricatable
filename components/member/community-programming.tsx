@@ -55,12 +55,12 @@ export function CommunityProgramming({
       <section id="gatherings" className="community-programming-section">
         <header>
           <div>
-            <p className="eyebrow">Gatherings</p>
-            <h2>Meet with shared context.</h2>
+            <p className="eyebrow">Community events</p>
+            <h2>Meet in person or online.</h2>
           </div>
           <p>
-            Events selected for this community—so the conversation can begin
-            before the room and continue after it.
+            Events chosen for this community. Meet members, learn together and
+            continue the conversation afterwards.
           </p>
         </header>
         {gatherings.length ? (
@@ -83,7 +83,7 @@ export function CommunityProgramming({
                   </div>
                   <div>
                     <span>
-                      {past ? "Past gathering" : dateFormat.format(new Date(gathering.starts_at))}
+                      {past ? "Past event" : dateFormat.format(new Date(gathering.starts_at))}
                       {" · "}
                       {gathering.city
                         ? `${gathering.city}, ${gathering.country}`
@@ -92,11 +92,11 @@ export function CommunityProgramming({
                     <h3>{gathering.title}</h3>
                     <p>
                       {gathering.summary ||
-                        "The host will share the gathering details shortly."}
+                        "The community leader will share more details soon."}
                     </p>
                   </div>
                   <Link href={`/events/${gathering.slug}`}>
-                    View gathering <span aria-hidden="true">→</span>
+                    View event <span aria-hidden="true">→</span>
                   </Link>
                 </article>
               );
@@ -104,10 +104,10 @@ export function CommunityProgramming({
           </div>
         ) : (
           <div className="community-program-empty">
-            <strong>The next gathering is being considered.</strong>
+            <strong>No community event has been added yet.</strong>
             <p>
-              Your host will add an event when it is relevant to this community.
-              The main event calendar is still available.
+              The community leader can add a relevant event here. You can
+              still browse the full event calendar.
             </p>
             <Link href="/events">View all events</Link>
           </div>
@@ -117,12 +117,11 @@ export function CommunityProgramming({
       <section id="resources" className="community-programming-section">
         <header>
           <div>
-            <p className="eyebrow">Resources</p>
-            <h2>Learn from what the room needs.</h2>
+            <p className="eyebrow">Recommended learning</p>
+            <h2>Learn what helps you move forward.</h2>
           </div>
           <p>
-            A small, host-curated shelf of practical learning—not an endless
-            library.
+            A short list of practical learning chosen by the community leader.
           </p>
         </header>
         {resources.length ? (
@@ -150,10 +149,10 @@ export function CommunityProgramming({
           </div>
         ) : (
           <div className="community-program-empty">
-            <strong>Your resource shelf is intentionally quiet.</strong>
+            <strong>No learning has been recommended yet.</strong>
             <p>
-              Relevant learning will appear here after the host reviews it and
-              the learning studio is available.
+              Useful courses will appear here when the community leader adds
+              them. You can still browse all available learning.
             </p>
             <Link href="/learning">Visit the learning studio</Link>
           </div>
@@ -163,15 +162,15 @@ export function CommunityProgramming({
       {canManage ? (
         <footer className="community-host-callout">
           <div>
-            <p className="eyebrow">For hosts</p>
-            <strong>Shape what this room needs next.</strong>
+            <p className="eyebrow">Manage this community</p>
+            <strong>Help members find what they need.</strong>
             <p>
-              Review admissions, unanswered Asks, safety signals and community
-              programming from one private workspace.
+              Review join requests, member needs, safety concerns, events and
+              learning in one private place.
             </p>
           </div>
           <Link className="button button-outline" href={`/communities/${slug}/host`}>
-            Open host workspace
+            Open community controls
           </Link>
         </footer>
       ) : null}

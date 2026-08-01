@@ -279,7 +279,11 @@ export default async function CommunityPage({
               />
             ) : null}
             <div>
-              <p className="eyebrow">{community.community_type} community</p>
+              <p className="eyebrow">
+                {community.community_type === "private"
+                  ? "Private community"
+                  : "Her Africa Table community"}
+              </p>
               <h1>{community.name}</h1>
             </div>
           </div>
@@ -295,25 +299,25 @@ export default async function CommunityPage({
       </section>
       <nav className="community-room-navigation" aria-label="Community areas">
         <a aria-current="page" href="#overview">
-          Overview
+          Start here
         </a>
-        <a href="#conversations">Conversations</a>
+        <a href="#conversations">Posts</a>
         <a href="#members">Members</a>
         {programmingReady ? (
           <>
-            <a href="#gatherings">Gatherings</a>
-            <a href="#resources">Resources</a>
+            <a href="#gatherings">Events</a>
+            <a href="#resources">Learning</a>
           </>
         ) : (
           <>
-            <Link href="/events">Gatherings</Link>
-            <Link href="/learning">Resources</Link>
+            <Link href="/events">Events</Link>
+            <Link href="/learning">Learning</Link>
           </>
         )}
         {!circleProgramResult.error && circlePrograms.length ? (
           <a href="#circles">Circles</a>
         ) : null}
-        {canManage ? <Link href={`/communities/${slug}/host`}>Host</Link> : null}
+        {canManage ? <Link href={`/communities/${slug}/host`}>Manage</Link> : null}
       </nav>
       <CommunityStartPath
         cohortActive={cohort?.cohort_status === "active"}
@@ -327,7 +331,7 @@ export default async function CommunityPage({
       />
       {postsResult.error && !structuredConversationsReady ? (
         <section className="admin-empty opportunity-error" role="alert">
-          <strong>Community feed unavailable</strong>
+          <strong>Community posts are not loading</strong>
           <p>{memberErrorMessage(postsResult.error, "load this community")}</p>
           <div className="journey-state-actions">
             <Link
@@ -369,7 +373,7 @@ export default async function CommunityPage({
           readStateReady={!readSummaryResult.error && !readStateResult.error}
           prompt={
             cohort
-              ? "Continue the table with one focused Ask, Offer or follow-up"
+              ? "Share a question, an offer of help or an event follow-up"
               : undefined
           }
           readOnly={cohort?.cohort_status === "read_only"}

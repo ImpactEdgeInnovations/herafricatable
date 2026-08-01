@@ -50,20 +50,20 @@ export function CommunityNotificationPreferences({
     <details className="community-update-preferences" id="room-updates">
       <summary>
         <span>
-          <small>Room updates</small>
-          <strong>Keep what is useful. Quiet the rest.</strong>
+          <small>Community notifications</small>
+          <strong>Choose which updates you receive.</strong>
           <em>
-            Replies and one useful weekly summary stay in Activity by default;
-            email remains your choice.
+            See replies in Activity, receive a weekly summary, or turn email
+            updates on and off.
           </em>
         </span>
-        <b>Choose updates</b>
+        <b>Change notifications</b>
       </summary>
       <form onSubmit={(event) => void save(event)}>
         <div>
           <p>
             These choices apply only to this community. Your main Activity
-            settings still control whether notifications can reach you.
+            settings still control all platform notifications.
           </p>
           <Link href="/notifications">Open main Activity settings</Link>
         </div>
@@ -79,10 +79,9 @@ export function CommunityNotificationPreferences({
             type="checkbox"
           />
           <span>
-            <strong>Replies in Activity</strong>
+            <strong>Show replies in Activity</strong>
             <small>
-              Show replies to conversations you follow in your private Activity
-              feed.
+              Add replies from conversations you follow to your Activity page.
             </small>
           </span>
         </label>
@@ -100,7 +99,7 @@ export function CommunityNotificationPreferences({
           <span>
             <strong>Email me about replies</strong>
             <small>
-              Off by default to avoid an email for every community reply.
+              Turn this on if you also want each reply sent by email.
             </small>
           </span>
         </label>
@@ -119,10 +118,9 @@ export function CommunityNotificationPreferences({
             type="checkbox"
           />
           <span>
-            <strong>Weekly room briefing</strong>
+            <strong>Weekly community summary</strong>
             <small>
-              One aggregate update only when the room moved or a gathering is
-              near.
+              Receive one summary when there are new posts or an event is near.
             </small>
           </span>
         </label>
@@ -139,15 +137,15 @@ export function CommunityNotificationPreferences({
             type="checkbox"
           />
           <span>
-            <strong>Send the briefing by email</strong>
+            <strong>Email the weekly summary</strong>
             <small>
-              The same quiet summary can also appear in your inbox.
+              Send the same weekly summary to your inbox.
             </small>
           </span>
         </label>
         <footer>
           <button className="button button-primary" disabled={busy}>
-            {busy ? "Saving…" : "Save room updates"}
+            {busy ? "Saving…" : "Save notification choices"}
           </button>
           {message ? <p role="status">{message}</p> : null}
         </footer>
