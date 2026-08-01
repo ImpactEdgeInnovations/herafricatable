@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { AuthPanel } from "@/components/auth/auth-panel";
 
-export function AuthPage({ intent }: { intent: "member" | "admin" }) {
+export function AuthPage({
+  destination,
+  intent,
+}: {
+  destination?: string;
+  intent: "member" | "admin";
+}) {
   const isAdmin = intent === "admin";
   return (
     <main className="auth-page">
@@ -18,7 +24,7 @@ export function AuthPage({ intent }: { intent: "member" | "admin" }) {
         <p className="auth-quote">“When women gather with intention, possibility becomes practical.”</p>
       </section>
       <section className="auth-panel-wrap" aria-label={`${isAdmin ? "Admin" : "Member"} authentication`}>
-        <AuthPanel intent={intent} />
+        <AuthPanel destination={destination} intent={intent} />
       </section>
     </main>
   );

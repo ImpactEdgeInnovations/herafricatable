@@ -20,7 +20,13 @@ function safeMessage(message: string) {
   return "We could not complete that request. Please try again or contact support.";
 }
 
-export function AuthPanel({ intent }: { intent: AuthIntent }) {
+export function AuthPanel({
+  destination: requestedDestination,
+  intent,
+}: {
+  destination?: string;
+  intent: AuthIntent;
+}) {
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +34,11 @@ export function AuthPanel({ intent }: { intent: AuthIntent }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
 
-  const destination = destinationFor(intent);
+  const destination =
+    requestedDestination?.startsWith("/") &&
+    !requestedDestination.startsWith("//")
+      ? requestedDestination
+      : destinationFor(intent);
   const isAdmin = intent === "admin";
 
   async function requestCode(event: FormEvent<HTMLFormElement>) {

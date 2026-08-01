@@ -36,6 +36,10 @@ import {
   CommunityCircleHostPanel,
   type CommunityCircleOption,
 } from "@/components/member/community-circle-host-panel";
+import {
+  CommunityPublicProfilePanel,
+  type CommunityPublicProfile,
+} from "@/components/member/community-public-profile-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -65,19 +69,27 @@ export default async function CommunityHostPage({
     redirect(`/communities/${slug}`);
   }
 
-  const [capabilityResult, brandingResult] = await Promise.all([
+  const [capabilityResult, brandingResult, publicProfileResult] = await Promise.all([
     supabase.rpc("get_community_host_capabilities", {
       p_community_id: community.community_id,
     }),
     supabase.rpc("list_community_brand_identities", {
       p_community_id: community.community_id,
     }),
+    community.membership_role === "owner"
+      ? supabase.rpc("get_community_public_profile_admin", {
+          p_community_id: community.community_id,
+        })
+      : Promise.resolve({ data: [], error: null }),
   ]);
   const capabilities =
     ((capabilityResult.data as CommunityHostCapabilities[] | null) ?? [])[0] ??
     null;
   const brandIdentity =
     ((brandingResult.data as CommunityBrandIdentity[] | null) ?? [])[0] ?? null;
+  const publicProfile =
+    ((publicProfileResult.data as CommunityPublicProfile[] | null) ?? [])[0] ??
+    null;
   const [iconSigned, coverSigned] = await Promise.all([
     brandIdentity?.icon_storage_path
       ? supabase.storage
@@ -229,7 +241,10 @@ export default async function CommunityHostPage({
       <nav className="community-room-navigation" aria-label="Host workspace areas">
         <a href="#host-tools">Plan &amp; tools</a>
         {community.membership_role === "owner" ? (
-          <a href="#identity">Look &amp; feel</a>
+          <>
+            <a href="#identity">Look &amp; feel</a>
+            <a href="#public-page">Public page</a>
+          </>
         ) : null}
         <a href="#continuity">Member health</a>
         <a href="#admissions">Join requests</a>
@@ -256,6 +271,15 @@ export default async function CommunityHostPage({
         identity={signedBrandIdentity}
         migrationReady={!brandingResult.error}
         owner={community.membership_role === "owner"}
+      />
+      <CommunityPublicProfilePanel
+        communityId={community.community_id}
+        communityName={community.name}
+        migrationReady={!publicProfileResult.error}
+        owner={community.membership_role === "owner"}
+        profile={publicProfile}
+        slug={community.slug}
+        taglineReady={Boolean(brandIdentity?.tagline)}
       />
       <CommunityCircleHostPanel
         communityId={community.community_id}

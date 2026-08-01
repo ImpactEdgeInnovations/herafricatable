@@ -291,6 +291,11 @@ Usability is part of production readiness and continues alongside feature delive
       directory with restrained count badges, priority ordering and clear return actions
 - [x] Replace the fixed recent-conversation ceiling with stable cursor pagination,
       page-scoped replies and private media, twenty-item loading and a three-pin limit
+- [x] Add an owner-controlled, shareable Community About page with a clear
+      audience, benefits, host introduction, access price and next gathering;
+      keep posts, member identities, private event details and storage paths private
+- [ ] Apply `20260803090000_community_public_profiles.sql` in production Supabase
+      and complete signed-out, member, owner and Draft-rollback acceptance
 - [ ] Apply `20260802010000_community_identity_and_media.sql` in production
       Supabase
 - [ ] Apply `20260802050000_community_post_editing.sql` in production Supabase

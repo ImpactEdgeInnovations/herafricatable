@@ -488,6 +488,74 @@ const communityNotificationPreferences = read(
   "components/member/community-notification-preferences.tsx",
 );
 for (const contract of [
+  "CommunityPublicProfilePanel",
+  "get_community_public_profile_admin",
+  'href="#public-page"',
+  "taglineReady",
+]) {
+  assert(
+    communityHostPage.includes(contract),
+    `Community Host page must include ${contract}`,
+  );
+}
+const communityPublicProfilePanel = read(
+  "components/member/community-public-profile-panel.tsx",
+);
+for (const contract of [
+  "Shareable Community page",
+  "Always private",
+  "Make this page shareable",
+  "save_community_public_profile",
+  "Share public page",
+  "at least three clear member benefits",
+  "Posts, replies, member names",
+  "release checklist",
+]) {
+  assert(
+    communityPublicProfilePanel.includes(contract),
+    `Community public-profile Host UX must include ${contract}`,
+  );
+}
+const communityAboutPage = read("app/communities/[slug]/about/page.tsx");
+for (const contract of [
+  "get_public_community_about",
+  "createAdminClient",
+  "CommunityAboutAction",
+  "Who this is for",
+  "What members receive",
+  "Community host",
+  "Next at the table",
+  "Private conversation stays private.",
+]) {
+  assert(
+    communityAboutPage.includes(contract),
+    `Shareable Community page must include ${contract}`,
+  );
+}
+const communityAboutAction = read(
+  "components/community/community-about-action.tsx",
+);
+for (const contract of [
+  "Sign in to join",
+  "View your membership status",
+  "Enter Community",
+  "Review your request",
+  "Joining opens soon",
+  "request_community_access",
+]) {
+  assert(
+    communityAboutAction.includes(contract),
+    `Community About joining flow must include ${contract}`,
+  );
+}
+const memberSignIn = read("app/sign-in/page.tsx");
+assert(
+  memberSignIn.includes("safeNext") &&
+    memberSignIn.includes('value.startsWith("//")') &&
+    authPanel.includes("requestedDestination"),
+  "Member sign-in must preserve only a validated same-site destination",
+);
+for (const contract of [
   'active="community"',
   "community-room-navigation",
   "Start here",

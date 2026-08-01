@@ -32,6 +32,7 @@ export type CommunitySummary = {
   new_activity_count?: number;
   new_conversation_count?: number;
   new_reply_count?: number;
+  public_preview_enabled?: boolean;
 };
 
 export type CommunityActivitySummary = {
@@ -209,6 +210,7 @@ export function CommunityDirectory({
     return (
       <article
         className={`community-directory-card is-${context}${newActivity ? " has-new-activity" : ""} accent-${item.accent_key ?? "wine"}`}
+        id={`community-${item.slug}`}
         key={item.community_id}
       >
         <header>
@@ -259,6 +261,14 @@ export function CommunityDirectory({
           </div>
         </div>
         <p>{item.tagline || item.description}</p>
+        {context === "discover" && item.public_preview_enabled ? (
+          <Link
+            className="community-directory-about-link"
+            href={`/communities/${item.slug}/about`}
+          >
+            See who it is for and what members receive →
+          </Link>
+        ) : null}
         <footer>
           {item.membership_status === "active" ? (
             <Link

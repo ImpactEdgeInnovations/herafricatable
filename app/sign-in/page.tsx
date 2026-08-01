@@ -3,6 +3,16 @@ import { AuthPage } from "@/components/auth/auth-page";
 
 export const metadata: Metadata = { title: "Member sign in" };
 
-export default function MemberSignInPage() {
-  return <AuthPage intent="member" />;
+function safeNext(value: string | undefined) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/home";
+  return value;
+}
+
+export default async function MemberSignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  return <AuthPage destination={safeNext(next)} intent="member" />;
 }

@@ -1203,6 +1203,43 @@ assert(
   ),
   "Module release audit metadata must not duplicate acceptance evidence",
 );
+const communityPublicProfileMigration = read(
+  "supabase/migrations/20260803090000_community_public_profiles.sql",
+);
+for (const contract of [
+  "public_preview_enabled boolean not null default false",
+  "enforce_community_public_profile",
+  "new.public_preview_enabled := false",
+  "public.community_release_ready(new.id)",
+  "public.communities_enabled()",
+  "Complete every required public Community field before sharing",
+  "get_community_public_profile_admin",
+  "save_community_public_profile",
+  "get_public_community_about",
+  "community.public_profile_saved",
+  "show_public_member_count",
+  "public.community_creator_commerce_enabled()",
+  "grant execute on function public.get_public_community_about(text)\n  to anon, authenticated",
+  "public_preview_enabled boolean\n)",
+]) {
+  assert(
+    communityPublicProfileMigration.includes(contract),
+    `Community public profiles must include ${contract}`,
+  );
+}
+assert(
+  !communityPublicProfileMigration.includes("storage_path"),
+  "Anonymous Community profiles must not project private media storage paths",
+);
+assert(
+  !communityPublicProfileMigration.includes(
+    "jsonb_build_object(\n      'about_summary'",
+  ) &&
+    !communityPublicProfileMigration.includes(
+      "jsonb_build_object(\n      'host_intro'",
+    ),
+  "Community public-profile audits must not duplicate owner-written copy",
+);
 const memberProfileMigration = read(
   "supabase/migrations/20260728170000_member_profile_view.sql",
 );
