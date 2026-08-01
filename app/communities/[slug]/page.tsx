@@ -36,6 +36,10 @@ import {
   type CommunityStartPathState,
 } from "@/components/member/community-start-path";
 import type { CommunityBrandIdentity } from "@/components/member/community-branding-panel";
+import {
+  CommunityCircles,
+  type CommunityCircleProgram,
+} from "@/components/member/community-circles";
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
   params,
@@ -70,6 +74,7 @@ export default async function CommunityPage({
     memberResult,
     gatheringResult,
     resourceResult,
+    circleProgramResult,
     notificationPreferenceResult,
     startPathResult,
     brandingResult,
@@ -115,6 +120,9 @@ export default async function CommunityPage({
         p_community_id: community.community_id,
       }),
       supabase.rpc("list_community_resources", {
+        p_community_id: community.community_id,
+      }),
+      supabase.rpc("list_community_circle_programs", {
         p_community_id: community.community_id,
       }),
       supabase.rpc("get_community_notification_preferences", {
@@ -180,6 +188,8 @@ export default async function CommunityPage({
     paginationOperational ||
     (!structuredPostsResult.error && !commentResult.error);
   const programmingReady = !gatheringResult.error && !resourceResult.error;
+  const circlePrograms =
+    (circleProgramResult.data as CommunityCircleProgram[] | null) ?? [];
   const canManage = ["owner", "moderator"].includes(
     community.membership_role ?? "",
   );
@@ -300,6 +310,9 @@ export default async function CommunityPage({
             <Link href="/learning">Resources</Link>
           </>
         )}
+        {!circleProgramResult.error && circlePrograms.length ? (
+          <a href="#circles">Circles</a>
+        ) : null}
         {canManage ? <Link href={`/communities/${slug}/host`}>Host</Link> : null}
       </nav>
       <CommunityStartPath
@@ -371,6 +384,9 @@ export default async function CommunityPage({
           resources={(resourceResult.data as CommunityResource[] | null) ?? []}
           slug={slug}
         />
+      ) : null}
+      {!circleProgramResult.error ? (
+        <CommunityCircles programs={circlePrograms} />
       ) : null}
       {cohort ? (
         <CohortActivation

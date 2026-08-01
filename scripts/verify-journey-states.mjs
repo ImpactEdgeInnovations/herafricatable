@@ -92,6 +92,7 @@ const refreshModules = [
   "components/member/circles-hub.tsx",
   "components/member/community-directory.tsx",
   "components/member/community-feed.tsx",
+  "components/member/community-circle-host-panel.tsx",
   "components/member/community-host-workspace.tsx",
   "components/member/community-commerce-panel.tsx",
   "components/events/event-attendee-directory.tsx",
@@ -402,6 +403,10 @@ const communityFeed = read("components/member/community-feed.tsx");
 const communityProgramming = read(
   "components/member/community-programming.tsx",
 );
+const communityCircles = read("components/member/community-circles.tsx");
+const communityCircleHostPanel = read(
+  "components/member/community-circle-host-panel.tsx",
+);
 const communityHostPage = read("app/communities/[slug]/host/page.tsx");
 const communityHostWorkspace = read(
   "components/member/community-host-workspace.tsx",
@@ -464,6 +469,9 @@ for (const contract of [
   "createSignedUrl",
   "mediaReady",
   "community-room-cover",
+  "list_community_circle_programs",
+  "CommunityCircles",
+  'href="#circles"',
 ]) {
   assert(
     communityRoom.includes(contract),
@@ -607,10 +615,38 @@ for (const contract of [
   "automations",
   "CommunityBrandingPanel",
   'href="#identity"',
+  "list_community_circle_options",
+  "CommunityCircleHostPanel",
+  'href="#circle-programming"',
 ]) {
   assert(
     communityHostPage.includes(contract),
     `Community Host route must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Smaller circles",
+  "Go deeper with a few.",
+  "Circle room remains visible only to assigned members.",
+  "/circles?circle=",
+  "Review and opt in",
+  "Assignment details stay private",
+]) {
+  assert(
+    communityCircles.includes(contract),
+    `Community Circle member UX must include ${contract}`,
+  );
+}
+for (const contract of [
+  "set_community_circle_cycle_link",
+  "without seeing matching notes",
+  "Remove from community",
+  "Add to community",
+  "migrationReady",
+]) {
+  assert(
+    communityCircleHostPanel.includes(contract),
+    `Community Circle host UX must include ${contract}`,
   );
 }
 for (const contract of [

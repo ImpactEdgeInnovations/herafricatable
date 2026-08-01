@@ -263,7 +263,8 @@ Usability is part of production readiness and continues alongside feature delive
       connection paths
 - [x] Connect host-curated events and learning resources to each community with
       member-only projections and audited Host controls
-- [ ] Connect relevant Circles to each community after Circle launch acceptance
+- [x] Connect released Circle cycles to relevant communities with audited Host
+      curation, member-only own-assignment context and no roster or matching-data access
 - [x] Add per-community reply and briefing preferences plus a restrained,
       privacy-safe weekly briefing with idempotent delivery batches
 - [x] Add the first Host workspace for admission, member roles, unanswered Asks,
@@ -295,6 +296,9 @@ Usability is part of production readiness and continues alongside feature delive
       Supabase
 - [ ] Apply `20260802170000_community_feed_pagination.sql` in production
       Supabase
+- [ ] Apply `20260802210000_community_circle_links.sql` in production Supabase
+- [ ] Test Community and Circles feature-flag gating, Host link/unlink auditing,
+      member opt-in routing and own-assignment-only Circle visibility
 - [ ] Test multi-page pinned/unpinned ordering, duplicate prevention, protected
       media delivery and blocked-member filtering with at least 45 conversations
 - [ ] Test join-time baseline, own-activity exclusion, block filtering and
@@ -452,6 +456,7 @@ Usability is part of production readiness and continues alongside feature delive
       Supabase
 - [ ] Apply `20260802170000_community_feed_pagination.sql` in production
       Supabase
+- [ ] Apply `20260802210000_community_circle_links.sql` in production Supabase
 - [ ] Complete Creator Commerce admission/payment/entitlement/payout-boundary
       acceptance and deliberately enable its feature flag
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag

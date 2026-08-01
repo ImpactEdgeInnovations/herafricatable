@@ -32,6 +32,10 @@ import {
   CommunityBrandingPanel,
   type CommunityBrandIdentity,
 } from "@/components/member/community-branding-panel";
+import {
+  CommunityCircleHostPanel,
+  type CommunityCircleOption,
+} from "@/components/member/community-circle-host-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +104,7 @@ export default async function CommunityHostPage({
     healthResult,
     memberResult,
     programmingResult,
+    circleOptionResult,
     continuityResult,
     introductionResult,
     outcomeResult,
@@ -117,6 +122,9 @@ export default async function CommunityHostPage({
       p_community_id: community.community_id,
     }),
     supabase.rpc("list_community_programming_options", {
+      p_community_id: community.community_id,
+    }),
+    supabase.rpc("list_community_circle_options", {
       p_community_id: community.community_id,
     }),
     loadAdvancedInsights
@@ -226,6 +234,7 @@ export default async function CommunityHostPage({
         <a href="#people">People</a>
         <a href="#gatherings">Gatherings</a>
         <a href="#resources">Resources</a>
+        <a href="#circle-programming">Circles</a>
         {community.membership_role === "owner" ? (
           <>
             <a href="#commerce">Commerce</a>
@@ -245,6 +254,13 @@ export default async function CommunityHostPage({
         identity={signedBrandIdentity}
         migrationReady={!brandingResult.error}
         owner={community.membership_role === "owner"}
+      />
+      <CommunityCircleHostPanel
+        communityId={community.community_id}
+        migrationReady={!circleOptionResult.error}
+        options={
+          (circleOptionResult.data as CommunityCircleOption[] | null) ?? []
+        }
       />
       {community.membership_role === "owner" ? (
         <CommunityCommercePanel

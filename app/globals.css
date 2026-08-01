@@ -20540,8 +20540,160 @@ body {
   margin-top: 52px;
   opacity: 0.92;
 }
+.community-circles {
+  width: min(1120px, calc(100% - 48px));
+  margin: 72px auto 0;
+  padding-top: 64px;
+  border-top: 1px solid rgba(61, 45, 39, 0.12);
+  scroll-margin-top: 72px;
+}
+.community-circles > header,
+.community-circle-host > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 42px;
+}
+.community-circles > header h2,
+.community-circle-host > header h2 {
+  margin: 7px 0 0;
+  font-family: var(--serif);
+  font-size: clamp(2.35rem, 4vw, 3.6rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+.community-circles > header > p,
+.community-circle-host > header > p {
+  max-width: 430px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.75;
+}
+.community-circle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.community-circle-grid > article {
+  display: grid;
+  min-width: 0;
+  padding: 28px;
+  border: 1px solid rgba(61, 45, 39, 0.13);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 90% 8%, rgba(184, 139, 49, 0.09), transparent 26%),
+    rgba(255, 255, 255, 0.78);
+  grid-template-rows: auto auto 1fr auto auto;
+}
+.community-circle-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--wine);
+  font-size: 0.58rem;
+  font-weight: 850;
+  gap: 15px;
+}
+.community-circle-state span {
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.community-circle-state small {
+  color: var(--muted);
+  font-weight: 700;
+}
+.community-circle-grid h3 {
+  margin: 28px 0 0;
+  font-family: var(--serif);
+  font-size: clamp(1.7rem, 2.7vw, 2.35rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+.community-circle-grid article > p {
+  margin: 13px 0 22px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.7;
+}
+.community-circle-grid dl {
+  display: flex;
+  align-items: end;
+  margin: 0 0 24px;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+}
+.community-circle-grid dl > div {
+  display: grid;
+  gap: 4px;
+}
+.community-circle-grid dt {
+  color: var(--muted);
+  font-size: 0.55rem;
+  text-transform: uppercase;
+}
+.community-circle-grid dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.68rem;
+}
+.community-circle-grid .button {
+  width: fit-content;
+}
+.community-circle-private-note {
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.55;
+}
+.community-circle-host {
+  width: min(1120px, calc(100% - 48px));
+  margin: 62px auto 0;
+  padding-top: 58px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 72px;
+}
+.community-circle-host-list {
+  display: grid;
+  gap: 10px;
+}
+.community-circle-host-list > article {
+  display: grid;
+  align-items: center;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.62);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 28px;
+}
+.community-circle-host-list article > div {
+  display: grid;
+  gap: 5px;
+}
+.community-circle-host-list span {
+  color: var(--wine);
+  font-size: 0.55rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.community-circle-host-list strong {
+  font-family: var(--serif);
+  font-size: 1.28rem;
+  font-weight: 400;
+}
+.community-circle-host-list p {
+  max-width: 680px;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.65rem;
+  line-height: 1.6;
+}
 
 @media (max-width: 800px) {
+  .community-circle-grid {
+    grid-template-columns: 1fr;
+  }
   .community-room-snapshot {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -20569,6 +20721,38 @@ body {
   .community-start-path {
     margin-top: 28px;
     padding-bottom: 30px;
+  }
+  .community-circles,
+  .community-circle-host {
+    width: calc(100% - 32px);
+    margin-top: 48px;
+    padding-top: 42px;
+  }
+  .community-circles > header,
+  .community-circle-host > header {
+    align-items: start;
+    margin-bottom: 22px;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .community-circle-grid > article {
+    padding: 22px;
+    border-radius: 14px;
+  }
+  .community-circle-state {
+    align-items: start;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .community-circle-host-list > article {
+    align-items: stretch;
+    padding: 20px;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .community-circle-host-list .button {
+    width: 100%;
+    justify-content: center;
   }
   .community-conversation-shell {
     padding: 52px 0 62px;

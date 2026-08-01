@@ -1024,6 +1024,54 @@ assert(
   circlesMigration.includes("include_test_accounts"),
   "Circle cycles must explicitly control test identities",
 );
+const communityCircleLinksMigration = read(
+  "supabase/migrations/20260802210000_community_circle_links.sql",
+);
+for (const contract of [
+  "community_circle_cycle_links",
+  "revoke all on table public.community_circle_cycle_links",
+  "list_community_circle_programs",
+  "list_community_circle_options",
+  "set_community_circle_cycle_link",
+  "public.communities_enabled()",
+  "public.circles_enabled()",
+  "public.can_manage_community(p_community_id)",
+  "mine_membership.user_id = auth.uid()",
+  "circle.status in ('published', 'completed')",
+  "community.circle_cycle_linked",
+  "community.circle_cycle_unlinked",
+]) {
+  assert(
+    communityCircleLinksMigration.includes(contract),
+    `Community-linked Circles must include ${contract}`,
+  );
+}
+assert(
+  !communityCircleLinksMigration.includes("create policy") &&
+    !communityCircleLinksMigration.includes(
+      "grant select on table public.community_circle_cycle_links",
+    ),
+  "Community-Circle links must be available only through controlled functions",
+);
+const communityCircleMemberFunction = communityCircleLinksMigration.slice(
+  communityCircleLinksMigration.indexOf(
+    "create or replace function public.list_community_circle_programs",
+  ),
+  communityCircleLinksMigration.indexOf(
+    "create or replace function public.list_community_circle_options",
+  ),
+);
+for (const privateProjection of [
+  "match_explanation",
+  "circle_prompt_responses",
+  "profile.display_name",
+  "auth.users",
+]) {
+  assert(
+    !communityCircleMemberFunction.includes(privateProjection),
+    `Community Circle context must not project ${privateProjection}`,
+  );
+}
 const perksMigration = read(
   "supabase/migrations/20260726130000_partner_perks_redemption.sql",
 );
