@@ -465,6 +465,11 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Apply `20260802210000_community_circle_links.sql` in production Supabase
 - [ ] Apply `20260803010000_production_database_readiness.sql` in production
       Supabase and review every capability in Admin → Release
+- [x] Add a database-enforced module opening gate for Communities, Creator
+      Commerce, Learning, Referrals, Membership, Circles and Partner benefits,
+      with Super Admin evidence, ownership and always-available emergency pause
+- [ ] Apply `20260803050000_module_release_acceptance.sql` in production Supabase,
+      then complete every module card in Admin → Release before enabling its flag
 - [ ] Complete Creator Commerce admission/payment/entitlement/payout-boundary
       acceptance and deliberately enable its feature flag
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag

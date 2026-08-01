@@ -85,6 +85,7 @@ const refreshModules = [
   "components/admin/learning-manager.tsx",
   "components/admin/marketplace-moderation.tsx",
   "components/admin/membership-manager.tsx",
+  "components/admin/module-release-gate.tsx",
   "components/admin/moderation-queue.tsx",
   "components/admin/perks-manager.tsx",
   "components/admin/referral-manager.tsx",
@@ -251,10 +252,29 @@ for (const contract of [
   "DatabaseReadinessPanel",
   "list_database_release_readiness",
   "databaseReadinessResult.error",
+  "ModuleReleaseGate",
+  "list_module_release_acceptance",
+  "moduleReleaseResult.error",
 ]) {
   assert(
     adminOperations.includes(contract),
     `Admin release controls must include ${contract}`,
+  );
+}
+const moduleReleaseGate = read("components/admin/module-release-gate.tsx");
+for (const contract of [
+  "Controlled feature opening",
+  "Prove each member feature before opening it.",
+  "Supabase blocks accidental activation",
+  "pausing a feature is always available",
+  "save_module_release_check",
+  "Record result",
+  "passwords, OTPs",
+  "20260803050000_module_release_acceptance.sql",
+]) {
+  assert(
+    moduleReleaseGate.includes(contract),
+    `Module release Admin UX must include ${contract}`,
   );
 }
 const databaseReadinessPanel = read(

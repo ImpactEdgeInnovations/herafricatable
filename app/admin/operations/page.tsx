@@ -140,6 +140,10 @@ import {
   DatabaseReadinessPanel,
   type DatabaseReleaseCheck,
 } from "@/components/admin/database-readiness-panel";
+import {
+  ModuleReleaseGate,
+  type ModuleReleaseCheck,
+} from "@/components/admin/module-release-gate";
 import { assessOperationalHealth } from "@/lib/operational-health";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
@@ -370,6 +374,7 @@ export default async function AdminOperationsPage({
     analyticsResult,
     launchGateResult,
     databaseReadinessResult,
+    moduleReleaseResult,
     curatedIntroductionResult,
     connectionAvailabilityResult,
     connectionOutcomeResult,
@@ -521,6 +526,9 @@ export default async function AdminOperationsPage({
       : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadRelease
       ? supabase.rpc("list_database_release_readiness")
+      : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadRelease
+      ? supabase.rpc("list_module_release_acceptance")
       : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadPeople
       ? supabase.rpc("list_curated_introductions_admin")
@@ -1151,6 +1159,12 @@ export default async function AdminOperationsPage({
                     | null) ?? []
                 }
                 migrationReady={!databaseReadinessResult.error}
+              />
+              <ModuleReleaseGate
+                checks={
+                  (moduleReleaseResult.data as ModuleReleaseCheck[] | null) ?? []
+                }
+                migrationReady={!moduleReleaseResult.error}
               />
               <LaunchGateControl
                 checks={

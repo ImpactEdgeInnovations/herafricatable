@@ -46,7 +46,22 @@ blocked checks require an accountable owner.
 - Rolling back a release does not erase evidence. Update affected checks and record
   the new rehearsal or decision.
 
-Feature-specific acceptance remains separate from the platform launch gate.
-Communities use the eight-check workflow in **Admin → Founding cohort**. Its
-database guard controls Community publication and prevents a published room with
-incomplete evidence from being exposed through the global feature flag.
+Feature-specific acceptance remains separate from the platform launch gate. Open
+**Admin → Release → Module opening checks** for Communities, Community host
+payments, Learning, Referrals, Membership checkout, Circles and Partner benefits.
+Each controlled module needs:
+
+1. every mapped database capability to be present;
+2. a completed two-account member journey;
+3. verified privacy and permission boundaries;
+4. rehearsed Admin support; and
+5. a rehearsed pause-and-recovery path.
+
+Supabase prevents a controlled feature from being enabled until these checks pass.
+Turning a feature off remains available at all times. Existing enabled features are
+not automatically disabled when the gate migration is installed; review any such
+module immediately and either complete its evidence or pause it deliberately.
+
+Communities also retain their room-level eight-check workflow in **Admin → Founding
+cohort**. That separate guard prevents a published room with incomplete evidence
+from being exposed through the global Communities flag.

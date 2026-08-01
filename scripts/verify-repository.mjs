@@ -1172,6 +1172,37 @@ assert(
     !databaseReadinessMigration.includes("auth.users"),
   "Database readiness must inspect structure without reading member or authentication data",
 );
+const moduleReleaseMigration = read(
+  "supabase/migrations/20260803050000_module_release_acceptance.sql",
+);
+for (const contract of [
+  "module_release_checks",
+  "list_module_release_acceptance",
+  "save_module_release_check",
+  "enforce_module_release_acceptance",
+  "Complete this module in Admin Release before enabling it",
+  "two_account_journey",
+  "privacy_and_permissions",
+  "admin_operations",
+  "rollback_and_recovery",
+  "community_creator_commerce",
+  "list_database_release_readiness",
+  "revoke insert, update, delete on public.feature_flags from anon, authenticated",
+  "if not new.enabled then",
+  "if p_enabled",
+  "Every published community must pass release acceptance",
+]) {
+  assert(
+    moduleReleaseMigration.includes(contract),
+    `Module release acceptance must include ${contract}`,
+  );
+}
+assert(
+  !moduleReleaseMigration.includes(
+    "jsonb_build_object(\n      'feature_key', p_feature_key,\n      'check_key', p_check_key,\n      'status', p_status,\n      'evidence_note'",
+  ),
+  "Module release audit metadata must not duplicate acceptance evidence",
+);
 const memberProfileMigration = read(
   "supabase/migrations/20260728170000_member_profile_view.sql",
 );
