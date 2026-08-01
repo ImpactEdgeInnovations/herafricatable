@@ -389,6 +389,8 @@ Usability is part of production readiness and continues alongside feature delive
 2. **Production database and environment parity**
    - Verify every forward-only migration is present in production rather than relying
      on manual recollection.
+   - [x] Add a Super Admin database readiness manifest that checks required tables
+     and secure actions by capability without reading member data.
    - Confirm Vercel Production variables, Paystack webhook secrets, notification
      credentials and scheduled jobs against the readiness checklist.
 3. **Real-account acceptance**
@@ -461,6 +463,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Apply `20260802170000_community_feed_pagination.sql` in production
       Supabase
 - [ ] Apply `20260802210000_community_circle_links.sql` in production Supabase
+- [ ] Apply `20260803010000_production_database_readiness.sql` in production
+      Supabase and review every capability in Admin → Release
 - [ ] Complete Creator Commerce admission/payment/entitlement/payout-boundary
       acceptance and deliberately enable its feature flag
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag

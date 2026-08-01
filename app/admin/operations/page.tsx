@@ -136,6 +136,10 @@ import {
   type CommunityOutcome,
 } from "@/components/admin/community-outcome-summary";
 import { OperationalHealthPanel } from "@/components/admin/operational-health-panel";
+import {
+  DatabaseReadinessPanel,
+  type DatabaseReleaseCheck,
+} from "@/components/admin/database-readiness-panel";
 import { assessOperationalHealth } from "@/lib/operational-health";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
@@ -365,6 +369,7 @@ export default async function AdminOperationsPage({
     readinessResult,
     analyticsResult,
     launchGateResult,
+    databaseReadinessResult,
     curatedIntroductionResult,
     connectionAvailabilityResult,
     connectionOutcomeResult,
@@ -513,6 +518,9 @@ export default async function AdminOperationsPage({
       : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadRelease
       ? supabase.rpc("list_launch_gate_checks")
+      : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadRelease
+      ? supabase.rpc("list_database_release_readiness")
       : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadPeople
       ? supabase.rpc("list_curated_introductions_admin")
@@ -1135,38 +1143,48 @@ export default async function AdminOperationsPage({
             <OperationalHealthPanel assessment={operationalHealth} />
           ) : null}
           {role.role === "super_admin" ? (
-            <LaunchGateControl
-              checks={
-                (launchGateResult.data as LaunchGateCheck[] | null) ?? []
-              }
-              environmentSignals={[
-                {
-                  label: "Server integration",
-                  ready:
-                    operationalHealth?.checks.find(
-                      (check) => check.key === "server",
-                    )?.status === "ready",
-                },
-                {
-                  label: "Online payments",
-                  ready:
-                    operationalHealth?.checks.find(
-                      (check) => check.key === "payments",
-                    )?.status === "ready",
-                },
-                {
-                  label: "Email delivery",
-                  ready:
-                    operationalHealth?.checks.find(
-                      (check) => check.key === "email",
-                    )?.status === "ready",
-                },
-              ]}
-              migrationReady={!launchGateResult.error}
-              release={
-                process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local"
-              }
-            />
+            <>
+              <DatabaseReadinessPanel
+                checks={
+                  (databaseReadinessResult.data as
+                    | DatabaseReleaseCheck[]
+                    | null) ?? []
+                }
+                migrationReady={!databaseReadinessResult.error}
+              />
+              <LaunchGateControl
+                checks={
+                  (launchGateResult.data as LaunchGateCheck[] | null) ?? []
+                }
+                environmentSignals={[
+                  {
+                    label: "Server integration",
+                    ready:
+                      operationalHealth?.checks.find(
+                        (check) => check.key === "server",
+                      )?.status === "ready",
+                  },
+                  {
+                    label: "Online payments",
+                    ready:
+                      operationalHealth?.checks.find(
+                        (check) => check.key === "payments",
+                      )?.status === "ready",
+                  },
+                  {
+                    label: "Email delivery",
+                    ready:
+                      operationalHealth?.checks.find(
+                        (check) => check.key === "email",
+                      )?.status === "ready",
+                  },
+                ]}
+                migrationReady={!launchGateResult.error}
+                release={
+                  process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local"
+                }
+              />
+            </>
           ) : null}
           <RoadmapOverview />
           <section className="admin-section" id="event">

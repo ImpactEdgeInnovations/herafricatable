@@ -1145,6 +1145,33 @@ assert(
   ),
   "Launch audit metadata must not duplicate operational evidence text",
 );
+const databaseReadinessMigration = read(
+  "supabase/migrations/20260803010000_production_database_readiness.sql",
+);
+for (const contract of [
+  "list_database_release_readiness",
+  "Super admin required",
+  "to_regclass('public.' || table_name)",
+  "pg_catalog.pg_proc",
+  "pg_catalog.pg_namespace",
+  "cardinality(evaluated.missing_items) = 0",
+  "20260722200000_registration_lifecycle.sql",
+  "20260802170000_community_feed_pagination.sql",
+  "20260802210000_community_circle_links.sql",
+  "20260728130000_launch_gate_evidence.sql",
+  "Community-linked Circles",
+  "Analytics and launch controls",
+]) {
+  assert(
+    databaseReadinessMigration.includes(contract),
+    `Production database readiness must include ${contract}`,
+  );
+}
+assert(
+  !databaseReadinessMigration.includes("select * from public.") &&
+    !databaseReadinessMigration.includes("auth.users"),
+  "Database readiness must inspect structure without reading member or authentication data",
+);
 const memberProfileMigration = read(
   "supabase/migrations/20260728170000_member_profile_view.sql",
 );

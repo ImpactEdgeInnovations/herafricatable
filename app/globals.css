@@ -21535,3 +21535,182 @@ body {
     border-radius: 16px;
   }
 }
+
+/* Super Admin database parity — read-only, capability-based release check. */
+.database-readiness {
+  width: min(1240px, calc(100% - 56px));
+  margin: 62px auto 0;
+  padding: 58px 0 66px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 70px;
+}
+.database-readiness > header {
+  display: grid;
+  align-items: end;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  gap: 58px;
+}
+.database-readiness > header h2 {
+  margin: 8px 0 13px;
+  font-family: var(--serif);
+  font-size: clamp(2.5rem, 4vw, 4rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+.database-readiness > header > div > p:last-child {
+  max-width: 700px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+.database-readiness > header > aside {
+  display: grid;
+  padding: 22px;
+  border: 1px solid var(--line);
+  background: #fff;
+  gap: 5px;
+}
+.database-readiness > header > aside.ready {
+  border-color: rgba(53, 99, 70, 0.38);
+}
+.database-readiness > header > aside.attention {
+  border-color: rgba(176, 120, 34, 0.44);
+}
+.database-readiness > header > aside strong {
+  font-family: var(--serif);
+  font-size: 2.1rem;
+  font-weight: 400;
+}
+.database-readiness > header > aside span {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+.database-readiness-group {
+  margin-top: 40px;
+}
+.database-readiness-group > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  gap: 20px;
+}
+.database-readiness-group > header h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.55rem;
+  font-weight: 400;
+}
+.database-readiness-group > header span {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+.database-readiness-group > div {
+  display: grid;
+  margin-top: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.database-readiness-group article {
+  display: grid;
+  min-width: 0;
+  min-height: 250px;
+  align-content: start;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.68);
+  gap: 9px;
+}
+.database-readiness-group article.ready {
+  border-top: 2px solid #547a5f;
+}
+.database-readiness-group article.missing {
+  border-top: 2px solid #b07822;
+}
+.database-readiness-group article > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.database-readiness-group article > header span,
+.database-readiness-group article > header small {
+  color: var(--muted);
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+.database-readiness-group article.ready > header span {
+  color: #356346;
+  font-weight: 800;
+}
+.database-readiness-group article.missing > header span {
+  color: #855c1d;
+  font-weight: 800;
+}
+.database-readiness-group article > header small {
+  max-width: 240px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.database-readiness-group article h4 {
+  margin: 18px 0 0;
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-weight: 400;
+}
+.database-readiness-group article > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+.database-readiness-confirmation,
+.database-readiness-group details {
+  align-self: end;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+.database-readiness-group summary {
+  min-height: 44px;
+  color: var(--wine);
+  font-weight: 800;
+  cursor: pointer;
+}
+.database-readiness-group ul {
+  display: grid;
+  margin: 10px 0 0;
+  padding-left: 18px;
+  gap: 6px;
+}
+.database-readiness-group li {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+@media (max-width: 800px) {
+  .database-readiness {
+    width: calc(100% - 32px);
+    margin-top: 44px;
+    padding: 44px 0 54px;
+  }
+  .database-readiness > header,
+  .database-readiness-group > div {
+    grid-template-columns: 1fr;
+  }
+  .database-readiness > header {
+    align-items: start;
+    gap: 24px;
+  }
+  .database-readiness > header > aside {
+    max-width: 260px;
+  }
+  .database-readiness-group article {
+    min-height: 0;
+  }
+}

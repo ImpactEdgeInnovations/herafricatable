@@ -248,10 +248,30 @@ for (const contract of [
   "list_launch_gate_checks",
   "environmentSignals",
   "launchGateResult.error",
+  "DatabaseReadinessPanel",
+  "list_database_release_readiness",
+  "databaseReadinessResult.error",
 ]) {
   assert(
     adminOperations.includes(contract),
     `Admin release controls must include ${contract}`,
+  );
+}
+const databaseReadinessPanel = read(
+  "components/admin/database-readiness-panel.tsx",
+);
+for (const contract of [
+  "Production database",
+  "Know what is ready before launch.",
+  "reads structure only",
+  "Database ready",
+  "Updates still needed",
+  "See {check.missing_items.length} missing database item",
+  "20260803010000_production_database_readiness.sql",
+]) {
+  assert(
+    databaseReadinessPanel.includes(contract),
+    `Database readiness Admin UX must include ${contract}`,
   );
 }
 const launchGateControl = read("components/admin/launch-gate-control.tsx");
