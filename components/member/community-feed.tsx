@@ -74,6 +74,12 @@ export type CommunityPostReadState = {
   post_id: string;
 };
 
+export type CommunityFeedCursor = {
+  activityAt: string;
+  pinned: boolean;
+  postId: string;
+};
+
 export type CommunityPost = {
   appreciation_count?: number;
   appreciated_by_me?: boolean;
@@ -86,6 +92,7 @@ export type CommunityPost = {
   comment_count?: number;
   can_edit?: boolean;
   created_at: string;
+  cursor_activity_at?: string | null;
   edited_at?: string | null;
   edit_expires_at?: string | null;
   followed_by_me?: boolean;
@@ -153,9 +160,12 @@ export function CommunityFeed({
   currentUserId,
   enhanced,
   initialComments,
+  initialCursor = null,
+  initialHasMore = false,
   initialNewActivityCount = 0,
   initialPosts,
   mediaReady = false,
+  paginationReady = false,
   readStateReady = false,
   readOnly = false,
   prompt,
@@ -165,9 +175,12 @@ export function CommunityFeed({
   currentUserId: string;
   enhanced: boolean;
   initialComments: CommunityComment[];
+  initialCursor?: CommunityFeedCursor | null;
+  initialHasMore?: boolean;
   initialNewActivityCount?: number;
   initialPosts: CommunityPost[];
   mediaReady?: boolean;
+  paginationReady?: boolean;
   readStateReady?: boolean;
   readOnly?: boolean;
   prompt?: string;
@@ -182,27 +195,46 @@ export function CommunityFeed({
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [category, setCategory] = useState("all");
   const [composerType, setComposerType] = useState("discussion");
+  const [hasMore, setHasMore] = useState(initialHasMore);
   const [message, setMessage] = useState("");
+  const [olderComments, setOlderComments] = useState<CommunityComment[]>([]);
+  const [olderPosts, setOlderPosts] = useState<CommunityPost[]>([]);
   const [order, setOrder] = useState<ConversationOrder>("newest");
+  const [pageCursor, setPageCursor] =
+    useState<CommunityFeedCursor | null>(initialCursor);
   const [query, setQuery] = useState("");
   const [view, setView] = useState<ConversationView>("all");
   const { ask, dialog } = useActionDialog();
   const availableTypes = canManage
     ? [...hostConversationTypes, ...conversationTypes]
     : [...conversationTypes];
+  const allPosts = useMemo(() => {
+    const unique = new Map<string, CommunityPost>();
+    [...olderPosts, ...initialPosts].forEach((post) =>
+      unique.set(post.post_id, post),
+    );
+    return [...unique.values()];
+  }, [initialPosts, olderPosts]);
+  const allComments = useMemo(() => {
+    const unique = new Map<string, CommunityComment>();
+    [...olderComments, ...initialComments].forEach((comment) =>
+      unique.set(comment.comment_id, comment),
+    );
+    return [...unique.values()];
+  }, [initialComments, olderComments]);
   const roomSnapshot = useMemo(
     () => ({
-      asksAndOpportunities: initialPosts.filter((post) =>
+      asksAndOpportunities: allPosts.filter((post) =>
         ["ask", "opportunity"].includes(post.category ?? ""),
       ).length,
-      followed: initialPosts.filter((post) => post.followed_by_me).length,
-      saved: initialPosts.filter((post) => post.saved_by_me).length,
+      followed: allPosts.filter((post) => post.followed_by_me).length,
+      saved: allPosts.filter((post) => post.saved_by_me).length,
     }),
-    [initialPosts],
+    [allPosts],
   );
   const posts = useMemo(() => {
     const search = query.trim().toLocaleLowerCase();
-    const filtered = initialPosts.filter((post) => {
+    const filtered = allPosts.filter((post) => {
       const matchesView =
         view === "all" ||
         (view === "following" && post.followed_by_me) ||
@@ -246,17 +278,17 @@ export function CommunityFeed({
         new Date(left.created_at).getTime()
       );
     });
-  }, [category, currentUserId, initialPosts, order, query, view]);
+  }, [allPosts, category, currentUserId, order, query, view]);
   const commentsByPost = useMemo(() => {
     const grouped = new Map<string, CommunityComment[]>();
-    initialComments.forEach((comment) => {
+    allComments.forEach((comment) => {
       grouped.set(comment.post_id, [
         ...(grouped.get(comment.post_id) ?? []),
         comment,
       ]);
     });
     return grouped;
-  }, [initialComments]);
+  }, [allComments]);
 
   function announce(error: unknown, action: string, success: string) {
     setMessage(error ? memberErrorMessage(error, action) : success);
@@ -582,6 +614,96 @@ export function CommunityFeed({
     if (!error) router.refresh();
   }
 
+  async function loadOlder() {
+    if (!pageCursor || !hasMore || !paginationReady) return;
+    setBusy("load-older");
+    setMessage("");
+    try {
+      const pageResult = await supabase.rpc(
+        "list_community_conversation_page",
+        {
+          p_before_activity_at: pageCursor.activityAt,
+          p_before_pinned: pageCursor.pinned,
+          p_before_post_id: pageCursor.postId,
+          p_community_id: communityId,
+          p_limit: 21,
+        },
+      );
+      if (pageResult.error) throw pageResult.error;
+      const page = (pageResult.data as CommunityPost[] | null) ?? [];
+      const nextPosts = page.slice(0, 20);
+      if (!nextPosts.length) {
+        setHasMore(false);
+        setMessage("You have reached the beginning of this community.");
+        return;
+      }
+
+      const postIds = nextPosts.map((post) => post.post_id);
+      const [commentResult, mediaResult] = await Promise.all([
+        supabase.rpc("list_community_comments_for_posts", {
+          p_community_id: communityId,
+          p_limit: 500,
+          p_post_ids: postIds,
+        }),
+        supabase.rpc("list_community_post_media_for_posts", {
+          p_community_id: communityId,
+          p_post_ids: postIds,
+        }),
+      ]);
+      if (commentResult.error) throw commentResult.error;
+      if (mediaResult.error) throw mediaResult.error;
+
+      const attachments =
+        (mediaResult.data as CommunityPostAttachment[] | null) ?? [];
+      const signedAttachments = await Promise.all(
+        attachments.map(async (attachment) => {
+          if (!attachment.storage_path) return attachment;
+          const signed = await supabase.storage
+            .from("community-media")
+            .createSignedUrl(attachment.storage_path, 3600);
+          if (signed.error) throw signed.error;
+          return {
+            ...attachment,
+            signed_url: signed.data.signedUrl,
+          };
+        }),
+      );
+      const attachmentByPost = new Map(
+        signedAttachments.map((attachment) => [
+          attachment.post_id,
+          attachment,
+        ]),
+      );
+      const enrichedPosts = nextPosts.map((post) => ({
+        ...post,
+        attachment: attachmentByPost.get(post.post_id) ?? null,
+      }));
+      const lastPost = nextPosts[nextPosts.length - 1];
+      setOlderPosts((current) => [...current, ...enrichedPosts]);
+      setOlderComments((current) => [
+        ...current,
+        ...((commentResult.data as CommunityComment[] | null) ?? []),
+      ]);
+      setHasMore(page.length > 20);
+      setPageCursor({
+        activityAt: lastPost.cursor_activity_at ?? lastPost.created_at,
+        pinned: Boolean(lastPost.is_pinned),
+        postId: lastPost.post_id,
+      });
+      setMessage(
+        page.length > 20
+          ? "Older conversations added."
+          : "You have reached the beginning of this community.",
+      );
+    } catch (error) {
+      setMessage(
+        memberErrorMessage(error, "load older community conversations"),
+      );
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function copyConversationLink(postId: string) {
     const target = new URL(window.location.href);
     target.hash = `conversation-${postId}`;
@@ -617,7 +739,7 @@ export function CommunityFeed({
         <dl className="community-room-snapshot" aria-label="Recent room snapshot">
           <div>
             <dt>Recent conversations</dt>
-            <dd>{initialPosts.length}</dd>
+            <dd>{allPosts.length}</dd>
           </div>
           <div>
             <dt>Asks &amp; opportunities</dt>
@@ -864,7 +986,7 @@ export function CommunityFeed({
             role="status"
           >
             <span>
-              Showing {posts.length} of {initialPosts.length} recent
+              Showing {posts.length} of {allPosts.length} loaded
               conversations
             </span>
             {query ||
@@ -1176,12 +1298,12 @@ export function CommunityFeed({
         ) : (
           <div className="admin-empty community-feed-empty">
             <strong>
-              {initialPosts.length
+              {allPosts.length
                 ? "No conversations match this view"
                 : "Begin the conversation"}
             </strong>
             <p>
-              {initialPosts.length
+              {allPosts.length
                 ? "Try a broader search or return to the latest conversations."
                 : "Share one focused thought, request, opportunity or resource that another member can act on."}
             </p>
@@ -1190,11 +1312,30 @@ export function CommunityFeed({
               onClick={clearDiscovery}
               type="button"
             >
-              {initialPosts.length ? "Clear filters" : "View all conversations"}
+              {allPosts.length ? "Clear filters" : "View all conversations"}
             </button>
           </div>
         )}
       </section>
+      {enhanced && paginationReady && (hasMore || olderPosts.length) ? (
+        <div className="community-feed-pagination">
+          {hasMore ? (
+            <button
+              className="button button-outline"
+              disabled={busy === "load-older"}
+              onClick={() => void loadOlder()}
+              type="button"
+            >
+              {busy === "load-older"
+                ? "Loading conversations…"
+                : "Load older conversations"}
+            </button>
+          ) : (
+            <strong>You are at the beginning of this community.</strong>
+          )}
+          <span>Conversations load in calm, manageable groups of 20.</span>
+        </div>
+      ) : null}
       {message ? (
         <p className="network-message" role="status">
           {message}

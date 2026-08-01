@@ -388,6 +388,41 @@ assert(
     !communityActivityNavigationMigration.includes("is_admin"),
   "Community navigation activity must never expose another member's read state to hosts or staff",
 );
+const communityFeedPaginationMigration = read(
+  "supabase/migrations/20260802170000_community_feed_pagination.sql",
+);
+for (const contract of [
+  "list_community_conversation_page",
+  "p_before_activity_at",
+  "p_before_post_id",
+  "num_nulls",
+  "post.is_pinned::integer",
+  "post.id desc",
+  "list_community_comments_for_posts",
+  "list_community_post_media_for_posts",
+  "cardinality(p_post_ids)",
+  "not public.is_blocked_pair",
+  "Keep no more than three pinned conversations",
+  ") >= 3",
+  "limit least(greatest(coalesce(p_limit, 21), 1), 25)",
+]) {
+  assert(
+    communityFeedPaginationMigration.includes(contract),
+    `Scalable Community feed pagination must include ${contract}`,
+  );
+}
+const conversationPageFunction = communityFeedPaginationMigration.slice(
+  communityFeedPaginationMigration.indexOf(
+    "create or replace function public.list_community_conversation_page",
+  ),
+  communityFeedPaginationMigration.indexOf(
+    "create or replace function public.list_community_comments_for_posts",
+  ),
+);
+assert(
+  !conversationPageFunction.includes(" offset "),
+  "Community feed pagination must use a stable cursor rather than offset paging",
+);
 const communityNotificationMigration = read(
   "supabase/migrations/20260731100000_community_notification_preferences_and_briefings.sql",
 );

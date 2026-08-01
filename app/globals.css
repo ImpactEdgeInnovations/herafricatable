@@ -20509,6 +20509,30 @@ body {
   margin-right: auto;
   margin-left: auto;
 }
+.community-feed-pagination {
+  display: grid;
+  width: min(900px, calc(100% - 48px));
+  justify-items: center;
+  margin: 28px auto 0;
+  padding-top: 24px;
+  border-top: 1px solid rgba(61, 45, 39, 0.1);
+  color: var(--muted);
+  text-align: center;
+  gap: 9px;
+}
+.community-feed-pagination .button {
+  min-width: 210px;
+  justify-content: center;
+}
+.community-feed-pagination strong {
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 400;
+}
+.community-feed-pagination span {
+  font-size: 0.68rem;
+}
 .community-conversation-shell > .network-message {
   margin: 18px auto 0;
 }
@@ -20555,6 +20579,7 @@ body {
   .community-composer,
   .community-discovery,
   .community-feed,
+  .community-feed-pagination,
   .community-conversation-shell > .network-message {
     width: calc(100% - 32px);
   }

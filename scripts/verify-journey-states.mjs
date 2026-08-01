@@ -457,6 +457,10 @@ for (const contract of [
   "list_community_post_edit_states",
   "get_community_read_summary",
   "list_community_post_read_states",
+  "list_community_conversation_page",
+  "list_community_comments_for_posts",
+  "list_community_post_media_for_posts",
+  "initialHasMore",
   "createSignedUrl",
   "mediaReady",
   "community-room-cover",
@@ -541,6 +545,11 @@ for (const contract of [
   "Mark all as seen",
   "is_new",
   "new_reply_count",
+  "loadOlder",
+  "Load older conversations",
+  "cursor_activity_at",
+  "paginationReady",
+  "groups of 20",
 ]) {
   assert(
     communityFeed.includes(contract),

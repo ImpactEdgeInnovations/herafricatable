@@ -284,6 +284,8 @@ Usability is part of production readiness and continues alongside feature delive
       a “New for you” view and an explicit member-controlled caught-up action
 - [x] Carry private Community activity into the global member shell and room
       directory with restrained count badges, priority ordering and clear return actions
+- [x] Replace the fixed recent-conversation ceiling with stable cursor pagination,
+      page-scoped replies and private media, twenty-item loading and a three-pin limit
 - [ ] Apply `20260802010000_community_identity_and_media.sql` in production
       Supabase
 - [ ] Apply `20260802050000_community_post_editing.sql` in production Supabase
@@ -291,6 +293,10 @@ Usability is part of production readiness and continues alongside feature delive
       Supabase
 - [ ] Apply `20260802130000_community_activity_navigation.sql` in production
       Supabase
+- [ ] Apply `20260802170000_community_feed_pagination.sql` in production
+      Supabase
+- [ ] Test multi-page pinned/unpinned ordering, duplicate prevention, protected
+      media delivery and blocked-member filtering with at least 45 conversations
 - [ ] Test join-time baseline, own-activity exclusion, block filtering and
       caught-up behavior with two real member accounts
 - [ ] Test edit expiry, pinned-conversation protection, revision limits and
@@ -443,6 +449,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Apply `20260802090000_community_member_read_state.sql` in production
       Supabase
 - [ ] Apply `20260802130000_community_activity_navigation.sql` in production
+      Supabase
+- [ ] Apply `20260802170000_community_feed_pagination.sql` in production
       Supabase
 - [ ] Complete Creator Commerce admission/payment/entitlement/payout-boundary
       acceptance and deliberately enable its feature flag

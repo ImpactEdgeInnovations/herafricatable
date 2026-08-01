@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { memberErrorMessage } from "@/lib/member-error";
 import {
   CommunityFeed,
+  type CommunityFeedCursor,
   type CommunityComment,
   type CommunityPost,
   type CommunityPostAttachment,
@@ -62,6 +63,7 @@ export default async function CommunityPage({
   const [
     postsResult,
     structuredPostsResult,
+    paginatedPostsResult,
     commentResult,
     cohortResult,
     introductionResult,
@@ -86,6 +88,13 @@ export default async function CommunityPage({
         p_community_id: community.community_id,
         p_limit: 30,
         p_offset: 0,
+      }),
+      supabase.rpc("list_community_conversation_page", {
+        p_before_activity_at: null,
+        p_before_pinned: null,
+        p_before_post_id: null,
+        p_community_id: community.community_id,
+        p_limit: 21,
       }),
       supabase.rpc("list_community_comments", {
         p_community_id: community.community_id,
@@ -133,8 +142,43 @@ export default async function CommunityPage({
         p_limit: 100,
       }),
     ]);
+  const paginatedPosts =
+    (paginatedPostsResult.data as CommunityPost[] | null) ?? [];
+  const paginationReady = !paginatedPostsResult.error;
+  const visiblePaginatedPosts = paginationReady
+    ? paginatedPosts.slice(0, 20)
+    : [];
+  const initialHasMore = paginationReady && paginatedPosts.length > 20;
+  const lastPaginatedPost =
+    visiblePaginatedPosts[visiblePaginatedPosts.length - 1];
+  const initialCursor: CommunityFeedCursor | null = lastPaginatedPost
+    ? {
+        activityAt:
+          lastPaginatedPost.cursor_activity_at ?? lastPaginatedPost.created_at,
+        pinned: Boolean(lastPaginatedPost.is_pinned),
+        postId: lastPaginatedPost.post_id,
+      }
+    : null;
+  const paginatedPostIds = visiblePaginatedPosts.map((post) => post.post_id);
+  const [pageCommentsResult, pageMediaResult] =
+    paginationReady && paginatedPostIds.length
+      ? await Promise.all([
+          supabase.rpc("list_community_comments_for_posts", {
+            p_community_id: community.community_id,
+            p_limit: 500,
+            p_post_ids: paginatedPostIds,
+          }),
+          supabase.rpc("list_community_post_media_for_posts", {
+            p_community_id: community.community_id,
+            p_post_ids: paginatedPostIds,
+          }),
+        ])
+      : [{ data: null, error: null }, { data: null, error: null }];
+  const paginationOperational =
+    paginationReady && !pageCommentsResult.error && !pageMediaResult.error;
   const structuredConversationsReady =
-    !structuredPostsResult.error && !commentResult.error;
+    paginationOperational ||
+    (!structuredPostsResult.error && !commentResult.error);
   const programmingReady = !gatheringResult.error && !resourceResult.error;
   const canManage = ["owner", "moderator"].includes(
     community.membership_role ?? "",
@@ -142,8 +186,9 @@ export default async function CommunityPage({
   const cohort = ((cohortResult.data as CohortRoom[] | null) ?? [])[0];
   const brandIdentity =
     ((brandingResult.data as CommunityBrandIdentity[] | null) ?? [])[0] ?? null;
-  const attachments =
-    (mediaResult.data as CommunityPostAttachment[] | null) ?? [];
+  const attachments = paginationOperational
+    ? ((pageMediaResult.data as CommunityPostAttachment[] | null) ?? [])
+    : ((mediaResult.data as CommunityPostAttachment[] | null) ?? []);
   const [iconSigned, coverSigned, signedAttachments] = await Promise.all([
     brandIdentity?.icon_storage_path
       ? supabase.storage
@@ -184,9 +229,11 @@ export default async function CommunityPage({
   const readSummary = (
     (readSummaryResult.data as { new_activity_count: number }[] | null) ?? []
   )[0];
-  const sourcePosts = structuredConversationsReady
-    ? ((structuredPostsResult.data as CommunityPost[] | null) ?? [])
-    : ((postsResult.data as CommunityPost[] | null) ?? []);
+  const sourcePosts = paginationOperational
+    ? visiblePaginatedPosts
+    : structuredConversationsReady
+      ? ((structuredPostsResult.data as CommunityPost[] | null) ?? [])
+      : ((postsResult.data as CommunityPost[] | null) ?? []);
   const posts = sourcePosts.map((post) => ({
     ...post,
     attachment: attachmentByPost.get(post.post_id) ?? null,
@@ -288,17 +335,24 @@ export default async function CommunityPage({
           communityId={community.community_id}
           currentUserId={user.id}
           initialComments={
-            structuredConversationsReady
+            paginationOperational
+              ? ((pageCommentsResult.data as CommunityComment[] | null) ?? [])
+              : structuredConversationsReady
               ? ((commentResult.data as CommunityComment[] | null) ?? [])
               : []
           }
+          initialCursor={paginationOperational ? initialCursor : null}
+          initialHasMore={paginationOperational && initialHasMore}
           initialNewActivityCount={Number(
             readSummary?.new_activity_count ?? 0,
           )}
           initialPosts={
             posts
           }
-          mediaReady={!mediaResult.error}
+          mediaReady={
+            paginationOperational ? !pageMediaResult.error : !mediaResult.error
+          }
+          paginationReady={paginationOperational}
           readStateReady={!readSummaryResult.error && !readStateResult.error}
           prompt={
             cohort
