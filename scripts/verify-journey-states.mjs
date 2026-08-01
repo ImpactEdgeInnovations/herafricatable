@@ -451,6 +451,7 @@ for (const contract of [
   "CommunityStartPath",
   "list_community_brand_identities",
   "list_community_post_media",
+  "list_community_post_edit_states",
   "createSignedUrl",
   "mediaReady",
   "community-room-cover",
@@ -503,6 +504,11 @@ for (const contract of [
   "community-post-image",
   "community-post-document",
   "community-post-link",
+  "edit_community_post",
+  "Edit this conversation?",
+  "Previous versions remain private",
+  "Save changes",
+  "Edited",
 ]) {
   assert(
     communityFeed.includes(contract),

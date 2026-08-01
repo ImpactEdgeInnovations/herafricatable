@@ -7,6 +7,7 @@ import {
   type CommunityComment,
   type CommunityPost,
   type CommunityPostAttachment,
+  type CommunityPostEditState,
 } from "@/components/member/community-feed";
 import {
   CohortActivation,
@@ -70,6 +71,7 @@ export default async function CommunityPage({
     startPathResult,
     brandingResult,
     mediaResult,
+    editStateResult,
   ] = await Promise.all([
       supabase.rpc("list_community_posts", {
         p_community_id: community.community_id,
@@ -116,6 +118,10 @@ export default async function CommunityPage({
         p_community_id: community.community_id,
         p_limit: 100,
       }),
+      supabase.rpc("list_community_post_edit_states", {
+        p_community_id: community.community_id,
+        p_limit: 100,
+      }),
     ]);
   const structuredConversationsReady =
     !structuredPostsResult.error && !commentResult.error;
@@ -155,12 +161,18 @@ export default async function CommunityPage({
   const attachmentByPost = new Map(
     signedAttachments.map((attachment) => [attachment.post_id, attachment]),
   );
+  const editStateByPost = new Map(
+    ((editStateResult.data as CommunityPostEditState[] | null) ?? []).map(
+      (state) => [state.post_id, state],
+    ),
+  );
   const sourcePosts = structuredConversationsReady
     ? ((structuredPostsResult.data as CommunityPost[] | null) ?? [])
     : ((postsResult.data as CommunityPost[] | null) ?? []);
   const posts = sourcePosts.map((post) => ({
     ...post,
     attachment: attachmentByPost.get(post.post_id) ?? null,
+    ...editStateByPost.get(post.post_id),
   }));
   return (
     <main className="community-page">

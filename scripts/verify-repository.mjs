@@ -304,6 +304,40 @@ assert(
     ),
   "Registered community media objects must remain immutable to browser clients",
 );
+const communityPostEditingMigration = read(
+  "supabase/migrations/20260802050000_community_post_editing.sql",
+);
+for (const contract of [
+  "community_post_revisions",
+  "revoke all on table public.community_post_revisions",
+  "list_community_post_edit_states",
+  "edit_community_post",
+  "interval '30 minutes'",
+  "not post.is_pinned",
+  "revision_number >= 5",
+  "previous_body",
+  "'prior_versions'",
+  "'edited_at'",
+  "'community.post_edited'",
+]) {
+  assert(
+    communityPostEditingMigration.includes(contract),
+    `Controlled Community post editing must include ${contract}`,
+  );
+}
+const communityPostEditFunction = communityPostEditingMigration.slice(
+  communityPostEditingMigration.indexOf(
+    "create or replace function public.edit_community_post",
+  ),
+  communityPostEditingMigration.indexOf(
+    "create or replace function public.report_community_post",
+  ),
+);
+assert(
+  !communityPostEditFunction.includes("'body', clean_body") &&
+    !communityPostEditFunction.includes("'body', p_body"),
+  "Community post edit audit metadata must never copy conversation text",
+);
 const communityNotificationMigration = read(
   "supabase/migrations/20260731100000_community_notification_preferences_and_briefings.sql",
 );

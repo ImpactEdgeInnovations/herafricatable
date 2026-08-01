@@ -60,6 +60,13 @@ export type CommunityPostAttachment = {
   signed_url?: string | null;
 };
 
+export type CommunityPostEditState = {
+  can_edit: boolean;
+  edited_at: string | null;
+  edit_expires_at: string;
+  post_id: string;
+};
+
 export type CommunityPost = {
   appreciation_count?: number;
   appreciated_by_me?: boolean;
@@ -70,7 +77,10 @@ export type CommunityPost = {
   body: string;
   category?: string;
   comment_count?: number;
+  can_edit?: boolean;
   created_at: string;
+  edited_at?: string | null;
+  edit_expires_at?: string | null;
   followed_by_me?: boolean;
   is_pinned?: boolean;
   post_id: string;
@@ -513,6 +523,35 @@ export function CommunityFeed({
     );
   }
 
+  async function edit(post: CommunityPost) {
+    const result = await ask({
+      title: "Edit this conversation?",
+      description:
+        "You can edit during the first 30 minutes. Previous versions remain private and are available only if this conversation is reported for safety review.",
+      confirmLabel: "Save changes",
+      fields: [
+        {
+          name: "body",
+          label: "Conversation",
+          type: "textarea",
+          initialValue: post.body,
+          required: true,
+          minLength: 2,
+          maxLength: 3000,
+        },
+      ],
+    });
+    if (!result) return;
+    setBusy(`edit-${post.post_id}`);
+    const { error } = await supabase.rpc("edit_community_post", {
+      p_body: String(result.body),
+      p_post_id: post.post_id,
+    });
+    setBusy("");
+    announce(error, "edit this conversation", "Your changes are live.");
+    if (!error) router.refresh();
+  }
+
   async function copyConversationLink(postId: string) {
     const target = new URL(window.location.href);
     target.hash = `conversation-${postId}`;
@@ -810,12 +849,15 @@ export function CommunityFeed({
                         .join(" · ")}
                     </small>
                   </div>
-                  <time dateTime={post.created_at}>
-                    {new Intl.DateTimeFormat("en-KE", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(new Date(post.created_at))}
-                  </time>
+                  <div className="community-post-timestamp">
+                    <time dateTime={post.created_at}>
+                      {new Intl.DateTimeFormat("en-KE", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      }).format(new Date(post.created_at))}
+                    </time>
+                    {post.edited_at ? <small>Edited</small> : null}
+                  </div>
                 </header>
                 <p>{post.body}</p>
                 {post.attachment?.attachment_type === "image" &&
@@ -1029,13 +1071,24 @@ export function CommunityFeed({
                       Copy conversation link
                     </button>
                     {post.author_id === currentUserId ? (
-                      <button
-                        disabled={busy === `remove-${post.post_id}`}
-                        onClick={() => void remove(post.post_id, "post")}
-                        type="button"
-                      >
-                        Remove post
-                      </button>
+                      <>
+                        {post.can_edit ? (
+                          <button
+                            disabled={busy === `edit-${post.post_id}`}
+                            onClick={() => void edit(post)}
+                            type="button"
+                          >
+                            Edit post
+                          </button>
+                        ) : null}
+                        <button
+                          disabled={busy === `remove-${post.post_id}`}
+                          onClick={() => void remove(post.post_id, "post")}
+                          type="button"
+                        >
+                          Remove post
+                        </button>
+                      </>
                     ) : (
                       <button
                         disabled={busy === `report-${post.post_id}`}

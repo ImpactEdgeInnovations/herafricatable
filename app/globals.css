@@ -10396,6 +10396,14 @@ body {
   color: var(--muted);
   font-size: 0.57rem;
 }
+.community-post-timestamp {
+  justify-items: end;
+  text-align: right;
+}
+.community-post-timestamp small {
+  color: var(--wine);
+  font-weight: 750;
+}
 .community-feed article > p {
   margin: 22px 0;
   white-space: pre-wrap;
