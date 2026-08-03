@@ -2270,6 +2270,162 @@ svg {
   }
 }
 
+/* Member-wide search */
+.member-search-page {
+  min-height: 100vh;
+  background: var(--paper);
+}
+.member-search-hero,
+.member-search-results,
+.member-search-state {
+  width: min(980px, calc(100% - 48px));
+  margin-right: auto;
+  margin-left: auto;
+}
+.member-search-hero {
+  padding: 76px 0 48px;
+  border-bottom: 1px solid var(--line);
+}
+.member-search-hero h1 {
+  margin: 8px 0 12px;
+  font-family: var(--serif);
+  font-size: clamp(3.3rem, 7vw, 6rem);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+.member-search-hero > p:last-of-type {
+  max-width: 650px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.7;
+}
+.member-search-hero form {
+  display: grid;
+  max-width: 760px;
+  margin-top: 34px;
+  gap: 8px;
+}
+.member-search-hero form > label {
+  color: var(--muted);
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.member-search-hero form > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+.member-search-hero input {
+  min-height: 54px;
+  padding: 0 17px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.72rem;
+}
+.member-search-results {
+  padding: 38px 0 90px;
+}
+.member-search-results > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  color: var(--muted);
+  font-size: 0.6rem;
+}
+.member-search-results > header p {
+  margin: 0;
+}
+.member-search-results > header a {
+  color: var(--wine);
+  text-decoration: none;
+}
+.member-search-results > div {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+.member-search-results > div > a {
+  display: grid;
+  min-height: 122px;
+  align-content: center;
+  padding: 20px 56px 20px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  gap: 4px;
+  position: relative;
+}
+.member-search-results > div > a > span {
+  color: var(--gold);
+  font-size: 0.49rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.member-search-results > div > a > strong {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+.member-search-results > div > a > small,
+.member-search-results > div > a > p {
+  max-width: 740px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.57rem;
+  line-height: 1.55;
+}
+.member-search-results > div > a > em {
+  position: absolute;
+  right: 0;
+  color: var(--wine);
+  font-size: 0.55rem;
+  font-style: normal;
+}
+.member-search-state {
+  margin-top: 38px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.member-search-state p {
+  margin: 6px 0 12px;
+  color: var(--muted);
+  font-size: 0.62rem;
+}
+.member-search-state a {
+  color: var(--wine);
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+@media (max-width: 700px) {
+  .member-search-hero,
+  .member-search-results,
+  .member-search-state {
+    width: calc(100% - 32px);
+  }
+  .member-search-hero {
+    padding: 54px 0 38px;
+  }
+  .member-search-hero form > div {
+    grid-template-columns: 1fr;
+  }
+  .member-search-results > div > a {
+    padding-right: 0;
+  }
+  .member-search-results > div > a > em {
+    position: static;
+    margin-top: 7px;
+  }
+}
+
 /* Community quick check-ins */
 .community-check-ins {
   width: min(1120px, calc(100% - 48px));
@@ -16432,6 +16588,28 @@ body {
   border: 1px solid var(--line);
   border-radius: 100px;
 }
+.member-search-link {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  padding: 0 10px;
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 800;
+  text-decoration: none;
+  gap: 6px;
+}
+.member-search-link svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.7;
+}
+.member-search-link[aria-current="page"] {
+  color: var(--wine);
+}
 .member-alert-link[aria-current="page"] {
   border-color: var(--wine);
   background: var(--wine);
@@ -16581,6 +16759,19 @@ body {
     margin-left: auto;
     padding: 8px 11px;
     font-size: 0.55rem !important;
+  }
+  .member-search-link {
+    width: 38px;
+    min-height: 38px;
+    justify-content: center;
+    padding: 0;
+  }
+  .member-search-link > span {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0 0 0 0);
   }
   .member-mobile-dock {
     position: fixed;

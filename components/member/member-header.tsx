@@ -87,7 +87,7 @@ export async function MemberHeader({
   accountLabel = "My profile",
   label,
 }: {
-  active?: MemberDestination | "alerts";
+  active?: MemberDestination | "alerts" | "search";
   accountHref?: "/profile" | "/settings";
   accountLabel?: "Account" | "My profile";
   label: string;
@@ -164,6 +164,18 @@ export async function MemberHeader({
           ))}
         </nav>
         <div className="member-header-actions">
+          <Link
+            aria-current={active === "search" ? "page" : undefined}
+            aria-label="Search your table"
+            className="member-search-link"
+            href="/search"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="6" />
+              <path d="m16 16 5 5" />
+            </svg>
+            <span>Search</span>
+          </Link>
           <Link
             aria-current={active === "alerts" ? "page" : undefined}
             aria-label={

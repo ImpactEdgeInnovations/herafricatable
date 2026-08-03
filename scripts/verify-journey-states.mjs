@@ -325,6 +325,7 @@ const upcomingEvents = read("app/events/page.tsx");
 const pastEvents = read("app/events/past/page.tsx");
 const memberExplore = read("app/explore/page.tsx");
 const memberHeader = read("components/member/member-header.tsx");
+const memberSearch = read("app/search/page.tsx");
 const opportunityMarketplace = read(
   "components/member/opportunity-marketplace.tsx",
 );
@@ -341,6 +342,29 @@ for (const contract of [
   assert(
     memberHome.includes(contract),
     `Compact member Home must include ${contract}`,
+  );
+}
+for (const contract of [
+  'href="/search"',
+  "Search your table",
+  'active === "search"',
+]) {
+  assert(
+    memberHeader.includes(contract),
+    `Shared member shell must expose search through ${contract}`,
+  );
+}
+for (const contract of [
+  "search_my_table",
+  "Find a member, a Community conversation, an event or useful learning",
+  "only see information you already have permission to open",
+  'role="search"',
+  "Start with two or more letters",
+  "Search is being prepared",
+]) {
+  assert(
+    memberSearch.includes(contract),
+    `Member-wide search UX must include ${contract}`,
   );
 }
 assert(

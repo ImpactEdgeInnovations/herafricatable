@@ -432,6 +432,38 @@ const communityEventReminderMigration = read(
 const communityCheckInMigration = read(
   "supabase/migrations/20260803210000_community_check_ins.sql",
 );
+const memberGlobalSearchMigration = read(
+  "supabase/migrations/20260804010000_member_global_search.sql",
+);
+for (const contract of [
+  "search_my_table",
+  "public.is_active_member(actor)",
+  "not profile.visibility_paused",
+  "not public.is_blocked_pair(actor, profile.id)",
+  "membership.user_id = actor",
+  "membership.status = 'active'",
+  "not public.is_blocked_pair(actor, post.author_id)",
+  "event.status = 'published'",
+  "course.status = 'published'",
+  "limit least(greatest(coalesce(p_limit, 30), 1), 40)",
+]) {
+  assert(
+    memberGlobalSearchMigration.includes(contract),
+    `Member-wide search must enforce ${contract}`,
+  );
+}
+for (const privateField of [
+  "profile_private",
+  "email",
+  "phone",
+  "private_note",
+  "messages",
+]) {
+  assert(
+    !memberGlobalSearchMigration.includes(privateField),
+    `Member-wide search must not include ${privateField}`,
+  );
+}
 for (const contract of [
   "community_check_ins",
   "community_check_in_options",
