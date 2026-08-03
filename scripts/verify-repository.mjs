@@ -429,6 +429,41 @@ const communityNotificationMigration = read(
 const communityEventReminderMigration = read(
   "supabase/migrations/20260803170000_community_event_reminders.sql",
 );
+const communityCheckInMigration = read(
+  "supabase/migrations/20260803210000_community_check_ins.sql",
+);
+for (const contract of [
+  "community_check_ins",
+  "community_check_in_options",
+  "community_check_in_responses",
+  "list_community_check_ins",
+  "create_community_check_in",
+  "respond_to_community_check_in",
+  "close_community_check_in",
+  "remove_community_check_in",
+  "response_total.response_count >= 3",
+  "not public.is_blocked_pair",
+  "now() - interval '7 days'",
+  "on conflict (check_in_id, user_id) do update",
+]) {
+  assert(
+    communityCheckInMigration.includes(contract),
+    `Community Quick Check-ins must enforce ${contract}`,
+  );
+}
+const communityCheckInResponseFunction = communityCheckInMigration.slice(
+  communityCheckInMigration.indexOf(
+    "create or replace function public.respond_to_community_check_in",
+  ),
+  communityCheckInMigration.indexOf(
+    "create or replace function public.close_community_check_in",
+  ),
+);
+assert(
+  !communityCheckInResponseFunction.includes("audit_events") &&
+    !communityCheckInResponseFunction.includes("display_name"),
+  "Individual Community Check-in answers must not enter audit or identity projections",
+);
 for (const contract of [
   "community_event_reminders",
   "list_my_community_event_preferences",

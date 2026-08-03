@@ -2270,6 +2270,289 @@ svg {
   }
 }
 
+/* Community quick check-ins */
+.community-check-ins {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 58px 0 66px;
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: 74px;
+}
+.community-check-ins > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 44px;
+}
+.community-check-ins > header h2 {
+  margin: 6px 0 8px;
+  font-family: var(--serif);
+  font-size: clamp(2.15rem, 3.8vw, 3.4rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+}
+.community-check-ins > header p:last-child {
+  max-width: 650px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.65rem;
+  line-height: 1.7;
+}
+.community-check-ins > header > button {
+  flex: 0 0 auto;
+}
+.community-check-in-composer {
+  display: grid;
+  margin-top: 30px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  background: #fff;
+  gap: 22px;
+}
+.community-check-in-composer label,
+.community-check-in-composer fieldset {
+  display: grid;
+  gap: 7px;
+}
+.community-check-in-composer label > span,
+.community-check-in-composer legend {
+  color: var(--muted);
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.community-check-in-composer input,
+.community-check-in-composer select {
+  min-height: 46px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.64rem;
+}
+.community-check-in-question input {
+  font-family: var(--serif);
+  font-size: 1rem;
+}
+.community-check-in-composer fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.community-check-in-composer fieldset legend {
+  margin-bottom: 7px;
+  grid-column: 1 / -1;
+}
+.community-check-in-composer fieldset label {
+  position: relative;
+}
+.community-check-in-composer fieldset label > button {
+  position: absolute;
+  right: 9px;
+  bottom: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.5rem;
+}
+.community-check-in-add-choice {
+  width: fit-content;
+  padding: 7px 0;
+  border: 0;
+  background: transparent;
+  color: var(--wine);
+  cursor: pointer;
+  font-size: 0.57rem;
+  font-weight: 800;
+  grid-column: 1 / -1;
+}
+.community-check-in-composer > footer {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  gap: 24px;
+}
+.community-check-in-composer > footer > div {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.community-check-in-composer > footer small {
+  color: var(--muted);
+  font-size: 0.52rem;
+}
+.community-check-in-message {
+  margin: 20px 0 0;
+  padding: 11px 14px;
+  border-left: 2px solid var(--gold);
+  background: #fffdf8;
+  font-size: 0.59rem;
+}
+.community-check-in-list {
+  display: grid;
+  margin-top: 30px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.community-check-in-list > article {
+  display: grid;
+  min-width: 0;
+  padding: 25px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.68);
+  gap: 20px;
+}
+.community-check-in-list > article.is-closed {
+  opacity: 0.78;
+}
+.community-check-in-list article > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+}
+.community-check-in-list article > header span {
+  color: var(--gold);
+  font-size: 0.49rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.community-check-in-list h3 {
+  margin: 7px 0;
+  font-family: var(--serif);
+  font-size: 1.28rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.community-check-in-list article > header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.54rem;
+}
+.community-check-in-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.community-check-in-list article > header button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.52rem;
+  text-decoration: underline;
+}
+.community-check-in-list article > header button.danger-action {
+  color: var(--error);
+}
+.community-check-in-options {
+  display: grid;
+  gap: 7px;
+}
+.community-check-in-options > button {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.57rem;
+  text-align: left;
+  gap: 12px;
+}
+.community-check-in-options > button > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(189, 140, 66, 0.13);
+}
+.community-check-in-options > button > span,
+.community-check-in-options > button > strong {
+  position: relative;
+  z-index: 1;
+}
+.community-check-in-options > button > strong {
+  color: var(--wine);
+  font-size: 0.51rem;
+  white-space: nowrap;
+}
+.community-check-in-options > button.is-selected {
+  border-color: var(--gold);
+}
+.community-check-in-options > button:disabled {
+  cursor: default;
+}
+.community-check-in-list article > footer {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 15px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.49rem;
+  line-height: 1.5;
+  gap: 14px;
+}
+.community-check-in-list article > footer em {
+  color: var(--wine);
+  font-style: normal;
+  white-space: nowrap;
+}
+.community-check-in-empty {
+  margin-top: 30px;
+  padding: 27px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.62);
+}
+.community-check-in-empty p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.59rem;
+}
+
+@media (max-width: 700px) {
+  .community-check-ins {
+    width: calc(100% - 32px);
+    padding: 44px 0 52px;
+  }
+  .community-check-ins > header,
+  .community-check-in-composer > footer,
+  .community-check-in-composer > footer > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .community-check-ins > header > button,
+  .community-check-in-composer > footer .button {
+    width: 100%;
+  }
+  .community-check-in-composer {
+    padding: 21px;
+  }
+  .community-check-in-composer fieldset,
+  .community-check-in-list {
+    grid-template-columns: 1fr;
+  }
+  .community-check-in-list > article {
+    padding: 21px;
+  }
+  .community-check-in-list article > footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 /* Community programming and host stewardship */
 .community-programming {
   width: min(1120px, calc(100% - 48px));

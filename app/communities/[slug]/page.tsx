@@ -41,6 +41,10 @@ import {
   type CommunityCircleProgram,
 } from "@/components/member/community-circles";
 import type { CommunityEventPreference } from "@/components/member/community-event-actions";
+import {
+  CommunityCheckIns,
+  type CommunityCheckIn,
+} from "@/components/member/community-check-ins";
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
   params,
@@ -84,6 +88,7 @@ export default async function CommunityPage({
     readSummaryResult,
     readStateResult,
     eventPreferenceResult,
+    checkInResult,
   ] = await Promise.all([
       supabase.rpc("list_community_posts", {
         p_community_id: community.community_id,
@@ -153,6 +158,10 @@ export default async function CommunityPage({
       }),
       supabase.rpc("list_my_community_event_preferences", {
         p_community_id: community.community_id,
+      }),
+      supabase.rpc("list_community_check_ins", {
+        p_community_id: community.community_id,
+        p_limit: 8,
       }),
     ]);
   const paginatedPosts =
@@ -306,6 +315,7 @@ export default async function CommunityPage({
         <a aria-current="page" href="#overview">
           Start here
         </a>
+        {!checkInResult.error ? <a href="#check-ins">Check-ins</a> : null}
         <a href="#conversations">Posts</a>
         <a href="#members">Members</a>
         {programmingReady ? (
@@ -334,6 +344,12 @@ export default async function CommunityPage({
               )[0] ?? null
         }
       />
+      {!checkInResult.error ? (
+        <CommunityCheckIns
+          checkIns={(checkInResult.data as CommunityCheckIn[] | null) ?? []}
+          communityId={community.community_id}
+        />
+      ) : null}
       {postsResult.error && !structuredConversationsReady ? (
         <section className="admin-empty opportunity-error" role="alert">
           <strong>Community posts are not loading</strong>

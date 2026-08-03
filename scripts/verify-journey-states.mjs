@@ -447,6 +447,7 @@ const communityProgramming = read(
 const communityEventActions = read(
   "components/member/community-event-actions.tsx",
 );
+const communityCheckIns = read("components/member/community-check-ins.tsx");
 const communityCircles = read("components/member/community-circles.tsx");
 const communityCircleHostPanel = read(
   "components/member/community-circle-host-panel.tsx",
@@ -506,6 +507,32 @@ for (const contract of [
   assert(
     communityHostPage.includes(contract),
     `Community Host page must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Quick check-ins",
+  "Ask one clear question",
+  "Start a check-in",
+  "Answers never reveal member names",
+  "Results appear after at least three members answer",
+  "respond_to_community_check_in",
+  "close_community_check_in",
+  "remove_community_check_in",
+  "useActionDialog",
+]) {
+  assert(
+    communityCheckIns.includes(contract),
+    `Community Quick Check-in UX must include ${contract}`,
+  );
+}
+for (const contract of [
+  "list_community_check_ins",
+  "CommunityCheckIns",
+  'href="#check-ins"',
+]) {
+  assert(
+    communityRoom.includes(contract),
+    `Community room must load Quick Check-ins through ${contract}`,
   );
 }
 for (const contract of [
