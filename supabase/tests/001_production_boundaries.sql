@@ -262,8 +262,9 @@ select lives_ok($$select public.review_community_report((select report_id from p
 select lives_ok($$select public.invite_community_member('70000000-0000-4000-8000-000000000002','staff@test.invalid','moderator')$$,'super admin invites an active member into a private community role');
 select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000002'and user_id='10000000-0000-4000-8000-000000000004'),'invited','community invitation remains consent-based until accepted');
 select lives_ok($$select public.ensure_founding_cohort('50000000-0000-4000-8000-000000000001')$$,'super admin prepares the event-linked founding room');
-select is((select public.sync_cohort_invitations((select id from public.communities where slug='founding-table-nairobi'))),1,'eligibility sync creates one consent-based guest invitation');
-select is((select status from public.community_memberships where community_id=(select id from public.communities where slug='founding-table-nairobi')and user_id='10000000-0000-4000-8000-000000000002'),'invited','eligible attendee remains invited until she accepts');
+select set_config('hat.test.founding_community_id',(select id::text from public.communities where slug='founding-table-nairobi'),true);
+select is((select public.sync_cohort_invitations(current_setting('hat.test.founding_community_id')::uuid)),1,'eligibility sync creates one consent-based guest invitation');
+select is((select status from public.community_memberships where community_id=current_setting('hat.test.founding_community_id')::uuid and user_id='10000000-0000-4000-8000-000000000002'),'invited','eligible attendee remains invited until she accepts');
 select is((select count(*)from public.list_cohort_overview()where community_slug='founding-table-nairobi'),1::bigint,'super admin sees the founding room in cohort operations');
 select is((select count(*)from public.list_cohort_health((select id from public.communities where slug='founding-table-nairobi'))),1::bigint,'cohort health lists the invited attendee without unrelated active members');
 select is((select count(*)from public.list_course_orders()),1::bigint,'super admin lists the pending course order');
@@ -307,10 +308,10 @@ select is((select test_events from public.get_product_analytics(30)where event_n
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 select lives_ok($$select public.remove_saved_member_profile('10000000-0000-4000-8000-000000000003')$$,'member removes a profile from her private shortlist');
 select is(public.is_member_profile_saved('10000000-0000-4000-8000-000000000003'),false,'removed profile no longer appears saved');
-select lives_ok($$select public.respond_to_community_invitation((select id from public.communities where slug='founding-table-nairobi'),true)$$,'invited attendee deliberately accepts founding-room access');
-select is((select status from public.community_memberships where community_id=(select id from public.communities where slug='founding-table-nairobi')and user_id='10000000-0000-4000-8000-000000000002'),'active','accepted cohort invitation becomes active');
-select lives_ok($$select public.save_community_introduction((select id from public.communities where slug='founding-table-nairobi'),'I lead a growing East African enterprise.','I am building a trusted regional partner network.','I can offer commercial strategy and warm introductions.','I am seeking values-aligned distribution partners.')$$,'accepted cohort member saves a structured introduction');
-select is((select count(*)from public.list_community_introductions((select id from public.communities where slug='founding-table-nairobi'))),1::bigint,'cohort member sees introductions only after accepting room access');
+select lives_ok($$select public.respond_to_community_invitation(current_setting('hat.test.founding_community_id')::uuid,true)$$,'invited attendee deliberately accepts founding-room access');
+select is((select status from public.community_memberships where community_id=current_setting('hat.test.founding_community_id')::uuid and user_id='10000000-0000-4000-8000-000000000002'),'active','accepted cohort invitation becomes active');
+select lives_ok($$select public.save_community_introduction(current_setting('hat.test.founding_community_id')::uuid,'I lead a growing East African enterprise.','I am building a trusted regional partner network.','I can offer commercial strategy and warm introductions.','I am seeking values-aligned distribution partners.')$$,'accepted cohort member saves a structured introduction');
+select is((select count(*)from public.list_community_introductions(current_setting('hat.test.founding_community_id')::uuid)),1::bigint,'cohort member sees introductions only after accepting room access');
 select is((select introduction_complete from public.get_my_activation_journey()),true,'member activation journey records the completed cohort introduction');
 select is((select count(*)from public.list_my_circles()),1::bigint,'assigned member enters only her published Circle');
 select is((select count(*)from public.list_circle_members((select circle_id from public.list_my_circles()limit 1))),3::bigint,'Circle member sees the blocked-safe cohort roster through the authorized member projection');
