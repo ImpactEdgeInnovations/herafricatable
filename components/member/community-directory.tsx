@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
+import { useActionDialog } from "@/components/ui/action-dialog";
 
 export type CommunitySummary = {
   community_id: string;
@@ -66,6 +67,7 @@ export function CommunityDirectory({
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+  const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
@@ -149,11 +151,54 @@ export function CommunityDirectory({
     if (!error) router.refresh();
   }
 
+  async function changeMembership(
+    item: CommunitySummary,
+    action: "cancel_request" | "decline_invitation" | "leave",
+  ) {
+    const leaving = action === "leave";
+    const confirmed = await ask({
+      title: leaving
+        ? `Leave ${item.name}?`
+        : action === "decline_invitation"
+          ? `Decline the invitation to ${item.name}?`
+          : `Cancel your request to ${item.name}?`,
+      description: leaving
+        ? "You will lose access immediately. Contributions you already shared remain in their conversations. Leaving does not automatically create a payment refund, and you may ask to rejoin later."
+        : "You can ask to join again later if the community is still accepting members.",
+      confirmLabel: leaving
+        ? "Leave community"
+        : action === "decline_invitation"
+          ? "Decline invitation"
+          : "Cancel request",
+      tone: leaving ? "danger" : "default",
+    });
+    if (!confirmed) return;
+    setBusy(`${action}-${item.community_id}`);
+    setMessage("");
+    const { error } = await supabase.rpc("manage_my_community_membership", {
+      p_action: action,
+      p_community_id: item.community_id,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "update your community membership")
+        : leaving
+          ? `You have left ${item.name}. Your earlier contributions remain in their conversations.`
+          : action === "decline_invitation"
+            ? "Invitation declined. You can ask to join later."
+            : "Request cancelled. You can ask to join later.",
+    );
+    if (!error) router.refresh();
+  }
+
   const memberStates = [
     "active",
     "requested",
     "invited",
     "approved_pending_payment",
+    "paused",
+    "suspended",
   ];
   const memberCommunities = communities
     .filter((item) => memberStates.includes(item.membership_status ?? ""))
@@ -203,6 +248,8 @@ export function CommunityDirectory({
             ? "You’re invited"
             : awaitingPayment
               ? "Ready for payment"
+              : ["paused", "suspended"].includes(item.membership_status ?? "")
+                ? "Temporarily paused"
               : item.community_type === "private"
                 ? "Approval required"
                 : "Open to members";
@@ -271,22 +318,44 @@ export function CommunityDirectory({
         ) : null}
         <footer>
           {item.membership_status === "active" ? (
-            <Link
-              aria-label={
-                newActivity
-                  ? `Continue to ${item.name}, ${newActivity} new update${newActivity === 1 ? "" : "s"}`
-                  : `Enter ${item.name}`
-              }
-              className="button button-primary"
-              href={`/communities/${item.slug}`}
-            >
-              {newActivity ? "See new updates" : "Open community"}
-            </Link>
+            <div className="community-membership-actions">
+              <Link
+                aria-label={
+                  newActivity
+                    ? `Continue to ${item.name}, ${newActivity} new update${newActivity === 1 ? "" : "s"}`
+                    : `Enter ${item.name}`
+                }
+                className="button button-primary"
+                href={`/communities/${item.slug}`}
+              >
+                {newActivity ? "See new updates" : "Open community"}
+              </Link>
+              {item.membership_role === "member" ? (
+                <button
+                  className="community-membership-secondary"
+                  disabled={busy === `leave-${item.community_id}`}
+                  onClick={() => void changeMembership(item, "leave")}
+                  type="button"
+                >
+                  Leave community
+                </button>
+              ) : null}
+            </div>
           ) : item.membership_status === "requested" ? (
-            <span className="community-membership-state">
-              <strong>Waiting for approval</strong>
-              <small>The community leader will review your request.</small>
-            </span>
+            <div className="community-membership-actions">
+              <span className="community-membership-state">
+                <strong>Waiting for approval</strong>
+                <small>The community leader will review your request.</small>
+              </span>
+              <button
+                className="community-membership-secondary"
+                disabled={busy === `cancel_request-${item.community_id}`}
+                onClick={() => void changeMembership(item, "cancel_request")}
+                type="button"
+              >
+                Cancel request
+              </button>
+            </div>
           ) : awaitingPayment ? (
             <div className="community-checkout">
               <div>
@@ -343,6 +412,43 @@ export function CommunityDirectory({
                   <small>Your approved place is reserved.</small>
                 </span>
               )}
+              <button
+                className="community-membership-secondary"
+                disabled={busy === `cancel_request-${item.community_id}`}
+                onClick={() => void changeMembership(item, "cancel_request")}
+                type="button"
+              >
+                Cancel joining
+              </button>
+            </div>
+          ) : ["paused", "suspended"].includes(item.membership_status ?? "") ? (
+            <span className="community-membership-state">
+              <strong>This community is temporarily paused</strong>
+              <small>
+                Your membership and earlier contributions are preserved. We
+                will notify you when access resumes.
+              </small>
+            </span>
+          ) : item.membership_status === "invited" ? (
+            <div className="community-membership-actions">
+              <button
+                className="button button-outline"
+                disabled={busy === item.community_id}
+                onClick={() => void join(item)}
+                type="button"
+              >
+                Accept invitation
+              </button>
+              <button
+                className="community-membership-secondary"
+                disabled={busy === `decline_invitation-${item.community_id}`}
+                onClick={() =>
+                  void changeMembership(item, "decline_invitation")
+                }
+                type="button"
+              >
+                Decline
+              </button>
             </div>
           ) : (
             <button
@@ -458,6 +564,7 @@ export function CommunityDirectory({
           {message}
         </p>
       ) : null}
+      {dialog}
     </>
   );
 }

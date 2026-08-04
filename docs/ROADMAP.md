@@ -295,6 +295,11 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Unify reported Community posts and Quick Check-ins in a report-scoped
       Admin safety queue with private member reporting, captured evidence,
       immediate containment, audited decisions and no voter-answer access
+- [x] Add member-controlled invitation decline, request cancellation and safe
+      departure with preserved contributions, stopped reminders, clear refund
+      wording and rejoining that honours an existing paid access period
+- [x] Add audited Community pause, host replacement, controlled reopening and
+      closure with member notices and preserved content, finance and membership records
 - [x] Refine the Community landing and directory into separate “Your rooms” and
       discovery journeys, with compact host admission and search-ready empty states
 - [x] Add approved-owner Community identity controls for a square icon, wide
@@ -416,6 +421,8 @@ Usability is part of production readiness and continues alongside feature delive
       reconciliation with signed Paystack financial-event processing
 - [x] Add host-readable creator statements and audited Admin draft → approve →
       paid settlement batches with balance revalidation
+- [x] Add downloadable host statement CSV exports while clearly withholding a
+      legal tax-invoice claim until the approved tax format is available
 - [ ] Add automatic Paystack split settlement only after payout acceptance passes
 
 ### Heavy work remaining before production launch

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(266);
+select plan(281);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -59,14 +59,21 @@ insert into public.event_attendee_preferences(event_id,user_id,discoverable,show
  ('50000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003',true,true,'I would enjoy meeting women building trusted regional businesses.');
 insert into public.marketplace_posts(id,author_id,post_type,category,title,body,delivery_mode,status)values
  ('60000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','offer','mentorship','Test mentorship office hours','I can offer a focused thirty minute mentoring conversation.','online','published');
+alter table public.feature_flags disable trigger enforce_module_release_acceptance_before_update;
+alter table public.communities disable trigger enforce_community_publish_acceptance_before_insert;
+alter table public.communities disable trigger enforce_community_publish_acceptance_before_update;
 update public.feature_flags set enabled=true where key='communities';
 insert into public.communities(id,slug,name,description,community_type,status,created_by)values
  ('70000000-0000-4000-8000-000000000001','test-official-community','Test Official Community','An official production boundary test community for active members.','official','published','10000000-0000-4000-8000-000000000001'),
- ('70000000-0000-4000-8000-000000000002','test-private-community','Test Private Community','A private production boundary test community requiring host approval.','private','published','10000000-0000-4000-8000-000000000001');
+ ('70000000-0000-4000-8000-000000000002','test-private-community','Test Private Community','A private production boundary test community requiring host approval.','private','published','10000000-0000-4000-8000-000000000001'),
+ ('70000000-0000-4000-8000-000000000003','test-offboarding-community','Test Offboarding Community','A controlled draft room used to prove host transition and record-preservation boundaries.','private','draft','10000000-0000-4000-8000-000000000001');
 insert into public.community_memberships(community_id,user_id,role,status,joined_at)values
  ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','owner','active',now()),
  ('70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','owner','active',now()),
- ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','member','active',now());
+ ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000003','member','active',now()),
+ ('70000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000001','owner','active',now()),
+ ('70000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000004','moderator','active',now()),
+ ('70000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000003','member','active',now());
 insert into public.community_cohorts(community_id,event_id,eligibility_scope,status,welcome_message,introduction_prompt,follow_up_until,created_by)values
  ('70000000-0000-4000-8000-000000000002','50000000-0000-4000-8000-000000000002','confirmed_event','active','A private cohort boundary used to prove that eligibility and accepted room access remain separate permissions.','Share who you are, what you are building, what you can offer and what you are seeking from this cohort.',now()+interval'60 days','10000000-0000-4000-8000-000000000001');
 insert into public.community_posts(id,community_id,author_id,body)values
@@ -91,6 +98,9 @@ insert into public.partners(id,slug,name,description,category,city,country,statu
  ('93000000-0000-4000-8000-000000000001','test-partner','Test Partner','A reviewed partner used for private redemption and inventory boundary tests.','Business services','Nairobi','Kenya','active','10000000-0000-4000-8000-000000000001');
 insert into public.partner_perks(id,partner_id,slug,title,description,terms,inventory_total,per_member_limit,reservation_days,starts_at,ends_at,status,created_by)values
  ('94000000-0000-4000-8000-000000000001','93000000-0000-4000-8000-000000000001','test-member-benefit','Test Member Benefit','A limited partner benefit reserved through the production-safe member workflow.','One reservation per active member. Present the private code before expiry.',1,1,7,now()-interval'1 day',now()+interval'30 days','published','10000000-0000-4000-8000-000000000001');
+alter table public.feature_flags enable trigger enforce_module_release_acceptance_before_update;
+alter table public.communities enable trigger enforce_community_publish_acceptance_before_insert;
+alter table public.communities enable trigger enforce_community_publish_acceptance_before_update;
 
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
@@ -127,12 +137,20 @@ select lives_ok($$select public.request_community_access('70000000-0000-4000-800
 select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000002'and user_id='10000000-0000-4000-8000-000000000002'),'requested','private community request remains pending');
 select throws_ok($$select *from public.list_community_posts('70000000-0000-4000-8000-000000000002',30,0)$$,'P0001','Active community membership required','pending member cannot read private community feed');
 select throws_ok($$select *from public.get_community_cohort('70000000-0000-4000-8000-000000000002')$$,'P0001','Active community membership required','pending member cannot read private cohort controls');
+select lives_ok($$select public.manage_my_community_membership('70000000-0000-4000-8000-000000000002','cancel_request')$$,'member cancels her own pending community request');
+select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000002'and user_id='10000000-0000-4000-8000-000000000002'),'declined','cancelled request becomes a rejoinable declined membership');
 select throws_ok($$select *from public.list_cohort_overview()$$,'P0001','Super admin required','member cannot read cohort operations overview');
 select throws_ok($$select *from public.list_cohort_health('70000000-0000-4000-8000-000000000002')$$,'P0001','Super admin required','member cannot read cohort health identities');
 select throws_ok($$select public.sync_cohort_invitations('70000000-0000-4000-8000-000000000002')$$,'P0001','Super admin required','member cannot issue cohort invitations');
 select lives_ok($$select public.request_community_access('70000000-0000-4000-8000-000000000001')$$,'active member joins an official community');
 select lives_ok($$select public.create_community_post('70000000-0000-4000-8000-000000000001','A useful update shared only with this trusted community.')$$,'active community member creates a rate-limited post');
 select lives_ok($$select public.report_community_post('71000000-0000-4000-8000-000000000001','other','Report-scoped community moderation boundary test.')$$,'community member reports a visible post with evidence');
+select lives_ok($$select public.manage_my_community_membership('70000000-0000-4000-8000-000000000001','leave')$$,'ordinary member leaves a community without deleting content');
+select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000001'and user_id='10000000-0000-4000-8000-000000000002'),'removed','departed member loses active room access');
+select throws_ok($$select *from public.list_community_posts('70000000-0000-4000-8000-000000000001',30,0)$$,'P0001','Active community membership required','departed member cannot read the private feed');
+select lives_ok($$select public.request_community_access('70000000-0000-4000-8000-000000000001')$$,'departed member may deliberately rejoin an open community');
+select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000001'and user_id='10000000-0000-4000-8000-000000000002'),'active','successful rejoin restores active membership');
+select is((select count(*)from public.list_community_posts('70000000-0000-4000-8000-000000000001',30,0)where body='A useful update shared only with this trusted community.'),1::bigint,'member content remains available after leave and rejoin');
 select throws_ok($$select *from public.list_community_reports()$$,'P0001','Moderator role required','member cannot access community moderation evidence');
 select throws_ok($$select public.set_feature_flag('communities',false)$$,'P0001','Super admin required','member cannot change a release gate');
 select is((select count(*)from public.list_courses()),2::bigint,'active member reads the enabled published course catalog');
@@ -227,6 +245,13 @@ select is((select count(*)from public.perk_redemptions),0::bigint,'another membe
 select is((select count(*)from public.list_partner_perks()),1::bigint,'another active member sees the catalog without another member code');
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select lives_ok($$select public.manage_community_lifecycle('70000000-0000-4000-8000-000000000003','pause','Host unavailable during the controlled offboarding test.',null)$$,'super admin pauses a community while preserving its records');
+select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000003'and role='owner'),'suspended','paused community removes the unavailable owner from host controls');
+select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000003'and user_id='10000000-0000-4000-8000-000000000003'),'paused','ordinary member access is preserved but unavailable during transition');
+select lives_ok($$select public.manage_community_lifecycle('70000000-0000-4000-8000-000000000003','replace_host','Backup moderator assumes accountable ownership after review.',(select id from public.community_memberships where community_id='70000000-0000-4000-8000-000000000003'and user_id='10000000-0000-4000-8000-000000000004'))$$,'super admin appoints the reviewed backup moderator as successor');
+select is((select role from public.community_memberships where community_id='70000000-0000-4000-8000-000000000003'and user_id='10000000-0000-4000-8000-000000000004'),'owner','successor receives the single active owner role');
+select lives_ok($$select public.manage_community_lifecycle('70000000-0000-4000-8000-000000000003','close','Controlled test closure preserves Community and financial records.',null)$$,'super admin closes a community without deleting member content');
+select is((select status from public.communities where id='70000000-0000-4000-8000-000000000003'),'archived','closed Community remains archived for retention and audit');
 select is((select count(*)from public.member_saved_profiles),0::bigint,'super admin cannot browse member saved-profile notes');
 select is((select count(*)from public.support_tickets),2::bigint,'super admin reads support tickets');
 select is((select count(*)from public.list_admin_privacy_requests()),2::bigint,'super admin lists privacy requests');

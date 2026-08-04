@@ -1,3 +1,5 @@
+"use client";
+
 export type CommunityFinancialSummary = {
   currency: string;
   gross_minor: number;
@@ -44,6 +46,20 @@ function money(amount: number, currency: string) {
   }).format(amount / 100);
 }
 
+function csvCell(value: string | number | null) {
+  return `"${String(value ?? "").replaceAll('"', '""')}"`;
+}
+
+function downloadCsv(filename: string, rows: Array<Array<string | number | null>>) {
+  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export function CommunityFinancialStatement({
   entries,
   migrationReady,
@@ -57,6 +73,23 @@ export function CommunityFinancialStatement({
 }) {
   if (!migrationReady) return null;
 
+  function exportStatement() {
+    const date = new Date().toISOString().slice(0, 10);
+    downloadCsv(`her-africa-table-community-statement-${date}.csv`, [
+      ["Transaction date", "Order reference", "Type", "Description", "Credit minor", "Debit minor", "Currency", "Source reference"],
+      ...entries.map((entry) => [
+        entry.transaction_at,
+        entry.order_reference,
+        entry.entry_kind,
+        entry.description,
+        entry.credit_minor,
+        entry.debit_minor,
+        entry.currency,
+        entry.source_reference,
+      ]),
+    ]);
+  }
+
   return (
     <section className="community-financial-statement" id="statement">
       <div className="community-financial-heading">
@@ -68,7 +101,21 @@ export function CommunityFinancialStatement({
             appear separately. “Available” means ready for payout—not yet sent.
           </p>
         </div>
-        <span>Payouts reviewed manually</span>
+        <div className="community-financial-actions">
+          <span>Payouts reviewed manually</span>
+          <button
+            className="button button-outline"
+            disabled={!entries.length}
+            onClick={exportStatement}
+            type="button"
+          >
+            Download statement CSV
+          </button>
+          <small>
+            Operational statement only. A legally approved tax invoice format
+            will be introduced after tax review.
+          </small>
+        </div>
       </div>
 
       {summaries.length ? (

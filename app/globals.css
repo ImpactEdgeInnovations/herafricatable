@@ -11461,6 +11461,21 @@ body {
 .community-member-admin {
   min-width: 0;
 }
+.community-lifecycle-controls {
+  display: grid;
+  margin: 18px 0 4px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.45);
+  gap: 14px;
+}
+.community-lifecycle-controls p {
+  max-width: 620px;
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.55;
+}
 .community-invite {
   padding: 20px;
   border: 1px solid var(--line);
@@ -12501,7 +12516,8 @@ body {
   font-size: 0.78rem;
   line-height: 1.7;
 }
-.community-financial-heading > span {
+.community-financial-heading > span,
+.community-financial-actions > span {
   padding: 7px 11px;
   border-radius: 999px;
   background: #f3efe8;
@@ -12511,6 +12527,18 @@ body {
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+.community-financial-actions {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+.community-financial-actions small {
+  max-width: 250px;
+  color: var(--muted);
+  font-size: 0.58rem;
+  line-height: 1.5;
+  text-align: right;
 }
 .community-financial-summary {
   display: grid;
@@ -18708,6 +18736,26 @@ body {
 }
 .community-directory-card > footer > .button {
   min-height: 42px;
+}
+.community-membership-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+.community-membership-secondary {
+  min-height: 42px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.66rem;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.community-membership-secondary:hover {
+  color: var(--ink);
 }
 .community-directory-card .community-membership-state strong {
   font-size: 0.66rem;

@@ -87,14 +87,8 @@ export function CommunityManager({
   }
   async function review(id: string, action: string) {
     if (action === "transfer_ownership") {
-      const result = await ask({
-        title: "Transfer community ownership?",
-        description:
-          "This member will become the community owner. The current owner will become a regular member and lose owner-only controls.",
-        confirmLabel: "Transfer ownership",
-        tone: "danger",
-      });
-      if (!result) return;
+      await lifecycle("replace_host", id);
+      return;
     }
     setBusy(id);
     const { error } = await supabase.rpc("review_community_membership", {
@@ -106,6 +100,63 @@ export function CommunityManager({
       error
         ? adminErrorMessage(error, "update this Community membership")
         : "Membership updated and audited.",
+    );
+    if (!error) router.refresh();
+  }
+  async function lifecycle(action: string, successorMembershipId?: string) {
+    if (!selected) return;
+    const labels: Record<string, { title: string; description: string; confirm: string }> = {
+      pause: {
+        title: `Pause ${community?.name ?? "this community"}?`,
+        description: "Member access will stop immediately, while posts, memberships and payment records remain preserved. Backup moderators retain access to support the transition.",
+        confirm: "Pause and preserve",
+      },
+      replace_host: {
+        title: "Replace the Community host?",
+        description: "The selected member becomes the owner. The previous owner loses host controls, while all Community content and records remain in place.",
+        confirm: "Replace host",
+      },
+      reopen: {
+        title: `Reopen ${community?.name ?? "this community"}?`,
+        description: "This succeeds only after the release checks pass and an active host and backup moderator are assigned. Preserved member access will be restored.",
+        confirm: "Reopen community",
+      },
+      close: {
+        title: `Close ${community?.name ?? "this community"}?`,
+        description: "New activity and member access will stop. Content, membership history, financial records and audit evidence remain preserved.",
+        confirm: "Close and preserve",
+      },
+    };
+    const copy = labels[action];
+    const answer = await ask({
+      title: copy.title,
+      description: copy.description,
+      confirmLabel: copy.confirm,
+      tone: ["pause", "close", "replace_host"].includes(action) ? "danger" : "default",
+      fields: [{
+        name: "reason",
+        label: "Operational reason",
+        type: "textarea",
+        minLength: 10,
+        maxLength: 1000,
+        required: true,
+        help: "Explain the decision without including private member information.",
+      }],
+    });
+    if (!answer) return;
+    setBusy(`lifecycle-${action}`);
+    setMessage("");
+    const { error } = await supabase.rpc("manage_community_lifecycle", {
+      p_action: action,
+      p_community_id: selected,
+      p_reason: String(answer.reason ?? ""),
+      p_successor_membership_id: successorMembershipId ?? null,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? adminErrorMessage(error, `${copy.confirm.toLowerCase()}`)
+        : `${copy.confirm} completed, members informed and records preserved.`,
     );
     if (!error) router.refresh();
   }
@@ -259,6 +310,44 @@ export function CommunityManager({
                 </label>
                 <button disabled={busy === "invite"}>Send invitation</button>
               </form>
+              <section className="community-lifecycle-controls">
+                <div>
+                  <strong>Continuity and offboarding</strong>
+                  <p>
+                    Pause safely, replace an unavailable host, reopen after
+                    acceptance, or close while preserving records.
+                  </p>
+                </div>
+                <div className="member-actions">
+                  {community?.status === "published" ? (
+                    <button
+                      disabled={busy.startsWith("lifecycle-")}
+                      onClick={() => void lifecycle("pause")}
+                      type="button"
+                    >
+                      Pause community
+                    </button>
+                  ) : (
+                    <button
+                      disabled={busy.startsWith("lifecycle-")}
+                      onClick={() => void lifecycle("reopen")}
+                      type="button"
+                    >
+                      Reopen after checks
+                    </button>
+                  )}
+                  {community?.status !== "archived" ? (
+                    <button
+                      className="danger-action"
+                      disabled={busy.startsWith("lifecycle-")}
+                      onClick={() => void lifecycle("close")}
+                      type="button"
+                    >
+                      Close and preserve
+                    </button>
+                  ) : null}
+                </div>
+              </section>
               <div>
                 {scoped.map((member) => (
                   <article key={member.membership_id}>
@@ -316,7 +405,8 @@ export function CommunityManager({
                           Remove moderator
                         </button>
                       ) : null}
-                      {member.status === "active" && member.role !== "owner" ? (
+                      {["active", "paused", "suspended"].includes(member.status) &&
+                      member.role !== "owner" ? (
                         <>
                           <button
                             disabled={busy === member.membership_id}

@@ -145,3 +145,30 @@ configuration.
 
 Before enabling a third-party hosted or paid community, separately approve host
 offboarding/export, billing, analytics, content ownership, and data-retention terms.
+
+## Member departure and rejoining
+
+- A member may decline an invitation, cancel a pending request or leave an active
+  Community without contacting support.
+- Leaving immediately removes room access and stops Community briefings and event
+  reminders. It does not delete prior contributions or create an automatic refund.
+- A departed member may ask to rejoin. An unexpired paid access period is honoured
+  and must not create a second charge; a private Community still requires host approval.
+- Owners and moderators must hand over their role before leaving so a room cannot
+  silently lose accountable stewardship.
+
+## Host continuity and offboarding
+
+The Super Admin lifecycle control is the safety boundary for an unavailable host:
+
+1. **Pause** returns the Community to Draft, stops ordinary member access and
+   suspends the owner while preserving the backup moderator's transition access.
+2. **Replace host** appoints an existing reviewed member or moderator and removes
+   the previous owner's host controls without moving or deleting content.
+3. **Reopen** restores preserved memberships only when release acceptance, an
+   active owner and an active backup moderator all pass.
+4. **Close and preserve** archives the room and suspends activity while retaining
+   content, financial records, membership history and audit evidence.
+
+Every transition requires a reason, informs affected members, and creates both a
+dedicated lifecycle record and a platform audit event.
