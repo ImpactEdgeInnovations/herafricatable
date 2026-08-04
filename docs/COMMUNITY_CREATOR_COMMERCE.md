@@ -89,10 +89,13 @@ operating controls have passed acceptance.
 - [ ] Paystack split/subaccount settlement after merchant and country acceptance
 - [x] Provider-fee, tax, refund, chargeback, and reserve allocation
 - [x] Audited payout batches and host-readable settlement statements
-- [ ] Downloadable tax invoices and statement exports after legal format review
-- [ ] Plan-entitlement enforcement for analytics, automations, and moderator limits
+- [x] Downloadable statement CSV exports with no unsupported tax-invoice claim
+- [ ] Downloadable tax invoices after legal format review
+- [x] Plan-entitlement enforcement for analytics, automations, and moderator limits
 - [ ] Creator acquisition, conversion, retention, and cohort analytics
-- [ ] Host application, review, suspension, offboarding, and member-migration flows
+- [x] Host application, review, suspension, replacement and record-preserving
+  offboarding flows
+- [ ] Consent-based member invitations to a successor Community after closure
 
 ## Production acceptance
 

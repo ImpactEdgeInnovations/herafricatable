@@ -334,6 +334,13 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Apply `20260804050000_community_check_in_safety.sql` in production Supabase
       and test report authorization, evidence boundaries, duplicate prevention,
       Moderator roles, hide/dismiss outcomes and launch-readiness counts
+- [ ] Apply `20260804090000_community_membership_lifecycle.sql` in production
+      Supabase and test invitation decline, request cancellation, departure and rejoin
+- [ ] Apply `20260804130000_community_host_offboarding.sql` in production Supabase
+      and rehearse pause, replacement, reopening and record-preserving closure
+- [ ] Apply `20260804170000_order_rls_recursion_fix.sql` and
+      `20260804210000_community_order_scope.sql` in production Supabase before
+      host-visible Community order acceptance
 - [ ] Apply `20260802010000_community_identity_and_media.sql` in production
       Supabase
 - [ ] Apply `20260802050000_community_post_editing.sql` in production Supabase
@@ -354,6 +361,8 @@ Usability is part of production readiness and continues alongside feature delive
       report-scoped prior-version evidence with two real member accounts
 - [ ] Test owner-only branding, member-only signed delivery, blocked-member
       filtering, failed-upload rollback and post-removal media revocation
+- [x] Create two ordinary members, one host candidate and one backup moderator as
+      tagged production-safe test identities, plus a repeatable provisioning command
 - [x] Add database-enforced Community publication acceptance with eight audited
       checks, required host coverage and a controlled Draft rollback
 - [ ] Complete Nairobi Founding Table acceptance before opening another chapter
@@ -515,6 +524,10 @@ Usability is part of production readiness and continues alongside feature delive
       with Super Admin evidence, ownership and always-available emergency pause
 - [ ] Apply `20260803050000_module_release_acceptance.sql` in production Supabase,
       then complete every module card in Admin → Release before enabling its flag
+- [ ] Apply `20260804090000_community_membership_lifecycle.sql`,
+      `20260804130000_community_host_offboarding.sql`,
+      `20260804170000_order_rls_recursion_fix.sql` and
+      `20260804210000_community_order_scope.sql` in production Supabase
 - [ ] Complete Creator Commerce admission/payment/entitlement/payout-boundary
       acceptance and deliberately enable its feature flag
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag
