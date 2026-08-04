@@ -435,6 +435,45 @@ const communityCheckInMigration = read(
 const memberGlobalSearchMigration = read(
   "supabase/migrations/20260804010000_member_global_search.sql",
 );
+const communityCheckInSafetyMigration = read(
+  "supabase/migrations/20260804050000_community_check_in_safety.sql",
+);
+for (const contract of [
+  "community_check_in_reports",
+  "report_community_check_in",
+  "list_community_safety_reports",
+  "review_community_safety_report",
+  "array['super_admin', 'moderator']",
+  "You already have an active report for this check-in",
+  "'question', target.question",
+  "'options', coalesce(captured_options",
+  "community.check_in_reported",
+  "community.report_queue_accessed",
+  "community_check_in_reports qr",
+]) {
+  assert(
+    communityCheckInSafetyMigration.includes(contract),
+    `Community Check-in safety must enforce ${contract}`,
+  );
+}
+const checkInReportFunction = communityCheckInSafetyMigration.slice(
+  communityCheckInSafetyMigration.indexOf(
+    "create or replace function public.report_community_check_in",
+  ),
+  communityCheckInSafetyMigration.indexOf(
+    "create or replace function public.list_community_safety_reports",
+  ),
+);
+for (const privateVoteProjection of [
+  "community_check_in_responses",
+  "option_id",
+  "response_count",
+]) {
+  assert(
+    !checkInReportFunction.includes(privateVoteProjection),
+    `Check-in report evidence must not include ${privateVoteProjection}`,
+  );
+}
 for (const contract of [
   "search_my_table",
   "public.is_active_member(actor)",

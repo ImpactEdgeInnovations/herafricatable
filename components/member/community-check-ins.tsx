@@ -32,9 +32,11 @@ export type CommunityCheckIn = {
 export function CommunityCheckIns({
   checkIns,
   communityId,
+  currentUserId,
 }: {
   checkIns: CommunityCheckIn[];
   communityId: string;
+  currentUserId: string;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -134,6 +136,57 @@ export function CommunityCheckIns({
         : "Check-in removed from the Community.",
     );
     if (!error) router.refresh();
+  }
+
+  async function report(checkIn: CommunityCheckIn) {
+    const result = await ask({
+      title: "Report this check-in privately?",
+      description:
+        "Only the authorised platform moderation team will receive your reason and a captured copy of the question and choices. Member answers are never included.",
+      confirmLabel: "Send private report",
+      tone: "danger",
+      fields: [
+        {
+          initialValue: "safety",
+          label: "What is the concern?",
+          name: "category",
+          options: [
+            { label: "Safety concern", value: "safety" },
+            { label: "Harassment", value: "harassment" },
+            { label: "Privacy", value: "privacy" },
+            { label: "Spam", value: "spam" },
+            { label: "Misinformation", value: "misinformation" },
+            { label: "Other", value: "other" },
+          ],
+          required: true,
+          type: "select",
+        },
+        {
+          help: "Describe what the moderation team should review. Do not add another member’s private information.",
+          label: "What happened?",
+          maxLength: 2000,
+          minLength: 10,
+          name: "details",
+          required: true,
+          type: "textarea",
+        },
+      ],
+    });
+    if (!result) return;
+    const action = `report-${checkIn.check_in_id}`;
+    setBusy(action);
+    setMessage("");
+    const { error } = await supabase.rpc("report_community_check_in", {
+      p_category: result.category,
+      p_check_in_id: checkIn.check_in_id,
+      p_details: result.details,
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? memberErrorMessage(error, "send this private report")
+        : "Your report was sent privately to the platform moderation team.",
+    );
   }
 
   return (
@@ -311,6 +364,15 @@ export function CommunityCheckIns({
                       : "Results appear after at least three members answer."}
                   </span>
                   {open && checkIn.my_option_id ? <em>You can change your answer</em> : null}
+                  {checkIn.creator_id !== currentUserId ? (
+                    <button
+                      disabled={busy === `report-${checkIn.check_in_id}`}
+                      onClick={() => void report(checkIn)}
+                      type="button"
+                    >
+                      Report privately
+                    </button>
+                  ) : null}
                 </footer>
               </article>
             );

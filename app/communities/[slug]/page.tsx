@@ -348,6 +348,7 @@ export default async function CommunityPage({
         <CommunityCheckIns
           checkIns={(checkInResult.data as CommunityCheckIn[] | null) ?? []}
           communityId={community.community_id}
+          currentUserId={user.id}
         />
       ) : null}
       {postsResult.error && !structuredConversationsReady ? (

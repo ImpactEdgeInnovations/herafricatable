@@ -386,7 +386,7 @@ export default async function AdminOperationsPage({
       ? supabase.rpc("list_marketplace_reports")
       : Promise.resolve({ data: [], error: null }),
     canModerate && loadSafety
-      ? supabase.rpc("list_community_reports")
+      ? supabase.rpc("list_community_safety_reports")
       : Promise.resolve({ data: [], error: null }),
     isProgramAdmin
       ? supabase.rpc("list_communities")
@@ -769,8 +769,15 @@ export default async function AdminOperationsPage({
   const memberReports = (reportResult.data as MemberReport[] | null) ?? [];
   const marketplaceReports =
     (marketplaceReportResult.data as MarketplaceReport[] | null) ?? [];
+  const communityReportFallbackResult =
+    communityReportResult.error && canModerate && loadSafety
+      ? await supabase.rpc("list_community_reports")
+      : null;
+  const communityReportSource = communityReportResult.error
+    ? communityReportFallbackResult
+    : communityReportResult;
   const communityReports =
-    (communityReportResult.data as CommunityReport[] | null) ?? [];
+    (communityReportSource?.data as CommunityReport[] | null) ?? [];
   return (
     <main className="admin-command-center">
       <AdminHeader
@@ -971,7 +978,7 @@ export default async function AdminOperationsPage({
           />
           <CommunityModeration
             reports={communityReports}
-            migrationReady={!communityReportResult.error}
+            migrationReady={!communityReportSource?.error}
           />
         </AdminWorkGroup>
       ) : null}

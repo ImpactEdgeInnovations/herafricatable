@@ -84,7 +84,7 @@ export default async function AdminHomePage() {
       ? supabase.rpc("list_marketplace_reports")
       : Promise.resolve({ data: [], error: null }),
     canModerate
-      ? supabase.rpc("list_community_reports")
+      ? supabase.rpc("list_community_safety_reports")
       : Promise.resolve({ data: [], error: null }),
   ]);
 
@@ -111,10 +111,16 @@ export default async function AdminHomePage() {
           { count: 0, error: null },
         ];
 
+  const communityReportsFallback = communityReports.error
+    ? await supabase.rpc("list_community_reports")
+    : null;
+  const effectiveCommunityReports = communityReports.error
+    ? communityReportsFallback
+    : communityReports;
   const reports = [
     ...((memberReports.data as ReportRow[] | null) ?? []),
     ...((marketplaceReports.data as ReportRow[] | null) ?? []),
-    ...((communityReports.data as ReportRow[] | null) ?? []),
+    ...((effectiveCommunityReports?.data as ReportRow[] | null) ?? []),
   ];
   const pendingMembers = members.filter(
     (member) => member.access_status === "pending",

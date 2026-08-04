@@ -477,6 +477,9 @@ const communityCircleHostPanel = read(
   "components/member/community-circle-host-panel.tsx",
 );
 const communityHostPage = read("app/communities/[slug]/host/page.tsx");
+const communityModeration = read(
+  "components/admin/community-moderation.tsx",
+);
 const communityHostWorkspace = read(
   "components/member/community-host-workspace.tsx",
 );
@@ -542,11 +545,25 @@ for (const contract of [
   "respond_to_community_check_in",
   "close_community_check_in",
   "remove_community_check_in",
+  "report_community_check_in",
+  "Report privately",
+  "Member answers are never included",
   "useActionDialog",
 ]) {
   assert(
     communityCheckIns.includes(contract),
     `Community Quick Check-in UX must include ${contract}`,
+  );
+}
+for (const contract of [
+  "review_community_safety_report",
+  "Quick check-in",
+  "never general access to private Community feeds",
+  "evidence_snapshot.question",
+]) {
+  assert(
+    communityModeration.includes(contract),
+    `Unified Community moderation UX must include ${contract}`,
   );
 }
 for (const contract of [

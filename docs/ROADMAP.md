@@ -292,6 +292,9 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Add one member-wide search for visible professional profiles, joined
       Communities and conversations, published events and released learning,
       with block, membership and visibility boundaries enforced in the database
+- [x] Unify reported Community posts and Quick Check-ins in a report-scoped
+      Admin safety queue with private member reporting, captured evidence,
+      immediate containment, audited decisions and no voter-answer access
 - [x] Refine the Community landing and directory into separate “Your rooms” and
       discovery journeys, with compact host admission and search-ready empty states
 - [x] Add approved-owner Community identity controls for a square icon, wide
@@ -323,6 +326,9 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Apply `20260804010000_member_global_search.sql` in production Supabase and
       test paused profiles, bilateral blocks, Community membership isolation,
       publication gates, deep links and result limits
+- [ ] Apply `20260804050000_community_check_in_safety.sql` in production Supabase
+      and test report authorization, evidence boundaries, duplicate prevention,
+      Moderator roles, hide/dismiss outcomes and launch-readiness counts
 - [ ] Apply `20260802010000_community_identity_and_media.sql` in production
       Supabase
 - [ ] Apply `20260802050000_community_post_editing.sql` in production Supabase

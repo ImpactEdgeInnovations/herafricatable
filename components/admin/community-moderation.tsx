@@ -16,6 +16,7 @@ export type CommunityReport = {
   evidence_snapshot: Record<string, unknown>;
   status: string;
   created_at: string;
+  content_type?: "check_in" | "post";
 };
 
 export function CommunityModeration({
@@ -65,11 +66,19 @@ export function CommunityModeration({
       outcome = String(result.outcome ?? "");
     }
     setBusy(id);
-    const { error } = await supabase.rpc("review_community_report", {
-      p_action: action,
-      p_outcome: outcome,
-      p_report_id: id,
-    });
+    const report = reports.find((item) => item.report_id === id);
+    const { error } = report?.content_type
+      ? await supabase.rpc("review_community_safety_report", {
+          p_action: action,
+          p_content_type: report.content_type,
+          p_outcome: outcome,
+          p_report_id: id,
+        })
+      : await supabase.rpc("review_community_report", {
+          p_action: action,
+          p_outcome: outcome,
+          p_report_id: id,
+        });
     setBusy("");
     setMessage(
       error
@@ -91,8 +100,9 @@ export function CommunityModeration({
             <p className="eyebrow">Report-scoped access</p>
             <h2>Community safety</h2>
             <p>
-              Moderators receive only captured evidence from reported content,
-              never general access to private community feeds.
+              Moderators receive only captured evidence from reported posts or
+              check-ins, never general access to private Community feeds or any
+              member’s check-in answer.
             </p>
           </div>
           <span className="status-count">
@@ -111,14 +121,18 @@ export function CommunityModeration({
                 <div>
                   <span className="member-status">{report.status}</span>
                   <small>
-                    {report.community_name} · {report.category}
+                    {report.community_name} · {report.content_type === "check_in" ? "Quick check-in" : "Post"} · {report.category}
                   </small>
                 </div>
                 <div>
                   <strong>{report.reporter_email}</strong>
                   <p>{report.details}</p>
                   <blockquote>
-                    {String(report.evidence_snapshot.body ?? "")}
+                    {String(
+                      report.evidence_snapshot.body ??
+                        report.evidence_snapshot.question ??
+                        "Captured evidence available",
+                    )}
                   </blockquote>
                 </div>
                 {["open", "reviewing"].includes(report.status) ? (
@@ -154,7 +168,7 @@ export function CommunityModeration({
         ) : (
           <div className="admin-empty">
             <strong>No community reports</strong>
-            <p>Reported post and comment snapshots appear here for bounded review.</p>
+            <p>Reported post, comment and Quick Check-in snapshots appear here for bounded review.</p>
           </div>
         )}
         {message ? (

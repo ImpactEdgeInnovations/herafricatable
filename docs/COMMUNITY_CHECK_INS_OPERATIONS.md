@@ -45,6 +45,6 @@ Closing and removal are audited; individual answers are not.
 ## Safety boundary
 
 Check-in questions remain Community content and are subject to the Community
-guidelines. Hosts can close a problematic check-in immediately and escalate the
-content to platform safety. A future moderation release may add a dedicated
-report action; it must preserve the same no-voter-identity boundary.
+guidelines. Members can report another member's Check-in privately, while Hosts
+can remove problematic content immediately. Report evidence includes the
+question and choice labels but never voter identities or individual answers.
