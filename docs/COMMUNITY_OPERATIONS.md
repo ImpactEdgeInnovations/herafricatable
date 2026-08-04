@@ -172,3 +172,11 @@ The Super Admin lifecycle control is the safety boundary for an unavailable host
 
 Every transition requires a reason, informs affected members, and creates both a
 dedicated lifecycle record and a platform audit event.
+
+## Scale-test identities
+
+Use two ordinary members, one host candidate and one backup moderator with reserved
+`.invalid` addresses. Create them from Admin → Programmes → Membership operations,
+or run `npm run ops:provision-community-test-cohort` when the ignored local test
+environment and server key are available. Every identity must remain tagged as a test
+account so activity is separated from live member analytics.

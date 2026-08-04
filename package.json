@@ -14,7 +14,8 @@
     "test": "npm run verify && npm run test:journeys && npm run test:accessibility && npm run test:operations && npm run typecheck",
     "test:live": "node scripts/smoke-live.mjs",
     "ops:auth-readiness": "node --env-file=.env.local scripts/smoke-authenticated.mjs",
-    "ops:provision-beta-admin": "node --env-file=.env.local scripts/provision-beta-admin.mjs"
+    "ops:provision-beta-admin": "node --env-file=.env.local scripts/provision-beta-admin.mjs",
+    "ops:provision-community-test-cohort": "node --env-file=.env.local --env-file=.env.test.local scripts/provision-community-test-cohort.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.3",
