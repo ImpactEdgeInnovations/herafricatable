@@ -46,6 +46,54 @@ export function NotificationOperations({
   const router = useRouter();
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
+  async function sendDeliveryTest() {
+    setBusy("delivery-test");
+    setNotice("");
+    try {
+      const response = await fetch("/api/admin/notifications/test", {
+        method: "POST",
+      });
+      const result = (await response.json()) as {
+        deliveredTo?: string;
+        error?: string;
+      };
+      setNotice(
+        response.ok
+          ? `Test accepted for ${result.deliveredTo ?? "your admin email"}. Check the inbox and spam folder.`
+          : result.error ?? "The email provider did not accept the test.",
+      );
+    } catch {
+      setNotice("The delivery test could not be completed. Please try again.");
+    } finally {
+      setBusy("");
+    }
+  }
+  async function processQueue() {
+    setBusy("process-queue");
+    setNotice("");
+    try {
+      const response = await fetch("/api/admin/notifications/process", {
+        method: "POST",
+      });
+      const result = (await response.json()) as {
+        claimed?: number;
+        error?: string;
+        failed?: number;
+        sent?: number;
+        suppressed?: number;
+      };
+      setNotice(
+        response.ok
+          ? `${result.claimed ?? 0} queued message${result.claimed === 1 ? "" : "s"} processed: ${result.sent ?? 0} sent, ${result.suppressed ?? 0} test ${result.suppressed === 1 ? "address" : "addresses"} suppressed, ${result.failed ?? 0} failed.`
+          : result.error ?? "The delivery queue could not be processed.",
+      );
+      if (response.ok) router.refresh();
+    } catch {
+      setNotice("The delivery queue could not be processed. Please try again.");
+    } finally {
+      setBusy("");
+    }
+  }
   async function retry(id: string) {
     setBusy(id);
     const { error } = await supabase.rpc("retry_notification_job", {
@@ -75,13 +123,35 @@ export function NotificationOperations({
             and processed outside member requests.
           </p>
         </div>
-        <span
-          className={`provider-state ${providerConfigured ? "ready" : "pending"}`}
-        >
-          {providerConfigured
-            ? "Provider configured"
-            : "Provider setup required"}
-        </span>
+        <div className="notification-provider-actions">
+          <span
+            className={`provider-state ${providerConfigured ? "ready" : "pending"}`}
+          >
+            {providerConfigured
+              ? "Provider configured"
+              : "Provider setup required"}
+          </span>
+          {providerConfigured ? (
+            <>
+              <button
+                className="button button-outline"
+                disabled={Boolean(busy)}
+                onClick={() => void processQueue()}
+                type="button"
+              >
+                {busy === "process-queue" ? "Processing…" : "Process queue now"}
+              </button>
+              <button
+                className="button button-outline"
+                disabled={Boolean(busy)}
+                onClick={() => void sendDeliveryTest()}
+                type="button"
+              >
+                {busy === "delivery-test" ? "Sending test…" : "Send private test"}
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
       <div className="notification-metrics">
         <article>

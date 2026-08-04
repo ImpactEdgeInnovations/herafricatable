@@ -30,7 +30,8 @@ export default async function AdminNotificationsPage() {
   const configured = Boolean(
     process.env.RESEND_API_KEY &&
       process.env.EMAIL_FROM &&
-      process.env.CRON_SECRET &&
+      (process.env.CRON_SECRET?.length ?? 0) >= 32 &&
+      process.env.NEXT_PUBLIC_SITE_URL &&
       process.env.SUPABASE_SECRET_KEY,
   );
 

@@ -49,15 +49,21 @@ for (const path of migrations.filter(
   assert(sql.endsWith("commit;"), `${path} must commit atomically`);
 }
 const cron = read("app/api/cron/notifications/route.ts");
+const notificationWorker = read("lib/notifications/worker.ts");
 assert(
   cron.includes("timingSafeEqual"),
   "Cron authorization must use constant-time comparison",
 );
 assert(cron.includes("CRON_SECRET"), "Cron route must require CRON_SECRET");
 assert(
-  cron.includes("reconcile_community_host_subscriptions") &&
-    cron.includes("hostLifecycleMigrationPending"),
+  notificationWorker.includes("reconcile_community_host_subscriptions") &&
+    notificationWorker.includes("migrationPending"),
   "Cron must safely reconcile host subscription lifecycles",
+);
+assert(
+  notificationWorker.includes("\\.invalid$") &&
+    notificationWorker.includes("suppressed:test-address"),
+  "Notification worker must suppress reserved test-account recipients",
 );
 const privacy = read("app/api/admin/privacy/delete/route.ts");
 assert(
@@ -552,8 +558,8 @@ for (const contract of [
   );
 }
 assert(
-  cron.includes("queue_due_community_event_reminders") &&
-    cron.includes("eventReminderMigrationPending"),
+  notificationWorker.includes("queue_due_community_event_reminders") &&
+    notificationWorker.includes("migrationPending"),
   "Notification worker must queue Community event reminders without breaking pre-migration delivery",
 );
 for (const contract of [
@@ -603,8 +609,8 @@ for (const privateProjection of [
   );
 }
 assert(
-  cron.includes("queue_community_weekly_briefings") &&
-    cron.includes("briefingMigrationPending"),
+  notificationWorker.includes("queue_community_weekly_briefings") &&
+    notificationWorker.includes("migrationPending"),
   "Notification worker must queue weekly Community briefings without breaking pre-migration delivery",
 );
 const communityContinuityMigration = read(
