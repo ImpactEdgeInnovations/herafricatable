@@ -542,7 +542,7 @@ export default async function MemberHomePage() {
               }
           : unreadNotifications > 0
             ? {
-                action: "Review activity",
+                action: "See your updates",
                 description: `${unreadNotifications} new update${unreadNotifications === 1 ? "" : "s"} across your network and events.`,
                 href: "/notifications",
                 label: "See what changed",
@@ -596,7 +596,7 @@ export default async function MemberHomePage() {
         </div>
         {accessStatus === "active" ? (
           <aside className="member-welcome-note member-next-action">
-            <span>Recommended next</span>
+            <span>Your next step</span>
             <strong>{nextBestAction?.label}</strong>
             <p>{nextBestAction?.description}</p>
             <Link href={nextBestAction?.href ?? "/network"}>
@@ -606,10 +606,10 @@ export default async function MemberHomePage() {
         ) : null}
       </section>
       {accessStatus === "active" ? (
-        <section className="member-pulse" aria-label="Your member activity">
+        <section className="member-pulse" aria-label="Your latest updates">
           <header>
             <p className="eyebrow">At a glance</p>
-            <span>Your private member activity</span>
+            <span>Only you can see this</span>
           </header>
           <div>
             <Link href="/network">
@@ -625,7 +625,7 @@ export default async function MemberHomePage() {
               </small>
             </Link>
             <Link href="/notifications">
-              <span>New activity</span>
+              <span>New updates</span>
               <strong>{unreadNotifications}</strong>
               <small>
                 {unreadNotifications ? "See what changed" : "Nothing needs attention"}

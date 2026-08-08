@@ -297,7 +297,7 @@ export function OnboardingForm({
             <div>
               <h2 id="profile-step-title">Your professional profile</h2>
               <p>
-                Start with the identity members will see in the directory and at
+                Start with the details members will see when they find you and at
                 events.
               </p>
             </div>
@@ -500,7 +500,7 @@ export function OnboardingForm({
               <h2 id="contact-step-title">Private contact details</h2>
               <p>
                 These are stored separately and are not placed in the public
-                directory.
+                member list.
               </p>
             </div>
           </div>

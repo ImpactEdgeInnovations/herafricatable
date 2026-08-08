@@ -40,7 +40,7 @@ const SparkIcon = () => (
 
 const principles = [
   ["01", "No business cards", "Scan, request, accept—and keep the relationship in one private place."],
-  ["02", "Smart discovery", "Find women by industry, country, experience, interests, and what they need now."],
+  ["02", "Find the right people", "Meet women by industry, country, experience, interests, and what they need now."],
   ["03", "Useful every week", "Ask for an introduction, offer expertise, join a Circle, or learn something practical."],
   ["04", "Yours beyond the event", "Your connections, conversations, communities, and event memories stay with you."],
 ];
@@ -141,7 +141,7 @@ export default function HomePage() {
           <h2 id="platform-title">A reason to return—even when no event is near.</h2>
           <p>Your home brings the network into focus: who to meet, what members need, what you can offer, and what is happening next.</p>
           <ul className="platform-features">
-            <li><ConnectionIcon /><span><b>Trusted directory</b>Search across events without exposing private contact details.</span></li>
+            <li><ConnectionIcon /><span><b>Find trusted members</b>Search across events without exposing private contact details.</span></li>
             <li><SparkIcon /><span><b>Asks & Offers</b>Make a specific request or open a door for someone else.</span></li>
             <li><EventIcon /><span><b>Circles and communities</b>Build momentum in smaller, relevant groups.</span></li>
           </ul>
@@ -166,7 +166,7 @@ export default function HomePage() {
           <p>Membership creates access to a professional network—not automatic access to your private information. Every deeper connection remains permission-based.</p>
           <div className="trust-points">
             <article><strong>01</strong><h3>Contact details stay gated</h3><p>Email, phone, and social links appear only after you accept a connection.</p></article>
-            <article><strong>02</strong><h3>Pause without losing your network</h3><p>Step out of discovery while keeping your existing connections and history.</p></article>
+            <article><strong>02</strong><h3>Pause without losing your network</h3><p>Hide your profile from new people while keeping your existing connections and history.</p></article>
             <article><strong>03</strong><h3>Reporting without standing surveillance</h3><p>Moderators see private content only when a report requires investigation—and access is logged.</p></article>
           </div>
         </div>
@@ -177,7 +177,7 @@ export default function HomePage() {
         <ol className="membership-steps">
           <li><strong>01</strong><span><b>Join the beta</b>Sign in with Google or a secure email code.</span></li>
           <li><strong>02</strong><span><b>Complete your profile</b>Share enough for the right women to find you.</span></li>
-          <li><strong>03</strong><span><b>Take your seat</b>Enter the event, directory, and trusted network.</span></li>
+          <li><strong>03</strong><span><b>Take your seat</b>Join the event and meet your trusted network.</span></li>
         </ol>
         <Link className="button button-light" href="/sign-in">Request membership <ArrowIcon /></Link>
       </section>

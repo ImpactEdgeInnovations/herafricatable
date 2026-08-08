@@ -51,12 +51,12 @@ export default async function NotificationsPage() {
 
   return (
     <main className="notifications-page">
-      <MemberHeader active="alerts" label="Activity" />
+      <MemberHeader active="alerts" label="Updates" />
       {notificationResult.error ||
       conversationResult.error ||
       networkResult.error ? (
         <section className="admin-empty network-error">
-          <strong>Your activity is temporarily unavailable</strong>
+          <strong>We could not open your updates</strong>
           <p>Please try again or contact support if the problem continues.</p>
           <div className="journey-state-actions">
             <Link className="button button-primary" href="/notifications">

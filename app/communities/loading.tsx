@@ -4,7 +4,7 @@ export default function CommunityLoading() {
   return (
     <main className="route-state-page">
       <JourneyState
-        description="We are preparing your communities and the latest member activity."
+        description="We are opening your communities and checking what is new."
         eyebrow="Community"
         title="Opening your communities…"
         variant="loading"

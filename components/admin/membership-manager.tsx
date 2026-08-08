@@ -177,10 +177,10 @@ export function MembershipManager({
   }
   async function reconcile() {
     const result = await ask({
-      title: "Reconcile membership states now?",
+      title: "Check all membership dates now?",
       description:
-        "This applies scheduled starts, grace periods, expiries and dormant access using the current database time. Every resulting status change remains auditable.",
-      confirmLabel: "Run reconciliation",
+        "This starts memberships that are due, applies grace days and closes access that has expired. Every change will be saved in the records.",
+      confirmLabel: "Check memberships",
     });
     if (!result) return;
     setBusy("reconcile");
@@ -188,8 +188,8 @@ export function MembershipManager({
     setBusy("");
     setMessage(
       error
-        ? adminErrorMessage(error, "reconcile membership lifecycles")
-        : `Lifecycle reconciled: ${JSON.stringify(data?.[0] ?? {})}`,
+        ? adminErrorMessage(error, "check membership dates")
+        : `Membership check complete: ${JSON.stringify(data?.[0] ?? {})}`,
     );
     if (!error) router.refresh();
   }
@@ -231,11 +231,11 @@ export function MembershipManager({
     <section className="admin-section membership-admin" id="memberships-admin">
       <div className="admin-section-heading">
         <div>
-          <p className="eyebrow">Controlled account lifecycle</p>
-          <h2>Membership operations</h2>
+          <p className="eyebrow">Membership access</p>
+          <h2>Plans, payments and access</h2>
           <p>
-            Define terms, review manual payments, grant exceptions and test
-            safely without polluting member metrics.
+            Set membership plans, review manual payments and give or remove
+            access when needed.
           </p>
         </div>
         <button
@@ -439,7 +439,7 @@ export function MembershipManager({
             onClick={() => void reconcile()}
             disabled={busy === "reconcile"}
           >
-            Run lifecycle reconciliation
+            Check membership dates
           </button>
         </div>
       </div>

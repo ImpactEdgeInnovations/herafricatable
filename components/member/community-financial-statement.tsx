@@ -137,7 +137,7 @@ export function CommunityFinancialStatement({
               </small>
             </article>
             <article>
-              <span>Provider costs and refunds</span>
+              <span>Payment costs and refunds</span>
               <strong>
                 {money(
                   summary.provider_fee_minor +

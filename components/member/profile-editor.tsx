@@ -213,7 +213,7 @@ export function ProfileEditor({
           <span>01</span>
           <div>
             <h2 id="profile-public-title">How members know you</h2>
-            <p>Visible to active members in trusted discovery spaces.</p>
+            <p>Active members can see this when they are looking for people to meet.</p>
           </div>
         </div>
         <div className="profile-editor-grid">

@@ -121,7 +121,7 @@ export function CommunityReturnCard({
             }
           : newActivity
             ? {
-                action: "See new activity",
+                action: "See what is new",
                 label: `${newActivity} new update${newActivity === 1 ? "" : "s"}`,
                 description: [
                   newConversations

@@ -313,7 +313,7 @@ export function CommunityHostWorkspace({
           <div>
             <strong>Platform safety review is active.</strong>
             <p>
-              Report evidence stays private to the authorised moderation team.
+              Report details stay private with the Her Africa Table safety team.
               Contact platform support if a member needs immediate care.
             </p>
           </div>

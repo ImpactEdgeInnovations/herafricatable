@@ -142,7 +142,7 @@ export function CommunityCheckIns({
     const result = await ask({
       title: "Report this check-in privately?",
       description:
-        "Only the authorised platform moderation team will receive your reason and a captured copy of the question and choices. Member answers are never included.",
+        "Only the Her Africa Table safety team will receive your reason and a copy of the question and choices. Member answers are never included.",
       confirmLabel: "Send private report",
       tone: "danger",
       fields: [
@@ -162,7 +162,7 @@ export function CommunityCheckIns({
           type: "select",
         },
         {
-          help: "Describe what the moderation team should review. Do not add another member’s private information.",
+          help: "Tell the Her Africa Table safety team what happened. Do not add another member’s private information.",
           label: "What happened?",
           maxLength: 2000,
           minLength: 10,
@@ -185,7 +185,7 @@ export function CommunityCheckIns({
     setMessage(
       error
         ? memberErrorMessage(error, "send this private report")
-        : "Your report was sent privately to the platform moderation team.",
+        : "Your report was sent privately to the Her Africa Table safety team.",
     );
   }
 

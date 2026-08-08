@@ -63,7 +63,7 @@ export function AccountSettings({
       error
         ? memberErrorMessage(error, "change your profile visibility")
         : paused
-          ? "Your profile is now hidden from member discovery."
+          ? "Other members can no longer find your profile."
           : "Your profile is visible to active members again.",
     );
     if (!error) router.refresh();
@@ -109,7 +109,7 @@ export function AccountSettings({
     link.download = `her-africa-table-data-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(href);
-    setNotice("Your private JSON export was generated on this device.");
+    setNotice("Your private copy is ready and was created on this device.");
   }
   async function requestDeletion(event: FormEvent) {
     event.preventDefault();
@@ -165,12 +165,12 @@ export function AccountSettings({
           </p>
         </div>
         <aside>
-          <span>Directory status</span>
+          <span>Who can find you</span>
           <strong>{visibilityPaused ? "Hidden" : "Visible"}</strong>
           <small>
             {visibilityPaused
-              ? "Other members cannot currently discover your profile."
-              : "Active members can discover your public profile."}
+              ? "Other members cannot currently find your profile."
+              : "Active members can find the details you choose to share."}
           </small>
         </aside>
       </header>
@@ -185,19 +185,18 @@ export function AccountSettings({
             <dd>{email}</dd>
           </div>
           <div>
-            <dt>Directory visibility</dt>
+            <dt>Profile visibility</dt>
             <dd>{visibilityPaused ? "Paused" : "Visible"}</dd>
           </div>
         </dl>
       </section>
       <section className="settings-card settings-action">
         <div>
-          <p className="eyebrow">Member discovery</p>
-          <h2>Profile visibility</h2>
+          <p className="eyebrow">Who can find you</p>
+          <h2>Show or hide your profile</h2>
           <p>
-            Pausing removes you from discovery and prevents new network
-            activity. Your account, event records, and existing information
-            remain intact.
+            Pausing hides your profile from new people. Your account, event
+            bookings and existing connections will stay as they are.
           </p>
         </div>
         <button
@@ -205,7 +204,7 @@ export function AccountSettings({
           disabled={busy === "visibility" || Boolean(activeDeletion)}
           onClick={() => void visibility(!visibilityPaused)}
         >
-          {visibilityPaused ? "Restore visibility" : "Pause visibility"}
+          {visibilityPaused ? "Show my profile" : "Hide my profile"}
         </button>
       </section>
       <section className="settings-card connection-preferences-card">
@@ -260,12 +259,11 @@ export function AccountSettings({
       </section>
       <section className="settings-card settings-action">
         <div>
-          <p className="eyebrow">Data portability</p>
-          <h2>Download your information</h2>
+          <p className="eyebrow">Your information</p>
+          <h2>Download a private copy</h2>
           <p>
-            Generate a private JSON file containing your profile, consent
-            history, registrations, authored messages, support history, and
-            account activity.
+            Download a private copy of your profile, choices, event bookings,
+            messages and help requests.
           </p>
         </div>
         <button

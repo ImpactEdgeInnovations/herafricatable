@@ -63,7 +63,7 @@ export function EventAttendeeDirectory({
         ? memberErrorMessage(error, "save your attendee visibility")
         : discoverable
           ? "You are now visible to confirmed guests at this event."
-          : "You are no longer visible in this event’s attendee discovery.",
+          : "You are no longer shown to other guests at this event.",
     );
     if (!error) router.refresh();
   }
@@ -79,7 +79,7 @@ export function EventAttendeeDirectory({
     setMessage(
       error
         ? memberErrorMessage(error, "send this connection request")
-        : "Connection request sent. Contact details unlock only after acceptance.",
+        : "Connection request sent. Contact details will appear only if she accepts.",
     );
     if (!error) router.refresh();
   }
@@ -99,7 +99,7 @@ export function EventAttendeeDirectory({
           </h2>
           <p>
             {mode === "after"
-              ? "Reconnect with attendees who chose to remain discoverable. Participation stays optional and private contact details remain protected."
+              ? "Reconnect with guests who chose to remain visible. Joining is optional and private contact details remain protected."
               : "Choose whether to introduce yourself to other confirmed guests. Joining is optional, and private contact details are never shown here."}
           </p>
         </div>
@@ -120,8 +120,8 @@ export function EventAttendeeDirectory({
               type="checkbox"
             />
             <span>
-              <strong>Let confirmed guests discover me</strong>
-              <small>You can leave this space at any time.</small>
+              <strong>Show me to confirmed guests</strong>
+              <small>You can hide yourself again at any time.</small>
             </span>
           </label>
           <label>
@@ -152,7 +152,7 @@ export function EventAttendeeDirectory({
             </span>
           </label>
           <button className="button button-primary" disabled={busy}>
-            {busy ? "Saving…" : "Save event visibility"}
+            {busy ? "Saving…" : "Save my choice"}
           </button>
           {message ? <p role="status">{message}</p> : null}
         </form>

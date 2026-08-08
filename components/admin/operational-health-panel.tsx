@@ -4,7 +4,7 @@ import type {
 } from "@/lib/operational-health";
 
 const statusLabels: Record<OperationalCheck["status"], string> = {
-  attention: "Needs rehearsal",
+  attention: "Needs testing",
   ready: "Verified now",
   unavailable: "Action required",
 };

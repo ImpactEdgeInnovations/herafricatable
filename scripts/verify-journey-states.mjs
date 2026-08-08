@@ -438,7 +438,7 @@ for (const contract of [
   "Build two mutual connections",
   "nextBestAction",
   "member-next-action",
-  "Recommended next",
+  "Your next step",
 ]) {
   assert(
     memberHome.includes(contract),
@@ -525,9 +525,9 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Test rehearsal active",
-  "Start test rehearsal",
-  "tagged test accounts only",
+  "Test mode is on",
+  "Turn on test mode",
+  "marked test accounts",
   "community_acceptance_mode",
 ]) {
   assert(
@@ -801,7 +801,7 @@ for (const contract of [
   "Invitation waiting",
   "Ready for payment",
   "Request under review",
-  "See new activity",
+  "See what is new",
   "You are all caught up",
 ]) {
   assert(
@@ -1033,7 +1033,7 @@ for (const contract of [
   "Community earnings",
   "See where every payment goes.",
   "Available for payout",
-  "Provider costs and refunds",
+  "Payment costs and refunds",
   "Recent payments and adjustments",
   "Payouts reviewed manually",
 ]) {
@@ -1188,12 +1188,12 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Show replies in Activity",
+  "Show replies in Updates",
   "Email me about replies",
   "Weekly community summary",
   "Email the weekly summary",
   "update_community_notification_preferences",
-  "Open main Activity settings",
+  "Open all update choices",
   "memberErrorMessage",
 ]) {
   assert(
@@ -1456,7 +1456,7 @@ const activityPage = read("app/notifications/page.tsx");
 for (const contract of [
   "list_my_conversations",
   "list_my_network",
-  'label="Activity"',
+  'label="Updates"',
 ]) {
   assert(
     activityPage.includes(contract),
@@ -1467,8 +1467,8 @@ const activityCenter = read("components/member/notification-center.tsx");
 for (const contract of [
   "activity-overview",
   "activity-filters",
-  "Unread conversations",
-  "Connection requests",
+  "Unread messages",
+  "People waiting to connect",
 ]) {
   assert(
     activityCenter.includes(contract),

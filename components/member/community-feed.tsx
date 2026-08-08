@@ -528,7 +528,7 @@ export function CommunityFeed({
     const result = await ask({
       title: `Report this ${kind} privately`,
       description:
-        "Choose the concern and add enough context for the moderation team to review it safely.",
+        "Choose what worries you and tell the Her Africa Table safety team what happened.",
       confirmLabel: "Submit report",
       tone: "danger",
       fields: [
@@ -567,7 +567,7 @@ export function CommunityFeed({
     announce(
       error,
       `send this ${kind} report`,
-      "Report sent privately to the moderation team.",
+      "Your report was sent privately to the Her Africa Table safety team.",
     );
   }
 
@@ -1036,7 +1036,7 @@ export function CommunityFeed({
                     </span>
                     {post.is_new || Number(post.new_reply_count ?? 0) > 0 ? (
                       <span className="community-post-new-label">
-                        {post.is_new ? "New conversation" : "New activity"}
+                        {post.is_new ? "New conversation" : "New reply"}
                         {Number(post.new_reply_count ?? 0) > 0
                           ? ` · ${post.new_reply_count} new repl${Number(post.new_reply_count) === 1 ? "y" : "ies"}`
                           : ""}

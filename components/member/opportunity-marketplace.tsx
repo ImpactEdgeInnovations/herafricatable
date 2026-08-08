@@ -181,7 +181,7 @@ export function OpportunityMarketplace({
     const result = await ask({
       title: "Report this post privately",
       description:
-        "Choose the concern and add enough context for the moderation team to review it safely.",
+        "Choose what worries you and tell the Her Africa Table safety team what happened.",
       confirmLabel: "Submit report",
       tone: "danger",
       fields: [
@@ -222,7 +222,7 @@ export function OpportunityMarketplace({
     setMessage(
       error
         ? memberErrorMessage(error, "send this marketplace report")
-        : "Report submitted privately to the moderation team.",
+        : "Your report was sent privately to the Her Africa Table safety team.",
     );
   }
   return (
@@ -382,7 +382,7 @@ export function OpportunityMarketplace({
               ))}
             </select>
             <button>Filter</button>
-            <a href="/opportunities?mine=1">My activity</a>
+            <a href="/opportunities?mine=1">My posts</a>
           </form>
         </header>
         {posts.length ? (

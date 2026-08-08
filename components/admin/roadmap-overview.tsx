@@ -3,49 +3,49 @@ const phases = [
     label: "Foundation",
     range: "Days 1–3",
     progress: 100,
-    status: "Operationally observable",
+    status: "Ready",
     detail:
-      "Hosting, authentication, roles, RLS, health, delivery operations, privacy-safe analytics and isolated CI security tests are built.",
+      "Hosting, sign-in, staff access, system checks, private reporting and security tests are built.",
   },
   {
     label: "Members",
     range: "Days 4–7",
     progress: 91,
-    status: "Membership acceptance",
+    status: "Ready for member testing",
     detail:
-      "Onboarding, profiles, approvals, consent, privacy and the feature-gated membership renewal lifecycle are built.",
+      "Joining, profiles, approvals, privacy choices and membership renewals are built.",
   },
   {
     label: "Events",
     range: "Days 8–11",
     progress: 96,
-    status: "Acceptance testing",
+    status: "Ready for full testing",
     detail:
-      "Event lifecycle, scoped staff, programme, announcements, sponsors, menu and private-by-default galleries are operational.",
+      "Creating events, staff access, programmes, announcements, sponsors, menus and private galleries are built.",
   },
   {
     label: "Registration",
     range: "Days 12–15",
     progress: 91,
-    status: "Acceptance testing",
+    status: "Ready for payment testing",
     detail:
-      "Tickets, orders, receipts, manual review, Paystack verification, refunds, reconciliation and idempotent entitlements are built.",
+      "Tickets, orders, receipts, manual payments, Paystack checks and refunds are built.",
   },
   {
     label: "Network",
     range: "Days 16–30",
     progress: 99,
-    status: "Production acceptance",
+    status: "Needs final live testing",
     detail:
-      "Marketplace, feedback, governed Communities, consent-based founding cohort activation, Learning, referrals, renewals, Circles and controlled partner perks are built; production acceptance remains.",
+      "Opportunities, feedback, Communities, founding-member invitations, Learning, referrals, renewals, Circles and partner benefits are built. Final live testing remains.",
   },
   {
     label: "Experience",
     range: "Every day",
     progress: 98,
-    status: "Cohort activation complete",
+    status: "Ready for member review",
     detail:
-      "Member Home now guides activation, the Nairobi room uses explicit invitations and structured introductions, and Admin can monitor cohort health without opening private conversations. Cross-browser QA and non-technical user testing remain.",
+      "Member Home gives each woman a clear next step. Nairobi invitations and introductions are ready. Real-device and non-technical member testing remain.",
   },
 ];
 
@@ -61,8 +61,8 @@ export function RoadmapOverview() {
           <p className="eyebrow">30-day delivery</p>
           <h2 id="roadmap-title">Launch roadmap</h2>
           <p>
-            A focused view of the production plan. Progress reflects completed
-            code, not just designed screens.
+            A simple view of what is built, what has been tested and what still
+            needs a real member check.
           </p>
         </div>
         <a

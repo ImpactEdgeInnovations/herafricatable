@@ -99,7 +99,7 @@ export function CommunityHostBillingManager({
       title: "Reconcile host subscriptions now?",
       description:
         "This promotes due renewals, starts grace periods, expires lapsed plans, pauses unsafe paid offers and queues owner reminders.",
-      confirmLabel: "Run lifecycle check",
+      confirmLabel: "Check host plans",
     });
     if (!confirmed) return;
     setBusy("reconcile");
@@ -110,8 +110,8 @@ export function CommunityHostBillingManager({
     setBusy("");
     setMessage(
       error
-        ? adminErrorMessage(error, "reconcile host subscription lifecycles")
-        : `Host lifecycle reconciled: ${JSON.stringify(data?.[0] ?? {})}`,
+        ? adminErrorMessage(error, "check host plan dates")
+        : `Host plan check complete: ${JSON.stringify(data?.[0] ?? {})}`,
     );
     if (!error) router.refresh();
   }
@@ -289,11 +289,11 @@ export function CommunityHostBillingManager({
       </div>
       <div className="host-lifecycle-admin">
         <div>
-          <p className="eyebrow">Subscription lifecycle</p>
+          <p className="eyebrow">Host plan dates</p>
           <h3>Renewals and expiry protection</h3>
           <p>
-            The scheduled job runs this safely alongside notification delivery.
-            Run it here after a support decision or during acceptance testing.
+            This check starts, renews or ends host plans on the correct date.
+            Run it after helping a host or during testing.
           </p>
         </div>
         <div className="host-lifecycle-metrics">
@@ -327,7 +327,7 @@ export function CommunityHostBillingManager({
           disabled={busy === "reconcile"}
           onClick={() => void reconcileLifecycle()}
         >
-          {busy === "reconcile" ? "Reconciling…" : "Run lifecycle check"}
+          {busy === "reconcile" ? "Checking…" : "Check host plans"}
         </button>
       </div>
       {message ? (

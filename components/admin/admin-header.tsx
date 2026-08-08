@@ -163,8 +163,8 @@ export async function AdminHeader({
           {
             href: "/admin/cohort",
             key: "cohort",
-            label: "Founding cohort",
-            shortLabel: "Cohort",
+            label: "Founding members",
+            shortLabel: "Founders",
           },
           {
             href: "/admin/support",

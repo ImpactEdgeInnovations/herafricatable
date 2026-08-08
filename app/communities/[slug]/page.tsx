@@ -449,7 +449,7 @@ export default async function CommunityPage({
             <h2>Find the right person or next gathering.</h2>
             <p>
               Member profiles, Community events and shared learning are kept
-              together here so you can explore without searching the feed.
+              together here so you do not have to search through every conversation.
             </p>
           </section>
           {cohort ? (

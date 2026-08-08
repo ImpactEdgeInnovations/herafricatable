@@ -54,12 +54,12 @@ export function CommunityManager({
   async function toggleAcceptanceMode() {
     const result = await ask({
       title: acceptanceMode
-        ? "End the Community rehearsal?"
-        : "Open Community rehearsal for test accounts?",
+        ? "Turn off Community test mode?"
+        : "Turn on Community test mode?",
       description: acceptanceMode
         ? "Tagged test accounts will immediately lose Community access. Their memberships, posts and evidence remain preserved."
         : "Only active accounts explicitly tagged as test accounts can enter Community. Real members remain blocked until the release checks pass.",
-      confirmLabel: acceptanceMode ? "End rehearsal" : "Start controlled rehearsal",
+      confirmLabel: acceptanceMode ? "Turn off test mode" : "Turn on test mode",
       tone: acceptanceMode ? "danger" : "default",
     });
     if (!result) return;
@@ -72,10 +72,10 @@ export function CommunityManager({
     setBusy("");
     setMessage(
       error
-        ? adminErrorMessage(error, "change the Community rehearsal boundary")
+        ? adminErrorMessage(error, "change Community test mode")
         : acceptanceMode
-          ? "Community rehearsal ended. Test data remains preserved."
-          : "Controlled rehearsal is open only to tagged test accounts.",
+          ? "Community test mode is off. Test data has been kept."
+          : "Community test mode is open only to marked test accounts.",
     );
     if (!error) router.refresh();
   }
@@ -208,11 +208,11 @@ export function CommunityManager({
     <section className="admin-section community-admin" id="communities-admin">
       <div className="admin-section-heading">
         <div>
-          <p className="eyebrow">Controlled P1 release</p>
+          <p className="eyebrow">Community access</p>
           <h2>Communities</h2>
           <p>
-            Create trusted spaces and review membership before deliberately
-            exposing the feature.
+            Create trusted spaces and check who can enter before opening them
+            to members.
           </p>
         </div>
         <button
@@ -225,12 +225,12 @@ export function CommunityManager({
       </div>
       <aside className={`community-acceptance-mode ${acceptanceMode ? "is-active" : ""}`}>
         <div>
-          <span>{acceptanceMode ? "Test rehearsal active" : "Test rehearsal closed"}</span>
-          <strong>Prove Community before real members can enter.</strong>
+          <span>{acceptanceMode ? "Test mode is on" : "Test mode is off"}</span>
+          <strong>Test Community safely before members enter.</strong>
           <p>
-            This boundary admits tagged test accounts only. Use it for the
-            two-member journey, privacy checks, Admin support and pause/recovery
-            rehearsal; it never opens Community to real members.
+            Only marked test accounts can enter in this mode. Use it to test
+            two members, privacy, Admin help, pausing and reopening. Real
+            members cannot enter.
           </p>
         </div>
         <button
@@ -242,8 +242,8 @@ export function CommunityManager({
           {busy === "acceptance-mode"
             ? "Updating…"
             : acceptanceMode
-              ? "End rehearsal"
-              : "Start test rehearsal"}
+              ? "Turn off test mode"
+              : "Turn on test mode"}
         </button>
       </aside>
       <div className="community-admin-layout">
@@ -254,8 +254,8 @@ export function CommunityManager({
           <p className="admin-form-guide" id="community-editor-guide">
             Official communities allow active members to join immediately.
             Private communities require host approval. Create new rooms as
-            Draft; publication is controlled by the audited acceptance gate in
-            the Founding cohort workspace.
+            Draft. Open them to members only after the checks in the Founding
+            members area are complete.
           </p>
           <input
             type="hidden"
@@ -374,10 +374,10 @@ export function CommunityManager({
               </form>
               <section className="community-lifecycle-controls">
                 <div>
-                  <strong>Continuity and offboarding</strong>
+                  <strong>Pausing or closing this Community</strong>
                   <p>
                     Pause safely, replace an unavailable host, reopen after
-                    acceptance, or close while preserving records.
+                    checks, or close while keeping the records.
                   </p>
                 </div>
                 <div className="member-actions">

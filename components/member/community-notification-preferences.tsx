@@ -53,7 +53,7 @@ export function CommunityNotificationPreferences({
           <small>Community notifications</small>
           <strong>Choose which updates you receive.</strong>
           <em>
-            See replies in Activity, receive a weekly summary, or turn email
+            See replies in Updates, receive a weekly summary, or turn email
             updates on and off.
           </em>
         </span>
@@ -62,10 +62,10 @@ export function CommunityNotificationPreferences({
       <form onSubmit={(event) => void save(event)}>
         <div>
           <p>
-            These choices apply only to this community. Your main Activity
+            These choices apply only to this community. Your main Updates
             settings still control all platform notifications.
           </p>
-          <Link href="/notifications">Open main Activity settings</Link>
+          <Link href="/notifications">Open all update choices</Link>
         </div>
         <label>
           <input
@@ -79,9 +79,9 @@ export function CommunityNotificationPreferences({
             type="checkbox"
           />
           <span>
-            <strong>Show replies in Activity</strong>
+            <strong>Show replies in Updates</strong>
             <small>
-              Add replies from conversations you follow to your Activity page.
+              Put replies from conversations you follow on your Updates page.
             </small>
           </span>
         </label>

@@ -68,7 +68,7 @@ export default async function MemberProfilePage({
         <section className="admin-empty network-error" role="alert">
           <strong>This member profile is temporarily unavailable</strong>
           <p>
-            Return to discovery and try again, or contact support if the problem
+            Return to Members and try again, or contact support if the problem
             continues.
           </p>
           <div className="journey-state-actions">

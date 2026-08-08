@@ -55,7 +55,7 @@ const statusCopy: Record<
   pending: {
     label: "Submitted",
     summary:
-      "We received your application. We will update you here and in Activity.",
+      "We received your application. We will update you here and under Updates.",
   },
   under_review: {
     label: "In review",

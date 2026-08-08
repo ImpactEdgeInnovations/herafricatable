@@ -69,7 +69,7 @@ export function CommunityReleaseGate({
     const result = await ask({
       title: `Update “${check.label}”?`,
       description:
-        "Record the test outcome without passwords, OTPs, private member content or secret configuration. Every change is audited.",
+        "Record what happened without passwords, one-time codes, private member content or private system keys. Every change is saved.",
       confirmLabel: "Save acceptance evidence",
       fields: [
         {

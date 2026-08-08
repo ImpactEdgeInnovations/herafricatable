@@ -115,7 +115,7 @@ export default async function NetworkPage({
       followupResult.error ||
       outcomeResult.error ? (
         <section className="admin-empty network-error">
-          <strong>The member directory is temporarily unavailable</strong>
+          <strong>We could not open the member list</strong>
           <p>Please try again or contact support if the problem continues.</p>
           <div className="journey-state-actions">
             <Link className="button button-primary" href="/network">

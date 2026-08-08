@@ -93,7 +93,7 @@ export default async function PastEventsPage() {
         {pastError ? (
           <div className="past-events-empty" role="status">
             <span className="past-events-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7h14M8 3v4M16 3v4"/><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 12h8M8 16h5"/></svg></span>
-            <div><p className="eyebrow">Archive temporarily unavailable</p><h2>We could not open past events.</h2><p>Please try again shortly. Your attendance history and private feedback remain unchanged.</p><div className="past-events-empty-actions"><Link className="button button-primary" href="/events/past">Try again</Link>{user ? <Link className="button button-outline" href="/support">Contact support</Link> : null}</div></div>
+            <div><p className="eyebrow">Past events are temporarily unavailable</p><h2>We could not open past events.</h2><p>Please try again shortly. Your attendance history and private feedback remain unchanged.</p><div className="past-events-empty-actions"><Link className="button button-primary" href="/events/past">Try again</Link>{user ? <Link className="button button-outline" href="/support">Contact support</Link> : null}</div></div>
           </div>
         ) : events.length ? (
           events.map((event) => (

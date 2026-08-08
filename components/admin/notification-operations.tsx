@@ -116,11 +116,11 @@ export function NotificationOperations({
     <section className="admin-section notification-operations">
       <div className="admin-section-heading">
         <div>
-          <p className="eyebrow">Delivery operations</p>
-          <h2>Notification outbox</h2>
+          <p className="eyebrow">Member messages</p>
+          <h2>Email and app messages</h2>
           <p>
-            Transactional messages are queued, idempotent, retried with backoff,
-            and processed outside member requests.
+            See messages waiting to be sent, messages delivered and messages
+            that need another try.
           </p>
         </div>
         <div className="notification-provider-actions">
@@ -128,8 +128,8 @@ export function NotificationOperations({
             className={`provider-state ${providerConfigured ? "ready" : "pending"}`}
           >
             {providerConfigured
-              ? "Provider configured"
-              : "Provider setup required"}
+              ? "Email service is ready"
+              : "Email service needs setup"}
           </span>
           {providerConfigured ? (
             <>
@@ -139,7 +139,7 @@ export function NotificationOperations({
                 onClick={() => void processQueue()}
                 type="button"
               >
-                {busy === "process-queue" ? "Processing…" : "Process queue now"}
+                {busy === "process-queue" ? "Sending…" : "Send waiting messages"}
               </button>
               <button
                 className="button button-outline"
@@ -179,8 +179,8 @@ export function NotificationOperations({
             <p className="eyebrow">Community rhythm</p>
             <h3>Weekly briefing</h3>
             <p>
-              One privacy-safe aggregate per active room member, queued only
-              when a room moved or a linked gathering is within seven days.
+              One private weekly summary for each active Community member,
+              sent only when there is something useful to share.
             </p>
           </div>
           {briefingBatches[0] ? (
@@ -206,8 +206,8 @@ export function NotificationOperations({
             </dl>
           ) : (
             <span>
-              No weekly batch yet. The next authenticated worker run will create
-              the first idempotent batch.
+              No weekly summary has been prepared yet. The next scheduled check
+              will prepare one when there is something to share.
             </span>
           )}
         </section>

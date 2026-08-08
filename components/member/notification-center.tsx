@@ -77,7 +77,7 @@ export function NotificationCenter({
     key: ActivityFilter;
     label: string;
   }[] = [
-    { key: "all", label: "All activity" },
+    { key: "all", label: "Everything" },
     { key: "requests", label: "Requests" },
     { key: "events", label: "Events" },
     { key: "communities", label: "Communities" },
@@ -150,15 +150,16 @@ export function NotificationCenter({
     <div className="notification-layout">
       <section className="activity-overview" aria-labelledby="activity-title">
         <header>
-          <p className="eyebrow">Your private activity</p>
-          <h1 id="activity-title">What needs your attention.</h1>
+          <p className="eyebrow">Your updates</p>
+          <h1 id="activity-title">What is new for you.</h1>
           <p>
-            Requests, conversations, events and account updates in one place.
+            See new messages, connection requests, event news and account
+            notices in one place.
           </p>
         </header>
         <div>
           <Link href="/network">
-            <span>Connection requests</span>
+            <span>People waiting to connect</span>
             <strong>{requests.length}</strong>
             <small>
               {requests.length
@@ -170,7 +171,7 @@ export function NotificationCenter({
             </small>
           </Link>
           <Link href="/messages">
-            <span>Unread conversations</span>
+            <span>Unread messages</span>
             <strong>{unreadMessages}</strong>
             <small>
               {unreadMessages
@@ -191,10 +192,10 @@ export function NotificationCenter({
                 ).length
               }
             </strong>
-            <small>Registration, programme and guest information</small>
+            <small>Bookings, programmes and guest information</small>
           </button>
           <button type="button" onClick={() => setFilter("account")}>
-            <span>Account and support</span>
+            <span>Your account</span>
             <strong>
               {
                 notifications.filter(
@@ -204,14 +205,14 @@ export function NotificationCenter({
                 ).length
               }
             </strong>
-            <small>Private account, privacy and support updates</small>
+            <small>Privacy, account and help messages</small>
           </button>
         </div>
       </section>
       <section className="notification-feed">
         <header>
           <div>
-            <p className="eyebrow">Activity history</p>
+            <p className="eyebrow">Your recent updates</p>
             <h2>Recent updates</h2>
             <p>
               {unreadCount
@@ -225,7 +226,7 @@ export function NotificationCenter({
             </button>
           ) : null}
         </header>
-        <nav className="activity-filters" aria-label="Filter activity">
+        <nav className="activity-filters" aria-label="Choose which updates to see">
           {categories.map((category) => (
             <button
               aria-pressed={filter === category.key}
@@ -267,8 +268,7 @@ export function NotificationCenter({
                     ?.label.toLowerCase()} yet`}
             </strong>
             <p>
-              New activity will appear here when something needs your
-              attention.
+              New updates will appear here when something needs your attention.
             </p>
           </div>
         )}
@@ -276,13 +276,13 @@ export function NotificationCenter({
       <details className="notification-preferences">
         <summary>
           <span>
-            <small>Delivery choices</small>
-            <strong>Notification settings</strong>
+            <small>Email choices</small>
+            <strong>Choose what reaches your email</strong>
             <em>
               Choose which optional updates also reach your email.
             </em>
           </span>
-          <b>Manage</b>
+          <b>Change</b>
         </summary>
         <form onSubmit={save}>
           <p>

@@ -181,7 +181,7 @@ export async function MemberHeader({
             aria-label={
               unreadAlerts
                 ? `${unreadAlerts} unread notification${unreadAlerts === 1 ? "" : "s"}`
-                : "Activity"
+                : "Updates"
             }
             className="member-alert-link"
             href="/notifications"
@@ -190,7 +190,7 @@ export async function MemberHeader({
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
               <path d="M10 21h4" />
             </svg>
-            <span>Activity</span>
+            <span>Updates</span>
             {unreadAlerts ? (
               <b>{unreadAlerts > 9 ? "9+" : unreadAlerts}</b>
             ) : null}

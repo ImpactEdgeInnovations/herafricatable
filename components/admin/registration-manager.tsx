@@ -134,7 +134,7 @@ export function RegistrationManager({
     });
     if (fail(error)) return;
     setBusy(false);
-    setMessage("Ticket saved in minor units and audit logged.");
+    setMessage("Ticket saved and added to the records.");
     router.refresh();
   }
   async function review(orderId: string, action: "approve" | "reject") {
@@ -145,7 +145,7 @@ export function RegistrationManager({
           : "Decline this registration?",
       description:
         action === "approve"
-          ? "Confirm that the submitted payment evidence has been checked. This grants the same event entitlement as a verified online payment."
+          ? "Confirm that you checked the payment proof. The member will receive the same event access as someone who paid online."
           : "The member will not receive event access. Record a clear reason so the decision can be audited.",
       confirmLabel:
         action === "approve" ? "Approve registration" : "Decline registration",
@@ -189,8 +189,8 @@ export function RegistrationManager({
           : "Decline this refund request?",
       description:
         action === "approve"
-          ? "Manual payments will be marked complete. Paystack payments will move to provider processing and still require reconciliation."
-          : "The refund will not proceed. Record a clear reason for the member and audit history.",
+          ? "Manual refunds will be marked complete. Paystack refunds will be sent to Paystack and must be checked again afterward."
+          : "The refund will not proceed. Write a clear reason for the member and your records.",
       confirmLabel: action === "approve" ? "Approve refund" : "Decline refund",
       tone: action === "reject" ? "danger" : "default",
       fields: [
@@ -220,8 +220,8 @@ export function RegistrationManager({
     setBusy(false);
     setMessage(
       action === "approve"
-        ? "Refund approved. Manual orders are complete; Paystack orders now await provider processing."
-        : "Refund request rejected and audit logged.",
+        ? "Refund approved. Manual refunds are complete; Paystack refunds are waiting for Paystack."
+        : "Refund request declined and saved in the records.",
     );
     router.refresh();
   }
@@ -246,18 +246,18 @@ export function RegistrationManager({
       >
         <div className="admin-section-heading">
           <div>
-            <p className="eyebrow">Registration operations</p>
-            <h2>Tickets and manual review</h2>
+            <p className="eyebrow">Registration and payment</p>
+            <h2>Tickets and payment checks</h2>
             <p>
-              Prices are stored in minor units. Manual approval and verified
-              online payment grant the same idempotent entitlement.
+              Set ticket prices, review registration requests and approve
+              manual payments from one place.
             </p>
             <span
               className={`payment-readiness ${paystackConfigured ? "ready" : "not-ready"}`}
             >
               {paystackConfigured
-                ? "Paystack server configuration detected"
-                : "Paystack configuration incomplete—keep manual mode active"}
+                ? "Paystack is ready"
+                : "Paystack is not ready—keep manual payments on"}
             </span>
           </div>
           <label className="event-content-select">
@@ -501,7 +501,7 @@ export function RegistrationManager({
         </div>
         {initialPayments.length ? (
           <div className="payment-reconciliation">
-            <p className="eyebrow">Paystack reconciliation</p>
+            <p className="eyebrow">Check Paystack payments</p>
             {initialPayments
               .filter((p) =>
                 registrations.some((r) => r.order_id === p.order_id),

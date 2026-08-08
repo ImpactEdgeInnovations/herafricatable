@@ -98,7 +98,7 @@ export function MessageCenter({
     const result = await ask({
       title: "Report this message privately",
       description:
-        "Give the moderation team enough context to review the message. You can also block the sender immediately.",
+        "Tell the Her Africa Table safety team what happened. You can also block the sender now.",
       confirmLabel: "Submit report",
       tone: "danger",
       fields: [
@@ -196,7 +196,7 @@ export function MessageCenter({
             </span>
             <strong>Start with a connection.</strong>
             <p>
-              Find someone in the member directory and send a thoughtful
+              Find someone under Members and send a thoughtful
               connection request. Messaging opens only after she accepts, so
               every conversation begins with mutual consent.
             </p>

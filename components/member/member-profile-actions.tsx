@@ -164,7 +164,7 @@ export function MemberProfileActions({
         : {
             title: "Report this profile privately",
             description:
-              "Give the moderation team enough context to review the concern. The member is not shown your report.",
+              "Tell the Her Africa Table safety team what happened. The member will not see your report.",
             confirmLabel: "Submit report",
             tone: "danger",
             fields: [
@@ -216,7 +216,7 @@ export function MemberProfileActions({
       return;
     }
     if (action === "block") router.push("/network");
-    else setMessage("Report submitted privately to the moderation team.");
+    else setMessage("Your report was sent privately to the Her Africa Table safety team.");
   }
 
   return (

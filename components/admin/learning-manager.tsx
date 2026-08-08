@@ -218,7 +218,7 @@ export function LearningManager({
     <section className="admin-section learning-admin" id="learning-admin">
       <div className="admin-section-heading">
         <div>
-          <p className="eyebrow">Controlled P1 release</p>
+          <p className="eyebrow">Learning access</p>
           <h2>Learning studio</h2>
           <p>
             Manage courses, protected lessons, access and purchases through the

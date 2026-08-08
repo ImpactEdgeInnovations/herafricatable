@@ -49,7 +49,7 @@ export function CommunityAboutAction({
     }
     setMessage(
       communityType === "private"
-        ? "Your request is with the Community host. We’ll update you in Activity."
+        ? "The Community host has your request. We’ll let you know under Updates."
         : "Your place is ready. Open Community to complete payment.",
     );
     router.refresh();

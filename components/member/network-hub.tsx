@@ -593,7 +593,7 @@ export function NetworkHub({
       const result = await ask({
         title: "Report this member privately",
         description:
-          "Choose the concern and add enough context for the moderation team to review it safely.",
+          "Choose what worries you and tell the Her Africa Table safety team what happened.",
         confirmLabel: "Submit report",
         tone: "danger",
         fields: [
@@ -638,7 +638,7 @@ export function NetworkHub({
       error
         ? memberErrorMessage(error, `${action} this member`)
         : action === "report"
-          ? "Report submitted privately to the moderation team."
+          ? "Your report was sent privately to the Her Africa Table safety team."
           : `Member ${action}ed.`,
     );
     if (!error) router.refresh();

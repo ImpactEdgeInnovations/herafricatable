@@ -221,15 +221,15 @@ export default async function AdminHomePage() {
           {canModerate ? (
             <Link href="/admin/safety">
               <small>Trust</small>
-              <strong>Safety and moderation</strong>
-              <span>Review concerns without exposing private activity →</span>
+              <strong>Safety and member concerns</strong>
+              <span>Help members and review private reports →</span>
             </Link>
           ) : null}
           {role === "super_admin" ? (
             <Link href="/admin/cohort">
-              <small>Founding cohort</small>
+              <small>Founding members</small>
               <strong>Activate the Nairobi community</strong>
-              <span>Invite, orient and follow cohort health →</span>
+              <span>Invite members and see who may need help →</span>
             </Link>
           ) : null}
           {role === "super_admin" ? (
