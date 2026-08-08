@@ -89,19 +89,19 @@ export default async function NetworkPage({
       <MemberHeader active="members" label="Member network" />
       <section className="network-hero">
         <div>
-          <p className="eyebrow">Your trusted network</p>
-          <h1>Find the right person.</h1>
+          <p className="eyebrow">Members</p>
+          <h1>Meet women in the room</h1>
           <p>
-            Search by her work, city, interests or what she hopes to achieve.
-            Private contact details appear only after you both connect.
+            See who is here, learn what they care about and ask to connect when
+            it feels relevant. Messaging opens when you both agree.
           </p>
         </div>
         <aside aria-label="Network summary">
           <span>
-            <strong>{accepted.length}</strong> connections
+            <strong>{accepted.length}</strong> people you know
           </span>
           <span>
-            <strong>{pending.length}</strong> requests waiting
+            <strong>{pending.length}</strong> invitations
           </span>
         </aside>
       </section>

@@ -1247,39 +1247,39 @@ const networkHub = read("components/member/network-hub.tsx");
 assert(
   networkHub.indexOf('className="member-directory"') <
     networkHub.indexOf('className="network-code-tools"') &&
-    networkHub.includes("Find members"),
+    networkHub.includes("Show members"),
   "Member discovery must appear before optional in-person connection codes",
 );
 for (const contract of [
   "directory-filters",
-  "Current goal",
-  "Request introduction",
+  "What would you like?",
+  "Ask to connect",
   "request_connection_with_context",
   "save_member_profile",
   "Saved for later",
-  "People you may want to meet",
-  "Why this suggestion",
+  "Start with these members",
+  "You may have something in common",
   "A thoughtful person to meet",
   "Both of you decide independently",
   "respond_to_curated_introduction",
-  "Plan follow-up",
-  "Your private plan",
+  "Add reminder",
+  "Your reminder",
   "save_connection_followup",
   "complete_connection_followup",
-  "Record outcome",
+  "Add result",
   "record_connection_outcome",
   "update_connection_outcome",
   "You can change or withdraw anonymous sharing at any time",
   "Choose a network view",
   'aria-pressed={networkView === view.id}',
-  "No requests waiting",
-  "No active connections yet",
-  "No private relationship history yet",
+  "No invitations waiting",
+  "No connections yet",
+  "No notes or reminders yet",
   "More options",
-  "Eligible for anonymous totals",
-  "Completely private",
+  "Included anonymously in totals",
+  "Only you can see this",
   "Why she would like to connect",
-  "Messaging opens only after she accepts",
+  "Messaging opens when you both agree",
   'href={`/members/${member.user_id}`}',
 ]) {
   assert(
@@ -1290,8 +1290,8 @@ for (const contract of [
 const memberProfilePage = read("app/members/[id]/page.tsx");
 for (const contract of [
   "get_member_profile",
-  "Private by design",
-  "Connection comes first",
+  "Privacy",
+  "Contact stays private",
   "MemberProfileActions",
 ]) {
   assert(

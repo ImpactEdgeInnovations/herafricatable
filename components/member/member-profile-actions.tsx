@@ -31,14 +31,14 @@ export function MemberProfileActions({
 
   async function request() {
     const result = await ask({
-      title: "Add context to your introduction",
+      title: "Tell her why you would like to connect",
       description:
-        "A short note helps her decide whether this connection feels relevant. It is visible only to the two of you.",
-      confirmLabel: "Send request",
+        "A short, friendly note helps her decide. Only the two of you can see it.",
+      confirmLabel: "Send invitation",
       fields: [
         {
           name: "note",
-          label: "Why would you like to connect? (optional)",
+          label: "Your note (optional)",
           type: "textarea",
           minLength: 10,
           maxLength: 500,
@@ -59,7 +59,7 @@ export function MemberProfileActions({
     setMessage(
       error
         ? memberErrorMessage(error, "send this connection request")
-        : "Connection request sent. She remains in control of whether to accept.",
+        : "Invitation sent. She can accept or decline privately.",
     );
     if (!error) router.refresh();
   }
@@ -77,8 +77,8 @@ export function MemberProfileActions({
       error
         ? memberErrorMessage(error, `${action} this connection request`)
         : action === "accept"
-          ? "Connection accepted. Private messaging is now available."
-          : "Request ignored privately.",
+          ? "You are connected. You can now send a private message."
+          : "Invitation declined privately.",
     );
     if (!error) router.refresh();
   }
@@ -248,19 +248,19 @@ export function MemberProfileActions({
               disabled={Boolean(busy)}
               onClick={() => void respond("accept")}
             >
-              Accept connection
+              Accept
             </button>
             <button
               className="button button-outline"
               disabled={Boolean(busy)}
               onClick={() => void respond("ignore")}
             >
-              Ignore privately
+              Not now
             </button>
           </>
         ) : connectionStatus === "pending" ? (
           <span className="member-profile-pending">
-            Connection request pending
+            Invitation sent
           </span>
         ) : (
           <button
@@ -271,10 +271,10 @@ export function MemberProfileActions({
             {busy === "request"
               ? "Sending…"
               : connectionMode === "open"
-                ? "Request introduction"
+                ? "Ask to connect"
                 : connectionMode === "curated_only"
-                  ? "Curated introductions only"
-                  : "Not accepting requests"}
+                  ? "Introductions through HAT"
+                  : "Not available right now"}
           </button>
         )}
         <button
@@ -282,22 +282,27 @@ export function MemberProfileActions({
           disabled={Boolean(busy)}
           onClick={() => void saveProfile()}
         >
-          {isSaved ? "Saved · remove" : "Save for later"}
+          {isSaved ? "Saved · remove" : "Save"}
         </button>
-        <button
-          className="member-profile-safety"
-          disabled={Boolean(busy)}
-          onClick={() => void safety("report")}
-        >
-          Report
-        </button>
-        <button
-          className="member-profile-safety danger-action"
-          disabled={Boolean(busy)}
-          onClick={() => void safety("block")}
-        >
-          Block
-        </button>
+        <details className="member-profile-safety-menu">
+          <summary>Safety options</summary>
+          <div>
+            <button
+              className="member-profile-safety"
+              disabled={Boolean(busy)}
+              onClick={() => void safety("report")}
+            >
+              Report privately
+            </button>
+            <button
+              className="member-profile-safety danger-action"
+              disabled={Boolean(busy)}
+              onClick={() => void safety("block")}
+            >
+              Block this member
+            </button>
+          </div>
+        </details>
       </div>
       {message ? (
         <p className="network-message member-profile-message" role="status">

@@ -138,7 +138,7 @@ export default async function MemberProfilePage({
 
       <section className="member-profile-context">
         <article>
-          <p className="eyebrow">Professional context</p>
+          <p className="eyebrow">Work and background</p>
           <dl>
             {profile.industry ? (
               <div>
@@ -175,7 +175,7 @@ export default async function MemberProfilePage({
           </dl>
         </article>
         <article>
-          <p className="eyebrow">At the table for</p>
+          <p className="eyebrow">What she would like</p>
           <div className="member-profile-tags">
             {profile.goals.map((goal) => (
               <span key={goal}>{goalLabels[goal] ?? goal}</span>
@@ -198,14 +198,14 @@ export default async function MemberProfilePage({
 
       <section className="member-profile-contact">
         <div>
-          <p className="eyebrow">Private by design</p>
+          <p className="eyebrow">Privacy</p>
           <h2>
-            {accepted ? "Contact shared with you." : "Connection comes first."}
+            {accepted ? "Contact details she shared" : "Contact stays private"}
           </h2>
           <p>
             {accepted
-              ? "These details are visible because this connection is mutually accepted. Phone and WhatsApp appear only when she has chosen to share them."
-              : "Private contact details and messaging remain closed until she accepts your connection request."}
+              ? "You can see these because you are connected. Phone and WhatsApp appear only when she chooses to share them."
+              : "You can message each other and see shared contact details after you both agree to connect."}
           </p>
         </div>
         {accepted ? (
@@ -238,7 +238,7 @@ export default async function MemberProfilePage({
             ) : null}
           </div>
         ) : (
-          <span className="member-profile-lock">Mutual consent required</span>
+          <span className="member-profile-lock">Available after you connect</span>
         )}
       </section>
     </main>

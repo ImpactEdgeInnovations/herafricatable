@@ -672,11 +672,11 @@ export function NetworkHub({
       {connections.length ? (
         <section className="network-connections">
           <div>
-            <p className="eyebrow">Your network</p>
-            <h2>People and relationships</h2>
+            <p className="eyebrow">Your connections</p>
+            <h2>People you know</h2>
             <p className="network-section-intro">
-              Keep requests, active conversations and your private follow-up
-              history easy to find.
+              Invitations, conversations and private reminders stay together
+              here.
             </p>
           </div>
           <div className="network-connection-workspace">
@@ -689,17 +689,17 @@ export function NetworkHub({
                   {
                     count: requestConnections.length,
                     id: "requests",
-                    label: "Requests",
+                    label: "Invitations",
                   },
                   {
                     count: acceptedConnections.length,
                     id: "connections",
-                    label: "Connections",
+                    label: "People you know",
                   },
                   {
                     count: historyConnections.length,
                     id: "history",
-                    label: "Private history",
+                    label: "Notes & reminders",
                   },
                 ] as { count: number; id: NetworkView; label: string }[]
               ).map((view) => (
@@ -803,8 +803,8 @@ export function NetworkHub({
                       >
                         <span>
                           {followup.is_due
-                            ? "Follow-up due"
-                            : "Your private plan"}
+                            ? "Reminder due"
+                            : "Your reminder"}
                         </span>
                         {followup.next_step ? (
                           <strong>{followup.next_step}</strong>
@@ -824,7 +824,7 @@ export function NetworkHub({
                     {item.status === "accepted" &&
                     connectionOutcomes.length ? (
                       <div className="connection-outcomes">
-                        <span>What this connection led to</span>
+                        <span>What happened next</span>
                         {connectionOutcomes.map((outcome) => (
                           <div
                             className="connection-outcome"
@@ -842,8 +842,8 @@ export function NetworkHub({
                                 )}
                                 {" · "}
                                 {outcome.share_anonymously
-                                  ? "Eligible for anonymous totals"
-                                  : "Completely private"}
+                                  ? "Included anonymously in totals"
+                                  : "Only you can see this"}
                               </small>
                               <p>{outcome.private_detail}</p>
                             </div>
@@ -920,7 +920,7 @@ export function NetworkHub({
                           )
                         }
                       >
-                        {followup ? "Edit follow-up" : "Plan follow-up"}
+                        {followup ? "Edit reminder" : "Add reminder"}
                       </button>
                       <button
                         disabled={busy !== ""}
@@ -931,7 +931,7 @@ export function NetworkHub({
                           )
                         }
                       >
-                        Record outcome
+                        Add result
                       </button>
                       <details className="network-more-actions">
                         <summary>More options</summary>
@@ -943,7 +943,7 @@ export function NetworkHub({
                                 void completeFollowup(item.connection_id)
                               }
                             >
-                              Mark follow-up done
+                              Mark reminder done
                             </button>
                           ) : null}
                           {followup ? (
@@ -953,7 +953,7 @@ export function NetworkHub({
                                 void removeFollowup(item.connection_id)
                               }
                             >
-                              Clear private plan
+                              Remove reminder
                             </button>
                           ) : null}
                           <button
@@ -995,17 +995,17 @@ export function NetworkHub({
               <div className="network-view-empty">
                 <strong>
                   {networkView === "requests"
-                    ? "No requests waiting"
+                      ? "No invitations waiting"
                     : networkView === "history"
-                      ? "No private relationship history yet"
-                      : "No active connections yet"}
+                      ? "No notes or reminders yet"
+                      : "No connections yet"}
                 </strong>
                 <p>
                   {networkView === "requests"
-                    ? "New requests you send or receive will stay together here."
+                    ? "New invitations you send or receive will appear here."
                     : networkView === "history"
-                      ? "Private plans and outcomes will appear here after you add them to a connection."
-                      : "Discover a relevant member below and send a thoughtful introduction."}
+                      ? "Private reminders and results will appear here when you add them."
+                      : "Choose someone below and ask to connect when it feels relevant."}
                 </p>
               </div>
             )}
@@ -1137,17 +1137,16 @@ export function NetworkHub({
         <section className="member-suggestions">
           <header>
             <div>
-              <p className="eyebrow">A thoughtful starting point</p>
-              <h2>People you may want to meet</h2>
+              <p className="eyebrow">Suggested for you</p>
+              <h2>Start with these members</h2>
               <p>
-                Suggestions use the goals and professional details members
-                choose to share. They are not endorsements or popularity
-                rankings.
+                Take a look at their profiles. If someone feels relevant, ask
+                to connect—there is no pressure.
               </p>
             </div>
           </header>
           <div>
-            {suggestedMembers.map((member) => (
+            {suggestedMembers.slice(0, 3).map((member) => (
               <article key={member.user_id}>
                 <span className="directory-avatar">
                   {member.avatar_url ? (
@@ -1172,7 +1171,7 @@ export function NetworkHub({
                   </strong>
                 </div>
                 <div className="suggestion-reasons">
-                  <small>Why this suggestion</small>
+                  <small>You may have something in common</small>
                   {member.match_reasons.map((reason) => (
                     <span key={reason}>{reason}</span>
                   ))}
@@ -1186,10 +1185,10 @@ export function NetworkHub({
                     onClick={() => void request(member.user_id, null)}
                   >
                     {connectionModeFor(member.user_id) === "open"
-                      ? "Request introduction"
+                      ? "Ask to connect"
                       : connectionModeFor(member.user_id) === "curated_only"
-                        ? "Curated introductions only"
-                        : "Not accepting requests"}
+                        ? "Introductions through HAT"
+                        : "Not available right now"}
                   </button>
                   <button
                     disabled={busy !== ""}
@@ -1200,7 +1199,7 @@ export function NetworkHub({
                       )
                     }
                   >
-                    Save for later
+                    Save
                   </button>
                 </div>
               </article>
@@ -1209,26 +1208,35 @@ export function NetworkHub({
         </section>
       ) : null}
       <section className="member-directory">
+        <details
+          className="member-directory-browser"
+          open={Boolean(searchQuery || cityFilter || goalFilter)}
+        >
+          <summary>
+            <span>Browse all members</span>
+            <small>Search by name, work, location or what matters to you</small>
+          </summary>
+          <div className="member-directory-content">
         <header>
           <div>
-            <p className="eyebrow">Discover members</p>
-            <h2>Find someone to connect with.</h2>
+            <p className="eyebrow">All members</p>
+            <h2>Who would you like to meet?</h2>
             <p>
-              Search by name, role, company, industry, or city.
+              Use one or two details. You can always change your search.
             </p>
           </div>
           <form className="directory-filters" method="get">
             <label>
-              <span>Search</span>
+              <span>Name or work</span>
               <input
                 defaultValue={searchQuery}
                 id="member-search"
                 name="q"
-                placeholder="Role, company or industry"
+                placeholder="Name, role or company"
               />
             </label>
             <label>
-              <span>City</span>
+              <span>Location</span>
               <input
                 defaultValue={cityFilter}
                 name="city"
@@ -1236,7 +1244,7 @@ export function NetworkHub({
               />
             </label>
             <label>
-              <span>Current goal</span>
+              <span>What would you like?</span>
               <select defaultValue={goalFilter} name="goal">
                 <option value="">Any goal</option>
                 {Object.entries(goalLabels).map(([value, label]) => (
@@ -1247,7 +1255,7 @@ export function NetworkHub({
               </select>
             </label>
             <div>
-              <button type="submit">Find members</button>
+              <button type="submit">Show members</button>
               {searchQuery || cityFilter || goalFilter ? (
                 <a href="/network">Clear</a>
               ) : null}
@@ -1282,7 +1290,7 @@ export function NetworkHub({
                   <p>{member.bio}</p>
                   {member.goals.length ? (
                     <div className="directory-intent">
-                      <small>Here for</small>
+                      <small>Would like to</small>
                       <strong>
                         {member.goals
                           .slice(0, 2)
@@ -1303,7 +1311,7 @@ export function NetworkHub({
                   className="directory-profile-link"
                   href={`/members/${member.user_id}`}
                 >
-                  View full profile
+                  See profile
                 </Link>
                 <div className="directory-card-actions">
                   <button
@@ -1320,11 +1328,11 @@ export function NetworkHub({
                       : member.connection_status === "pending"
                         ? "Request pending"
                         : connectionModeFor(member.user_id) === "open"
-                          ? "Request introduction"
+                          ? "Ask to connect"
                           : connectionModeFor(member.user_id) ===
                               "curated_only"
-                            ? "Curated introductions only"
-                            : "Not accepting requests"}
+                            ? "Introductions through HAT"
+                            : "Not available right now"}
                   </button>
                   {savedMembers.some(
                     (saved) => saved.user_id === member.user_id,
@@ -1345,26 +1353,28 @@ export function NetworkHub({
                         )
                       }
                     >
-                      Save for later
+                      Save
                     </button>
                   )}
                 </div>
                 <small className="directory-privacy-note">
                   {connectionModeFor(member.user_id) === "open"
-                    ? "Messaging opens only after she accepts."
+                    ? "Messaging opens when you both agree."
                     : connectionModeFor(member.user_id) === "curated_only"
-                      ? "She welcomes only introductions proposed by Her Africa Table."
-                      : "She has paused new introductions for now."}
+                      ? "Her Africa Table can make an introduction."
+                      : "She is taking a pause from new connections."}
                 </small>
               </article>
             ))}
           </div>
         ) : (
           <div className="admin-empty">
-            <strong>No members match this search</strong>
-            <p>Try a broader role, company, industry, or city.</p>
+            <strong>No one matches this search yet</strong>
+            <p>Try fewer words or remove one of the filters.</p>
           </div>
         )}
+          </div>
+        </details>
       </section>
       <details className="network-code-tools">
         <summary>
