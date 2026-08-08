@@ -22,17 +22,27 @@ export default async function CommunitiesPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
-  const [{ data: profile }, { data: flag }, applicationResult] =
+  const [
+    { data: profile },
+    { data: flag },
+    { data: acceptanceFlag },
+    applicationResult,
+  ] =
     await Promise.all([
       supabase
         .from("profiles")
-        .select("access_status")
+        .select("access_status, is_test_account")
         .eq("id", user.id)
         .maybeSingle(),
       supabase
         .from("feature_flags")
         .select("enabled")
         .eq("key", "communities")
+        .maybeSingle(),
+      supabase
+        .from("feature_flags")
+        .select("enabled")
+        .eq("key", "community_acceptance_mode")
         .maybeSingle(),
       supabase.rpc("list_my_community_host_applications"),
     ]);
@@ -42,7 +52,10 @@ export default async function CommunitiesPage() {
   const applications =
     (applicationResult.data as CommunityHostApplicationState[] | null) ?? [];
 
-  if (!flag?.enabled) {
+  const communityAvailable =
+    flag?.enabled || (profile?.is_test_account && acceptanceFlag?.enabled);
+
+  if (!communityAvailable) {
     return (
       <main className="community-page">
         <MemberHeader active="community" label="Community" />

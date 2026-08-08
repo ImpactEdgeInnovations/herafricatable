@@ -17,11 +17,13 @@ export type CommunityMember = {
   created_at: string;
 };
 export function CommunityManager({
+  acceptanceMode,
   communities,
   members,
   enabled,
   migrationReady,
 }: {
+  acceptanceMode: boolean;
   communities: CommunitySummary[];
   members: CommunityMember[];
   enabled: boolean;
@@ -45,6 +47,34 @@ export function CommunityManager({
       error
         ? adminErrorMessage(error, "change Community availability")
         : `Communities ${enabled ? "disabled" : "enabled"}.`,
+    );
+    if (!error) router.refresh();
+  }
+  async function toggleAcceptanceMode() {
+    const result = await ask({
+      title: acceptanceMode
+        ? "End the Community rehearsal?"
+        : "Open Community rehearsal for test accounts?",
+      description: acceptanceMode
+        ? "Tagged test accounts will immediately lose Community access. Their memberships, posts and evidence remain preserved."
+        : "Only active accounts explicitly tagged as test accounts can enter Community. Real members remain blocked until the release checks pass.",
+      confirmLabel: acceptanceMode ? "End rehearsal" : "Start controlled rehearsal",
+      tone: acceptanceMode ? "danger" : "default",
+    });
+    if (!result) return;
+    setBusy("acceptance-mode");
+    setMessage("");
+    const { error } = await supabase.rpc("set_feature_flag", {
+      p_enabled: !acceptanceMode,
+      p_key: "community_acceptance_mode",
+    });
+    setBusy("");
+    setMessage(
+      error
+        ? adminErrorMessage(error, "change the Community rehearsal boundary")
+        : acceptanceMode
+          ? "Community rehearsal ended. Test data remains preserved."
+          : "Controlled rehearsal is open only to tagged test accounts.",
     );
     if (!error) router.refresh();
   }
@@ -192,6 +222,29 @@ export function CommunityManager({
           {enabled ? "Disable member access" : "Enable after sign-off"}
         </button>
       </div>
+      <aside className={`community-acceptance-mode ${acceptanceMode ? "is-active" : ""}`}>
+        <div>
+          <span>{acceptanceMode ? "Test rehearsal active" : "Test rehearsal closed"}</span>
+          <strong>Prove Community before real members can enter.</strong>
+          <p>
+            This boundary admits tagged test accounts only. Use it for the
+            two-member journey, privacy checks, Admin support and pause/recovery
+            rehearsal; it never opens Community to real members.
+          </p>
+        </div>
+        <button
+          className={acceptanceMode ? "danger-action" : "button button-outline"}
+          disabled={busy === "acceptance-mode"}
+          onClick={() => void toggleAcceptanceMode()}
+          type="button"
+        >
+          {busy === "acceptance-mode"
+            ? "Updating…"
+            : acceptanceMode
+              ? "End rehearsal"
+              : "Start test rehearsal"}
+        </button>
+      </aside>
       <div className="community-admin-layout">
         <form
           onSubmit={(event) => void save(event)}
@@ -347,7 +400,7 @@ export function CommunityManager({
                     </button>
                   ) : null}
                 </div>
-              </section>
+  </section>
               <div>
                 {scoped.map((member) => (
                   <article key={member.membership_id}>

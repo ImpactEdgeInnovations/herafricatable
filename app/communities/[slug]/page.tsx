@@ -57,12 +57,27 @@ export default async function CommunityPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
-  const { data: flag } = await supabase
-    .from("feature_flags")
-    .select("enabled")
-    .eq("key", "communities")
-    .maybeSingle();
-  if (!flag?.enabled) redirect("/communities");
+  const [{ data: profile }, { data: flag }, { data: acceptanceFlag }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("is_test_account")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("feature_flags")
+        .select("enabled")
+        .eq("key", "communities")
+        .maybeSingle(),
+      supabase
+        .from("feature_flags")
+        .select("enabled")
+        .eq("key", "community_acceptance_mode")
+        .maybeSingle(),
+    ]);
+  const communityAvailable =
+    flag?.enabled || (profile?.is_test_account && acceptanceFlag?.enabled);
+  if (!communityAvailable) redirect("/communities");
   const communitiesResult = await supabase.rpc("list_communities");
   const community = (
     (communitiesResult.data as CommunitySummary[] | null) ?? []

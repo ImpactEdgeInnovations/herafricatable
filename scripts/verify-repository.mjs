@@ -1311,6 +1311,20 @@ assert(
 const moduleReleaseMigration = read(
   "supabase/migrations/20260803050000_module_release_acceptance.sql",
 );
+const communityAcceptanceModeMigration = read(
+  "supabase/migrations/20260805010000_community_acceptance_mode.sql",
+);
+for (const contract of [
+  "community_acceptance_mode",
+  "profile.is_test_account",
+  "profile.access_status = 'active'",
+  "communities_enabled",
+]) {
+  assert(
+    communityAcceptanceModeMigration.includes(contract),
+    `Community controlled rehearsal must include ${contract}`,
+  );
+}
 for (const contract of [
   "module_release_checks",
   "list_module_release_acceptance",

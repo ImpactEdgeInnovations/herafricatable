@@ -531,6 +531,11 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Complete Creator Commerce admission/payment/entitlement/payout-boundary
       acceptance and deliberately enable its feature flag
 - [ ] Complete Communities host/moderation acceptance and deliberately enable its P1 flag
+- [x] Add a fail-closed Community rehearsal mode that admits only active tagged
+      test accounts while real-member Community access remains disabled
+- [ ] Apply `20260805010000_community_acceptance_mode.sql`, run the four module
+      checks with the existing two-member/host/moderator cohort, record evidence,
+      then end rehearsal before deciding whether to enable Communities
 - [ ] Apply `20260725130000_learning_foundation.sql` in production Supabase
 - [ ] Complete Learning content/access/payment acceptance and deliberately enable its P1 flag
 - [ ] Apply `20260725170000_referrals_vouched_invitations.sql` in production Supabase

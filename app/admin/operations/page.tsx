@@ -345,6 +345,7 @@ export default async function AdminOperationsPage({
     communityResult,
     communityHostApplicationResult,
     featureFlagResult,
+    communityAcceptanceFlagResult,
     communityHostPlanResult,
     communityCommerceResult,
     communityOrderResult,
@@ -399,6 +400,13 @@ export default async function AdminOperationsPage({
           .from("feature_flags")
           .select("enabled")
           .eq("key", "communities")
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    isProgramAdmin
+      ? supabase
+          .from("feature_flags")
+          .select("enabled")
+          .eq("key", "community_acceptance_mode")
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     isProgramAdmin
@@ -1041,12 +1049,14 @@ export default async function AdminOperationsPage({
             migrationReady={!communityHostApplicationResult.error}
           />
           <CommunityManager
+            acceptanceMode={Boolean(communityAcceptanceFlagResult.data?.enabled)}
             communities={communities}
             members={communityMembers}
             enabled={Boolean(featureFlagResult.data?.enabled)}
             migrationReady={
               !communityResult.error &&
               !featureFlagResult.error &&
+              !communityAcceptanceFlagResult.error &&
               communityMemberResults.every((result) => !result.error)
             }
           />

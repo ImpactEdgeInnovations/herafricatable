@@ -491,6 +491,29 @@ const communityFinancialStatement = read(
 );
 const communityDirectory = read("components/member/community-directory.tsx");
 const communityPage = read("app/communities/page.tsx");
+const communityRoomPage = read("app/communities/[slug]/page.tsx");
+const communityManager = read("components/admin/community-manager.tsx");
+for (const contract of [
+  "community_acceptance_mode",
+  "is_test_account",
+  "communityAvailable",
+]) {
+  assert(
+    communityPage.includes(contract) && communityRoomPage.includes(contract),
+    `Community pages must enforce controlled rehearsal through ${contract}`,
+  );
+}
+for (const contract of [
+  "Test rehearsal active",
+  "Start test rehearsal",
+  "tagged test accounts only",
+  "community_acceptance_mode",
+]) {
+  assert(
+    communityManager.includes(contract),
+    `Community Admin rehearsal UX must include ${contract}`,
+  );
+}
 const communityHostApplication = read(
   "components/member/community-host-application.tsx",
 );

@@ -3,6 +3,19 @@
 Communities are a controlled P1 module. Applying the migration does **not** expose
 them to members: the `communities` feature flag starts disabled.
 
+## Controlled test rehearsal
+
+Apply `supabase/migrations/20260805010000_community_acceptance_mode.sql`, then
+open **Admin → Programmes → Communities** and select **Start test rehearsal**.
+This does not enable Communities for real members. It extends the database access
+boundary only to active profiles explicitly tagged as test accounts, allowing the
+two-member, host and backup-moderator cohort to complete release acceptance before
+the public feature flag can be enabled.
+
+End rehearsal after each acceptance session. Memberships, test posts and audit
+evidence remain preserved, while tagged test accounts immediately lose room access.
+Never remove the test-account tag to increase product-readiness totals.
+
 ## Release sequence
 
 1. Apply `supabase/migrations/20260725090000_communities_foundation.sql`.

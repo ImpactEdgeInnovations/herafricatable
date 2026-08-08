@@ -11564,6 +11564,60 @@ body {
   grid-template-columns: 380px 1fr;
   gap: 45px;
 }
+.community-acceptance-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 28px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  gap: 30px;
+}
+.community-acceptance-mode.is-active {
+  border-color: rgba(47, 121, 87, 0.32);
+  background: rgba(47, 121, 87, 0.055);
+}
+.community-acceptance-mode > div {
+  display: grid;
+  gap: 5px;
+}
+.community-acceptance-mode span {
+  color: var(--gold);
+  font-size: 0.54rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.community-acceptance-mode.is-active span {
+  color: var(--success);
+}
+.community-acceptance-mode strong {
+  font-family: var(--serif);
+  font-size: 1.22rem;
+  font-weight: 500;
+}
+.community-acceptance-mode p {
+  max-width: 710px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.65rem;
+  line-height: 1.55;
+}
+.community-acceptance-mode > button {
+  flex: 0 0 auto;
+}
+@media (max-width: 700px) {
+  .community-acceptance-mode {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .community-acceptance-mode > button {
+    width: 100%;
+  }
+}
 .community-admin-layout > form,
 .community-invite {
   display: grid;
