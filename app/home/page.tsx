@@ -308,9 +308,6 @@ export default async function MemberHomePage() {
         acceptedConnections >= 2,
       ].filter(Boolean).length
     : 0;
-  const journeyComplete = tableJourney
-    ? Math.min(Number(tableJourney.completed_steps), 5)
-    : activationComplete;
   const feedbackPrompt = (
     (pastEventResult.data as
       | { feedback_id: string | null; slug: string; title: string }[]
@@ -631,15 +628,6 @@ export default async function MemberHomePage() {
                 {unreadNotifications ? "See what changed" : "Nothing needs attention"}
               </small>
             </Link>
-            <Link href="/home#table-journey">
-              <span>Your Table Journey</span>
-              <strong>{journeyComplete}/5</strong>
-              <small>
-                {journeyComplete === 5
-                  ? "Journey established"
-                  : "Continue your next step"}
-              </small>
-            </Link>
           </div>
         </section>
       ) : null}
@@ -711,6 +699,23 @@ export default async function MemberHomePage() {
           </div>
         )}
       </section>
+      {accessStatus === "active" || isApproved || feedbackPrompt || orders.length ? (
+        <details className="member-home-secondary">
+          <summary>
+            <div>
+              <p className="eyebrow">Your progress and more</p>
+              <h2>Everything else is here when you need it.</h2>
+              <p>
+                See your Table Journey, member tools, private feedback and past
+                orders without crowding your home page.
+              </p>
+            </div>
+            <span>
+              <span className="when-closed">Show more</span>
+              <span className="when-open">Show less</span>
+            </span>
+          </summary>
+          <div className="member-home-secondary-content">
       {accessStatus === "active" && tableJourney && !tableJourneyResult.error ? (
         <TableJourney
           communityAvailable={communityEnabled}
@@ -1020,6 +1025,9 @@ export default async function MemberHomePage() {
           orders={orders}
           refundOrderIds={(refunds ?? []).map((refund) => refund.order_id)}
         />
+      ) : null}
+          </div>
+        </details>
       ) : null}
     </main>
   );

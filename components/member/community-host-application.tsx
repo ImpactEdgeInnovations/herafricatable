@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -80,6 +80,19 @@ const categoryLabels: Record<string, string> = {
   wellbeing: "Wellbeing",
 };
 
+const admissionLabels: Record<string, string> = {
+  application_review: "You approve each request",
+  invitation_only: "Only invited members can join",
+  open_request: "Anyone can request to join",
+};
+
+const applicationSteps = [
+  { label: "Your idea", shortLabel: "Idea" },
+  { label: "The people", shortLabel: "People" },
+  { label: "How you will lead", shortLabel: "Leadership" },
+  { label: "Review and send", shortLabel: "Review" },
+];
+
 export function CommunityHostApplication({
   applications,
   migrationReady,
@@ -100,9 +113,76 @@ export function CommunityHostApplication({
   const [open, setOpen] = useState(current?.status === "changes_requested");
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
+  const [step, setStep] = useState(0);
+  const [furthestStep, setFurthestStep] = useState(0);
+  const [reviewValues, setReviewValues] = useState<Record<string, string>>({});
+  const formRef = useRef<HTMLFormElement>(null);
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (open && stepHeadingRef.current) {
+      stepHeadingRef.current.focus();
+      stepHeadingRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [open, step]);
+
+  function readApplication() {
+    if (!formRef.current) return {};
+    return Object.fromEntries(
+      Array.from(new FormData(formRef.current).entries()).map(([key, value]) => [
+        key,
+        String(value),
+      ]),
+    );
+  }
+
+  function openApplication() {
+    setStep(0);
+    setFurthestStep(0);
+    setOpen(true);
+  }
+
+  function closeApplication() {
+    setOpen(false);
+  }
+
+  function nextStep() {
+    const panel = formRef.current?.querySelector<HTMLElement>(
+      `[data-host-step="${step}"]`,
+    );
+    const fields = panel?.querySelectorAll<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >("input, select, textarea");
+    if (fields) {
+      for (const field of fields) {
+        if (!field.checkValidity()) {
+          field.reportValidity();
+          field.focus();
+          return;
+        }
+      }
+    }
+    const next = Math.min(step + 1, applicationSteps.length - 1);
+    if (next === applicationSteps.length - 1) {
+      setReviewValues(readApplication());
+    }
+    setStep(next);
+    setFurthestStep((currentStep) => Math.max(currentStep, next));
+  }
+
+  function previousStep() {
+    setStep((currentStep) => Math.max(0, currentStep - 1));
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (step < applicationSteps.length - 1) {
+      nextStep();
+      return;
+    }
     const form = new FormData(event.currentTarget);
     setBusy("save");
     setMessage("");
@@ -131,7 +211,7 @@ export function CommunityHostApplication({
           : "Application sent. You can follow its progress here.",
     );
     if (!error) {
-      setOpen(false);
+      closeApplication();
       router.refresh();
     }
   }
@@ -159,7 +239,7 @@ export function CommunityHostApplication({
         : "Application withdrawn. You can create a new proposal at any time.",
     );
     if (!error) {
-      setOpen(false);
+      closeApplication();
       router.refresh();
     }
   }
@@ -185,7 +265,7 @@ export function CommunityHostApplication({
   const canBegin = !current || ["declined", "withdrawn"].includes(current.status);
   const showForm = open && (canBegin || editable);
   const showJourney =
-    open || Boolean(current && current.status !== "approved");
+    !showForm && Boolean(current && current.status !== "approved");
   const defaults = editable ? current : null;
 
   return (
@@ -209,9 +289,9 @@ export function CommunityHostApplication({
         ) : (
           <button
             className="button button-primary"
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => (open ? closeApplication() : openApplication())}
           >
-            {open ? "Close application" : "Apply to start a community"}
+            {open ? "Close" : "Start your application"}
           </button>
         )}
       </div>
@@ -287,13 +367,15 @@ export function CommunityHostApplication({
               <>
                 <button
                   className="button button-primary"
-                  onClick={() => setOpen((value) => !value)}
+                  onClick={() =>
+                    open ? closeApplication() : openApplication()
+                  }
                 >
                   {open
-                    ? "Close editor"
+                    ? "Close"
                     : current.status === "changes_requested"
                       ? "Update and resubmit"
-                      : "Edit application"}
+                      : "Continue application"}
                 </button>
                 <button
                   className="button button-quiet"
@@ -312,161 +394,280 @@ export function CommunityHostApplication({
         <form
           className="community-host-form"
           onSubmit={(event) => void submit(event)}
+          ref={formRef}
         >
           <header>
             <p className="eyebrow">
-              {editable ? "Update your application" : "Community leader application"}
+              {editable ? "Update your application" : "Start a Community"}
             </p>
-            <h3>Tell us about the community you want to lead.</h3>
+            <h3>Let’s shape your Community together.</h3>
             <p>
-              Use clear, everyday language. You can edit the application until
-              our review begins.
+              Four short steps. Your answers stay here as you move back and
+              forward, and nothing is sent until you confirm at the end.
             </p>
           </header>
-          <div className="community-host-form-grid">
-            <label>
-              Community name
-              <input
-                defaultValue={defaults?.community_name ?? ""}
-                maxLength={80}
-                minLength={3}
-                name="community_name"
-                placeholder="e.g. Women Building in Climate"
-                required
-              />
-            </label>
-            <label>
-              Main focus
-              <select
-                defaultValue={defaults?.category ?? ""}
-                name="category"
-                required
-              >
-                <option disabled value="">
-                  Choose one
-                </option>
-                {Object.entries(categoryLabels).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="span-two">
-              Why should this community exist?
-              <textarea
-                defaultValue={defaults?.purpose ?? ""}
-                maxLength={1200}
-                minLength={40}
-                name="purpose"
-                placeholder="Describe the shared purpose and what members should gain from belonging."
-                required
-                rows={5}
-              />
-            </label>
-            <label className="span-two">
-              Who is it for?
-              <textarea
-                defaultValue={defaults?.intended_members ?? ""}
-                maxLength={600}
-                minLength={20}
-                name="intended_members"
-                placeholder="Describe the women who would benefit and any important eligibility boundaries."
-                required
-                rows={3}
-              />
-            </label>
-            <label>
-              How many members do you expect in the first year?
-              <input
-                defaultValue={defaults?.expected_members ?? 20}
-                max={100000}
-                min={5}
-                name="expected_members"
-                required
-                type="number"
-              />
-            </label>
-            <label>
-              How should members enter?
-              <select
-                defaultValue={
-                  defaults?.admission_model ?? "application_review"
-                }
-                name="admission_model"
-                required
-              >
-                <option value="application_review">
-                  Host reviews every request
-                </option>
-                <option value="invitation_only">Invitation only</option>
-                <option value="open_request">
-                  Open requests with light review
-                </option>
-              </select>
-            </label>
-            <label className="span-two">
-              What experience will help you lead this community?
-              <textarea
-                defaultValue={defaults?.host_experience ?? ""}
-                maxLength={1000}
-                minLength={20}
-                name="host_experience"
-                placeholder="Tell us about relevant leadership, community or subject experience."
-                required
-                rows={3}
-              />
-            </label>
-            <label className="span-two">
-              How will you keep the community useful and safe?
-              <textarea
-                defaultValue={defaults?.safety_plan ?? ""}
-                maxLength={1200}
-                minLength={40}
-                name="safety_plan"
-                placeholder="Explain the rules you will set, how you will check posts and how you will handle a concern."
-                required
-                rows={4}
-              />
-            </label>
-            <label className="span-two">
-              Anything else we should know? <small>Optional</small>
-              <textarea
-                defaultValue={defaults?.applicant_message ?? ""}
-                maxLength={1000}
-                name="applicant_message"
-                placeholder="Add context, timing or links you would like the review team to consider."
-                rows={3}
-              />
-            </label>
-          </div>
-          <label className="community-host-consent">
-            <input name="accept_guidelines" required type="checkbox" />
-            <span>
-              I will follow the{" "}
-              <Link href="/community-guidelines">Community Guidelines</Link> and
-              understand that approval creates a private community for setup.
-              It does not open to members automatically.
+          <nav
+            aria-label="Application progress"
+            className="community-host-form-progress"
+          >
+            <div>
+              <span>
+                Step {step + 1} of {applicationSteps.length}
+              </span>
+              <strong>{applicationSteps[step].label}</strong>
+            </div>
+            <ol>
+              {applicationSteps.map((item, index) => (
+                <li className={index < step ? "is-complete" : ""} key={item.label}>
+                  <button
+                    aria-current={index === step ? "step" : undefined}
+                    disabled={index > furthestStep}
+                    onClick={() => {
+                      if (index === applicationSteps.length - 1) {
+                        setReviewValues(readApplication());
+                      }
+                      setStep(index);
+                    }}
+                    type="button"
+                  >
+                    <span>{index + 1}</span>
+                    <small>{item.shortLabel}</small>
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <span aria-hidden="true" className="community-host-form-progress-line">
+              <i style={{ width: `${(step / (applicationSteps.length - 1)) * 100}%` }} />
             </span>
-          </label>
+          </nav>
+
+          <div className="community-host-form-carousel">
+            <section
+              aria-labelledby="community-host-step-idea"
+              data-host-step="0"
+              hidden={step !== 0}
+            >
+              <div className="community-host-step-heading">
+                <span>01</span>
+                <div>
+                  <h4 id="community-host-step-idea" ref={step === 0 ? stepHeadingRef : undefined} tabIndex={-1}>
+                    What would you like to bring people together around?
+                  </h4>
+                  <p>Start with a clear name and one shared purpose.</p>
+                </div>
+              </div>
+              <div className="community-host-form-grid">
+                <label>
+                  Community name
+                  <input
+                    defaultValue={defaults?.community_name ?? ""}
+                    maxLength={80}
+                    minLength={3}
+                    name="community_name"
+                    placeholder="e.g. Women Building in Climate"
+                    required
+                  />
+                  <small>Choose a name members will understand immediately.</small>
+                </label>
+                <label>
+                  Main focus
+                  <select defaultValue={defaults?.category ?? ""} name="category" required>
+                    <option disabled value="">Choose one</option>
+                    {Object.entries(categoryLabels).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="span-two">
+                  Why should this Community exist?
+                  <textarea
+                    defaultValue={defaults?.purpose ?? ""}
+                    maxLength={1200}
+                    minLength={40}
+                    name="purpose"
+                    placeholder="What will bring members together, and what should they gain from belonging?"
+                    required
+                    rows={5}
+                  />
+                  <small>A few honest sentences are enough.</small>
+                </label>
+              </div>
+            </section>
+
+            <section
+              aria-labelledby="community-host-step-people"
+              data-host-step="1"
+              hidden={step !== 1}
+            >
+              <div className="community-host-step-heading">
+                <span>02</span>
+                <div>
+                  <h4 id="community-host-step-people" ref={step === 1 ? stepHeadingRef : undefined} tabIndex={-1}>
+                    Who should feel at home here?
+                  </h4>
+                  <p>Describe the members and how you would like them to join.</p>
+                </div>
+              </div>
+              <div className="community-host-form-grid">
+                <label className="span-two">
+                  Who is it for?
+                  <textarea
+                    defaultValue={defaults?.intended_members ?? ""}
+                    maxLength={600}
+                    minLength={20}
+                    name="intended_members"
+                    placeholder="Describe the women who would benefit and any important boundaries."
+                    required
+                    rows={4}
+                  />
+                </label>
+                <label>
+                  About how many members in the first year?
+                  <input
+                    defaultValue={defaults?.expected_members ?? 20}
+                    max={100000}
+                    min={5}
+                    name="expected_members"
+                    required
+                    type="number"
+                  />
+                </label>
+                <label>
+                  How should people join?
+                  <select defaultValue={defaults?.admission_model ?? "application_review"} name="admission_model" required>
+                    <option value="application_review">I approve each request</option>
+                    <option value="invitation_only">Only invited members can join</option>
+                    <option value="open_request">Anyone can request to join</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <section
+              aria-labelledby="community-host-step-leadership"
+              data-host-step="2"
+              hidden={step !== 2}
+            >
+              <div className="community-host-step-heading">
+                <span>03</span>
+                <div>
+                  <h4 id="community-host-step-leadership" ref={step === 2 ? stepHeadingRef : undefined} tabIndex={-1}>
+                    How will you care for this Community?
+                  </h4>
+                  <p>Tell us how you will lead, welcome people and handle concerns.</p>
+                </div>
+              </div>
+              <div className="community-host-form-grid">
+                <label className="span-two">
+                  What experience will help you lead?
+                  <textarea
+                    defaultValue={defaults?.host_experience ?? ""}
+                    maxLength={1000}
+                    minLength={20}
+                    name="host_experience"
+                    placeholder="Share any leadership, Community or subject experience that will help."
+                    required
+                    rows={4}
+                  />
+                </label>
+                <label className="span-two">
+                  How will you keep it useful and safe?
+                  <textarea
+                    defaultValue={defaults?.safety_plan ?? ""}
+                    maxLength={1200}
+                    minLength={40}
+                    name="safety_plan"
+                    placeholder="What rules will you set? How will you welcome members and respond when something goes wrong?"
+                    required
+                    rows={5}
+                  />
+                </label>
+                <label className="span-two">
+                  Anything else we should know? <small>Optional</small>
+                  <textarea
+                    defaultValue={defaults?.applicant_message ?? ""}
+                    maxLength={1000}
+                    name="applicant_message"
+                    placeholder="Add useful timing, context or links."
+                    rows={3}
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section
+              aria-labelledby="community-host-step-review"
+              data-host-step="3"
+              hidden={step !== 3}
+            >
+              <div className="community-host-step-heading">
+                <span>04</span>
+                <div>
+                  <h4 id="community-host-step-review" ref={step === 3 ? stepHeadingRef : undefined} tabIndex={-1}>
+                    Does this feel right?
+                  </h4>
+                  <p>Read through your idea. You can go back and change anything before sending it.</p>
+                </div>
+              </div>
+              <div className="community-host-application-review">
+                <article>
+                  <span>Your idea</span>
+                  <h5>{reviewValues.community_name || "Community name"}</h5>
+                  <small>{categoryLabels[reviewValues.category] || "Main focus"}</small>
+                  <p>{reviewValues.purpose || "Your shared purpose will appear here."}</p>
+                  <button onClick={() => setStep(0)} type="button">Change</button>
+                </article>
+                <article>
+                  <span>The people</span>
+                  <h5>{reviewValues.expected_members || "20"} members in the first year</h5>
+                  <small>{admissionLabels[reviewValues.admission_model] || "How people will join"}</small>
+                  <p>{reviewValues.intended_members || "Who the Community is for will appear here."}</p>
+                  <button onClick={() => setStep(1)} type="button">Change</button>
+                </article>
+                <article>
+                  <span>Your leadership</span>
+                  <h5>How you will lead and keep people safe</h5>
+                  <p>{reviewValues.host_experience || "Your experience will appear here."}</p>
+                  <p>{reviewValues.safety_plan || "Your care and safety plan will appear here."}</p>
+                  <button onClick={() => setStep(2)} type="button">Change</button>
+                </article>
+              </div>
+              <label className="community-host-consent">
+                <input name="accept_guidelines" required type="checkbox" />
+                <span>
+                  I will follow the{" "}
+                  <Link href="/community-guidelines">Community Guidelines</Link>.
+                  I understand that an approved Community is prepared privately
+                  before members can join.
+                </span>
+              </label>
+            </section>
+          </div>
           <footer>
-            <button
-              className="button button-primary"
-              disabled={busy === "save"}
-            >
-              {busy === "save"
-                ? "Sending application…"
-                : editable
-                  ? "Save and resubmit"
-                  : "Send application"}
-            </button>
-            <button
-              className="button button-quiet"
-              onClick={() => setOpen(false)}
-              type="button"
-            >
-              Cancel and close
-            </button>
+            <div>
+              {step > 0 ? (
+                <button className="button button-quiet" onClick={previousStep} type="button">
+                  <span aria-hidden="true">←</span> Back
+                </button>
+              ) : (
+                <button className="button button-quiet" onClick={closeApplication} type="button">
+                  Close for now
+                </button>
+              )}
+            </div>
+            {step < applicationSteps.length - 1 ? (
+              <button className="button button-primary" onClick={nextStep} type="button">
+                Continue <span aria-hidden="true">→</span>
+              </button>
+            ) : (
+              <button className="button button-primary" disabled={busy === "save"}>
+                {busy === "save"
+                  ? "Sending…"
+                  : editable
+                    ? "Send updated application"
+                    : "Send my application"}
+              </button>
+            )}
           </footer>
         </form>
       ) : null}
@@ -474,7 +675,7 @@ export function CommunityHostApplication({
       {!current && applications.length > 0 ? (
         <button
           className="community-host-new-proposal"
-          onClick={() => setOpen(true)}
+          onClick={openApplication}
         >
           Start a new community application
         </button>

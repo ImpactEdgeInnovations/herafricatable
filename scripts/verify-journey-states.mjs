@@ -439,6 +439,9 @@ for (const contract of [
   "nextBestAction",
   "member-next-action",
   "Your next step",
+  "member-home-secondary",
+  "Everything else is here when you need it.",
+  "Show more",
 ]) {
   assert(
     memberHome.includes(contract),
@@ -1113,7 +1116,7 @@ for (const contract of [
 }
 for (const contract of [
   "Start a community",
-  "Apply to start a community",
+  "Start your application",
   "Tell us your idea",
   "We review it",
   "Set up privately",
@@ -1122,7 +1125,12 @@ for (const contract of [
   "Update and resubmit",
   "Manage community",
   "Community Guidelines",
-  "private community for setup",
+  "applicationSteps",
+  "data-host-step",
+  "checkValidity",
+  "Does this feel right?",
+  "Send my application",
+  "prepared privately",
   "memberErrorMessage",
 ]) {
   assert(
