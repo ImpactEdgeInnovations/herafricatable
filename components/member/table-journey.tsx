@@ -17,13 +17,20 @@ export type TableJourneyState = {
 
 type JourneyStep = {
   action: string;
+  available?: boolean;
   complete: boolean;
   description: string;
   href: string;
   label: string;
 };
 
-export function TableJourney({ journey }: { journey: TableJourneyState }) {
+export function TableJourney({
+  communityAvailable = true,
+  journey,
+}: {
+  communityAvailable?: boolean;
+  journey: TableJourneyState;
+}) {
   const communityHref = journey.community_slug
     ? `/communities/${journey.community_slug}`
     : "/communities";
@@ -37,13 +44,18 @@ export function TableJourney({ journey }: { journey: TableJourneyState }) {
       label: "Make your profile useful",
     },
     {
-      action: journey.community_joined
+      action: !communityAvailable
+        ? "Opening soon"
+        : journey.community_joined
         ? journey.introduction_shared
           ? "Open Community"
           : "Introduce yourself"
         : "Find a Community",
+      available: communityAvailable,
       complete: journey.introduction_shared,
-      description: journey.community_joined
+      description: !communityAvailable
+        ? "The first trusted Communities are being prepared. This step will open when they are ready."
+        : journey.community_joined
         ? `Enter ${journey.community_name ?? "your Community"} and share what you are building, offering and seeking.`
         : "Choose one focused Community, then introduce yourself when you are ready.",
       href: communityHref,
@@ -77,7 +89,9 @@ export function TableJourney({ journey }: { journey: TableJourneyState }) {
     },
   ];
   const complete = Math.min(Number(journey.completed_steps), steps.length);
-  const recommended = steps.find((step) => !step.complete);
+  const recommended = steps.find(
+    (step) => !step.complete && step.available !== false,
+  );
   const allComplete = complete === steps.length;
 
   return (
@@ -147,7 +161,11 @@ export function TableJourney({ journey }: { journey: TableJourneyState }) {
                 <strong>{step.label}</strong>
                 <p>{step.description}</p>
               </div>
-              <Link href={step.href}>{step.action}</Link>
+              {step.available === false ? (
+                <span className="table-journey-unavailable">{step.action}</span>
+              ) : (
+                <Link href={step.href}>{step.action}</Link>
+              )}
             </li>
           ))}
         </ol>

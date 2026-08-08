@@ -10,6 +10,10 @@ import {
   TableJourney,
   type TableJourneyState,
 } from "@/components/member/table-journey";
+import {
+  CommunityReturnCard,
+  type HomeCommunity,
+} from "@/components/member/community-return-card";
 
 export const dynamic = "force-dynamic";
 
@@ -174,6 +178,30 @@ export default async function MemberHomePage() {
           .eq("key", "communities")
           .maybeSingle()
       : { data: null, error: null };
+  const communityEnabled = communityFlagResult.data?.enabled === true;
+  const [homeCommunityResult, homeCommunityActivityResult] = communityEnabled
+    ? await Promise.all([
+        supabase.rpc("list_communities"),
+        supabase.rpc("list_my_community_activity"),
+      ])
+    : [{ data: [], error: null }, { data: [], error: null }];
+  const activityByCommunity = new Map(
+    ((homeCommunityActivityResult.data as
+      | {
+          community_id: string;
+          latest_activity_at: string | null;
+          new_activity_count: number;
+          new_conversation_count: number;
+          new_reply_count: number;
+        }[]
+      | null) ?? []).map((activity) => [activity.community_id, activity]),
+  );
+  const homeCommunities = (
+    (homeCommunityResult.data as HomeCommunity[] | null) ?? []
+  ).map((community) => ({
+    ...community,
+    ...(activityByCommunity.get(community.community_id) ?? {}),
+  }));
   const learningFlagResult =
     accessStatus === "active"
       ? await supabase
@@ -433,7 +461,7 @@ export default async function MemberHomePage() {
           href: "/onboarding",
           label: "Make your profile useful",
         }
-      : !tableJourney.introduction_shared
+      : communityEnabled && !tableJourney.introduction_shared
         ? {
             action: tableJourney.community_joined
               ? "Introduce yourself"
@@ -602,6 +630,14 @@ export default async function MemberHomePage() {
           </div>
         </section>
       ) : null}
+      {accessStatus === "active" &&
+      !homeCommunityResult.error &&
+      !homeCommunityActivityResult.error ? (
+        <CommunityReturnCard
+          communities={homeCommunities}
+          openingSoon={!communityEnabled}
+        />
+      ) : null}
       <section className="member-next-event" aria-labelledby="next-event-title">
         {nextEvent ? (
           <>
@@ -663,7 +699,10 @@ export default async function MemberHomePage() {
         )}
       </section>
       {accessStatus === "active" && tableJourney && !tableJourneyResult.error ? (
-        <TableJourney journey={tableJourney} />
+        <TableJourney
+          communityAvailable={communityEnabled}
+          journey={tableJourney}
+        />
       ) : accessStatus === "active" &&
       activation &&
       activationComplete < 5 &&

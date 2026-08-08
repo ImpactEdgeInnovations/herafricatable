@@ -599,6 +599,9 @@ for (const contract of [
   "Make one trusted connection",
   "Continue the relationship",
   "not a score, requirement or public ranking",
+  "communityAvailable",
+  "Opening soon",
+  "table-journey-unavailable",
 ]) {
   assert(
     tableJourney.includes(contract),
@@ -742,6 +745,34 @@ for (const contract of [
   assert(
     communityPage.includes(contract),
     `Community landing must include ${contract}`,
+  );
+}
+const communityReturnCard = read("components/member/community-return-card.tsx");
+for (const contract of [
+  "Your Community",
+  "Community · Opening soon",
+  "Preview Community",
+  "Find one room that feels relevant",
+  "Invitation waiting",
+  "Ready for payment",
+  "Request under review",
+  "See new activity",
+  "You are all caught up",
+]) {
+  assert(
+    communityReturnCard.includes(contract),
+    `Member home Community return card must include ${contract}`,
+  );
+}
+for (const contract of [
+  "CommunityReturnCard",
+  "list_my_community_activity",
+  "list_communities",
+  "communityEnabled",
+]) {
+  assert(
+    memberHome.includes(contract),
+    `Member home Community return loop must include ${contract}`,
   );
 }
 for (const contract of [
