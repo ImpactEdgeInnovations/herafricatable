@@ -727,36 +727,13 @@ export function CommunityFeed({
       {dialog}
       <header className="community-conversation-heading">
         <div>
-          <p className="eyebrow">Community posts</p>
-          <h2 id="community-conversations-title">Ask, share and support.</h2>
+          <p className="eyebrow">Conversations</p>
+          <h2 id="community-conversations-title">What members are sharing</h2>
         </div>
         <p>
-          Start a conversation, reply to a member or share something useful.
+          Ask a question, offer help or share an update.
         </p>
       </header>
-
-      {enhanced && allPosts.length ? (
-        <dl className="community-room-snapshot" aria-label="Recent room snapshot">
-          <div>
-            <dt>Posts loaded</dt>
-            <dd>{allPosts.length}</dd>
-          </div>
-          <div>
-            <dt>Questions &amp; opportunities</dt>
-            <dd>{roomSnapshot.asksAndOpportunities}</dd>
-          </div>
-          <div>
-            <dt>Following</dt>
-            <dd>{roomSnapshot.followed}</dd>
-          </div>
-          <div>
-            <dt>{readStateReady ? "New for you" : "Saved privately"}</dt>
-            <dd>
-              {readStateReady ? initialNewActivityCount : roomSnapshot.saved}
-            </dd>
-          </div>
-        </dl>
-      ) : null}
 
       {enhanced && readStateReady && initialNewActivityCount > 0 ? (
         <div className="community-catchup-note">
@@ -925,10 +902,15 @@ export function CommunityFeed({
       )}
 
       {enhanced && allPosts.length ? (
-        <section
-          className="community-discovery"
+        <details
           aria-label="Find and filter conversations"
+          className="community-discovery"
         >
+          <summary>
+            <span>Find conversations</span>
+            <small>Search or filter posts</small>
+          </summary>
+          <div className="community-discovery-controls">
           <div className="community-feed-toolbar">
             <label>
               Search posts
@@ -1006,7 +988,8 @@ export function CommunityFeed({
               </button>
             ) : null}
           </div>
-        </section>
+          </div>
+        </details>
       ) : null}
 
       <section className="community-feed" aria-label="Community conversations">

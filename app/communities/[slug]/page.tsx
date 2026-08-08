@@ -59,7 +59,7 @@ export default async function CommunityPage({
     requestedView ?? "",
   )
     ? (requestedView as "today" | "conversations" | "people")
-    : "today";
+    : "conversations";
   const showToday = view === "today";
   const showConversations = view === "conversations";
   const showPeople = view === "people";
@@ -317,7 +317,11 @@ export default async function CommunityPage({
                 src={iconSigned.data.signedUrl}
                 width={brandIdentity?.icon_width ?? undefined}
               />
-            ) : null}
+            ) : (
+              <span className="community-room-icon is-placeholder" aria-hidden="true">
+                {community.name.slice(0, 1)}
+              </span>
+            )}
             <div>
               <p className="eyebrow">
                 {community.community_type === "private"
@@ -339,23 +343,24 @@ export default async function CommunityPage({
       </section>
       <nav className="community-room-navigation" aria-label="Community areas">
         <Link
-          aria-current={view === "today" ? "page" : undefined}
-          href={`/communities/${slug}?view=today`}
-        >
-          Today
-        </Link>
-        <Link
           aria-current={view === "conversations" ? "page" : undefined}
           href={`/communities/${slug}?view=conversations`}
         >
           Conversations
         </Link>
         <Link
+          aria-current={view === "today" ? "page" : undefined}
+          href={`/communities/${slug}?view=today`}
+        >
+          Start here
+        </Link>
+        <Link
           aria-current={view === "people" ? "page" : undefined}
           href={`/communities/${slug}?view=people`}
         >
-          People &amp; resources
+          Members &amp; events
         </Link>
+        <Link href={`/communities/${slug}/about`}>About</Link>
         {canManage ? <Link href={`/communities/${slug}/host`}>Manage</Link> : null}
       </nav>
       {showToday ? (
