@@ -735,7 +735,7 @@ export function CommunityFeed({
         </p>
       </header>
 
-      {enhanced ? (
+      {enhanced && allPosts.length ? (
         <dl className="community-room-snapshot" aria-label="Recent room snapshot">
           <div>
             <dt>Posts loaded</dt>
@@ -779,50 +779,58 @@ export function CommunityFeed({
       ) : null}
 
       {readOnly ? null : (
-        <form
-          className="community-composer"
-          onSubmit={(event) => void publish(event)}
+        <details
+          className="community-composer-panel"
+          open={!initialPosts.length}
         >
-          <div className="community-composer-heading">
-            <label htmlFor="community-post">
-              {prompt ?? "Write a post"}
-            </label>
-            {enhanced ? (
-              <label>
-                What are you sharing?
-                <select
-                  name="category"
-                  onChange={(event) => setComposerType(event.target.value)}
-                  value={composerType}
-                >
-                  {availableTypes.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
+          <summary>
+            <span>Start a conversation</span>
+            <small>Ask, offer or share something useful</small>
+          </summary>
+          <form
+            className="community-composer"
+            onSubmit={(event) => void publish(event)}
+          >
+            <div className="community-composer-heading">
+              <label htmlFor="community-post">
+                {prompt ?? "Write a post"}
               </label>
+              {enhanced ? (
+                <label>
+                  What are you sharing?
+                  <select
+                    name="category"
+                    onChange={(event) => setComposerType(event.target.value)}
+                    value={composerType}
+                  >
+                    {availableTypes.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+            </div>
+            {enhanced ? (
+              <p className="community-composer-hint">
+                {conversationTypeHints.get(composerType)}
+              </p>
             ) : null}
-          </div>
-          {enhanced ? (
-            <p className="community-composer-hint">
-              {conversationTypeHints.get(composerType)}
-            </p>
-          ) : null}
-          <textarea
-            id="community-post"
-            name="body"
-            minLength={2}
-            maxLength={3000}
-            required
-            placeholder={
-              prompt
-                ? "Ask a clear question, offer help or share what happened after the event…"
-                : "Write an update, ask a question or share something useful…"
-            }
-          />
-          {mediaReady ? (
-            <div className="community-attachment-composer">
+            <textarea
+              id="community-post"
+              name="body"
+              minLength={2}
+              maxLength={3000}
+              required
+              placeholder={
+                prompt
+                  ? "Ask a clear question, offer help or share what happened after the event…"
+                  : "Write an update, ask a question or share something useful…"
+              }
+            />
+            {mediaReady ? (
+              <div className="community-attachment-composer">
               <label>
                 Add to your post <small>Optional</small>
                 <select
@@ -898,24 +906,25 @@ export function CommunityFeed({
                   image, PDF or secure link.
                 </p>
               )}
+              </div>
+            ) : null}
+            <div>
+              <small>
+                Only active members of this community can see this post. Share
+                confidential details only in a private message.
+              </small>
+              <button
+                className="button button-primary"
+                disabled={busy === "publish"}
+              >
+                {busy === "publish" ? "Posting…" : "Post to community"}
+              </button>
             </div>
-          ) : null}
-          <div>
-            <small>
-              Only active members of this community can see this post. Share
-              confidential details only in a private message.
-            </small>
-            <button
-              className="button button-primary"
-              disabled={busy === "publish"}
-            >
-              {busy === "publish" ? "Posting…" : "Post to community"}
-            </button>
-          </div>
-        </form>
+          </form>
+        </details>
       )}
 
-      {enhanced ? (
+      {enhanced && allPosts.length ? (
         <section
           className="community-discovery"
           aria-label="Find and filter conversations"
@@ -1306,13 +1315,15 @@ export function CommunityFeed({
                 ? "Try a broader search or return to the latest conversations."
                 : "Share one focused thought, request, opportunity or resource that another member can act on."}
             </p>
-            <button
-              className="button button-outline"
-              onClick={clearDiscovery}
-              type="button"
-            >
-              {allPosts.length ? "Clear filters" : "View all conversations"}
-            </button>
+            {allPosts.length ? (
+              <button
+                className="button button-outline"
+                onClick={clearDiscovery}
+                type="button"
+              >
+                Clear filters
+              </button>
+            ) : null}
           </div>
         )}
       </section>

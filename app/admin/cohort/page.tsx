@@ -11,6 +11,7 @@ import {
   CommunityReleaseGate,
   type CommunityReleaseCheck,
 } from "@/components/admin/community-release-gate";
+import type { CommunitySummary } from "@/components/member/community-directory";
 import { createClient } from "@/lib/supabase/server";
 
 type ManagedEvent = {
@@ -42,24 +43,32 @@ export default async function AdminCohortPage({
     .maybeSingle();
   if (!role) redirect("/admin");
 
-  const [eventResult, overviewResult] = await Promise.all([
+  const [eventResult, overviewResult, communityResult] = await Promise.all([
     supabase.rpc("list_managed_events"),
     supabase.rpc("list_cohort_overview"),
+    supabase.rpc("list_communities"),
   ]);
   const cohorts = (overviewResult.data as CohortOverview[] | null) ?? [];
-  const selectedId = cohorts.some(
+  const communities =
+    (communityResult.data as CommunitySummary[] | null) ?? [];
+  const selectedCohortId = cohorts.some(
     (cohort) => cohort.community_id === requestedCommunity,
   )
     ? requestedCommunity!
     : (cohorts[0]?.community_id ?? null);
-  const healthResult = selectedId
+  const selectedReleaseId = communities.some(
+    (community) => community.community_id === requestedCommunity,
+  )
+    ? requestedCommunity!
+    : (selectedCohortId ?? communities[0]?.community_id ?? null);
+  const healthResult = selectedCohortId
     ? await supabase.rpc("list_cohort_health", {
-        p_community_id: selectedId,
+        p_community_id: selectedCohortId,
       })
     : { data: [], error: null };
-  const releaseResult = selectedId
+  const releaseResult = selectedReleaseId
     ? await supabase.rpc("list_community_release_checks", {
-        p_community_id: selectedId,
+        p_community_id: selectedReleaseId,
       })
     : { data: [], error: null };
   const events: CohortEvent[] = (
@@ -83,18 +92,40 @@ export default async function AdminCohortPage({
         events={events}
         health={(healthResult.data as CohortHealthMember[] | null) ?? []}
         migrationReady={!overviewResult.error}
-        selectedId={selectedId}
+        selectedId={selectedCohortId}
       />
+      {communities.length > 1 ? (
+        <nav
+          aria-label="Choose Community release checklist"
+          className="community-release-community-picker"
+        >
+          <span>Release checklist</span>
+          {communities.map((community) => (
+            <Link
+              aria-current={
+                community.community_id === selectedReleaseId
+                  ? "page"
+                  : undefined
+              }
+              href={`/admin/cohort?community=${community.community_id}#community-release-title`}
+              key={community.community_id}
+            >
+              {community.name}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
       <CommunityReleaseGate
         checks={
           (releaseResult.data as CommunityReleaseCheck[] | null) ?? []
         }
-        communityId={selectedId}
+        communityId={selectedReleaseId}
         communityName={
-          cohorts.find((cohort) => cohort.community_id === selectedId)
-            ?.community_name ?? null
+          communities.find(
+            (community) => community.community_id === selectedReleaseId,
+          )?.name ?? null
         }
-        migrationReady={!releaseResult.error}
+        migrationReady={!communityResult.error && !releaseResult.error}
       />
       <footer className="admin-footer">
         <span>Consent-based cohort operations</span>

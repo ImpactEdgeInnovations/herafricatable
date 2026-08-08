@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -337,6 +338,14 @@ export function CommunityManager({
           <button className="button button-primary" disabled={busy === "save"}>
             {busy === "save" ? "Saving…" : "Save community"}
           </button>
+          {community ? (
+            <Link
+              className="admin-form-secondary-link"
+              href={`/admin/cohort?community=${community.community_id}#community-release-title`}
+            >
+              Review release checklist →
+            </Link>
+          ) : null}
         </form>
         <div className="community-member-admin">
           {selected ? (

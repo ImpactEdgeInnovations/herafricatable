@@ -45,9 +45,11 @@ const fallbackSteps: StartStep[] = [
 
 export function CommunityStartPath({
   cohortActive,
+  communitySlug,
   state,
 }: {
   cohortActive: boolean;
+  communitySlug: string;
   state: CommunityStartPathState | null;
 }) {
   const steps: StartStep[] = state
@@ -61,7 +63,7 @@ export function CommunityStartPath({
                 complete: state.has_introduction,
                 description:
                   "Tell members who you are, what you are working on and what support would help.",
-                href: "#cohort-welcome-title",
+                href: `/communities/${communitySlug}?view=people#cohort-welcome-title`,
                 label: "Introduce yourself",
               },
             ]
@@ -73,7 +75,7 @@ export function CommunityStartPath({
           complete: state.has_contribution,
           description:
             "Ask a clear question, share an update or offer useful support.",
-          href: "#conversations",
+          href: `/communities/${communitySlug}?view=conversations#conversations`,
           label: "Join a conversation",
         },
         {
@@ -83,7 +85,9 @@ export function CommunityStartPath({
           complete: state.has_accepted_connection,
           description:
             "Read a member’s profile first. You can message after you both agree to connect.",
-          href: state.has_accepted_connection ? "/network" : "#members",
+          href: state.has_accepted_connection
+            ? "/network"
+            : `/communities/${communitySlug}?view=people#members`,
           label: "Meet a member",
         },
         ...(state.next_gathering_slug
@@ -102,10 +106,21 @@ export function CommunityStartPath({
             ]
           : []),
       ]
-    : fallbackSteps;
+    : fallbackSteps.map((step) => ({
+        ...step,
+        href:
+          step.href === "#conversations"
+            ? `/communities/${communitySlug}?view=conversations#conversations`
+            : step.href === "#members"
+              ? `/communities/${communitySlug}?view=people#members`
+              : `/communities/${communitySlug}?view=people#gatherings`,
+      }));
 
   const recommended = steps.find((step) => !step.complete);
   const allComplete = state && !recommended;
+  const supportingSteps = recommended
+    ? steps.filter((step) => step !== recommended)
+    : steps;
 
   return (
     <section
@@ -132,27 +147,34 @@ export function CommunityStartPath({
             {recommended.action} <span aria-hidden="true">→</span>
           </Link>
         ) : (
-          <a className="community-start-primary" href="#conversations">
+          <Link
+            className="community-start-primary"
+            href={`/communities/${communitySlug}?view=conversations#conversations`}
+          >
             View community posts <span aria-hidden="true">→</span>
-          </a>
+          </Link>
         )}
       </header>
-      <div aria-label="Ways to participate in this community">
-        {steps.map((step, index) => (
-          <Link
-            className={`${step.complete ? "is-complete" : ""} ${
-              step === recommended ? "is-recommended" : ""
-            }`}
-            href={step.href}
-            key={step.label}
-          >
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            <strong>{step.label}</strong>
-            <small>{step.complete ? "You have completed this step." : step.description}</small>
-            <em>{step.complete ? "Done" : step.action}</em>
-          </Link>
-        ))}
-      </div>
+      {supportingSteps.length ? (
+        <div aria-label="Other ways to participate in this community">
+          {supportingSteps.map((step) => (
+            <Link
+              className={step.complete ? "is-complete" : undefined}
+              href={step.href}
+              key={step.label}
+            >
+              <span>{String(steps.indexOf(step) + 1).padStart(2, "0")}</span>
+              <strong>{step.label}</strong>
+              <small>
+                {step.complete
+                  ? "You have completed this step."
+                  : step.description}
+              </small>
+              <em>{step.complete ? "Done" : step.action}</em>
+            </Link>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }

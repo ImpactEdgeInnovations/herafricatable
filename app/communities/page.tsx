@@ -167,22 +167,19 @@ export default async function CommunitiesPage() {
   return (
     <main className="community-page">
       <MemberHeader active="community" label="Community" />
-      <section className="community-hero">
+      <section className="community-hero community-member-hero">
         <div>
-            <p className="eyebrow">Community</p>
-            <h1>
-            Find your people.
+          <p className="eyebrow">Community</p>
+          <h1>
+            Your people,
             <br />
-            Build what matters.
+            one place.
           </h1>
           <p>
-            Join a private group, share what you need, offer what you know and
-            build relationships around a purpose you share.
+            Pick up conversations, meet members and find the next useful thing
+            to do together.
           </p>
         </div>
-        <a className="button button-outline" href="#create-community">
-          Start a community
-        </a>
       </section>
       <nav
         className="community-landing-navigation"
@@ -190,7 +187,6 @@ export default async function CommunitiesPage() {
       >
         <a href="#your-communities">Your communities</a>
         <a href="#discover-communities">Find a community</a>
-        <a href="#create-community">Start a community</a>
       </nav>
 
       {communityResult.error ? (

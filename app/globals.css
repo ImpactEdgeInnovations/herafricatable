@@ -14,6 +14,153 @@
   --error: #a12837;
 }
 
+/* Community room v3 — focused areas and progressive action. */
+.community-today-choices {
+  display: grid;
+  width: min(1120px, calc(100% - 48px));
+  margin: -18px auto 42px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.community-today-choices > a {
+  display: grid;
+  min-height: 128px;
+  align-content: center;
+  padding: 24px 26px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.76);
+  color: inherit;
+  text-decoration: none;
+  gap: 7px;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+.community-today-choices > a:hover,
+.community-today-choices > a:focus-visible {
+  border-color: rgba(95, 23, 34, 0.35);
+  transform: translateY(-2px);
+}
+.community-today-choices span {
+  color: var(--gold);
+  font-size: 0.55rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.community-today-choices strong {
+  max-width: 450px;
+  font-family: var(--serif);
+  font-size: 1.22rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.community-today-choices small {
+  color: var(--wine);
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+.community-people-intro {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto 24px;
+  padding: 34px 0 25px;
+  border-bottom: 1px solid var(--line);
+}
+.community-people-intro h2 {
+  margin: 5px 0 10px;
+  font-family: var(--serif);
+  font-size: clamp(2.2rem, 4vw, 3.35rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+.community-people-intro > p:last-child {
+  max-width: 650px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+.community-composer-panel {
+  overflow: hidden;
+  margin: 0 0 24px;
+  border: 1px solid rgba(95, 23, 34, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+}
+.community-composer-panel > summary {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  color: var(--wine);
+  cursor: pointer;
+  list-style: none;
+  gap: 18px;
+}
+.community-composer-panel > summary::-webkit-details-marker {
+  display: none;
+}
+.community-composer-panel > summary > span {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+.community-composer-panel > summary > span::before {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  margin-right: 11px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--wine);
+  color: #fff;
+  content: "+";
+  font-family: var(--sans);
+  font-size: 1rem;
+  vertical-align: middle;
+}
+.community-composer-panel[open] > summary > span::before {
+  content: "−";
+}
+.community-composer-panel > summary small {
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+.community-composer-panel .community-composer {
+  margin: 0;
+  padding: 24px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: #fffdf9;
+}
+
+@media (max-width: 760px) {
+  .community-today-choices {
+    width: calc(100% - 32px);
+    margin-bottom: 32px;
+    grid-template-columns: 1fr;
+  }
+  .community-today-choices > a {
+    min-height: 108px;
+    padding: 21px;
+  }
+  .community-people-intro {
+    width: calc(100% - 32px);
+    padding-top: 20px;
+  }
+  .community-composer-panel > summary {
+    min-height: 70px;
+    padding: 0 19px;
+  }
+  .community-composer-panel > summary small {
+    display: none;
+  }
+  .community-composer-panel .community-composer {
+    padding: 20px;
+  }
+}
+
 /* Table Journey and human Community welcome */
 .table-journey {
   width: min(1120px, calc(100% - 48px));
@@ -23927,5 +24074,200 @@ body {
   }
   .home-opportunities {
     padding: 32px 0 38px;
+  }
+}
+
+/* Authoritative Community v3 shell after legacy responsive layers. */
+.community-room-hero {
+  min-height: 0;
+  padding-top: 27px;
+  padding-bottom: 24px;
+}
+.community-room-hero:not(.has-cover) {
+  display: grid;
+  align-items: end;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 32px;
+}
+.community-room-hero-copy > p:last-of-type {
+  max-width: 650px;
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+.community-room-title h1 {
+  font-size: clamp(2.4rem, 4vw, 3.4rem);
+}
+.community-room-navigation {
+  position: sticky;
+  z-index: 25;
+  top: 0;
+  width: min(1120px, calc(100% - 48px));
+  min-height: 0;
+  margin: 0 auto 30px;
+  padding: 7px;
+  border: 1px solid rgba(69, 42, 35, 0.13);
+  border-radius: 15px;
+  background: rgba(255, 253, 249, 0.94);
+  box-shadow: 0 10px 28px rgba(57, 35, 29, 0.06);
+  backdrop-filter: blur(14px);
+  gap: 5px;
+}
+.community-room-navigation a {
+  min-height: 44px;
+  justify-content: center;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  color: #706662;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.community-room-navigation a[aria-current="page"] {
+  background: var(--wine);
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .community-room-hero,
+  .community-room-hero:not(.has-cover) {
+    padding-top: 21px;
+    padding-bottom: 20px;
+    gap: 15px;
+  }
+  .community-room-hero:not(.has-cover) {
+    grid-template-columns: 1fr;
+  }
+  .community-room-title h1 {
+    font-size: clamp(2.15rem, 10vw, 2.65rem);
+    line-height: 0.98;
+  }
+  .community-room-hero-copy > p:last-of-type {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 0.78rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+  .community-room-navigation {
+    position: static;
+    width: calc(100% - 32px);
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+  .community-room-navigation a {
+    min-height: 48px;
+    padding: 0 15px;
+    white-space: nowrap;
+  }
+}
+
+/* Community v3 landing — member-first, compact and calm. */
+.community-member-hero,
+.community-member-hero:has(> div) {
+  display: block;
+  min-height: 0;
+  padding-top: 28px;
+  padding-bottom: 24px;
+}
+.community-member-hero h1 {
+  max-width: 620px;
+  font-size: clamp(2.65rem, 4.5vw, 3.8rem);
+  line-height: 0.98;
+}
+.community-member-hero:has(> div) > div > p:last-child {
+  max-width: 560px;
+  margin-bottom: 0;
+  font-size: 0.82rem;
+}
+.community-member-hero + .community-landing-navigation {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.community-directory-card,
+.community-directory-empty,
+.community-conversation-shell,
+.community-room-overview,
+.community-people-intro + section {
+  box-shadow: 0 10px 30px rgba(57, 35, 29, 0.035);
+}
+.community-directory-card {
+  border-color: rgba(60, 35, 26, 0.12);
+}
+
+@media (max-width: 760px) {
+  .community-member-hero,
+  .community-member-hero:has(> div) {
+    width: calc(100% - 32px);
+    padding-top: 24px;
+    padding-bottom: 20px;
+  }
+  .community-member-hero h1 {
+    font-size: clamp(2.45rem, 11vw, 3.1rem);
+  }
+  .community-member-hero + .community-landing-navigation {
+    width: calc(100% - 32px);
+    border-radius: 12px;
+  }
+  .community-member-hero + .community-landing-navigation a {
+    min-height: 52px;
+  }
+}
+
+.admin-form-secondary-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--wine);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.community-release-community-picker {
+  display: flex;
+  width: min(1240px, calc(100% - 56px));
+  margin: 42px auto -18px;
+  overflow-x: auto;
+  align-items: center;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.76);
+  gap: 6px;
+}
+.community-release-community-picker > span,
+.community-release-community-picker a {
+  min-height: 42px;
+  padding: 0 16px;
+  white-space: nowrap;
+}
+.community-release-community-picker > span {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.community-release-community-picker a {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9px;
+  color: var(--wine);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.community-release-community-picker a[aria-current="page"] {
+  background: var(--wine);
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .community-release-community-picker {
+    width: calc(100% - 32px);
+    margin-top: 30px;
+    scroll-padding-inline: 7px;
+  }
+  .community-release-community-picker > span,
+  .community-release-community-picker a {
+    min-height: 48px;
   }
 }

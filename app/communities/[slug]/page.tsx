@@ -48,10 +48,21 @@ import {
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ view?: string }>;
 }) {
   const { slug } = await params;
+  const requestedView = (await searchParams).view;
+  const view = ["today", "conversations", "people"].includes(
+    requestedView ?? "",
+  )
+    ? (requestedView as "today" | "conversations" | "people")
+    : "today";
+  const showToday = view === "today";
+  const showConversations = view === "conversations";
+  const showPeople = view === "people";
   const supabase = await createClient();
   const {
     data: { user },
@@ -105,79 +116,79 @@ export default async function CommunityPage({
     eventPreferenceResult,
     checkInResult,
   ] = await Promise.all([
-      supabase.rpc("list_community_posts", {
+      showConversations ? supabase.rpc("list_community_posts", {
         p_community_id: community.community_id,
         p_limit: 30,
         p_offset: 0,
-      }),
-      supabase.rpc("list_community_conversations", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showConversations ? supabase.rpc("list_community_conversations", {
         p_category: null,
         p_community_id: community.community_id,
         p_limit: 30,
         p_offset: 0,
-      }),
-      supabase.rpc("list_community_conversation_page", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showConversations ? supabase.rpc("list_community_conversation_page", {
         p_before_activity_at: null,
         p_before_pinned: null,
         p_before_post_id: null,
         p_community_id: community.community_id,
         p_limit: 21,
-      }),
-      supabase.rpc("list_community_comments", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showConversations ? supabase.rpc("list_community_comments", {
         p_community_id: community.community_id,
         p_limit: 200,
-      }),
+      }) : Promise.resolve({ data: [], error: null }),
       supabase.rpc("get_community_cohort", {
         p_community_id: community.community_id,
       }),
-      supabase.rpc("list_community_introductions", {
+      showPeople ? supabase.rpc("list_community_introductions", {
         p_community_id: community.community_id,
-      }),
-      supabase.rpc("list_community_member_directory", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showPeople ? supabase.rpc("list_community_member_directory", {
         p_community_id: community.community_id,
         p_limit: 8,
         p_offset: 0,
-      }),
-      supabase.rpc("list_community_gatherings", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showPeople ? supabase.rpc("list_community_gatherings", {
         p_community_id: community.community_id,
-      }),
-      supabase.rpc("list_community_resources", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showPeople ? supabase.rpc("list_community_resources", {
         p_community_id: community.community_id,
-      }),
-      supabase.rpc("list_community_circle_programs", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showPeople ? supabase.rpc("list_community_circle_programs", {
         p_community_id: community.community_id,
-      }),
-      supabase.rpc("get_community_notification_preferences", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showPeople ? supabase.rpc("get_community_notification_preferences", {
         p_community_id: community.community_id,
-      }),
-      supabase.rpc("get_my_community_start_path", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showToday ? supabase.rpc("get_my_community_start_path", {
         p_community_id: community.community_id,
-      }),
+      }) : Promise.resolve({ data: [], error: null }),
       supabase.rpc("list_community_brand_identities", {
         p_community_id: community.community_id,
       }),
-      supabase.rpc("list_community_post_media", {
+      showConversations ? supabase.rpc("list_community_post_media", {
         p_community_id: community.community_id,
         p_limit: 100,
-      }),
-      supabase.rpc("list_community_post_edit_states", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showConversations ? supabase.rpc("list_community_post_edit_states", {
         p_community_id: community.community_id,
         p_limit: 100,
-      }),
-      supabase.rpc("get_community_read_summary", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showConversations ? supabase.rpc("get_community_read_summary", {
         p_community_id: community.community_id,
-      }),
-      supabase.rpc("list_community_post_read_states", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showConversations ? supabase.rpc("list_community_post_read_states", {
         p_community_id: community.community_id,
         p_limit: 100,
-      }),
-      supabase.rpc("list_my_community_event_preferences", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showPeople ? supabase.rpc("list_my_community_event_preferences", {
         p_community_id: community.community_id,
-      }),
-      supabase.rpc("list_community_check_ins", {
+      }) : Promise.resolve({ data: [], error: null }),
+      showToday ? supabase.rpc("list_community_check_ins", {
         p_community_id: community.community_id,
         p_limit: 8,
-      }),
+      }) : Promise.resolve({ data: [], error: null }),
     ]);
   const paginatedPosts =
     (paginatedPostsResult.data as CommunityPost[] | null) ?? [];
@@ -327,46 +338,61 @@ export default async function CommunityPage({
         <span>{community.member_count} members</span>
       </section>
       <nav className="community-room-navigation" aria-label="Community areas">
-        <a aria-current="page" href="#overview">
-          Start here
-        </a>
-        {!checkInResult.error ? <a href="#check-ins">Check-ins</a> : null}
-        <a href="#conversations">Posts</a>
-        <a href="#members">Members</a>
-        {programmingReady ? (
-          <>
-            <a href="#gatherings">Events</a>
-            <a href="#resources">Learning</a>
-          </>
-        ) : (
-          <>
-            <Link href="/events">Events</Link>
-            <Link href="/learning">Learning</Link>
-          </>
-        )}
-        {!circleProgramResult.error && circlePrograms.length ? (
-          <a href="#circles">Circles</a>
-        ) : null}
+        <Link
+          aria-current={view === "today" ? "page" : undefined}
+          href={`/communities/${slug}?view=today`}
+        >
+          Today
+        </Link>
+        <Link
+          aria-current={view === "conversations" ? "page" : undefined}
+          href={`/communities/${slug}?view=conversations`}
+        >
+          Conversations
+        </Link>
+        <Link
+          aria-current={view === "people" ? "page" : undefined}
+          href={`/communities/${slug}?view=people`}
+        >
+          People &amp; resources
+        </Link>
         {canManage ? <Link href={`/communities/${slug}/host`}>Manage</Link> : null}
       </nav>
-      <CommunityStartPath
-        cohortActive={cohort?.cohort_status === "active"}
-        state={
-          startPathResult.error
-            ? null
-            : (
-                (startPathResult.data as CommunityStartPathState[] | null) ?? []
-              )[0] ?? null
-        }
-      />
-      {!checkInResult.error ? (
-        <CommunityCheckIns
-          checkIns={(checkInResult.data as CommunityCheckIn[] | null) ?? []}
-          communityId={community.community_id}
-          currentUserId={user.id}
-        />
+      {showToday ? (
+        <>
+          <CommunityStartPath
+            cohortActive={cohort?.cohort_status === "active"}
+            communitySlug={slug}
+            state={
+              startPathResult.error
+                ? null
+                : (
+                    (startPathResult.data as CommunityStartPathState[] | null) ?? []
+                  )[0] ?? null
+            }
+          />
+          <section className="community-today-choices" aria-label="Explore this Community">
+            <Link href={`/communities/${slug}?view=conversations`}>
+              <span>Conversations</span>
+              <strong>See what members are asking and sharing.</strong>
+              <small>Open posts →</small>
+            </Link>
+            <Link href={`/communities/${slug}?view=people`}>
+              <span>People &amp; resources</span>
+              <strong>Meet members and find gatherings or learning.</strong>
+              <small>Explore Community →</small>
+            </Link>
+          </section>
+          {!checkInResult.error ? (
+            <CommunityCheckIns
+              checkIns={(checkInResult.data as CommunityCheckIn[] | null) ?? []}
+              communityId={community.community_id}
+              currentUserId={user.id}
+            />
+          ) : null}
+        </>
       ) : null}
-      {postsResult.error && !structuredConversationsReady ? (
+      {showConversations && postsResult.error && !structuredConversationsReady ? (
         <section className="admin-empty opportunity-error" role="alert">
           <strong>Community posts are not loading</strong>
           <p>{memberErrorMessage(postsResult.error, "load this community")}</p>
@@ -382,7 +408,7 @@ export default async function CommunityPage({
             </Link>
           </div>
         </section>
-      ) : (
+      ) : showConversations ? (
         <CommunityFeed
           canManage={canManage}
           enhanced={structuredConversationsReady}
@@ -415,57 +441,69 @@ export default async function CommunityPage({
           }
           readOnly={cohort?.cohort_status === "read_only"}
         />
-      )}
-      {programmingReady ? (
-        <CommunityProgramming
-          canManage={canManage}
-          communityId={community.community_id}
-          eventPreferences={
-            (eventPreferenceResult.data as CommunityEventPreference[] | null) ?? []
-          }
-          gatherings={
-            (gatheringResult.data as CommunityGathering[] | null) ?? []
-          }
-          remindersReady={!eventPreferenceResult.error}
-          resources={(resourceResult.data as CommunityResource[] | null) ?? []}
-          slug={slug}
-        />
       ) : null}
-      {!circleProgramResult.error ? (
-        <CommunityCircles programs={circlePrograms} />
-      ) : null}
-      {cohort ? (
-        <CohortActivation
-          currentUserId={user.id}
-          introductions={
-            (introductionResult.data as CohortIntroduction[] | null) ?? []
-          }
-          room={cohort}
-        />
-      ) : null}
-      {!memberResult.error ? (
-        <CommunityMemberRoster
-          members={
-            (memberResult.data as CommunityRosterMember[] | null) ?? []
-          }
-        />
-      ) : null}
-      {!notificationPreferenceResult.error ? (
-        <CommunityNotificationPreferences
-          communityId={community.community_id}
-          initialPreferences={
-            (
-              notificationPreferenceResult.data as
-                | CommunityNotificationPreference[]
-                | null
-            )?.[0] ?? {
-              email_replies: false,
-              in_app_replies: true,
-              weekly_briefing: true,
-              weekly_briefing_email: false,
-            }
-          }
-        />
+      {showPeople ? (
+        <>
+          <section className="community-people-intro" id="people">
+            <p className="eyebrow">People &amp; resources</p>
+            <h2>Find the right person or next gathering.</h2>
+            <p>
+              Member profiles, Community events and shared learning are kept
+              together here so you can explore without searching the feed.
+            </p>
+          </section>
+          {cohort ? (
+            <CohortActivation
+              currentUserId={user.id}
+              introductions={
+                (introductionResult.data as CohortIntroduction[] | null) ?? []
+              }
+              room={cohort}
+            />
+          ) : null}
+          {!memberResult.error ? (
+            <CommunityMemberRoster
+              members={
+                (memberResult.data as CommunityRosterMember[] | null) ?? []
+              }
+            />
+          ) : null}
+          {programmingReady ? (
+            <CommunityProgramming
+              canManage={canManage}
+              communityId={community.community_id}
+              eventPreferences={
+                (eventPreferenceResult.data as CommunityEventPreference[] | null) ?? []
+              }
+              gatherings={
+                (gatheringResult.data as CommunityGathering[] | null) ?? []
+              }
+              remindersReady={!eventPreferenceResult.error}
+              resources={(resourceResult.data as CommunityResource[] | null) ?? []}
+              slug={slug}
+            />
+          ) : null}
+          {!circleProgramResult.error ? (
+            <CommunityCircles programs={circlePrograms} />
+          ) : null}
+          {!notificationPreferenceResult.error ? (
+            <CommunityNotificationPreferences
+              communityId={community.community_id}
+              initialPreferences={
+                (
+                  notificationPreferenceResult.data as
+                    | CommunityNotificationPreference[]
+                    | null
+                )?.[0] ?? {
+                  email_replies: false,
+                  in_app_replies: true,
+                  weekly_briefing: true,
+                  weekly_briefing_email: false,
+                }
+              }
+            />
+          ) : null}
+        </>
       ) : null}
     </main>
   );

@@ -101,9 +101,9 @@ for (const contract of [
 const communityPage = read("app/communities/[slug]/page.tsx");
 for (const contract of [
   'aria-label="Community areas"',
-  'aria-current="page"',
-  'href="#conversations"',
-  'href="#members"',
+  'aria-current={view === "today" ? "page" : undefined}',
+  '?view=conversations',
+  '?view=people',
 ]) {
   assert(
     communityPage.includes(contract),

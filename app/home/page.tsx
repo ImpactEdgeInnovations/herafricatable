@@ -62,7 +62,9 @@ export default async function MemberHomePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, access_status, onboarding_completed_at")
+    .select(
+      "display_name, access_status, onboarding_completed_at, is_test_account",
+    )
     .eq("id", user.id)
     .maybeSingle();
 
@@ -178,7 +180,18 @@ export default async function MemberHomePage() {
           .eq("key", "communities")
           .maybeSingle()
       : { data: null, error: null };
-  const communityEnabled = communityFlagResult.data?.enabled === true;
+  const communityAcceptanceFlagResult =
+    accessStatus === "active" && profile?.is_test_account
+      ? await supabase
+          .from("feature_flags")
+          .select("enabled")
+          .eq("key", "community_acceptance_mode")
+          .maybeSingle()
+      : { data: null, error: null };
+  const communityEnabled =
+    communityFlagResult.data?.enabled === true ||
+    (profile?.is_test_account === true &&
+      communityAcceptanceFlagResult.data?.enabled === true);
   const [homeCommunityResult, homeCommunityActivityResult] = communityEnabled
     ? await Promise.all([
         supabase.rpc("list_communities"),

@@ -15,7 +15,11 @@
     "test:live": "node scripts/smoke-live.mjs",
     "ops:auth-readiness": "node --env-file=.env.local scripts/smoke-authenticated.mjs",
     "ops:provision-beta-admin": "node --env-file=.env.local scripts/provision-beta-admin.mjs",
-    "ops:provision-community-test-cohort": "node --env-file=.env.local --env-file=.env.test.local scripts/provision-community-test-cohort.mjs"
+    "ops:provision-community-test-cohort": "node --env-file=.env.local --env-file=.env.test.local scripts/provision-community-test-cohort.mjs",
+    "ops:community:accept-test-invitations": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-test-invitations.mjs",
+    "ops:community:accept-member-journeys": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-member-journeys.mjs",
+    "ops:community:accept-safety": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-safety.mjs",
+    "ops:community:accept-membership-lifecycle": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-membership-lifecycle.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.3",

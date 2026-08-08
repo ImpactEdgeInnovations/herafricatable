@@ -494,6 +494,17 @@ const communityPage = read("app/communities/page.tsx");
 const communityRoomPage = read("app/communities/[slug]/page.tsx");
 const communityManager = read("components/admin/community-manager.tsx");
 for (const contract of [
+  "community-composer-panel",
+  "Start a conversation",
+  "Ask, offer or share something useful",
+  "open={!initialPosts.length}",
+]) {
+  assert(
+    communityFeed.includes(contract),
+    `Progressive Community composer must include ${contract}`,
+  );
+}
+for (const contract of [
   "community_acceptance_mode",
   "is_test_account",
   "communityAvailable",
@@ -501,6 +512,16 @@ for (const contract of [
   assert(
     communityPage.includes(contract) && communityRoomPage.includes(contract),
     `Community pages must enforce controlled rehearsal through ${contract}`,
+  );
+}
+for (const contract of [
+  "community_acceptance_mode",
+  "is_test_account",
+  "communityAcceptanceFlagResult",
+]) {
+  assert(
+    memberHome.includes(contract),
+    `Member Home must keep tagged Community rehearsal access through ${contract}`,
   );
 }
 for (const contract of [
@@ -592,7 +613,8 @@ for (const contract of [
 for (const contract of [
   "list_community_check_ins",
   "CommunityCheckIns",
-  'href="#check-ins"',
+  "showToday",
+  "?view=today",
 ]) {
   assert(
     communityRoom.includes(contract),
@@ -719,11 +741,12 @@ assert(
 for (const contract of [
   'active="community"',
   "community-room-navigation",
-  "Start here",
-  "Posts",
-  "Members",
-  "Events",
-  "Learning",
+  "Today",
+  "Conversations",
+  "People &amp; resources",
+  "showToday",
+  "showConversations",
+  "showPeople",
   "list_community_member_directory",
   "get_my_community_start_path",
   "CommunityStartPath",
@@ -741,7 +764,6 @@ for (const contract of [
   "community-room-cover",
   "list_community_circle_programs",
   "CommunityCircles",
-  'href="#circles"',
 ]) {
   assert(
     communityRoom.includes(contract),
@@ -1505,8 +1527,16 @@ for (const contract of [
 const adminCohortPage = read("app/admin/cohort/page.tsx");
 assert(
   adminCohortPage.includes("list_community_release_checks") &&
-    adminCohortPage.includes("CommunityReleaseGate"),
-  "Admin founding cohort must load the Community release gate",
+    adminCohortPage.includes("CommunityReleaseGate") &&
+    adminCohortPage.includes("list_communities") &&
+    adminCohortPage.includes("community-release-community-picker") &&
+    adminCohortPage.includes("selectedReleaseId"),
+  "Admin must load the release gate for every managed Community",
+);
+assert(
+  communityManager.includes("Review release checklist") &&
+    communityManager.includes("/admin/cohort?community="),
+  "Community Admin must link each managed room to its release checklist",
 );
 
 console.log(
