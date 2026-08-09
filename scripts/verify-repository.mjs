@@ -1815,6 +1815,26 @@ assert(
   qualityWorkflow.includes("supabase/setup-cli@v2"),
   "CI must use the Node 24-compatible Supabase setup action",
 );
+const communityScaleAcceptance = read("scripts/accept-community-scale.mjs");
+const packageJson = JSON.parse(read("package.json"));
+for (const contract of [
+  "HAT_ADMIN_TEST_EMAIL",
+  "HAT_COMMUNITY_SCALE_WRITE",
+  "list_community_conversation_page",
+  "list_community_safety_reports",
+  "after.posts.length < 45",
+  "Pagination repeated conversation",
+  "Anonymous visitors unexpectedly read",
+]) {
+  assert(
+    communityScaleAcceptance.includes(contract),
+    `Community scale acceptance must include ${contract}`,
+  );
+}
+assert(
+  packageJson.scripts?.["ops:community:accept-scale"],
+  "Package scripts must expose the five-role Community scale acceptance",
+);
 console.log(
   `Repository contracts passed: ${tracked.length} tracked files, ${migrations.length} ordered migrations.`,
 );

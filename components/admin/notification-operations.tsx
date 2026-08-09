@@ -24,6 +24,12 @@ export type AdminCommunityBriefingBatch = {
   started_at: string;
   completed_at: string | null;
 };
+export type EmailReadinessCheck = {
+  detail: string;
+  key: string;
+  label: string;
+  ready: boolean;
+};
 const date = (value: string) =>
   new Intl.DateTimeFormat("en-KE", {
     day: "numeric",
@@ -36,11 +42,13 @@ export function NotificationOperations({
   briefingMigrationReady,
   jobs,
   providerConfigured,
+  readinessChecks,
 }: {
   briefingBatches: AdminCommunityBriefingBatch[];
   briefingMigrationReady: boolean;
   jobs: AdminNotificationJob[];
   providerConfigured: boolean;
+  readinessChecks: EmailReadinessCheck[];
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -153,6 +161,27 @@ export function NotificationOperations({
           ) : null}
         </div>
       </div>
+      <section className="notification-readiness" aria-labelledby="email-readiness-title">
+        <div>
+          <p className="eyebrow">Before emails go live</p>
+          <h3 id="email-readiness-title">Email readiness</h3>
+          <p>
+            Every item must be ready, then a private test must arrive in the
+            Admin inbox before member email is enabled.
+          </p>
+        </div>
+        <ul>
+          {readinessChecks.map((check) => (
+            <li className={check.ready ? "ready" : "pending"} key={check.key}>
+              <span aria-hidden="true">{check.ready ? "✓" : "·"}</span>
+              <div>
+                <strong>{check.label}</strong>
+                <small>{check.detail}</small>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
       <div className="notification-metrics">
         <article>
           <strong>{counts.queued}</strong>

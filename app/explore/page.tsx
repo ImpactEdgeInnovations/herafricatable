@@ -115,6 +115,16 @@ export default async function ExplorePage() {
     (flags ?? []).filter((flag) => flag.enabled).map((flag) => flag.key),
   );
   const isActive = profile.access_status === "active";
+  const visibleGroups = groups
+    .map((group) => ({
+      ...group,
+      tools: group.tools.filter(
+        (tool) =>
+          (!tool.requiresActive || isActive) &&
+          (!tool.flag || enabledFlags.has(tool.flag)),
+      ),
+    }))
+    .filter((group) => group.tools.length > 0);
 
   return (
     <main className="member-explore-page">
@@ -125,8 +135,8 @@ export default async function ExplorePage() {
           <h1>More ways to use the table.</h1>
         </div>
         <p>
-          Start with what is useful today. Areas marked “Preparing” stay
-          unavailable until their content, safety and support paths are ready.
+          Everything shown here is ready to use. New member benefits will
+          appear only when they are complete.
         </p>
       </section>
 
@@ -141,7 +151,7 @@ export default async function ExplorePage() {
         </section>
       ) : (
         <div className="member-explore-groups">
-          {groups.map((group) => (
+          {visibleGroups.map((group) => (
             <section key={group.label}>
               <header>
                 <h2>{group.label}</h2>
@@ -149,22 +159,15 @@ export default async function ExplorePage() {
               </header>
               <div>
                 {group.tools.map((tool) => {
-                  const available =
-                    (!tool.requiresActive || isActive) &&
-                    (!tool.flag || enabledFlags.has(tool.flag));
                   const content = (
                     <>
-                      <span>{available ? "Ready" : "Preparing"}</span>
+                      <span>Ready</span>
                       <strong>{tool.label}</strong>
                       <p>{tool.description}</p>
-                      <small>{available ? "Open tool →" : "Nothing needed from you"}</small>
+                      <small>Open →</small>
                     </>
                   );
-                  return available ? (
-                    <Link href={tool.href} key={tool.href}>{content}</Link>
-                  ) : (
-                    <article aria-disabled="true" key={tool.href}>{content}</article>
-                  );
+                  return <Link href={tool.href} key={tool.href}>{content}</Link>;
                 })}
               </div>
             </section>

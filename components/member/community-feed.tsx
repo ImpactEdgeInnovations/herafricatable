@@ -160,10 +160,12 @@ export function CommunityFeed({
   currentUserId,
   enhanced,
   initialComments,
+  initialComposerType = "discussion",
   initialCursor = null,
   initialHasMore = false,
   initialNewActivityCount = 0,
   initialPosts,
+  composerInitiallyOpen = false,
   mediaReady = false,
   paginationReady = false,
   readStateReady = false,
@@ -175,10 +177,12 @@ export function CommunityFeed({
   currentUserId: string;
   enhanced: boolean;
   initialComments: CommunityComment[];
+  initialComposerType?: string;
   initialCursor?: CommunityFeedCursor | null;
   initialHasMore?: boolean;
   initialNewActivityCount?: number;
   initialPosts: CommunityPost[];
+  composerInitiallyOpen?: boolean;
   mediaReady?: boolean;
   paginationReady?: boolean;
   readStateReady?: boolean;
@@ -194,7 +198,17 @@ export function CommunityFeed({
     useState<AttachmentMode>("none");
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [category, setCategory] = useState("all");
-  const [composerType, setComposerType] = useState("discussion");
+  const availableTypes = canManage
+    ? [...hostConversationTypes, ...conversationTypes]
+    : [...conversationTypes];
+  const [composerType, setComposerType] = useState(
+    availableTypes.some((item) => item.value === initialComposerType)
+      ? initialComposerType
+      : "discussion",
+  );
+  const [composerExpanded, setComposerExpanded] = useState(
+    composerInitiallyOpen || !initialPosts.length,
+  );
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [message, setMessage] = useState("");
   const [olderComments, setOlderComments] = useState<CommunityComment[]>([]);
@@ -205,9 +219,6 @@ export function CommunityFeed({
   const [query, setQuery] = useState("");
   const [view, setView] = useState<ConversationView>("all");
   const { ask, dialog } = useActionDialog();
-  const availableTypes = canManage
-    ? [...hostConversationTypes, ...conversationTypes]
-    : [...conversationTypes];
   const allPosts = useMemo(() => {
     const unique = new Map<string, CommunityPost>();
     [...olderPosts, ...initialPosts].forEach((post) =>
@@ -758,7 +769,9 @@ export function CommunityFeed({
       {readOnly ? null : (
         <details
           className="community-composer-panel"
-          open={!initialPosts.length}
+          id="create-conversation"
+          onToggle={(event) => setComposerExpanded(event.currentTarget.open)}
+          open={composerExpanded}
         >
           <summary>
             <span>Start a conversation</span>

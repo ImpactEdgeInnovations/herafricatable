@@ -43,6 +43,11 @@ the signed-in Super Admin, limits tests to one per minute and records success or
 failure in the audit trail. A configured badge is not delivery proof; the test
 must be accepted by Resend and confirmed in the receiving inbox.
 
+The same screen now shows five plain-language readiness checks for the provider,
+sender, scheduled worker, production links and private Supabase connection. A
+green checklist confirms configuration only; the inbox test remains the final
+delivery proof.
+
 `caseready.africa` is a temporary launch sender, not a permanent Her Africa Table
 identity. After the Her Africa Table domain is verified, rotate the domain-scoped
 Resend key and change `EMAIL_FROM`; no code change is required.

@@ -56,6 +56,24 @@ for (const contract of [
     `Admin release operations must include ${contract}`,
   );
 }
+const adminNotificationPage = read("app/admin/notifications/page.tsx");
+const notificationOperations = read(
+  "components/admin/notification-operations.tsx",
+);
+for (const contract of [
+  "Email readiness",
+  "Email provider connected",
+  "Sender address added",
+  "Scheduled sending protected",
+  "Website links configured",
+  "Secure server connection ready",
+]) {
+  assert(
+    adminNotificationPage.includes(contract) ||
+      notificationOperations.includes(contract),
+    `Admin email readiness must include ${contract}`,
+  );
+}
 for (const contract of [
   "CommunityCreatorCommerceManager",
   "list_community_host_plans",

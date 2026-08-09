@@ -408,7 +408,7 @@ for (const contract of [
 }
 for (const [content, contract, description] of [
   [memberExplore, "More ways to use the table.", "give members one plain-language tool directory"],
-  [memberExplore, "Nothing needed from you", "explain gated tools without creating false work"],
+  [memberExplore, "Everything shown here is ready to use", "hide gated tools until they are ready"],
   [memberHeader, 'href: "/communities"', "make Community a primary member destination"],
   [opportunityMarketplace, "initialComposerOpen", "keep the Ask/Offer composer closed until requested"],
   [opportunityMarketplace, "aria-expanded={composerOpen}", "expose composer state accessibly"],
@@ -500,7 +500,7 @@ for (const contract of [
   "community-composer-panel",
   "Start a conversation",
   "Ask, offer or share something useful",
-  "open={!initialPosts.length}",
+  "composerInitiallyOpen || !initialPosts.length",
 ]) {
   assert(
     communityFeed.includes(contract),
@@ -1455,12 +1455,39 @@ for (const contract of [
   "list_event_attendee_directory",
   'mode="after"',
   "Your private event follow-up",
+  "community_event_links",
+  "moment=event-follow-up",
+  "Continue in ${linkedCommunity!.name}",
 ]) {
   assert(
     eventFollowUp.includes(contract),
     `Post-event member journey must include ${contract}`,
   );
 }
+for (const contract of [
+  'requestedSearch.moment === "event-follow-up"',
+  'initialComposerType={isEventFollowUp ? "event_follow_up" : "discussion"}',
+  "What would you like to carry forward from the event?",
+]) {
+  assert(
+    communityRoom.includes(contract),
+    `Event-to-Community continuation must include ${contract}`,
+  );
+}
+assert(
+  communityFeed.includes("composerInitiallyOpen") &&
+    communityFeed.includes('id="create-conversation"') &&
+    communityFeed.includes("open={composerExpanded}") &&
+    communityFeed.includes("onToggle="),
+  "Event follow-up must open the Community composer without trapping it open",
+);
+const explorePage = read("app/explore/page.tsx");
+assert(
+  explorePage.includes("visibleGroups") &&
+    explorePage.includes("Everything shown here is ready to use") &&
+    !explorePage.includes('aria-disabled="true"'),
+  "Explore must show only member tools that are ready to use",
+);
 const activityPage = read("app/notifications/page.tsx");
 for (const contract of [
   "list_my_conversations",

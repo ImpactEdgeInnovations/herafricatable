@@ -19,6 +19,13 @@ type MemberPastEvent = {
   title: string;
 };
 
+type LinkedCommunity = {
+  communities:
+    | { name: string; slug: string }
+    | { name: string; slug: string }[]
+    | null;
+};
+
 export default async function EventFollowUpPage({
   params,
 }: {
@@ -46,7 +53,13 @@ export default async function EventFollowUpPage({
   );
   if (pastError || !event) notFound();
 
-  const [recapResult, preferenceResult, attendeeResult, communityFlagResult] =
+  const [
+    recapResult,
+    preferenceResult,
+    attendeeResult,
+    communityFlagResult,
+    linkedCommunityResult,
+  ] =
     await Promise.all([
       supabase
         .from("event_recaps")
@@ -70,8 +83,22 @@ export default async function EventFollowUpPage({
         .select("enabled")
         .eq("key", "communities")
         .maybeSingle(),
+      supabase
+        .from("community_event_links")
+        .select("communities!inner(name,slug)")
+        .eq("event_id", event.event_id)
+        .limit(1)
+        .maybeSingle(),
     ]);
   const recap = recapResult.data;
+  const linkedRelation = (linkedCommunityResult.data as LinkedCommunity | null)
+    ?.communities;
+  const linkedCommunity = Array.isArray(linkedRelation)
+    ? linkedRelation[0]
+    : linkedRelation;
+  const communityReady = Boolean(
+    communityFlagResult.data?.enabled && linkedCommunity?.slug,
+  );
 
   return (
     <main className="event-follow-up-page">
@@ -111,15 +138,27 @@ export default async function EventFollowUpPage({
           <small>Turn a useful conversation into a clear next step</small>
         </Link>
         <Link
-          href={communityFlagResult.data?.enabled ? "/communities" : "/messages"}
+          href={
+            communityReady
+              ? `/communities/${linkedCommunity!.slug}?view=conversations&moment=event-follow-up#create-conversation`
+              : communityFlagResult.data?.enabled
+                ? "/communities"
+                : "/messages"
+          }
         >
           <span>04</span>
           <strong>
-            {communityFlagResult.data?.enabled
-              ? "Continue in a community"
+            {communityReady
+              ? `Continue in ${linkedCommunity!.name}`
+              : communityFlagResult.data?.enabled
+                ? "Continue in a community"
               : "Continue a conversation"}
           </strong>
-          <small>Use the private space that matches your relationship</small>
+          <small>
+            {communityReady
+              ? "Share a reflection, question or useful next step with the room"
+              : "Use the private space that matches your relationship"}
+          </small>
         </Link>
       </nav>
 

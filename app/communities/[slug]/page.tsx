@@ -51,10 +51,12 @@ export default async function CommunityPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ moment?: string; view?: string }>;
 }) {
   const { slug } = await params;
-  const requestedView = (await searchParams).view;
+  const requestedSearch = await searchParams;
+  const requestedView = requestedSearch.view;
+  const isEventFollowUp = requestedSearch.moment === "event-follow-up";
   const view = ["today", "conversations", "people"].includes(
     requestedView ?? "",
   )
@@ -416,6 +418,7 @@ export default async function CommunityPage({
       ) : showConversations ? (
         <CommunityFeed
           canManage={canManage}
+          composerInitiallyOpen={isEventFollowUp}
           enhanced={structuredConversationsReady}
           communityId={community.community_id}
           currentUserId={user.id}
@@ -426,6 +429,7 @@ export default async function CommunityPage({
               ? ((commentResult.data as CommunityComment[] | null) ?? [])
               : []
           }
+          initialComposerType={isEventFollowUp ? "event_follow_up" : "discussion"}
           initialCursor={paginationOperational ? initialCursor : null}
           initialHasMore={paginationOperational && initialHasMore}
           initialNewActivityCount={Number(
@@ -440,7 +444,9 @@ export default async function CommunityPage({
           paginationReady={paginationOperational}
           readStateReady={!readSummaryResult.error && !readStateResult.error}
           prompt={
-            cohort
+            isEventFollowUp
+              ? "What would you like to carry forward from the event?"
+              : cohort
               ? "Share a question, an offer of help or an event follow-up"
               : undefined
           }

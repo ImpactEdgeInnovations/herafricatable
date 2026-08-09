@@ -26531,6 +26531,82 @@ textarea {
 }
 
 /* Experience v7 — quieter scale, less ceremony, faster decisions. */
+.notification-readiness {
+  display: grid;
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
+  gap: 44px;
+}
+
+.notification-readiness h3 {
+  margin: 5px 0 8px;
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 400;
+}
+
+.notification-readiness > div > p:last-child {
+  max-width: 440px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+
+.notification-readiness ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.notification-readiness li {
+  display: grid;
+  min-height: 70px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 9px;
+}
+
+.notification-readiness li > span {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: #f2ede4;
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.notification-readiness li.ready > span {
+  background: #e8f1e8;
+  color: #32623a;
+}
+
+.notification-readiness li div {
+  display: grid;
+  gap: 3px;
+}
+
+.notification-readiness li strong {
+  font-size: 0.68rem;
+}
+
+.notification-readiness li small {
+  color: var(--muted);
+  font-size: 0.58rem;
+  line-height: 1.45;
+}
+
 .learning-hero,
 .referral-hero,
 .membership-hero,
@@ -26554,6 +26630,16 @@ textarea {
 .member-search-hero {
   padding-top: 50px;
   padding-bottom: 38px;
+}
+
+.member-explore-hero {
+  padding-top: 46px;
+  padding-bottom: 36px;
+}
+
+.member-explore-hero h1 {
+  font-size: clamp(2.8rem, 4.6vw, 4.25rem);
+  line-height: 0.98;
 }
 
 .member-search-hero h1,
@@ -26613,6 +26699,15 @@ textarea {
 }
 
 @media (max-width: 620px) {
+  .notification-readiness,
+  .notification-readiness ul {
+    grid-template-columns: 1fr;
+  }
+
+  .notification-readiness {
+    gap: 22px;
+  }
+
   .learning-hero,
   .referral-hero,
   .membership-hero,
@@ -26631,6 +26726,15 @@ textarea {
   .opportunity-hero h1,
   .member-search-hero h1,
   .activity-overview > header h1 {
+    font-size: clamp(2.45rem, 11.5vw, 3.25rem);
+  }
+
+  .member-explore-hero {
+    padding-top: 30px;
+    padding-bottom: 26px;
+  }
+
+  .member-explore-hero h1 {
     font-size: clamp(2.45rem, 11.5vw, 3.25rem);
   }
 

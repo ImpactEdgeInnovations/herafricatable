@@ -13,6 +13,8 @@ prove this complete loop:
 
 The community operating model and its staged expansion are maintained in
 [`docs/COMMUNITY_PRODUCT_VISION.md`](./COMMUNITY_PRODUCT_VISION.md).
+Live Community rehearsal results and remaining acceptance evidence are maintained
+in [`docs/COMMUNITY_ACCEPTANCE_REPORT.md`](./COMMUNITY_ACCEPTANCE_REPORT.md).
 The approved-host monetization task and its release boundaries are maintained in
 [`docs/COMMUNITY_CREATOR_COMMERCE.md`](./COMMUNITY_CREATOR_COMMERCE.md).
 
@@ -379,6 +381,9 @@ Usability is part of production readiness and continues alongside feature delive
       filtering, failed-upload rollback and post-removal media revocation
 - [x] Create two ordinary members, one host candidate and one backup moderator as
       tagged production-safe test identities, plus a repeatable provisioning command
+- [x] Add one five-role Community scale command that verifies two members, Host,
+      backup Moderator, Super Admin safety access, 45+ conversations, stable
+      cursor pagination, pin ordering and anonymous isolation
 - [x] Add database-enforced Community publication acceptance with eight audited
       checks, required host coverage and a controlled Draft rollback
 - [ ] Complete Nairobi Founding Table acceptance before opening another chapter
@@ -569,6 +574,8 @@ Usability is part of production readiness and continues alongside feature delive
         form guidance and recoverable journey states
   - [ ] Record acceptance evidence from five non-technical users and address findings
 - [ ] Verify the Resend sending domain and configure the production email worker schedule
+- [x] Add a plain-language Admin email readiness checklist that identifies each
+      missing deployment dependency without revealing a credential
 - [ ] Create a draft event, publish it, and verify anonymous/draft/staff boundaries
 - [x] Add automated authentication, authorization and migration tests to CI
 - [ ] Require both application and database GitHub checks before production deployment
