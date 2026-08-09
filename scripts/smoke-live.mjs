@@ -48,7 +48,7 @@ async function redirect(path, location) {
 
 const results = [];
 results.push(await page("/", "The table for women"));
-results.push(await page("/events", "Upcoming tables"));
+results.push(await page("/events", "What’s coming up"));
 results.push(await page("/sign-in", "Take your seat"));
 results.push(await redirect("/home", "/sign-in"));
 results.push(await redirect("/communities", "/sign-in"));

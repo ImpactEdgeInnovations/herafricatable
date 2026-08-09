@@ -1256,11 +1256,11 @@ for (const contract of [
   "Ask to connect",
   "request_connection_with_context",
   "save_member_profile",
-  "Saved for later",
+  "People you saved",
   "Start with these members",
   "You may have something in common",
-  "A thoughtful person to meet",
-  "Both of you decide independently",
+  "Someone you may enjoy meeting",
+  "You each decide privately",
   "respond_to_curated_introduction",
   "Add reminder",
   "Your reminder",
@@ -1269,7 +1269,7 @@ for (const contract of [
   "Add result",
   "record_connection_outcome",
   "update_connection_outcome",
-  "You can change or withdraw anonymous sharing at any time",
+  "Count this anonymously in Community results",
   "Choose a network view",
   'aria-pressed={networkView === view.id}',
   "No invitations waiting",
@@ -1278,7 +1278,7 @@ for (const contract of [
   "More options",
   "Included anonymously in totals",
   "Only you can see this",
-  "Why she would like to connect",
+  "Her note to you",
   "Messaging opens when you both agree",
   'href={`/members/${member.user_id}`}',
 ]) {
@@ -1339,12 +1339,13 @@ for (const contract of ["p_city:", "p_goal:", "cityFilter=", "goalFilter="]) {
 const messageCenter = read("components/member/message-center.tsx");
 assert(
   messageCenter.includes("message-shell${conversations.length") &&
-    messageCenter.includes("Messaging opens only"),
+    messageCenter.includes("When you both") &&
+    messageCenter.includes("agreed to connect"),
   "Empty messages must explain the accepted-connection next step once",
 );
 assert(
   memberHome.includes("list_due_connection_followups") &&
-    memberHome.includes("A relationship to nurture"),
+    memberHome.includes("Keep in touch"),
   "Member Home must calmly surface due private relationship follow-ups",
 );
 const communityOutcomeSummary = read(

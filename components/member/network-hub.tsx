@@ -203,14 +203,14 @@ export function NetworkHub({
     connectionCode: string | null,
   ) {
     const result = await ask({
-      title: "Add context to your introduction",
+      title: "Tell her why you would like to connect",
       description:
-        "A short note helps her decide whether this connection feels relevant. It is visible only to the two of you.",
-      confirmLabel: "Send request",
+        "A short, friendly note helps her decide. Only the two of you can see it.",
+      confirmLabel: "Send invitation",
       fields: [
         {
           name: "note",
-          label: "Why would you like to connect? (optional)",
+          label: "Your note (optional)",
           type: "textarea",
           minLength: 10,
           maxLength: 500,
@@ -231,7 +231,7 @@ export function NetworkHub({
     setMessage(
       error
         ? memberErrorMessage(error, "send this connection request")
-        : "Connection request sent.",
+        : "Invitation sent. She can accept or decline privately.",
     );
     if (!error) router.refresh();
   }
@@ -245,7 +245,9 @@ export function NetworkHub({
     setMessage(
       error
         ? memberErrorMessage(error, `${action} this connection request`)
-        : `Request ${action}ed.`,
+        : action === "accept"
+          ? "You are connected. You can now send a private message."
+          : "Invitation declined privately.",
     );
     if (!error) router.refresh();
   }
@@ -255,10 +257,10 @@ export function NetworkHub({
   ) {
     if (action === "decline") {
       const result = await ask({
-        title: "Decline this introduction?",
+        title: "Not the right connection for now?",
         description:
-          "No contact details will be shared. The other member will only see that the introduction is not moving forward.",
-        confirmLabel: "Decline privately",
+          "No contact details will be shared. The other member will simply see that it is not moving forward.",
+        confirmLabel: "Not this time",
         tone: "danger",
       });
       if (!result) return;
@@ -277,19 +279,19 @@ export function NetworkHub({
       error
         ? memberErrorMessage(error, `${action} this introduction`)
         : data === "accepted"
-          ? "You both accepted. Your connection and private messaging are ready."
+          ? "You both agreed. You can now send a private message."
           : action === "accept"
-            ? "Accepted privately. We will let you know if she also accepts."
-            : "Introduction declined privately.",
+            ? "You said yes. We will let you know if she does too."
+            : "You chose not to connect this time.",
     );
     if (!error) router.refresh();
   }
   async function saveProfile(memberId: string, displayName: string) {
     const result = await ask({
-      title: `Save ${displayName} for later?`,
+      title: `Save ${displayName}?`,
       description:
-        "This is private. She will not be notified, and saving does not send a connection request.",
-      confirmLabel: "Save profile",
+        "This is private. She will not be notified, and no invitation will be sent.",
+      confirmLabel: "Save",
       fields: [
         {
           name: "note",
@@ -313,7 +315,7 @@ export function NetworkHub({
     setMessage(
       error
         ? memberErrorMessage(error, "save this profile")
-        : "Profile saved privately for later.",
+        : "Saved. Only you can see this list.",
     );
     if (!error) router.refresh();
   }
@@ -351,17 +353,17 @@ export function NetworkHub({
       (item) => item.connection_id === connectionId,
     );
     const result = await ask({
-      title: `Plan your follow-up with ${displayName}`,
+      title: `Add a reminder for ${displayName}`,
       description:
-        "This note and reminder are private to you. The member and Admin cannot see them.",
-      confirmLabel: existing ? "Update private plan" : "Save private plan",
+        "Your note and reminder are private. Neither the member nor Admin can see them.",
+      confirmLabel: existing ? "Update reminder" : "Save reminder",
       fields: [
         {
           initialValue: existing?.private_note ?? "",
           maxLength: 1000,
           minLength: 3,
           name: "note",
-          label: "Private note (optional)",
+          label: "Note to yourself (optional)",
           placeholder:
             "For example: Interested in regional distribution and values careful partnerships.",
           type: "textarea",
@@ -371,7 +373,7 @@ export function NetworkHub({
           maxLength: 300,
           minLength: 3,
           name: "nextStep",
-          label: "Your next step (optional)",
+          label: "What would you like to do next? (optional)",
           placeholder: "Send the supplier introduction we discussed.",
           type: "textarea",
         },
@@ -395,8 +397,8 @@ export function NetworkHub({
     setBusy("");
     setMessage(
       error
-        ? memberErrorMessage(error, "save this private follow-up")
-        : "Your private follow-up plan is saved.",
+        ? memberErrorMessage(error, "save this reminder")
+        : "Your private reminder is saved.",
     );
     if (!error) router.refresh();
   }
@@ -409,17 +411,17 @@ export function NetworkHub({
     setBusy("");
     setMessage(
       error
-        ? memberErrorMessage(error, "complete this follow-up")
-        : "Follow-up marked complete.",
+        ? memberErrorMessage(error, "complete this reminder")
+        : "Reminder marked done.",
     );
     if (!error) router.refresh();
   }
   async function removeFollowup(connectionId: string) {
     const result = await ask({
-      title: "Remove this private plan?",
+      title: "Remove this reminder?",
       description:
-        "Your personal note, next step and reminder will be deleted. The connection itself is unchanged.",
-      confirmLabel: "Remove private plan",
+        "Your note, next step and date will be deleted. Your connection will stay the same.",
+      confirmLabel: "Remove reminder",
       tone: "danger",
     });
     if (!result) return;
@@ -431,8 +433,8 @@ export function NetworkHub({
     setBusy("");
     setMessage(
       error
-        ? memberErrorMessage(error, "remove this private follow-up")
-        : "Private follow-up plan removed.",
+        ? memberErrorMessage(error, "remove this reminder")
+        : "Reminder removed.",
     );
     if (!error) router.refresh();
   }
@@ -443,15 +445,15 @@ export function NetworkHub({
   ) {
     const result = await ask({
       title: existing
-        ? `Update your outcome with ${displayName}`
-        : `What came from connecting with ${displayName}?`,
+        ? `Update what happened with ${displayName}`
+        : `What happened after connecting with ${displayName}?`,
       description:
-        "Your note and both members’ identities always stay private. You can change or withdraw anonymous sharing at any time.",
-      confirmLabel: existing ? "Update outcome" : "Save outcome",
+        "Your note stays private. If you allow anonymous counting, Admin sees only the category—not either member’s identity.",
+      confirmLabel: existing ? "Update result" : "Save result",
       fields: [
         {
           initialValue: existing?.outcome_type ?? "collaboration",
-          label: "Type of outcome",
+          label: "What happened?",
           name: "outcomeType",
           options: Object.entries(outcomeLabels).map(([value, label]) => ({
             label,
@@ -470,7 +472,7 @@ export function NetworkHub({
         {
           help: "This is visible only to you—not the other member or Admin.",
           initialValue: existing?.private_detail ?? "",
-          label: "Private detail",
+          label: "Private note",
           maxLength: 2000,
           minLength: 10,
           name: "detail",
@@ -482,7 +484,7 @@ export function NetworkHub({
         {
           help: "Admin receives only an anonymous category total—never your note, name, or the other member’s identity. The category stays hidden until at least three different real members contribute.",
           initialValue: existing?.share_anonymously ?? true,
-          label: "Include this in anonymous community totals",
+          label: "Count this anonymously in Community results",
           name: "shareAnonymously",
           type: "checkbox",
         },
@@ -511,17 +513,17 @@ export function NetworkHub({
       error
         ? memberErrorMessage(error, "record this connection outcome")
         : existing
-          ? "Your outcome and sharing choice have been updated."
-          : "Your private outcome has been recorded.",
+          ? "Your result and privacy choice are updated."
+          : "Your result is saved privately.",
     );
     if (!error) router.refresh();
   }
   async function removeOutcome(outcomeId: string) {
     const result = await ask({
-      title: "Delete this private outcome?",
+      title: "Delete this result?",
       description:
-        "The private note and its anonymous contribution will be removed. Your connection is unchanged.",
-      confirmLabel: "Delete outcome",
+        "Your private note and any anonymous count will be removed. Your connection will stay the same.",
+      confirmLabel: "Delete result",
       tone: "danger",
     });
     if (!result) return;
@@ -534,7 +536,7 @@ export function NetworkHub({
     setMessage(
       error
         ? memberErrorMessage(error, "delete this connection outcome")
-        : "Private outcome deleted.",
+        : "Result deleted.",
     );
     if (!error) router.refresh();
   }
@@ -547,10 +549,10 @@ export function NetworkHub({
     setBusy(memberId);
     if (action === "remove") {
       const result = await ask({
-        title: "Remove this connection?",
+        title: "Remove this person from your connections?",
         description:
-          "Private contact access will end for both members. You can send a new connection request later.",
-        confirmLabel: "Remove connection",
+          "You will both lose shared contact access. You can ask to connect again later.",
+        confirmLabel: "Remove",
         tone: "danger",
       });
       if (!result) {
@@ -757,8 +759,8 @@ export function NetworkHub({
                       <blockquote className="network-introduction-note">
                         <span>
                           {item.direction === "incoming"
-                            ? "Why she would like to connect"
-                            : "Your introduction"}
+                            ? "Her note to you"
+                            : "Your note"}
                         </span>
                         {item.introduction_note}
                       </blockquote>
@@ -880,8 +882,8 @@ export function NetworkHub({
                     {item.status === "accepted"
                       ? "Connected"
                       : item.direction === "incoming"
-                        ? "Your response"
-                        : "Request sent"}
+                        ? "Invitation for you"
+                        : "Invitation sent"}
                   </span>
                   {item.status === "pending" &&
                   item.direction === "incoming" ? (
@@ -1019,11 +1021,11 @@ export function NetworkHub({
           id="curated-introductions"
         >
           <header>
-            <p className="eyebrow">Introduced by Her Africa Table</p>
-            <h2>A thoughtful person to meet</h2>
+            <p className="eyebrow">Suggested by Her Africa Table</p>
+            <h2>Someone you may enjoy meeting</h2>
             <p>
-              Both of you decide independently. Contact details and messaging
-              remain private until you both accept.
+              You each decide privately. Messaging opens only if you both say
+              yes.
             </p>
           </header>
           <div>
@@ -1059,7 +1061,7 @@ export function NetworkHub({
                   </div>
                   {item.my_decision === "accepted" ? (
                     <span className="curated-waiting">
-                      You accepted · waiting privately
+                      You said yes · waiting privately
                     </span>
                   ) : (
                     <div className="curated-introduction-actions">
@@ -1072,7 +1074,7 @@ export function NetworkHub({
                           )
                         }
                       >
-                        I would like to meet
+                        Yes, I would like to meet
                       </button>
                       <button
                         disabled={busy !== ""}
@@ -1096,8 +1098,8 @@ export function NetworkHub({
         <section className="saved-member-profiles">
           <header>
             <div>
-              <p className="eyebrow">Private to you</p>
-              <h2>Saved for later</h2>
+              <p className="eyebrow">Only you can see this</p>
+              <h2>People you saved</h2>
             </div>
             <span>{savedMembers.length} saved</span>
           </header>
@@ -1380,13 +1382,13 @@ export function NetworkHub({
         <summary>
           <span>
             <strong>Met someone in person?</strong>
-            <small>Use a private eight-character code to connect.</small>
+            <small>Exchange a private code and connect without searching.</small>
           </span>
-          <span>Open connection codes</span>
+          <span>Connect with a code</span>
         </summary>
         <div className="network-identity">
           <div>
-            <p className="eyebrow">Your connection code</p>
+            <p className="eyebrow">Your private code</p>
             <strong>{connectionCode}</strong>
             <span>
               Share this only with someone you intend to connect with. It
@@ -1395,7 +1397,7 @@ export function NetworkHub({
           </div>
           <form onSubmit={submitCode}>
             <label>
-              Enter her code
+              Enter their code
               <input
                 value={code}
                 maxLength={8}
@@ -1411,7 +1413,7 @@ export function NetworkHub({
               className="button button-primary"
               disabled={busy !== "" || code.length !== 8}
             >
-              Send request
+              Ask to connect
             </button>
           </form>
         </div>

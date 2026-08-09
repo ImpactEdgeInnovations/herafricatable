@@ -158,8 +158,8 @@ export function MessageCenter({
       {dialog}
       <aside className="conversation-list">
         <header>
-          <p className="eyebrow">Private messages</p>
-          <h1>Inbox</h1>
+          <p className="eyebrow">Messages</p>
+          <h1>Your conversations</h1>
         </header>
         {conversations.length ? (
           conversations.map((item) => (
@@ -194,14 +194,13 @@ export function MessageCenter({
                 <path d="M8 9h8M8 13h5" />
               </svg>
             </span>
-            <strong>Start with a connection.</strong>
+            <strong>No messages yet</strong>
             <p>
-              Find someone under Members and send a thoughtful
-              connection request. Messaging opens only after she accepts, so
-              every conversation begins with mutual consent.
+              Choose someone in Members and ask to connect. When you both
+              agree, your conversation will appear here.
             </p>
             <Link className="button button-primary" href="/network">
-              Explore members
+              Meet members
             </Link>
           </div>
         )}
@@ -287,11 +286,11 @@ export function MessageCenter({
           </>
         ) : (
           <div className="conversation-placeholder">
-            <p className="eyebrow">Private by design</p>
-            <h2>Select a conversation.</h2>
+            <p className="eyebrow">Messages</p>
+            <h2>Choose a conversation</h2>
             <p>
-              Only accepted, active and unblocked connections can exchange
-              messages.
+              Your messages stay private between you and people who have
+              agreed to connect.
             </p>
           </div>
         )}

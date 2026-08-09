@@ -529,13 +529,13 @@ export default async function MemberHomePage() {
             }
           : dueFollowups.length > 0
             ? {
-                action: "Review your follow-up",
+                action: "See reminder",
                 description:
                   dueFollowups.length === 1
                     ? `${dueFollowups[0].next_step} — ${dueFollowups[0].display_name}`
-                    : `${dueFollowups.length} private relationship follow-ups are ready for your attention.`,
+                    : `${dueFollowups.length} private reminders are ready for your attention.`,
                 href: "/network",
-                label: "A relationship to nurture",
+                label: "Keep in touch",
               }
           : unreadNotifications > 0
             ? {
@@ -586,7 +586,7 @@ export default async function MemberHomePage() {
             )}
             {accessStatus === "active" ? (
               <Link className="button button-outline" href="/events">
-                View events
+                Events
               </Link>
             ) : null}
           </div>
@@ -610,15 +610,15 @@ export default async function MemberHomePage() {
           </header>
           <div>
             <Link href="/network">
-              <span>Connections</span>
+              <span>People you know</span>
               <strong>{acceptedConnections}</strong>
-              <small>View your network</small>
+              <small>See your connections</small>
             </Link>
             <Link href="/messages">
-              <span>Unread messages</span>
+              <span>New messages</span>
               <strong>{unreadMessages}</strong>
               <small>
-                {unreadMessages ? "Continue conversations" : "You are all caught up"}
+                {unreadMessages ? "Open messages" : "No new messages"}
               </small>
             </Link>
             <Link href="/notifications">
