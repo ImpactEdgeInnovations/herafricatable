@@ -81,6 +81,15 @@ export default async function MemberHomePage() {
   }
   const isApproved = ["onboarding", "active", "dormant"].includes(accessStatus);
   const isSuspended = accessStatus === "suspended";
+  const membershipApplicationResult =
+    accessStatus === "pending"
+      ? await supabase
+          .from("membership_applications")
+          .select("status")
+          .eq("user_id", user.id)
+          .maybeSingle()
+      : { data: null, error: null };
+  const applicationStatus = membershipApplicationResult.data?.status ?? null;
   const { data: nextEventRow } = await supabase
     .from("events")
     .select(
@@ -346,14 +355,32 @@ export default async function MemberHomePage() {
               action: "Contact support",
               href: "mailto:support@herafricatable.com",
             }
-          : {
-              label: "Approval pending",
-              title: "Your request is with our team.",
-              description:
-                "You have signed in successfully. We will open your member access after your invitation, registration or payment has been confirmed.",
-              action: "Explore events",
-              href: "/events",
-            };
+          : !membershipApplicationResult.error && !applicationStatus
+            ? {
+                label: "One short step",
+                title: "Tell us a little about you.",
+                description:
+                  "Your email is verified. Complete a short private request so our membership team can prepare your seat thoughtfully.",
+                action: "Request membership",
+                href: "/apply",
+              }
+            : applicationStatus === "declined"
+              ? {
+                  label: "Request update",
+                  title: "You can update your request.",
+                  description:
+                    "We could not approve your earlier request. You may revise it or contact the team if you would like help.",
+                  action: "Update my request",
+                  href: "/apply",
+                }
+              : {
+                  label: "Approval pending",
+                  title: "Your request is with our team.",
+                  description:
+                    "We are reviewing your request privately. You can explore upcoming gatherings while your seat is being considered.",
+                  action: "Explore events",
+                  href: "/events",
+                };
   const registrationState = nextRegistrationStatus
     ? ({
         approved: {

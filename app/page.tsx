@@ -2,206 +2,197 @@ import Link from "next/link";
 import { EventCountdown } from "@/components/event-countdown";
 
 const ArrowIcon = () => (
-  <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 10h11m-4-4 4 4-4 4" /></svg>
-);
-
-const ConnectionIcon = () => (
-  <svg aria-hidden="true" viewBox="0 0 32 32">
-    <circle cx="11" cy="11" r="4" /><circle cx="23" cy="10" r="3" />
-    <path d="M4 26c.7-5 3.1-7.4 7-7.4S17.3 21 18 26M18.3 18.7c1.2-1.1 2.8-1.7 4.7-1.7 3.2 0 5.1 2.1 5.7 6" />
+  <svg aria-hidden="true" viewBox="0 0 20 20">
+    <path d="M4 10h11m-4-4 4 4-4 4" />
   </svg>
 );
 
-const EventIcon = () => (
-  <svg aria-hidden="true" viewBox="0 0 32 32">
-    <rect x="4" y="7" width="24" height="21" rx="3" />
-    <path d="M10 3v8M22 3v8M4 14h24M10 20h4M18 20h4" />
-  </svg>
-);
+const membershipBenefits = [
+  {
+    number: "01",
+    title: "Meet with context",
+    description:
+      "Find women by what they are building, what they know and what they need now—not by follower count.",
+  },
+  {
+    number: "02",
+    title: "Continue the conversation",
+    description:
+      "Move from a thoughtful event introduction into private, permission-based connection and Community.",
+  },
+  {
+    number: "03",
+    title: "Make the network useful",
+    description:
+      "Ask for help, open a door, share an opportunity or gather women around a focused purpose.",
+  },
+];
 
-const GrowthIcon = () => (
-  <svg aria-hidden="true" viewBox="0 0 32 32">
-    <path d="M7 27V16M16 27V10M25 27V5M4 27h24" /><path d="m6 11 8-6 6 3 7-6" />
-  </svg>
-);
-
-const ShieldIcon = () => (
-  <svg aria-hidden="true" viewBox="0 0 32 32">
-    <path d="M16 3 27 7v8c0 7.4-4.2 11.8-11 14-6.8-2.2-11-6.6-11-14V7l11-4Z" />
-    <path d="m11 16 3.2 3L21 12" />
-  </svg>
-);
-
-const SparkIcon = () => (
-  <svg aria-hidden="true" viewBox="0 0 32 32">
-    <path d="M16 3c.5 7.7 4.3 11.5 12 12-7.7.5-11.5 4.3-12 12-.5-7.7-4.3-11.5-12-12 7.7-.5 11.5-4.3 12-12Z" />
-  </svg>
-);
-
-const principles = [
-  ["01", "No business cards", "Scan, request, accept—and keep the relationship in one private place."],
-  ["02", "Find the right people", "Meet women by industry, country, experience, interests, and what they need now."],
-  ["03", "Useful every week", "Ask for an introduction, offer expertise, join a Circle, or learn something practical."],
-  ["04", "Yours beyond the event", "Your connections, conversations, communities, and event memories stay with you."],
+const membershipSteps = [
+  ["01", "Verify your email", "Receive a private six-digit sign-in code."],
+  ["02", "Tell us about you", "Share a few details about your work and purpose."],
+  ["03", "Thoughtful review", "Our membership team considers every request privately."],
+  ["04", "Take your seat", "Complete your profile and enter the member network."],
 ];
 
 export default function HomePage() {
   return (
-    <main className="site-shell">
-      <header className="site-header">
+    <main className="site-shell editorial-home">
+      <header className="site-header editorial-header">
         <Link className="brand" href="/" aria-label="Her Africa Table home">
           <span className="brand-mark" aria-hidden="true">H</span>
           <span>Her Africa Table<small>Meet. Connect. Rise.</small></span>
         </Link>
         <nav className="desktop-nav" aria-label="About Her Africa Table">
-          <a href="#why">Why the table</a>
-          <a href="#experience">The experience</a>
+          <a href="#why">Why join</a>
+          <a href="#inside">Inside the table</a>
           <Link href="/events">Events</Link>
-          <a href="#membership">Membership</a>
           <Link href="/faq">FAQ</Link>
         </nav>
         <nav className="header-actions" aria-label="Account navigation">
-          <Link className="button button-small button-outline" href="/sign-in">Member sign in</Link>
+          <Link className="editorial-sign-in" href="/sign-in">Sign in</Link>
+          <Link className="button button-small button-primary" href="/sign-in">
+            Request membership
+          </Link>
         </nav>
       </header>
 
+      <section className="editorial-hero" aria-labelledby="hero-title">
+        <div className="editorial-hero-copy">
+          <p className="eyebrow"><span /> Private membership · Nairobi</p>
+          <h1 id="hero-title">
+            Where African women<br />
+            gather <em>with purpose.</em>
+          </h1>
+          <p>
+            A considered network for women who lead, build, invest and create—
+            grounded in trusted relationships that continue beyond the room.
+          </p>
+          <div className="hero-actions">
+            <Link className="button button-primary" href="/sign-in">
+              Request membership <ArrowIcon />
+            </Link>
+            <Link className="text-link" href="/events">View gatherings</Link>
+          </div>
+          <div className="editorial-proof" aria-label="Membership qualities">
+            <span>Application-led</span>
+            <span>Private by design</span>
+            <span>Community beyond events</span>
+          </div>
+        </div>
+
+        <div className="editorial-table-art" aria-label="Her Africa Table founding circle in Nairobi">
+          <div className="editorial-art-top"><span>Founding circle</span><span>01 / Nairobi</span></div>
+          <div className="editorial-art-centre">
+            <i aria-hidden="true" />
+            <strong>HAT</strong>
+            <p>A seat changes<br />everything.</p>
+          </div>
+          <div className="editorial-art-bottom"><span>Women shaping Africa</span><span>Est. 2026</span></div>
+        </div>
+      </section>
+
       <EventCountdown />
 
-      <section className="landing-hero" aria-labelledby="hero-title">
-        <div className="hero-copy">
-          <p className="eyebrow"><span /> Private membership · Nairobi</p>
-          <h1 id="hero-title">The table for women<br /><em>shaping Africa.</em></h1>
-          <p className="hero-intro">A curated network for African women who found, lead, invest, and build—designed for trusted relationships that move beyond the room.</p>
-          <div className="hero-actions">
-            <Link className="button button-primary" href="/sign-in">Request membership <ArrowIcon /></Link>
-            <a className="text-link" href="#membership">Explore the network</a>
-          </div>
-          <div className="trust-row" aria-label="Membership qualities">
-            <span>Application-led</span><span>Private by design</span><span>Nairobi founding circle</span>
-          </div>
-        </div>
-
-        <div className="table-visual" aria-label="Her Africa Table founding network in Nairobi">
-          <div className="visual-index"><span>Circle 01</span><p>Private members&apos; network<br />Nairobi · Kenya</p></div>
-          <div className="table-top"><span className="table-monogram">HAT</span><span className="table-subtitle">A seat changes everything</span></div>
-          <div className="visual-bottom"><span>Est. Nairobi</span><span>Founding circle</span></div>
-          <p className="visual-note">Designed around real conversations—not follower counts.</p>
-        </div>
-      </section>
-
-      <section className="promise-section" id="why" aria-labelledby="promise-title">
-        <div className="section-heading">
-          <p className="eyebrow">Beyond the event</p>
-          <h2 id="promise-title">One room.<br />A network that endures.</h2>
-        </div>
-        <p className="section-lead">Events are where trust begins. Her Africa Table is where the connection keeps working—before the next gathering and long after the last conversation.</p>
-        <div className="value-grid">
-          <article className="value-card"><ConnectionIcon /><span>01</span><h3>Find your people</h3><p>Discover members by industry, expertise, country, and what they are building next.</p></article>
-          <article className="value-card featured-card"><EventIcon /><span>02</span><h3>Connect with intention</h3><p>Turn a conversation at the table into a trusted, permission-based professional connection.</p></article>
-          <article className="value-card"><GrowthIcon /><span>03</span><h3>Keep moving forward</h3><p>Ask, offer, learn, share opportunities, and grow with women invested in your progress.</p></article>
-        </div>
-      </section>
-
-      <section className="nairobi-section" aria-labelledby="nairobi-title">
-        <div className="event-art" aria-hidden="true">
-          <span className="event-ring ring-a" /><span className="event-ring ring-b" />
-          <div className="event-city"><small>Founding city</small><strong>Nairobi</strong><span>Kenya</span></div>
-          <p>One table · Many industries · Shared ambition</p>
-        </div>
-        <div className="event-copy">
-          <p className="eyebrow">The first gathering</p>
-          <h2 id="nairobi-title">A carefully chosen room in Nairobi.</h2>
-          <p>The first Her Africa Table event will bring together women whose work, perspective, and generosity can move one another forward. Approved members receive the date, venue, programme, and ticket window first.</p>
-          <dl className="event-details">
-            <div><dt>Format</dt><dd>Curated professional gathering</dd></div>
-            <div><dt>Access</dt><dd>Invitation and approval</dd></div>
-            <div><dt>Details</dt><dd>Announced to beta members</dd></div>
-          </dl>
-          <Link className="button button-primary" href="/sign-in">Request a seat <ArrowIcon /></Link>
-        </div>
-      </section>
-
-      <section className="principles-section" aria-labelledby="principles-title">
-        <div className="compact-heading">
-          <p className="eyebrow">Made to be useful</p>
-          <h2 id="principles-title">Professional networking,<br />made more human.</h2>
-        </div>
-        <div className="principle-list">
-          {principles.map(([number, title, description]) => (
-            <article className="principle-row" key={number}>
-              <span>{number}</span><h3>{title}</h3><p>{description}</p><ArrowIcon />
+      <section className="editorial-purpose" id="why" aria-labelledby="purpose-title">
+        <header>
+          <p className="eyebrow">Why the table exists</p>
+          <h2 id="purpose-title">A network that becomes more useful with every real conversation.</h2>
+        </header>
+        <p className="editorial-purpose-intro">
+          Events create the first moment. Her Africa Table gives the relationship
+          somewhere considered to grow—without public performance or unwanted access.
+        </p>
+        <div className="editorial-benefits">
+          {membershipBenefits.map((benefit) => (
+            <article key={benefit.number}>
+              <span>{benefit.number}</span>
+              <h3>{benefit.title}</h3>
+              <p>{benefit.description}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="platform-section" id="experience" aria-labelledby="platform-title">
-        <div className="platform-copy">
-          <p className="eyebrow light-eyebrow">Inside your network</p>
-          <h2 id="platform-title">A reason to return—even when no event is near.</h2>
-          <p>Your home brings the network into focus: who to meet, what members need, what you can offer, and what is happening next.</p>
-          <ul className="platform-features">
-            <li><ConnectionIcon /><span><b>Find trusted members</b>Search across events without exposing private contact details.</span></li>
-            <li><SparkIcon /><span><b>Asks & Offers</b>Make a specific request or open a door for someone else.</span></li>
-            <li><EventIcon /><span><b>Circles and communities</b>Build momentum in smaller, relevant groups.</span></li>
+      <section className="editorial-community" id="inside" aria-labelledby="inside-title">
+        <div className="editorial-community-copy">
+          <p className="eyebrow light-eyebrow">Inside the table</p>
+          <h2 id="inside-title">A Community—not another crowded feed.</h2>
+          <p>
+            Enter a calm member home, return to your Communities and see the one
+            next step that matters. Conversations are organised around useful
+            asks, offers, introductions and shared work.
+          </p>
+          <ul>
+            <li><span>01</span><p><strong>Your Communities first</strong><small>Return directly to the women and conversations you chose.</small></p></li>
+            <li><span>02</span><p><strong>Permission before access</strong><small>Private contact details remain yours until you accept a connection.</small></p></li>
+            <li><span>03</span><p><strong>Purpose over noise</strong><small>One clear action per screen, with quieter tools waiting when needed.</small></p></li>
           </ul>
+          <Link className="button button-light" href="/sign-in">Request your seat <ArrowIcon /></Link>
         </div>
-        <div className="product-preview" aria-label="Illustrative preview of the member home">
-          <div className="preview-top"><div className="mini-brand">H</div><span>Good evening, Amina</span><i /></div>
-          <div className="preview-body">
-            <div className="preview-welcome"><small>YOUR NEXT GATHERING</small><strong>Nairobi</strong><span>Details arriving soon</span><div><b>—</b><small>DAYS</small><b>—</b><small>HOURS</small></div></div>
-            <div className="preview-section-title"><b>From the network</b><span>See all</span></div>
-            <div className="preview-ask"><span className="preview-avatar">AM</span><div><b>Looking for an introduction</b><p>Seeking women building in climate finance across East Africa.</p><small>ASK · FINANCE</small></div></div>
-            <div className="preview-ask offer"><span className="preview-avatar">NK</span><div><b>Offering two mentorship sessions</b><p>For early-stage founders preparing their first institutional raise.</p><small>OFFER · FOUNDERS</small></div></div>
-            <div className="preview-nav"><span>Home</span><span>Network</span><span>Connect</span><span>Inbox</span><span>More</span></div>
+
+        <div className="editorial-community-preview" aria-label="Illustrative preview of a Her Africa Table Community">
+          <header><span className="mini-brand">H</span><p><small>Your Community</small><strong>The Founding Table</strong></p><i /></header>
+          <div className="editorial-preview-welcome">
+            <small>GOOD MORNING, AMINA</small>
+            <strong>What would move your work forward today?</strong>
+            <span>Start a conversation</span>
           </div>
+          <div className="editorial-preview-row">
+            <span>MN</span><p><strong>Looking for a climate finance introduction</strong><small>ASK · NAIROBI · 12 MIN AGO</small></p>
+          </div>
+          <div className="editorial-preview-row">
+            <span>AK</span><p><strong>Offering two founder office hours this month</strong><small>OFFER · FOUNDERS · TODAY</small></p>
+          </div>
+          <footer><span>Home</span><span>Community</span><span>Members</span><span>Messages</span></footer>
         </div>
       </section>
 
-      <section className="trust-section" aria-labelledby="trust-title">
-        <div className="trust-emblem"><ShieldIcon /><span>Trust is a product feature</span></div>
-        <div className="trust-copy">
+      <section className="editorial-trust" aria-labelledby="trust-title">
+        <div>
           <p className="eyebrow">Private by design</p>
           <h2 id="trust-title">You decide who gets closer.</h2>
-          <p>Membership creates access to a professional network—not automatic access to your private information. Every deeper connection remains permission-based.</p>
-          <div className="trust-points">
-            <article><strong>01</strong><h3>Contact details stay gated</h3><p>Email, phone, and social links appear only after you accept a connection.</p></article>
-            <article><strong>02</strong><h3>Pause without losing your network</h3><p>Hide your profile from new people while keeping your existing connections and history.</p></article>
-            <article><strong>03</strong><h3>Reporting without standing surveillance</h3><p>Moderators see private content only when a report requires investigation—and access is logged.</p></article>
-          </div>
+        </div>
+        <p>
+          Membership creates access to a professional Community—not automatic
+          access to your private information. Connections require consent,
+          moderation is evidence-led, and sensitive Admin actions are recorded.
+        </p>
+        <Link href="/community-guidelines">How we protect the table <ArrowIcon /></Link>
+      </section>
+
+      <section className="editorial-membership" id="membership" aria-labelledby="membership-title">
+        <header>
+          <p className="eyebrow">Membership, clearly</p>
+          <h2 id="membership-title">Your seat begins with four simple steps.</h2>
+          <p>No complicated setup. No public application. Your answers are reviewed privately.</p>
+        </header>
+        <ol>
+          {membershipSteps.map(([number, title, description]) => (
+            <li key={number}>
+              <span>{number}</span>
+              <p><strong>{title}</strong><small>{description}</small></p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="editorial-closing" aria-labelledby="closing-title">
+        <p className="eyebrow light-eyebrow">The Nairobi founding circle</p>
+        <h2 id="closing-title">Bring your work.<br />Find your people.</h2>
+        <p>Request membership and help shape the table from its first chapter.</p>
+        <div>
+          <Link className="button button-light" href="/sign-in">Request membership <ArrowIcon /></Link>
+          <a href="mailto:support@herafricatable.com">Ask us a question</a>
         </div>
       </section>
 
-      <section className="membership-section" id="membership" aria-labelledby="membership-title">
-        <div><p className="eyebrow light-eyebrow">Membership, simply</p><h2 id="membership-title">One invitation.<br />A network that compounds.</h2></div>
-        <ol className="membership-steps">
-          <li><strong>01</strong><span><b>Join the beta</b>Sign in with Google or a secure email code.</span></li>
-          <li><strong>02</strong><span><b>Complete your profile</b>Share enough for the right women to find you.</span></li>
-          <li><strong>03</strong><span><b>Take your seat</b>Join the event and meet your trusted network.</span></li>
-        </ol>
-        <Link className="button button-light" href="/sign-in">Request membership <ArrowIcon /></Link>
-      </section>
-
-      <section className="founding-section" aria-labelledby="founding-title">
-        <blockquote>
-          <p id="founding-title">A considered room for ambitious women—private enough for trust, diverse enough for perspective, and useful long after everyone goes home.</p>
-          <footer>— A note from the founding team</footer>
-        </blockquote>
-      </section>
-
-      <section className="closing-section" aria-labelledby="closing-title">
-        <p className="eyebrow light-eyebrow">Your invitation starts here</p>
-        <h2 id="closing-title">The next opportunity may already be sitting at the table.</h2>
-        <p>Request membership in the Nairobi founding circle and help shape the table from its first chapter.</p>
-        <div><Link className="button button-light" href="/sign-in">Request membership <ArrowIcon /></Link><a href="mailto:support@herafricatable.com">Ask us a question</a></div>
-      </section>
-
-      <footer className="site-footer complete-footer">
+      <footer className="site-footer complete-footer editorial-footer">
         <div className="footer-intro">
           <div className="brand footer-brand"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></div>
-          <p>A private professional network for African women, beginning in Nairobi.</p>
+          <p>A private professional Community for African women, beginning in Nairobi.</p>
         </div>
-        <div className="footer-column"><strong>Explore</strong><a href="#why">Why the table</a><a href="#experience">The experience</a><a href="#membership">Membership</a><Link href="/faq">FAQ</Link></div>
+        <div className="footer-column"><strong>Explore</strong><a href="#why">Why join</a><a href="#inside">Inside the table</a><Link href="/events">Events</Link><Link href="/faq">FAQ</Link></div>
         <div className="footer-column"><strong>Account</strong><Link href="/sign-in">Member sign in</Link><Link href="/admin/sign-in">Admin sign in</Link><a href="mailto:support@herafricatable.com">Support</a></div>
         <div className="footer-column"><strong>Trust</strong><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/community-guidelines">Community guidelines</Link></div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} Her Africa Table</span><span>Built with intention in Nairobi.</span></div>

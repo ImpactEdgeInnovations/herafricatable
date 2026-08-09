@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 
 type MemberRow = {
   access_status: string;
+  application_status?: string | null;
 };
 
 type EventRow = {
@@ -65,14 +66,14 @@ export default async function AdminHomePage() {
   const canModerate = role === "super_admin" || role === "moderator";
 
   const [
-    memberResult,
+    memberApplicationResult,
     eventResult,
     memberReports,
     marketplaceReports,
     communityReports,
   ] = await Promise.all([
     role === "super_admin"
-      ? supabase.rpc("list_admin_members_v2")
+      ? supabase.rpc("list_admin_members_v3")
       : Promise.resolve({ data: [], error: null }),
     canManageEvents
       ? supabase.rpc("list_managed_events")
@@ -87,6 +88,12 @@ export default async function AdminHomePage() {
       ? supabase.rpc("list_community_safety_reports")
       : Promise.resolve({ data: [], error: null }),
   ]);
+
+  const memberFallbackResult =
+    role === "super_admin" && memberApplicationResult.error
+      ? await supabase.rpc("list_admin_members_v2")
+      : null;
+  const memberResult = memberFallbackResult ?? memberApplicationResult;
 
   const members = (memberResult.data as MemberRow[] | null) ?? [];
   const events = (eventResult.data as EventRow[] | null) ?? [];
@@ -123,7 +130,9 @@ export default async function AdminHomePage() {
     ...((effectiveCommunityReports?.data as ReportRow[] | null) ?? []),
   ];
   const pendingMembers = members.filter(
-    (member) => member.access_status === "pending",
+    (member) =>
+      member.access_status === "pending" &&
+      member.application_status !== "declined",
   ).length;
   const activeMembers = members.filter(
     (member) => member.access_status === "active",

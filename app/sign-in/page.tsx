@@ -4,7 +4,7 @@ import { AuthPage } from "@/components/auth/auth-page";
 export const metadata: Metadata = { title: "Member sign in" };
 
 function safeNext(value: string | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/home";
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/apply";
   return value;
 }
 

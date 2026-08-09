@@ -283,7 +283,7 @@ export default async function AdminOperationsPage({
   const loadEventList = loadEvents || loadPrograms;
   const [
     { data: countdown },
-    memberResult,
+    memberApplicationResult,
     eventResult,
     operationalHealth,
   ] = await Promise.all([
@@ -295,7 +295,7 @@ export default async function AdminOperationsPage({
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     role.role === "super_admin" && loadPeople
-      ? supabase.rpc("list_admin_members_v2")
+      ? supabase.rpc("list_admin_members_v3")
       : Promise.resolve({ data: [], error: null }),
     canManageEvents && loadEventList
       ? supabase.rpc("list_managed_events")
@@ -305,6 +305,11 @@ export default async function AdminOperationsPage({
       : Promise.resolve(null),
   ]);
 
+  const memberFallbackResult =
+    role.role === "super_admin" && loadPeople && memberApplicationResult.error
+      ? await supabase.rpc("list_admin_members_v2")
+      : null;
+  const memberResult = memberFallbackResult ?? memberApplicationResult;
   const members = (memberResult.data as AdminMember[] | null) ?? [];
   const managedRows = (eventResult.data as ManagedEventRow[] | null) ?? [];
   const events: AdminEvent[] = managedRows.map((event) => ({
@@ -832,6 +837,7 @@ export default async function AdminOperationsPage({
             initialMembers={members}
             currentUserId={user.id}
             migrationReady={!memberResult.error}
+            applicationJourneyReady={!memberApplicationResult.error}
           />
           <CuratedIntroductionManager
             availability={

@@ -1835,6 +1835,22 @@ assert(
   packageJson.scripts?.["ops:community:accept-scale"],
   "Package scripts must expose the five-role Community scale acceptance",
 );
+const membershipApplicationMigration = read(
+  "supabase/migrations/20260809100000_membership_application_journey.sql",
+);
+for (const contract of [
+  "membership_applications",
+  "submit_membership_application",
+  "list_admin_members_v3",
+  "Only a submitted pending request can be declined",
+  "public.is_admin(array['super_admin']::public.app_role[])",
+  "membership.application_submitted",
+]) {
+  assert(
+    membershipApplicationMigration.includes(contract),
+    `Membership application boundary must include ${contract}`,
+  );
+}
 console.log(
   `Repository contracts passed: ${tracked.length} tracked files, ${migrations.length} ordered migrations.`,
 );

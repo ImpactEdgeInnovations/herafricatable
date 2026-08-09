@@ -192,6 +192,9 @@ Usability is part of production readiness and continues alongside feature delive
       member/admin routes
 - [x] Single-method email OTP request and six-digit verification interface
 - [x] Pending member state, invite-based onboarding eligibility, admin roles and RLS
+- [x] Private post-OTP membership request with a three-step member journey,
+      purposeful applicant context, audited submission, calm pending state and
+      Admin approve/decline review without granting access from identity alone
 - [x] First public operational control: publish or hide the next-event countdown
 - [x] Vercel production deployment from `main` and environment normalization
 - [x] Temporary Supabase password access for pre-SMTP administrator testing
@@ -281,6 +284,11 @@ Usability is part of production readiness and continues alongside feature delive
       connection paths
 - [x] Connect host-curated events and learning resources to each community with
       member-only projections and audited Host controls
+- [ ] Add Community-hosted event proposals for approved owners and Hosts: private
+      draft, Community scope, host and venue details, capacity, visibility and
+      free/manual-payment mode, followed by an audited Admin approval that creates
+      the canonical event and links it to the Community. Keep public and paid
+      publication fail-closed until safety, refunds and creator settlement pass.
 - [x] Connect released Circle cycles to relevant communities with audited Host
       curation, member-only own-assignment context and no roster or matching-data access
 - [x] Rewrite the Community journey in plain language across discovery, joining,
@@ -491,6 +499,9 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Seed and verify the Super Admin account, then test member and admin OTP end to end
 - [x] Apply the onboarding/admin migration in production Supabase
 - [ ] Complete a real pending → onboarding → active acceptance test
+- [ ] Apply `20260809100000_membership_application_journey.sql` in production
+      Supabase and accept a new OTP identity through request, Admin decision,
+      onboarding and active membership
 - [x] Add a forward-only onboarding migration for city, languages, referral source,
       business/website fields, profile completion and normalized member goals
 - [x] Apply `20260721120000_onboarding_v2.sql` in production Supabase

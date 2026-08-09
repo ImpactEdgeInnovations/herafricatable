@@ -741,6 +741,56 @@ assert(
     authPanel.includes("requestedDestination"),
   "Member sign-in must preserve only a validated same-site destination",
 );
+const membershipApplicationPage = read("app/apply/page.tsx");
+const membershipApplicationForm = read(
+  "components/onboarding/membership-application-form.tsx",
+);
+const memberReview = read("components/admin/member-review.tsx");
+for (const contract of [
+  "Private membership request",
+  "membership_applications",
+  "MembershipApplicationForm",
+  'redirect("/home")',
+]) {
+  assert(
+    membershipApplicationPage.includes(contract),
+    `Membership application page must include ${contract}`,
+  );
+}
+for (const contract of [
+  "About you",
+  "Your purpose",
+  "Review",
+  "submit_membership_application",
+  "Request received",
+  "Community Guidelines",
+]) {
+  assert(
+    membershipApplicationForm.includes(contract),
+    `Membership application journey must include ${contract}`,
+  );
+}
+for (const contract of [
+  "What brings her to the table",
+  "Approve and welcome",
+  "Decline request",
+  "applicationJourneyReady",
+]) {
+  assert(
+    memberReview.includes(contract),
+    `Admin membership review must include ${contract}`,
+  );
+}
+const publicHome = read("app/page.tsx");
+for (const contract of [
+  "Where African women",
+  "A Community—not another crowded feed.",
+  "Verify your email",
+  "Thoughtful review",
+  "Private by design",
+]) {
+  assert(publicHome.includes(contract), `Public home must include ${contract}`);
+}
 for (const contract of [
   'active="community"',
   "community-room-navigation",
