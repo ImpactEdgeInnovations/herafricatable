@@ -30,11 +30,11 @@ export default async function PerksPage() {
       <main className="perks-page">
         <MemberHeader label="Partner benefits" />
         <section className="community-hold">
-          <p className="eyebrow">Useful, carefully negotiated</p>
-          <h1>Partner benefits are being curated.</h1>
+          <p className="eyebrow">A little more for members</p>
+          <h1>Member benefits are on their way.</h1>
           <p>
-            Offers will open only after their terms, inventory and redemption
-            process pass review.
+            We are choosing useful offers from trusted partners. We will share
+            them here when they are ready to use.
           </p>
           <Link className="button button-outline" href="/home">
             Return home

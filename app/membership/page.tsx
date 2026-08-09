@@ -33,8 +33,8 @@ export default async function MembershipPage() {
           at the table.
         </h1>
         <p>
-          A clear, auditable membership record—designed for continuity, trust
-          and thoughtful renewal.
+          See your membership, renewal date and available options in one calm,
+          private place.
         </p>
       </section>
       {error ? (

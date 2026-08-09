@@ -48,6 +48,8 @@ const categories = [
   "events",
   "other",
 ];
+const categoryLabel = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1);
 
 export function OpportunityMarketplace({
   currentUserId,
@@ -228,14 +230,14 @@ export function OpportunityMarketplace({
   return (
     <>
       {dialog}
-      <section className="opportunity-create" id="create-opportunity">
+      {composerOpen ? <section className="opportunity-create" id="create-opportunity">
         <header className="opportunity-create-heading">
           <div>
-            <p className="eyebrow">Publish with purpose</p>
-            <h2>{editing ? "Refine your post" : "Share one focused ask or offer"}</h2>
+            <p className="eyebrow">{editing ? "Update your post" : "Ask or offer"}</p>
+            <h2>{editing ? "Make your changes" : "What would you like to share?"}</h2>
             <p>
-              Be specific and keep confidential details for a trusted private
-              conversation.
+              Keep it clear and useful. Share private details only after you
+              feel comfortable with the person who replies.
             </p>
           </div>
           <button
@@ -247,16 +249,16 @@ export function OpportunityMarketplace({
             }}
             type="button"
           >
-            {composerOpen ? "Close form" : "Create a post"}
+            Close
           </button>
         </header>
-        {composerOpen ? <form
+        <form
           key={editing?.post_id ?? "new"}
           onSubmit={(event) => void save(event)}
         >
           <div className="opportunity-form-grid">
             <label>
-              Post type
+              What would you like to do?
               <select
                 name="post_type"
                 defaultValue={editing?.post_type ?? "ask"}
@@ -266,14 +268,14 @@ export function OpportunityMarketplace({
               </select>
             </label>
             <label>
-              Category
+              What is this about?
               <select
                 name="category"
                 defaultValue={editing?.category ?? "business"}
               >
                 {categories.map((category) => (
                   <option value={category} key={category}>
-                    {category}
+                    {categoryLabel(category)}
                   </option>
                 ))}
               </select>
@@ -301,7 +303,7 @@ export function OpportunityMarketplace({
               />
             </label>
             <label>
-              Industry
+              Industry (optional)
               <input
                 name="industry"
                 maxLength={100}
@@ -309,7 +311,7 @@ export function OpportunityMarketplace({
               />
             </label>
             <label>
-              Location
+              Location (optional)
               <input
                 name="location"
                 maxLength={120}
@@ -318,7 +320,7 @@ export function OpportunityMarketplace({
               />
             </label>
             <label>
-              Mode
+              How can people take part?
               <select
                 name="delivery_mode"
                 defaultValue={editing?.delivery_mode ?? "hybrid"}
@@ -329,7 +331,7 @@ export function OpportunityMarketplace({
               </select>
             </label>
             <label>
-              Close responses on
+              Stop accepting replies on (optional)
               <input
                 name="closes_at"
                 type="date"
@@ -358,8 +360,8 @@ export function OpportunityMarketplace({
               </button>
             ) : null}
           </div>
-        </form> : null}
-      </section>
+        </form>
+      </section> : null}
       <section className="opportunity-feed">
         <header>
           <div>
@@ -377,7 +379,7 @@ export function OpportunityMarketplace({
               <option value="">All categories</option>
               {categories.map((category) => (
                 <option value={category} key={category}>
-                  {category}
+                    {categoryLabel(category)}
                 </option>
               ))}
             </select>
@@ -398,9 +400,9 @@ export function OpportunityMarketplace({
                   key={post.post_id}
                 >
                   <div className="opportunity-card-meta">
-                    <span>{post.post_type}</span>
+                    <span>{categoryLabel(post.post_type)}</span>
                     <small>
-                      {post.category} · {post.delivery_mode.replace("_", " ")}
+                      {categoryLabel(post.category)} · {post.delivery_mode.replace("_", " ")}
                     </small>
                   </div>
                   <h3>{post.title}</h3>
@@ -548,10 +550,10 @@ export function OpportunityMarketplace({
           </div>
         ) : (
           <div className="admin-empty">
-            <strong>No posts match this view</strong>
+            <strong>Nothing here yet</strong>
             <p>
-              Start with a clear Ask or Offer that another member can act on
-              this week.
+              Share one clear Ask or Offer that another member could respond
+              to this week.
             </p>
           </div>
         )}

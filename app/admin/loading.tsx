@@ -4,9 +4,9 @@ export default function AdminLoading() {
   return (
     <main className="route-state-page route-state-admin">
       <JourneyState
-        description="Loading current queues, launch readiness, and authorized operations."
-        eyebrow="Admin command center"
-        title="Preparing live operations…"
+        description="Bringing together the latest member, event and safety updates."
+        eyebrow="Admin workspace"
+        title="Getting today’s work ready…"
         variant="loading"
       />
     </main>

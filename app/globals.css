@@ -26525,7 +26525,128 @@ textarea {
     min-height: 0;
   }
 
-  .profile-editor > header h1 {
+.profile-editor > header h1 {
     font-size: clamp(2.6rem, 13vw, 3.5rem);
+  }
+}
+
+/* Experience v7 — quieter scale, less ceremony, faster decisions. */
+.learning-hero,
+.referral-hero,
+.membership-hero,
+.circles-hero,
+.perks-hero,
+.opportunity-hero {
+  padding-top: 44px;
+  padding-bottom: 34px;
+}
+
+.learning-hero h1,
+.referral-hero h1,
+.membership-hero h1,
+.circles-hero h1,
+.perks-hero h1,
+.opportunity-hero h1 {
+  font-size: clamp(2.8rem, 4.6vw, 4.25rem);
+  line-height: 0.98;
+}
+
+.member-search-hero {
+  padding-top: 50px;
+  padding-bottom: 38px;
+}
+
+.member-search-hero h1,
+.activity-overview > header h1 {
+  font-size: clamp(2.8rem, 4.8vw, 4.35rem);
+  line-height: 0.98;
+}
+
+.community-hold {
+  width: min(720px, calc(100% - 48px));
+  margin-top: 48px;
+  padding: 38px 40px;
+  border-radius: 10px;
+}
+
+.community-hold h1 {
+  font-size: clamp(2.55rem, 4.7vw, 3.8rem);
+  line-height: 1;
+}
+
+.admin-hero {
+  min-height: 340px;
+  padding-top: 58px;
+  padding-bottom: 50px;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: 58px;
+}
+
+.admin-hero h1 {
+  max-width: 720px;
+  font-size: clamp(3rem, 5vw, 4.8rem);
+  line-height: 0.94;
+}
+
+.admin-hero > div:first-child > p:last-child {
+  margin-top: 20px;
+}
+
+.opportunity-feed {
+  padding-top: 34px;
+}
+
+.opportunity-feed > header {
+  display: grid;
+  align-items: start;
+  justify-content: stretch;
+  margin-bottom: 30px;
+  gap: 20px;
+}
+
+.opportunity-feed > header form {
+  justify-content: start;
+}
+
+.opportunity-feed > header input {
+  width: min(340px, 100%);
+}
+
+@media (max-width: 620px) {
+  .learning-hero,
+  .referral-hero,
+  .membership-hero,
+  .circles-hero,
+  .perks-hero,
+  .opportunity-hero {
+    padding-top: 30px;
+    padding-bottom: 26px;
+  }
+
+  .learning-hero h1,
+  .referral-hero h1,
+  .membership-hero h1,
+  .circles-hero h1,
+  .perks-hero h1,
+  .opportunity-hero h1,
+  .member-search-hero h1,
+  .activity-overview > header h1 {
+    font-size: clamp(2.45rem, 11.5vw, 3.25rem);
+  }
+
+  .community-hold {
+    width: calc(100% - 32px);
+    margin-top: 28px;
+    padding: 27px 22px;
+  }
+
+  .admin-hero {
+    padding-top: 38px;
+    padding-bottom: 34px;
+    gap: 32px;
+  }
+
+  .admin-hero h1 {
+    font-size: clamp(2.7rem, 13vw, 3.7rem);
   }
 }

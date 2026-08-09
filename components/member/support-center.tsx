@@ -37,7 +37,20 @@ const categories = [
   "technical",
   "other",
 ];
-const label = (value: string) => value.replaceAll("_", " ");
+const categoryLabels: Record<string, string> = {
+  account: "My account",
+  registration: "Event registration",
+  payment: "A payment",
+  event: "An event",
+  safety: "A safety concern",
+  privacy: "My privacy",
+  technical: "Something is not working",
+  other: "Something else",
+};
+const label = (value: string) =>
+  value
+    .replaceAll("_", " ")
+    .replace(/^./, (letter) => letter.toUpperCase());
 const date = (value: string) =>
   new Intl.DateTimeFormat("en-KE", {
     day: "numeric",
@@ -140,7 +153,7 @@ export function SupportCenter({
           <summary>New support request</summary>
           <form onSubmit={createTicket}>
             <label>
-              Category
+              What do you need help with?
               <select
                 value={category}
                 onChange={(event) => setCategory(event.target.value)}
@@ -148,17 +161,17 @@ export function SupportCenter({
               >
                 {categories.map((item) => (
                   <option key={item} value={item}>
-                    {label(item)}
+                    {categoryLabels[item]}
                   </option>
                 ))}
               </select>
               <small className="form-help" id="support-category-help">
-                Choose the closest topic. The support team can reclassify it if
-                needed.
+                Choose the closest option. We will make sure it reaches the
+                right person.
               </small>
             </label>
             <label>
-              Subject
+              A short title
               <input
                 minLength={5}
                 maxLength={160}

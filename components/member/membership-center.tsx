@@ -88,7 +88,7 @@ export function MembershipCenter({
           </h2>
           <p>
             {plans.length
-              ? "Membership periods are recorded individually, renewals are added after your current term, and grace status remains visible to you."
+              ? "You can see when your current membership ends and renew without losing any remaining time."
               : "The team is preparing the first membership plans. Nothing is required from you until an option is published."}
           </p>
         </div>
@@ -120,8 +120,7 @@ export function MembershipCenter({
               })}
             </strong>
             <small>
-              {plan.grace_days} day renewal grace ·{" "}
-              {plan.payment_mode.replace("_", " ")}
+              {plan.grace_days} days to renew after your end date
             </small>
             {plan.payment_mode === "closed" ? (
               <button disabled>Enrollment closed</button>

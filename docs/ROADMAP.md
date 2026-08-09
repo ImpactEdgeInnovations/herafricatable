@@ -56,6 +56,22 @@ A feature is not complete merely because its screen exists. It is complete when:
 
 Usability is part of production readiness and continues alongside feature delivery:
 
+### Platform-wide experience audit — 9 August 2026
+
+- [x] Review the full signed-in member journey, secondary member tools and the
+      Admin daily workspace at production desktop size
+- [x] Reduce oversized secondary-page and Admin headings so the interface feels
+      calmer, faster and less presentation-like
+- [x] Remove the repeated Ask & Offer action and show its form only when a member
+      chooses to create or edit a post
+- [x] Replace internal release, payment-path, inventory, attribution and audit
+      wording on member-facing preparing states with clear everyday language
+- [x] Rename support topics and form prompts around what the member needs help with
+- [ ] Complete the launch-device visual sign-off on Safari, Chrome, iPhone and
+      common Android sizes with real member and Admin accounts
+- [ ] Run five observed usability sessions with non-technical members and record
+      completion time, hesitation points and misunderstood wording
+
 - [x] Establish a refined visual system with consistent typography, colour, spacing,
       buttons, cards, forms, feedback states and responsive behavior
 - [x] Replace the member-home product language with clear account status, task-based

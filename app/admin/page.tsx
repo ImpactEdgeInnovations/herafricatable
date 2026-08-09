@@ -139,15 +139,13 @@ export default async function AdminHomePage() {
 
       <section className="admin-hero" id="overview">
         <div>
-          <p className="eyebrow">Today&apos;s operations</p>
+          <p className="eyebrow">Today at Her Africa Table</p>
           <h1>
-            One clear view.
-            <br />
-            The right next action.
+            Today, at a glance.
           </h1>
           <p>
-            Start with work that needs a decision. Open the full operations
-            workspace only when you need specialist controls.
+            Begin with anything waiting for your decision. Open All tools when
+            you need to manage something in more detail.
           </p>
         </div>
         <div className="admin-metrics">
