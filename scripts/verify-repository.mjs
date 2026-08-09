@@ -1905,6 +1905,41 @@ for (const contract of [
     `Admin event review journey must include ${contract}`,
   );
 }
+const communityEventReadiness = read(
+  "scripts/verify-community-event-readiness.mjs",
+);
+for (const contract of [
+  "community_event_proposals",
+  "membership_applications",
+  "list_my_community_event_proposals",
+  "list_admin_community_event_proposals",
+  "list_admin_members_v3",
+  "can_view_event",
+  "secretsPrinted: false",
+]) {
+  assert(
+    communityEventReadiness.includes(contract),
+    `Community event readiness must include ${contract}`,
+  );
+}
+const communityEventAcceptance = read("scripts/accept-community-events.mjs");
+for (const contract of [
+  "save_community_event_proposal",
+  'p_action: "request_changes"',
+  'p_action: "approve"',
+  "anonymousEvent.data?.length",
+  "outsiderEvent.data?.length",
+  "p_quantity: 2",
+  "p_quantity: 1",
+  'p_status: "cancelled"',
+  'p_status: "archived"',
+  "secretsPrinted: false",
+]) {
+  assert(
+    communityEventAcceptance.includes(contract),
+    `Community event acceptance must include ${contract}`,
+  );
+}
 console.log(
   `Repository contracts passed: ${tracked.length} tracked files, ${migrations.length} ordered migrations.`,
 );

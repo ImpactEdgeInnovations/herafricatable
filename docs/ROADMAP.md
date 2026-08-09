@@ -289,7 +289,7 @@ Usability is part of production readiness and continues alongside feature delive
       a fixed free launch tier, followed by an audited Admin approval that creates
       the canonical event and links it to the Community. Keep public and paid
       publication fail-closed until safety, refunds and creator settlement pass.
-- [ ] Apply `20260809140000_community_hosted_event_proposals.sql` and complete a
+- [x] Apply `20260809140000_community_hosted_event_proposals.sql` and complete a
       five-account acceptance: Host draft, Admin change request, resubmission,
       approval, member-only discovery, one-seat registration and non-member denial
 - [x] Connect released Circle cycles to relevant communities with audited Host
@@ -502,9 +502,10 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Seed and verify the Super Admin account, then test member and admin OTP end to end
 - [x] Apply the onboarding/admin migration in production Supabase
 - [ ] Complete a real pending → onboarding → active acceptance test
-- [ ] Apply `20260809100000_membership_application_journey.sql` in production
-      Supabase and accept a new OTP identity through request, Admin decision,
-      onboarding and active membership
+- [x] Apply `20260809100000_membership_application_journey.sql` in production
+      Supabase and verify its private table and Admin projection are available
+- [ ] Accept a new OTP identity through request, Admin decision, onboarding and
+      active membership
 - [x] Add a forward-only onboarding migration for city, languages, referral source,
       business/website fields, profile completion and normalized member goals
 - [x] Apply `20260721120000_onboarding_v2.sql` in production Supabase

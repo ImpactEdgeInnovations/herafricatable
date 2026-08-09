@@ -20,7 +20,9 @@
     "ops:community:accept-member-journeys": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-member-journeys.mjs",
     "ops:community:accept-scale": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-scale.mjs",
     "ops:community:accept-safety": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-safety.mjs",
-    "ops:community:accept-membership-lifecycle": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-membership-lifecycle.mjs"
+    "ops:community:accept-membership-lifecycle": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-membership-lifecycle.mjs",
+    "ops:community:event-readiness": "node --env-file=.env.local scripts/verify-community-event-readiness.mjs",
+    "ops:community:accept-events": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-events.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.3",
