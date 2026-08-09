@@ -11,6 +11,7 @@ import {
 export const dynamic = "force-dynamic";
 
 type EventDetail = {
+  audience: "community" | "public";
   ends_at: string;
   format: string;
   id: string;
@@ -27,12 +28,23 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const supabase = await createClient();
   const { data } = await supabase
     .from("events")
-    .select("id, title, summary, format, starts_at, ends_at, timezone, registration_mode, venues(name, city, country, address_line, map_url)")
+    .select("id, title, summary, format, audience, starts_at, ends_at, timezone, registration_mode, venues(name, city, country, address_line, map_url)")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
   if (!data) notFound();
   const event = data as unknown as EventDetail;
+  const { data: communityLink } = event.audience === "community"
+    ? await supabase
+        .from("community_event_links")
+        .select("communities(name,slug)")
+        .eq("event_id", event.id)
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
+  const eventCommunity = communityLink?.communities as unknown as
+    | { name: string; slug: string }
+    | null;
 
   const [{ data: announcements }, { data: sessions }, { data: sponsors }] = await Promise.all([
     supabase.from("event_announcements").select("id, title, body, published_at").eq("event_id", event.id).eq("status", "published").order("published_at", { ascending: false }),
@@ -91,10 +103,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     <main className="event-detail-page">
       <header className="legal-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></Link>
-        <Link href="/events">All events</Link>
+        <Link href={eventCommunity ? `/communities/${eventCommunity.slug}?view=people` : "/events"}>{eventCommunity ? `Back to ${eventCommunity.name}` : "All events"}</Link>
       </header>
       <section className="event-detail-hero">
-        <div><p className="eyebrow">{event.format.replace("_", " ")} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "A carefully curated Her Africa Table gathering."}</p></div>
+        <div><p className="eyebrow">{event.audience === "community" ? "Private Community gathering" : event.format.replace("_", " ")} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "A carefully curated Her Africa Table gathering."}</p>{eventCommunity ? <span className="event-community-badge">For active members of {eventCommunity.name}</span> : null}</div>
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div></dl>
           {event.registration_mode === "closed" ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <Link className="button button-primary" href={`/events/${slug}/register`}>{cta}</Link>}

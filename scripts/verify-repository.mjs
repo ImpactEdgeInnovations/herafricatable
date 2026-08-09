@@ -1644,6 +1644,7 @@ const adminDialogModules = [
   "analytics-readiness",
   "circle-manager",
   "community-manager",
+  "community-event-proposal-manager",
   "community-release-gate",
   "community-moderation",
   "event-checkin-console",
@@ -1849,6 +1850,59 @@ for (const contract of [
   assert(
     membershipApplicationMigration.includes(contract),
     `Membership application boundary must include ${contract}`,
+  );
+}
+const communityEventProposalMigration = read(
+  "supabase/migrations/20260809140000_community_hosted_event_proposals.sql",
+);
+for (const contract of [
+  "community_event_proposals",
+  "save_community_event_proposal",
+  "review_community_event_proposal",
+  "list_admin_community_event_proposals",
+  "can_view_event",
+  "p_user_id = auth.uid()",
+  "public.is_active_member(p_user_id)",
+  "Event is not available to this member",
+  "Choose one Community place per member",
+  "Public and paid Community events are not open yet",
+  "'manual_review'",
+  "'community'",
+  "'free'",
+]) {
+  assert(
+    communityEventProposalMigration.includes(contract),
+    `Community-hosted event boundary must include ${contract}`,
+  );
+}
+const hostEventProposal = read(
+  "components/community/community-event-proposal-panel.tsx",
+);
+for (const contract of [
+  "Plan a gathering",
+  "Members only",
+  "Save private draft",
+  "Send for review",
+  "memberErrorMessage",
+]) {
+  assert(
+    hostEventProposal.includes(contract),
+    `Host event proposal journey must include ${contract}`,
+  );
+}
+const adminEventProposal = read(
+  "components/admin/community-event-proposal-manager.tsx",
+);
+for (const contract of [
+  "Approve free gathering",
+  "Request changes",
+  "Responsible person",
+  "adminErrorMessage",
+  "useActionDialog",
+]) {
+  assert(
+    adminEventProposal.includes(contract),
+    `Admin event review journey must include ${contract}`,
   );
 }
 console.log(

@@ -64,7 +64,7 @@ export function EventCountdown() {
   return (
     <section className="countdown-section" aria-label="Next Her Africa Table event">
       <div className="countdown-intro">
-        <span>Next table</span>
+        <span>Next gathering</span>
         <strong>{event?.event_name ?? "Launch of the Africa Table Platform"}</strong>
         <small>{event?.city ?? "Details shared with approved members"}</small>
       </div>
@@ -85,7 +85,7 @@ export function EventCountdown() {
         </div>
       )}
 
-      <Link href="/sign-in">Request a seat <span aria-hidden="true">→</span></Link>
+      <Link href="/events">View gathering <span aria-hidden="true">→</span></Link>
     </section>
   );
 }

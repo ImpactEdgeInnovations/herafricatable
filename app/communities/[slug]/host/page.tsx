@@ -44,6 +44,10 @@ import {
   CommunityWelcomeQueue,
   type CommunityWelcomeMember,
 } from "@/components/member/community-welcome-queue";
+import {
+  CommunityEventProposalPanel,
+  type CommunityEventProposal,
+} from "@/components/community/community-event-proposal-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -131,6 +135,7 @@ export default async function CommunityHostPage({
     financialStatementResult,
     settlementResult,
     welcomeQueueResult,
+    eventProposalResult,
   ] = await Promise.all([
     supabase.rpc("get_community_host_health", {
       p_community_id: community.community_id,
@@ -198,6 +203,9 @@ export default async function CommunityHostPage({
       p_community_id: community.community_id,
       p_limit: 12,
     }),
+    supabase.rpc("list_my_community_event_proposals", {
+      p_community_id: community.community_id,
+    }),
   ]);
 
   const migrationReady =
@@ -249,6 +257,7 @@ export default async function CommunityHostPage({
       </section>
       <nav className="community-room-navigation" aria-label="Host workspace areas">
         <a href="#host-tools">Plan &amp; tools</a>
+        <a href="#gathering-proposals">Plan an event</a>
         <a href="#welcome">Welcome</a>
         {community.membership_role === "owner" ? (
           <>
@@ -276,6 +285,13 @@ export default async function CommunityHostPage({
           owner={community.membership_role === "owner"}
         />
       </div>
+      <CommunityEventProposalPanel
+        communityId={community.community_id}
+        migrationReady={!eventProposalResult.error}
+        proposals={
+          (eventProposalResult.data as CommunityEventProposal[] | null) ?? []
+        }
+      />
       <CommunityWelcomeQueue
         communityId={community.community_id}
         members={

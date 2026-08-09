@@ -10,21 +10,21 @@ const ArrowIcon = () => (
 const membershipBenefits = [
   {
     number: "01",
-    title: "Meet with context",
+    title: "Meet the right women",
     description:
-      "Find women by what they are building, what they know and what they need now—not by follower count.",
+      "Find women through what they are building, what they know and what they need now.",
   },
   {
     number: "02",
-    title: "Continue the conversation",
+    title: "Stay connected",
     description:
-      "Move from a thoughtful event introduction into private, permission-based connection and Community.",
+      "Continue a good event conversation privately, with permission on both sides.",
   },
   {
     number: "03",
-    title: "Make the network useful",
+    title: "Move work forward",
     description:
-      "Ask for help, open a door, share an opportunity or gather women around a focused purpose.",
+      "Ask for help, share an opportunity or bring women together around a clear purpose.",
   },
 ];
 
@@ -65,8 +65,8 @@ export default function HomePage() {
             gather <em>with purpose.</em>
           </h1>
           <p>
-            A considered network for women who lead, build, invest and create—
-            grounded in trusted relationships that continue beyond the room.
+            A private membership network for African women who lead, build,
+            invest and create—with relationships that continue beyond the room.
           </p>
           <div className="hero-actions">
             <Link className="button button-primary" href="/sign-in">
@@ -75,9 +75,9 @@ export default function HomePage() {
             <Link className="text-link" href="/events">View gatherings</Link>
           </div>
           <div className="editorial-proof" aria-label="Membership qualities">
-            <span>Application-led</span>
+            <span>Carefully selected</span>
             <span>Private by design</span>
-            <span>Community beyond events</span>
+            <span>Built for real connection</span>
           </div>
         </div>
 
@@ -97,11 +97,11 @@ export default function HomePage() {
       <section className="editorial-purpose" id="why" aria-labelledby="purpose-title">
         <header>
           <p className="eyebrow">Why the table exists</p>
-          <h2 id="purpose-title">A network that becomes more useful with every real conversation.</h2>
+          <h2 id="purpose-title">A network built for useful relationships.</h2>
         </header>
         <p className="editorial-purpose-intro">
           Events create the first moment. Her Africa Table gives the relationship
-          somewhere considered to grow—without public performance or unwanted access.
+          a private place to grow—without unwanted access or public pressure.
         </p>
         <div className="editorial-benefits">
           {membershipBenefits.map((benefit) => (
@@ -117,16 +117,15 @@ export default function HomePage() {
       <section className="editorial-community" id="inside" aria-labelledby="inside-title">
         <div className="editorial-community-copy">
           <p className="eyebrow light-eyebrow">Inside the table</p>
-          <h2 id="inside-title">A Community—not another crowded feed.</h2>
+          <h2 id="inside-title">Your people, in one calm place.</h2>
           <p>
-            Enter a calm member home, return to your Communities and see the one
-            next step that matters. Conversations are organised around useful
-            asks, offers, introductions and shared work.
+            Return to the women and conversations you chose. Share an ask,
+            offer help, plan a gathering or continue work together.
           </p>
           <ul>
             <li><span>01</span><p><strong>Your Communities first</strong><small>Return directly to the women and conversations you chose.</small></p></li>
-            <li><span>02</span><p><strong>Permission before access</strong><small>Private contact details remain yours until you accept a connection.</small></p></li>
-            <li><span>03</span><p><strong>Purpose over noise</strong><small>One clear action per screen, with quieter tools waiting when needed.</small></p></li>
+            <li><span>02</span><p><strong>You stay in control</strong><small>Your contact details stay private until you accept a connection.</small></p></li>
+            <li><span>03</span><p><strong>Useful, not noisy</strong><small>Clear conversations, gatherings and introductions without the clutter.</small></p></li>
           </ul>
           <Link className="button button-light" href="/sign-in">Request your seat <ArrowIcon /></Link>
         </div>
@@ -154,9 +153,8 @@ export default function HomePage() {
           <h2 id="trust-title">You decide who gets closer.</h2>
         </div>
         <p>
-          Membership creates access to a professional Community—not automatic
-          access to your private information. Connections require consent,
-          moderation is evidence-led, and sensitive Admin actions are recorded.
+          Membership never gives someone your private information. You choose
+          which connections to accept, and our team can step in when support is needed.
         </p>
         <Link href="/community-guidelines">How we protect the table <ArrowIcon /></Link>
       </section>
@@ -164,7 +162,7 @@ export default function HomePage() {
       <section className="editorial-membership" id="membership" aria-labelledby="membership-title">
         <header>
           <p className="eyebrow">Membership, clearly</p>
-          <h2 id="membership-title">Your seat begins with four simple steps.</h2>
+          <h2 id="membership-title">Joining is simple.</h2>
           <p>No complicated setup. No public application. Your answers are reviewed privately.</p>
         </header>
         <ol>

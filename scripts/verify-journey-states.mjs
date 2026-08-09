@@ -77,6 +77,7 @@ const refreshModules = [
   "components/admin/community-creator-commerce-manager.tsx",
   "components/admin/community-host-billing-manager.tsx",
   "components/admin/community-moderation.tsx",
+  "components/admin/community-event-proposal-manager.tsx",
   "components/admin/event-content-manager.tsx",
   "components/admin/event-feedback-manager.tsx",
   "components/admin/event-gallery-manager.tsx",
@@ -95,6 +96,7 @@ const refreshModules = [
   "components/member/community-feed.tsx",
   "components/member/community-circle-host-panel.tsx",
   "components/member/community-host-workspace.tsx",
+  "components/community/community-event-proposal-panel.tsx",
   "components/member/community-commerce-panel.tsx",
   "components/events/event-attendee-directory.tsx",
   "components/member/learning-catalog.tsx",
@@ -784,7 +786,7 @@ for (const contract of [
 const publicHome = read("app/page.tsx");
 for (const contract of [
   "Where African women",
-  "A Community—not another crowded feed.",
+  "Your people, in one calm place.",
   "Verify your email",
   "Thoughtful review",
   "Private by design",

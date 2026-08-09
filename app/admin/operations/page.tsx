@@ -145,6 +145,10 @@ import {
   type ModuleReleaseCheck,
 } from "@/components/admin/module-release-gate";
 import { assessOperationalHealth } from "@/lib/operational-health";
+import {
+  CommunityEventProposalManager,
+  type CommunityEventProposalAdmin,
+} from "@/components/admin/community-event-proposal-manager";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -286,6 +290,7 @@ export default async function AdminOperationsPage({
     memberApplicationResult,
     eventResult,
     operationalHealth,
+    communityEventProposalResult,
   ] = await Promise.all([
     loadRelease
       ? supabase
@@ -303,6 +308,9 @@ export default async function AdminOperationsPage({
     loadRelease
       ? assessOperationalHealth()
       : Promise.resolve(null),
+    role.role === "super_admin" && loadEvents
+      ? supabase.rpc("list_admin_community_event_proposals")
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   const memberFallbackResult =
@@ -872,6 +880,16 @@ export default async function AdminOperationsPage({
           label="Event work"
           title="Plan and run an event"
         >
+          {role.role === "super_admin" ? (
+            <CommunityEventProposalManager
+              migrationReady={!communityEventProposalResult.error}
+              proposals={
+                (communityEventProposalResult.data as
+                  | CommunityEventProposalAdmin[]
+                  | null) ?? []
+              }
+            />
+          ) : null}
           <EventManager
             initialEvents={events}
             privateEvents={privateEvents}

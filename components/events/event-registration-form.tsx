@@ -35,6 +35,7 @@ export function EventRegistrationForm({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const ticket = tickets.find((x) => x.id === ticketId);
+  const isFree = ticket?.price_minor === 0;
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -84,6 +85,8 @@ export function EventRegistrationForm({
         ? memberErrorMessage(error, "submit your event registration")
         : mode === "waitlist"
           ? "You are on the waitlist. We will contact you when a seat opens."
+          : isFree
+            ? "Your free place request is with the event team. No payment is required."
           : "Your registration is awaiting manual review. No automatic charge has been made.",
     );
     if (!error) router.refresh();
@@ -106,7 +109,9 @@ export function EventRegistrationForm({
         <h1>{eventTitle}</h1>
         <p>
           {mode === "manual_review"
-            ? "Submit your ticket request and any offline payment reference. An administrator will verify it before access is granted."
+            ? isFree
+              ? "Request a complimentary place. The event team will confirm attendance before the guest list closes."
+              : "Submit your ticket request and any offline payment reference. An administrator will verify it before access is granted."
             : mode === "waitlist"
               ? "Join the waitlist and we will contact you when a seat becomes available."
               : "Choose your ticket and continue to Paystack's secure checkout. Access is granted only after server verification."}
@@ -162,7 +167,7 @@ export function EventRegistrationForm({
             onChange={(e) => setNote(e.target.value)}
           />
         </label>
-        {mode === "manual_review" ? (
+        {mode === "manual_review" && !isFree ? (
           <>
             <label>
               Payment/reference number
@@ -206,7 +211,9 @@ export function EventRegistrationForm({
             ? "Join waitlist"
             : mode === "automatic"
               ? "Continue to secure payment"
-              : "Submit for manual review"}
+              : isFree
+                ? "Request my free place"
+                : "Submit for manual review"}
       </button>
       {message ? (
         <p className="manager-message" role="status">

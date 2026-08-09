@@ -284,11 +284,14 @@ Usability is part of production readiness and continues alongside feature delive
       connection paths
 - [x] Connect host-curated events and learning resources to each community with
       member-only projections and audited Host controls
-- [ ] Add Community-hosted event proposals for approved owners and Hosts: private
+- [x] Add Community-hosted event proposals for approved owners and Hosts: private
       draft, Community scope, host and venue details, capacity, visibility and
-      free/manual-payment mode, followed by an audited Admin approval that creates
+      a fixed free launch tier, followed by an audited Admin approval that creates
       the canonical event and links it to the Community. Keep public and paid
       publication fail-closed until safety, refunds and creator settlement pass.
+- [ ] Apply `20260809140000_community_hosted_event_proposals.sql` and complete a
+      five-account acceptance: Host draft, Admin change request, resubmission,
+      approval, member-only discovery, one-seat registration and non-member denial
 - [x] Connect released Circle cycles to relevant communities with audited Host
       curation, member-only own-assignment context and no roster or matching-data access
 - [x] Rewrite the Community journey in plain language across discovery, joining,
