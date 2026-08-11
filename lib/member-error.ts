@@ -62,6 +62,10 @@ export function memberErrorMessage(error: unknown, action: string) {
     return "Too many attempts were made. Wait a moment, then try again.";
   }
 
+  if (/new membership requests are temporarily paused/i.test(message)) {
+    return "New membership requests are taking a short pause. Your account is safe—please return when applications reopen.";
+  }
+
   const hasTechnicalCode = /^(?:PGRST|22|23|25|40|42|53|54|55|57|58|XX)/.test(
     code,
   );

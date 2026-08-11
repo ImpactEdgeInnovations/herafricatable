@@ -91,15 +91,24 @@ Paystack and Resend secrets belong in server-only Vercel/Supabase secret stores.
    continues to the correct account state.
    A verified team account using the ordinary sign-in page is sent directly to the
    Admin workspace; roles are never disclosed before authentication.
-3. A submitted request remains private and pending until an Admin decides it.
-4. An approved new member completes onboarding before entering the member home.
-5. A declined, suspended or dormant member sees a safe status screen and cannot read
+3. The Super Admin chooses one clearly labelled intake setting:
+   - **Review every request** — every completed application waits for an Admin decision.
+   - **Welcome verified invitations automatically** — only an unexpired invitation
+     created by the team can move directly to onboarding; everyone else still waits.
+   - **Pause new requests** — existing members retain access, but no new application
+     can be submitted.
+4. Email verification proves ownership of the address. It never grants membership or
+   Admin access by itself.
+5. An approved new member completes onboarding before entering the member home.
+6. A declined, suspended or dormant member sees a safe status screen and cannot read
    private member or Community data.
 
 ## Authentication acceptance tests
 
 - Email OTP request, expiry, invalid code, retry and successful verification work.
 - An authenticated but unapproved user cannot access member data.
+- Manual, verified-invitation and paused intake settings pass with separate test accounts.
+- An uninvited applicant cannot bypass review while invitation auto-entry is selected.
 - An approved incomplete user is routed to onboarding.
 - Active, dormant and suspended members receive the correct access.
 - Signing out clears the session and protected pages cannot be restored from cache.

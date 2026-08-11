@@ -34,6 +34,11 @@
 - [ ] Email OTP uses production sender configuration
 - [ ] OTP and authentication endpoints are rate-limited
 - [ ] Authenticated pending users cannot access member data
+- [ ] Super Admin can switch between Review every request, verified-invitation
+      auto-entry and Pause new requests; every change is audited
+- [ ] Verified-invitation auto-entry accepts only a matching, unexpired team invitation
+- [ ] Uninvited applicants remain pending when verified-invitation auto-entry is enabled
+- [ ] Paused intake blocks new applications without affecting existing member sessions
 - [ ] Active/dormant/suspended/deleted state tests pass
 - [ ] First Super Admin and scoped staff accounts are verified
 - [ ] `npm run ops:auth-readiness` passes with a time-bounded, test-tagged identity

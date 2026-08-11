@@ -15,11 +15,21 @@ export default async function MembershipApplicationPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?next=/apply");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("access_status")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [profileResult, intakeResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("access_status")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase.rpc("get_membership_intake_mode"),
+  ]);
+  const profile = profileResult.data;
+  const intakeMode =
+    intakeResult.data === "closed" ||
+    intakeResult.data === "trusted_auto" ||
+    intakeResult.data === "manual_review"
+      ? intakeResult.data
+      : "manual_review";
 
   if (profile?.access_status === "onboarding") redirect("/onboarding");
   if (profile && ["active", "dormant", "suspended"].includes(profile.access_status)) {
@@ -37,6 +47,33 @@ export default async function MembershipApplicationPage() {
   // Keep the existing pending-member journey available until the migration has
   // been applied in this environment.
   if (applicationResult.error) redirect("/home");
+
+  if (intakeMode === "closed" && !applicationResult.data) {
+    return (
+      <main className="membership-application-page">
+        <header className="application-page-nav">
+          <Link className="brand" href="/">
+            <span className="brand-mark" aria-hidden="true">H</span>
+            <span>Her Africa Table<small>Meet. Connect. Rise.</small></span>
+          </Link>
+          <span>Membership requests</span>
+        </header>
+        <section className="membership-intake-paused">
+          <span className="application-complete-mark" aria-hidden="true">H</span>
+          <p className="eyebrow">A carefully held table</p>
+          <h1>New membership requests are taking a short pause.</h1>
+          <p>
+            We are giving current introductions and welcomes our full attention.
+            Your verified account is safe, and you can return here when requests reopen.
+          </p>
+          <div className="portal-actions">
+            <Link className="button button-primary" href="/events">Explore gatherings</Link>
+            <Link className="button button-outline" href="/">Return home</Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="membership-application-page">
@@ -63,6 +100,7 @@ export default async function MembershipApplicationPage() {
         <MembershipApplicationForm
           email={user.email ?? ""}
           initial={applicationResult.data as MembershipApplication | null}
+          intakeMode={intakeMode}
         />
       </div>
     </main>

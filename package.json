@@ -24,7 +24,9 @@
     "ops:community:event-readiness": "node --env-file=.env.local scripts/verify-community-event-readiness.mjs",
     "ops:community:accept-events": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-events.mjs",
     "ops:verify-admin": "node --env-file=.env.local scripts/verify-admin-identity.mjs",
-    "ops:email-readiness": "node --env-file=.env.local scripts/verify-email-provider-readiness.mjs"
+    "ops:email-readiness": "node --env-file=.env.local scripts/verify-email-provider-readiness.mjs",
+    "ops:membership:intake-readiness": "node --env-file=.env.local scripts/verify-membership-intake-readiness.mjs",
+    "ops:membership:accept-intake": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-membership-intake.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.3",

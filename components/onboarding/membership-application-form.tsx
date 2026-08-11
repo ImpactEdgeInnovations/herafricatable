@@ -22,9 +22,11 @@ const STEPS = ["About you", "Your purpose", "Review"];
 export function MembershipApplicationForm({
   email,
   initial,
+  intakeMode,
 }: {
   email: string;
   initial: MembershipApplication | null;
+  intakeMode: "closed" | "manual_review" | "trusted_auto";
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [step, setStep] = useState(0);
@@ -80,7 +82,7 @@ export function MembershipApplicationForm({
     }
     setBusy(true);
     setMessage("");
-    const { error } = await supabase.rpc("submit_membership_application", {
+    const { data, error } = await supabase.rpc("submit_membership_application", {
       p_acknowledged: values.acknowledged,
       p_city: values.city.trim(),
       p_country: values.country.trim(),
@@ -93,6 +95,10 @@ export function MembershipApplicationForm({
     setBusy(false);
     if (error) {
       setMessage(memberErrorMessage(error, "submit your membership request"));
+      return;
+    }
+    if (data === "approved") {
+      window.location.assign("/onboarding");
       return;
     }
     setSubmitted(true);
@@ -133,6 +139,11 @@ export function MembershipApplicationForm({
             This helps us welcome people with care. Your answers are reviewed
             privately by the Her Africa Table team.
           </p>
+          {intakeMode === "trusted_auto" ? (
+            <small className="application-invitation-note">
+              Have a verified invitation? You can continue to your welcome steps as soon as this is complete.
+            </small>
+          ) : null}
         </div>
         <span>{step + 1} of {STEPS.length}</span>
       </header>

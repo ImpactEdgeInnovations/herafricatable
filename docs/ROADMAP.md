@@ -200,6 +200,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Temporary Supabase password access for pre-SMTP administrator testing
 - [x] Admin command center and database-backed launch roadmap view
 - [x] Member review operations with audited approval, suspension and restoration
+- [x] Add a plain-language, audited membership intake control for manual review,
+      verified-invitation auto-entry and paused requests; email OTP never grants access
 - [x] Onboarding foundation with public/private profile separation and consent records
 - [x] Progressive onboarding v2 implementation with secure avatar upload, structured
       goals, languages, city, business/referral fields and deterministic completion
@@ -506,6 +508,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [ ] Complete a real pending → onboarding → active acceptance test
 - [x] Apply `20260809100000_membership_application_journey.sql` in production
       Supabase and verify its private table and Admin projection are available
+- [ ] Apply `20260811120000_membership_intake_modes.sql` in production Supabase,
+      then run the three-mode dummy-account acceptance rehearsal
 - [ ] Accept a new OTP identity through request, Admin decision, onboarding and
       active membership
 - [x] Add a forward-only onboarding migration for city, languages, referral source,

@@ -1852,6 +1852,73 @@ for (const contract of [
     `Membership application boundary must include ${contract}`,
   );
 }
+const membershipIntakeMigration = read(
+  "supabase/migrations/20260811120000_membership_intake_modes.sql",
+);
+for (const contract of [
+  "membership_intake_settings",
+  "manual_review",
+  "trusted_auto",
+  "closed",
+  "get_membership_intake_admin",
+  "set_membership_intake_mode",
+  "matching_invite.intended_role is not null",
+  "membership.application_auto_approved",
+  "New membership requests are temporarily paused",
+]) {
+  assert(
+    membershipIntakeMigration.includes(contract),
+    `Hybrid membership intake must include ${contract}`,
+  );
+}
+const membershipIntakeControl = read(
+  "components/admin/membership-intake-control.tsx",
+);
+for (const contract of [
+  "Review every request",
+  "Welcome verified invitations automatically",
+  "Pause new requests",
+  "set_membership_intake_mode",
+  "Email verification alone never grants member access",
+  "useActionDialog",
+]) {
+  assert(
+    membershipIntakeControl.includes(contract),
+    `Admin membership intake control must include ${contract}`,
+  );
+}
+const membershipApplicationForm = read(
+  "components/onboarding/membership-application-form.tsx",
+);
+assert(
+  membershipApplicationForm.includes('data === "approved"') &&
+    membershipApplicationForm.includes('window.location.assign("/onboarding")'),
+  "Verified invitations must continue to onboarding after application approval",
+);
+const membershipIntakeAcceptance = read(
+  "scripts/accept-membership-intake.mjs",
+);
+for (const contract of [
+  "membership.manual@hat-test.invalid",
+  "membership.invited@hat-test.invalid",
+  "membership.paused@hat-test.invalid",
+  "membership.uninvited@hat-test.invalid",
+  "waiting_for_review",
+  "approved_to_onboarding",
+  "submission_blocked",
+  "originalModeRestored",
+  "secretsPrinted: false",
+]) {
+  assert(
+    membershipIntakeAcceptance.includes(contract),
+    `Membership intake acceptance must include ${contract}`,
+  );
+}
+assert(
+  packageJson.scripts?.["ops:membership:accept-intake"] &&
+    packageJson.scripts?.["ops:membership:intake-readiness"],
+  "Package scripts must expose membership intake readiness and acceptance",
+);
 const communityEventProposalMigration = read(
   "supabase/migrations/20260809140000_community_hosted_event_proposals.sql",
 );

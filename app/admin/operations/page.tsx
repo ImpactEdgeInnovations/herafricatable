@@ -9,6 +9,10 @@ import {
   MemberReview,
   type AdminMember,
 } from "@/components/admin/member-review";
+import {
+  MembershipIntakeControl,
+  type MembershipIntakeAdmin,
+} from "@/components/admin/membership-intake-control";
 import { RoadmapOverview } from "@/components/admin/roadmap-overview";
 import {
   EventManager,
@@ -288,6 +292,7 @@ export default async function AdminOperationsPage({
   const [
     { data: countdown },
     memberApplicationResult,
+    membershipIntakeResult,
     eventResult,
     operationalHealth,
     communityEventProposalResult,
@@ -301,6 +306,9 @@ export default async function AdminOperationsPage({
       : Promise.resolve({ data: null, error: null }),
     role.role === "super_admin" && loadPeople
       ? supabase.rpc("list_admin_members_v3")
+      : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadPeople
+      ? supabase.rpc("get_membership_intake_admin")
       : Promise.resolve({ data: [], error: null }),
     canManageEvents && loadEventList
       ? supabase.rpc("list_managed_events")
@@ -840,6 +848,13 @@ export default async function AdminOperationsPage({
             metrics={(readinessResult.data as ReadinessMetric[] | null) ?? []}
             analytics={(analyticsResult.data as ProductAnalytic[] | null) ?? []}
             migrationReady={!readinessResult.error && !analyticsResult.error}
+          />
+          <MembershipIntakeControl
+            configuration={
+              ((membershipIntakeResult.data as MembershipIntakeAdmin[] | null) ??
+                [])[0] ?? null
+            }
+            migrationReady={!membershipIntakeResult.error}
           />
           <MemberReview
             initialMembers={members}
