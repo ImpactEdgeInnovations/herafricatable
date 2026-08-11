@@ -260,12 +260,14 @@ export async function MemberHeader({
           </Link>
         ))}
       </nav>
-      {tableGuideFlag?.enabled && guideAccess?.feature_enabled ? (
+      {user ? (
         <FloatingTableGuide
-          assistantEnabled={guideAccess.assistant_enabled}
+          assistantEnabled={guideAccess?.assistant_enabled ?? false}
+          featureEnabled={Boolean(guideAccess?.feature_enabled)}
           firstName={memberName.split(/\s+/)[0] || "Member"}
+          installed={Boolean(guideAccess)}
           keyConfigured={Boolean(process.env.OPENAI_API_KEY && process.env.AI_SAFETY_SALT)}
-          remainingToday={guideAccess.remaining_today}
+          remainingToday={guideAccess?.remaining_today ?? 60}
         />
       ) : null}
     </>

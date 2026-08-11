@@ -49,12 +49,16 @@ function clampPosition(position: Position): Position {
 
 export function FloatingTableGuide({
   assistantEnabled,
+  featureEnabled,
   firstName,
+  installed,
   keyConfigured,
   remainingToday,
 }: {
   assistantEnabled: boolean;
+  featureEnabled: boolean;
   firstName: string;
+  installed: boolean;
   keyConfigured: boolean;
   remainingToday: number;
 }) {
@@ -182,7 +186,14 @@ export function FloatingTableGuide({
   if (!position) return null;
 
   const dockedLeft = position.x < window.innerWidth / 2;
-  const ready = assistantEnabled && keyConfigured;
+  const ready = installed && featureEnabled && assistantEnabled && keyConfigured;
+  const restingMessage = !installed
+    ? "Your Table Guide is being prepared. It will open here when setup is complete."
+    : !featureEnabled
+      ? "The Table Guide is resting while Her Africa Table prepares it for members."
+      : !keyConfigured
+        ? "The Guide’s secure connection is being prepared. You can still explore the platform normally."
+        : "The Guide is optional. Turn it on when you would like help finding people, events or Communities.";
 
   return (
     <aside
@@ -233,8 +244,12 @@ export function FloatingTableGuide({
             </>
           ) : (
             <div className="floating-guide-welcome">
-              <p>The Guide is optional. Turn it on when you would like help finding people, events or Communities.</p>
-              <Link className="button button-primary" href="/guide">Meet the Table Guide</Link>
+              <p>{restingMessage}</p>
+              {installed ? (
+                <Link className="button button-primary" href="/guide">
+                  {featureEnabled ? "Meet the Table Guide" : "Learn about the Guide"}
+                </Link>
+              ) : null}
             </div>
           )}
           <button className="floating-guide-quiet" onClick={() => setQuiet((current) => !current)} type="button">
@@ -249,7 +264,7 @@ export function FloatingTableGuide({
         onPointerDown={beginDrag}
         onPointerMove={move}
         onPointerUp={finishDrag}
-        title="Drag me, or tap for help"
+        title={featureEnabled ? "Drag me, or tap for help" : "The Table Guide is resting"}
         type="button"
       >
         <span className="floating-guide-spark" aria-hidden="true">✦</span>
