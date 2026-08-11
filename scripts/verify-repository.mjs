@@ -2172,6 +2172,78 @@ for (const contract of [
     `Email provider readiness must include ${contract}`,
   );
 }
+const tableGuideMigration = read(
+  "supabase/migrations/20260811210000_table_guide_foundation.sql",
+);
+for (const contract of [
+  "member_ai_preferences",
+  "table_guide_usage",
+  "recommend_me",
+  "profile.visibility_paused",
+  "public.connection_request_mode(profile.id) = 'open'",
+  "not public.is_blocked_pair(actor, profile.id)",
+  "connection.status in ('pending', 'accepted')",
+  "public.list_table_guide_connections",
+  "public.get_table_guide_admin",
+]) {
+  assert(
+    tableGuideMigration.includes(contract),
+    `Table Guide database boundary must include ${contract}`,
+  );
+}
+const tableGuideApi = read("app/api/table-guide/route.ts");
+for (const contract of [
+  'origin !== new URL(request.url).origin',
+  'supabase.auth.getUser()',
+  '"/moderations"',
+  '"omni-moderation-latest"',
+  '"/responses"',
+  "safety_identifier: safetyIdentifier(user.id, safetySalt)",
+  "store: false",
+  'supabase.rpc("list_table_guide_connections"',
+  "private messages",
+]) {
+  assert(tableGuideApi.includes(contract), `Table Guide API must include ${contract}`);
+}
+for (const forbiddenContract of [
+  "SUPABASE_SECRET_KEY",
+  "createAdminClient",
+  'from("messages")',
+  'from("member_reports")',
+]) {
+  assert(
+    !tableGuideApi.includes(forbiddenContract),
+    `Table Guide API must not include ${forbiddenContract}`,
+  );
+}
+const tableGuideMember = read("components/member/table-guide.tsx");
+for (const contract of [
+  "Turn on my Table Guide",
+  "Included in suggestions",
+  "Ask a person instead",
+  'href={`/members/${member.user_id}`}',
+  "Private contact details and messages are never used",
+]) {
+  assert(
+    tableGuideMember.includes(contract),
+    `Table Guide member experience must include ${contract}`,
+  );
+}
+const tableGuideAdmin = read("components/admin/table-guide-control.tsx");
+for (const contract of [
+  "Open the Table Guide",
+  "Close the Table Guide",
+  'p_key: "table_guide"',
+  "OPENAI_API_KEY or AI_SAFETY_SALT missing in Vercel",
+]) {
+  assert(
+    tableGuideAdmin.includes(contract),
+    `Table Guide Admin control must include ${contract}`,
+  );
+}
+for (const contract of ["OPENAI_API_KEY=", "OPENAI_MODEL=", "AI_SAFETY_SALT="]) {
+  assert(read(".env.example").includes(contract), `Table Guide environment must include ${contract}`);
+}
 console.log(
   `Repository contracts passed: ${tracked.length} tracked files, ${migrations.length} ordered migrations.`,
 );

@@ -151,6 +151,19 @@
 - [ ] Essential registration, account and privacy notices cannot be opted out
 - [ ] Feature flags expose only modules that passed their acceptance gate
 
+## Table Guide
+
+- [ ] `OPENAI_API_KEY` and `AI_SAFETY_SALT` are server-only in Vercel
+- [ ] The Admin off-switch stops new requests immediately
+- [ ] Members separately consent to using the Guide and appearing in suggestions
+- [ ] Hidden, paused, blocked, pending, suspended and opted-out members never appear
+- [ ] Suggestions use only visible industry, location, interests and goals
+- [ ] Private contacts, messages, safety reports and Admin data never enter model context
+- [ ] Moderation, daily limits, provider failure and human handoff paths pass
+- [ ] Her Africa Table stores no ordinary prompt or response transcript
+- [ ] A support transcript is stored only after explicit member confirmation
+- [ ] Two-account recommendation and blocked-pair acceptance tests pass
+
 ## Quality
 
 - [ ] Latest iOS Safari and Android Chrome pass core journeys

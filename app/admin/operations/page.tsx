@@ -15,6 +15,10 @@ import {
 } from "@/components/admin/membership-intake-control";
 import { RoadmapOverview } from "@/components/admin/roadmap-overview";
 import {
+  TableGuideControl,
+  type TableGuideAdmin,
+} from "@/components/admin/table-guide-control";
+import {
   EventManager,
   type AdminEvent,
 } from "@/components/admin/event-manager";
@@ -326,6 +330,10 @@ export default async function AdminOperationsPage({
       ? await supabase.rpc("list_admin_members_v2")
       : null;
   const memberResult = memberFallbackResult ?? memberApplicationResult;
+  const tableGuideAdminResult =
+    role.role === "super_admin" && loadPeople
+      ? await supabase.rpc("get_table_guide_admin")
+      : { data: [], error: null };
   const members = (memberResult.data as AdminMember[] | null) ?? [];
   const managedRows = (eventResult.data as ManagedEventRow[] | null) ?? [];
   const events: AdminEvent[] = managedRows.map((event) => ({
@@ -855,6 +863,16 @@ export default async function AdminOperationsPage({
                 [])[0] ?? null
             }
             migrationReady={!membershipIntakeResult.error}
+          />
+          <TableGuideControl
+            configuration={
+              ((tableGuideAdminResult.data as TableGuideAdmin[] | null) ?? [])[0] ??
+              null
+            }
+            keyConfigured={Boolean(
+              process.env.OPENAI_API_KEY && process.env.AI_SAFETY_SALT,
+            )}
+            migrationReady={!tableGuideAdminResult.error}
           />
           <MemberReview
             initialMembers={members}

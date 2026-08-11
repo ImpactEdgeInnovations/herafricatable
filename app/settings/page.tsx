@@ -4,6 +4,7 @@ import {
   AccountSettings,
   type ConnectionPreference,
   type PrivacyRequest,
+  type TableGuidePreference,
 } from "@/components/member/account-settings";
 import { MemberHeader } from "@/components/member/member-header";
 import { createClient } from "@/lib/supabase/server";
@@ -17,7 +18,12 @@ export default async function SettingsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
-  const [profileResult, requestResult, connectionPreferenceResult] =
+  const [
+    profileResult,
+    requestResult,
+    connectionPreferenceResult,
+    tableGuidePreferenceResult,
+  ] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -31,6 +37,7 @@ export default async function SettingsPage() {
         )
         .order("created_at", { ascending: false }),
       supabase.rpc("get_my_connection_preferences"),
+      supabase.rpc("get_my_table_guide_access"),
     ]);
 
   return (
@@ -65,6 +72,14 @@ export default async function SettingsPage() {
                 | null
             )?.[0] ?? { request_mode: "open", updated_at: null }
           }
+          tableGuidePreference={
+            (
+              tableGuidePreferenceResult.data as
+                | TableGuidePreference[]
+                | null
+            )?.[0] ?? null
+          }
+          tableGuideReady={!tableGuidePreferenceResult.error}
           email={user.email ?? ""}
           visibilityPaused={Boolean(
             profileResult.data?.visibility_paused,

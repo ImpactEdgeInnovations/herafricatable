@@ -54,6 +54,20 @@ A feature is not complete merely because its screen exists. It is complete when:
 8. **The interface teaches itself.** Use plain language, visible next steps, forgiving
    forms and familiar navigation so members and administrators do not need training.
 
+## Table Guide and consent-led introductions — 11 August 2026
+
+- [x] Add an optional, server-only AI concierge with an Admin off-switch
+- [x] Exclude private messages, private contacts, safety evidence and Admin data
+- [x] Add separate member consent for using the Guide and appearing in suggestions
+- [x] Rank suggestions deterministically from public industry, location, interests
+      and goals only after visibility, blocking and introduction boundaries pass
+- [x] Add OpenAI moderation, privacy-preserving safety identifiers, `store: false`,
+      daily limits and privacy-minimised usage metrics
+- [x] Add an explicit member-confirmed handoff into the existing private support queue
+- [ ] Apply `20260811210000_table_guide_foundation.sql` in production Supabase
+- [ ] Configure the OpenAI server secrets in Vercel and complete live acceptance
+- [ ] Open the feature only after two-member consent and blocked-pair tests pass
+
 ## UI and usability workstream — every day
 
 Usability is part of production readiness and continues alongside feature delivery:

@@ -299,6 +299,25 @@ notices. Provider credentials exist only in server-side Vercel environment varia
 Transactional/security messages remain enabled. Member preferences control grouped
 event, connection, community and platform communications.
 
+## Table Guide and AI boundary
+
+The Table Guide is an optional server-side concierge, not an authorization layer or
+autonomous platform actor. The signed-in Supabase client first resolves approved
+membership, feature availability, member consent and daily allowance. Only then does
+the server assemble a minimal context from records that account may already access.
+
+Connection suggestions are ranked deterministically in Postgres. Candidates must be
+active, fully onboarded, visible, unblocked, open to direct introductions and
+separately opted into recommendations. The model may explain these matches but cannot
+add candidates, reveal private fields or initiate a connection.
+
+OpenAI credentials and the safety-identifier salt remain server-only. Requests use
+moderation, `store: false`, low output limits and a privacy-preserving per-member
+identifier. Her Africa Table stores operational counts and outcomes, not ordinary
+prompt or response bodies. A transcript enters support records only when the member
+explicitly confirms a human handoff. The Super Admin feature flag stops new requests
+without deleting consent or operational evidence.
+
 ## Observability and operations
 
 Every push to `main` and every pull request runs an application and database quality

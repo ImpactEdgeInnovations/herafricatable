@@ -20,6 +20,13 @@ export type ConnectionPreference = {
   request_mode: "open" | "curated_only" | "paused";
   updated_at: string | null;
 };
+export type TableGuidePreference = {
+  assistant_enabled: boolean;
+  feature_enabled: boolean;
+  recommend_me: boolean;
+  remaining_today: number;
+  uses_today: number;
+};
 const date = (value: string) =>
   new Intl.DateTimeFormat("en-KE", {
     day: "numeric",
@@ -30,11 +37,15 @@ const date = (value: string) =>
 export function AccountSettings({
   email,
   connectionPreference,
+  tableGuidePreference,
+  tableGuideReady,
   visibilityPaused,
   requests,
 }: {
   email: string;
   connectionPreference: ConnectionPreference;
+  tableGuidePreference: TableGuidePreference | null;
+  tableGuideReady: boolean;
   visibilityPaused: boolean;
   requests: PrivacyRequest[];
 }) {
@@ -44,6 +55,12 @@ export function AccountSettings({
   const [notice, setNotice] = useState("");
   const [connectionMode, setConnectionMode] = useState(
     connectionPreference.request_mode,
+  );
+  const [assistantEnabled, setAssistantEnabled] = useState(
+    tableGuidePreference?.assistant_enabled ?? false,
+  );
+  const [recommendMe, setRecommendMe] = useState(
+    tableGuidePreference?.recommend_me ?? false,
   );
   const [confirmation, setConfirmation] = useState("");
   const [reason, setReason] = useState("");
@@ -88,6 +105,32 @@ export function AccountSettings({
     );
     if (!error) {
       setConnectionMode(mode);
+      router.refresh();
+    }
+  }
+  async function updateTableGuide(
+    nextAssistantEnabled: boolean,
+    nextRecommendMe: boolean,
+  ) {
+    setBusy("table-guide");
+    setNotice("");
+    const { error } = await supabase.rpc("set_my_table_guide_preferences", {
+      p_assistant_enabled: nextAssistantEnabled,
+      p_recommend_me: nextRecommendMe,
+    });
+    setBusy("");
+    setNotice(
+      error
+        ? memberErrorMessage(error, "change your Table Guide choices")
+        : nextAssistantEnabled
+          ? nextRecommendMe
+            ? "The Table Guide is on, and your visible profile may be suggested to suitable members."
+            : "The Table Guide is on. Your profile is not included in its suggestions."
+          : "The Table Guide is off for your account.",
+    );
+    if (!error) {
+      setAssistantEnabled(nextAssistantEnabled);
+      setRecommendMe(nextRecommendMe);
       router.refresh();
     }
   }
@@ -257,6 +300,58 @@ export function AccountSettings({
           ))}
         </div>
       </section>
+      {tableGuideReady ? (
+        <section className="settings-card table-guide-settings-card">
+          <div>
+            <p className="eyebrow">Optional member concierge</p>
+            <h2>Your Table Guide choices</h2>
+            <p>
+              Decide whether to use the Guide and whether your visible profile may
+              be suggested to members with relevant interests or goals.
+            </p>
+          </div>
+          <div className="table-guide-setting-options">
+            <button
+              aria-pressed={assistantEnabled}
+              disabled={busy === "table-guide"}
+              onClick={() => {
+                const nextAssistant = !assistantEnabled;
+                void updateTableGuide(
+                  nextAssistant,
+                  nextAssistant ? recommendMe : false,
+                );
+              }}
+              type="button"
+            >
+              <span aria-hidden="true"><i /></span>
+              <strong>Use the Table Guide</strong>
+              <small>
+                It can answer platform questions but cannot read private messages or act for you.
+              </small>
+            </button>
+            <button
+              aria-pressed={recommendMe}
+              disabled={
+                busy === "table-guide" ||
+                !assistantEnabled ||
+                visibilityPaused ||
+                connectionMode !== "open"
+              }
+              onClick={() => void updateTableGuide(true, !recommendMe)}
+              type="button"
+            >
+              <span aria-hidden="true"><i /></span>
+              <strong>Include me in suitable introductions</strong>
+              <small>
+                Requires a visible profile and Open to introductions. Only public profile details are compared.
+              </small>
+            </button>
+          </div>
+          {!tableGuidePreference?.feature_enabled ? (
+            <small>The Table Guide is currently closed platform-wide. Your choices will be remembered.</small>
+          ) : null}
+        </section>
+      ) : null}
       <section className="settings-card settings-action">
         <div>
           <p className="eyebrow">Your information</p>

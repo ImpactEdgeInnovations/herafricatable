@@ -35,6 +35,11 @@ export default async function OnboardingPage() {
     supabase.from("profile_interests").select("interest").eq("user_id", user.id),
     supabase.from("member_goals").select("goal_key").eq("user_id", user.id),
   ]);
+  const { data: tableGuideFlag } = await supabase
+    .from("feature_flags")
+    .select("enabled")
+    .eq("key", "table_guide")
+    .maybeSingle();
 
   if (profileResult.error || privateResult.error || interestsResult.error || goalsResult.error || !profileResult.data) {
     return (
@@ -63,6 +68,13 @@ export default async function OnboardingPage() {
         <p className="eyebrow">Welcome to the table</p>
         <h1>Introduce yourself<br />with intention.</h1>
         <p>Your profile is the beginning of every thoughtful introduction. Complete it once; it travels with you across every Her Africa Table event.</p>
+        {tableGuideFlag?.enabled &&
+        process.env.OPENAI_API_KEY &&
+        process.env.AI_SAFETY_SALT ? (
+          <Link className="table-guide-onboarding-link" href="/guide">
+            Need a hand? Ask the Table Guide <span>→</span>
+          </Link>
+        ) : null}
       </section>
       <OnboardingForm email={user.email ?? ""} userId={user.id} initial={{
         display_name: profile.display_name,
