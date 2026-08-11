@@ -19359,6 +19359,27 @@ body {
 .profile-goals span {
   font-size: 0.62rem;
 }
+.profile-goals label:has(input:checked) {
+  border-color: rgba(111, 31, 55, 0.48);
+  background: rgba(111, 31, 55, 0.06);
+}
+.profile-interests {
+  margin-top: 24px;
+}
+.profile-interests legend,
+.profile-interests > small {
+  grid-column: 1 / -1;
+}
+.profile-interests legend {
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 1rem;
+}
+.profile-interests > small {
+  color: var(--muted);
+  font-size: 0.56rem;
+}
 .profile-sharing-choice,
 .attendee-discovery-toggle {
   display: flex;

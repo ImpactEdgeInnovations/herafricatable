@@ -2096,6 +2096,40 @@ assert(
   !simplifiedOnboarding.includes("comma separated"),
   "Member onboarding must not ask non-technical members for comma-separated values",
 );
+const memberProfileEditor = read("components/member/profile-editor.tsx");
+for (const contract of [
+  "Choose at least one interest",
+  "Add a photo (optional)",
+  "interests.length === 0",
+]) {
+  assert(
+    memberProfileEditor.includes(contract),
+    `Member profile editing must include ${contract}`,
+  );
+}
+assert(
+  !memberProfileEditor.includes('name="interests"'),
+  "Member profile editing must use friendly interest choices instead of comma-separated entry",
+);
+const plainLanguageProfileMigration = read(
+  "supabase/migrations/20260811170000_plain_language_profile_updates.sql",
+);
+for (const contract of [
+  "required_photo', false",
+  "required_languages', false",
+  "Photo, languages, private contact details and commercial links remain optional",
+]) {
+  assert(
+    plainLanguageProfileMigration.includes(contract),
+    `Member profile database guidance must include ${contract}`,
+  );
+}
+assert(
+  !plainLanguageProfileMigration.includes(
+    "profile field, interest, goal and profile photo",
+  ),
+  "Member profile database guidance must not describe the optional photo as required",
+);
 const adminMemberHome = read("app/admin/page.tsx");
 assert(
   adminMemberHome.includes('["submitted", "in_review"].includes'),

@@ -58,6 +58,21 @@ const GOALS = [
   ["shop_african_brands", "Discover African brands"],
 ] as const;
 
+const INTERESTS = [
+  "Entrepreneurship",
+  "Leadership",
+  "Finance",
+  "Investment",
+  "Technology",
+  "Creative work",
+  "Wellness",
+  "Travel",
+  "Mentorship",
+  "Community impact",
+  "Career growth",
+  "African brands",
+] as const;
+
 export function ProfileEditor({
   email,
   initial,
@@ -74,6 +89,7 @@ export function ProfileEditor({
   const [message, setMessage] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(initial.avatar_url ?? "");
   const [goals, setGoals] = useState(initial.goals);
+  const [interests, setInterests] = useState(initial.interests);
   const completedProfileFields = [
     initial.display_name,
     initial.job_title,
@@ -99,6 +115,16 @@ export function ProfileEditor({
         ? current.filter((item) => item !== goal)
         : current.length < 6
           ? [...current, goal]
+          : current,
+    );
+  }
+
+  function toggleInterest(interest: string) {
+    setInterests((current) =>
+      current.includes(interest)
+        ? current.filter((item) => item !== interest)
+        : current.length < 8
+          ? [...current, interest]
           : current,
     );
   }
@@ -135,6 +161,10 @@ export function ProfileEditor({
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    if (interests.length === 0 || goals.length === 0) {
+      setMessage("Choose at least one interest and one goal before saving.");
+      return;
+    }
     setBusy(true);
     setMessage("");
     const { error } = await supabase.rpc("update_member_profile", {
@@ -148,7 +178,7 @@ export function ProfileEditor({
       p_goals: goals,
       p_industry: form.get("industry"),
       p_instagram_url: form.get("instagram_url"),
-      p_interests: splitList(form.get("interests")),
+      p_interests: interests,
       p_job_title: form.get("job_title"),
       p_languages: splitList(form.get("languages")),
       p_linkedin_url: form.get("linkedin_url"),
@@ -186,7 +216,13 @@ export function ProfileEditor({
               <span>{initial.display_name?.slice(0, 1) ?? "H"}</span>
             )}
             <label>
-              <strong>{uploading ? "Uploading…" : "Change photo"}</strong>
+              <strong>
+                {uploading
+                  ? "Uploading…"
+                  : avatarUrl
+                    ? "Change photo (optional)"
+                    : "Add a photo (optional)"}
+              </strong>
               <small>JPG, PNG or WebP · up to 5 MB</small>
               <input
                 accept="image/jpeg,image/png,image/webp"
@@ -274,9 +310,8 @@ export function ProfileEditor({
               defaultValue={initial.languages.join(", ")}
               name="languages"
               placeholder="English, Kiswahili"
-              required
             />
-            <small>Separate multiple languages with commas.</small>
+            <small>Optional. Separate multiple languages with commas.</small>
           </label>
           <label className="wide">
             Short introduction
@@ -304,17 +339,21 @@ export function ProfileEditor({
               type="url"
             />
           </label>
-          <label className="wide">
-            Interests
-            <input
-              defaultValue={initial.interests.join(", ")}
-              name="interests"
-              placeholder="Entrepreneurship, finance, wellness"
-              required
-            />
-            <small>Use commas to add a few specific interests.</small>
-          </label>
         </div>
+        <fieldset className="profile-goals profile-interests">
+          <legend>Choose at least one interest</legend>
+          {[...new Set([...INTERESTS, ...interests])].map((interest) => (
+            <label key={interest}>
+              <input
+                checked={interests.includes(interest)}
+                onChange={() => toggleInterest(interest)}
+                type="checkbox"
+              />
+              <span>{interest}</span>
+            </label>
+          ))}
+          <small>Select up to eight.</small>
+        </fieldset>
       </section>
 
       <section aria-labelledby="profile-purpose-title">
@@ -404,7 +443,9 @@ export function ProfileEditor({
         <p role="status">{message}</p>
         <button
           className="button button-primary"
-          disabled={busy || uploading || goals.length === 0}
+          disabled={
+            busy || uploading || goals.length === 0 || interests.length === 0
+          }
         >
           {busy ? "Saving…" : "Save profile"}
         </button>
