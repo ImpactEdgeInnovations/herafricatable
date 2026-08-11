@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthIntent = "member" | "admin";
@@ -32,6 +32,7 @@ export function AuthPanel({
   const [password, setPassword] = useState("");
   const [step, setStep] = useState<Step>("request");
   const [busy, setBusy] = useState(false);
+  const [resendIn, setResendIn] = useState(0);
   const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
 
   const destination =
@@ -41,21 +42,49 @@ export function AuthPanel({
       : destinationFor(intent);
   const isAdmin = intent === "admin";
 
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = window.setTimeout(() => setResendIn((value) => value - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendIn]);
+
+  async function sendCode() {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim().toLowerCase(),
+      options: {
+        shouldCreateUser: !isAdmin,
+      },
+    });
+    if (error) throw error;
+    setStep("verify");
+    setResendIn(30);
+    setMessage({
+      kind: "success",
+      text: "Your six-digit code is on its way. Check your inbox and spam folder. It can only be used once.",
+    });
+  }
+
   async function requestCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setMessage(null);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim().toLowerCase(),
-        options: {
-          shouldCreateUser: !isAdmin,
-        },
-      });
-      if (error) throw error;
-      setStep("verify");
-      setMessage({ kind: "success", text: "A six-digit sign-in code has been sent to your email. It expires shortly and can only be used once." });
+      await sendCode();
+    } catch (error) {
+      setMessage({ kind: "error", text: safeMessage(error instanceof Error ? error.message : "Unknown error") });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resendCode() {
+    if (busy || resendIn > 0) return;
+    setBusy(true);
+    setToken("");
+    setMessage(null);
+    try {
+      await sendCode();
     } catch (error) {
       setMessage({ kind: "error", text: safeMessage(error instanceof Error ? error.message : "Unknown error") });
     } finally {
@@ -112,13 +141,23 @@ export function AuthPanel({
         <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 10h11m-4-4 4 4-4 4" /></svg>
         Back to Her Africa Table
       </Link>
-      <p className="auth-kicker">{isAdmin ? "Authorized team access" : "Private beta"}</p>
-      <h2>{isAdmin ? "Admin sign in" : "Take your seat"}</h2>
+      <p className="auth-kicker">{isAdmin ? "Approved team only" : "Membership"}</p>
+      <h2>{isAdmin ? "Admin sign in" : step === "verify" ? "Check your email" : "Welcome"}</h2>
       <p className="auth-description">
         {isAdmin
-          ? <>Use your approved team email with a one-time code or the temporary beta password. <strong>Admin access is verified after sign-in.</strong></>
-          : <>Use a secure six-digit email code or the temporary beta password during setup. <strong>Email OTP remains the production method.</strong></>}
+          ? <>Enter an approved team email. We will send a private six-digit code, then confirm your Admin access.</>
+          : step === "verify"
+            ? <>We sent a six-digit code to <strong>{email}</strong>. Enter it below to continue.</>
+            : <>Enter your email to sign in or begin a membership request. No password is needed.</>}
       </p>
+
+      {!isAdmin && step === "request" ? (
+        <ol className="auth-journey" aria-label="How membership works">
+          <li><span>1</span><div><strong>Confirm your email</strong><small>We send a six-digit code.</small></div></li>
+          <li><span>2</span><div><strong>Tell us about you</strong><small>A short membership request.</small></div></li>
+          <li><span>3</span><div><strong>Private review</strong><small>We email you when your seat is ready.</small></div></li>
+        </ol>
+      ) : null}
 
       {step === "request" ? (
         <form className="auth-form" onSubmit={requestCode}>
@@ -134,16 +173,16 @@ export function AuthPanel({
             required
           />
           <button className="button button-primary" type="submit" disabled={busy}>
-            {busy ? "Sending…" : "Email me a code"}
+            {busy ? "Sending…" : "Send my six-digit code"}
           </button>
-          <div className="auth-divider">Temporary beta access</div>
+          <div className="auth-divider">Temporary access</div>
           <button className="button google-button" type="button" onClick={() => { setStep("password"); setMessage(null); }} disabled={busy}>
-            Sign in with password
+            Use a temporary password
           </button>
         </form>
       ) : step === "verify" ? (
         <form className="auth-form" onSubmit={verifyCode}>
-          <label htmlFor={`${intent}-token`}>Six-digit code sent to {email}</label>
+          <label htmlFor={`${intent}-token`}>Your six-digit code</label>
           <input
             id={`${intent}-token`}
             name="token"
@@ -159,9 +198,14 @@ export function AuthPanel({
           <button className="button button-primary" type="submit" disabled={busy || token.length !== 6}>
             {busy ? "Verifying…" : "Verify and continue"}
           </button>
-          <button className="button google-button" type="button" onClick={() => { setStep("request"); setToken(""); setMessage(null); }} disabled={busy}>
-            Use a different email or request a new code
-          </button>
+          <div className="auth-secondary-actions">
+            <button className="auth-text-button" type="button" onClick={resendCode} disabled={busy || resendIn > 0}>
+              {resendIn > 0 ? `Send another code in ${resendIn}s` : "Send another code"}
+            </button>
+            <button className="auth-text-button" type="button" onClick={() => { setStep("request"); setToken(""); setMessage(null); setResendIn(0); }} disabled={busy}>
+              Change email
+            </button>
+          </div>
         </form>
       ) : (
         <form className="auth-form" onSubmit={signInWithPassword}>
@@ -199,8 +243,8 @@ export function AuthPanel({
       {message && <p className={`auth-message ${message.kind}`} role="status">{message.text}</p>}
 
       <p className="auth-help">
-        By continuing, you agree to the beta Terms, Privacy Notice, and Community
-        Guidelines. Need help? <a href="mailto:support@herafricatable.com">Contact support</a>.
+        By continuing, you agree to our Terms, Privacy Notice, and Community
+        Guidelines. Need help? <a href="mailto:support@herafricatable.com">Contact us</a>.
       </p>
       <p className="intent-switch">
         {isAdmin ? <>Not a team administrator? <Link href="/sign-in">Member sign in</Link></> : <>Working on the Her Africa Table team? <Link href="/admin/sign-in">Admin sign in</Link></>}

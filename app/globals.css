@@ -1887,6 +1887,45 @@ svg {
 .auth-description strong {
   color: var(--ink);
 }
+.auth-journey {
+  display: grid;
+  margin: -4px 0 28px;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.auth-journey li {
+  display: grid;
+  align-items: center;
+  min-height: 62px;
+  border-bottom: 1px solid var(--line);
+  grid-template-columns: 28px 1fr;
+  gap: 12px;
+}
+.auth-journey li > span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid rgba(110, 35, 47, 0.22);
+  border-radius: 50%;
+  color: var(--wine);
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+.auth-journey strong,
+.auth-journey small {
+  display: block;
+}
+.auth-journey strong {
+  color: var(--ink);
+  font-size: 0.78rem;
+}
+.auth-journey small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
 .google-button {
   width: 100%;
   background: #fff;
@@ -1952,6 +1991,26 @@ svg {
 }
 .auth-form .button {
   width: 100%;
+}
+.auth-secondary-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+.auth-text-button {
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--wine);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+.auth-text-button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 .auth-message {
   margin: 16px 0 0;
@@ -16978,15 +17037,15 @@ body {
 }
 @media (max-width: 620px) {
   .auth-story {
-    min-height: 270px;
+    min-height: 220px;
     padding: 24px;
   }
   .auth-story .story-copy {
-    margin-top: 45px;
+    margin: 30px 0 8px;
   }
   .auth-story .story-copy h1 {
-    font-size: 2.65rem;
-    line-height: 0.91;
+    font-size: 2.35rem;
+    line-height: 0.94;
   }
   .auth-story .story-copy > p:last-child {
     display: none;
@@ -16999,6 +17058,26 @@ body {
   }
   .auth-back {
     margin-bottom: 28px;
+  }
+  .auth-journey {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .auth-journey li {
+    align-content: start;
+    min-height: 0;
+    border: 0;
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  .auth-journey small {
+    display: none;
+  }
+  .auth-journey strong {
+    font-size: 0.7rem;
+    line-height: 1.25;
   }
   .member-home-header {
     min-height: auto;

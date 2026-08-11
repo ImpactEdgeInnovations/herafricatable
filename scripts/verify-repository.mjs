@@ -1940,6 +1940,34 @@ for (const contract of [
     `Community event acceptance must include ${contract}`,
   );
 }
+const adminIdentityVerification = read("scripts/verify-admin-identity.mjs");
+for (const contract of [
+  "list_admin_team_access",
+  "grant_time_bounded_admin_access",
+  "HAT_CONFIRM_SUPER_ADMIN_GRANT",
+  "access_state",
+  "passwordAccepted",
+  "secretsPrinted: false",
+]) {
+  assert(
+    adminIdentityVerification.includes(contract),
+    `Admin identity verification must include ${contract}`,
+  );
+}
+const emailProviderReadiness = read(
+  "scripts/verify-email-provider-readiness.mjs",
+);
+for (const contract of [
+  "https://api.resend.com/domains",
+  "resend._domainkey",
+  "returnPathMx",
+  "secretsPrinted: false",
+]) {
+  assert(
+    emailProviderReadiness.includes(contract),
+    `Email provider readiness must include ${contract}`,
+  );
+}
 console.log(
   `Repository contracts passed: ${tracked.length} tracked files, ${migrations.length} ordered migrations.`,
 );

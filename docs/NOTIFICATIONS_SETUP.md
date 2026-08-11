@@ -57,6 +57,10 @@ idempotency header per outbox job.
 Reserved `.invalid` test-account recipients are completed as suppressed deliveries
 and never sent to the provider.
 
+This Vercel configuration sends platform notifications only. Sign-in codes are sent
+by Supabase Auth and require the separate custom SMTP configuration documented in
+`docs/AUTH_SETUP.md`. Adding `RESEND_API_KEY` to Vercel alone will not deliver OTPs.
+
 ## Scheduled processing
 
 The worker route is `GET /api/cron/notifications`. Vercel automatically sends

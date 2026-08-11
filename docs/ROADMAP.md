@@ -498,7 +498,9 @@ Usability is part of production readiness and continues alongside feature delive
 
 - [ ] Configure the Supabase email template with `{{ .Token }}` and disable magic-link
       wording
-- [ ] Configure production SMTP and verify sender-domain authentication
+- [ ] Configure Supabase custom SMTP for Auth OTP; public Resend DNS records for the
+      temporary `caseready.africa` sender are visible, but provider status and inbox
+      delivery still require production confirmation
 - [ ] Seed and verify the Super Admin account, then test member and admin OTP end to end
 - [x] Apply the onboarding/admin migration in production Supabase
 - [ ] Complete a real pending → onboarding → active acceptance test
