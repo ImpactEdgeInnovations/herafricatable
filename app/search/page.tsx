@@ -42,9 +42,16 @@ export default async function SearchPage({
     .maybeSingle();
   if (profile?.access_status !== "active") redirect("/home");
 
-  const result = query.length >= 2
-    ? await supabase.rpc("search_my_table", { p_limit: 30, p_query: query })
+  const naturalResult = query.length >= 2
+    ? await supabase.rpc("search_my_table_natural", {
+        p_limit: 30,
+        p_query: query,
+      })
     : { data: [], error: null };
+  const result =
+    query.length >= 2 && naturalResult.error
+      ? await supabase.rpc("search_my_table", { p_limit: 30, p_query: query })
+      : naturalResult;
   const results = (result.data as SearchResult[] | null) ?? [];
 
   return (
@@ -55,6 +62,7 @@ export default async function SearchPage({
         <h1>Search your table.</h1>
         <p>
           Find a member, a Community conversation, an event or useful learning.
+          You can write what you need in your own words.
           You will only see information you already have permission to open.
         </p>
         <form action="/search" method="get" role="search">
@@ -67,7 +75,7 @@ export default async function SearchPage({
               maxLength={80}
               minLength={2}
               name="q"
-              placeholder="Try a name, topic, city or skill"
+              placeholder="Try “women in trade finance in Nairobi”"
               required
               type="search"
             />
@@ -85,7 +93,7 @@ export default async function SearchPage({
       ) : query.length < 2 ? (
         <section className="member-search-state">
           <strong>Start with two or more letters.</strong>
-          <p>Search by a person’s name, her work, a Community topic or an event.</p>
+          <p>Try a name or write what you need in your own words.</p>
         </section>
       ) : results.length ? (
         <section className="member-search-results" aria-label="Search results">

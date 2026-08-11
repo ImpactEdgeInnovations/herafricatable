@@ -7,6 +7,7 @@ import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
 
 type GuideMessage = {
+  action?: { href: string; label: string };
   content: string;
   role: "assistant" | "user";
 };
@@ -182,11 +183,16 @@ export function FloatingTableGuide({
         headers: { "Content-Type": "application/json" },
         method: "POST",
       });
-      const result = (await response.json()) as { answer?: string; error?: string };
+      const result = (await response.json()) as {
+        actions?: { href: string; label: string }[];
+        answer?: string;
+        error?: string;
+      };
       if (response.ok) setRemaining((current) => Math.max(0, current - 1));
       setMessages((current) => [
         ...current,
         {
+          action: result.actions?.[0],
           content:
             result.answer ??
             result.error ??
@@ -274,6 +280,11 @@ export function FloatingTableGuide({
                 {messages.slice(-4).map((message, index) => (
                   <div className={message.role} key={`${message.role}-${index}`}>
                     <p>{message.content}</p>
+                    {message.role === "assistant" && message.action ? (
+                      <a className="floating-guide-action" href={message.action.href}>
+                        {message.action.label} <span aria-hidden="true">→</span>
+                      </a>
+                    ) : null}
                     {message.role === "assistant" && featureEnabled ? (
                       <GuideListenButton compact text={message.content} />
                     ) : null}

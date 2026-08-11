@@ -5,6 +5,11 @@ surfaces member-safe events and Communities, and shows deterministic connection
 suggestions. It does not approve access, publish content, send messages, create
 connections, process payments or read private conversations.
 
+Nia may prepare a clearly labelled draft, summarise recent Community posts that the
+signed-in member is already allowed to read, and offer one relevant next-step link.
+The answer remains inside the panel. Following a link, sending a request, publishing
+or registering is always a separate member-controlled action.
+
 ## Privacy boundary
 
 - Every member chooses whether to use the Guide.
@@ -73,3 +78,12 @@ The companion uses restrained movement, honours `prefers-reduced-motion`, stays
 clear of the mobile navigation and never reports internal development or deployment
 activity to members. Its page-aware prompts explain the current member journey;
 they do not expand the Guide's data access or action permissions.
+
+## Community Host writing help
+
+Approved Community owners and moderators can ask Nia for a welcome post,
+discussion prompt, event outline or recap from the Host workspace. The endpoint
+checks Community management permission on the server, moderates the supplied notes,
+uses `store: false`, and returns an editable draft. It never saves or publishes the
+draft. If the provider is unavailable, a restrained local template keeps the Host
+workflow usable without weakening permissions.

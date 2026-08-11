@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
+import { CommunityHostAssistant } from "@/components/member/community-host-assistant";
 import { useActionDialog } from "@/components/ui/action-dialog";
 
 export type CommunityHostHealth = {
@@ -328,6 +329,8 @@ export function CommunityHostWorkspace({
           {message}
         </p>
       ) : null}
+
+      <CommunityHostAssistant communityId={communityId} />
 
       <section
         className="community-host-panel community-host-continuity"

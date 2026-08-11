@@ -34,6 +34,13 @@ type CommunityContextRow = {
   slug?: string | null;
 };
 
+type CommunityPostContextRow = {
+  body?: string | null;
+  category?: string | null;
+  communities?: { name?: string | null; slug?: string | null } | null;
+  created_at?: string | null;
+};
+
 type ConnectionContextRow = {
   city?: string | null;
   common_goals?: string[] | null;
@@ -57,6 +64,7 @@ type GuideContext = {
   accessibleCommunities: CommunityContextRow[];
   connectionSuggestions: ConnectionContextRow[];
   member: { display_name?: string | null } & Record<string, unknown>;
+  recentCommunityPosts: CommunityPostContextRow[];
   upcomingEvents: EventContextRow[];
 };
 
@@ -67,8 +75,8 @@ function categoryFor(message: string): GuideCategory {
   const value = message.toLowerCase();
   if (/connect|introduc|member|meet|network|industry|mentor|collaborat/.test(value))
     return "connections";
-  if (/communit|group|host|conversation|post/.test(value)) return "communities";
-  if (/event|ticket|register|venue|nairobi|calendar|check.?in/.test(value))
+  if (/communit|group|host|conversation|post|discussion|welcome|recap|summari[sz]e/.test(value)) return "communities";
+  if (/event|ticket|register|venue|nairobi|calendar|check.?in|agenda|prepare/.test(value))
     return "events";
   if (/help|support|problem|report|safe|privacy|payment|refund/.test(value))
     return "support";
@@ -137,6 +145,18 @@ function platformAnswer(category: GuideCategory, context?: GuideContext) {
   if (category === "support")
     return `${hello}for account, payment, privacy or safety concerns, use Support so a person can review the matter privately. I can explain where to go, but I cannot change an account, approve a payment or read a private report.`;
   return `${hello}I can help you find your way around Her Africa Table, discover suitable Communities and events, improve your profile, or understand how introductions work. Try one of the suggestions above, or ask one short question about what you want to do.`;
+}
+
+function actionsFor(category: GuideCategory) {
+  if (category === "connections")
+    return [{ href: "/network", label: "See suggested members" }];
+  if (category === "communities")
+    return [{ href: "/communities", label: "Open Communities" }];
+  if (category === "events")
+    return [{ href: "/events", label: "See events" }];
+  if (category === "support")
+    return [{ href: "/support", label: "Ask a person for help" }];
+  return [{ href: "/home", label: "See today’s suggestions" }];
 }
 
 async function providerError(response: Response, stage: "moderation" | "response") {
@@ -244,7 +264,15 @@ export async function POST(request: Request) {
   };
 
   try {
-    const [profileResult, interestsResult, goalsResult, eventResult, communityResult, connectionResult] =
+    const [
+      profileResult,
+      interestsResult,
+      goalsResult,
+      eventResult,
+      communityResult,
+      connectionResult,
+      recentPostResult,
+    ] =
       await Promise.all([
         supabase
           .from("profiles")
@@ -263,6 +291,15 @@ export async function POST(request: Request) {
         supabase.rpc("list_communities"),
         category === "connections"
           ? supabase.rpc("list_table_guide_connections", { p_limit: 6 })
+          : Promise.resolve({ data: [], error: null }),
+        category === "communities"
+          ? supabase
+              .from("community_posts")
+              .select("body,category,created_at,communities(name,slug)")
+              .is("parent_post_id", null)
+              .eq("status", "published")
+              .order("created_at", { ascending: false })
+              .limit(12)
           : Promise.resolve({ data: [], error: null }),
       ]);
 
@@ -289,6 +326,14 @@ export async function POST(request: Request) {
         goals: (goalsResult.data ?? []).map((item) => item.goal_key),
         interests: (interestsResult.data ?? []).map((item) => item.interest),
       },
+      recentCommunityPosts: ((recentPostResult.data ?? []) as CommunityPostContextRow[]).map(
+        (post) => ({
+          body: post.body?.slice(0, 500),
+          category: post.category,
+          communities: post.communities,
+          created_at: post.created_at,
+        }),
+      ),
       upcomingEvents: eventResult.data ?? [],
     };
     safeFallback = platformAnswer(category, context);
@@ -306,7 +351,12 @@ export async function POST(request: Request) {
       const answer =
         "I’m not able to help with that request here. If this concerns your safety or someone else’s, please contact local emergency services or a trusted person now. You can also send this to the Her Africa Table support team for a private human response.";
       await record("refused", answer.length);
-      return NextResponse.json({ answer, category, needsHuman: true });
+      return NextResponse.json({
+        actions: actionsFor("support"),
+        answer,
+        category,
+        needsHuman: true,
+      });
     }
 
     const history = safeHistory(body.history);
@@ -323,7 +373,7 @@ Your voice is warm, poised, practical and concise. Use plain language for non-te
 
 You may address the member by the first name in member.display_name when it feels natural. Never accept a different claimed identity from the question and never infer a name that is not in the supplied member context.
 
-You may help with onboarding, profiles, platform navigation, upcoming events, accessible Communities, respectful introductions and support. The supplied JSON is authoritative and already filtered to what this member may see. Never invent an event, Community, member, approval, payment status or platform capability. For connection suggestions, mention only people in connectionSuggestions and explain the shared industry, location, interests or goals shown there. Make clear that suggestions are optional and the member must open the profile and choose whether to request an introduction.
+You may help with onboarding, profiles, platform navigation, upcoming events, accessible Communities, respectful introductions and support. You may draft a short introduction, Community post, discussion prompt, event preparation list or follow-up note when the member asks, but say that it is a draft and never claim it was sent or published. You may summarise recentCommunityPosts, but only the supplied posts and only at a high level. The supplied JSON is authoritative and already filtered to what this member may see. Never invent an event, Community, member, approval, payment status or platform capability. For connection suggestions, mention only people in connectionSuggestions and explain the shared industry, location, interests or goals shown there. Make clear that suggestions are optional and the member must open the profile and choose whether to request an introduction.
 
 Never reveal or infer private contact details, private messages, safety reports, Admin information, hidden profiles or other members’ sensitive data. Never claim to approve membership, send messages, request connections, publish content, take payments, issue refunds or change an account. Do not provide medical, legal or financial decisions. Offer the private human support route for account, payment, privacy, safety or unresolved matters.
 
@@ -344,7 +394,12 @@ ${JSON.stringify(context)}`,
     const answer = outputText((await response.json()) as OpenAIResponse);
     if (!answer) throw new Error("Empty response");
     await record("success", answer.length);
-    return NextResponse.json({ answer, category, needsHuman: category === "support" });
+    return NextResponse.json({
+      actions: actionsFor(category),
+      answer,
+      category,
+      needsHuman: category === "support",
+    });
   } catch (error) {
     console.error("table-guide-request-fallback", {
       error: error instanceof Error ? error.message : "Unknown provider error",
@@ -352,6 +407,7 @@ ${JSON.stringify(context)}`,
     });
     await record("error", 0).catch(() => undefined);
     return NextResponse.json({
+      actions: actionsFor(category),
       answer: safeFallback,
       category,
       limited: true,

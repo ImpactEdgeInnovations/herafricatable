@@ -11,9 +11,12 @@ import {
   type TableJourneyState,
 } from "@/components/member/table-journey";
 import {
-  CommunityReturnCard,
   type HomeCommunity,
 } from "@/components/member/community-return-card";
+import {
+  YourTableToday,
+  type TableTodaySuggestion,
+} from "@/components/member/your-table-today";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +54,13 @@ type DueConnectionFollowup = {
   display_name: string;
   next_step: string;
   remind_on: string;
+};
+type HomeMemberSuggestion = {
+  display_name: string | null;
+  industry: string | null;
+  city: string | null;
+  match_reasons: string[];
+  user_id: string;
 };
 
 export default async function MemberHomePage() {
@@ -290,7 +300,12 @@ export default async function MemberHomePage() {
   const tableJourney = (
     (tableJourneyResult.data as TableJourneyState[] | null) ?? []
   )[0];
-  const [conversationResult, unreadNotificationResult, dueFollowupResult] =
+  const [
+    conversationResult,
+    unreadNotificationResult,
+    dueFollowupResult,
+    consentMemberSuggestionResult,
+  ] =
     accessStatus === "active"
       ? await Promise.all([
           supabase.rpc("list_my_conversations"),
@@ -299,14 +314,24 @@ export default async function MemberHomePage() {
             .select("id", { count: "exact", head: true })
             .is("read_at", null),
           supabase.rpc("list_due_connection_followups", { p_limit: 3 }),
+          supabase.rpc("list_consent_led_member_recommendations", {
+            p_limit: 1,
+          }),
         ])
-      : [{ data: [] }, { count: 0 }, { data: [] }];
+      : [{ data: [] }, { count: 0 }, { data: [] }, { data: [] }];
+  const memberSuggestionResult =
+    accessStatus === "active" && consentMemberSuggestionResult.error
+      ? { data: [], error: null }
+      : consentMemberSuggestionResult;
   const unreadMessages = (
     (conversationResult.data as { unread_count: number }[] | null) ?? []
   ).reduce((total, conversation) => total + Number(conversation.unread_count), 0);
   const unreadNotifications = unreadNotificationResult.count ?? 0;
   const dueFollowups =
     (dueFollowupResult.data as DueConnectionFollowup[] | null) ?? [];
+  const memberSuggestion = (
+    (memberSuggestionResult.data as HomeMemberSuggestion[] | null) ?? []
+  )[0];
   const acceptedConnections = Number(activation?.accepted_connections ?? 0);
   const activationComplete = activation
     ? [
@@ -590,6 +615,65 @@ export default async function MemberHomePage() {
                     label: "Your network is ready",
                   });
 
+  const activeHomeCommunity = [...homeCommunities]
+    .filter((community) => community.membership_status === "active")
+    .sort(
+      (left, right) =>
+        Number(right.new_activity_count ?? 0) -
+        Number(left.new_activity_count ?? 0),
+    )[0];
+  const personToday: TableTodaySuggestion = memberSuggestion
+    ? {
+        action: "View her profile",
+        description:
+          memberSuggestion.match_reasons?.slice(0, 2).join(" · ") ||
+          [memberSuggestion.industry, memberSuggestion.city]
+            .filter(Boolean)
+            .join(" · ") ||
+          "A fresh perspective for your network.",
+        href: `/members/${memberSuggestion.user_id}`,
+        kicker: "Who to meet",
+        title: memberSuggestion.display_name || "Meet a member",
+      }
+    : {
+        action: "Meet members",
+        description:
+          "Browse only the profiles members have chosen to make visible.",
+        href: "/network",
+        kicker: "Who to meet",
+        title: "Find one relevant person",
+      };
+  const communityToday: TableTodaySuggestion = activeHomeCommunity
+    ? {
+        action: Number(activeHomeCommunity.new_activity_count ?? 0)
+          ? "See what is new"
+          : "Open Community",
+        description: Number(activeHomeCommunity.new_activity_count ?? 0)
+          ? `${activeHomeCommunity.new_activity_count} new update${Number(activeHomeCommunity.new_activity_count) === 1 ? "" : "s"} since your last visit.`
+          : activeHomeCommunity.tagline ||
+            "Return when you want to ask, offer or continue a conversation.",
+        href: `/communities/${activeHomeCommunity.slug}`,
+        kicker: "Where to participate",
+        title: activeHomeCommunity.name,
+      }
+    : {
+        action: "Find a Community",
+        description:
+          "Choose one group built around a purpose, interest or place you share.",
+        href: "/communities",
+        kicker: "Where to participate",
+        title: "Find your room",
+      };
+  const actionToday: TableTodaySuggestion = {
+    action: nextBestAction?.action ?? "See your next step",
+    description:
+      nextBestAction?.description ??
+      "Choose one small action that keeps a useful relationship moving.",
+    href: nextBestAction?.href ?? "/network",
+    kicker: "What to follow up on",
+    title: nextBestAction?.label ?? "Continue where you left off",
+  };
+
   return (
     <main className="member-home-page">
       <MemberHeader active="home" label="Member home" />
@@ -601,7 +685,7 @@ export default async function MemberHomePage() {
           </p>
           <h1>{memberState.title}</h1>
           <p>{memberState.description}</p>
-          <div className="portal-actions">
+          {accessStatus !== "active" ? <div className="portal-actions">
             {memberState.href.startsWith("mailto:") ? (
               <a className="button button-primary" href={memberState.href}>
                 {memberState.action}
@@ -611,121 +695,16 @@ export default async function MemberHomePage() {
                 {memberState.action}
               </Link>
             )}
-            {accessStatus === "active" ? (
-              <Link className="button button-outline" href="/events">
-                Events
-              </Link>
-            ) : null}
-          </div>
+          </div> : null}
         </div>
-        {accessStatus === "active" ? (
-          <aside className="member-welcome-note member-next-action">
-            <span>Your next step</span>
-            <strong>{nextBestAction?.label}</strong>
-            <p>{nextBestAction?.description}</p>
-            <Link href={nextBestAction?.href ?? "/network"}>
-              {nextBestAction?.action} <span aria-hidden="true">→</span>
-            </Link>
-          </aside>
-        ) : null}
       </section>
       {accessStatus === "active" ? (
-        <section className="member-pulse" aria-label="Your latest updates">
-          <header>
-            <p className="eyebrow">At a glance</p>
-            <span>Only you can see this</span>
-          </header>
-          <div>
-            <Link href="/network">
-              <span>People you know</span>
-              <strong>{acceptedConnections}</strong>
-              <small>See your connections</small>
-            </Link>
-            <Link href="/messages">
-              <span>New messages</span>
-              <strong>{unreadMessages}</strong>
-              <small>
-                {unreadMessages ? "Open messages" : "No new messages"}
-              </small>
-            </Link>
-            <Link href="/notifications">
-              <span>New updates</span>
-              <strong>{unreadNotifications}</strong>
-              <small>
-                {unreadNotifications ? "See what changed" : "Nothing needs attention"}
-              </small>
-            </Link>
-          </div>
-        </section>
-      ) : null}
-      {accessStatus === "active" &&
-      !homeCommunityResult.error &&
-      !homeCommunityActivityResult.error ? (
-        <CommunityReturnCard
-          communities={homeCommunities}
-          openingSoon={!communityEnabled}
+        <YourTableToday
+          action={actionToday}
+          community={communityToday}
+          person={personToday}
         />
       ) : null}
-      <section className="member-next-event" aria-labelledby="next-event-title">
-        {nextEvent ? (
-          <>
-            <div className="member-next-event-date" aria-hidden="true">
-              <strong>
-                {new Intl.DateTimeFormat("en-KE", {
-                  day: "2-digit",
-                }).format(new Date(nextEvent.starts_at))}
-              </strong>
-              <span>
-                {new Intl.DateTimeFormat("en-KE", {
-                  month: "short",
-                  year: "numeric",
-                }).format(new Date(nextEvent.starts_at))}
-              </span>
-            </div>
-            <div className="member-next-event-copy">
-              <p className="eyebrow">Your next table</p>
-              <h2 id="next-event-title">{nextEvent.title}</h2>
-              <p>
-                {new Intl.DateTimeFormat("en-KE", {
-                  dateStyle: "full",
-                  timeStyle: "short",
-                  timeZone: "Africa/Nairobi",
-                }).format(new Date(nextEvent.starts_at))}
-                {" · "}
-                {nextEvent.venues
-                  ? `${nextEvent.venues.name}, ${nextEvent.venues.city}`
-                  : nextEvent.format.replace("_", " ")}
-              </p>
-            </div>
-            <div className="member-next-event-action">
-              <span>{registrationState.label}</span>
-              <p>{registrationState.description}</p>
-              <Link
-                className="button button-primary"
-                href={
-                  nextRegistrationStatus === "pending_payment" ||
-                  (!nextRegistration &&
-                    nextEvent.registration_mode !== "closed")
-                    ? `/events/${nextEvent.slug}/register`
-                    : `/events/${nextEvent.slug}`
-                }
-              >
-                {registrationState.action}
-              </Link>
-            </div>
-          </>
-        ) : (
-          <div className="member-next-event-empty">
-            <p className="eyebrow">Your next table</p>
-            <h2 id="next-event-title">The next gathering is being prepared.</h2>
-            <p>
-              We will place the date, venue and your registration status here as
-              soon as the next table is published.
-            </p>
-            <Link href="/events">View all events →</Link>
-          </div>
-        )}
-      </section>
       {accessStatus === "active" || isApproved || feedbackPrompt || orders.length ? (
         <details className="member-home-secondary">
           <summary>

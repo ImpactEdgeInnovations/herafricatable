@@ -74,6 +74,28 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Configure the OpenAI server secrets in Vercel and complete live acceptance
 - [ ] Open the feature only after two-member consent and blocked-pair tests pass
 
+## Member retention orchestration — 12 August 2026
+
+- [x] Replace the dense Member Home dashboard with **Your Table Today**: one
+      consent-led person suggestion, one relevant Community and one next action
+- [x] Keep suggestions explainable and limit the new recommendation path to active,
+      visible members who explicitly opted in and accept direct introductions
+- [x] Let Nia answer inside her panel and offer one optional next-step link without
+      claiming to send, join, register, approve or publish anything
+- [x] Let Nia prepare introductions, Community posts, event preparation and high-level
+      summaries only from the member-authorized context supplied by the server
+- [x] Add plain-language discovery so members can search with phrases such as
+      “women in trade finance in Nairobi” while preserving existing search permissions
+- [x] Add a Community Host writing assistant for welcome posts, discussion prompts,
+      event outlines and recaps; every result remains an editable private draft
+- [x] Surface existing private relationship reminders as the most important follow-up
+      when they are due
+- [x] Retain the privacy-safe weekly Community briefings and the existing before/after
+      event journey as the Community and event retention loops
+- [ ] Apply `20260812130000_member_retention_orchestration.sql` in production Supabase
+- [ ] Complete live acceptance with two opted-in members, one opted-out member, one
+      blocked pair, one active Community, one past event and one Community Host
+
 ## Community joining and Event-to-Community journey — 12 August 2026
 
 - [x] Let a public Community choose immediate entry or Host approval for active

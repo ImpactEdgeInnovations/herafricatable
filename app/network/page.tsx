@@ -41,7 +41,7 @@ export default async function NetworkPage({
     networkResult,
     blocksResult,
     savedResult,
-    suggestionsResult,
+    consentSuggestionsResult,
     introductionResult,
     availabilityResult,
     followupResult,
@@ -58,12 +58,15 @@ export default async function NetworkPage({
       supabase.rpc("list_my_network_with_context"),
       supabase.rpc("list_my_blocks"),
       supabase.rpc("list_my_saved_profiles"),
-      supabase.rpc("list_member_recommendations", { p_limit: 6 }),
+      supabase.rpc("list_consent_led_member_recommendations", { p_limit: 6 }),
       supabase.rpc("list_my_curated_introductions"),
       supabase.rpc("list_connection_availability"),
       supabase.rpc("list_my_connection_followups"),
       supabase.rpc("list_my_connection_outcomes"),
     ]);
+  const suggestionsResult = consentSuggestionsResult.error
+    ? { data: [], error: null }
+    : consentSuggestionsResult;
   const connections = (networkResult.data as NetworkConnection[] | null) ?? [];
   const accepted = connections.filter((item) => item.status === "accepted");
   const pending = connections.filter(

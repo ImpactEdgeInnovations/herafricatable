@@ -430,7 +430,6 @@ assert(
   "Member home must progressively disclose secondary tools",
 );
 for (const contract of [
-  'className="member-next-event"',
   '"registration_requests"',
   "Your next table",
   "Seat confirmed",
@@ -439,8 +438,10 @@ for (const contract of [
   "member-activation",
   "Build two mutual connections",
   "nextBestAction",
-  "member-next-action",
-  "Your next step",
+  "YourTableToday",
+  "Who to meet",
+  "Where to participate",
+  "What to follow up on",
   "member-home-secondary",
   "Everything else is here when you need it.",
   "Show more",
@@ -865,7 +866,8 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "CommunityReturnCard",
+  "YourTableToday",
+  "activeHomeCommunity",
   "list_my_community_activity",
   "list_communities",
   "communityEnabled",
