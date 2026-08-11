@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { GuideListenButton } from "@/components/member/guide-listen-button";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 
@@ -200,15 +201,17 @@ export function TableGuide({
   if (!access.feature_enabled || !keyConfigured) {
     return (
       <section className="table-guide-unavailable">
-        <p className="eyebrow">A considered welcome</p>
-        <h1>The Table Guide is nearly ready.</h1>
+        <p className="eyebrow">Table Guide availability</p>
+        <h1>{!access.feature_enabled ? "The Guide is resting." : "The secure AI connection is missing."}</h1>
         <p>
-          The private member concierge will open after the final Admin and safety
-          checks. Your normal member experience remains available.
+          {!access.feature_enabled
+            ? "A Super Admin has closed the Guide for all members. The character remains visible so you always know where help will return."
+            : "Add OPENAI_API_KEY and AI_SAFETY_SALT to Vercel, then redeploy. The Guide will open without changing any member account."}
         </p>
-        <Link className="button button-primary" href="/home">
-          Return home
-        </Link>
+        <div>
+          <Link className="button button-primary" href="/home">Return home</Link>
+          <Link className="button button-outline" href="/support">Ask a person</Link>
+        </div>
       </section>
     );
   }
@@ -275,6 +278,9 @@ export function TableGuide({
               <article className={message.role} key={`${message.role}-${index}`}>
                 <span>{message.role === "assistant" ? "Table Guide" : "You"}</span>
                 <p>{message.content}</p>
+                {message.role === "assistant" ? (
+                  <GuideListenButton text={message.content} />
+                ) : null}
               </article>
             ))}
             {busy === "question" ? (
@@ -326,7 +332,7 @@ export function TableGuide({
             >
               {busy === "handoff" ? "Sending…" : "Ask a person instead"}
             </button>
-            <span>The Guide can make mistakes. Confirm important details on the relevant page.</span>
+            <span>Voice is AI-generated. The Guide can make mistakes, so confirm important details on the relevant page.</span>
           </footer>
           {notice ? <p className="network-message" role="status">{notice}</p> : null}
         </section>

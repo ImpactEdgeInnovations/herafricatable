@@ -15,7 +15,11 @@ export type MemberEventProposal = {
   capacity: number;
   city: string | null;
   community_after_event: boolean;
+  community_id: string | null;
   community_idea: string | null;
+  community_name: string | null;
+  community_slug: string | null;
+  community_type: string | null;
   country: string;
   created_at: string;
   ends_at: string;
@@ -36,6 +40,13 @@ export type MemberEventProposal = {
   title: string;
   updated_at: string;
   venue_name: string | null;
+};
+
+export type HostedCommunity = {
+  community_id: string;
+  community_type: string;
+  name: string;
+  slug: string;
 };
 
 const steps = ["Your idea", "Time & place", "Hosting safely", "What comes next"];
@@ -66,6 +77,7 @@ function initialValues() {
     capacity: "30",
     city: "Nairobi",
     communityAfterEvent: false,
+    communityId: "",
     communityIdea: "",
     country: "Kenya",
     endsAt: localDateTimeValue(ends),
@@ -85,9 +97,11 @@ function initialValues() {
 }
 
 export function MemberEventProposalPanel({
+  hostedCommunities,
   migrationReady,
   proposals,
 }: {
+  hostedCommunities: HostedCommunity[];
   migrationReady: boolean;
   proposals: MemberEventProposal[];
 }) {
@@ -96,6 +110,7 @@ export function MemberEventProposalPanel({
   const { ask, dialog } = useActionDialog();
   const [expanded, setExpanded] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [eventPath, setEventPath] = useState<"community" | "public">("public");
   const [step, setStep] = useState(0);
   const [values, setValues] = useState(initialValues);
   const [busy, setBusy] = useState(false);
@@ -109,6 +124,7 @@ export function MemberEventProposalPanel({
   function startNew() {
     setEditingId(null);
     setValues(initialValues());
+    setEventPath("public");
     setStep(0);
     setMessage("");
     setExpanded(true);
@@ -122,6 +138,7 @@ export function MemberEventProposalPanel({
       capacity: String(proposal.capacity),
       city: proposal.city ?? "",
       communityAfterEvent: proposal.community_after_event,
+      communityId: proposal.community_id ?? "",
       communityIdea: proposal.community_idea ?? "",
       country: proposal.country,
       endsAt: localDateTimeValue(proposal.ends_at),
@@ -139,38 +156,34 @@ export function MemberEventProposalPanel({
       venueName: proposal.venue_name ?? "",
     });
     setStep(0);
+    setEventPath("public");
     setMessage("");
     setExpanded(true);
   }
 
-  function continueForward() {
+  function currentStepIssue() {
     if (step === 0 && (values.title.trim().length < 4 || values.summary.trim().length < 40)) {
-      setMessage("Add a clear name and explain who this event will help.");
-      return;
+      if (values.title.trim().length < 4) return "Add a clear event name using at least 4 characters.";
+      return `Add ${40 - values.summary.trim().length} more character${40 - values.summary.trim().length === 1 ? "" : "s"} about what guests will gain.`;
     }
     if (step === 1) {
       const start = new Date(values.startsAt);
       const end = new Date(values.endsAt);
       if (!values.startsAt || !values.endsAt || end <= start) {
-        setMessage("Choose a start and end time for the event.");
-        return;
+        return "Choose a start and end time for the event.";
       }
       if (start.getTime() < Date.now() + 7 * 86_400_000) {
-        setMessage("Choose a date at least seven days away so there is time for review.");
-        return;
+        return "Choose a date at least seven days away so there is time for review.";
       }
       const capacity = Number(values.capacity);
       if (!Number.isInteger(capacity) || capacity < 5 || capacity > 500) {
-        setMessage("Choose a guest limit between 5 and 500.");
-        return;
+        return "Choose a guest limit between 5 and 500.";
       }
       if (values.format !== "virtual" && (!values.venueName.trim() || !values.city.trim())) {
-        setMessage("Add the venue and city for this event.");
-        return;
+        return "Add the venue and city for this event.";
       }
       if (values.format !== "in_person" && !values.onlineUrl.startsWith("https://")) {
-        setMessage("Add the full private online link, beginning with https://.");
-        return;
+        return "Add the full private online link, beginning with https://.";
       }
     }
     if (step === 2 && (
@@ -178,11 +191,18 @@ export function MemberEventProposalPanel({
       values.safetyContactName.trim().length < 2 ||
       values.safetyContactPhone.trim().length < 7
     )) {
-      setMessage("Tell us how you will host responsibly and add the day-of-event contact.");
-      return;
+      return "Tell us how you will host responsibly and add the day-of-event contact.";
     }
     if (step === 3 && values.communityAfterEvent && values.communityIdea.trim().length < 20) {
-      setMessage("Briefly describe the Community that might continue after this event.");
+      return "Briefly describe the Community that might continue after this event.";
+    }
+    return "";
+  }
+
+  function continueForward() {
+    const issue = currentStepIssue();
+    if (issue) {
+      setMessage(issue);
       return;
     }
     setStep((current) => Math.min(current + 1, steps.length - 1));
@@ -192,7 +212,7 @@ export function MemberEventProposalPanel({
   async function save(submit: boolean) {
     setBusy(true);
     setMessage("");
-    const { error } = await supabase.rpc("save_member_event_proposal", {
+    const proposalValues = {
       p_accessibility_notes: values.accessibilityNotes.trim() || null,
       p_address_line: values.addressLine.trim() || null,
       p_capacity: Number(values.capacity),
@@ -210,18 +230,48 @@ export function MemberEventProposalPanel({
       p_safety_contact_name: values.safetyContactName.trim(),
       p_safety_contact_phone: values.safetyContactPhone.trim(),
       p_starts_at: new Date(values.startsAt).toISOString(),
-      p_submit: submit,
+      p_submit: false,
       p_summary: values.summary.trim(),
       p_timezone: values.timezone,
       p_title: values.title.trim(),
       p_venue_name: values.venueName.trim() || null,
-    });
-    setBusy(false);
-    if (error) {
-      setMessage(memberErrorMessage(error, submit ? "send this event for review" : "save this private draft"));
+    };
+    const { data: savedProposalId, error: draftError } = await supabase.rpc(
+      "save_member_event_proposal",
+      proposalValues,
+    );
+    if (draftError || !savedProposalId) {
+      setBusy(false);
+      setMessage(memberErrorMessage(draftError, submit ? "send this event for review" : "save this draft"));
       return;
     }
-    setMessage(submit ? "Your event is with the review team." : "Private draft saved.");
+    setEditingId(String(savedProposalId));
+    const { error: contextError } = await supabase.rpc(
+      "set_member_event_proposal_community",
+      {
+        p_community_id: values.communityId || null,
+        p_proposal_id: savedProposalId,
+      },
+    );
+    if (contextError) {
+      setBusy(false);
+      setMessage(`Your draft was saved, but ${memberErrorMessage(contextError, "link its Community")}`);
+      router.refresh();
+      return;
+    }
+    const { error } = submit
+      ? await supabase.rpc("save_member_event_proposal", {
+          ...proposalValues,
+          p_proposal_id: savedProposalId,
+          p_submit: true,
+        })
+      : { error: null };
+    setBusy(false);
+    if (error) {
+      setMessage(memberErrorMessage(error, submit ? "send this event for review" : "save this draft"));
+      return;
+    }
+    setMessage(submit ? "Your event is with the review team." : "Draft saved. Only you and the review team can see it.");
     setExpanded(false);
     setEditingId(null);
     router.refresh();
@@ -280,9 +330,72 @@ export function MemberEventProposalPanel({
 
           {step === 0 ? (
             <div className="community-event-wizard-step">
+              <fieldset className="member-event-paths">
+                <legend>Who are you bringing together?</legend>
+                <div>
+                  <button
+                    aria-pressed={eventPath === "public"}
+                    onClick={() => { setEventPath("public"); setMessage(""); }}
+                    type="button"
+                  >
+                    <span>Open event</span>
+                    <strong>Everyone can discover it</strong>
+                    <small>It becomes public only after Admin approval.</small>
+                  </button>
+                  <button
+                    aria-pressed={eventPath === "community"}
+                    onClick={() => { setEventPath("community"); setMessage(""); }}
+                    type="button"
+                  >
+                    <span>Community gathering</span>
+                    <strong>For one Community</strong>
+                    <small>Private Communities keep the event private too.</small>
+                  </button>
+                </div>
+              </fieldset>
+
+              {eventPath === "community" ? (
+                <div className="member-event-community-route">
+                  <div>
+                    <p className="eyebrow">Plan it with your people</p>
+                    <h4>Community gatherings begin inside the Community.</h4>
+                    <p>The host can invite the right members, share updates in one place and keep private gatherings out of public discovery.</p>
+                  </div>
+                  {hostedCommunities.length ? (
+                    <div>
+                      {hostedCommunities.map((community) => (
+                        <Link href={`/communities/${community.slug}/host#event-proposals`} key={community.community_id}>
+                          <span>{community.community_type === "private" ? "Private Community" : "Open Community"}</span>
+                          <strong>Plan with {community.name}</strong>
+                          <i aria-hidden="true">→</i>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="member-event-no-community">
+                      <strong>You are not hosting a Community yet.</strong>
+                      <p>You can still propose an open event here, or apply to start a Community first.</p>
+                      <button onClick={() => setEventPath("public")} type="button">Plan an open event</button>
+                      <Link href="/communities#create-community">Start a Community</Link>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
               <label>Event name<input maxLength={140} onChange={(event) => update("title", event.target.value)} placeholder="For example: Women in trade breakfast" value={values.title}/></label>
-              <label>What will people gain?<textarea maxLength={2000} minLength={40} onChange={(event) => update("summary", event.target.value)} placeholder="Tell us who the event is for, why it matters and what guests should leave with." rows={5} value={values.summary}/><small>{values.summary.length}/2000 characters</small></label>
-              <div className="community-event-fixed-terms"><span>Public after approval</span><span>Free launch tier</span><p>Anyone can see an approved event. Registration remains reviewed by Her Africa Table. Paid member events will open only after settlement and refund checks pass.</p></div>
+              <label className={message && values.summary.trim().length < 40 ? "field-needs-attention" : ""}>What will people gain?<textarea aria-describedby="member-event-summary-help" maxLength={2000} minLength={40} onChange={(event) => update("summary", event.target.value)} placeholder="Tell us who the event is for, why it matters and what guests should leave with." rows={5} value={values.summary}/><small id="member-event-summary-help">{values.summary.trim().length < 40 ? `${40 - values.summary.trim().length} more character${40 - values.summary.trim().length === 1 ? "" : "s"} before you can continue` : "Ready to continue"} · {values.summary.length}/2000</small></label>
+              {hostedCommunities.length ? (
+                <label>Is this event connected to one of your Communities?
+                  <select onChange={(event) => update("communityId", event.target.value)} value={values.communityId}>
+                    <option value="">No — it stands on its own</option>
+                    {hostedCommunities.map((community) => <option key={community.community_id} value={community.community_id}>{community.name}</option>)}
+                  </select>
+                  <small>If you choose one, its name and join button will appear on the approved event.</small>
+                </label>
+              ) : null}
+              <div className="community-event-fixed-terms"><span>Public after approval</span><span>Free to attend</span><span>Seats reviewed</span><p>Paid member events will open after payment, refund and settlement checks pass.</p></div>
+                </>
+              )}
             </div>
           ) : null}
 
@@ -315,10 +428,10 @@ export function MemberEventProposalPanel({
             </div>
           ) : null}
 
-          {message ? <p className="manager-message" role="alert">{message}</p> : null}
+          {message ? <p className="manager-message member-event-inline-message" role="alert">{message}</p> : null}
           <footer>
             <button className="button button-outline" disabled={busy} onClick={() => step === 0 ? setExpanded(false) : setStep((current) => current - 1)} type="button">{step === 0 ? "Close" : "Back"}</button>
-            <div>{step === steps.length - 1 ? <button className="button button-outline" disabled={busy} onClick={() => void save(false)} type="button">Save private draft</button> : null}{step < steps.length - 1 ? <button className="button button-primary" onClick={continueForward} type="button">Continue</button> : <button className="button button-primary" disabled={busy} type="submit">{busy ? "Sending…" : "Send for review"}</button>}</div>
+            <div>{step === steps.length - 1 ? <button className="button button-outline" disabled={busy} onClick={() => void save(false)} type="button">Save draft</button> : null}{step < steps.length - 1 && (step !== 0 || eventPath === "public") ? <button className="button button-primary" onClick={continueForward} type="button">Continue</button> : step === steps.length - 1 ? <button className="button button-primary" disabled={busy} type="submit">{busy ? "Sending…" : "Send for review"}</button> : null}</div>
           </footer>
         </form>
       ) : null}
@@ -327,6 +440,7 @@ export function MemberEventProposalPanel({
         <article key={proposal.proposal_id}>
           <header><div><span className={`proposal-state state-${proposal.status}`}>{statusLabels[proposal.status]}</span><h3>{proposal.title}</h3><p>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: proposal.timezone }).format(new Date(proposal.starts_at))} · {proposal.format.replaceAll("_", " ")}</p></div><strong>{proposal.capacity} places</strong></header>
           {proposal.review_note ? <div className="proposal-review-guidance"><strong>Review guidance</strong><p>{proposal.review_note}</p></div> : null}
+          {proposal.community_name ? <p className="member-event-community-note">Connected to <Link href={`/communities/${proposal.community_slug}/about`}>{proposal.community_name}</Link>. Its name and join route appear on the approved event.</p> : null}
           {proposal.community_after_event ? <p className="member-event-community-note">A possible follow-up Community is included. Guests must opt in before receiving any invitation.</p> : null}
           <footer>
             {proposal.status === "approved" && proposal.canonical_event_slug ? <Link className="button button-primary" href={`/events/${proposal.canonical_event_slug}`}>View public event</Link> : null}

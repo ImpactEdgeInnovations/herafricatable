@@ -2701,6 +2701,68 @@ svg {
   font-style: italic;
 }
 
+.guide-listen {
+  display: grid;
+  width: fit-content;
+  gap: 4px;
+}
+
+.guide-listen > button {
+  display: inline-flex;
+  min-height: 34px;
+  padding: 6px 10px;
+  align-items: center;
+  border: 1px solid rgba(95, 23, 34, 0.16);
+  border-radius: 999px;
+  color: var(--wine);
+  font: inherit;
+  font-size: 0.53rem;
+  font-weight: 750;
+  background: rgba(255, 252, 246, 0.92);
+  cursor: pointer;
+  gap: 6px;
+}
+
+.guide-listen > button:hover {
+  border-color: rgba(95, 23, 34, 0.32);
+  background: #fff;
+}
+
+.guide-listen > button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.guide-listen svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.guide-listen small {
+  max-width: 270px;
+  color: #8a394a;
+  font-size: 0.5rem;
+  line-height: 1.4;
+}
+
+.guide-listen.is-compact > button {
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 0;
+  color: #70404b;
+  font-size: 0.68rem;
+  background: transparent;
+}
+
+.floating-guide-messages .guide-listen {
+  margin: 3px 0 0 3px;
+}
+
 .table-guide-quick-questions {
   display: flex;
   padding: 0 30px 20px;
@@ -3146,7 +3208,7 @@ svg {
   }
 }
 
-/* Movable Table Guide — playful enough to feel alive, quiet enough to stay premium. */
+/* Movable Table Guide — a restrained aubergine and champagne expression of the brand. */
 .floating-table-guide {
   position: fixed;
   z-index: 92;
@@ -3165,9 +3227,9 @@ svg {
   color: #fff7eb;
   cursor: grab;
   background:
-    radial-gradient(circle at 34% 25%, rgba(255, 255, 255, 0.3), transparent 22%),
-    linear-gradient(145deg, #8d6294 0%, #59375f 58%, #38203f 100%);
-  box-shadow: 0 17px 35px rgba(57, 31, 61, 0.24), 0 3px 9px rgba(57, 31, 61, 0.16);
+    radial-gradient(circle at 34% 25%, rgba(255, 255, 255, 0.24), transparent 22%),
+    linear-gradient(145deg, #721f31 0%, #4f263a 58%, #2f1d2b 100%);
+  box-shadow: 0 17px 35px rgba(62, 25, 39, 0.22), 0 3px 9px rgba(62, 25, 39, 0.14);
   user-select: none;
   -webkit-user-select: none;
   animation: table-guide-breathe 3.8s ease-in-out infinite;
@@ -3218,9 +3280,11 @@ svg {
   place-items: center;
   border: 1px solid rgba(255, 250, 233, 0.75);
   border-radius: 50%;
-  color: #513056;
-  font-size: 12px;
-  background: #f4d99f;
+  color: #5f1722;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  background: #f2d89d;
   box-shadow: 0 5px 12px rgba(57, 31, 61, 0.18);
   animation: table-guide-spark 5s ease-in-out infinite;
 }
@@ -3260,6 +3324,11 @@ svg {
   left: 0;
 }
 
+.floating-table-guide[data-vertical="below"] .floating-guide-panel {
+  top: 78px;
+  bottom: auto;
+}
+
 .floating-guide-panel > header {
   display: flex;
   align-items: flex-start;
@@ -3267,7 +3336,7 @@ svg {
   gap: 16px;
   padding: 20px 21px 16px;
   color: #fffaf1;
-  background: linear-gradient(135deg, #49304e, #6f4a73);
+  background: linear-gradient(135deg, #3b202e, #671d2c);
 }
 
 .floating-guide-panel > header div {
@@ -3309,9 +3378,16 @@ svg {
   padding: 18px 20px 8px;
 }
 
-.floating-guide-messages p {
+.floating-guide-messages > div {
   width: fit-content;
   max-width: 88%;
+}
+
+.floating-guide-messages > div.user {
+  justify-self: end;
+}
+
+.floating-guide-messages p {
   margin: 0;
   padding: 10px 12px;
   border-radius: 13px 13px 13px 4px;
@@ -3321,21 +3397,32 @@ svg {
   background: #f1ece6;
 }
 
-.floating-guide-messages p.user {
-  justify-self: end;
+.floating-guide-messages div.user p {
   border-radius: 13px 13px 4px 13px;
   color: #fff;
-  background: #66456b;
+  background: #672133;
+}
+
+.floating-guide-suggestions {
+  display: flex;
+  padding: 8px 20px 4px;
+  overflow-x: auto;
+  gap: 7px;
+  scrollbar-width: none;
+}
+
+.floating-guide-suggestions::-webkit-scrollbar {
+  display: none;
 }
 
 .floating-guide-suggestion {
-  display: block;
-  width: calc(100% - 40px);
-  margin: 8px 20px 4px;
+  flex: 0 0 auto;
+  max-width: 220px;
+  margin: 0;
   padding: 11px 13px;
   border: 1px solid rgba(100, 70, 104, 0.18);
   border-radius: 12px;
-  color: #59405c;
+  color: #5f2838;
   font: inherit;
   font-size: 0.79rem;
   line-height: 1.4;
@@ -3371,7 +3458,7 @@ svg {
   font: inherit;
   font-size: 0.82rem;
   font-weight: 700;
-  background: #644368;
+  background: #672133;
   cursor: pointer;
 }
 
@@ -3390,7 +3477,7 @@ svg {
 }
 
 .floating-guide-panel > footer a {
-  color: #624467;
+  color: #672133;
   font-weight: 700;
 }
 
@@ -4202,6 +4289,147 @@ svg {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.member-event-paths {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.member-event-paths legend {
+  margin-bottom: 10px;
+  color: var(--ink);
+  font-size: 0.67rem;
+  font-weight: 750;
+}
+
+.member-event-paths > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.member-event-paths button {
+  display: grid;
+  min-height: 128px;
+  padding: 18px;
+  border: 1px solid rgba(60, 35, 26, 0.14);
+  border-radius: 12px;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  background: #fff;
+  cursor: pointer;
+  gap: 5px;
+}
+
+.member-event-paths button[aria-pressed="true"] {
+  border-color: rgba(95, 23, 34, 0.52);
+  background: linear-gradient(145deg, rgba(255, 252, 246, 0.98), rgba(241, 226, 218, 0.58));
+  box-shadow: inset 0 0 0 1px rgba(95, 23, 34, 0.08);
+}
+
+.member-event-paths button > span {
+  color: var(--wine);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.member-event-paths button > strong {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.member-event-paths button > small {
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.5;
+}
+
+.member-event-community-route {
+  display: grid;
+  padding: 24px;
+  border: 1px solid rgba(95, 23, 34, 0.13);
+  border-radius: 12px;
+  background: #fffdf8;
+  gap: 20px;
+}
+
+.member-event-community-route h4 {
+  margin: 5px 0 7px;
+  font-family: var(--serif);
+  font-size: 1.28rem;
+  font-weight: 500;
+}
+
+.member-event-community-route p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.6;
+}
+
+.member-event-community-route > div:last-child {
+  display: grid;
+  gap: 8px;
+}
+
+.member-event-community-route > div:last-child > a {
+  display: grid;
+  padding: 14px 15px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  background: #fff;
+  grid-template-columns: 1fr auto;
+  gap: 3px 12px;
+}
+
+.member-event-community-route > div:last-child > a span {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 0.54rem;
+}
+
+.member-event-community-route > div:last-child > a strong {
+  grid-column: 1;
+  font-size: 0.7rem;
+}
+
+.member-event-community-route > div:last-child > a i {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  color: var(--wine);
+  font-style: normal;
+}
+
+.member-event-no-community button,
+.member-event-no-community a {
+  width: fit-content;
+  border: 0;
+  color: var(--wine);
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.community-event-wizard-step .field-needs-attention textarea {
+  border-color: #a13c4e;
+  box-shadow: 0 0 0 3px rgba(161, 60, 78, 0.08);
+}
+
+.member-event-inline-message {
+  margin: 16px 0 0;
+}
+
 .member-event-community-choice {
   display: grid;
   padding: 22px;
@@ -4247,6 +4475,44 @@ svg {
   font-size: 0.62rem;
   line-height: 1.55;
   background: rgba(105, 70, 109, 0.06);
+}
+
+.member-event-community-note a {
+  color: var(--wine);
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.event-list-community,
+.event-list-standalone {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 11px;
+  align-items: center;
+  color: var(--wine);
+  font-size: 0.57rem;
+  font-weight: 750;
+  gap: 7px;
+}
+
+.event-list-community i {
+  font-style: normal;
+}
+
+.event-list-standalone {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+@media (max-width: 680px) {
+  .member-event-paths > div {
+    grid-template-columns: 1fr;
+  }
+
+  .member-event-paths button {
+    min-height: 104px;
+  }
 }
 
 .member-event-review {

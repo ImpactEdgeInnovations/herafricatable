@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { GuideListenButton } from "@/components/member/guide-listen-button";
 
 type GuideMessage = {
   content: string;
@@ -15,25 +16,45 @@ const STORAGE_KEY = "hat-table-guide-position-v1";
 const DOCK_SIZE = 64;
 const EDGE_GAP = 16;
 
-const routeHelp: Record<string, { prompt: string; title: string }> = {
+const routeHelp: Record<string, { prompts: string[]; title: string }> = {
   "/communities": {
-    prompt: "Help me choose a Community and understand how joining works.",
+    prompts: [
+      "Help me choose a Community.",
+      "How does joining a private Community work?",
+      "How can I start my own Community?",
+    ],
     title: "Finding your people?",
   },
   "/events": {
-    prompt: "Help me understand upcoming events and how I can propose one.",
+    prompts: [
+      "Which event might suit me?",
+      "How do I propose an event?",
+      "What happens after I request a seat?",
+    ],
     title: "Planning to gather?",
   },
   "/home": {
-    prompt: "What is the most useful thing for me to do next?",
+    prompts: [
+      "What should I do next?",
+      "Show me what is coming up.",
+      "Help me find my people.",
+    ],
     title: "Where shall we begin?",
   },
   "/network": {
-    prompt: "Who could I thoughtfully connect with and why?",
+    prompts: [
+      "Who could I thoughtfully connect with?",
+      "How do introductions work?",
+      "Help me find someone in my industry.",
+    ],
     title: "Looking for an introduction?",
   },
   "/profile": {
-    prompt: "Help me make my profile clearer and more welcoming.",
+    prompts: [
+      "Help me improve my profile.",
+      "What should I share in my bio?",
+      "How do I control who can find me?",
+    ],
     title: "Shaping your profile?",
   },
 };
@@ -66,7 +87,11 @@ export function FloatingTableGuide({
   const route = useMemo(
     () =>
       Object.entries(routeHelp).find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? {
-        prompt: "Help me find my way around Her Africa Table.",
+        prompts: [
+          "Help me find my way around.",
+          "What can I do here?",
+          "How can I get human help?",
+        ],
         title: "Need a hand?",
       },
     [pathname],
@@ -131,17 +156,11 @@ export function FloatingTableGuide({
   function finishDrag(event: PointerEvent<HTMLButtonElement>) {
     if (!drag.current || !position) return;
     event.currentTarget.releasePointerCapture(event.pointerId);
-    const snapped = clampPosition({
-      x:
-        position.x + DOCK_SIZE / 2 < window.innerWidth / 2
-          ? EDGE_GAP
-          : window.innerWidth - DOCK_SIZE - EDGE_GAP,
-      y: position.y,
-    });
+    const placed = clampPosition(position);
     const moved = drag.current.moved;
     drag.current = null;
-    setPosition(snapped);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapped));
+    setPosition(placed);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(placed));
     if (!moved) setOpen((current) => !current);
   }
 
@@ -199,6 +218,7 @@ export function FloatingTableGuide({
     <aside
       className={`floating-table-guide${quiet ? " is-quiet" : ""}${open ? " is-open" : ""}`}
       data-side={dockedLeft ? "left" : "right"}
+      data-vertical={position.y < 410 ? "below" : "above"}
       style={{ left: position.x, top: position.y }}
     >
       {open ? (
@@ -214,18 +234,28 @@ export function FloatingTableGuide({
             <>
               <div aria-live="polite" className="floating-guide-messages">
                 {messages.slice(-4).map((message, index) => (
-                  <p className={message.role} key={`${message.role}-${index}`}>{message.content}</p>
+                  <div className={message.role} key={`${message.role}-${index}`}>
+                    <p>{message.content}</p>
+                    {message.role === "assistant" && featureEnabled ? (
+                      <GuideListenButton compact text={message.content} />
+                    ) : null}
+                  </div>
                 ))}
-                {busy ? <p className="assistant">Let me consider that…</p> : null}
+                {busy ? <div className="assistant"><p>Let me consider that…</p></div> : null}
               </div>
-              <button
-                className="floating-guide-suggestion"
-                disabled={busy || remaining < 1}
-                onClick={() => void askGuide(route.prompt)}
-                type="button"
-              >
-                {route.prompt}
-              </button>
+              <div className="floating-guide-suggestions" aria-label="Question ideas">
+                {route.prompts.map((prompt) => (
+                  <button
+                    className="floating-guide-suggestion"
+                    disabled={busy || remaining < 1}
+                    key={prompt}
+                    onClick={() => void askGuide(prompt)}
+                    type="button"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
               <form onSubmit={(event) => { event.preventDefault(); void askGuide(question); }}>
                 <label className="sr-only" htmlFor="floating-guide-question">Ask the Table Guide</label>
                 <input
@@ -247,7 +277,7 @@ export function FloatingTableGuide({
               <p>{restingMessage}</p>
               {installed ? (
                 <Link className="button button-primary" href="/guide">
-                  {featureEnabled ? "Meet the Table Guide" : "Learn about the Guide"}
+                  {featureEnabled ? "Turn on my Guide" : "See why it is closed"}
                 </Link>
               ) : null}
             </div>
@@ -267,7 +297,7 @@ export function FloatingTableGuide({
         title={featureEnabled ? "Drag me, or tap for help" : "The Table Guide is resting"}
         type="button"
       >
-        <span className="floating-guide-spark" aria-hidden="true">✦</span>
+        <span className="floating-guide-spark" aria-hidden="true">H</span>
         <span className="floating-guide-face" aria-hidden="true"><i /><i /><b /></span>
         <span className="floating-guide-shadow" aria-hidden="true" />
       </button>

@@ -15,7 +15,11 @@ export type MemberEventProposalAdmin = {
   capacity: number;
   city: string | null;
   community_after_event: boolean;
+  community_id: string | null;
   community_idea: string | null;
+  community_name: string | null;
+  community_slug: string | null;
+  community_type: string | null;
   country: string;
   created_at: string;
   ends_at: string;
@@ -143,13 +147,14 @@ export function MemberEventProposalManager({
           </nav>
           {visible.length ? <div className="community-event-review-list">{visible.map((proposal) => (
             <article key={proposal.proposal_id}>
-              <header><div><span className={`proposal-state state-${proposal.status}`}>{labels[proposal.status] ?? proposal.status.replaceAll("_", " ")}</span><h3>{proposal.title}</h3><p>Public event · Proposed by {proposal.proposer_name || proposal.proposer_email}</p></div><time dateTime={proposal.submitted_at ?? proposal.created_at}>{new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", year: "numeric" }).format(new Date(proposal.submitted_at ?? proposal.created_at))}</time></header>
+              <header><div><span className={`proposal-state state-${proposal.status}`}>{labels[proposal.status] ?? proposal.status.replaceAll("_", " ")}</span><h3>{proposal.title}</h3><p>Public event · Proposed by {proposal.proposer_name || proposal.proposer_email}{proposal.community_name ? ` · Connected to ${proposal.community_name}` : " · Stands alone"}</p></div><time dateTime={proposal.submitted_at ?? proposal.created_at}>{new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", year: "numeric" }).format(new Date(proposal.submitted_at ?? proposal.created_at))}</time></header>
               <p className="community-event-review-summary">{proposal.summary}</p>
               <dl>
                 <div><dt>When</dt><dd>{new Intl.DateTimeFormat("en-KE", { dateStyle: "full", timeStyle: "short", timeZone: proposal.timezone }).format(new Date(proposal.starts_at))}</dd></div>
                 <div><dt>Format</dt><dd>{proposal.format.replaceAll("_", " ")} · {proposal.capacity} places</dd></div>
                 <div><dt>Place</dt><dd>{proposal.format === "virtual" ? "Online" : [proposal.venue_name, proposal.city, proposal.country].filter(Boolean).join(", ")}</dd></div>
                 <div><dt>Access</dt><dd>Public · Free · Manual registration review</dd></div>
+                <div><dt>Community</dt><dd>{proposal.community_name ? <><Link href={`/communities/${proposal.community_slug}/about`}>{proposal.community_name}</Link><small>{proposal.community_type === "private" ? "Private Community; event remains public" : "Open Community"}</small></> : "No Community attached"}</dd></div>
                 <div><dt>Responsible person</dt><dd>{proposal.safety_contact_name}<small>{proposal.safety_contact_phone}</small></dd></div>
                 <div><dt>Accessibility</dt><dd>{proposal.accessibility_notes || "No information supplied"}</dd></div>
                 <div className="wide"><dt>Hosting readiness</dt><dd>{proposal.host_experience}</dd></div>

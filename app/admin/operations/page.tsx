@@ -310,6 +310,7 @@ export default async function AdminOperationsPage({
     operationalHealth,
     communityEventProposalResult,
     memberEventProposalResult,
+    memberEventProposalContextResult,
     memberEventArchiveResult,
     memberEventMediaResult,
   ] = await Promise.all([
@@ -339,6 +340,9 @@ export default async function AdminOperationsPage({
       ? supabase.rpc("list_admin_member_event_proposals")
       : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadEvents
+      ? supabase.rpc("list_member_event_proposal_communities")
+      : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadEvents
       ? supabase.rpc("list_admin_member_event_archives")
       : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadEvents
@@ -356,6 +360,29 @@ export default async function AdminOperationsPage({
       ? await supabase.rpc("get_table_guide_admin")
       : { data: [], error: null };
   const members = (memberResult.data as AdminMember[] | null) ?? [];
+  const memberEventProposalContexts = (memberEventProposalContextResult.data as
+    | {
+        community_id: string | null;
+        community_name: string | null;
+        community_slug: string | null;
+        community_type: string | null;
+        proposal_id: string;
+      }[]
+    | null) ?? [];
+  const memberEventProposals = (((memberEventProposalResult.data as
+    | MemberEventProposalAdmin[]
+    | null) ?? []).map((proposal) => {
+      const context = memberEventProposalContexts.find(
+        (item) => item.proposal_id === proposal.proposal_id,
+      );
+      return {
+        ...proposal,
+        community_id: context?.community_id ?? null,
+        community_name: context?.community_name ?? null,
+        community_slug: context?.community_slug ?? null,
+        community_type: context?.community_type ?? null,
+      };
+    }));
   const eventMediaSubmissions = await Promise.all(
     (((memberEventMediaResult.data as EventMediaSubmissionAdmin[] | null) ?? [])).map(async (item) => {
       const signed = await supabase.storage.from("event-media").createSignedUrl(item.storage_path, 3600);
@@ -960,12 +987,8 @@ export default async function AdminOperationsPage({
           {role.role === "super_admin" ? (
             <>
               <MemberEventProposalManager
-                migrationReady={!memberEventProposalResult.error}
-                proposals={
-                  (memberEventProposalResult.data as
-                    | MemberEventProposalAdmin[]
-                    | null) ?? []
-                }
+                migrationReady={!memberEventProposalResult.error && !memberEventProposalContextResult.error}
+                proposals={memberEventProposals}
               />
               <CommunityEventProposalManager
                 migrationReady={!communityEventProposalResult.error}

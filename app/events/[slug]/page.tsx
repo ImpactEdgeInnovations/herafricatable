@@ -153,7 +153,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <Link href={eventCommunity ? `/communities/${eventCommunity.slug}?view=people` : "/events"}>{eventCommunity ? `Back to ${eventCommunity.name}` : "All events"}</Link>
       </header>
       <section className="event-detail-hero">
-        <div><p className="eyebrow">{event.audience === "community" ? "Private Community gathering" : event.format.replace("_", " ")} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "A carefully curated Her Africa Table gathering."}</p>{eventCommunity ? <span className="event-community-badge">For active members of {eventCommunity.name}</span> : null}</div>
+        <div><p className="eyebrow">{event.audience === "community" ? "Private Community gathering" : event.format.replace("_", " ")} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "A carefully curated Her Africa Table gathering."}</p>{eventCommunity ? <span className="event-community-badge">{event.audience === "community" ? `For active members of ${eventCommunity.name}` : `Hosted with ${eventCommunity.name}`}</span> : null}</div>
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div></dl>
           {hasEnded || event.registration_mode === "closed" ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}
@@ -168,8 +168,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             <p>{eventCommunity.tagline || "Meet members, see event updates and continue the conversation together."}</p>
           </div>
           <aside>
-            <span>{eventCommunity.community_type === "private" ? "Host approval required" : "Public Community"}</span>
-            <p>Joining the event does not automatically add you to the Community. You choose each separately.</p>
+            <span>{eventCommunity.community_type === "private" ? "Host approval required" : "Open Community"}</span>
+            <p>{event.audience === "community" ? "This gathering is for active members of the Community." : "This is an open event connected to the Community. Joining either one is always your choice."}</p>
             <Link className="button button-outline" href={`/communities/${eventCommunity.slug}/about`}>
               Meet the Community
             </Link>
