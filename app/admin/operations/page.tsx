@@ -157,6 +157,15 @@ import {
   CommunityEventProposalManager,
   type CommunityEventProposalAdmin,
 } from "@/components/admin/community-event-proposal-manager";
+import {
+  MemberEventProposalManager,
+  type MemberEventProposalAdmin,
+} from "@/components/admin/member-event-proposal-manager";
+import {
+  MemberEventArchiveManager,
+  type EventMediaSubmissionAdmin,
+  type MemberEventArchiveAdmin,
+} from "@/components/admin/member-event-archive-manager";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -300,6 +309,9 @@ export default async function AdminOperationsPage({
     eventResult,
     operationalHealth,
     communityEventProposalResult,
+    memberEventProposalResult,
+    memberEventArchiveResult,
+    memberEventMediaResult,
   ] = await Promise.all([
     loadRelease
       ? supabase
@@ -323,6 +335,15 @@ export default async function AdminOperationsPage({
     role.role === "super_admin" && loadEvents
       ? supabase.rpc("list_admin_community_event_proposals")
       : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadEvents
+      ? supabase.rpc("list_admin_member_event_proposals")
+      : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadEvents
+      ? supabase.rpc("list_admin_member_event_archives")
+      : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadEvents
+      ? supabase.rpc("list_admin_event_media_submissions")
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   const memberFallbackResult =
@@ -335,6 +356,12 @@ export default async function AdminOperationsPage({
       ? await supabase.rpc("get_table_guide_admin")
       : { data: [], error: null };
   const members = (memberResult.data as AdminMember[] | null) ?? [];
+  const eventMediaSubmissions = await Promise.all(
+    (((memberEventMediaResult.data as EventMediaSubmissionAdmin[] | null) ?? [])).map(async (item) => {
+      const signed = await supabase.storage.from("event-media").createSignedUrl(item.storage_path, 3600);
+      return { ...item, image_url: signed.data?.signedUrl ?? null };
+    }),
+  );
   const managedRows = (eventResult.data as ManagedEventRow[] | null) ?? [];
   const events: AdminEvent[] = managedRows.map((event) => ({
     capacity: event.capacity,
@@ -577,7 +604,24 @@ export default async function AdminOperationsPage({
       ? supabase.rpc("get_connection_outcome_summary", { p_days: 365 })
       : Promise.resolve({ data: [], error: null }),
   ]);
-  const communities = (communityResult.data as CommunitySummary[] | null) ?? [];
+  const communityJoiningResult = isProgramAdmin
+    ? await supabase.rpc("list_community_joining_settings", {
+        p_community_id: null,
+      })
+    : { data: [], error: null };
+  const joiningByCommunity = new Map(
+    ((communityJoiningResult.data as {
+      admission_mode: "open" | "approval";
+      community_id: string;
+      effective_mode: "open" | "approval";
+    }[] | null) ?? []).map((item) => [item.community_id, item]),
+  );
+  const communities = (
+    (communityResult.data as CommunitySummary[] | null) ?? []
+  ).map((community) => ({
+    ...community,
+    ...(joiningByCommunity.get(community.community_id) ?? {}),
+  }));
   const adminCourses =
     (learningCourseResult.data as CourseSummary[] | null) ?? [];
   const learningCourseIds = adminCourses.map((item) => item.course_id);
@@ -914,14 +958,35 @@ export default async function AdminOperationsPage({
           title="Plan and run an event"
         >
           {role.role === "super_admin" ? (
-            <CommunityEventProposalManager
-              migrationReady={!communityEventProposalResult.error}
-              proposals={
-                (communityEventProposalResult.data as
-                  | CommunityEventProposalAdmin[]
-                  | null) ?? []
-              }
-            />
+            <>
+              <MemberEventProposalManager
+                migrationReady={!memberEventProposalResult.error}
+                proposals={
+                  (memberEventProposalResult.data as
+                    | MemberEventProposalAdmin[]
+                    | null) ?? []
+                }
+              />
+              <CommunityEventProposalManager
+                migrationReady={!communityEventProposalResult.error}
+                proposals={
+                  (communityEventProposalResult.data as
+                    | CommunityEventProposalAdmin[]
+                    | null) ?? []
+                }
+              />
+              <MemberEventArchiveManager
+                archives={
+                  (memberEventArchiveResult.data as
+                    | MemberEventArchiveAdmin[]
+                    | null) ?? []
+                }
+                media={eventMediaSubmissions}
+                migrationReady={
+                  !memberEventArchiveResult.error && !memberEventMediaResult.error
+                }
+              />
+            </>
           ) : null}
           <EventManager
             initialEvents={events}
@@ -1110,6 +1175,7 @@ export default async function AdminOperationsPage({
             communities={communities}
             members={communityMembers}
             enabled={Boolean(featureFlagResult.data?.enabled)}
+            joiningReady={!communityJoiningResult.error}
             migrationReady={
               !communityResult.error &&
               !featureFlagResult.error &&

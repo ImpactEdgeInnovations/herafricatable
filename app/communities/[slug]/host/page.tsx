@@ -48,6 +48,10 @@ import {
   CommunityEventProposalPanel,
   type CommunityEventProposal,
 } from "@/components/community/community-event-proposal-panel";
+import {
+  CommunityJoiningSettingsPanel,
+  type CommunityJoiningSettings,
+} from "@/components/member/community-joining-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +81,7 @@ export default async function CommunityHostPage({
     redirect(`/communities/${slug}`);
   }
 
-  const [capabilityResult, brandingResult, publicProfileResult] = await Promise.all([
+  const [capabilityResult, brandingResult, publicProfileResult, joiningSettingsResult] = await Promise.all([
     supabase.rpc("get_community_host_capabilities", {
       p_community_id: community.community_id,
     }),
@@ -89,6 +93,9 @@ export default async function CommunityHostPage({
           p_community_id: community.community_id,
         })
       : Promise.resolve({ data: [], error: null }),
+    supabase.rpc("list_community_joining_settings", {
+      p_community_id: community.community_id,
+    }),
   ]);
   const capabilities =
     ((capabilityResult.data as CommunityHostCapabilities[] | null) ?? [])[0] ??
@@ -97,6 +104,9 @@ export default async function CommunityHostPage({
     ((brandingResult.data as CommunityBrandIdentity[] | null) ?? [])[0] ?? null;
   const publicProfile =
     ((publicProfileResult.data as CommunityPublicProfile[] | null) ?? [])[0] ??
+    null;
+  const joiningSettings =
+    ((joiningSettingsResult.data as CommunityJoiningSettings[] | null) ?? [])[0] ??
     null;
   const [iconSigned, coverSigned] = await Promise.all([
     brandIdentity?.icon_storage_path
@@ -257,6 +267,7 @@ export default async function CommunityHostPage({
       </section>
       <nav className="community-room-navigation" aria-label="Host workspace areas">
         <a href="#host-tools">Plan &amp; tools</a>
+        <a href="#joining-settings">Who can join?</a>
         <a href="#gathering-proposals">Plan an event</a>
         <a href="#welcome">Welcome</a>
         {community.membership_role === "owner" ? (
@@ -285,6 +296,11 @@ export default async function CommunityHostPage({
           owner={community.membership_role === "owner"}
         />
       </div>
+      <CommunityJoiningSettingsPanel
+        communityId={community.community_id}
+        owner={community.membership_role === "owner"}
+        settings={joiningSettings}
+      />
       <CommunityEventProposalPanel
         communityId={community.community_id}
         migrationReady={!eventProposalResult.error}

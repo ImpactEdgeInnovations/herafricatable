@@ -46,18 +46,31 @@ export default async function PastEventsPage() {
     ).map((item) => [item.slug, item.feedback_id]),
   );
   const events = (past as PastEvent[] | null) ?? [];
-  const testimonialResults = await Promise.all(
-    events.map((event) =>
-      supabase.rpc("list_event_testimonials", {
-        p_event_id: event.event_id,
-      }),
+  const [testimonialResults, continuationResult] = await Promise.all([
+    Promise.all(
+      events.map((event) =>
+        supabase.rpc("list_event_testimonials", {
+          p_event_id: event.event_id,
+        }),
+      ),
     ),
-  );
+    events.length
+      ? supabase
+          .from("event_community_continuations")
+          .select("event_id,communities(name,slug)")
+          .in("event_id", events.map((event) => event.event_id))
+      : Promise.resolve({ data: [] }),
+  ]);
   const testimonials = new Map(
     events.map((event, index) => [
       event.event_id,
       (testimonialResults[index].data as Testimonial[] | null) ?? [],
     ]),
+  );
+  const continuations = new Map(
+    (((continuationResult.data as { event_id: string; communities: { name: string; slug: string } | null }[] | null) ?? [])
+      .filter((item) => item.communities)
+      .map((item) => [item.event_id, item.communities!])),
   );
 
   return (
@@ -149,12 +162,14 @@ export default async function PastEventsPage() {
                 ) : null}
                 <footer className="past-event-card-footer">
                   <span>{event.recap_summary ? "Recap published" : "Recap pending"}</span>
-                  {eligible.has(event.slug) ? (
-                    <div className="past-event-member-actions">
+                  <div className="past-event-member-actions">
+                    <Link href={`/events/${event.slug}`}>View event story</Link>
+                    {continuations.has(event.event_id) ? <Link href={`/communities/${continuations.get(event.event_id)!.slug}`}>View {continuations.get(event.event_id)!.name}</Link> : null}
+                    {eligible.has(event.slug) ? <>
                       <Link href={`/events/${event.slug}/follow-up`}>Continue connections</Link>
                       <Link href={`/events/${event.slug}/feedback`}>{eligible.get(event.slug) ? "Update feedback" : "Share private feedback"}</Link>
-                    </div>
-                  ) : <span>Public recap</span>}
+                    </> : null}
+                  </div>
                 </footer>
               </div>
             </article>

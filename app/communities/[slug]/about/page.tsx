@@ -154,6 +154,15 @@ export default async function CommunityAboutPage({
   }
 
   const activeMember = profileResult.data?.access_status === "active";
+  const joiningResult = user
+    ? await supabase.rpc("list_community_joining_settings", {
+        p_community_id: about.community_id,
+      })
+    : { data: [], error: null };
+  const joiningMode =
+    ((joiningResult.data as { effective_mode: "open" | "approval" }[] | null) ??
+      [])[0]?.effective_mode ??
+    (about.community_type === "private" ? "approval" : "open");
   const location = [about.next_event_city, about.next_event_country]
     .filter(Boolean)
     .join(", ");
@@ -229,7 +238,7 @@ export default async function CommunityAboutPage({
             activeMember={activeMember}
             commerceEnabled={about.commerce_enabled}
             communityId={about.community_id}
-            communityType={about.community_type}
+            joiningMode={joiningMode}
             membershipStatus={about.membership_status}
             paymentMode={about.offer_payment_mode}
             signedIn={Boolean(user)}

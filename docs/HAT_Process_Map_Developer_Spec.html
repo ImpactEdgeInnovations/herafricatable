@@ -415,24 +415,32 @@ flowchart TD
         <div class="journey-head"><span class="jtitle">3.4 · Events (Ticketing, Check-in, Networking)</span><span class="jtag">MODULE 05</span></div>
         <div class="diagram-wrap"><div class="mermaid">
 flowchart TD
-    A["Community or Host creates Event"] --> B["Event Setup: Online/Physical/Hybrid, Agenda, Sponsors, Ticket Tiers"]
-    B --> C["Event Published"]
-    C --> D["Attendee Registers"]
-    D --> E{Free or Paid?}
-    E -->|Paid| F["Payment Processing"]
-    E -->|Free| G["Ticket Issued"]
-    F --> G
-    G --> H["QR Code Generated"]
-    G --> I["Attendee Profile Added to Guest List"]
-    I --> J["Pre-Event Networking Suggestions Triggered"]
-    H --> K["Event Day: QR Check-In"]
-    K --> L["Live Event: Agenda, Livestream, Attendee Chat, Networking"]
-    L --> M["Post-Event: Replay Available, Photos, Follow-up Prompts"]
+    A["Approved Community Host or active member proposes an Event"] --> B["Private setup: purpose, format, venue, capacity, Host and safety contact"]
+    B --> C["Admin reviews safety, visibility, timing and registration mode"]
+    C -->|Changes needed| B
+    C -->|Approved| D{Community-only or public?}
+    D --> E["Canonical Event Published"]
+    E --> F["Attendee Registers"]
+    F --> G{Free or Paid?}
+    G -->|Paid after finance release| H["Verified Payment Processing"]
+    G -->|Free launch tier| I["Place Confirmed after applicable review"]
+    H --> I
+    I --> J["QR Code Generated"]
+    I --> K["Attendee opts into Guest Discovery"]
+    K --> L["Consent-led Networking Suggestions"]
+    J --> M["Event Day: QR Check-In"]
+    M --> N["Live Event: Agenda and Networking"]
+    N --> O["Post-Event: private feedback; Host recap and consent-confirmed photos enter Admin review"]
+    O --> OA["Approved recap, selected media and outcomes remain on the public Event archive"]
+    OA --> P{Member-hosted event may continue?}
+    P -->|Yes| Q["Attendee separately opts into Community invitation"]
+    Q --> R["Host submits normal Community application"]
+    P -->|No| S["Event record retained; no Community created"]
         </div></div>
         <div class="journey-body">
           <p>Ticketing needs its own <code class="mono">event_tickets</code> entity separate from <code class="mono">event_attendees</code> — a ticket is a purchase record (price, tier, payment status); attendance is a separate state (checked_in: boolean, checked_in_at).</p>
           <p>Pre-event networking ("12 women in Kigali are in your industry") is a query against the guest list, filtered by location/industry/interests, run once the guest list reaches a minimum threshold — this can reuse the matching logic from Section 3.5.</p>
-          <div class="buildnote"><span class="lbl">Build note</span>Livestream/replay is likely a third-party embed (see Section 8, Open Questions) rather than custom-built video infrastructure for MVP.</div>
+          <div class="buildnote"><span class="lbl">Build note</span>An event proposal is not a published event. Active members may propose a free public event without owning a Community, while approved Community owners and Hosts may propose a free Community-only gathering. Admin approval creates the canonical event. Attendance never creates Community membership: each attendee must separately opt into a follow-up invitation, and the Host must still pass the normal Community approval process. Livestream/replay remains a third-party embed rather than custom video infrastructure for MVP.</div>
         </div>
       </div>
 

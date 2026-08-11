@@ -64,9 +64,32 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [x] Add OpenAI moderation, privacy-preserving safety identifiers, `store: false`,
       daily limits and privacy-minimised usage metrics
 - [x] Add an explicit member-confirmed handoff into the existing private support queue
+- [x] Add a movable, minimisable member companion with page-aware guidance,
+      remembered edge position, quiet mode and reduced-motion support
 - [ ] Apply `20260811210000_table_guide_foundation.sql` in production Supabase
 - [ ] Configure the OpenAI server secrets in Vercel and complete live acceptance
 - [ ] Open the feature only after two-member consent and blocked-pair tests pass
+
+## Community joining and Event-to-Community journey — 12 August 2026
+
+- [x] Let a public Community choose immediate entry or Host approval for active
+      Her Africa Table members
+- [x] Keep every private Community approval-only at the database layer
+- [x] Give owners a plain-language **Who can join?** control while moderators
+      retain request-review tools
+- [x] Notify Hosts and moderators when a request arrives and notify the member
+      after approval or decline
+- [x] Preserve Super Admin oversight of all Communities, joining settings,
+      invitations, pending requests and membership decisions
+- [x] Keep event ticket choice and free/manual registration on the event page
+- [x] Show the issued event pass on the same journey after approval
+- [x] Show a linked Community before and after an event without automatically
+      enrolling an attendee
+- [x] Keep automatic card payment inside verified Paystack checkout; returning
+      to the platform never substitutes for webhook verification
+- [ ] Apply `20260812030000_community_admission_and_event_companion.sql`
+- [ ] Rehearse open join, approval join, decline, rejoin, event request, pass and
+      linked-Community entry with separate member, Host, moderator and Admin accounts
 
 ## UI and usability workstream — every day
 
@@ -309,6 +332,18 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Apply `20260809140000_community_hosted_event_proposals.sql` and complete a
       five-account acceptance: Host draft, Admin change request, resubmission,
       approval, member-only discovery, one-seat registration and non-member denial
+- [x] Add an event-first path for active members who do not own a Community:
+      private proposal carousel, free public launch tier, Admin publication,
+      manually reviewed registration and separate attendee consent for a possible
+      follow-up Community
+- [ ] Apply `20260811230000_member_public_event_proposals.sql`, run
+      `npm run ops:community:member-events-readiness` and complete the tagged
+      member → Admin → anonymous visitor → confirmed attendee acceptance path
+- [x] Add the member-hosted past-event archive: private Host recap submission,
+      consent-confirmed Host/attendee image offers, Admin publication review,
+      enduring public event details and one approved Community continuation link
+- [ ] Apply `20260812010000_member_event_archives.sql` and verify Host, attendee,
+      anonymous, rejected-media, published-gallery and Community-link boundaries
 - [x] Connect released Circle cycles to relevant communities with audited Host
       curation, member-only own-assignment context and no roster or matching-data access
 - [x] Rewrite the Community journey in plain language across discovery, joining,

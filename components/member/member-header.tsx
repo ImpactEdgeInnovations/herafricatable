@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { FloatingTableGuide } from "@/components/member/floating-table-guide";
 import { createClient } from "@/lib/supabase/server";
 
 type MemberDestination =
@@ -12,6 +13,12 @@ type MemberDestination =
 
 type CommunityActivitySummary = {
   new_activity_count: number;
+};
+
+type TableGuideAccess = {
+  assistant_enabled: boolean;
+  feature_enabled: boolean;
+  remaining_today: number;
 };
 
 const destinations: {
@@ -102,6 +109,7 @@ export async function MemberHeader({
     { count: unreadAlerts },
     { data: communityActivity },
     { data: tableGuideFlag },
+    { data: tableGuideAccess },
   ] = user
     ? await Promise.all([
         supabase
@@ -119,8 +127,9 @@ export async function MemberHeader({
           .select("enabled")
           .eq("key", "table_guide")
           .maybeSingle(),
+        supabase.rpc("get_my_table_guide_access"),
       ])
-    : [{ data: null }, { count: 0 }, { data: null }, { data: null }];
+    : [{ data: null }, { count: 0 }, { data: null }, { data: null }, { data: null }];
   const navigation = destinations.map((destination) =>
     destination.key === "account"
       ? { ...destination, href: accountHref, label: accountLabel }
@@ -131,6 +140,7 @@ export async function MemberHeader({
   );
   const memberName = profile?.display_name?.trim() || "Member";
   const memberInitial = memberName.charAt(0).toUpperCase();
+  const guideAccess = ((tableGuideAccess as TableGuideAccess[] | null) ?? [])[0] ?? null;
   const newCommunityActivity = (
     (communityActivity as CommunityActivitySummary[] | null) ?? []
   ).reduce(
@@ -250,6 +260,14 @@ export async function MemberHeader({
           </Link>
         ))}
       </nav>
+      {tableGuideFlag?.enabled && guideAccess?.feature_enabled ? (
+        <FloatingTableGuide
+          assistantEnabled={guideAccess.assistant_enabled}
+          firstName={memberName.split(/\s+/)[0] || "Member"}
+          keyConfigured={Boolean(process.env.OPENAI_API_KEY && process.env.AI_SAFETY_SALT)}
+          remainingToday={guideAccess.remaining_today}
+        />
+      ) : null}
     </>
   );
 }

@@ -55,3 +55,15 @@ member choices and privacy-safe operational totals.
 Each member is limited to 60 recorded requests per day. Provider errors return a
 plain-language retry message. The support route remains available when the provider
 or feature is unavailable.
+
+## Movable member companion
+
+When the feature and member consent are both active, the Guide appears as a small
+deep-plum companion on signed-in member pages. A member can drag it to either edge,
+open a compact conversation, keep it still or use the full Guide page. Its saved
+position remains on that browser only.
+
+The companion uses restrained movement, honours `prefers-reduced-motion`, stays
+clear of the mobile navigation and never reports internal development or deployment
+activity to members. Its page-aware prompts explain the current member journey;
+they do not expand the Guide's data access or action permissions.

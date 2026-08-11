@@ -18,12 +18,18 @@ export function EventRegistrationForm({
   mode,
   tickets,
   existingStatus,
+  embedded = false,
+  eventSlug,
+  passReady = false,
 }: {
   eventId: string;
   eventTitle: string;
   mode: string;
   tickets: Ticket[];
   existingStatus: string | null;
+  embedded?: boolean;
+  eventSlug?: string;
+  passReady?: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -93,20 +99,26 @@ export function EventRegistrationForm({
   }
   if (existingStatus)
     return (
-      <div className="registration-status-card">
+      <div className={`registration-status-card${embedded ? " is-embedded" : ""}`}>
         <p className="eyebrow">Registration received</p>
-        <h2>{existingStatus.replace("_", " ")}</h2>
+        <h2>{passReady ? "Your place is confirmed" : existingStatus.replaceAll("_", " ")}</h2>
         <p>
-          Your request is recorded. Status changes are issued only after payment
-          verification or an audited administrator review.
+          {passReady
+            ? "Your event pass is ready. Keep its private code with you for check-in."
+            : "Your request is recorded. We’ll notify you here and by email after the event team reviews it."}
         </p>
+        {passReady && eventSlug ? (
+          <a className="button button-primary" href={`/events/${eventSlug}/pass`}>
+            Open my event pass
+          </a>
+        ) : null}
       </div>
     );
   return (
-    <form className="event-registration-form" onSubmit={submit}>
+    <form className={`event-registration-form${embedded ? " is-embedded" : ""}`} onSubmit={submit}>
       <header>
         <p className="eyebrow">Request your seat</p>
-        <h1>{eventTitle}</h1>
+        {embedded ? <h2>Choose your place</h2> : <h1>{eventTitle}</h1>}
         <p>
           {mode === "manual_review"
             ? isFree

@@ -12,6 +12,7 @@ import {
 import type { CommunityBrandIdentity } from "@/components/member/community-branding-panel";
 import { MemberHeader } from "@/components/member/member-header";
 import { createClient } from "@/lib/supabase/server";
+import type { CommunityJoiningSettings } from "@/components/member/community-joining-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -131,12 +132,15 @@ export default async function CommunitiesPage() {
     );
   }
 
-  const [communityResult, brandingResult, activityResult] = await Promise.all([
+  const [communityResult, brandingResult, activityResult, joiningResult] = await Promise.all([
     supabase.rpc("list_communities"),
     supabase.rpc("list_community_brand_identities", {
       p_community_id: null,
     }),
     supabase.rpc("list_my_community_activity"),
+    supabase.rpc("list_community_joining_settings", {
+      p_community_id: null,
+    }),
   ]);
   const communities =
     (communityResult.data as CommunitySummary[] | null) ?? [];
@@ -161,6 +165,11 @@ export default async function CommunitiesPage() {
   const activityByCommunity = new Map(
     ((activityResult.data as CommunityActivitySummary[] | null) ?? []).map(
       (activity) => [activity.community_id, activity],
+    ),
+  );
+  const joiningByCommunity = new Map(
+    ((joiningResult.data as CommunityJoiningSettings[] | null) ?? []).map(
+      (settings) => [settings.community_id, settings],
     ),
   );
 
@@ -210,6 +219,7 @@ export default async function CommunitiesPage() {
             ...community,
             ...(brandingByCommunity.get(community.community_id) ?? {}),
             ...(activityByCommunity.get(community.community_id) ?? {}),
+            ...(joiningByCommunity.get(community.community_id) ?? {}),
           }))}
         />
       )}

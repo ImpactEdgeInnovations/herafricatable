@@ -13,6 +13,8 @@ export type CommunitySummary = {
   name: string;
   description: string;
   community_type: "official" | "private";
+  admission_mode?: "open" | "approval";
+  effective_mode?: "open" | "approval";
   status: string;
   membership_status: string | null;
   membership_role: string | null;
@@ -93,7 +95,7 @@ export function CommunityDirectory({
             item.membership_role === "member"
             ? "Invitation accepted. Pay to finish joining this community."
             : "Invitation accepted. You can now open the community."
-          : item.community_type === "private"
+          : item.effective_mode === "approval" || item.community_type === "private"
           ? "Your request has been sent to the community leader."
           : item.offer_access_type === "paid"
             ? "Your request was approved. Pay to finish joining."
@@ -250,7 +252,7 @@ export function CommunityDirectory({
               ? "Ready for payment"
               : ["paused", "suspended"].includes(item.membership_status ?? "")
                 ? "Temporarily paused"
-              : item.community_type === "private"
+              : item.effective_mode === "approval" || item.community_type === "private"
                 ? "Approval required"
                 : "Open to members";
 
@@ -291,7 +293,9 @@ export function CommunityDirectory({
               <small>
                 {item.community_type === "private"
                   ? "Private community"
-                  : "Her Africa Table community"}
+                  : item.effective_mode === "approval"
+                    ? "Public · Host approval"
+                    : "Public · Open to members"}
               </small>
               <h3>{item.name}</h3>
             </div>
@@ -458,7 +462,7 @@ export function CommunityDirectory({
             >
               {item.membership_status === "invited"
                 ? "Accept invitation"
-                : item.community_type === "private"
+                : item.effective_mode === "approval" || item.community_type === "private"
                   ? "Ask to join"
                   : paid
                     ? "Join community"

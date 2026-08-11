@@ -1,8 +1,12 @@
 # Community production acceptance
 
-Last rehearsal: 9 August 2026  
+Last completed rehearsal: 9 August 2026
 Community: Nairobi Founding Table  
 Mode: controlled tagged-account rehearsal
+
+Read-only production readiness was reconfirmed on 11 August 2026: the Community
+event proposal tables and functions are present, unknown events remain private,
+and signed-out visitors cannot read Host or Admin proposal projections.
 
 ## Passed with live Supabase accounts
 
@@ -43,6 +47,8 @@ in `.env.test.local`. The command does not print passwords or tokens.
 
 ## Remaining before declaring the module fully accepted
 
+- Restore `SUPABASE_SECRET_KEY` in the ignored local `.env.local` file so the
+  four reserved test identities can be refreshed without using a real account.
 - Supply `HAT_ADMIN_TEST_EMAIL` and `HAT_ADMIN_TEST_PASSWORD` locally and run the
   five-role scale command.
 - Confirm at least 45 conversations load across three stable cursor pages with

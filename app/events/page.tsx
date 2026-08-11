@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MemberHeader } from "@/components/member/member-header";
+import {
+  MemberEventProposalPanel,
+  type MemberEventProposal,
+} from "@/components/events/member-event-proposal";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +41,9 @@ export default async function EventsPage() {
         .maybeSingle()
     : { data: null };
   const isActiveMember = memberProfile?.access_status === "active";
+  const proposalResult = isActiveMember
+    ? await supabase.rpc("list_my_member_event_proposals")
+    : { data: [], error: null };
 
   return (
     <main className="events-page">
@@ -83,6 +90,14 @@ export default async function EventsPage() {
           </article>
         )) : <div className="events-empty"><span className="events-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><p className="eyebrow">No upcoming events</p><strong>We’re preparing the next gathering.</strong><p>{isActiveMember ? "We will let you know as soon as the date and place are ready." : "Published event details will appear here. Join the founding network to hear first."}</p><div className="events-empty-actions"><Link className="button button-primary" href={isActiveMember ? "/home" : "/sign-in"}>{isActiveMember ? "Back home" : "Request membership"}</Link>{isActiveMember ? <Link className="button button-outline" href="/network">Meet members</Link> : null}</div></div></div>}
       </section>
+      {isActiveMember ? (
+        <MemberEventProposalPanel
+          migrationReady={!proposalResult.error}
+          proposals={
+            (proposalResult.data as MemberEventProposal[] | null) ?? []
+          }
+        />
+      ) : null}
     </main>
   );
 }

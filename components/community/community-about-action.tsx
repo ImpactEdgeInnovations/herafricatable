@@ -11,7 +11,7 @@ export function CommunityAboutAction({
   activeMember,
   commerceEnabled,
   communityId,
-  communityType,
+  joiningMode,
   membershipStatus,
   paymentMode,
   slug,
@@ -21,7 +21,7 @@ export function CommunityAboutAction({
   activeMember: boolean;
   commerceEnabled: boolean;
   communityId: string;
-  communityType: string;
+  joiningMode: "open" | "approval";
   membershipStatus: string | null;
   paymentMode: string | null;
   slug: string;
@@ -43,12 +43,12 @@ export function CommunityAboutAction({
       setMessage(memberErrorMessage(error, "request Community access"));
       return;
     }
-    if (communityType === "official" && accessType !== "paid") {
+    if (joiningMode === "open" && accessType !== "paid") {
       router.push(`/communities/${slug}`);
       return;
     }
     setMessage(
-      communityType === "private"
+      joiningMode === "approval"
         ? "The Community host has your request. We’ll let you know under Updates."
         : "Your place is ready. Open Community to complete payment.",
     );
@@ -131,14 +131,14 @@ export function CommunityAboutAction({
       >
         {busy
           ? "Sending…"
-          : communityType === "private"
+          : joiningMode === "approval"
             ? "Request to join"
             : accessType === "paid"
               ? "Join and continue to payment"
               : "Join Community"}
       </button>
       <small>
-        {communityType === "private"
+        {joiningMode === "approval"
           ? "The host reviews every request."
           : accessType === "paid"
             ? "You’ll review the price before secure payment."

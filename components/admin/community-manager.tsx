@@ -22,12 +22,14 @@ export function CommunityManager({
   communities,
   members,
   enabled,
+  joiningReady,
   migrationReady,
 }: {
   acceptanceMode: boolean;
   communities: CommunitySummary[];
   members: CommunityMember[];
   enabled: boolean;
+  joiningReady: boolean;
   migrationReady: boolean;
 }) {
   const router = useRouter();
@@ -83,7 +85,7 @@ export function CommunityManager({
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setBusy("save");
-    const { error } = await supabase.rpc("save_community", {
+    const { data: savedCommunityId, error } = await supabase.rpc("save_community", {
       p_community_id: form.get("id") || null,
       p_description: form.get("description"),
       p_name: form.get("name"),
@@ -91,13 +93,24 @@ export function CommunityManager({
       p_status: form.get("status"),
       p_type: form.get("type"),
     });
+    const joiningMode = form.get("type") === "private"
+      ? "approval"
+      : form.get("admissionMode");
+    const joiningError = !error && joiningReady && savedCommunityId
+      ? (
+          await supabase.rpc("save_community_joining_mode", {
+            p_community_id: savedCommunityId,
+            p_mode: joiningMode,
+          })
+        ).error
+      : null;
     setBusy("");
     setMessage(
-      error
-        ? adminErrorMessage(error, "save this Community")
+      error || joiningError
+        ? adminErrorMessage(error || joiningError, "save this Community")
         : "Community saved and audited.",
     );
-    if (!error) router.refresh();
+    if (!error && !joiningError) router.refresh();
   }
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -252,10 +265,10 @@ export function CommunityManager({
           aria-describedby="community-editor-guide"
         >
           <p className="admin-form-guide" id="community-editor-guide">
-            Official communities allow active members to join immediately.
-            Private communities require host approval. Create new rooms as
-            Draft. Open them to members only after the checks in the Founding
-            members area are complete.
+            Public communities can welcome approved members immediately or
+            review each request. Private communities always require Host
+            approval. Create new spaces as Draft and open them only after the
+            release checks pass.
           </p>
           <input
             type="hidden"
@@ -316,10 +329,24 @@ export function CommunityManager({
                 defaultValue={community?.community_type ?? "official"}
                 key={`type-${selected}`}
               >
-                <option value="official">Official — instant join</option>
+                <option value="official">Public Community</option>
                 <option value="private">Private — host approval</option>
               </select>
             </label>
+            {joiningReady ? (
+              <label>
+                Who can join?
+                <select
+                  name="admissionMode"
+                  defaultValue={community?.effective_mode ?? "open"}
+                  key={`admission-${selected}`}
+                  disabled={community?.community_type === "private"}
+                >
+                  <option value="open">Approved members join immediately</option>
+                  <option value="approval">Host reviews every request</option>
+                </select>
+              </label>
+            ) : null}
             <label>
               Status
               <select
