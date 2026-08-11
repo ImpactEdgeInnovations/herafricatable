@@ -1,6 +1,6 @@
 # Her Africa Table — Authentication Setup
 
-Her Africa Table uses one passwordless entry method: a six-digit email OTP delivered
+Her Africa Table uses one passwordless entry method: a numeric email OTP delivered
 through Supabase Auth. Gmail, Google Workspace and other valid email providers are
 supported. Google does not issue the code and Google OAuth is not enabled.
 
@@ -86,7 +86,7 @@ Paystack and Resend secrets belong in server-only Vercel/Supabase secret stores.
 
 ## Member journey
 
-1. The member enters her email and receives a six-digit code.
+1. The member enters her email and receives a one-time numeric code.
 2. A new identity continues to the short membership request; a returning member
    continues to the correct account state.
    A verified team account using the ordinary sign-in page is sent directly to the

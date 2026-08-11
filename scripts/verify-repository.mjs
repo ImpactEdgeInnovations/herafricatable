@@ -1972,6 +1972,17 @@ assert(
   read("components/auth/auth-panel.tsx").includes('intent === "admin" ? "/admin" : "/continue"'),
   "Member sign-in must continue through the role-aware router",
 );
+for (const contract of [
+  'pattern="[0-9]{6,8}"',
+  "minLength={6}",
+  "maxLength={8}",
+  "token.length < 6 || token.length > 8",
+]) {
+  assert(
+    read("components/auth/auth-panel.tsx").includes(contract),
+    `Email OTP input must include ${contract}`,
+  );
+}
 const signOutButton = read("components/auth/sign-out-button.tsx");
 for (const contract of [
   'signOut({ scope: "local" })',

@@ -190,7 +190,7 @@ Usability is part of production readiness and continues alongside feature delive
       and dedicated FAQ page
 - [x] Supabase browser/server clients, request-level session refresh and protected
       member/admin routes
-- [x] Single-method email OTP request and six-digit verification interface
+- [x] Single-method email OTP request and six-to-eight-digit verification interface
 - [x] Pending member state, invite-based onboarding eligibility, admin roles and RLS
 - [x] Private post-OTP membership request with a three-step member journey,
       purposeful applicant context, audited submission, calm pending state and
@@ -469,7 +469,7 @@ Usability is part of production readiness and continues alongside feature delive
 ### Heavy work remaining before production launch
 
 1. **Production authentication and email delivery**
-   - Configure the Supabase six-digit OTP template, production SMTP, verified sender
+   - Configure the Supabase numeric OTP template, production SMTP, verified sender
      domain and Resend worker schedule.
    - Retire temporary password access after member and Admin OTP pass end to end.
 2. **Production database and environment parity**
@@ -663,7 +663,7 @@ email delivery is configured. Email OTP must still pass end to end before public
 **Day 3: authentication and authorization skeleton**
 
 - Implement Supabase SSR sessions and request-level session refresh.
-- Add email OTP request and six-digit verification.
+- Add email OTP request and numeric-code verification.
 - Add pending, active, dormant, suspended, and deleted access states.
 - Seed the first Super Admin through an auditable migration/operation.
 - Test anonymous, member, dormant, event-staff, moderator, and super-admin boundaries.

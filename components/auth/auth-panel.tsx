@@ -61,7 +61,7 @@ export function AuthPanel({
     setResendIn(30);
     setMessage({
       kind: "success",
-      text: "Your six-digit code is on its way. Check your inbox and spam folder. It can only be used once.",
+      text: "Your sign-in code is on its way. Check your inbox and spam folder. It can only be used once.",
     });
   }
 
@@ -145,15 +145,15 @@ export function AuthPanel({
       <h2>{isAdmin ? "Admin sign in" : step === "verify" ? "Check your email" : "Welcome"}</h2>
       <p className="auth-description">
         {isAdmin
-          ? <>Enter an approved team email. We will send a private six-digit code, then confirm your Admin access.</>
+          ? <>Enter an approved team email. We will send a private sign-in code, then confirm your Admin access.</>
           : step === "verify"
-            ? <>We sent a six-digit code to <strong>{email}</strong>. Enter it below to continue.</>
+            ? <>We sent a sign-in code to <strong>{email}</strong>. Enter it below to continue.</>
             : <>Enter your email to sign in or begin a membership request. No password is needed.</>}
       </p>
 
       {!isAdmin && step === "request" ? (
         <ol className="auth-journey" aria-label="How membership works">
-          <li><span>1</span><div><strong>Confirm your email</strong><small>We send a six-digit code.</small></div></li>
+          <li><span>1</span><div><strong>Confirm your email</strong><small>We send a private sign-in code.</small></div></li>
           <li><span>2</span><div><strong>Tell us about you</strong><small>A short membership request.</small></div></li>
           <li><span>3</span><div><strong>Private review</strong><small>We email you when your seat is ready.</small></div></li>
         </ol>
@@ -173,7 +173,7 @@ export function AuthPanel({
             required
           />
           <button className="button button-primary" type="submit" disabled={busy}>
-            {busy ? "Sending…" : "Send my six-digit code"}
+            {busy ? "Sending…" : "Send my sign-in code"}
           </button>
           <div className="auth-divider">Temporary access</div>
           <button className="button google-button" type="button" onClick={() => { setStep("password"); setMessage(null); }} disabled={busy}>
@@ -182,20 +182,21 @@ export function AuthPanel({
         </form>
       ) : step === "verify" ? (
         <form className="auth-form" onSubmit={verifyCode}>
-          <label htmlFor={`${intent}-token`}>Your six-digit code</label>
+          <label htmlFor={`${intent}-token`}>Your sign-in code</label>
           <input
             id={`${intent}-token`}
             name="token"
             inputMode="numeric"
             autoComplete="one-time-code"
-            pattern="[0-9]{6}"
-            maxLength={6}
-            placeholder="000000"
+            pattern="[0-9]{6,8}"
+            minLength={6}
+            maxLength={8}
+            placeholder="Enter the code"
             value={token}
             onChange={(event) => setToken(event.target.value.replace(/\D/g, ""))}
             required
           />
-          <button className="button button-primary" type="submit" disabled={busy || token.length !== 6}>
+          <button className="button button-primary" type="submit" disabled={busy || token.length < 6 || token.length > 8}>
             {busy ? "Verifying…" : "Verify and continue"}
           </button>
           <div className="auth-secondary-actions">

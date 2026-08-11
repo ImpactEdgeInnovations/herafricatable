@@ -29,7 +29,7 @@ const membershipBenefits = [
 ];
 
 const membershipSteps = [
-  ["01", "Verify your email", "Receive a private six-digit sign-in code."],
+  ["01", "Verify your email", "Receive a private one-time sign-in code."],
   ["02", "Tell us about you", "Share a few details about your work and purpose."],
   ["03", "Thoughtful review", "Our membership team considers every request privately."],
   ["04", "Take your seat", "Complete your profile and enter the member network."],
