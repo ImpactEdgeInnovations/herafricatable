@@ -70,7 +70,7 @@ export function TableGuide({
   const [remaining, setRemaining] = useState(access?.remaining_today ?? 0);
   const [messages, setMessages] = useState<GuideMessage[]>([
     {
-      content: `Welcome, ${firstName}. I can help you find your way around the table, discover relevant people, understand Communities and prepare for upcoming events.`,
+      content: `Welcome, ${firstName}. I’m Nia, your AI Table Guide. I can help you find your way around the table, discover relevant people, understand Communities and prepare for upcoming events.`,
       role: "assistant",
     },
   ]);
@@ -188,6 +188,17 @@ export function TableGuide({
     );
   }
 
+  function clearConversation() {
+    setMessages([
+      {
+        content: `Fresh start, ${firstName}. What would you like help with?`,
+        role: "assistant",
+      },
+    ]);
+    setQuestion("");
+    setNotice("Conversation cleared. Her Africa Table does not store Nia’s chat transcript.");
+  }
+
   if (!access) {
     return (
       <section className="table-guide-unavailable">
@@ -276,7 +287,7 @@ export function TableGuide({
           <div aria-live="polite" className="table-guide-messages">
             {messages.map((message, index) => (
               <article className={message.role} key={`${message.role}-${index}`}>
-                <span>{message.role === "assistant" ? "Table Guide" : "You"}</span>
+                <span>{message.role === "assistant" ? "Nia · AI Table Guide" : "You"}</span>
                 <p>{message.content}</p>
                 {message.role === "assistant" ? (
                   <GuideListenButton text={message.content} />
@@ -285,7 +296,7 @@ export function TableGuide({
             ))}
             {busy === "question" ? (
               <article className="assistant table-guide-thinking">
-                <span>Table Guide</span>
+                <span>Nia · AI Table Guide</span>
                 <p>Let me consider that…</p>
               </article>
             ) : null}
@@ -324,14 +335,17 @@ export function TableGuide({
             </div>
           </form>
           <footer>
-            <button
-              className="button button-text"
-              disabled={busy === "handoff"}
-              onClick={() => void askPerson()}
-              type="button"
-            >
-              {busy === "handoff" ? "Sending…" : "Ask a person instead"}
-            </button>
+            <div>
+              <button
+                className="button button-text"
+                disabled={busy === "handoff"}
+                onClick={() => void askPerson()}
+                type="button"
+              >
+                {busy === "handoff" ? "Sending…" : "Ask a person instead"}
+              </button>
+              <button className="button button-text" onClick={clearConversation} type="button">Clear conversation</button>
+            </div>
             <span>Voice is AI-generated. The Guide can make mistakes, so confirm important details on the relevant page.</span>
           </footer>
           {notice ? <p className="network-message" role="status">{notice}</p> : null}

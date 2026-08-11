@@ -28,7 +28,7 @@ export function TableGuideControl({
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"" | "test" | "toggle">("");
   const [notice, setNotice] = useState("");
 
   async function toggle() {
@@ -43,13 +43,13 @@ export function TableGuideControl({
       tone: nextEnabled ? "default" : "danger",
     });
     if (!confirmed) return;
-    setBusy(true);
+    setBusy("toggle");
     setNotice("");
     const { error } = await supabase.rpc("set_feature_flag", {
       p_enabled: nextEnabled,
       p_key: "table_guide",
     });
-    setBusy(false);
+    setBusy("");
     setNotice(
       error
         ? adminErrorMessage(error, "change the Table Guide availability")
@@ -58,6 +58,24 @@ export function TableGuideControl({
           : "The Table Guide is closed platform-wide.",
     );
     if (!error) router.refresh();
+  }
+
+  async function testConnection() {
+    setBusy("test");
+    setNotice("");
+    try {
+      const response = await fetch("/api/admin/table-guide/test", { method: "POST" });
+      const result = (await response.json()) as { error?: string; model?: string; ready?: boolean };
+      setNotice(
+        response.ok && result.ready
+          ? `Nia can reach OpenAI using ${result.model}. Member questions are ready.`
+          : result.error ?? "The AI connection test did not complete.",
+      );
+    } catch {
+      setNotice("The AI connection test could not start. Try again shortly.");
+    } finally {
+      setBusy("");
+    }
   }
 
   if (!migrationReady || !configuration) {
@@ -110,21 +128,31 @@ export function TableGuideControl({
         <span className="ready"><i aria-hidden="true" />Private messages excluded</span>
         <span className="ready"><i aria-hidden="true" />Admin off-switch available</span>
       </div>
-      <button
-        className={
-          configuration.feature_enabled
-            ? "button button-outline"
-            : "button button-primary"
-        }
-        disabled={busy || (!keyConfigured && !configuration.feature_enabled)}
-        onClick={() => void toggle()}
-      >
-        {busy
-          ? "Saving…"
-          : configuration.feature_enabled
-            ? "Close the Table Guide"
-            : "Open the Table Guide"}
-      </button>
+      <div className="table-guide-admin-actions">
+        <button
+          className={
+            configuration.feature_enabled
+              ? "button button-outline"
+              : "button button-primary"
+          }
+          disabled={Boolean(busy) || (!keyConfigured && !configuration.feature_enabled)}
+          onClick={() => void toggle()}
+        >
+          {busy === "toggle"
+            ? "Saving…"
+            : configuration.feature_enabled
+              ? "Close the Table Guide"
+              : "Open the Table Guide"}
+        </button>
+        <button
+          className="button button-outline"
+          disabled={Boolean(busy) || !keyConfigured}
+          onClick={() => void testConnection()}
+          type="button"
+        >
+          {busy === "test" ? "Testing…" : "Test AI connection"}
+        </button>
+      </div>
       {notice ? <p className="network-message" role="status">{notice}</p> : null}
     </section>
   );

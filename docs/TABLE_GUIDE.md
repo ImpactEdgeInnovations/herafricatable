@@ -1,6 +1,6 @@
-# Table Guide operations
+# Nia · Table Guide operations
 
-The Table Guide is an optional member concierge. It answers platform questions,
+Nia is the platform's clearly labelled AI Table Guide. She answers platform questions,
 surfaces member-safe events and Communities, and shows deterministic connection
 suggestions. It does not approve access, publish content, send messages, create
 connections, process payments or read private conversations.
@@ -52,16 +52,22 @@ last 24 hours of requests and human handoffs. It never exposes member prompts or
 responses. Closing the switch immediately stops new AI requests while preserving
 member choices and privacy-safe operational totals.
 
-Each member is limited to 60 recorded requests per day. Provider errors return a
-plain-language retry message. The support route remains available when the provider
-or feature is unavailable.
+Each member is limited to 60 delivered or safely refused answers per day. Provider
+errors do not consume that allowance: Nia falls back to permission-filtered platform
+guidance while Admin receives a safe diagnostic code. The support route remains
+available when the provider or feature is unavailable.
 
 ## Movable member companion
 
-When the feature and member consent are both active, the Guide appears as a small
-deep-plum companion on signed-in member pages. A member can drag it to either edge,
-open a compact conversation, keep it still or use the full Guide page. Its saved
-position remains on that browser only.
+When the feature is active, Nia appears as a small wine-and-aubergine companion on
+signed-in member pages. A member turns her on inside the floating panel, without a
+redirect, then sees page-aware suggestions and a question box immediately. Nia can
+be placed anywhere inside the safe viewport and kept still. Her saved position
+remains on that browser only.
+
+The visible conversation exists only in the current browser screen. **Clear
+conversation** removes it immediately, and refreshing the page also starts fresh.
+Prompts and answers are not stored as chat transcripts in Her Africa Table.
 
 The companion uses restrained movement, honours `prefers-reduced-motion`, stays
 clear of the mobile navigation and never reports internal development or deployment

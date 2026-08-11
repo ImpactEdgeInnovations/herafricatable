@@ -2831,6 +2831,14 @@ svg {
   line-height: 1.5;
 }
 
+.table-guide-chat > footer > div,
+.table-guide-admin-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .table-guide-side {
   display: grid;
   align-content: start;
@@ -3481,6 +3489,18 @@ svg {
   font-weight: 700;
 }
 
+.floating-guide-panel > footer button {
+  padding: 0;
+  border: 0;
+  color: #672133;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: transparent;
+  cursor: pointer;
+}
+
 .floating-guide-welcome {
   display: grid;
   gap: 15px;
@@ -3492,6 +3512,36 @@ svg {
   color: #655d59;
   font-size: 0.88rem;
   line-height: 1.6;
+}
+
+.floating-guide-welcome ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  color: #655d59;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  list-style: none;
+  gap: 8px;
+}
+
+.floating-guide-welcome li {
+  position: relative;
+  padding-left: 18px;
+}
+
+.floating-guide-welcome li::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--gold-dark);
+  content: "✓";
+}
+
+.floating-guide-welcome > small {
+  color: #8a394a;
+  font-size: 0.7rem;
+  line-height: 1.45;
 }
 
 .floating-guide-quiet {

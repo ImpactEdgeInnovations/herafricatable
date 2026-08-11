@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { GuideListenButton } from "@/components/member/guide-listen-button";
+import { memberErrorMessage } from "@/lib/member-error";
+import { createClient } from "@/lib/supabase/client";
 
 type GuideMessage = {
   content: string;
@@ -84,6 +85,7 @@ export function FloatingTableGuide({
   remainingToday: number;
 }) {
   const pathname = usePathname();
+  const supabase = useMemo(() => createClient(), []);
   const route = useMemo(
     () =>
       Object.entries(routeHelp).find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? {
@@ -101,10 +103,13 @@ export function FloatingTableGuide({
   const [quiet, setQuiet] = useState(false);
   const [question, setQuestion] = useState("");
   const [busy, setBusy] = useState(false);
+  const [activating, setActivating] = useState(false);
+  const [enabled, setEnabled] = useState(assistantEnabled);
+  const [notice, setNotice] = useState("");
   const [remaining, setRemaining] = useState(remainingToday);
   const [messages, setMessages] = useState<GuideMessage[]>([
     {
-      content: `Hello ${firstName}. I am here when you want a little help.`,
+      content: `Hello ${firstName}. I’m Nia, your Table Guide. I am here when you want a little help.`,
       role: "assistant",
     },
   ]);
@@ -202,17 +207,50 @@ export function FloatingTableGuide({
     }
   }
 
+  async function turnOnGuide() {
+    if (activating) return;
+    setActivating(true);
+    setNotice("");
+    const { error } = await supabase.rpc("set_my_table_guide_preferences", {
+      p_assistant_enabled: true,
+      p_recommend_me: false,
+    });
+    setActivating(false);
+    if (error) {
+      setNotice(memberErrorMessage(error, "turn on your Table Guide"));
+      return;
+    }
+    setEnabled(true);
+    setMessages([
+      {
+        content: `I’m ready, ${firstName}. Choose a suggestion below or ask me anything about Her Africa Table.`,
+        role: "assistant",
+      },
+    ]);
+  }
+
+  function clearConversation() {
+    setMessages([
+      {
+        content: `Fresh start, ${firstName}. What would you like help with?`,
+        role: "assistant",
+      },
+    ]);
+    setQuestion("");
+    setNotice("");
+  }
+
   if (!position) return null;
 
   const dockedLeft = position.x < window.innerWidth / 2;
-  const ready = installed && featureEnabled && assistantEnabled && keyConfigured;
+  const ready = installed && featureEnabled && enabled && keyConfigured;
   const restingMessage = !installed
     ? "Your Table Guide is being prepared. It will open here when setup is complete."
     : !featureEnabled
       ? "The Table Guide is resting while Her Africa Table prepares it for members."
       : !keyConfigured
         ? "The Guide’s secure connection is being prepared. You can still explore the platform normally."
-        : "The Guide is optional. Turn it on when you would like help finding people, events or Communities.";
+        : "Turn on the Guide here. It will open immediately without taking you to another page.";
 
   return (
     <aside
@@ -225,7 +263,7 @@ export function FloatingTableGuide({
         <section aria-label="Table Guide" className="floating-guide-panel">
           <header>
             <div>
-              <span>Table Guide</span>
+              <span>Nia · AI Table Guide</span>
               <strong>{route.title}</strong>
             </div>
             <button aria-label="Close Table Guide" onClick={() => setOpen(false)} type="button">×</button>
@@ -269,17 +307,30 @@ export function FloatingTableGuide({
               </form>
               <footer>
                 <span>{remaining} questions left today</span>
-                <Link href="/guide">Open full Guide</Link>
+                <button onClick={clearConversation} type="button">Clear conversation</button>
               </footer>
             </>
           ) : (
             <div className="floating-guide-welcome">
               <p>{restingMessage}</p>
-              {installed ? (
-                <Link className="button button-primary" href="/guide">
-                  {featureEnabled ? "Turn on my Guide" : "See why it is closed"}
-                </Link>
+              {installed && featureEnabled && keyConfigured && !enabled ? (
+                <>
+                  <ul>
+                    <li>Ask questions without leaving this page</li>
+                    <li>See suggestions for people, events and Communities</li>
+                    <li>Private messages and contact details stay outside the Guide</li>
+                  </ul>
+                  <button
+                    className="button button-primary"
+                    disabled={activating}
+                    onClick={() => void turnOnGuide()}
+                    type="button"
+                  >
+                    {activating ? "Turning it on…" : "Turn on and start"}
+                  </button>
+                </>
               ) : null}
+              {notice ? <small role="status">{notice}</small> : null}
             </div>
           )}
           <button className="floating-guide-quiet" onClick={() => setQuiet((current) => !current)} type="button">

@@ -65,7 +65,11 @@ A feature is not complete merely because its screen exists. It is complete when:
       daily limits and privacy-minimised usage metrics
 - [x] Add an explicit member-confirmed handoff into the existing private support queue
 - [x] Add a movable, minimisable member companion with page-aware guidance,
-      remembered edge position, quiet mode and reduced-motion support
+      remembered free placement, quiet mode and reduced-motion support
+- [x] Name the member companion Nia and add inline activation, contextual prompts,
+      a question box, clear conversation and provider-safe platform answers
+- [x] Add a Super Admin AI connection test with specific key, access, billing and
+      network diagnoses while keeping project secrets server-only
 - [ ] Apply `20260811210000_table_guide_foundation.sql` in production Supabase
 - [ ] Configure the OpenAI server secrets in Vercel and complete live acceptance
 - [ ] Open the feature only after two-member consent and blocked-pair tests pass

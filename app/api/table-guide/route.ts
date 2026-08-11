@@ -45,6 +45,21 @@ type ConnectionContextRow = {
   match_score?: number | null;
 };
 
+type EventContextRow = {
+  format?: string | null;
+  registration_mode?: string | null;
+  slug?: string | null;
+  starts_at?: string | null;
+  title?: string | null;
+};
+
+type GuideContext = {
+  accessibleCommunities: CommunityContextRow[];
+  connectionSuggestions: ConnectionContextRow[];
+  member: { display_name?: string | null } & Record<string, unknown>;
+  upcomingEvents: EventContextRow[];
+};
+
 const OPENAI_URL = "https://api.openai.com/v1";
 const DEFAULT_MODEL = "gpt-5.6-luna";
 
@@ -94,6 +109,51 @@ function safetyIdentifier(userId: string, salt: string) {
   return createHmac("sha256", salt)
     .update(userId)
     .digest("hex");
+}
+
+function platformAnswer(category: GuideCategory, context?: GuideContext) {
+  const firstName = context?.member.display_name?.trim().split(/\s+/)[0];
+  const hello = firstName ? `${firstName}, ` : "";
+  if (category === "events") {
+    const events = context?.upcomingEvents.filter((event) => event.title).slice(0, 3) ?? [];
+    return events.length
+      ? `${hello}these are the next events I can see for you: ${events.map((event) => event.title).join(", ")}. Open Events to see the date, place and request a seat without leaving the event page.`
+      : `${hello}there are no published upcoming events in your view right now. You can still open Events to review past gatherings or propose an open event. Member events are free at launch and become public only after Admin approval.`;
+  }
+  if (category === "communities") {
+    const communities = context?.accessibleCommunities.filter((community) => community.name).slice(0, 4) ?? [];
+    return communities.length
+      ? `${hello}you can explore ${communities.map((community) => community.name).join(", ")}. Open Community to read what each group is for. Open Communities may admit you immediately; private Communities always ask the host to approve.`
+      : `${hello}open Community to discover groups or start a guided Community application. A private Community always requires host approval, while an open Community may allow immediate joining.`;
+  }
+  if (category === "connections") {
+    const people = context?.connectionSuggestions.filter((person) => person.display_name).slice(0, 3) ?? [];
+    return people.length
+      ? `${hello}you may enjoy meeting ${people.map((person) => person.display_name).join(", ")}. These suggestions use only visible profiles from members who opted in. Open Members to review each profile before requesting an introduction.`
+      : `${hello}open Members to browse people who chose to be visible. You control every introduction request, and private contact details are never shown by Nia.`;
+  }
+  if (category === "getting_started")
+    return `${hello}a good next step is to complete your profile, choose whether you are open to introductions, then explore Community and Events. You can ask me about any one of those areas and I will keep the answer simple.`;
+  if (category === "support")
+    return `${hello}for account, payment, privacy or safety concerns, use Support so a person can review the matter privately. I can explain where to go, but I cannot change an account, approve a payment or read a private report.`;
+  return `${hello}I can help you find your way around Her Africa Table, discover suitable Communities and events, improve your profile, or understand how introductions work. Try one of the suggestions above, or ask one short question about what you want to do.`;
+}
+
+async function providerError(response: Response, stage: "moderation" | "response") {
+  let details: { error?: { code?: string; param?: string; type?: string } } = {};
+  try {
+    details = (await response.json()) as typeof details;
+  } catch {
+    // Upstream did not return JSON. The HTTP status is still useful to Admin logs.
+  }
+  console.error("table-guide-provider-error", {
+    code: details.error?.code ?? null,
+    param: details.error?.param ?? null,
+    stage,
+    status: response.status,
+    type: details.error?.type ?? null,
+  });
+  return new Error(`OpenAI ${stage} request failed with ${response.status}`);
 }
 
 async function openAIRequest(path: string, body: object, apiKey: string) {
@@ -169,6 +229,7 @@ export async function POST(request: Request) {
 
   const category = categoryFor(message);
   const model = process.env.OPENAI_MODEL?.trim() || DEFAULT_MODEL;
+  let safeFallback = platformAnswer(category);
   const record = async (
     status: "error" | "refused" | "success",
     responseChars: number,
@@ -183,22 +244,6 @@ export async function POST(request: Request) {
   };
 
   try {
-    const moderationResponse = await openAIRequest(
-      "/moderations",
-      { input: message, model: "omni-moderation-latest" },
-      apiKey,
-    );
-    if (!moderationResponse.ok) throw new Error("Moderation unavailable");
-    const moderation = (await moderationResponse.json()) as {
-      results?: { flagged?: boolean }[];
-    };
-    if (moderation.results?.[0]?.flagged) {
-      const answer =
-        "I’m not able to help with that request here. If this concerns your safety or someone else’s, please contact local emergency services or a trusted person now. You can also send this to the Her Africa Table support team for a private human response.";
-      await record("refused", answer.length);
-      return NextResponse.json({ answer, category, needsHuman: true });
-    }
-
     const [profileResult, interestsResult, goalsResult, eventResult, communityResult, connectionResult] =
       await Promise.all([
         supabase
@@ -221,7 +266,7 @@ export async function POST(request: Request) {
           : Promise.resolve({ data: [], error: null }),
       ]);
 
-    const context = {
+    const context: GuideContext = {
       accessibleCommunities: (communityResult.data ?? []).slice(0, 8).map((item: CommunityContextRow) => ({
         community_type: item.community_type,
         description: item.description,
@@ -246,6 +291,23 @@ export async function POST(request: Request) {
       },
       upcomingEvents: eventResult.data ?? [],
     };
+    safeFallback = platformAnswer(category, context);
+
+    const moderationResponse = await openAIRequest(
+      "/moderations",
+      { input: message, model: "omni-moderation-latest" },
+      apiKey,
+    );
+    if (!moderationResponse.ok) throw await providerError(moderationResponse, "moderation");
+    const moderation = (await moderationResponse.json()) as {
+      results?: { flagged?: boolean }[];
+    };
+    if (moderation.results?.[0]?.flagged) {
+      const answer =
+        "I’m not able to help with that request here. If this concerns your safety or someone else’s, please contact local emergency services or a trusted person now. You can also send this to the Her Africa Table support team for a private human response.";
+      await record("refused", answer.length);
+      return NextResponse.json({ answer, category, needsHuman: true });
+    }
 
     const history = safeHistory(body.history);
     const response = await openAIRequest(
@@ -255,7 +317,7 @@ export async function POST(request: Request) {
           ...history.map((item) => ({ content: item.content, role: item.role })),
           { content: message, role: "user" },
         ],
-        instructions: `You are the Table Guide for Her Africa Table, a private women’s membership network.
+        instructions: `You are Nia, the AI Table Guide for Her Africa Table, a private women’s membership network. Always make it clear that you are an AI guide, not a human member or Admin.
 
 Your voice is warm, poised, practical and concise. Use plain language for non-technical members. Answer in at most four short paragraphs or a compact list.
 
@@ -278,16 +340,22 @@ ${JSON.stringify(context)}`,
       },
       apiKey,
     );
-    if (!response.ok) throw new Error("Response unavailable");
+    if (!response.ok) throw await providerError(response, "response");
     const answer = outputText((await response.json()) as OpenAIResponse);
     if (!answer) throw new Error("Empty response");
     await record("success", answer.length);
     return NextResponse.json({ answer, category, needsHuman: category === "support" });
-  } catch {
+  } catch (error) {
+    console.error("table-guide-request-fallback", {
+      error: error instanceof Error ? error.message : "Unknown provider error",
+      model,
+    });
     await record("error", 0).catch(() => undefined);
-    return NextResponse.json(
-      { error: "The Table Guide could not answer just now. Please try again or ask a person." },
-      { status: 502 },
-    );
+    return NextResponse.json({
+      answer: safeFallback,
+      category,
+      limited: true,
+      needsHuman: category === "support",
+    });
   }
 }

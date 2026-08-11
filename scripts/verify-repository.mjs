@@ -2229,6 +2229,33 @@ for (const contract of [
     `Table Guide member experience must include ${contract}`,
   );
 }
+const floatingTableGuide = read("components/member/floating-table-guide.tsx");
+for (const contract of [
+  'supabase.rpc("set_my_table_guide_preferences"',
+  "Turn on and start",
+  "Clear conversation",
+  "route.prompts.map",
+  "Nia · AI Table Guide",
+]) {
+  assert(
+    floatingTableGuide.includes(contract),
+    `Floating Table Guide must include ${contract}`,
+  );
+}
+assert(
+  !floatingTableGuide.includes('href="/guide"'),
+  "Floating Table Guide activation must not redirect to the full Guide page",
+);
+for (const contract of [
+  "platformAnswer",
+  "table-guide-provider-error",
+  "limited: true",
+]) {
+  assert(
+    tableGuideApi.includes(contract),
+    `Table Guide fallback must include ${contract}`,
+  );
+}
 const tableGuideAdmin = read("components/admin/table-guide-control.tsx");
 for (const contract of [
   "Open the Table Guide",
@@ -2239,6 +2266,18 @@ for (const contract of [
   assert(
     tableGuideAdmin.includes(contract),
     `Table Guide Admin control must include ${contract}`,
+  );
+}
+const tableGuideConnectionTest = read("app/api/admin/table-guide/test/route.ts");
+for (const contract of [
+  'eq("role", "super_admin")',
+  '`${OPENAI_URL}/responses`',
+  "OPENAI_API_KEY",
+  "table_guide.connection_test_failed",
+]) {
+  assert(
+    tableGuideConnectionTest.includes(contract),
+    `Table Guide connection test must include ${contract}`,
   );
 }
 for (const contract of ["OPENAI_API_KEY=", "OPENAI_MODEL=", "AI_SAFETY_SALT="]) {
