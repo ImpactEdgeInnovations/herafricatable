@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { createClient } from "@/lib/supabase/server";
 
 type MemberDestination =
@@ -206,6 +207,7 @@ export async function MemberHeader({
               <span aria-hidden="true">{memberInitial}</span>
             )}
           </Link>
+          <SignOutButton className="member-sign-out" />
         </div>
       </header>
       <nav className="member-mobile-dock" aria-label="Member shortcuts">

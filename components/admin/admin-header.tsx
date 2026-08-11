@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { createClient } from "@/lib/supabase/server";
 
 export type AdminRole = "super_admin" | "event_staff" | "moderator";
@@ -245,19 +246,22 @@ export async function AdminHeader({
             </details>
           ) : null}
         </nav>
-        <span className="admin-role">
-          {role.replace("_", " ")}
-          {hasBetaExpiry ? (
-            <small>
-              Beta until{" "}
-              {new Intl.DateTimeFormat("en-KE", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              }).format(betaExpiry!)}
-            </small>
-          ) : null}
-        </span>
+        <div className="admin-session-actions">
+          <span className="admin-role">
+            {role.replace("_", " ")}
+            {hasBetaExpiry ? (
+              <small>
+                Beta until{" "}
+                {new Intl.DateTimeFormat("en-KE", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                }).format(betaExpiry!)}
+              </small>
+            ) : null}
+          </span>
+          <SignOutButton className="admin-sign-out" />
+        </div>
       </header>
       <nav
         className="admin-mobile-dock"

@@ -1972,6 +1972,23 @@ assert(
   read("components/auth/auth-panel.tsx").includes('intent === "admin" ? "/admin" : "/continue"'),
   "Member sign-in must continue through the role-aware router",
 );
+const signOutButton = read("components/auth/sign-out-button.tsx");
+for (const contract of [
+  'signOut({ scope: "local" })',
+  'window.location.replace("/")',
+  "Could not sign out. Please try again.",
+]) {
+  assert(signOutButton.includes(contract), `Sign out must include ${contract}`);
+}
+for (const header of [
+  "components/admin/admin-header.tsx",
+  "components/member/member-header.tsx",
+]) {
+  assert(
+    read(header).includes("<SignOutButton"),
+    `${header} must offer a visible sign-out action`,
+  );
+}
 const emailProviderReadiness = read(
   "scripts/verify-email-provider-readiness.mjs",
 );

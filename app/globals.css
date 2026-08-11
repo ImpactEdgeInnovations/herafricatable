@@ -7975,6 +7975,60 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
+.admin-session-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 9px;
+}
+.session-sign-out-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.session-sign-out {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 800;
+  gap: 7px;
+}
+.session-sign-out:hover {
+  border-color: rgba(111, 30, 50, 0.28);
+  color: var(--wine);
+}
+.session-sign-out:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.session-sign-out svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+.session-sign-out-wrap > small {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  width: max-content;
+  padding: 6px 8px;
+  border: 1px solid rgba(148, 44, 55, 0.2);
+  background: #fff8f7;
+  color: var(--error);
+  font-size: 0.58rem;
+}
 .admin-mobile-dock {
   display: none;
 }
@@ -19770,6 +19824,9 @@ body {
   height: 100%;
   object-fit: cover;
 }
+.member-sign-out .session-sign-out {
+  min-width: 38px;
+}
 .member-welcome {
   display: grid;
   align-items: end;
@@ -20144,6 +20201,17 @@ body {
   .member-account-link {
     width: 38px;
     height: 38px;
+  }
+  .session-sign-out {
+    width: 38px;
+    padding: 0;
+  }
+  .session-sign-out > span {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0 0 0 0);
   }
   .member-welcome {
     width: calc(100% - 32px);
