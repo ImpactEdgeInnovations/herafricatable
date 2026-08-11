@@ -4,8 +4,10 @@ import { AuthPage } from "@/components/auth/auth-page";
 export const metadata: Metadata = { title: "Member sign in" };
 
 function safeNext(value: string | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/apply";
-  return value;
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/continue";
+  }
+  return `/continue?next=${encodeURIComponent(value)}`;
 }
 
 export default async function MemberSignInPage({

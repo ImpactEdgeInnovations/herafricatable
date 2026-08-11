@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 type AuthIntent = "member" | "admin";
 type Step = "request" | "verify" | "password";
 
-const destinationFor = (intent: AuthIntent) => intent === "admin" ? "/admin" : "/apply";
+const destinationFor = (intent: AuthIntent) => intent === "admin" ? "/admin" : "/continue";
 
 function safeMessage(message: string) {
   const normalized = message.toLowerCase();

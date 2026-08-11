@@ -1954,6 +1954,24 @@ for (const contract of [
     `Admin identity verification must include ${contract}`,
   );
 }
+const roleAwareSignIn = read("app/continue/page.tsx");
+for (const contract of [
+  'from("user_roles")',
+  'select("role,expires_at")',
+  "hasActiveAdminRole",
+  'redirect("/admin")',
+  'redirect("/onboarding")',
+  'redirect("/apply")',
+]) {
+  assert(
+    roleAwareSignIn.includes(contract),
+    `Role-aware sign-in must include ${contract}`,
+  );
+}
+assert(
+  read("components/auth/auth-panel.tsx").includes('intent === "admin" ? "/admin" : "/continue"'),
+  "Member sign-in must continue through the role-aware router",
+);
 const emailProviderReadiness = read(
   "scripts/verify-email-provider-readiness.mjs",
 );

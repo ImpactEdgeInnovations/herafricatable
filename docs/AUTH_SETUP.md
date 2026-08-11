@@ -89,6 +89,8 @@ Paystack and Resend secrets belong in server-only Vercel/Supabase secret stores.
 1. The member enters her email and receives a six-digit code.
 2. A new identity continues to the short membership request; a returning member
    continues to the correct account state.
+   A verified team account using the ordinary sign-in page is sent directly to the
+   Admin workspace; roles are never disclosed before authentication.
 3. A submitted request remains private and pending until an Admin decides it.
 4. An approved new member completes onboarding before entering the member home.
 5. A declined, suspended or dormant member sees a safe status screen and cannot read
