@@ -197,14 +197,15 @@ Usability is part of production readiness and continues alongside feature delive
       Admin approve/decline review without granting access from identity alone
 - [x] First public operational control: publish or hide the next-event countdown
 - [x] Vercel production deployment from `main` and environment normalization
-- [x] Temporary Supabase password access for pre-SMTP administrator testing
+- [x] Retire temporary-password controls from public member and Admin sign-in;
+      retain password credentials only for reserved automated test identities
 - [x] Admin command center and database-backed launch roadmap view
 - [x] Member review operations with audited approval, suspension and restoration
 - [x] Add a plain-language, audited membership intake control for manual review,
       verified-invitation auto-entry and paused requests; email OTP never grants access
 - [x] Onboarding foundation with public/private profile separation and consent records
-- [x] Progressive onboarding v2 implementation with secure avatar upload, structured
-      goals, languages, city, business/referral fields and deterministic completion
+- [x] Simplify onboarding to three plain-language stages with tap-to-select goals and
+      interests; photo, languages, contact, business and social details stay optional
 - [x] Event lifecycle foundation with venues, publishing states, registration modes,
       staff scopes, programme, speakers, announcements, sponsors and RLS
 - [x] Audited admin event editor with protected online access details and automatic
@@ -473,7 +474,8 @@ Usability is part of production readiness and continues alongside feature delive
 1. **Production authentication and email delivery**
    - Configure the Supabase numeric OTP template, production SMTP, verified sender
      domain and Resend worker schedule.
-   - Retire temporary password access after member and Admin OTP pass end to end.
+   - [x] Retire the public temporary-password interface; rotate remaining real-person
+     passwords after final member and Admin OTP acceptance.
 2. **Production database and environment parity**
    - Verify every forward-only migration is present in production rather than relying
      on manual recollection.
@@ -510,6 +512,8 @@ Usability is part of production readiness and continues alongside feature delive
       Supabase and verify its private table and Admin projection are available
 - [ ] Apply `20260811120000_membership_intake_modes.sql` in production Supabase,
       then run the three-mode dummy-account acceptance rehearsal
+- [ ] Apply `20260811150000_simplified_member_onboarding.sql` in production Supabase,
+      then complete onboarding without a photo, language or private contact detail
 - [ ] Accept a new OTP identity through request, Admin decision, onboarding and
       active membership
 - [x] Add a forward-only onboarding migration for city, languages, referral source,
@@ -604,8 +608,8 @@ Usability is part of production readiness and continues alongside feature delive
 - [x] Add the Super Admin Launch Gate workspace and evidence runbook
 - [ ] Apply `20260728170000_member_profile_view.sql` in production Supabase
 
-Temporary password access allows administrator testing to continue while production
-email delivery is configured. Email OTP must still pass end to end before public beta.
+Public sign-in is OTP-only. Reserved `.invalid` test accounts retain isolated password
+credentials for automated acceptance; real member and Admin OTP must pass end to end.
 
 ### P0 — launch-critical
 

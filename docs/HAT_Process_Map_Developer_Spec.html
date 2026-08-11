@@ -276,8 +276,8 @@ footer{
       <div class="callout"><b>Read this alongside the Product Vision Document, not instead of it</b> — this document assumes that context and focuses purely on build logic.</div>
       <h3>Production source of truth</h3>
       <p>The 30-day release is a controlled, event-led launch—not the delivery date for every long-term module. A capability is considered complete only when authorization is enforced in Postgres, failure and empty states exist, mobile and accessibility checks pass, critical paths are tested, operational actions are auditable, and the feature works on localhost, Vercel preview, and production.</p>
-      <div class="callout"><b>Launch loop:</b> registration → identity verification → payment or manual approval → onboarding → event access → member discovery → connection → messaging → ongoing value.</div>
-      <p><b>Confirmed platform decisions:</b> responsive web/PWA first; Supabase email OTP for production identity; temporary password access only during pre-SMTP testing; Vercel hosting; Supabase database/auth/storage; provider-neutral payments with Paystack first; audited manual registration as a first-class fallback; rule-based recommendations before AI.</p>
+      <div class="callout"><b>Launch loop:</b> identity verification → membership application or event registration → payment or audited approval → onboarding → official Community and event access → member discovery → connection → messaging → ongoing value.</div>
+      <p><b>Confirmed platform decisions:</b> responsive web/PWA first; Supabase email OTP is the only public identity method; passwords are limited to reserved automated test accounts; Vercel hosting; Supabase database/auth/storage; provider-neutral payments with Paystack first; audited manual registration as a first-class fallback; rule-based recommendations before AI.</p>
     </section>
 
     <section id="modules">
@@ -285,10 +285,10 @@ footer{
       <p>The platform breaks into 14 modules. Everything in the Product Vision Document maps into one or more of these.</p>
       <table class="modtable">
         <tr><th>#</th><th>Module</th><th>Launch priority</th><th>Covers</th></tr>
-        <tr><td class="mnum">01</td><td class="mname">Auth &amp; Onboarding</td><td>P0 · Day 1–7</td><td>Email OTP, controlled beta password, approval state, progressive profile creation, structured goals and consent</td></tr>
+        <tr><td class="mnum">01</td><td class="mname">Auth &amp; Onboarding</td><td>P0 · Day 1–7</td><td>Email OTP, approval state, progressive profile creation, structured goals and consent; passwords remain automation-only</td></tr>
         <tr><td class="mnum">02</td><td class="mname">Profile &amp; Identity</td><td>P0 · Day 4–7</td><td>Public/private member profiles, verification, visibility controls and QR identity</td></tr>
         <tr><td class="mnum">03</td><td class="mname">Discovery / Home Feed</td><td>P1 · post-launch</td><td>Rule-ranked content and recommendations; launch home uses event, connection and Ask/Offer summaries</td></tr>
-        <tr><td class="mnum">04</td><td class="mname">Communities</td><td>P1 · post-launch</td><td>Tenant-scoped communities, feeds, resources, chat and host tools</td></tr>
+        <tr><td class="mnum">04</td><td class="mname">Communities</td><td>P0 official · P1 creator</td><td>One Admin-operated founding Community at launch; member-created Communities, host tools and paid access open only after their release gate passes</td></tr>
         <tr><td class="mnum">05</td><td class="mname">Events</td><td>P0 · Day 8–15</td><td>Registration, ticketing, agenda, announcements, check-in, sponsors, menu and gallery</td></tr>
         <tr><td class="mnum">06</td><td class="mname">Networking &amp; Matchmaking</td><td>P0 · Day 16–19</td><td>Event discovery, connection requests, QR/manual codes and rule-based suggestions</td></tr>
         <tr><td class="mnum">07</td><td class="mname">Member Directory &amp; Search</td><td>P0 · Day 16–19</td><td>Privacy-safe event and network directories with search and filters</td></tr>
@@ -315,16 +315,21 @@ flowchart TD
     A["Woman discovers HAT via social, referral, partner, friend or event"] --> B["Attribution captured"]
     B --> C{Entry path}
     C -->|Event registration| D["Ticket or manual registration"]
-    C -->|Membership request| E["Application or approved invitation"]
+    C -->|Open membership request| E["Email OTP identity verified"]
+    C -->|Approved invitation| J["Invitation eligibility recorded"]
+    E --> R["Private membership application submitted"]
     D --> F{Payment mode}
     F -->|Automatic| G["Verified Paystack webhook"]
     F -->|Manual review| H["Audited admin approval"]
     G --> I["Entitlement issued exactly once"]
     H --> I
-    E --> J["Admin approval"]
+    R --> S["Audited admin approval"]
+    S --> I
     J --> I
-    I --> K["Email OTP identity verified"]
-    K --> L["Progressive onboarding: profile + private contact + consent"]
+    I --> K{"Email identity already verified?"}
+    K -->|No| T["Email OTP identity verified"]
+    K -->|Yes| L["Progressive onboarding: essentials + consent"]
+    T --> L
     L --> M["Structured interests and goals selected"]
     M --> N["Profile activated"]
     N --> O["Member home: event, people and next useful action"]
@@ -334,12 +339,13 @@ flowchart TD
           <table class="data">
             <tr><th>Step</th><th>Screen</th><th>User action</th><th>System process</th><th>Data written</th><th>Triggers</th></tr>
             <tr><td>1</td><td>Landing / Referral Link</td><td>Clicks a campaign, partner, member or event link</td><td>Capture attribution without placing personal data in URLs</td><td><code>referral_source</code>, <code>referral_code</code>, UTM metadata</td><td>Analytics event: <code>signup_source_captured</code></td></tr>
-            <tr><td>2</td><td>Registration Choice</td><td>Registers for an event or requests membership</td><td>Create a registration request; authentication alone does not grant membership</td><td><code>registration_requests</code> with entry type and status</td><td>Route to automatic payment, manual review or waitlist</td></tr>
-            <tr><td>3</td><td>Payment / Review</td><td>Pays or submits manual reference</td><td>Only verified webhook or audited admin decision approves registration</td><td><code>orders</code>, <code>payment_events</code>, <code>manual_payment_reviews</code>, <code>entitlements</code></td><td>Issue entitlement idempotently; invite member to authenticate</td></tr>
-            <tr><td>4</td><td>Email Sign-in</td><td>Requests and enters a numeric one-time code</td><td>Supabase verifies email ownership and establishes cookie session</td><td><code>auth.users</code>, <code>profiles</code></td><td>Resolve pending/onboarding/active/suspended access state</td></tr>
-            <tr><td>5</td><td>Profile Build</td><td>Completes progressive onboarding</td><td>Save draft safely; separate directory-safe and private fields</td><td><code>profiles</code>, <code>profile_private</code>, <code>profile_interests</code>, <code>consent_records</code></td><td>Calculate completeness; upload owned avatar</td></tr>
-            <tr><td>6</td><td>Goal Selection</td><td>Selects structured goals</td><td>Store normalized goal keys—not free text</td><td><code>member_goals</code></td><td>Seed directory filters and future rule-based matching</td></tr>
-            <tr><td>7</td><td>Activation</td><td>Finishes required fields and agreements</td><td>Atomic activation operation validates eligibility and consent</td><td><code>profiles.access_status</code> = <code>active</code>; audit event</td><td>Land on member home and send welcome notification</td></tr>
+            <tr><td>2</td><td>Registration Choice</td><td>Registers for an event, uses an invitation or requests membership</td><td>Choose the correct entry path; authentication alone does not grant membership</td><td>Attribution plus a pending identity, invitation or registration request</td><td>Route to open application, invitation, automatic payment, manual review or waitlist</td></tr>
+            <tr><td>3A</td><td>Email Sign-in + Application</td><td>Open applicant enters a six-to-eight-digit code, then completes a short request</td><td>Verify email ownership before accepting private applicant context</td><td><code>auth.users</code>, <code>profiles</code>, <code>membership_applications</code></td><td>Keep access pending and place only completed applications in the Admin review queue</td></tr>
+            <tr><td>3B</td><td>Payment / Invitation</td><td>Pays, submits manual evidence or accepts an approved invitation</td><td>Only a verified webhook, audited decision or valid invitation records eligibility</td><td><code>orders</code>, <code>payment_events</code>, <code>manual_payment_reviews</code>, <code>beta_invites</code>, <code>entitlements</code></td><td>Issue eligibility idempotently; request OTP if identity is not yet verified</td></tr>
+            <tr><td>4</td><td>Approval and Routing</td><td>Admin approves a completed request or the system confirms trusted eligibility</td><td>Resolve pending/onboarding/active/suspended state without granting access from OTP alone</td><td><code>profiles.access_status</code>, application decision and audit event</td><td>Open onboarding and send a plain-language approval notification</td></tr>
+            <tr><td>5</td><td>Profile Build</td><td>Completes three short stages</td><td>Save drafts safely; require only identity, role, location, introduction, one interest, one goal and consent</td><td><code>profiles</code>, <code>profile_private</code>, <code>profile_interests</code>, <code>consent_records</code></td><td>Photo, languages, contact, business and social details remain optional</td></tr>
+            <tr><td>6</td><td>Goal Selection</td><td>Taps structured goals and interests</td><td>Store normalized goal keys and selected interest labels—not comma-separated instructions</td><td><code>member_goals</code>, <code>profile_interests</code></td><td>Seed directory filters and future rule-based matching</td></tr>
+            <tr><td>7</td><td>Activation</td><td>Finishes the essentials and agreements</td><td>Atomic activation validates eligibility and consent</td><td><code>profiles.access_status</code> = <code>active</code>; audit event</td><td>Land on member home and send welcome notification</td></tr>
           </table>
           <div class="buildnote"><span class="lbl">Build note</span>Goal selection is a first-class structured model. Forward-only migration <code class="mono">20260721120000_onboarding_v2.sql</code> adds city, languages, business/website fields, referral attribution, profile completion, avatar storage and normalized member goals. The already-applied onboarding migration must never be edited or rerun as a shortcut.</div>
         </div>
@@ -577,11 +583,11 @@ flowchart TD
       <div class="phasewrap">
         <div class="phase">
           <div><div class="ptime">Days 1–3</div><div class="pbar" style="background:var(--phase1)"></div></div>
-          <div><div class="pname">Foundation &amp; access</div><div class="pdesc">Vercel/Supabase environments, migrations, CI, email OTP, temporary beta password, profiles, access states, roles, audit foundations and protected routes. Gate: identity never grants membership or admin authority by itself.</div></div>
+          <div><div class="pname">Foundation &amp; access</div><div class="pdesc">Vercel/Supabase environments, migrations, CI, email OTP, automation-only test credentials, profiles, access states, roles, audit foundations and protected routes. Gate: identity never grants membership or admin authority by itself.</div></div>
         </div>
         <div class="phase">
           <div><div class="ptime">Days 4–7</div><div class="pbar" style="background:var(--phase2)"></div></div>
-          <div><div class="pname">Onboarding, profiles &amp; member operations</div><div class="pdesc">Progressive onboarding, photo, city, languages, professional identity, private contacts, structured interests/goals, consent versions, completeness, visibility pause, admin review and suspension. Gate: pending users cannot enter member data; approved incomplete users reach onboarding.</div></div>
+          <div><div class="pname">Onboarding, profiles &amp; member operations</div><div class="pdesc">Three-stage progressive onboarding, optional photo/contact details, city, professional identity, tap-to-select interests/goals, consent versions, visibility pause, completed-request review and suspension. Gate: pending users cannot enter member data; approved incomplete users reach onboarding.</div></div>
         </div>
         <div class="phase">
           <div><div class="ptime">Days 8–11</div><div class="pbar" style="background:var(--phase3)"></div></div>
@@ -601,7 +607,7 @@ flowchart TD
         </div>
         <div class="phase">
           <div><div class="ptime">Days 23–27</div><div class="pbar" style="background:var(--phase3)"></div></div>
-          <div><div class="pname">Ongoing value &amp; controlled extensions</div><div class="pdesc">Asks &amp; Offers, post-event feedback, Past Events and notification preferences first. Basic communities or learning may ship only if their security and release gates pass; otherwise remain feature-flagged.</div></div>
+          <div><div class="pname">Official Community &amp; ongoing value</div><div class="pdesc">Open one Admin-operated founding Community with a welcome, host, backup moderator, first conversation and event link. Asks &amp; Offers, post-event feedback and notifications support it; member-created Communities remain gated.</div></div>
         </div>
         <div class="phase">
           <div><div class="ptime">Days 28–30</div><div class="pbar" style="background:var(--phase5)"></div></div>
@@ -609,7 +615,7 @@ flowchart TD
         </div>
         <div class="phase">
           <div><div class="ptime">Post-launch</div><div class="pbar" style="background:var(--phase4)"></div></div>
-          <div><div class="pname">Expansion without rework</div><div class="pdesc">Full communities and Host toolkit, learning, commercial tiers, marketplace, travel, opportunities/trade, Enterprise and AI. These remain schema-compatible but cannot delay or destabilize the first production loop.</div></div>
+          <div><div class="pname">Expansion without rework</div><div class="pdesc">Member-created Communities, paid Host toolkit, learning, commercial tiers, marketplace, travel, opportunities/trade, Enterprise and AI. These remain schema-compatible but cannot delay or destabilize the first production loop.</div></div>
         </div>
       </div>
     </section>
@@ -618,7 +624,7 @@ flowchart TD
       <h2><span class="secnum">08</span>Confirmed decisions &amp; remaining questions</h2>
       <p>The following implementation decisions are now fixed for the 30-day release:</p>
       <ul class="qlist">
-        <li><b>Authentication:</b> Supabase email OTP is the production method. The beta password is temporary and must be rotated or removed once SMTP passes.</li>
+        <li><b>Authentication:</b> Supabase email OTP is the only public method. Password credentials are limited to reserved automated test identities and never appear in member or Admin sign-in.</li>
         <li><b>Payments:</b> provider-neutral order and entitlement layer; Paystack first; automatic, manual-review and closed/waitlist modes controlled by admin.</li>
         <li><b>Client:</b> responsive web/PWA on Vercel first. Native app and app-store distribution require measured post-launch demand.</li>
         <li><b>Recommendations:</b> deterministic goal, interest, location and event rules first. AI consumes governed usage data later.</li>
@@ -636,7 +642,7 @@ flowchart TD
       </ul>
     </section>
 
-    <footer>Version 2 · 21 July 2026. This is the production engineering map for the controlled 30-day release. Product expansion remains intentional, feature-flagged and subordinate to security, trust and launch readiness.</footer>
+    <footer>Version 3 · 11 August 2026. This is the production engineering map for the controlled 30-day release. Product expansion remains intentional, feature-flagged and subordinate to security, trust and launch readiness.</footer>
   </main>
 </div>
 

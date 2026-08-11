@@ -242,12 +242,12 @@ why report-triggered private-content review is mediated through an audited opera
 ## Authentication flow
 
 1. Visitor requests an email code.
-2. Supabase verifies the submitted OTP. A temporary password path may be enabled only
-   during controlled pre-SMTP testing.
+2. Supabase verifies the submitted OTP. Passwords remain limited to reserved automated
+   test identities and are never exposed by the public sign-in interface.
 3. Server establishes the cookie session.
 4. Application resolves profile, registration, membership and role state.
 5. Pending users see registration/approval status; approved incomplete users see
-   onboarding; active users enter the member application.
+   onboarding; active users enter Member Home.
 6. Every protected route revalidates authorization server-side; client state is only
    a presentation aid.
 

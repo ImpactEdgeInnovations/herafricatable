@@ -55,7 +55,7 @@ without affecting existing members or Community content.
 - Optional branding URLs expire and cannot be used to enumerate other media.
 - Free official, private-review, paid, closed-payment, pending and active-member
   joining states show the correct next action.
-- Email-code and temporary-password sign-in return the visitor to the Community
+- Email-code sign-in returns the visitor to the Community
   page using a validated same-site path.
 - Every save records only state flags and counts in audit metadata, not public-page
   copy.

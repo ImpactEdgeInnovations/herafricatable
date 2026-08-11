@@ -7778,7 +7778,7 @@ body {
   padding: 0 0 22px;
   border-bottom: 1px solid var(--line);
   list-style: none;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
 }
 .onboarding-steps button {
   display: flex;
@@ -7854,6 +7854,10 @@ body {
 .avatar-field label > strong {
   font-size: 0.76rem;
 }
+.avatar-field label > strong span {
+  color: var(--muted);
+  font-weight: 500;
+}
 .avatar-field label > small {
   color: var(--muted);
   font-size: 0.64rem;
@@ -7906,6 +7910,98 @@ body {
 .goal-grid input {
   position: absolute;
   opacity: 0;
+}
+.onboarding-choice-fieldset {
+  margin: 0 0 38px 78px;
+  padding: 0;
+  border: 0;
+}
+.onboarding-choice-fieldset legend {
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.1rem;
+}
+.onboarding-choice-fieldset legend span,
+.onboarding-choice-fieldset > p {
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.7rem;
+}
+.onboarding-choice-fieldset > p {
+  margin: 7px 0 15px;
+  line-height: 1.5;
+}
+.onboarding-choice-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.onboarding-choice-grid label {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 10px 15px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.onboarding-choice-grid label.selected {
+  border-color: var(--wine);
+  background: #f8f1f2;
+  color: var(--wine);
+}
+.onboarding-choice-grid input {
+  position: absolute;
+  opacity: 0;
+}
+.onboarding-optional-details {
+  margin: 0 0 34px 78px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.onboarding-optional-details summary {
+  padding: 18px 0;
+  color: var(--wine);
+  cursor: pointer;
+}
+.onboarding-optional-details summary > span {
+  display: inline-grid;
+  margin-left: 8px;
+  gap: 3px;
+}
+.onboarding-optional-details summary small {
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 500;
+}
+.onboarding-optional-details .form-grid {
+  margin: 10px 0 34px;
+}
+.onboarding-optional-details .privacy-control {
+  margin: -10px 0 28px;
+}
+.onboarding-missing-essentials {
+  margin: 0 0 30px 78px;
+  padding: 18px 20px;
+  border: 1px solid rgba(161, 40, 55, 0.2);
+  background: #fff8f7;
+}
+.onboarding-missing-essentials strong {
+  font-family: var(--serif);
+  font-weight: 500;
+}
+.onboarding-missing-essentials p {
+  margin: 7px 0 5px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.onboarding-missing-essentials .button {
+  padding-left: 0;
 }
 .purpose-fields {
   margin-bottom: 24px;
@@ -17832,6 +17928,9 @@ body {
   }
   .avatar-field,
   .goal-grid,
+  .onboarding-choice-fieldset,
+  .onboarding-missing-essentials,
+  .onboarding-optional-details,
   .privacy-control,
   .profile-review {
     margin-left: 0;

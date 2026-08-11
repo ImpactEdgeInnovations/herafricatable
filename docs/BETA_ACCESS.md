@@ -1,14 +1,15 @@
 # Beta Access and First Admin
 
-## Temporary password access
+## Automation-only password access
 
-Until production email delivery is configured, the sign-in pages also accept a
-temporary Supabase email/password account. The password is never stored in this
-repository or exposed in browser code.
+The public member and Admin sign-in pages accept email OTP only. Reserved `.invalid`
+test identities may still have temporary Supabase passwords so automated acceptance
+scripts can exercise multiple roles without sending email. The password is never
+stored in this repository or exposed in browser code.
 
-Create the temporary account in Supabase Dashboard → Authentication → Users, using
-the approved administrator email. Mark the email as confirmed. Then grant the account
-its role in the SQL Editor:
+Production administrators use OTP. If a pre-production operational rehearsal requires
+a time-limited password, create it directly in Supabase, never share it through the
+application UI, and grant authority separately through the audited role workflow.
 
 ```sql
 insert into public.user_roles (user_id, role)
@@ -18,12 +19,14 @@ where lower(email) = 'impactedgeinnovations@gmail.com'
 on conflict (user_id, role) do nothing;
 ```
 
-Remove or rotate the temporary password as soon as email OTP and production SMTP are
-working. OTP remains the intended production sign-in method.
+Rotate or remove any real-person temporary password now that production SMTP works.
+Automation-only `.invalid` credentials remain isolated from real members and are
+suppressed by the notification worker.
 
 Production does not use shared passwords or hard-coded credentials. Members and team
-administrators authenticate with email OTP. Access is granted through
-`beta_invites`, and administrative authority comes from `user_roles`.
+administrators authenticate with email OTP. Member access follows an approved
+application or valid `beta_invites` record, and administrative authority comes
+separately from `user_roles`.
 
 Before the first administrator signs in, add an invite through the Supabase SQL Editor:
 

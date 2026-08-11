@@ -139,8 +139,8 @@ export function MemberReview({
           <p className="eyebrow">Member operations</p>
           <h2 id="member-review-title">Review the table</h2>
           <p>
-            Approve verified registrations, follow incomplete onboarding, and
-            pause access when required.
+            Review completed membership requests, follow onboarding, and pause
+            access when required.
           </p>
         </div>
         <span className="status-count">{readyForReview} ready for review</span>
@@ -271,6 +271,15 @@ export function MemberReview({
                     >
                       {member.access_status}
                     </span>
+                    {member.access_status === "pending" ? (
+                      <small>
+                        {["submitted", "in_review"].includes(
+                          member.application_status ?? "",
+                        )
+                          ? "Request ready for review"
+                          : "Application not sent"}
+                      </small>
+                    ) : null}
                   </td>
                   <td>
                     {new Intl.DateTimeFormat("en-KE", {
@@ -281,7 +290,10 @@ export function MemberReview({
                   </td>
                   <td>
                     <div className="member-actions">
-                      {member.access_status === "pending" ? (
+                      {member.access_status === "pending" &&
+                      ["submitted", "in_review"].includes(
+                        member.application_status ?? "",
+                      ) ? (
                         <button
                           disabled={workingId === member.user_id}
                           onClick={() => void confirmReview(member, "approve")}

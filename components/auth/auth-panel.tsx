@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthIntent = "member" | "admin";
-type Step = "request" | "verify" | "password";
+type Step = "request" | "verify";
 
 const destinationFor = (intent: AuthIntent) => intent === "admin" ? "/admin" : "/continue";
 
@@ -29,7 +29,6 @@ export function AuthPanel({
 }) {
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
-  const [password, setPassword] = useState("");
   const [step, setStep] = useState<Step>("request");
   const [busy, setBusy] = useState(false);
   const [resendIn, setResendIn] = useState(0);
@@ -111,30 +110,6 @@ export function AuthPanel({
     }
   }
 
-  async function signInWithPassword(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    setMessage(null);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password,
-      });
-      if (error) throw error;
-      window.location.assign(destination);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
-      setMessage({
-        kind: "error",
-        text: errorMessage.includes("invalid login credentials")
-          ? "The email or password is incorrect. Check the temporary beta credentials and try again."
-          : safeMessage(error instanceof Error ? error.message : "Unknown error"),
-      });
-      setBusy(false);
-    }
-  }
-
   return (
     <div className="auth-panel">
       <Link className="auth-back" href="/">
@@ -175,12 +150,8 @@ export function AuthPanel({
           <button className="button button-primary" type="submit" disabled={busy}>
             {busy ? "Sending…" : "Send my sign-in code"}
           </button>
-          <div className="auth-divider">Temporary access</div>
-          <button className="button google-button" type="button" onClick={() => { setStep("password"); setMessage(null); }} disabled={busy}>
-            Use a temporary password
-          </button>
         </form>
-      ) : step === "verify" ? (
+      ) : (
         <form className="auth-form" onSubmit={verifyCode}>
           <label htmlFor={`${intent}-token`}>Your sign-in code</label>
           <input
@@ -207,37 +178,6 @@ export function AuthPanel({
               Change email
             </button>
           </div>
-        </form>
-      ) : (
-        <form className="auth-form" onSubmit={signInWithPassword}>
-          <label htmlFor={`${intent}-password-email`}>Email address</label>
-          <input
-            id={`${intent}-password-email`}
-            name="email"
-            type="email"
-            autoComplete="username"
-            placeholder="you@company.com"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
-          <label htmlFor={`${intent}-password`}>Password</label>
-          <input
-            id={`${intent}-password`}
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="Enter your temporary password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-          <button className="button button-primary" type="submit" disabled={busy}>
-            {busy ? "Signing in…" : "Sign in"}
-          </button>
-          <button className="button google-button" type="button" onClick={() => { setStep("request"); setPassword(""); setMessage(null); }} disabled={busy}>
-            Use email code instead
-          </button>
         </form>
       )}
 

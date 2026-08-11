@@ -132,7 +132,7 @@ export default async function AdminHomePage() {
   const pendingMembers = members.filter(
     (member) =>
       member.access_status === "pending" &&
-      member.application_status !== "declined",
+      ["submitted", "in_review"].includes(member.application_status ?? ""),
   ).length;
   const activeMembers = members.filter(
     (member) => member.access_status === "active",

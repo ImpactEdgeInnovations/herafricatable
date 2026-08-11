@@ -4,9 +4,9 @@ Her Africa Table uses one passwordless entry method: a numeric email OTP deliver
 through Supabase Auth. Gmail, Google Workspace and other valid email providers are
 supported. Google does not issue the code and Google OAuth is not enabled.
 
-During pre-SMTP testing, the sign-in interface also supports a temporary Supabase
-email/password account. This is a migration aid, not the intended production method;
-remove or rotate it after email OTP delivery is ready.
+The public sign-in interface is OTP-only. Password credentials may be assigned to
+reserved `.invalid` test identities for automated acceptance, but they are never
+displayed as a member or Admin sign-in option.
 
 ## Required application URLs
 
@@ -99,7 +99,9 @@ Paystack and Resend secrets belong in server-only Vercel/Supabase secret stores.
      can be submitted.
 4. Email verification proves ownership of the address. It never grants membership or
    Admin access by itself.
-5. An approved new member completes onboarding before entering the member home.
+5. An approved new member completes three short onboarding stages before entering
+   Member Home. Photo, languages, private contact, business and social details remain
+   optional and can be completed later.
 6. A declined, suspended or dormant member sees a safe status screen and cannot read
    private member or Community data.
 

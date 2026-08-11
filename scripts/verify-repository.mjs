@@ -2050,6 +2050,63 @@ for (const contract of [
     `Email OTP input must include ${contract}`,
   );
 }
+const publicAuthPanel = read("components/auth/auth-panel.tsx");
+for (const forbiddenContract of [
+  "signInWithPassword",
+  "Temporary access",
+  "Use a temporary password",
+  'type="password"',
+]) {
+  assert(
+    !publicAuthPanel.includes(forbiddenContract),
+    `Public sign-in must not expose ${forbiddenContract}`,
+  );
+}
+const simplifiedOnboardingMigration = read(
+  "supabase/migrations/20260811150000_simplified_member_onboarding.sql",
+);
+for (const contract of [
+  "member.onboarding_completed_v3",
+  "required_photo', false",
+  "required_languages', false",
+  "one interest and one goal",
+  "profile_completion = completion",
+]) {
+  assert(
+    simplifiedOnboardingMigration.includes(contract),
+    `Simplified onboarding boundary must include ${contract}`,
+  );
+}
+const simplifiedOnboarding = read(
+  "components/onboarding/onboarding-form.tsx",
+);
+for (const contract of [
+  'const STEP_LABELS = ["About you", "Your purpose", "Privacy and trust"]',
+  "onboarding-choice-grid",
+  "Profile photo <span>(optional)",
+  "Optional—you can do this later.",
+  "missingEssentials",
+]) {
+  assert(
+    simplifiedOnboarding.includes(contract),
+    `Member onboarding must include ${contract}`,
+  );
+}
+assert(
+  !simplifiedOnboarding.includes("comma separated"),
+  "Member onboarding must not ask non-technical members for comma-separated values",
+);
+const adminMemberHome = read("app/admin/page.tsx");
+assert(
+  adminMemberHome.includes('["submitted", "in_review"].includes'),
+  "Admin Today must count only completed membership requests",
+);
+const memberReview = read("components/admin/member-review.tsx");
+assert(
+  memberReview.includes("Application not sent") &&
+    memberReview.includes("Request ready for review"),
+  "Member operations must distinguish identities from completed applications",
+);
 const signOutButton = read("components/auth/sign-out-button.tsx");
 for (const contract of [
   'signOut({ scope: "local" })',

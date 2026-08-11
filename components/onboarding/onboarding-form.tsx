@@ -60,7 +60,32 @@ const GOALS = [
   ["shop_african_brands", "Discover African brands"],
 ] as const;
 
-const STEP_LABELS = ["Profile", "Purpose", "Contact", "Trust"];
+const INTERESTS = [
+  "Business growth",
+  "Career growth",
+  "Climate and sustainability",
+  "Community building",
+  "Creative work",
+  "Investment and finance",
+  "Leadership",
+  "Mentorship",
+  "Public policy",
+  "Technology",
+  "Trade across Africa",
+  "Wellbeing",
+] as const;
+
+const LANGUAGES = [
+  "English",
+  "Kiswahili",
+  "French",
+  "Arabic",
+  "Portuguese",
+  "Amharic",
+  "Somali",
+] as const;
+
+const STEP_LABELS = ["About you", "Your purpose", "Privacy and trust"];
 
 export function OnboardingForm({
   email,
@@ -81,7 +106,7 @@ export function OnboardingForm({
     industry: initial.industry ?? "",
     country: initial.country ?? "Kenya",
     city: initial.city ?? "",
-    languages: initial.languages.join(", "),
+    languages: initial.languages,
     bio: initial.bio ?? "",
     businessName: initial.business_name ?? "",
     websiteUrl: initial.website_url ?? "",
@@ -92,7 +117,7 @@ export function OnboardingForm({
     whatsappNumber: initial.whatsapp_number ?? "",
     linkedinUrl: initial.linkedin_url ?? "",
     instagramUrl: initial.instagram_url ?? "",
-    interests: initial.interests.join(", "),
+    interests: initial.interests,
     goals: initial.goals,
     sharePhone: initial.share_phone_with_connections,
   });
@@ -107,6 +132,16 @@ export function OnboardingForm({
     kind: "error" | "success";
     text: string;
   } | null>(null);
+  const missingEssentials = [
+    !form.displayName.trim() ? "your name" : null,
+    !form.jobTitle.trim() ? "your role or title" : null,
+    !form.industry.trim() ? "your industry" : null,
+    !form.country.trim() ? "your country" : null,
+    !form.city.trim() ? "your city" : null,
+    !form.bio.trim() ? "your introduction" : null,
+    form.goals.length === 0 ? "at least one goal" : null,
+    form.interests.length === 0 ? "at least one interest" : null,
+  ].filter(Boolean) as string[];
 
   function updateField(
     field: keyof typeof form,
@@ -115,11 +150,19 @@ export function OnboardingForm({
     setForm((current) => ({ ...current, [field]: value }));
   }
 
-  function listFrom(value: string) {
-    return value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
+  function toggleList(field: "goals" | "interests" | "languages", value: string) {
+    setForm((current) => {
+      const selected = current[field];
+      const limit = field === "goals" ? 6 : field === "interests" ? 8 : 10;
+      return {
+        ...current,
+        [field]: selected.includes(value)
+          ? selected.filter((item) => item !== value)
+          : selected.length < limit
+            ? [...selected, value]
+            : selected,
+      };
+    });
   }
 
   function draftPayload() {
@@ -130,7 +173,7 @@ export function OnboardingForm({
       p_industry: form.industry,
       p_country: form.country,
       p_city: form.city,
-      p_languages: listFrom(form.languages),
+      p_languages: form.languages,
       p_bio: form.bio,
       p_business_name: form.businessName,
       p_website_url: form.websiteUrl,
@@ -142,7 +185,7 @@ export function OnboardingForm({
       p_linkedin_url: form.linkedinUrl,
       p_instagram_url: form.instagramUrl,
       p_share_phone: form.sharePhone,
-      p_interests: listFrom(form.interests),
+      p_interests: form.interests,
       p_goals: form.goals,
     };
   }
@@ -227,17 +270,6 @@ export function OnboardingForm({
     setUploading(false);
   }
 
-  function toggleGoal(goal: string) {
-    setForm((current) => ({
-      ...current,
-      goals: current.goals.includes(goal)
-        ? current.goals.filter((item) => item !== goal)
-        : current.goals.length < 6
-          ? [...current.goals, goal]
-          : current.goals,
-    }));
-  }
-
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
@@ -295,10 +327,9 @@ export function OnboardingForm({
           <div className="form-section-heading">
             <span>01</span>
             <div>
-              <h2 id="profile-step-title">Your professional profile</h2>
+              <h2 id="profile-step-title">How should members know you?</h2>
               <p>
-                Start with the details members will see when they find you and at
-                events.
+                Share only the essentials. You can add more to your profile later.
               </p>
             </div>
           </div>
@@ -311,7 +342,7 @@ export function OnboardingForm({
               )}
             </div>
             <label>
-              <strong>Profile photo</strong>
+              <strong>Profile photo <span>(optional)</span></strong>
               <small>JPG, PNG or WebP · maximum 5 MB</small>
               <input
                 type="file"
@@ -395,30 +426,38 @@ export function OnboardingForm({
                 required
               />
             </label>
-            <label>
-              Languages <span>(comma separated)</span>
-              <input
-                value={form.languages}
-                onChange={(event) =>
-                  updateField("languages", event.target.value)
-                }
-                placeholder="English, Kiswahili"
-                required
-              />
-            </label>
             <label className="form-wide">
-              Short professional bio
+              A short introduction
               <textarea
                 value={form.bio}
                 onChange={(event) => updateField("bio", event.target.value)}
                 maxLength={1600}
                 rows={5}
-                placeholder="Share what you do, the work you care about, and the connections you hope to make."
+                placeholder="What do you do, and what kind of work matters to you?"
                 required
               />
               <small>{form.bio.length}/1600 characters</small>
             </label>
           </div>
+          <fieldset className="onboarding-choice-fieldset">
+            <legend>Languages you are comfortable using <span>(optional)</span></legend>
+            <p>Choose any that help members speak with you comfortably.</p>
+            <div className="onboarding-choice-grid">
+              {[...new Set([...LANGUAGES, ...form.languages])].map((language) => (
+                <label
+                  className={form.languages.includes(language) ? "selected" : ""}
+                  key={language}
+                >
+                  <input
+                    checked={form.languages.includes(language)}
+                    onChange={() => toggleList("languages", language)}
+                    type="checkbox"
+                  />
+                  <span>{language}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
         </section>
       ) : null}
 
@@ -432,8 +471,7 @@ export function OnboardingForm({
             <div>
               <h2 id="purpose-step-title">What brings you to the table?</h2>
               <p>
-                Your goals are structured signals for useful introductions—not
-                advertising data.
+                Choose what feels useful now. You can change these choices later.
               </p>
             </div>
           </div>
@@ -447,144 +485,46 @@ export function OnboardingForm({
                 <input
                   type="checkbox"
                   checked={form.goals.includes(value)}
-                  onChange={() => toggleGoal(value)}
+                  onChange={() => toggleList("goals", value)}
                 />
                 <span>{label}</span>
               </label>
             ))}
           </fieldset>
-          <div className="form-grid purpose-fields">
-            <label className="form-wide">
-              Professional interests <span>(comma separated)</span>
-              <input
-                value={form.interests}
-                onChange={(event) =>
-                  updateField("interests", event.target.value)
-                }
-                placeholder="Leadership, investment, technology, public policy"
-                required
-              />
-            </label>
-            <label>
-              Business name <span>(optional)</span>
-              <input
-                value={form.businessName}
-                onChange={(event) =>
-                  updateField("businessName", event.target.value)
-                }
-              />
-            </label>
-            <label>
-              Business or personal website <span>(optional)</span>
-              <input
-                type="url"
-                value={form.websiteUrl}
-                onChange={(event) =>
-                  updateField("websiteUrl", event.target.value)
-                }
-                placeholder="https://…"
-              />
-            </label>
-          </div>
+          <fieldset className="onboarding-choice-fieldset">
+            <legend>What are you interested in?</legend>
+            <p>Choose at least one. These help us make more useful introductions.</p>
+            <div className="onboarding-choice-grid">
+              {[...new Set([...INTERESTS, ...form.interests])].map((interest) => (
+                <label
+                  className={form.interests.includes(interest) ? "selected" : ""}
+                  key={interest}
+                >
+                  <input
+                    checked={form.interests.includes(interest)}
+                    onChange={() => toggleList("interests", interest)}
+                    type="checkbox"
+                  />
+                  <span>{interest}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
         </section>
       ) : null}
 
       {step === 3 ? (
         <section
           className="onboarding-step"
-          aria-labelledby="contact-step-title"
+          aria-labelledby="trust-step-title"
         >
           <div className="form-section-heading">
             <span>03</span>
             <div>
-              <h2 id="contact-step-title">Private contact details</h2>
+              <h2 id="trust-step-title">Privacy and trust</h2>
               <p>
-                These are stored separately and are not placed in the public
-                member list.
-              </p>
-            </div>
-          </div>
-          <div className="form-grid">
-            <label>
-              Phone number
-              <input
-                value={form.phone}
-                onChange={(event) => updateField("phone", event.target.value)}
-                autoComplete="tel"
-                placeholder="+254…"
-              />
-            </label>
-            <label>
-              WhatsApp number
-              <input
-                value={form.whatsappNumber}
-                onChange={(event) =>
-                  updateField("whatsappNumber", event.target.value)
-                }
-                placeholder="+254…"
-              />
-            </label>
-            <label>
-              LinkedIn profile
-              <input
-                type="url"
-                value={form.linkedinUrl}
-                onChange={(event) =>
-                  updateField("linkedinUrl", event.target.value)
-                }
-                placeholder="https://linkedin.com/in/…"
-              />
-            </label>
-            <label>
-              Instagram profile
-              <input
-                type="url"
-                value={form.instagramUrl}
-                onChange={(event) =>
-                  updateField("instagramUrl", event.target.value)
-                }
-                placeholder="https://instagram.com/…"
-              />
-            </label>
-            <label className="form-wide">
-              How did you hear about Her Africa Table?
-              <input
-                value={form.referralSource}
-                onChange={(event) =>
-                  updateField("referralSource", event.target.value)
-                }
-                placeholder="Friend, LinkedIn, event partner, Instagram…"
-              />
-            </label>
-          </div>
-          <label className="privacy-control">
-            <input
-              type="checkbox"
-              checked={form.sharePhone}
-              onChange={(event) =>
-                updateField("sharePhone", event.target.checked)
-              }
-            />
-            <span>
-              <strong>Allow accepted connections to see my phone number</strong>
-              <small>
-                This preference can be changed later. It never exposes your
-                number publicly.
-              </small>
-            </span>
-          </label>
-        </section>
-      ) : null}
-
-      {step === 4 ? (
-        <section className="onboarding-step" aria-labelledby="trust-step-title">
-          <div className="form-section-heading">
-            <span>04</span>
-            <div>
-              <h2 id="trust-step-title">Trust at the table</h2>
-              <p>
-                Review your completion and accept the agreements that protect
-                this network.
+                Review what members will see and accept the agreements that
+                protect the table.
               </p>
             </div>
           </div>
@@ -596,10 +536,69 @@ export function OnboardingForm({
                 .join(" · ")}
             </span>
             <p>
-              {form.goals.length} goals · {listFrom(form.interests).length}{" "}
-              interests · {listFrom(form.languages).length} languages
+              {form.goals.length} goals · {form.interests.length} interests
+              {form.languages.length ? ` · ${form.languages.length} languages` : ""}
             </p>
           </div>
+          {missingEssentials.length ? (
+            <div className="onboarding-missing-essentials" role="status">
+              <strong>A few essentials still need your attention.</strong>
+              <p>{missingEssentials.join(", ")}.</p>
+              <button
+                className="button text-button"
+                onClick={() =>
+                  setStep(
+                    form.goals.length === 0 || form.interests.length === 0 ? 2 : 1,
+                  )
+                }
+                type="button"
+              >
+                Review the essentials
+              </button>
+            </div>
+          ) : null}
+          <details className="onboarding-optional-details">
+            <summary>
+              <span><strong>Add contact, business or social details</strong><small>Optional—you can do this later.</small></span>
+            </summary>
+            <div className="form-grid">
+              <label>
+                Phone number
+                <input value={form.phone} onChange={(event) => updateField("phone", event.target.value)} autoComplete="tel" placeholder="+254…" />
+              </label>
+              <label>
+                WhatsApp number
+                <input value={form.whatsappNumber} onChange={(event) => updateField("whatsappNumber", event.target.value)} placeholder="+254…" />
+              </label>
+              <label>
+                Business name
+                <input value={form.businessName} onChange={(event) => updateField("businessName", event.target.value)} />
+              </label>
+              <label>
+                Business or personal website
+                <input type="url" value={form.websiteUrl} onChange={(event) => updateField("websiteUrl", event.target.value)} placeholder="https://…" />
+              </label>
+              <label>
+                LinkedIn profile
+                <input type="url" value={form.linkedinUrl} onChange={(event) => updateField("linkedinUrl", event.target.value)} placeholder="https://linkedin.com/in/…" />
+              </label>
+              <label>
+                Instagram profile
+                <input type="url" value={form.instagramUrl} onChange={(event) => updateField("instagramUrl", event.target.value)} placeholder="https://instagram.com/…" />
+              </label>
+              <label className="form-wide">
+                How did you hear about Her Africa Table?
+                <input value={form.referralSource} onChange={(event) => updateField("referralSource", event.target.value)} placeholder="Friend, event, LinkedIn or Instagram" />
+              </label>
+            </div>
+            <label className="privacy-control">
+              <input checked={form.sharePhone} onChange={(event) => updateField("sharePhone", event.target.checked)} type="checkbox" />
+              <span>
+                <strong>Let accepted connections see my phone number</strong>
+                <small>This can be changed later. Your number is never public.</small>
+              </span>
+            </label>
+          </details>
           <div className="agreement-list">
             <label>
               <input
@@ -690,7 +689,7 @@ export function OnboardingForm({
               Back
             </button>
           ) : null}
-          {step < 4 ? (
+          {step < 3 ? (
             <button
               className="button button-primary"
               type="button"
@@ -703,13 +702,11 @@ export function OnboardingForm({
             <button
               className="button button-primary"
               type="submit"
-              disabled={saving || completion < 100}
+              disabled={saving || missingEssentials.length > 0}
             >
               {saving
                 ? "Activating…"
-                : completion < 100
-                  ? `Complete profile (${completion}%)`
-                  : "Complete profile"}
+                : "Enter the member network"}
             </button>
           )}
         </div>
