@@ -1892,8 +1892,10 @@ const membershipApplicationForm = read(
 );
 assert(
   membershipApplicationForm.includes('data === "approved"') &&
-    membershipApplicationForm.includes('window.location.assign("/onboarding")'),
-  "Verified invitations must continue to onboarding after application approval",
+    membershipApplicationForm.includes("window.location.assign(") &&
+    membershipApplicationForm.includes("nextHref") &&
+    membershipApplicationForm.includes("/onboarding?next="),
+  "Verified invitations must continue to onboarding and preserve their destination after application approval",
 );
 const membershipIntakeAcceptance = read(
   "scripts/accept-membership-intake.mjs",
@@ -2027,8 +2029,8 @@ for (const contract of [
   'select("role,expires_at")',
   "hasActiveAdminRole",
   'redirect("/admin")',
-  'redirect("/onboarding")',
-  'redirect("/apply")',
+  '`/onboarding?next=${encodeURIComponent(memberDestination)}`',
+  '`/apply?next=${encodeURIComponent(memberDestination)}`',
 ]) {
   assert(
     roleAwareSignIn.includes(contract),

@@ -52,6 +52,7 @@ import {
   CommunityJoiningSettingsPanel,
   type CommunityJoiningSettings,
 } from "@/components/member/community-joining-settings";
+import type { DestinationInvitation } from "@/components/member/destination-invitation-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -146,6 +147,7 @@ export default async function CommunityHostPage({
     settlementResult,
     welcomeQueueResult,
     eventProposalResult,
+    invitationResult,
   ] = await Promise.all([
     supabase.rpc("get_community_host_health", {
       p_community_id: community.community_id,
@@ -215,6 +217,10 @@ export default async function CommunityHostPage({
     }),
     supabase.rpc("list_my_community_event_proposals", {
       p_community_id: community.community_id,
+    }),
+    supabase.rpc("list_my_table_invitations", {
+      p_destination_id: community.community_id,
+      p_destination_type: "community",
     }),
   ]);
 
@@ -385,6 +391,7 @@ export default async function CommunityHostPage({
       ) : null}
       <CommunityHostWorkspace
         communityId={community.community_id}
+        communityName={community.name}
         advancedAnalytics={Boolean(capabilities?.advanced_analytics)}
         automations={Boolean(capabilities?.automations)}
         capabilitiesReady={!capabilityResult.error}
@@ -395,6 +402,10 @@ export default async function CommunityHostPage({
           (introductionResult.data as CommunityIntroductionFollowup[] | null) ??
           []
         }
+        invitations={
+          (invitationResult.data as DestinationInvitation[] | null) ?? []
+        }
+        invitationsReady={!invitationResult.error}
         members={(memberResult.data as CommunityHostMember[] | null) ?? []}
         migrationReady={migrationReady}
         options={

@@ -23,10 +23,12 @@ export function MembershipApplicationForm({
   email,
   initial,
   intakeMode,
+  nextHref,
 }: {
   email: string;
   initial: MembershipApplication | null;
   intakeMode: "closed" | "manual_review" | "trusted_auto";
+  nextHref: string | null;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [step, setStep] = useState(0);
@@ -98,7 +100,11 @@ export function MembershipApplicationForm({
       return;
     }
     if (data === "approved") {
-      window.location.assign("/onboarding");
+      window.location.assign(
+        nextHref
+          ? `/onboarding?next=${encodeURIComponent(nextHref)}`
+          : "/onboarding",
+      );
       return;
     }
     setSubmitted(true);

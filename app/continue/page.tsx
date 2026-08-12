@@ -45,7 +45,13 @@ export default async function ContinueAfterSignInPage({
   // before authentication.
   if (!memberDestination && hasActiveAdminRole) redirect("/admin");
 
-  if (profile?.access_status === "onboarding") redirect("/onboarding");
+  if (profile?.access_status === "onboarding") {
+    redirect(
+      memberDestination
+        ? `/onboarding?next=${encodeURIComponent(memberDestination)}`
+        : "/onboarding",
+    );
+  }
   if (
     profile &&
     ["active", "dormant", "suspended"].includes(profile.access_status)
@@ -53,5 +59,9 @@ export default async function ContinueAfterSignInPage({
     redirect(memberDestination ?? "/home");
   }
 
-  redirect("/apply");
+  redirect(
+    memberDestination
+      ? `/apply?next=${encodeURIComponent(memberDestination)}`
+      : "/apply",
+  );
 }

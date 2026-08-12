@@ -96,6 +96,26 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Complete live acceptance with two opted-in members, one opted-out member, one
       blocked pair, one active Community, one past event and one Community Host
 
+## Destination-aware invitations — 12 August 2026
+
+- [x] Keep invitation entry on the Community Host or event page instead of adding
+      another member navigation journey
+- [x] Allow approved Community and event Hosts to invite one email with an optional
+      personal note, while enforcing a database limit of 20 invitations per day
+- [x] Deliver invitations to existing active members immediately through the existing
+      notification outbox and Resend worker
+- [x] Require Super Admin review before emailing a new or not-yet-active address
+- [x] Bind every link to the recipient email, store only its SHA-256 token hash and
+      expire it after 30 days
+- [x] Preserve the destination through OTP sign-in, membership review and onboarding
+- [x] Keep private Community admission, paid Community access, event capacity,
+      ticket choice and payment as separate authoritative decisions
+- [x] Add plain-language Admin approval, revoke controls and delivery visibility
+- [ ] Apply `20260812150000_destination_aware_table_invitations.sql` in production
+      Supabase
+- [ ] Accept one active-member invitation, one new-member manual-review invitation,
+      one private Community request, one event registration and one revoked link
+
 ## Community joining and Event-to-Community journey — 12 August 2026
 
 - [x] Let a public Community choose immediate entry or Host approval for active
@@ -900,6 +920,7 @@ flag with no navigation exposure and no unsafe partial access.
 | Communities    | Membership and moderation are policy-enforced; private content is unavailable without membership or report escalation.                                  |
 | Courses        | Lesson assets are private/signed; access rules and purchases are server-enforced; progress is user-scoped.                                              |
 | Notifications  | Preferences are grouped; transactional messages cannot be disabled; deliveries are logged and retry-safe.                                               |
+| Invitations    | Links are email-bound and hashed; external addresses require review; destination admission and payment boundaries remain authoritative.                  |
 | Admin          | Every sensitive action is permission-checked and audited; no service key reaches browser code.                                                          |
 | Analytics      | Metrics use documented definitions and exclude test/seed activity.                                                                                      |
 | Deletion       | Identity removal, retained messages, financial records and audit evidence follow a documented retention policy.                                         |

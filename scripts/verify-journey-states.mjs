@@ -1629,6 +1629,59 @@ assert(
   "Community Admin must link each managed room to its release checklist",
 );
 
+const tableInvitationMigration = read(
+  "supabase/migrations/20260812150000_destination_aware_table_invitations.sql",
+);
+for (const contract of [
+  "create_table_invitation",
+  "review_table_invitation",
+  "preview_table_invitation",
+  "claim_table_invitation",
+  "resume_table_invitations_after_activation",
+  "digest(raw_token, 'sha256')",
+  "target.invitee_email",
+  "'table_invitation'",
+]) {
+  assert(
+    tableInvitationMigration.includes(contract),
+    `Destination-aware invitations must include ${contract}`,
+  );
+}
+const invitationPanel = read(
+  "components/member/destination-invitation-panel.tsx",
+);
+assert(
+  invitationPanel.includes("create_table_invitation") &&
+    invitationPanel.includes("We do not upload or store your") &&
+    invitationPanel.includes("router.refresh"),
+  "Hosts must send and review invitation state without leaving the destination",
+);
+const invitationClaim = read("components/member/table-invitation-claim.tsx");
+assert(
+  invitationClaim.includes("claim_table_invitation") &&
+    invitationClaim.includes("Your invitation is saved") &&
+    !invitationClaim.includes("window.location"),
+  "Invitation claims must stay visible and preserve a pending membership destination",
+);
+const adminInvitationPage = read("app/admin/invitations/page.tsx");
+const adminInvitationManager = read(
+  "components/admin/table-invitation-manager.tsx",
+);
+assert(
+  adminInvitationPage.includes("list_admin_table_invitations") &&
+    adminInvitationManager.includes("Approve and email") &&
+    adminInvitationManager.includes("review_table_invitation") &&
+    adminInvitationManager.includes("Resend"),
+  "Super Admin must review external invitations before Resend delivery",
+);
+const emailSender = read("lib/notifications/email.ts");
+assert(
+  emailSender.includes('job.template_key === "table_invitation"') &&
+    emailSender.includes("https://api.resend.com/emails") &&
+    emailSender.includes("Open your invitation"),
+  "Approved personal invitations must use the real Resend notification sender",
+);
+
 console.log(
   `Journey-state contracts passed: ${Object.keys(boundaryContracts).length} route boundaries, ${refreshModules.length} non-destructive refresh workflows, responsive shared member navigation, people-first discovery, lightweight Admin cockpit, editable profiles, opt-in attendee discovery, consent-based founding cohort, and 5 guided operations groups.`,
 );

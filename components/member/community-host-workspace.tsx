@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { CommunityHostAssistant } from "@/components/member/community-host-assistant";
+import {
+  DestinationInvitationPanel,
+  type DestinationInvitation,
+} from "@/components/member/destination-invitation-panel";
 import { useActionDialog } from "@/components/ui/action-dialog";
 
 export type CommunityHostHealth = {
@@ -139,10 +143,13 @@ export function CommunityHostWorkspace({
   automations,
   capabilitiesReady,
   communityId,
+  communityName,
   continuity,
   continuityReady,
   health,
   introductionFollowups,
+  invitations,
+  invitationsReady,
   members,
   migrationReady,
   options,
@@ -152,10 +159,13 @@ export function CommunityHostWorkspace({
   automations: boolean;
   capabilitiesReady: boolean;
   communityId: string;
+  communityName: string;
   continuity: CommunityContinuitySummary | null;
   continuityReady: boolean;
   health: CommunityHostHealth | null;
   introductionFollowups: CommunityIntroductionFollowup[];
+  invitations: DestinationInvitation[];
+  invitationsReady: boolean;
   members: CommunityHostMember[];
   migrationReady: boolean;
   options: CommunityProgrammingOption[];
@@ -331,6 +341,14 @@ export function CommunityHostWorkspace({
       ) : null}
 
       <CommunityHostAssistant communityId={communityId} />
+
+      <DestinationInvitationPanel
+        destinationId={communityId}
+        destinationName={communityName}
+        destinationType="community"
+        invitations={invitations}
+        ready={invitationsReady}
+      />
 
       <section
         className="community-host-panel community-host-continuity"

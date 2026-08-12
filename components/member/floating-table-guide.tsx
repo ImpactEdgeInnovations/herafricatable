@@ -22,15 +22,15 @@ const routeHelp: Record<string, { prompts: string[]; title: string }> = {
   "/communities": {
     prompts: [
       "Help me choose a Community.",
+      "Help me write a Community invitation.",
       "How does joining a private Community work?",
-      "How can I start my own Community?",
     ],
     title: "Finding your people?",
   },
   "/events": {
     prompts: [
       "Which event might suit me?",
-      "How do I propose an event?",
+      "Help me write an event invitation.",
       "What happens after I request a seat?",
     ],
     title: "Planning to gather?",

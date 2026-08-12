@@ -5,7 +5,19 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function OnboardingPage() {
+function safeNext(value: string | undefined) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
+  if (value.startsWith("/admin")) return null;
+  return value;
+}
+
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const nextHref = safeNext(next);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
@@ -56,7 +68,9 @@ export default async function OnboardingPage() {
 
   const profile = profileResult.data;
   const privateProfile = privateResult.data;
-  if (accessProfile.access_status === "active" && profile.profile_completion === 100) redirect("/home");
+  if (accessProfile.access_status === "active" && profile.profile_completion === 100) {
+    redirect(nextHref ?? "/home");
+  }
 
   return (
     <main className="onboarding-page">
@@ -76,7 +90,7 @@ export default async function OnboardingPage() {
           </Link>
         ) : null}
       </section>
-      <OnboardingForm email={user.email ?? ""} userId={user.id} initial={{
+      <OnboardingForm email={user.email ?? ""} userId={user.id} nextHref={nextHref} initial={{
         display_name: profile.display_name,
         job_title: profile.job_title,
         company: profile.company,

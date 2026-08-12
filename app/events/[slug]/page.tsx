@@ -15,6 +15,10 @@ import {
   type MemberEventArchiveAccess,
 } from "@/components/events/member-event-archive";
 import { EventRegistrationForm } from "@/components/events/event-registration-form";
+import {
+  DestinationInvitationPanel,
+  type DestinationInvitation,
+} from "@/components/member/destination-invitation-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +83,27 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     : { data: [] };
   const { data: { user } } = await supabase.auth.getUser();
   const { data: memberProfile } = user ? await supabase.from("profiles").select("access_status").eq("id", user.id).maybeSingle() : { data: null };
+  const [eventManagerResult, eventProposerResult] = user
+    ? await Promise.all([
+        supabase.rpc("can_manage_event", { check_event_id: event.id }),
+        supabase
+          .from("member_event_proposals")
+          .select("id")
+          .eq("event_id", event.id)
+          .eq("proposed_by", user.id)
+          .eq("status", "approved")
+          .maybeSingle(),
+      ])
+    : [{ data: false, error: null }, { data: null, error: null }];
+  const canInviteToEvent = Boolean(
+    eventManagerResult.data || eventProposerResult.data,
+  );
+  const eventInvitationResult = canInviteToEvent
+    ? await supabase.rpc("list_my_table_invitations", {
+        p_destination_id: event.id,
+        p_destination_type: "event",
+      })
+    : { data: [], error: null };
   const hasEnded = new Date(event.ends_at).getTime() < Date.now();
   const [recapResult, testimonialResult, continuationResult] = hasEnded
     ? await Promise.all([
@@ -175,6 +200,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </Link>
           </aside>
         </section>
+      ) : null}
+
+      {!hasEnded && canInviteToEvent ? (
+        <DestinationInvitationPanel
+          destinationId={event.id}
+          destinationName={event.title}
+          destinationType="event"
+          invitations={
+            (eventInvitationResult.data as DestinationInvitation[] | null) ?? []
+          }
+          ready={!eventInvitationResult.error}
+        />
       ) : null}
 
       {!hasEnded && event.registration_mode !== "closed" ? (

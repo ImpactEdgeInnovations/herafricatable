@@ -31366,3 +31366,372 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* Destination invitations: a quiet, same-page journey for Hosts and Admin. */
+.destination-invitation-panel {
+  width: min(1180px, calc(100% - 32px));
+  margin: clamp(24px, 5vw, 64px) auto;
+  padding: clamp(24px, 4vw, 48px);
+  border: 1px solid rgba(60, 43, 37, 0.12);
+  border-radius: 18px;
+  background: #fffdfa;
+  box-shadow: 0 18px 50px rgba(53, 35, 31, 0.055);
+}
+
+.community-host-workspace .destination-invitation-panel {
+  width: 100%;
+  margin: 0;
+}
+
+.destination-invitation-panel > header {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(260px, 0.55fr);
+  gap: 32px;
+  align-items: end;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(60, 43, 37, 0.1);
+}
+
+.destination-invitation-panel h2 {
+  max-width: 620px;
+  margin: 5px 0 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 2.8vw, 2.45rem);
+  font-weight: 500;
+  line-height: 1.08;
+}
+
+.destination-invitation-panel > header > p,
+.destination-invitation-preparing p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.destination-invitation-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.85fr) minmax(300px, 1.15fr);
+  gap: clamp(28px, 5vw, 64px);
+  padding-top: 28px;
+}
+
+.destination-invitation-layout form,
+.destination-invitation-layout label {
+  display: grid;
+  gap: 8px;
+}
+
+.destination-invitation-layout form {
+  align-content: start;
+  gap: 17px;
+}
+
+.destination-invitation-layout label {
+  color: var(--ink);
+  font-size: 0.73rem;
+  font-weight: 750;
+}
+
+.destination-invitation-layout label small,
+.destination-invitation-layout form > small {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.destination-invitation-layout input,
+.destination-invitation-layout textarea {
+  width: 100%;
+  border: 1px solid rgba(60, 43, 37, 0.17);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  padding: 13px 14px;
+}
+
+.destination-invitation-layout textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.destination-invitation-layout .button {
+  width: fit-content;
+}
+
+.destination-invitation-history {
+  align-content: start;
+  display: grid;
+  gap: 0;
+}
+
+.destination-invitation-history > div:first-child,
+.destination-invitation-history article {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+
+.destination-invitation-history > div:first-child {
+  padding: 2px 0 12px;
+  color: var(--ink);
+  font-size: 0.78rem;
+}
+
+.destination-invitation-history > div:first-child span {
+  min-width: 26px;
+  padding: 4px 8px;
+  border-radius: 99px;
+  background: #f2ebe3;
+  text-align: center;
+}
+
+.destination-invitation-history article {
+  padding: 15px 0;
+  border-top: 1px solid rgba(60, 43, 37, 0.09);
+}
+
+.destination-invitation-history article > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.destination-invitation-history article strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.73rem;
+  text-overflow: ellipsis;
+}
+
+.destination-invitation-history article small,
+.destination-invitation-history > p {
+  color: var(--muted);
+  font-size: 0.67rem;
+}
+
+.destination-invitation-history article > span,
+.table-invitation-admin-list header > strong {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 99px;
+  background: #f2eee9;
+  color: #685c56;
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
+.destination-invitation-history [data-status="sent"],
+.destination-invitation-history [data-status="joined"],
+.table-invitation-admin-list [data-status="sent"],
+.table-invitation-admin-list [data-status="joined"] {
+  background: #eaf3ed;
+  color: #315b41;
+}
+
+.destination-invitation-preparing {
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #f7f1ea;
+}
+
+.table-invitation-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(165, 124, 76, 0.09), transparent 36%),
+    #f7f3ed;
+}
+
+.table-invitation-card {
+  width: min(650px, calc(100% - 32px));
+  margin: clamp(50px, 9vw, 105px) auto;
+  padding: clamp(30px, 6vw, 62px);
+  border: 1px solid rgba(66, 44, 38, 0.13);
+  border-radius: 20px;
+  background: rgba(255, 254, 251, 0.96);
+  box-shadow: 0 28px 80px rgba(58, 37, 32, 0.08);
+  text-align: center;
+}
+
+.table-invitation-mark {
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  margin: 0 auto 28px;
+  border: 1px solid rgba(109, 23, 39, 0.24);
+  border-radius: 50%;
+  color: var(--wine);
+  font-family: var(--font-display);
+}
+
+.table-invitation-card h1 {
+  margin: 9px auto 16px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3.75rem);
+  font-weight: 500;
+  line-height: 1.02;
+}
+
+.table-invitation-card > p,
+.table-invitation-boundary p,
+.table-invitation-claim p {
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.75;
+}
+
+.table-invitation-card blockquote {
+  margin: 28px 0;
+  padding: 20px 0;
+  border-block: 1px solid rgba(60, 43, 37, 0.1);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.18rem;
+  line-height: 1.55;
+}
+
+.table-invitation-boundary {
+  margin: 28px 0;
+  padding: 18px;
+  border-radius: 12px;
+  background: #f6f0e8;
+  text-align: left;
+}
+
+.table-invitation-boundary p {
+  margin: 5px 0 0;
+}
+
+.table-invitation-claim {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  margin: 28px 0 20px;
+}
+
+.table-invitation-claim p {
+  margin: 0;
+}
+
+.table-invitation-card > small {
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+
+.table-invitation-admin-list {
+  display: grid;
+  gap: 14px;
+}
+
+.table-invitation-admin-list article {
+  padding: clamp(20px, 3vw, 30px);
+  border: 1px solid rgba(60, 43, 37, 0.12);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.table-invitation-admin-list header,
+.table-invitation-admin-list footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.table-invitation-admin-list header span {
+  color: var(--gold-dark);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.table-invitation-admin-list h3 {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 500;
+}
+
+.table-invitation-admin-list dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 22px 0;
+}
+
+.table-invitation-admin-list dl div {
+  display: grid;
+  gap: 4px;
+}
+
+.table-invitation-admin-list dt {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.table-invitation-admin-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: 0.73rem;
+}
+
+.table-invitation-admin-list blockquote,
+.table-invitation-review-note {
+  margin: 0 0 20px;
+  padding: 15px 18px;
+  border-left: 2px solid rgba(109, 23, 39, 0.45);
+  background: #faf7f2;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+
+.table-invitation-review-note strong {
+  display: block;
+  color: var(--ink);
+}
+
+.table-invitation-admin-list footer {
+  justify-content: flex-start;
+}
+
+@media (max-width: 720px) {
+  .destination-invitation-panel > header,
+  .destination-invitation-layout,
+  .table-invitation-admin-list dl {
+    grid-template-columns: 1fr;
+  }
+
+  .destination-invitation-panel {
+    width: min(100% - 20px, 1180px);
+    padding: 22px 18px;
+    border-radius: 14px;
+  }
+
+  .destination-invitation-history article {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .table-invitation-admin-list header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .table-invitation-admin-list footer .button {
+    flex: 1;
+  }
+}

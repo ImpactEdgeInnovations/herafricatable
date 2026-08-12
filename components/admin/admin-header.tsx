@@ -8,6 +8,7 @@ type AdminDestination =
   | "cohort"
   | "delivery"
   | "events"
+  | "invitations"
   | "members"
   | "operations"
   | "privacy"
@@ -41,6 +42,12 @@ function AdminIcon({ destination }: { destination: AdminDestination | "member" }
       <>
         <rect x="4" y="5" width="16" height="15" rx="2" />
         <path d="M8 3v4M16 3v4M4 10h16" />
+      </>
+    ),
+    invitations: (
+      <>
+        <path d="M4 7h16v11H4z" />
+        <path d="m4 8 8 6 8-6M18 3v5M15.5 5.5h5" />
       </>
     ),
     member: (
@@ -178,6 +185,12 @@ export async function AdminHeader({
             key: "privacy",
             label: "Privacy requests",
             shortLabel: "Privacy",
+          },
+          {
+            href: "/admin/invitations",
+            key: "invitations",
+            label: "Invitation review",
+            shortLabel: "Invites",
           },
           {
             href: "/admin/notifications",

@@ -8,7 +8,19 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function MembershipApplicationPage() {
+function safeNext(value: string | undefined) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
+  if (value.startsWith("/admin")) return null;
+  return value;
+}
+
+export default async function MembershipApplicationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const nextHref = safeNext(next);
   const supabase = await createClient();
   const {
     data: { user },
@@ -31,9 +43,13 @@ export default async function MembershipApplicationPage() {
       ? intakeResult.data
       : "manual_review";
 
-  if (profile?.access_status === "onboarding") redirect("/onboarding");
+  if (profile?.access_status === "onboarding") {
+    redirect(
+      nextHref ? `/onboarding?next=${encodeURIComponent(nextHref)}` : "/onboarding",
+    );
+  }
   if (profile && ["active", "dormant", "suspended"].includes(profile.access_status)) {
-    redirect("/home");
+    redirect(nextHref ?? "/home");
   }
 
   const applicationResult = await supabase
@@ -101,6 +117,7 @@ export default async function MembershipApplicationPage() {
           email={user.email ?? ""}
           initial={applicationResult.data as MembershipApplication | null}
           intakeMode={intakeMode}
+          nextHref={nextHref}
         />
       </div>
     </main>

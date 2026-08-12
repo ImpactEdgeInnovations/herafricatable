@@ -57,6 +57,14 @@ idempotency header per outbox job.
 Reserved `.invalid` test-account recipients are completed as suppressed deliveries
 and never sent to the provider.
 
+Personal Community and event invitations use this same outbox. An invitation to an
+existing active member is queued immediately. An invitation to a new or pending email
+first appears at `/admin/invitations`; **Approve and email** then creates a
+`table_invitation` job for Resend. The public link contains a one-time token, while
+Supabase stores only its SHA-256 hash. Approval is therefore not cosmetic and does
+not depend on the Admin keeping a browser tab open. The scheduled worker or the
+Admin **Send waiting messages** control performs the actual provider delivery.
+
 This Vercel configuration sends platform notifications only. Sign-in codes are sent
 by Supabase Auth and require the separate custom SMTP configuration documented in
 `docs/AUTH_SETUP.md`. Adding `RESEND_API_KEY` to Vercel alone will not deliver OTPs.
@@ -93,5 +101,7 @@ header. The manual control is an operational fallback, not the long-term schedul
 - Confirm member preferences suppress only network, event and support email; account,
   payment and privacy messages remain transactional.
 - Confirm `/api/health` reports `ok` without exposing credentials or personal data.
+- Confirm an approved new-member invitation appears as `table_invitation`, is sent
+  by Resend, returns to the correct destination and cannot be claimed by another email.
 - Alert an operator when failed jobs remain non-zero or the oldest queued job exceeds
   ten minutes.

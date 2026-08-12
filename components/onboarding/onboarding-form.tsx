@@ -90,10 +90,12 @@ const STEP_LABELS = ["About you", "Your purpose", "Privacy and trust"];
 export function OnboardingForm({
   email,
   userId,
+  nextHref,
   initial,
 }: {
   email: string;
   userId: string;
+  nextHref: string | null;
   initial: InitialOnboarding;
 }) {
   const supabase = useMemo(() => createClient(), []);
@@ -288,7 +290,7 @@ export function OnboardingForm({
       setSaving(false);
       return;
     }
-    window.location.assign("/home");
+    window.location.assign(nextHref ?? "/home");
   }
 
   return (
