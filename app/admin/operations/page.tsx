@@ -884,8 +884,13 @@ export default async function AdminOperationsPage({
   const communityReportSource = communityReportResult.error
     ? communityReportFallbackResult
     : communityReportResult;
-  const communityReports =
-    (communityReportSource?.data as CommunityReport[] | null) ?? [];
+  const gatheringReportResult = canModerate && loadSafety
+    ? await supabase.rpc("list_community_gathering_reports")
+    : { data: [], error: null };
+  const communityReports = [
+    ...((communityReportSource?.data as CommunityReport[] | null) ?? []),
+    ...((gatheringReportResult.data as CommunityReport[] | null) ?? []),
+  ];
   return (
     <main className="admin-command-center">
       <AdminHeader

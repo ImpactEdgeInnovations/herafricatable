@@ -620,7 +620,7 @@ for (const contract of [
   "list_community_check_ins",
   "CommunityCheckIns",
   "showToday",
-  "?view=today",
+  'view === "overview"',
 ]) {
   assert(
     communityRoom.includes(contract),
@@ -796,12 +796,13 @@ for (const contract of [
 }
 for (const contract of [
   'active="community"',
-  "community-room-navigation",
-  "Today",
+  "CommunityLocalNavigation",
   "Conversations",
-  "People &amp; resources",
+  "Gatherings",
+  "People",
   "showToday",
   "showConversations",
+  "showGatherings",
   "showPeople",
   "list_community_member_directory",
   "get_my_community_start_path",
@@ -820,6 +821,8 @@ for (const contract of [
   "community-room-cover",
   "list_community_circle_programs",
   "CommunityCircles",
+  "list_community_gathering_cards",
+  "CommunityGatherings",
 ]) {
   assert(
     communityRoom.includes(contract),

@@ -21,11 +21,11 @@ const EDGE_GAP = 16;
 const routeHelp: Record<string, { prompts: string[]; title: string }> = {
   "/communities": {
     prompts: [
-      "Help me choose a Community.",
-      "Help me write a Community invitation.",
-      "How does joining a private Community work?",
+      "What can I do in this Community?",
+      "Help me prepare for a gathering.",
+      "Help me write a useful question.",
     ],
-    title: "Finding your people?",
+    title: "Taking part in Community?",
   },
   "/events": {
     prompts: [

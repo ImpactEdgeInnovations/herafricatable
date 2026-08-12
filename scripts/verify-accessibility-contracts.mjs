@@ -98,12 +98,13 @@ for (const contract of [
   );
 }
 
-const communityPage = read("app/communities/[slug]/page.tsx");
+const communityPage = read("components/member/community-local-navigation.tsx");
 for (const contract of [
-  'aria-label="Community areas"',
-  'aria-current={view === "today" ? "page" : undefined}',
-  '?view=conversations',
-  '?view=people',
+  'aria-label="Inside this Community"',
+  'aria-current={active === area.key ? "page" : undefined}',
+  '"conversations"',
+  '"gatherings"',
+  '"people"',
 ]) {
   assert(
     communityPage.includes(contract),

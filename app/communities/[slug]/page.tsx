@@ -45,6 +45,11 @@ import {
   CommunityCheckIns,
   type CommunityCheckIn,
 } from "@/components/member/community-check-ins";
+import { CommunityLocalNavigation } from "@/components/member/community-local-navigation";
+import {
+  CommunityGatherings,
+  type CommunityGatheringCard,
+} from "@/components/member/community-gatherings";
 export const dynamic = "force-dynamic";
 export default async function CommunityPage({
   params,
@@ -57,13 +62,15 @@ export default async function CommunityPage({
   const requestedSearch = await searchParams;
   const requestedView = requestedSearch.view;
   const isEventFollowUp = requestedSearch.moment === "event-follow-up";
-  const view = ["today", "conversations", "people"].includes(
+  const selectedView = ["overview", "today", "conversations", "gatherings", "people"].includes(
     requestedView ?? "",
   )
-    ? (requestedView as "today" | "conversations" | "people")
-    : "conversations";
-  const showToday = view === "today";
+    ? (requestedView === "today" ? "overview" : requestedView as "overview" | "conversations" | "gatherings" | "people")
+    : "overview";
+  const view = isEventFollowUp ? "conversations" : selectedView;
+  const showToday = view === "overview";
   const showConversations = view === "conversations";
+  const showGatherings = view === "gatherings";
   const showPeople = view === "people";
   const supabase = await createClient();
   const {
@@ -117,6 +124,7 @@ export default async function CommunityPage({
     readStateResult,
     eventPreferenceResult,
     checkInResult,
+    gatheringCardResult,
   ] = await Promise.all([
       showConversations ? supabase.rpc("list_community_posts", {
         p_community_id: community.community_id,
@@ -151,16 +159,16 @@ export default async function CommunityPage({
         p_limit: 8,
         p_offset: 0,
       }) : Promise.resolve({ data: [], error: null }),
-      showPeople ? supabase.rpc("list_community_gatherings", {
+      showGatherings ? supabase.rpc("list_community_gatherings", {
         p_community_id: community.community_id,
       }) : Promise.resolve({ data: [], error: null }),
-      showPeople ? supabase.rpc("list_community_resources", {
+      showGatherings ? supabase.rpc("list_community_resources", {
         p_community_id: community.community_id,
       }) : Promise.resolve({ data: [], error: null }),
-      showPeople ? supabase.rpc("list_community_circle_programs", {
+      showGatherings ? supabase.rpc("list_community_circle_programs", {
         p_community_id: community.community_id,
       }) : Promise.resolve({ data: [], error: null }),
-      showPeople ? supabase.rpc("get_community_notification_preferences", {
+      showToday ? supabase.rpc("get_community_notification_preferences", {
         p_community_id: community.community_id,
       }) : Promise.resolve({ data: [], error: null }),
       showToday ? supabase.rpc("get_my_community_start_path", {
@@ -184,13 +192,16 @@ export default async function CommunityPage({
         p_community_id: community.community_id,
         p_limit: 100,
       }) : Promise.resolve({ data: [], error: null }),
-      showPeople ? supabase.rpc("list_my_community_event_preferences", {
+      showGatherings ? supabase.rpc("list_my_community_event_preferences", {
         p_community_id: community.community_id,
       }) : Promise.resolve({ data: [], error: null }),
       showToday ? supabase.rpc("list_community_check_ins", {
         p_community_id: community.community_id,
         p_limit: 8,
       }) : Promise.resolve({ data: [], error: null }),
+      supabase.rpc("list_community_gathering_cards", {
+        p_community_id: community.community_id,
+      }),
     ]);
   const paginatedPosts =
     (paginatedPostsResult.data as CommunityPost[] | null) ?? [];
@@ -235,6 +246,15 @@ export default async function CommunityPage({
   const canManage = ["owner", "moderator"].includes(
     community.membership_role ?? "",
   );
+  const gatheringCards = gatheringCardResult.error
+    ? []
+    : ((gatheringCardResult.data as CommunityGatheringCard[] | null) ?? []);
+  const liveGathering = gatheringCards.find((item) => {
+    const now = Date.now();
+    return item.chat_phase === "open"
+      && now >= new Date(item.starts_at).getTime() - 30 * 60 * 1000
+      && now <= new Date(item.ends_at).getTime();
+  });
   const cohort = ((cohortResult.data as CohortRoom[] | null) ?? [])[0];
   const brandIdentity =
     ((brandingResult.data as CommunityBrandIdentity[] | null) ?? [])[0] ?? null;
@@ -343,28 +363,14 @@ export default async function CommunityPage({
         </div>
         <span>{community.member_count} members</span>
       </section>
-      <nav className="community-room-navigation" aria-label="Community areas">
-        <Link
-          aria-current={view === "conversations" ? "page" : undefined}
-          href={`/communities/${slug}?view=conversations`}
-        >
-          Conversations
-        </Link>
-        <Link
-          aria-current={view === "today" ? "page" : undefined}
-          href={`/communities/${slug}?view=today`}
-        >
-          Start here
-        </Link>
-        <Link
-          aria-current={view === "people" ? "page" : undefined}
-          href={`/communities/${slug}?view=people`}
-        >
-          Members &amp; events
-        </Link>
-        <Link href={`/communities/${slug}/about`}>About</Link>
-        {canManage ? <Link href={`/communities/${slug}/host`}>Manage</Link> : null}
-      </nav>
+      <CommunityLocalNavigation active={view} canManage={canManage} slug={slug} />
+      {liveGathering ? (
+        <aside className="community-live-notice" aria-label="Gathering live now">
+          <span aria-hidden="true" />
+          <div><small>Live now</small><strong>{liveGathering.title}</strong></div>
+          <Link href={`/communities/${slug}/gatherings/${liveGathering.event_slug}`}>Join the room →</Link>
+        </aside>
+      ) : null}
       {showToday ? (
         <>
           <CommunityStartPath
@@ -384,10 +390,15 @@ export default async function CommunityPage({
               <strong>See what members are asking and sharing.</strong>
               <small>Open posts →</small>
             </Link>
+            <Link href={`/communities/${slug}?view=gatherings`}>
+              <span>Gatherings</span>
+              <strong>See what is coming up and save your place.</strong>
+              <small>View gatherings →</small>
+            </Link>
             <Link href={`/communities/${slug}?view=people`}>
-              <span>People &amp; resources</span>
-              <strong>Meet members and find gatherings or learning.</strong>
-              <small>Explore Community →</small>
+              <span>People</span>
+              <strong>Find someone relevant and start thoughtfully.</strong>
+              <small>Meet members →</small>
             </Link>
           </section>
           {!checkInResult.error ? (
@@ -456,11 +467,11 @@ export default async function CommunityPage({
       {showPeople ? (
         <>
           <section className="community-people-intro" id="people">
-            <p className="eyebrow">People &amp; resources</p>
-            <h2>Find the right person or next gathering.</h2>
+            <p className="eyebrow">People</p>
+            <h2>Find the right person to meet.</h2>
             <p>
-              Member profiles, Community events and shared learning are kept
-              together here so you do not have to search through every conversation.
+              Learn who is here and what they care about. Private messages open
+              only after both people agree to connect.
             </p>
           </section>
           {cohort ? (
@@ -479,6 +490,15 @@ export default async function CommunityPage({
               }
             />
           ) : null}
+        </>
+      ) : null}
+      {showGatherings ? (
+        <>
+          <CommunityGatherings
+            cards={gatheringCards}
+            migrationReady={!gatheringCardResult.error}
+            slug={slug}
+          />
           {programmingReady ? (
             <CommunityProgramming
               canManage={canManage}
@@ -491,30 +511,31 @@ export default async function CommunityPage({
               }
               remindersReady={!eventPreferenceResult.error}
               resources={(resourceResult.data as CommunityResource[] | null) ?? []}
+              showGatherings={Boolean(gatheringCardResult.error)}
               slug={slug}
             />
           ) : null}
           {!circleProgramResult.error ? (
             <CommunityCircles programs={circlePrograms} />
           ) : null}
-          {!notificationPreferenceResult.error ? (
-            <CommunityNotificationPreferences
-              communityId={community.community_id}
-              initialPreferences={
-                (
-                  notificationPreferenceResult.data as
-                    | CommunityNotificationPreference[]
-                    | null
-                )?.[0] ?? {
-                  email_replies: false,
-                  in_app_replies: true,
-                  weekly_briefing: true,
-                  weekly_briefing_email: false,
-                }
-              }
-            />
-          ) : null}
         </>
+      ) : null}
+      {showToday && !notificationPreferenceResult.error ? (
+        <CommunityNotificationPreferences
+          communityId={community.community_id}
+          initialPreferences={
+            (
+              notificationPreferenceResult.data as
+                | CommunityNotificationPreference[]
+                | null
+            )?.[0] ?? {
+              email_replies: false,
+              in_app_replies: true,
+              weekly_briefing: true,
+              weekly_briefing_email: false,
+            }
+          }
+        />
       ) : null}
     </main>
   );

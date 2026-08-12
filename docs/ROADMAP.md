@@ -116,6 +116,24 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Accept one active-member invitation, one new-member manual-review invitation,
       one private Community request, one event registration and one revoked link
 
+## Community Gatherings and live rooms — 12 August 2026
+
+- [x] Keep the global platform header unchanged and introduce compact Community-local
+      navigation: Overview, Conversations, Gatherings and People
+- [x] Give every approved linked Community event a protected Gathering room
+- [x] Add on-page RSVP with separate attendee-visibility consent
+- [x] Open member questions seven days before the gathering with support ranking and
+      Host answer/hide controls
+- [x] Open live text 30 minutes before the start, close writes 24 hours after the end
+      and retain a read-only archive
+- [x] Keep external video links private to eligible attendees during the joining window
+- [x] Add Host open, slow, Hosts-only and closed modes plus pin/remove controls
+- [x] Route private message reports into the bounded Admin safety queue
+- [x] Return only a Host-reviewed recap to permanent Community Conversations
+- [x] Add a Community-wide **Live now** notice and page-aware Nia gathering guidance
+- [ ] Apply `20260812170000_community_gathering_rooms.sql` in production Supabase
+- [ ] Complete the multi-account rehearsal in `docs/COMMUNITY_GATHERINGS_OPERATIONS.md`
+
 ## Community joining and Event-to-Community journey — 12 August 2026
 
 - [x] Let a public Community choose immediate entry or Host approval for active

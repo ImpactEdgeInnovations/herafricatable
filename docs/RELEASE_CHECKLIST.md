@@ -166,6 +166,11 @@
 
 ## Quality
 
+- [ ] Community Gathering RSVP, attendee visibility, questions and live-room windows pass with separate Host and member accounts
+- [ ] Private meeting links remain hidden from non-attendees and outside the joining window
+- [ ] Gathering reports appear in the Admin safety queue and hiding preserves the evidence snapshot
+- [ ] Archived Gathering rooms are read-only and only a Host-reviewed recap enters permanent Conversations
+
 - [ ] Latest iOS Safari and Android Chrome pass core journeys
 - [ ] Desktop Chrome/Safari/Firefox pass critical admin journeys
 - [ ] Draft events are invisible anonymously and published events expose no private online URL

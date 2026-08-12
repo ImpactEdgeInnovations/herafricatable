@@ -100,7 +100,7 @@ export function CommunityStartPath({
                 description: state.next_gathering_title
                   ? `${state.next_gathering_title} is the next event for this community.`
                   : "See the next event chosen for this community.",
-                href: `/events/${state.next_gathering_slug}`,
+                href: `/communities/${communitySlug}/gatherings/${state.next_gathering_slug}`,
                 label: "Join the next event",
               },
             ]
@@ -113,7 +113,7 @@ export function CommunityStartPath({
             ? `/communities/${communitySlug}?view=conversations#conversations`
             : step.href === "#members"
               ? `/communities/${communitySlug}?view=people#members`
-              : `/communities/${communitySlug}?view=people#gatherings`,
+              : `/communities/${communitySlug}?view=gatherings`,
       }));
 
   const recommended = steps.find((step) => !step.complete);

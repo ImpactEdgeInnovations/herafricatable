@@ -45,6 +45,8 @@ export function CommunityProgramming({
   slug,
   eventPreferences,
   remindersReady,
+  showGatherings = true,
+  showResources = true,
 }: {
   canManage: boolean;
   communityId: string;
@@ -53,13 +55,15 @@ export function CommunityProgramming({
   slug: string;
   eventPreferences: CommunityEventPreference[];
   remindersReady: boolean;
+  showGatherings?: boolean;
+  showResources?: boolean;
 }) {
   const preferenceByEvent = new Map(
     eventPreferences.map((preference) => [preference.event_id, preference]),
   );
   return (
     <section className="community-programming" aria-label="Community programming">
-      <section id="gatherings" className="community-programming-section">
+      {showGatherings ? <section id="gatherings" className="community-programming-section">
         <header>
           <div>
             <p className="eyebrow">Community events</p>
@@ -136,9 +140,9 @@ export function CommunityProgramming({
             <Link href="/events">View all events</Link>
           </div>
         )}
-      </section>
+      </section> : null}
 
-      <section id="resources" className="community-programming-section">
+      {showResources ? <section id="resources" className="community-programming-section">
         <header>
           <div>
             <p className="eyebrow">Recommended learning</p>
@@ -181,7 +185,7 @@ export function CommunityProgramming({
             <Link href="/learning">Visit the learning studio</Link>
           </div>
         )}
-      </section>
+      </section> : null}
 
       {canManage ? (
         <footer className="community-host-callout">

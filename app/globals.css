@@ -19,7 +19,7 @@
   display: grid;
   width: min(1120px, calc(100% - 48px));
   margin: -18px auto 42px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 .community-today-choices > a {
@@ -9941,6 +9941,844 @@ body {
   .countdown-manager {
     grid-template-columns: 1fr;
     gap: 28px;
+  }
+}
+
+/* Community rooms: compact local navigation and time-bound Gatherings */
+.community-local-navigation {
+  position: sticky;
+  z-index: 35;
+  top: 0;
+  display: flex;
+  width: min(100% - 40px, 1180px);
+  min-height: 58px;
+  margin: 0 auto 28px;
+  padding: 0 8px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid rgba(64, 46, 38, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 253, 249, 0.94);
+  box-shadow: 0 12px 35px rgba(54, 37, 30, 0.06);
+  backdrop-filter: blur(16px);
+}
+
+.community-local-navigation > div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.community-local-navigation a {
+  position: relative;
+  display: inline-flex;
+  min-height: 44px;
+  padding: 0 14px;
+  align-items: center;
+  border-radius: 11px;
+  color: #6f665f;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.community-local-navigation a:hover,
+.community-local-navigation a:focus-visible {
+  background: #f5f0ea;
+  color: var(--ink);
+}
+
+.community-local-navigation a[aria-current="page"] {
+  background: #3d2830;
+  color: #fffaf3;
+}
+
+.community-local-navigation .community-local-more {
+  padding-left: 12px;
+  border-left: 1px solid rgba(64, 46, 38, 0.1);
+}
+
+.community-local-more a:last-child {
+  color: var(--wine);
+}
+
+.community-live-notice {
+  display: flex;
+  width: min(100% - 40px, 1120px);
+  margin: -8px auto 24px;
+  padding: 13px 18px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(116, 29, 47, 0.15);
+  border-radius: 14px;
+  background: #fff9f7;
+}
+
+.community-live-notice > span {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #a9364b;
+  box-shadow: 0 0 0 5px rgba(169, 54, 75, 0.1);
+}
+
+.community-live-notice > div {
+  display: grid;
+  gap: 1px;
+  margin-right: auto;
+}
+
+.community-live-notice small {
+  color: #963149;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.community-live-notice strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.community-live-notice a {
+  color: var(--wine);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.community-gatherings,
+.gathering-room,
+.gathering-host-settings,
+.gathering-recap {
+  width: min(100% - 40px, 1120px);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.community-gatherings {
+  padding: 34px 0 18px;
+}
+
+.community-section-heading,
+.gathering-questions > header,
+.gathering-live > header,
+.gathering-host-settings > header,
+.gathering-recap > header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.72fr);
+  gap: 40px;
+  align-items: end;
+  margin-bottom: 24px;
+}
+
+.community-section-heading h2,
+.gathering-room h2 {
+  max-width: 680px;
+  margin: 5px 0 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.community-section-heading > p,
+.gathering-questions > header > p,
+.gathering-live > header > p,
+.gathering-host-settings > header > p,
+.gathering-recap > header > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.77rem;
+  line-height: 1.7;
+}
+
+.gathering-list {
+  display: grid;
+  gap: 12px;
+}
+
+.gathering-card {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  gap: 22px;
+  padding: 23px;
+  align-items: center;
+  border: 1px solid rgba(65, 47, 40, 0.1);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 26px rgba(53, 37, 31, 0.035);
+}
+
+.gathering-card.is-open {
+  border-color: rgba(133, 37, 57, 0.24);
+  box-shadow: 0 12px 35px rgba(103, 29, 46, 0.07);
+}
+
+.gathering-date {
+  display: grid;
+  width: 64px;
+  height: 68px;
+  place-content: center;
+  border: 1px solid rgba(65, 47, 40, 0.1);
+  border-radius: 15px;
+  background: #faf7f2;
+  text-align: center;
+}
+
+.gathering-date strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 500;
+  line-height: 0.9;
+}
+
+.gathering-date span {
+  margin-top: 5px;
+  color: var(--wine);
+  font-size: 0.59rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gathering-card-copy {
+  min-width: 0;
+}
+
+.gathering-card-meta,
+.gathering-card-signals,
+.gathering-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.gathering-card-meta span,
+.gathering-card-signals span,
+.gathering-room-status span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #f3eee8;
+  color: #756860;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.gathering-card-meta span:first-child,
+.gathering-room-status .is-open {
+  background: #f8e9ec;
+  color: #963149;
+}
+
+.gathering-card h3 {
+  margin: 8px 0 5px;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.gathering-card h3 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.gathering-card p {
+  max-width: 670px;
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+.gathering-card-copy > small,
+.gathering-card-signals {
+  color: #776c65;
+  font-size: 0.63rem;
+}
+
+.gathering-card-signals {
+  margin-top: 9px;
+}
+
+.gathering-card-actions {
+  max-width: 160px;
+  justify-content: flex-end;
+}
+
+.gathering-card-actions .button,
+.gathering-card-actions button {
+  width: 100%;
+  min-height: 42px;
+  justify-content: center;
+  font-size: 0.65rem;
+}
+
+.gathering-card-actions > button:not(.button),
+.gathering-question-list button,
+.gathering-message-list button,
+.gathering-rsvp > button:not(.button) {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.63rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.gathering-archive {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(65, 47, 40, 0.1);
+}
+
+.gathering-archive summary {
+  margin-bottom: 18px;
+  color: var(--ink);
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.gathering-archive summary span {
+  margin-left: 6px;
+  color: var(--muted);
+}
+
+.gathering-boundary-note {
+  margin-top: 30px;
+  padding: 20px 22px;
+  border-left: 2px solid rgba(105, 74, 52, 0.35);
+  background: #faf7f2;
+}
+
+.gathering-boundary-note strong,
+.gathering-soft-note strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.gathering-boundary-note p,
+.gathering-soft-note p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.71rem;
+  line-height: 1.55;
+}
+
+.gathering-room {
+  padding-bottom: 80px;
+}
+
+.gathering-room-hero {
+  padding: clamp(34px, 6vw, 68px) 0 34px;
+  border-bottom: 1px solid rgba(65, 47, 40, 0.1);
+}
+
+.gathering-room-hero > a {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.gathering-room-status {
+  display: flex;
+  gap: 7px;
+  margin: 28px 0 10px;
+}
+
+.gathering-room-hero h1 {
+  max-width: 850px;
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 6.2vw, 5.6rem);
+  font-weight: 450;
+  letter-spacing: -0.06em;
+  line-height: 0.93;
+}
+
+.gathering-room-hero > p {
+  max-width: 720px;
+  margin: 20px 0 28px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.75;
+}
+
+.gathering-room-hero dl {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 0.55fr;
+  gap: 1px;
+  max-width: 850px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(65, 47, 40, 0.1);
+  border-radius: 14px;
+  background: rgba(65, 47, 40, 0.1);
+}
+
+.gathering-room-hero dl > div {
+  padding: 16px 18px;
+  background: #fff;
+}
+
+.gathering-room-hero dt {
+  color: var(--muted);
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gathering-room-hero dd {
+  margin: 5px 0 0;
+  color: var(--ink);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.gathering-rsvp {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 22px;
+}
+
+.gathering-rsvp label {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.67rem;
+}
+
+.gathering-rsvp small {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+
+.gathering-room-jump {
+  display: flex;
+  gap: 22px;
+  padding: 19px 0;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(65, 47, 40, 0.1);
+  white-space: nowrap;
+}
+
+.gathering-room-jump a {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.gathering-room-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 54px;
+  padding: 54px 0;
+}
+
+.gathering-questions,
+.gathering-live {
+  grid-column: 1;
+}
+
+.gathering-live {
+  padding-top: 52px;
+  border-top: 1px solid rgba(65, 47, 40, 0.1);
+}
+
+.gathering-attendees {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  padding: 26px;
+  align-self: start;
+  border: 1px solid rgba(65, 47, 40, 0.1);
+  border-radius: 18px;
+  background: #faf7f2;
+}
+
+.gathering-attendees h2 {
+  margin: 8px 0;
+  font-size: 1.55rem;
+}
+
+.gathering-attendees > p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.55;
+}
+
+.gathering-attendees > div {
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
+}
+
+.gathering-attendees a {
+  display: flex;
+  gap: 11px;
+  padding: 9px;
+  align-items: center;
+  border-radius: 11px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.gathering-attendees a:hover {
+  background: #fff;
+}
+
+.gathering-attendees a > span:first-child,
+.gathering-message-avatar {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #e8ded6;
+  color: var(--wine);
+  font-weight: 800;
+}
+
+.gathering-attendees img,
+.gathering-message-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gathering-attendees a > span:last-child {
+  display: grid;
+  min-width: 0;
+}
+
+.gathering-attendees strong {
+  font-size: 0.69rem;
+}
+
+.gathering-attendees small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.59rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gathering-questions form,
+.gathering-host-settings form,
+.gathering-recap form {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid rgba(65, 47, 40, 0.1);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.gathering-questions form label,
+.gathering-message-composer label,
+.gathering-host-settings label,
+.gathering-recap label {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 0.67rem;
+  font-weight: 750;
+}
+
+.gathering-questions textarea,
+.gathering-message-composer textarea,
+.gathering-host-settings input,
+.gathering-host-settings select,
+.gathering-recap textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 13px 14px;
+  border: 1px solid rgba(65, 47, 40, 0.16);
+  border-radius: 11px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.5;
+}
+
+.gathering-question-list,
+.gathering-message-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.gathering-question-list article {
+  padding: 17px 18px;
+  border: 1px solid rgba(65, 47, 40, 0.09);
+  border-radius: 13px;
+  background: #fff;
+}
+
+.gathering-question-list article > div,
+.gathering-question-list footer,
+.gathering-message-list article header,
+.gathering-message-list article footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.gathering-question-list article > div span,
+.gathering-message-list article header span {
+  color: var(--wine);
+  font-size: 0.54rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.gathering-question-list article p {
+  margin: 10px 0;
+  color: var(--ink);
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+.gathering-question-list .is-supported {
+  color: var(--wine);
+}
+
+.gathering-message-list article {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 12px;
+  padding: 13px 4px;
+  border-bottom: 1px solid rgba(65, 47, 40, 0.08);
+}
+
+.gathering-message-list article.is-pinned {
+  padding: 14px;
+  border: 1px solid rgba(122, 83, 42, 0.16);
+  border-radius: 13px;
+  background: #fcf8ed;
+}
+
+.gathering-message-list article header strong {
+  color: var(--ink);
+  font-size: 0.69rem;
+}
+
+.gathering-message-list article header time {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.56rem;
+}
+
+.gathering-message-list article p {
+  margin: 5px 0 7px;
+  color: #4f4641;
+  font-size: 0.74rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.gathering-message-composer {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid rgba(65, 47, 40, 0.12);
+  border-radius: 15px;
+  background: #fff;
+}
+
+.gathering-message-composer > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.gathering-message-composer small {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 0.58rem;
+}
+
+.gathering-soft-note {
+  padding: 18px;
+  border-radius: 13px;
+  background: #f7f3ee;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.gathering-host-settings,
+.gathering-recap {
+  margin-top: 24px;
+  padding: clamp(28px, 5vw, 48px);
+  border: 1px solid rgba(65, 47, 40, 0.1);
+  border-radius: 22px;
+  background: #f7f2ed;
+}
+
+.gathering-host-settings form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.gathering-host-settings form button {
+  justify-self: start;
+}
+
+.gathering-recap {
+  background: #fff;
+}
+
+.gathering-recap-body {
+  max-width: 760px;
+  color: #4f4641;
+  font-size: 0.8rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.gathering-recap-body a {
+  color: var(--wine);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+@media (max-width: 840px) {
+  .community-local-navigation {
+    top: 0;
+    width: min(100% - 20px, 1180px);
+    padding: 7px;
+    overflow-x: auto;
+  }
+
+  .community-local-navigation > div {
+    flex: 0 0 auto;
+  }
+
+  .community-local-navigation .community-local-more {
+    border-left: 0;
+  }
+
+  .community-local-navigation a {
+    padding: 0 11px;
+  }
+
+  .community-gatherings,
+  .gathering-room,
+  .gathering-host-settings,
+  .gathering-recap {
+    width: min(100% - 28px, 1120px);
+  }
+
+  .community-section-heading,
+  .gathering-questions > header,
+  .gathering-live > header,
+  .gathering-host-settings > header,
+  .gathering-recap > header {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .gathering-card {
+    grid-template-columns: 62px minmax(0, 1fr);
+    gap: 15px;
+    padding: 17px;
+  }
+
+  .gathering-date {
+    width: 58px;
+    height: 62px;
+  }
+
+  .gathering-card-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
+  }
+
+  .gathering-room-layout {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .gathering-questions,
+  .gathering-live,
+  .gathering-attendees {
+    grid-column: 1;
+  }
+
+  .gathering-attendees {
+    grid-row: auto;
+  }
+
+  .gathering-room-hero dl,
+  .gathering-host-settings form {
+    grid-template-columns: 1fr;
+  }
+
+  .gathering-message-composer > div {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .community-local-navigation .community-local-more a:first-child {
+    display: none;
+  }
+
+  .community-live-notice {
+    width: calc(100% - 28px);
+    align-items: flex-start;
+  }
+
+  .community-live-notice a {
+    align-self: center;
+  }
+
+  .gathering-card {
+    grid-template-columns: 1fr;
+  }
+
+  .gathering-date {
+    display: none;
+  }
+
+  .gathering-card-actions {
+    grid-column: 1;
+  }
+
+  .gathering-room-hero h1 {
+    font-size: clamp(2.45rem, 15vw, 4rem);
+  }
+
+  .gathering-rsvp .button,
+  .gathering-rsvp > button {
+    flex: 1 1 140px;
   }
 }
 

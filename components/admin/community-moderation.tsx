@@ -16,7 +16,7 @@ export type CommunityReport = {
   evidence_snapshot: Record<string, unknown>;
   status: string;
   created_at: string;
-  content_type?: "check_in" | "post";
+  content_type?: "check_in" | "gathering_message" | "post";
 };
 
 export function CommunityModeration({
@@ -67,7 +67,13 @@ export function CommunityModeration({
     }
     setBusy(id);
     const report = reports.find((item) => item.report_id === id);
-    const { error } = report?.content_type
+    const { error } = report?.content_type === "gathering_message"
+      ? await supabase.rpc("review_community_gathering_report", {
+          p_action: action,
+          p_outcome: outcome,
+          p_report_id: id,
+        })
+      : report?.content_type
       ? await supabase.rpc("review_community_safety_report", {
           p_action: action,
           p_content_type: report.content_type,
@@ -121,7 +127,7 @@ export function CommunityModeration({
                 <div>
                   <span className="member-status">{report.status}</span>
                   <small>
-                    {report.community_name} · {report.content_type === "check_in" ? "Quick check-in" : "Post"} · {report.category}
+                    {report.community_name} · {report.content_type === "check_in" ? "Quick check-in" : report.content_type === "gathering_message" ? "Gathering message" : "Post"} · {report.category}
                   </small>
                 </div>
                 <div>
