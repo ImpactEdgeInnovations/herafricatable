@@ -32,7 +32,7 @@
 - [ ] Localhost, Preview and Production callbacks work
 - [ ] Email OTP template, sender branding and delivery configuration are production-ready
 - [ ] Email OTP uses production sender configuration
-- [ ] Public member and Admin sign-in expose no temporary-password control
+- [x] Public member and Admin sign-in expose no temporary-password control
 - [ ] OTP and authentication endpoints are rate-limited
 - [ ] Authenticated pending users cannot access member data
 - [ ] Super Admin can switch between Review every request, verified-invitation

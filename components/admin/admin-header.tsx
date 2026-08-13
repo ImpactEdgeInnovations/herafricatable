@@ -264,7 +264,7 @@ export async function AdminHeader({
             {role.replace("_", " ")}
             {hasBetaExpiry ? (
               <small>
-                Beta until{" "}
+                Temporary access until{" "}
                 {new Intl.DateTimeFormat("en-KE", {
                   day: "numeric",
                   month: "short",

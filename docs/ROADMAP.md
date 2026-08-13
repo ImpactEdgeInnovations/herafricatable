@@ -718,8 +718,8 @@ Usability is part of production readiness and continues alongside feature delive
       then end rehearsal before deciding whether to enable Communities
 - [ ] Apply `20260725130000_learning_foundation.sql` in production Supabase
 - [ ] Complete Learning content/access/payment acceptance and deliberately enable its P1 flag
-- [ ] Apply `20260725170000_referrals_vouched_invitations.sql` in production Supabase
-- [ ] Complete referral delivery/claim/activation acceptance and deliberately enable its P1 flag
+- [x] Apply `20260725170000_referrals_vouched_invitations.sql` in production Supabase
+- [x] Complete referral delivery/claim/activation acceptance and deliberately enable its P1 flag
 - [ ] Apply `20260725210000_membership_renewal_lifecycle.sql` in production Supabase
 - [ ] Complete membership manual/Paystack/renewal acceptance and deliberately enable its flag
 - [ ] Apply `20260726090000_circles_deterministic_matching.sql` in production Supabase
@@ -948,7 +948,7 @@ flag with no navigation exposure and no unsafe partial access.
 
 | Product area   | Minimum production acceptance                                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Authentication | Email OTP works locally and in production; temporary passwords are retired; redirects are allow-listed; sessions are cookie-based and refreshed safely. |
+| Authentication | Email OTP works locally and in production; public temporary-password access is retired; redirects are allow-listed; sessions are cookie-based and refreshed safely. |
 | Registration   | Authentication does not imply membership; automatic and manual approvals issue one auditable entitlement.                                               |
 | Profiles       | Public and private data are separated; private contacts require an accepted connection; pause mode removes discovery.                                   |
 | Events         | Staff access is event-scoped; drafts are not member-visible; upcoming/past transitions are deterministic.                                               |

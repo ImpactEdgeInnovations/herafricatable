@@ -14,7 +14,7 @@ in the production Supabase SQL editor. The migration:
 - backfills expiry from accepted beta invitations where possible;
 - provides audited grant and immediate-revocation operations.
 
-## Provision a beta Admin
+## Provision a temporary test Admin
 
 Run this from the project directory. The password is read into a temporary shell
 variable so it is not stored in Git:
@@ -48,7 +48,7 @@ or chat channels. Revoke access immediately when testing is complete.
 
 ## Rehearse authenticated boundaries
 
-Add the beta identity only to `.env.local`:
+Add the tagged test identity only to `.env.local`:
 
 ```sh
 HAT_TEST_EMAIL=admin@example.com

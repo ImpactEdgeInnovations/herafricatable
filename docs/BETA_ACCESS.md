@@ -1,4 +1,4 @@
-# Beta Access and First Admin
+# Pilot Access and First Admin
 
 ## Automation-only password access
 
@@ -25,7 +25,7 @@ suppressed by the notification worker.
 
 Production does not use shared passwords or hard-coded credentials. Members and team
 administrators authenticate with email OTP. Member access follows an approved
-application or valid `beta_invites` record, and administrative authority comes
+application or valid invitation record (stored in the legacy `beta_invites` table), and administrative authority comes
 separately from `user_roles`.
 
 Before the first administrator signs in, add an invite through the Supabase SQL Editor:
@@ -39,7 +39,7 @@ Use the exact lowercase email the administrator will use with Google or OTP. On 
 successful sign-in, the database trigger accepts the invite, creates the profile in
 `onboarding` status, and grants `super_admin`.
 
-Invite a beta member without an admin role:
+Invite an approved pilot member without an Admin role:
 
 ```sql
 insert into public.beta_invites (email)

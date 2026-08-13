@@ -20,6 +20,7 @@ Latest credentialed acceptance: deployed and exact-release smoke-tested
 - Super Admin decision functions for membership, Communities, events, registration
   and event-question moderation are deployed and reject signed-out callers.
 - Resend SPF, DKIM and return-path MX records resolve for `caseready.africa`.
+- Live membership intake reports `manual_review` and is ready for controlled admission.
 - The release is committed and pushed to `main`; Vercel reports the exact commit.
 
 ## Proven with live tagged accounts
@@ -41,6 +42,9 @@ Latest credentialed acceptance: deployed and exact-release smoke-tested
   cancelled and archived its fixtures.
 - The Communities module passed all four platform release checks. An audited pause
   blocked an ordinary member, retained Community data and restored the enabled flag.
+- Member invitations passed all four platform release checks. A tagged member vouch,
+  Super Admin review, targeted email job, invited application, manual approval,
+  claim, activation and fail-closed pause completed successfully; Referrals are enabled.
 - The Nairobi Founding Table now has four of eight Community-specific publication
   checks passed and remains a private draft.
 
@@ -64,7 +68,8 @@ Latest credentialed acceptance: deployed and exact-release smoke-tested
 
 - Complete real-email pending application → Admin approval → onboarding → OTP
   return journey using a non-test member.
-- Resend provider status, real inbox delivery, retry and bounce operations.
+- Resend provider dashboard status, retry and bounce operations. The sending-only API
+  key cannot inspect provider status; real OTP receipt has been confirmed manually.
 - Final Nairobi event content, registration, check-in and post-event rehearsal.
 - Low-value Paystack transaction, webhook, refund and reconciliation acceptance.
 - iPhone, Android, desktop-browser, keyboard and screen-reader human sign-off.
@@ -75,8 +80,18 @@ Latest credentialed acceptance: deployed and exact-release smoke-tested
 
 ## Current release position
 
-The application can enter a private controlled pilot with manual membership review,
+The application is approved for a limited live pilot with manual membership review,
 free/manual events and automatic creator payments disabled. Do not begin an
 unrestricted public campaign, publish the Nairobi Community, enable automatic
 payments, creator payouts or Paystack split settlement until the remaining P0
 evidence is recorded as passed.
+
+### Limited pilot operating boundary
+
+- Public and member-facing access uses email OTP only; no beta or temporary-password
+  option is presented.
+- New member requests remain under manual review and are admitted in small batches.
+- Tagged `.invalid` accounts and password-based acceptance runners remain internal,
+  excluded from member metrics and unavailable through the public sign-in.
+- The first real member journey is monitored from request through approval,
+  onboarding and OTP return, with support ready to intervene.

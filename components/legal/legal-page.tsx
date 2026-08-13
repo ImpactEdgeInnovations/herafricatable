@@ -25,7 +25,7 @@ export function LegalPage({
         <p className="eyebrow">{eyebrow}</p>
         <h1>{title}</h1>
         <p className="legal-intro">{intro}</p>
-        <aside><strong>Beta draft</strong>This document establishes the product behavior for development and requires qualified legal review before public launch.</aside>
+        <aside><strong>Pilot notice</strong>This document describes how the limited pilot operates. It still requires qualified legal review before a wider public launch.</aside>
         <div className="legal-content">{children}</div>
       </article>
       <footer className="legal-footer"><Link href="/">Return home</Link><a href="mailto:support@herafricatable.com">Contact support</a></footer>

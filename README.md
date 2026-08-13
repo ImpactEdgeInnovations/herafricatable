@@ -10,7 +10,7 @@ Production: [herafricatable.vercel.app](https://herafricatable.vercel.app)
 - [30-day production roadmap](docs/ROADMAP.md)
 - [Production architecture](docs/ARCHITECTURE.md)
 - [Email OTP setup](docs/AUTH_SETUP.md)
-- [Beta access and first Admin](docs/BETA_ACCESS.md)
+- [Pilot access and first Admin](docs/BETA_ACCESS.md)
 - [Landing-page content requirements](docs/CONTENT_REQUIREMENTS.md)
 - [Production release checklist](docs/RELEASE_CHECKLIST.md)
 - [Notification delivery setup](docs/NOTIFICATIONS_SETUP.md)
@@ -64,6 +64,7 @@ All schema and Row Level Security changes belong in versioned SQL files under
 The committed `supabase/config.toml` is local/CI configuration and contains no hosted
 project credentials. Database tests live under `supabase/tests`.
 
-Production authentication uses Supabase email OTP. Temporary password access exists
-only for controlled pre-SMTP testing. Authentication proves identity; registration,
-payment or an audited admin approval grants product membership.
+Production authentication uses Supabase email OTP. Temporary passwords exist only
+for tagged internal acceptance accounts and never appear in the public sign-in.
+Authentication proves identity; registration, payment or an audited Admin approval
+grants product membership.
