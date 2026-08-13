@@ -31,6 +31,7 @@ import {
   type MemberEventArchiveAdmin,
 } from "@/components/admin/member-event-archive-manager";
 import { createClient } from "@/lib/supabase/server";
+import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -124,15 +125,17 @@ export default async function AdminEventsPage({
   );
 
   let memberProposals: MemberEventProposalAdmin[] = [];
+  let proposalMedia: ApplicationProposalMedia[] = [];
   let communityProposals: CommunityEventProposalAdmin[] = [];
   let proposalReady = true;
   if (role === "super_admin") {
-    const [memberResult, contextResult, communityResult] = await Promise.all([
+    const [memberResult, contextResult, communityResult, proposalMediaResult] = await Promise.all([
       supabase.rpc("list_admin_member_event_proposals"),
       view === "proposals"
         ? supabase.rpc("list_member_event_proposal_communities")
         : Promise.resolve({ data: [], error: null }),
       supabase.rpc("list_admin_community_event_proposals"),
+      supabase.rpc("list_admin_application_proposal_media"),
     ]);
     const contexts = (contextResult.data as {
       community_id: string | null;
@@ -146,6 +149,14 @@ export default async function AdminEventsPage({
       return { ...proposal, community_id: context?.community_id ?? null, community_name: context?.community_name ?? null, community_slug: context?.community_slug ?? null, community_type: context?.community_type ?? null };
     });
     communityProposals = (communityResult.data as CommunityEventProposalAdmin[] | null) ?? [];
+    proposalMedia = await Promise.all(
+      (((proposalMediaResult.data as Omit<ApplicationProposalMedia, "image_url">[] | null) ?? [])
+        .filter((item) => item.context_type === "member_event_proposal"))
+        .map(async (item) => {
+          const signed = await supabase.storage.from("proposal-media").createSignedUrl(item.storage_path, 3600);
+          return { ...item, image_url: signed.data?.signedUrl ?? null };
+        }),
+    );
     proposalReady = !memberResult.error && !contextResult.error && !communityResult.error;
   }
 
@@ -222,7 +233,7 @@ export default async function AdminEventsPage({
       </section>
 
       {view === "overview" ? <EventCommandCentre canControlLifecycle={role === "super_admin"} events={events} lifecycleReady={!lifecycleResult.error} lifecycleStates={(lifecycleResult.data as EventLifecycleState[] | null) ?? []} proposalCount={proposalCount} refunds={refunds} registrations={registrations} /> : null}
-      {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager migrationReady={proposalReady} proposals={memberProposals} /><div className="legacy-gathering-note"><strong>Community gathering history</strong><p>Free member-only gatherings are now owner-led. Earlier submissions remain visible here so Admin can understand the complete decision history.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></section> : null}
+      {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager media={proposalMedia} migrationReady={proposalReady} proposals={memberProposals} /><div className="legacy-gathering-note"><strong>Community gathering history</strong><p>Free member-only gatherings are now owner-led. Earlier submissions remain visible here so Admin can understand the complete decision history.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></section> : null}
       {view === "edit" ? <section className="focused-admin-tool"><EventManager canCreate={role === "super_admin"} initialEvents={events} migrationReady={!eventResult.error} privateEvents={managedRows.map((event) => ({ event_id: event.event_id, online_url: event.online_url }))} /></section> : null}
       {view === "registrations" ? <section className="focused-admin-tool"><RegistrationManager events={events} initialPayments={payments} initialRefunds={refunds} initialRegistrations={registrations} initialTickets={tickets} migrationReady={registrationReady} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY && process.env.SUPABASE_SECRET_KEY && process.env.NEXT_PUBLIC_SITE_URL)} /></section> : null}
       {view === "arrival" ? <section className="focused-admin-tool"><EventCheckinConsole events={events.map((event) => ({ id: event.id, title: event.title, starts_at: event.starts_at, ends_at: event.ends_at }))} initialAttendees={checkinAttendees} migrationReady={checkinReady} /></section> : null}

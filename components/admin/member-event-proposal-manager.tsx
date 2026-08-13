@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { adminErrorMessage } from "@/lib/admin-error";
 import { createClient } from "@/lib/supabase/client";
+import { ApplicationImageReview } from "@/components/admin/application-image-review";
+import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 
 export type MemberEventProposalAdmin = {
   accessibility_notes: string | null;
@@ -58,9 +60,11 @@ const labels: Record<string, string> = {
 };
 
 export function MemberEventProposalManager({
+  media = [],
   migrationReady,
   proposals,
 }: {
+  media?: ApplicationProposalMedia[];
   migrationReady: boolean;
   proposals: MemberEventProposalAdmin[];
 }) {
@@ -149,6 +153,7 @@ export function MemberEventProposalManager({
             <article key={proposal.proposal_id}>
               <header><div><span className={`proposal-state state-${proposal.status}`}>{labels[proposal.status] ?? proposal.status.replaceAll("_", " ")}</span><h3>{proposal.title}</h3><p>Public event · Proposed by {proposal.proposer_name || proposal.proposer_email}{proposal.community_name ? ` · Connected to ${proposal.community_name}` : " · Stands alone"}</p></div><time dateTime={proposal.submitted_at ?? proposal.created_at}>{new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", year: "numeric" }).format(new Date(proposal.submitted_at ?? proposal.created_at))}</time></header>
               <p className="community-event-review-summary">{proposal.summary}</p>
+              <ApplicationImageReview media={media.find((item) => item.context_id === proposal.proposal_id) ?? null} name={proposal.title} />
               <dl>
                 <div><dt>When</dt><dd>{new Intl.DateTimeFormat("en-KE", { dateStyle: "full", timeStyle: "short", timeZone: proposal.timezone }).format(new Date(proposal.starts_at))}</dd></div>
                 <div><dt>Format</dt><dd>{proposal.format.replaceAll("_", " ")} · {proposal.capacity} places</dd></div>

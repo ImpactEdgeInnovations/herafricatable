@@ -147,4 +147,34 @@ for (const contract of [
   );
 }
 
+const applicationMedia = read(
+  "supabase/migrations/20260813200000_application_proposal_media.sql",
+);
+for (const contract of [
+  "application_proposal_media",
+  "proposal-media",
+  "save_application_proposal_media",
+  "remove_application_proposal_media",
+  "review_application_proposal_media",
+  "list_public_event_proposal_posters",
+  "media.status = 'approved'",
+  "event.status = 'published'",
+  "enqueue_notification",
+  "audit_events",
+]) {
+  assert(
+    applicationMedia.includes(contract),
+    `Application media must include ${contract}`,
+  );
+}
+for (const [path, contract] of [
+  ["components/member/community-host-application.tsx", "uploadApplicationProposalMedia"],
+  ["components/events/member-event-proposal.tsx", "uploadApplicationProposalMedia"],
+  ["components/admin/application-image-review.tsx", "review_application_proposal_media"],
+  ["app/events/page.tsx", "list_public_event_proposal_posters"],
+  ["app/events/[slug]/page.tsx", "list_public_event_proposal_posters"],
+]) {
+  assert(read(path).includes(contract), `${path} must include ${contract}`);
+}
+
 console.log("Super Admin decision contracts verified across member, Community, event, registration, safety and operations interfaces.");

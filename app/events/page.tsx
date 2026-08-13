@@ -6,6 +6,7 @@ import {
   type HostedCommunity,
   type MemberEventProposal,
 } from "@/components/events/member-event-proposal";
+import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,15 @@ export default async function EventsPage() {
     communities: { community_type: string; name: string; slug: string } | null;
     event_id: string;
   }[] | null) ?? [];
+  const { data: posterRows } = events.length
+    ? await supabase.rpc("list_public_event_proposal_posters", { p_event_ids: events.map((event) => event.id) })
+    : { data: [] };
+  const eventPosters = new Map(
+    await Promise.all((((posterRows as { alt_text: string; event_id: string; storage_path: string }[] | null) ?? [])).map(async (poster) => {
+      const signed = await supabase.storage.from("proposal-media").createSignedUrl(poster.storage_path, 3600);
+      return [poster.event_id, { alt: poster.alt_text, url: signed.data?.signedUrl ?? null }] as const;
+    })),
+  );
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -65,13 +75,15 @@ export default async function EventsPage() {
         .maybeSingle()
     : { data: null };
   const isActiveMember = memberProfile?.access_status === "active";
-  const [proposalResult, proposalContextResult, communitiesResult] = isActiveMember
+  const [proposalResult, proposalContextResult, communitiesResult, proposalMediaResult] = isActiveMember
     ? await Promise.all([
         supabase.rpc("list_my_member_event_proposals"),
         supabase.rpc("list_member_event_proposal_communities"),
         supabase.rpc("list_communities"),
+        supabase.rpc("list_my_application_proposal_media"),
       ])
     : [
+        { data: [], error: null },
         { data: [], error: null },
         { data: [], error: null },
         { data: [], error: null },
@@ -90,6 +102,14 @@ export default async function EventsPage() {
       ["owner", "moderator", "host"].includes(community.membership_role ?? ""),
     )
     .map(({ community_id, community_type, name, slug }) => ({ community_id, community_type, name, slug })));
+  const proposalMedia = await Promise.all(
+    (((proposalMediaResult.data as Omit<ApplicationProposalMedia, "image_url">[] | null) ?? [])
+      .filter((item) => item.context_type === "member_event_proposal"))
+      .map(async (item) => {
+        const signed = await supabase.storage.from("proposal-media").createSignedUrl(item.storage_path, 3600);
+        return { ...item, image_url: signed.data?.signedUrl ?? null };
+      }),
+  );
 
   return (
     <main className="events-page">
@@ -130,8 +150,10 @@ export default async function EventsPage() {
           </div>
         ) : events.length ? events.map((event) => {
           const eventCommunity = eventCommunities.find((item) => item.event_id === event.id)?.communities;
+          const poster = eventPosters.get(event.id);
           return (
           <article key={event.id}>
+            {poster?.url ? <img className="public-event-poster" alt={poster.alt} src={poster.url} /> : null}
             <div className="public-event-date"><strong>{new Intl.DateTimeFormat("en-KE", { day: "2-digit" }).format(new Date(event.starts_at))}</strong><span>{new Intl.DateTimeFormat("en-KE", { month: "short", year: "numeric" }).format(new Date(event.starts_at))}</span></div>
             <div className="public-event-copy"><span>{event.audience === "community" ? "Your Community · " : ""}{event.format.replace("_", " ")} · {event.venues ? `${event.venues.city}, ${event.venues.country}` : "Online"}</span><h2>{event.title}</h2><p>{event.summary || "Event details will be shared with approved members."}</p>{eventCommunity ? <Link className="event-list-community" href={`/communities/${eventCommunity.slug}/about`}>{eventCommunity.name} <i aria-hidden="true">→</i></Link> : <small className="event-list-standalone">Her Africa Table open event</small>}</div>
             <Link href={`/events/${event.slug}`}>See event <span aria-hidden="true">→</span></Link>
@@ -141,6 +163,8 @@ export default async function EventsPage() {
       {isActiveMember ? (
         <MemberEventProposalPanel
           hostedCommunities={hostedCommunities}
+          media={proposalMedia}
+          mediaReady={!proposalMediaResult.error}
           migrationReady={!proposalResult.error && !proposalContextResult.error}
           proposals={proposals}
         />

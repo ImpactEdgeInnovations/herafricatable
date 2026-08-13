@@ -13,6 +13,7 @@ import type { CommunityBrandIdentity } from "@/components/member/community-brand
 import { MemberHeader } from "@/components/member/member-header";
 import { createClient } from "@/lib/supabase/server";
 import type { CommunityJoiningSettings } from "@/components/member/community-joining-settings";
+import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function CommunitiesPage() {
     { data: flag },
     { data: acceptanceFlag },
     applicationResult,
+    mediaResult,
   ] =
     await Promise.all([
       supabase
@@ -46,12 +48,21 @@ export default async function CommunitiesPage() {
         .eq("key", "community_acceptance_mode")
         .maybeSingle(),
       supabase.rpc("list_my_community_host_applications"),
+      supabase.rpc("list_my_application_proposal_media"),
     ]);
 
   if (profile?.access_status !== "active") redirect("/home");
 
   const applications =
     (applicationResult.data as CommunityHostApplicationState[] | null) ?? [];
+  const applicationMedia = await Promise.all(
+    (((mediaResult.data as Omit<ApplicationProposalMedia, "image_url">[] | null) ?? [])
+      .filter((item) => item.context_type === "community_application"))
+      .map(async (item) => {
+        const signed = await supabase.storage.from("proposal-media").createSignedUrl(item.storage_path, 3600);
+        return { ...item, image_url: signed.data?.signedUrl ?? null };
+      }),
+  );
 
   const communityAvailable =
     flag?.enabled || (profile?.is_test_account && acceptanceFlag?.enabled);
@@ -126,6 +137,8 @@ export default async function CommunitiesPage() {
         </section>
         <CommunityHostApplication
           applications={applications}
+          media={applicationMedia}
+          mediaReady={!mediaResult.error}
           migrationReady={!applicationResult.error}
         />
       </main>
@@ -226,6 +239,8 @@ export default async function CommunitiesPage() {
 
       <CommunityHostApplication
         applications={applications}
+        media={applicationMedia}
+        mediaReady={!mediaResult.error}
         migrationReady={!applicationResult.error}
       />
     </main>

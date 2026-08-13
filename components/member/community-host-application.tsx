@@ -6,6 +6,14 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
+import { ApplicationImageField } from "@/components/applications/application-image-field";
+import { ApplicationImageQuickEdit } from "@/components/applications/application-image-quick-edit";
+import {
+  applicationMediaStatus,
+  removeApplicationProposalMedia,
+  type ApplicationProposalMedia,
+  uploadApplicationProposalMedia,
+} from "@/lib/application-proposal-media";
 
 export type CommunityHostApplicationState = {
   application_id: string;
@@ -95,9 +103,13 @@ const applicationSteps = [
 
 export function CommunityHostApplication({
   applications,
+  media,
+  mediaReady,
   migrationReady,
 }: {
   applications: CommunityHostApplicationState[];
+  media: ApplicationProposalMedia[];
+  mediaReady: boolean;
   migrationReady: boolean;
 }) {
   const router = useRouter();
@@ -116,8 +128,13 @@ export function CommunityHostApplication({
   const [step, setStep] = useState(0);
   const [furthestStep, setFurthestStep] = useState(0);
   const [reviewValues, setReviewValues] = useState<Record<string, string>>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageAltText, setImageAltText] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const currentMedia = current
+    ? media.find((item) => item.context_type === "community_application" && item.context_id === current.application_id) ?? null
+    : null;
 
   useEffect(() => {
     if (open && stepHeadingRef.current) {
@@ -142,6 +159,8 @@ export function CommunityHostApplication({
   function openApplication() {
     setStep(0);
     setFurthestStep(0);
+    setImageFile(null);
+    setImageAltText(currentMedia?.alt_text ?? "");
     setOpen(true);
   }
 
@@ -186,7 +205,7 @@ export function CommunityHostApplication({
     const form = new FormData(event.currentTarget);
     setBusy("save");
     setMessage("");
-    const { error } = await supabase.rpc(
+    const { data: savedApplicationId, error } = await supabase.rpc(
       "save_community_host_application",
       {
         p_accept_guidelines: form.get("accept_guidelines") === "on",
@@ -202,18 +221,56 @@ export function CommunityHostApplication({
         p_safety_plan: String(form.get("safety_plan") ?? ""),
       },
     );
+    let imageError: unknown = null;
+    if (!error && savedApplicationId && imageFile) {
+      try {
+        await uploadApplicationProposalMedia(supabase, {
+          altText: imageAltText,
+          contextId: String(savedApplicationId),
+          contextType: "community_application",
+          file: imageFile,
+        });
+      } catch (uploadError) {
+        imageError = uploadError;
+      }
+    }
     setBusy("");
     setMessage(
       error
         ? memberErrorMessage(error, "send your community application")
+        : imageError
+          ? `Your application was sent, but the optional image did not upload. ${memberErrorMessage(imageError, "add the image")}`
         : editable
           ? "Application updated and returned to the review queue."
           : "Application sent. You can follow its progress here.",
     );
     if (!error) {
+      setImageFile(null);
       closeApplication();
       router.refresh();
     }
+  }
+
+  async function removeImage() {
+    if (!currentMedia) return;
+    const confirmed = await ask({
+      confirmLabel: "Remove image",
+      description: "This removes the optional image from the application. Your written proposal remains unchanged.",
+      title: "Remove this application image?",
+      tone: "danger",
+    });
+    if (!confirmed) return;
+    setBusy("remove-image");
+    setMessage("");
+    try {
+      await removeApplicationProposalMedia(supabase, currentMedia);
+      setImageAltText("");
+      setMessage("Image removed. Your application is still in place.");
+      router.refresh();
+    } catch (removeError) {
+      setMessage(memberErrorMessage(removeError, "remove the image"));
+    }
+    setBusy("");
   }
 
   async function withdraw() {
@@ -346,6 +403,15 @@ export function CommunityHostApplication({
               <strong>Note from the Community team</strong>
               <p>{current.admin_note}</p>
             </blockquote>
+          ) : null}
+          {currentMedia ? (
+            <div className="application-image-member-summary">
+              {currentMedia.image_url ? <img alt={currentMedia.alt_text} src={currentMedia.image_url} /> : null}
+              <div><strong>{applicationMediaStatus(currentMedia.status)}</strong><p>{currentMedia.alt_text}</p>{currentMedia.review_note ? <small>{currentMedia.review_note}</small> : null}</div>
+            </div>
+          ) : null}
+          {!showForm && mediaReady && !["declined", "withdrawn"].includes(current.status) ? (
+            <ApplicationImageQuickEdit contextId={current.application_id} contextType="community_application" existing={currentMedia} label="Community cover image" />
           ) : null}
           <footer>
             {current.status === "approved" && current.created_community_slug ? (
@@ -632,6 +698,20 @@ export function CommunityHostApplication({
                   <button onClick={() => setStep(2)} type="button">Change</button>
                 </article>
               </div>
+              {mediaReady ? (
+                <ApplicationImageField
+                  altText={imageAltText}
+                  existing={currentMedia}
+                  file={imageFile}
+                  label="Community cover image"
+                  onAltText={setImageAltText}
+                  onFile={setImageFile}
+                  onRemoveExisting={() => void removeImage()}
+                  removing={busy === "remove-image"}
+                />
+              ) : (
+                <p className="application-image-unavailable">Optional image uploads will appear after the latest database update. You can still send the written application now.</p>
+              )}
               <label className="community-host-consent">
                 <input name="accept_guidelines" required type="checkbox" />
                 <span>

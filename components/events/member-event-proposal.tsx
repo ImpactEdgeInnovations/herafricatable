@@ -6,6 +6,14 @@ import { useRouter } from "next/navigation";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
+import { ApplicationImageField } from "@/components/applications/application-image-field";
+import { ApplicationImageQuickEdit } from "@/components/applications/application-image-quick-edit";
+import {
+  applicationMediaStatus,
+  removeApplicationProposalMedia,
+  type ApplicationProposalMedia,
+  uploadApplicationProposalMedia,
+} from "@/lib/application-proposal-media";
 
 export type MemberEventProposal = {
   accessibility_notes: string | null;
@@ -98,10 +106,14 @@ function initialValues() {
 
 export function MemberEventProposalPanel({
   hostedCommunities,
+  media,
+  mediaReady,
   migrationReady,
   proposals,
 }: {
   hostedCommunities: HostedCommunity[];
+  media: ApplicationProposalMedia[];
+  mediaReady: boolean;
   migrationReady: boolean;
   proposals: MemberEventProposal[];
 }) {
@@ -115,6 +127,11 @@ export function MemberEventProposalPanel({
   const [values, setValues] = useState(initialValues);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [posterFile, setPosterFile] = useState<File | null>(null);
+  const [posterAltText, setPosterAltText] = useState("");
+  const editingMedia = editingId
+    ? media.find((item) => item.context_type === "member_event_proposal" && item.context_id === editingId) ?? null
+    : null;
 
   function update(key: keyof ReturnType<typeof initialValues>, value: string | boolean) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -127,6 +144,8 @@ export function MemberEventProposalPanel({
     setEventPath("public");
     setStep(0);
     setMessage("");
+    setPosterFile(null);
+    setPosterAltText("");
     setExpanded(true);
   }
 
@@ -158,6 +177,9 @@ export function MemberEventProposalPanel({
     setStep(0);
     setEventPath("public");
     setMessage("");
+    const proposalMedia = media.find((item) => item.context_type === "member_event_proposal" && item.context_id === proposal.proposal_id);
+    setPosterFile(null);
+    setPosterAltText(proposalMedia?.alt_text ?? "");
     setExpanded(true);
   }
 
@@ -259,6 +281,21 @@ export function MemberEventProposalPanel({
       router.refresh();
       return;
     }
+    if (posterFile) {
+      try {
+        await uploadApplicationProposalMedia(supabase, {
+          altText: posterAltText,
+          contextId: String(savedProposalId),
+          contextType: "member_event_proposal",
+          file: posterFile,
+        });
+      } catch (posterError) {
+        setBusy(false);
+        setMessage(`Your private draft was saved, but the poster was not added. ${memberErrorMessage(posterError, "add the poster")}`);
+        router.refresh();
+        return;
+      }
+    }
     const { error } = submit
       ? await supabase.rpc("save_member_event_proposal", {
           ...proposalValues,
@@ -274,7 +311,31 @@ export function MemberEventProposalPanel({
     setMessage(submit ? "Your event is with the review team." : "Draft saved. Only you and the review team can see it.");
     setExpanded(false);
     setEditingId(null);
+    setPosterFile(null);
+    setPosterAltText("");
     router.refresh();
+  }
+
+  async function removePoster() {
+    if (!editingMedia) return;
+    const confirmed = await ask({
+      confirmLabel: "Remove poster",
+      description: "Your Event proposal and written details will remain in place.",
+      title: "Remove this optional poster?",
+      tone: "danger",
+    });
+    if (!confirmed) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      await removeApplicationProposalMedia(supabase, editingMedia);
+      setPosterAltText("");
+      setMessage("Poster removed. Your Event proposal is unchanged.");
+      router.refresh();
+    } catch (removeError) {
+      setMessage(memberErrorMessage(removeError, "remove the poster"));
+    }
+    setBusy(false);
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -424,6 +485,7 @@ export function MemberEventProposalPanel({
             <div className="community-event-wizard-step">
               <label className="member-event-community-choice"><input checked={values.communityAfterEvent} onChange={(event) => update("communityAfterEvent", event.target.checked)} type="checkbox"/><span><strong>This event may grow into a Community</strong><small>Guests will be asked separately whether they want to hear about it. Nobody is added automatically.</small></span></label>
               {values.communityAfterEvent ? <label>What might continue after the event?<textarea maxLength={800} minLength={20} onChange={(event) => update("communityIdea", event.target.value)} placeholder="Describe the shared purpose and what members could do together after meeting." rows={4} value={values.communityIdea}/></label> : null}
+              {mediaReady ? <ApplicationImageField altText={posterAltText} existing={editingMedia} file={posterFile} label="Event poster" onAltText={setPosterAltText} onFile={setPosterFile} onRemoveExisting={() => void removePoster()} removing={busy} /> : <p className="application-image-unavailable">Optional poster uploads will appear after the latest database update. You can still send the Event proposal now.</p>}
               <div className="community-event-review-note"><strong>What happens next</strong><p>Our team checks the purpose, time, venue and safety details. If approved, the event appears publicly and guests can request a free place. After the event, you can apply to start a Community; each guest chooses whether to receive that invitation.</p></div>
             </div>
           ) : null}
@@ -442,6 +504,8 @@ export function MemberEventProposalPanel({
           {proposal.review_note ? <div className="proposal-review-guidance"><strong>Review guidance</strong><p>{proposal.review_note}</p></div> : null}
           {proposal.community_name ? <p className="member-event-community-note">Connected to <Link href={`/communities/${proposal.community_slug}/about`}>{proposal.community_name}</Link>. Its name and join route appear on the approved event.</p> : null}
           {proposal.community_after_event ? <p className="member-event-community-note">A possible follow-up Community is included. Guests must opt in before receiving any invitation.</p> : null}
+          {media.filter((item) => item.context_type === "member_event_proposal" && item.context_id === proposal.proposal_id).map((item) => <div className="application-image-member-summary" key={item.media_id}>{item.image_url ? <img alt={item.alt_text} src={item.image_url}/> : null}<div><strong>{applicationMediaStatus(item.status)}</strong><p>{item.alt_text}</p>{item.review_note ? <small>{item.review_note}</small> : null}</div></div>)}
+          {mediaReady && !["cancelled", "declined"].includes(proposal.status) ? <ApplicationImageQuickEdit contextId={proposal.proposal_id} contextType="member_event_proposal" existing={media.find((item) => item.context_type === "member_event_proposal" && item.context_id === proposal.proposal_id) ?? null} label="Event poster" /> : null}
           <footer>
             {proposal.status === "approved" && proposal.canonical_event_slug ? <Link className="button button-primary" href={`/events/${proposal.canonical_event_slug}`}>View public event</Link> : null}
             {proposal.status === "approved" && new Date(proposal.ends_at) < new Date() ? <Link className="button button-outline" href="/communities#create-community">Apply for a follow-up Community</Link> : null}

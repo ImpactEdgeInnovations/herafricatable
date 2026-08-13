@@ -9,6 +9,8 @@ import { useActionDialog } from "@/components/ui/action-dialog";
 import type { CommunityHostApplicationAdmin } from "@/components/admin/community-host-application-manager";
 import type { CommunityMember } from "@/components/admin/community-manager";
 import type { CommunitySummary } from "@/components/member/community-directory";
+import { ApplicationImageReview } from "@/components/admin/application-image-review";
+import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 
 export type CommunityHealth = {
   active_members: number;
@@ -48,6 +50,7 @@ function plural(value: number, one: string, many = `${one}s`) {
 
 export function CommunityCommandCentre({
   applicationReady,
+  applicationMedia,
   applications,
   branding,
   communities,
@@ -56,6 +59,7 @@ export function CommunityCommandCentre({
   migrationReady,
 }: {
   applicationReady: boolean;
+  applicationMedia: ApplicationProposalMedia[];
   applications: CommunityHostApplicationAdmin[];
   branding: AdminCommunityBranding[];
   communities: CommunitySummary[];
@@ -288,6 +292,10 @@ export function CommunityCommandCentre({
                   <dl><div><dt>Focus</dt><dd>{applicationLabels[application.category] ?? application.category}</dd></div><div><dt>First year</dt><dd>{plural(application.expected_members, "member")}</dd></div></dl>
                 </header>
                 <blockquote>{application.purpose}</blockquote>
+                <ApplicationImageReview
+                  media={applicationMedia.find((item) => item.context_id === application.application_id) ?? null}
+                  name={application.community_name}
+                />
                 <details>
                   <summary>Read the full proposal</summary>
                   <div className="community-application-details">

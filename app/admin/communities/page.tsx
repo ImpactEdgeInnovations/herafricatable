@@ -9,6 +9,7 @@ import type { CommunityMember } from "@/components/admin/community-manager";
 import type { CommunitySummary } from "@/components/member/community-directory";
 import type { CommunityBrandIdentity } from "@/components/member/community-branding-panel";
 import { createClient } from "@/lib/supabase/server";
+import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 
 export const dynamic = "force-dynamic";
 
@@ -27,11 +28,12 @@ export default async function AdminCommunitiesPage() {
     .maybeSingle();
   if (!role) redirect("/admin");
 
-  const [communityResult, applicationResult, joiningResult, brandingResult] = await Promise.all([
+  const [communityResult, applicationResult, joiningResult, brandingResult, applicationMediaResult] = await Promise.all([
     supabase.rpc("list_communities"),
     supabase.rpc("list_community_host_applications_admin"),
     supabase.rpc("list_community_joining_settings", { p_community_id: null }),
     supabase.rpc("list_community_brand_identities", { p_community_id: null }),
+    supabase.rpc("list_admin_application_proposal_media"),
   ]);
   const joiningByCommunity = new Map(
     ((joiningResult.data as {
@@ -64,6 +66,14 @@ export default async function AdminCommunitiesPage() {
         };
       },
     ),
+  );
+  const applicationMedia = await Promise.all(
+    (((applicationMediaResult.data as Omit<ApplicationProposalMedia, "image_url">[] | null) ?? [])
+      .filter((item) => item.context_type === "community_application"))
+      .map(async (item) => {
+        const signed = await supabase.storage.from("proposal-media").createSignedUrl(item.storage_path, 3600);
+        return { ...item, image_url: signed.data?.signedUrl ?? null };
+      }),
   );
 
   const [memberResults, healthResults] = await Promise.all([
@@ -115,6 +125,7 @@ export default async function AdminCommunitiesPage() {
         applications={
           (applicationResult.data as CommunityHostApplicationAdmin[] | null) ?? []
         }
+        applicationMedia={applicationMedia}
         communities={communities}
         branding={branding}
         health={health}

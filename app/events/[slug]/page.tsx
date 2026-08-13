@@ -47,6 +47,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     .maybeSingle();
   if (!data) notFound();
   const event = data as unknown as EventDetail;
+  const { data: posterRows } = await supabase.rpc("list_public_event_proposal_posters", { p_event_ids: [event.id] });
+  const poster = ((posterRows as { alt_text: string; storage_path: string }[] | null) ?? [])[0] ?? null;
+  const posterSigned = poster
+    ? await supabase.storage.from("proposal-media").createSignedUrl(poster.storage_path, 3600)
+    : { data: null };
   const { data: communityLink } = await supabase
     .from("community_event_links")
     .select("community_id, communities(name,slug,tagline,community_type)")
@@ -193,6 +198,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       </header>
       <section className="event-detail-hero">
         <div><p className="eyebrow">{event.audience === "community" ? "Private Community gathering" : event.format.replace("_", " ")} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "A carefully curated Her Africa Table gathering."}</p>{eventCommunity ? <span className="event-community-badge">{event.audience === "community" ? `For active members of ${eventCommunity.name}` : `Hosted with ${eventCommunity.name}`}</span> : null}</div>
+        {posterSigned.data?.signedUrl ? <figure className="event-detail-poster"><img alt={poster.alt_text} src={posterSigned.data.signedUrl} /></figure> : null}
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div></dl>
           {gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : hasEnded || event.registration_mode === "closed" ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}
