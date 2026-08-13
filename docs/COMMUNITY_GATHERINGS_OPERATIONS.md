@@ -77,3 +77,16 @@ npm run ops:community:accept-gatherings
 The first command is read-only and verifies the deployed schema and signed-out boundaries. The second uses only the four reserved `.invalid` test identities. If a test credential has drifted, restore `SUPABASE_SECRET_KEY` locally and run `npm run ops:provision-community-test-cohort` before retrying. No key or password is printed.
 
 Do not enable member-created paid Gatherings or automatic Host settlements until commerce, refund and payout acceptance is separately complete.
+
+## Questions on standalone events
+
+Events without a linked Community use a focused **Questions for the Host** area on
+the event page. It is not a general social feed. Active members may ask before the
+event, support an existing question and privately report a concern. The approved
+event proposer or Admin can answer or hide a question. Reports expose only the
+captured question to the Admin safety workspace.
+
+Apply `20260813110000_event_host_questions.sql` after the Gathering reminder
+migration. Community-linked events continue to use their protected Gathering room;
+the event page takes active Community members there instead of creating a second,
+fragmented question queue.

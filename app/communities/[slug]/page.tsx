@@ -185,7 +185,7 @@ export default async function CommunityPage({
         p_community_id: community.community_id,
         p_limit: 100,
       }) : Promise.resolve({ data: [], error: null }),
-      showConversations ? supabase.rpc("get_community_read_summary", {
+      showConversations || showToday ? supabase.rpc("get_community_read_summary", {
         p_community_id: community.community_id,
       }) : Promise.resolve({ data: [], error: null }),
       showConversations ? supabase.rpc("list_community_post_read_states", {
@@ -249,6 +249,11 @@ export default async function CommunityPage({
   const gatheringCards = gatheringCardResult.error
     ? []
     : ((gatheringCardResult.data as CommunityGatheringCard[] | null) ?? []);
+  const nextGathering = gatheringCards.find(
+    (item) => new Date(item.ends_at).getTime() >= Date.now(),
+  );
+  const checkIns =
+    (checkInResult.data as CommunityCheckIn[] | null) ?? [];
   const liveGathering = gatheringCards.find((item) => {
     const now = Date.now();
     return item.chat_phase === "open"
@@ -359,9 +364,12 @@ export default async function CommunityPage({
             </strong>
           ) : null}
           <p>{community.description}</p>
-          <Link href="/communities">← All communities</Link>
+          <div className="community-room-meta">
+            <span>{community.member_count} members</span>
+            <Link href={`/communities/${slug}/about`}>About</Link>
+            <Link href="/communities">All Communities</Link>
+          </div>
         </div>
-        <span>{community.member_count} members</span>
       </section>
       <CommunityLocalNavigation active={view} canManage={canManage} slug={slug} />
       {liveGathering ? (
@@ -384,29 +392,32 @@ export default async function CommunityPage({
                   )[0] ?? null
             }
           />
-          <section className="community-today-choices" aria-label="Explore this Community">
+          <nav className="community-overview-links" aria-label="Inside this Community">
             <Link href={`/communities/${slug}?view=conversations`}>
-              <span>Conversations</span>
-              <strong>See what members are asking and sharing.</strong>
-              <small>Open posts →</small>
+              <span aria-hidden="true">01</span>
+              <div><strong>Conversations</strong><small>{Number(readSummary?.new_activity_count ?? 0) > 0 ? `${readSummary?.new_activity_count} new updates` : "Questions, ideas and useful updates"}</small></div>
+              <i aria-hidden="true">→</i>
             </Link>
             <Link href={`/communities/${slug}?view=gatherings`}>
-              <span>Gatherings</span>
-              <strong>See what is coming up and save your place.</strong>
-              <small>View gatherings →</small>
+              <span aria-hidden="true">02</span>
+              <div><strong>Gatherings</strong><small>{nextGathering ? `${nextGathering.title} · ${new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short" }).format(new Date(nextGathering.starts_at))}` : "See what is coming up"}</small></div>
+              <i aria-hidden="true">→</i>
             </Link>
             <Link href={`/communities/${slug}?view=people`}>
-              <span>People</span>
-              <strong>Find someone relevant and start thoughtfully.</strong>
-              <small>Meet members →</small>
+              <span aria-hidden="true">03</span>
+              <div><strong>People</strong><small>Meet {community.member_count} members thoughtfully</small></div>
+              <i aria-hidden="true">→</i>
             </Link>
-          </section>
+          </nav>
           {!checkInResult.error ? (
-            <CommunityCheckIns
-              checkIns={(checkInResult.data as CommunityCheckIn[] | null) ?? []}
-              communityId={community.community_id}
-              currentUserId={user.id}
-            />
+            checkIns.length ? (
+              <CommunityCheckIns checkIns={checkIns} communityId={community.community_id} currentUserId={user.id} />
+            ) : (
+              <details className="community-room-more">
+                <summary><span>Quick check-in</span><strong>Ask members one clear question</strong></summary>
+                <CommunityCheckIns checkIns={checkIns} communityId={community.community_id} currentUserId={user.id} />
+              </details>
+            )
           ) : null}
         </>
       ) : null}
@@ -499,24 +510,23 @@ export default async function CommunityPage({
             migrationReady={!gatheringCardResult.error}
             slug={slug}
           />
-          {programmingReady ? (
-            <CommunityProgramming
-              canManage={canManage}
-              communityId={community.community_id}
-              eventPreferences={
-                (eventPreferenceResult.data as CommunityEventPreference[] | null) ?? []
-              }
-              gatherings={
-                (gatheringResult.data as CommunityGathering[] | null) ?? []
-              }
-              remindersReady={!eventPreferenceResult.error}
-              resources={(resourceResult.data as CommunityResource[] | null) ?? []}
-              showGatherings={Boolean(gatheringCardResult.error)}
-              slug={slug}
-            />
-          ) : null}
-          {!circleProgramResult.error ? (
-            <CommunityCircles programs={circlePrograms} />
+          {programmingReady || !circleProgramResult.error ? (
+            <details className="community-room-more community-gathering-extras">
+              <summary><span>More from this Community</span><strong>Resources and small groups</strong></summary>
+              {programmingReady ? (
+                <CommunityProgramming
+                  canManage={canManage}
+                  communityId={community.community_id}
+                  eventPreferences={(eventPreferenceResult.data as CommunityEventPreference[] | null) ?? []}
+                  gatherings={(gatheringResult.data as CommunityGathering[] | null) ?? []}
+                  remindersReady={!eventPreferenceResult.error}
+                  resources={(resourceResult.data as CommunityResource[] | null) ?? []}
+                  showGatherings={Boolean(gatheringCardResult.error)}
+                  slug={slug}
+                />
+              ) : null}
+              {!circleProgramResult.error ? <CommunityCircles programs={circlePrograms} /> : null}
+            </details>
           ) : null}
         </>
       ) : null}

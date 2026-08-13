@@ -156,24 +156,19 @@ export function CommunityStartPath({
         )}
       </header>
       {supportingSteps.length ? (
-        <div aria-label="Other ways to participate in this community">
-          {supportingSteps.map((step) => (
-            <Link
-              className={step.complete ? "is-complete" : undefined}
-              href={step.href}
-              key={step.label}
-            >
-              <span>{String(steps.indexOf(step) + 1).padStart(2, "0")}</span>
-              <strong>{step.label}</strong>
-              <small>
-                {step.complete
-                  ? "You have completed this step."
-                  : step.description}
-              </small>
-              <em>{step.complete ? "Done" : step.action}</em>
-            </Link>
-          ))}
-        </div>
+        <details className="community-progress">
+          <summary>See your Community progress <span>{steps.filter((step) => step.complete).length} of {steps.length}</span></summary>
+          <div aria-label="Other ways to participate in this community">
+            {supportingSteps.map((step) => (
+              <Link className={step.complete ? "is-complete" : undefined} href={step.href} key={step.label}>
+                <span>{String(steps.indexOf(step) + 1).padStart(2, "0")}</span>
+                <strong>{step.label}</strong>
+                <small>{step.complete ? "Complete" : step.description}</small>
+                <em>{step.complete ? "Done" : step.action}</em>
+              </Link>
+            ))}
+          </div>
+        </details>
       ) : null}
     </section>
   );

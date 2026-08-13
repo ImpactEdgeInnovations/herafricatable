@@ -15,6 +15,7 @@ import {
   type MemberEventArchiveAccess,
 } from "@/components/events/member-event-archive";
 import { EventRegistrationForm } from "@/components/events/event-registration-form";
+import { EventQuestions, type EventQuestion } from "@/components/events/event-questions";
 import {
   DestinationInvitationPanel,
   type DestinationInvitation,
@@ -48,7 +49,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const event = data as unknown as EventDetail;
   const { data: communityLink } = await supabase
     .from("community_event_links")
-    .select("communities(name,slug,tagline,community_type)")
+    .select("community_id, communities(name,slug,tagline,community_type)")
     .eq("event_id", event.id)
     .order("is_featured", { ascending: false })
     .limit(1)
@@ -83,6 +84,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     : { data: [] };
   const { data: { user } } = await supabase.auth.getUser();
   const { data: memberProfile } = user ? await supabase.from("profiles").select("access_status").eq("id", user.id).maybeSingle() : { data: null };
+  const activeMember = Boolean(user && memberProfile?.access_status === "active");
+  const { data: communityMembership } = activeMember && communityLink?.community_id
+    ? await supabase.from("community_memberships").select("status").eq("community_id", communityLink.community_id).eq("user_id", user!.id).maybeSingle()
+    : { data: null };
   const [eventManagerResult, eventProposerResult] = user
     ? await Promise.all([
         supabase.rpc("can_manage_event", { check_event_id: event.id }),
@@ -105,6 +110,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       })
     : { data: [], error: null };
   const hasEnded = new Date(event.ends_at).getTime() < Date.now();
+  const useCommunityGathering = Boolean(eventCommunity && communityMembership?.status === "active");
+  const eventQuestionResult = activeMember && !useCommunityGathering
+    ? await supabase.rpc("list_event_questions", { p_event_id: event.id })
+    : { data: [], error: null };
   const [recapResult, testimonialResult, continuationResult] = hasEnded
     ? await Promise.all([
         supabase.from("event_recaps").select("title,summary,highlights").eq("event_id", event.id).eq("status", "published").maybeSingle(),
@@ -247,6 +256,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       ) : null}
 
       {announcements?.length ? <section className="event-content-section"><div><p className="eyebrow">Latest information</p><h2>Announcements</h2></div><div className="announcement-list">{announcements.map((item) => <article key={item.id}><span>{item.published_at ? new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short" }).format(new Date(item.published_at)) : "Update"}</span><div><h3>{item.title}</h3><p>{item.body}</p></div></article>)}</div></section> : null}
+
+      <EventQuestions
+        canAsk={activeMember && !hasEnded}
+        currentUserId={user?.id ?? null}
+        eventId={event.id}
+        eventSlug={slug}
+        gatheringHref={useCommunityGathering && eventCommunity ? `/communities/${eventCommunity.slug}/gatherings/${slug}#questions` : null}
+        initialQuestions={(eventQuestionResult.data as EventQuestion[] | null) ?? []}
+        migrationReady={useCommunityGathering || !eventQuestionResult.error}
+      />
 
       <section className="event-content-section"><div><p className="eyebrow">The gathering</p><h2>Programme</h2></div>{sessions?.length ? <div className="programme-list">{sessions.map((session) => { const speakers = speakersFor(session.id); return <article key={session.id}><time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(session.starts_at))}</time><div><h3>{session.title}</h3>{speakers.map((speaker) => <p className="programme-speaker" key={`${session.id}-${speaker.name}`}><strong>{speaker.name}</strong>{[speaker.job_title, speaker.company].filter(Boolean).join(" · ") ? ` · ${[speaker.job_title, speaker.company].filter(Boolean).join(" · ")}` : ""}</p>)}<p>{session.description}</p>{session.room ? <span>{session.room}</span> : null}</div></article>; })}</div> : <div className="events-empty"><strong>Programme arriving soon.</strong><p>Confirmed attendees will receive programme updates as they are published.</p></div>}</section>
 

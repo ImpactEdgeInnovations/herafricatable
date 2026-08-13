@@ -887,9 +887,13 @@ export default async function AdminOperationsPage({
   const gatheringReportResult = canModerate && loadSafety
     ? await supabase.rpc("list_community_gathering_reports")
     : { data: [], error: null };
+  const eventQuestionReportResult = canModerate && loadSafety
+    ? await supabase.rpc("list_event_question_reports")
+    : { data: [], error: null };
   const communityReports = [
     ...((communityReportSource?.data as CommunityReport[] | null) ?? []),
     ...((gatheringReportResult.data as CommunityReport[] | null) ?? []),
+    ...((eventQuestionReportResult.data as CommunityReport[] | null) ?? []),
   ];
   return (
     <main className="admin-command-center">
@@ -1136,7 +1140,7 @@ export default async function AdminOperationsPage({
           />
           <CommunityModeration
             reports={communityReports}
-            migrationReady={!communityReportSource?.error}
+            migrationReady={!communityReportSource?.error && !gatheringReportResult.error && !eventQuestionReportResult.error}
           />
         </AdminWorkGroup>
       ) : null}

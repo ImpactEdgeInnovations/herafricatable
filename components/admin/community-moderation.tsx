@@ -8,7 +8,7 @@ import { adminErrorMessage } from "@/lib/admin-error";
 
 export type CommunityReport = {
   report_id: string;
-  community_id: string;
+  community_id: string | null;
   community_name: string;
   reporter_email: string;
   category: string;
@@ -16,7 +16,7 @@ export type CommunityReport = {
   evidence_snapshot: Record<string, unknown>;
   status: string;
   created_at: string;
-  content_type?: "check_in" | "gathering_message" | "post";
+  content_type?: "check_in" | "event_question" | "gathering_message" | "post";
 };
 
 export function CommunityModeration({
@@ -67,7 +67,13 @@ export function CommunityModeration({
     }
     setBusy(id);
     const report = reports.find((item) => item.report_id === id);
-    const { error } = report?.content_type === "gathering_message"
+    const { error } = report?.content_type === "event_question"
+      ? await supabase.rpc("review_event_question_report", {
+          p_action: action,
+          p_outcome: outcome,
+          p_report_id: id,
+        })
+      : report?.content_type === "gathering_message"
       ? await supabase.rpc("review_community_gathering_report", {
           p_action: action,
           p_outcome: outcome,
@@ -104,11 +110,11 @@ export function CommunityModeration({
         <div className="admin-section-heading">
           <div>
             <p className="eyebrow">Report-scoped access</p>
-            <h2>Community safety</h2>
+            <h2>Conversation safety</h2>
             <p>
-              Moderators receive only captured evidence from reported posts or
-              check-ins, never general access to private Community feeds or any
-              member’s check-in answer.
+              Moderators receive only the reported question, post, message or
+              check-in—never general access to private Community feeds or any
+              member’s private check-in answer.
             </p>
           </div>
           <span className="status-count">
@@ -127,7 +133,7 @@ export function CommunityModeration({
                 <div>
                   <span className="member-status">{report.status}</span>
                   <small>
-                    {report.community_name} · {report.content_type === "check_in" ? "Quick check-in" : report.content_type === "gathering_message" ? "Gathering message" : "Post"} · {report.category}
+                    {report.community_name} · {report.content_type === "check_in" ? "Quick check-in" : report.content_type === "event_question" ? "Event question" : report.content_type === "gathering_message" ? "Gathering message" : "Post"} · {report.category}
                   </small>
                 </div>
                 <div>
@@ -173,8 +179,8 @@ export function CommunityModeration({
           </div>
         ) : (
           <div className="admin-empty">
-            <strong>No community reports</strong>
-            <p>Reported post, comment and Quick Check-in snapshots appear here for bounded review.</p>
+            <strong>No conversation reports</strong>
+            <p>Reported event questions and Community content appear here for bounded review.</p>
           </div>
         )}
         {message ? (

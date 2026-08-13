@@ -138,6 +138,23 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [ ] Apply `20260813100000_community_gathering_reminder_delivery.sql` in production Supabase
 - [ ] Complete the multi-account rehearsal in `docs/COMMUNITY_GATHERINGS_OPERATIONS.md`
 
+## Event questions and calmer Community rooms — 13 August 2026
+
+- [x] Replace the dense Community overview with one recommended action, three compact
+      entry points and progressive disclosure for optional tools
+- [x] Make the Community identity, local navigation, People and Conversation surfaces
+      quieter and more touch-friendly without changing global navigation
+- [x] Give standalone public events a focused **Questions for the Host** area instead
+      of an unmoderated social comment feed
+- [x] Keep Community-linked event questions and live text together in the protected
+      Gathering room so Hosts do not manage two fragmented conversations
+- [x] Add member-only questions, support ranking, Host answers, private reports,
+      rate limits, notifications, blocked-pair protection and audit records
+- [x] Route reported event questions into the bounded Admin safety workspace
+- [ ] Apply `20260813110000_event_host_questions.sql` in production Supabase
+- [ ] Rehearse ask, support, answer, hide and report with member, Host and moderator
+      accounts before enabling event proposals for the full membership
+
 ## Community joining and Event-to-Community journey — 12 August 2026
 
 - [x] Let a public Community choose immediate entry or Host approval for active
