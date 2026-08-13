@@ -23,7 +23,7 @@ export function AuthPage({
         </div>
         <p className="auth-quote">“When women gather with intention, possibility becomes practical.”</p>
       </section>
-      <section className="auth-panel-wrap" aria-label={`${isAdmin ? "Admin" : "Member"} authentication`}>
+      <section className="auth-panel-wrap" aria-label={`${isAdmin ? "Team" : "Member"} sign in`}>
         <AuthPanel destination={destination} intent={intent} />
       </section>
     </main>

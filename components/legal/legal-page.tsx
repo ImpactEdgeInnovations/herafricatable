@@ -19,7 +19,7 @@ export function LegalPage({
           <span className="brand-mark" aria-hidden="true">H</span>
           <span>Her Africa Table<small>Meet. Connect. Rise.</small></span>
         </Link>
-        <Link className="button button-small button-outline" href="/sign-in">Member sign in</Link>
+        <Link className="button button-small button-outline" href="/sign-in">Sign in</Link>
       </header>
       <article className="legal-document">
         <p className="eyebrow">{eyebrow}</p>

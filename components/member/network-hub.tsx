@@ -355,7 +355,7 @@ export function NetworkHub({
     const result = await ask({
       title: `Add a reminder for ${displayName}`,
       description:
-        "Your note and reminder are private. Neither the member nor Admin can see them.",
+        "Your note and reminder are private. Neither the member nor our team can see them.",
       confirmLabel: existing ? "Update reminder" : "Save reminder",
       fields: [
         {
@@ -448,7 +448,7 @@ export function NetworkHub({
         ? `Update what happened with ${displayName}`
         : `What happened after connecting with ${displayName}?`,
       description:
-        "Your note stays private. If you allow anonymous counting, Admin sees only the category—not either member’s identity.",
+        "Your note stays private. If you allow anonymous counting, our team sees only the category—not either member’s identity.",
       confirmLabel: existing ? "Update result" : "Save result",
       fields: [
         {
@@ -470,7 +470,7 @@ export function NetworkHub({
           type: "date",
         },
         {
-          help: "This is visible only to you—not the other member or Admin.",
+          help: "This is visible only to you—not the other member or our team.",
           initialValue: existing?.private_detail ?? "",
           label: "Private note",
           maxLength: 2000,
@@ -482,7 +482,7 @@ export function NetworkHub({
           type: "textarea",
         },
         {
-          help: "Admin receives only an anonymous category total—never your note, name, or the other member’s identity. The category stays hidden until at least three different real members contribute.",
+          help: "Our team receives only an anonymous category total—never your note, name or the other member’s identity. The total stays hidden until at least three members contribute.",
           initialValue: existing?.share_anonymously ?? true,
           label: "Count this anonymously in Community results",
           name: "shareAnonymously",

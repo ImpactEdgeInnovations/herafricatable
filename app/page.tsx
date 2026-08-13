@@ -191,7 +191,7 @@ export default function HomePage() {
           <p>A private professional Community for African women, beginning in Nairobi.</p>
         </div>
         <div className="footer-column"><strong>Explore</strong><a href="#why">Why join</a><a href="#inside">Inside the table</a><Link href="/events">Events</Link><Link href="/faq">FAQ</Link></div>
-        <div className="footer-column"><strong>Account</strong><Link href="/sign-in">Member sign in</Link><Link href="/admin/sign-in">Admin sign in</Link><a href="mailto:support@herafricatable.com">Support</a></div>
+        <div className="footer-column"><strong>Account</strong><Link href="/sign-in">Sign in</Link><Link href="/sign-in">Request membership</Link><a href="mailto:support@herafricatable.com">Support</a></div>
         <div className="footer-column"><strong>Trust</strong><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/community-guidelines">Community guidelines</Link></div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} Her Africa Table</span><span>Built with intention in Nairobi.</span></div>
       </footer>

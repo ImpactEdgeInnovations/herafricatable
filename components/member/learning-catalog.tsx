@@ -65,7 +65,7 @@ export function LearningCatalog({ courses }: { courses: CourseSummary[] }) {
       const result = await ask({
         title: "Submit payment for review",
         description:
-          "Add the payment information you received or used. An administrator will verify it before granting course access.",
+          "Add the payment information you received or used. Our team will check it before opening the course.",
         confirmLabel: "Submit for review",
         fields: [
           {
@@ -99,7 +99,7 @@ export function LearningCatalog({ courses }: { courses: CourseSummary[] }) {
       setMessage(
         error
           ? memberErrorMessage(error, "submit your course payment for review")
-          : "Your course purchase is awaiting admin review.",
+          : "Your course purchase is with our team.",
       );
       if (!error) router.refresh();
       return;

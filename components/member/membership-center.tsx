@@ -70,7 +70,7 @@ export function MembershipCenter({
     setMessage(
       error
         ? memberErrorMessage(error, "submit your membership payment for review")
-        : "Your payment details are awaiting private admin review.",
+        : "Your payment details are being checked privately by our team.",
     );
     if (!error) router.refresh();
   }

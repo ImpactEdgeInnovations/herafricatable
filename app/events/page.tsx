@@ -98,7 +98,7 @@ export default async function EventsPage() {
       ) : (
         <header className="legal-header">
           <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></Link>
-          <div className="event-header-actions"><Link className="button button-small button-outline" href="/sign-in">Member sign in</Link></div>
+          <div className="event-header-actions"><Link className="button button-small button-outline" href="/sign-in">Sign in</Link></div>
         </header>
       )}
       <nav className="event-view-switcher" aria-label="Event views">

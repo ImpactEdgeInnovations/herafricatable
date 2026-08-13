@@ -247,7 +247,7 @@ export function CommunityEventProposalPanel({
       </header>
 
       {!migrationReady ? (
-        <div className="community-panel-empty"><strong>Gathering proposals are almost ready</strong><p>The latest database update is still required. Existing Community events are unchanged.</p></div>
+        <div className="community-panel-empty"><strong>Planning a gathering is temporarily unavailable</strong><p>Please try again later. Gatherings you already planned are safe.</p></div>
       ) : null}
 
       {expanded && migrationReady ? (

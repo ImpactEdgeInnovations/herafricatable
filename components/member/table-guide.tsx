@@ -204,7 +204,7 @@ export function TableGuide({
       <section className="table-guide-unavailable">
         <p className="eyebrow">Table Guide</p>
         <h1>The Guide is being prepared.</h1>
-        <p>Apply the latest platform update, then return here.</p>
+        <p>Nia will appear here when she is ready. You can still use every other part of your membership.</p>
       </section>
     );
   }
@@ -212,12 +212,12 @@ export function TableGuide({
   if (!access.feature_enabled || !keyConfigured) {
     return (
       <section className="table-guide-unavailable">
-        <p className="eyebrow">Table Guide availability</p>
-        <h1>{!access.feature_enabled ? "The Guide is resting." : "The secure AI connection is missing."}</h1>
+        <p className="eyebrow">Nia, your Table Guide</p>
+        <h1>{!access.feature_enabled ? "Nia is taking a short break." : "Nia is being prepared."}</h1>
         <p>
           {!access.feature_enabled
-            ? "A Super Admin has closed the Guide for all members. The character remains visible so you always know where help will return."
-            : "Add OPENAI_API_KEY and AI_SAFETY_SALT to Vercel, then redeploy. The Guide will open without changing any member account."}
+            ? "You can still use every other part of your membership. Nia will return here when she is available."
+            : "You can still use every other part of your membership. Ask our team if you need help now."}
         </p>
         <div>
           <Link className="button button-primary" href="/home">Return home</Link>

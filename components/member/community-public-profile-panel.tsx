@@ -50,10 +50,10 @@ export function CommunityPublicProfilePanel({
     return (
       <section className="community-public-profile-panel" id="public-page">
         <div className="community-host-unavailable" role="status">
-          <strong>The shareable Community page is not installed yet.</strong>
+          <strong>The shareable Community page is being prepared.</strong>
           <p>
-            Nothing is public. The page controls will appear here after the
-            database update is applied.
+            Nothing is public. The sharing controls will appear here when they
+            are ready.
           </p>
         </div>
       </section>
@@ -165,13 +165,13 @@ export function CommunityPublicProfilePanel({
 
         {!openingReady ? (
           <div className="community-public-readiness" role="status">
-            <strong>Finish the private release steps before sharing.</strong>
+            <strong>Finish these private checks before sharing.</strong>
             <ul>
               {profile?.community_status !== "published" ? (
-                <li>The Community must be published by a Super Admin.</li>
+                <li>Our team must approve the Community.</li>
               ) : null}
               {!profile?.release_ready ? (
-                <li>The Community release checklist must be complete.</li>
+                <li>The Community readiness checks must be complete.</li>
               ) : null}
               {!taglineReady ? (
                 <li>Add a short tagline under Look &amp; feel.</li>
@@ -275,7 +275,7 @@ export function CommunityPublicProfilePanel({
             <span>
               <strong>Make this page shareable</strong>
               <small>
-                Turning this on requires the completed release checklist.
+                This opens after the Community readiness checks are complete.
               </small>
             </span>
           </label>
@@ -285,7 +285,7 @@ export function CommunityPublicProfilePanel({
               <strong>Save safely</strong>
               <small>
                 You can save an incomplete private draft. Sharing is blocked
-                until every required field and release check is complete.
+                until every required detail and safety check is complete.
               </small>
             </div>
             <button className="button button-primary" disabled={busy}>

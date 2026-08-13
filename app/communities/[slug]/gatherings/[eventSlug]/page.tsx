@@ -48,7 +48,7 @@ export default async function CommunityGatheringPage({
         <CommunityLocalNavigation active="gatherings" canManage={canManage} slug={slug} />
         <section className="admin-empty opportunity-error" role="alert">
           <strong>This gathering room is being prepared.</strong>
-          <p>Your event is safe. Run the Community gathering rooms migration, then return here.</p>
+          <p>Your event is safe. Please try again later or ask the Community host for help.</p>
           <Link className="button button-primary" href={`/communities/${slug}?view=gatherings`}>Back to gatherings</Link>
         </section>
       </main>

@@ -140,7 +140,7 @@ export function CommunityGatherings({
       {!migrationReady ? (
         <div className="community-program-empty">
           <strong>The new gathering rooms are being prepared.</strong>
-          <p>Your existing Community events are safe. Run the latest migration to open RSVP, questions and live conversation.</p>
+          <p>Your existing Community events are safe. Please try again later.</p>
         </div>
       ) : upcoming.length ? (
         <div className="gathering-list">{upcoming.map(renderCard)}</div>

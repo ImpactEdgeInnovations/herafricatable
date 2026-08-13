@@ -312,13 +312,13 @@ export function MemberEventProposalPanel({
 
       <div className="member-event-promise" aria-label="How member events work">
         <span><b>1</b> Share your idea</span>
-        <span><b>2</b> Admin reviews it</span>
+        <span><b>2</b> Our team reviews it</span>
         <span><b>3</b> The approved event becomes public</span>
         <span><b>4</b> Attendees choose whether to stay connected</span>
       </div>
 
       {!migrationReady ? (
-        <div className="community-panel-empty"><strong>Member event proposals are almost ready</strong><p>Apply the latest database update first. Existing events are unchanged.</p></div>
+        <div className="community-panel-empty"><strong>Starting an event is temporarily unavailable</strong><p>Please try again later. Events you already started are safe.</p></div>
       ) : null}
 
       {expanded && migrationReady ? (
@@ -340,7 +340,7 @@ export function MemberEventProposalPanel({
                   >
                     <span>Open event</span>
                     <strong>Everyone can discover it</strong>
-                    <small>It becomes public only after Admin approval.</small>
+                    <small>It becomes public only after our team approves it.</small>
                   </button>
                   <button
                     aria-pressed={eventPath === "community"}
@@ -424,7 +424,7 @@ export function MemberEventProposalPanel({
             <div className="community-event-wizard-step">
               <label className="member-event-community-choice"><input checked={values.communityAfterEvent} onChange={(event) => update("communityAfterEvent", event.target.checked)} type="checkbox"/><span><strong>This event may grow into a Community</strong><small>Guests will be asked separately whether they want to hear about it. Nobody is added automatically.</small></span></label>
               {values.communityAfterEvent ? <label>What might continue after the event?<textarea maxLength={800} minLength={20} onChange={(event) => update("communityIdea", event.target.value)} placeholder="Describe the shared purpose and what members could do together after meeting." rows={4} value={values.communityIdea}/></label> : null}
-              <div className="community-event-review-note"><strong>What happens next</strong><p>Admin checks the purpose, timing, venue, hosting readiness and safety contact. Approval creates a free public event with reviewed registration. After the event, you may apply to start a Community; interested guests choose whether to receive that invitation.</p></div>
+              <div className="community-event-review-note"><strong>What happens next</strong><p>Our team checks the purpose, time, venue and safety details. If approved, the event appears publicly and guests can request a free place. After the event, you can apply to start a Community; each guest chooses whether to receive that invitation.</p></div>
             </div>
           ) : null}
 

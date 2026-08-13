@@ -123,7 +123,7 @@ export function AuthPanel({
           ? <>Enter an approved team email. We will send a private sign-in code, then confirm your Admin access.</>
           : step === "verify"
             ? <>We sent a sign-in code to <strong>{email}</strong>. Enter it below to continue.</>
-            : <>Enter your email to sign in or begin a membership request. No password is needed.</>}
+            : <>Enter your email and we will send a one-time code. Members go to their home, approved team accounts go to their workspace, and new visitors can request membership.</>}
       </p>
 
       {!isAdmin && step === "request" ? (
@@ -188,7 +188,7 @@ export function AuthPanel({
         Guidelines. Need help? <a href="mailto:support@herafricatable.com">Contact us</a>.
       </p>
       <p className="intent-switch">
-        {isAdmin ? <>Not a team administrator? <Link href="/sign-in">Member sign in</Link></> : <>Working on the Her Africa Table team? <Link href="/admin/sign-in">Admin sign in</Link></>}
+        {isAdmin ? <>Not signing in for the team? <Link href="/sign-in">Use the main sign-in</Link></> : <>This is the only sign-in most people need. We will take you to the right place automatically.</>}
       </p>
     </div>
   );

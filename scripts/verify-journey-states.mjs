@@ -157,6 +157,35 @@ assert(
   authPanel.includes("safeMessage("),
   "Authentication errors must pass through the auth-safe message filter",
 );
+for (const contract of [
+  "This is the only sign-in most people need.",
+  "approved team accounts go to their workspace",
+  'destinationFor(intent)',
+]) {
+  assert(
+    authPanel.includes(contract),
+    `The shared OTP journey must include ${contract}`,
+  );
+}
+const memberSignInPage = read("app/sign-in/page.tsx");
+assert(
+  !memberSignInPage.includes("/admin/sign-in"),
+  "The public sign-in page must not ask people to choose between Member and Admin",
+);
+const continuationPage = read("app/continue/page.tsx");
+for (const contract of ["hasActiveAdminRole", 'redirect("/admin")']) {
+  assert(
+    continuationPage.includes(contract),
+    `Role-aware continuation must include ${contract}`,
+  );
+}
+const memberLanguage = read("lib/member-language.ts");
+for (const status of ["pending_review", "approved_pending_payment", "waitlisted"]) {
+  assert(
+    memberLanguage.includes(status),
+    `Friendly member status language must cover ${status}`,
+  );
+}
 const memberErrors = read("lib/member-error.ts");
 for (const contract of [
   "Give this member some time before requesting another introduction.",
@@ -698,7 +727,7 @@ for (const contract of [
   "Share public page",
   "at least three clear member benefits",
   "Posts, replies, member names",
-  "release checklist",
+  "readiness checks",
 ]) {
   assert(
     communityPublicProfilePanel.includes(contract),
@@ -1038,7 +1067,7 @@ for (const contract of [
   "Community logo",
   "Cover image",
   "Accent colour",
-  "Private until release",
+  "Private until your Community is ready",
   "p_remove_icon",
   "p_remove_cover",
 ]) {
@@ -1068,7 +1097,7 @@ for (const contract of [
   "accept_community_host_terms",
   "save_community_offer",
   "Automatic with Paystack",
-  "Manual admin verification",
+  "Our team confirms each payment",
   "Closed — preserve approvals",
   "Held for you",
   "paidPublishReady",

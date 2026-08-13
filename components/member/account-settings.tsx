@@ -267,7 +267,7 @@ export function AccountSettings({
           {[
             {
               description:
-                "Members may send thoughtful requests and Admin may suggest introductions.",
+                "Members may send thoughtful requests and our team may suggest introductions.",
               label: "Open to introductions",
               value: "open" as const,
             },

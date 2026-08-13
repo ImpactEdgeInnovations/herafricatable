@@ -148,7 +148,7 @@ export function CommunityDirectory({
     setMessage(
       error
         ? memberErrorMessage(error, "submit your payment for review")
-        : "Payment details received. An administrator will verify them before access is opened.",
+        : "Payment details received. Our team will check them before opening access.",
     );
     if (!error) router.refresh();
   }

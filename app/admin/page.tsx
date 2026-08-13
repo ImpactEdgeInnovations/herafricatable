@@ -42,11 +42,11 @@ export default async function AdminHomePage() {
     return (
       <main className="portal-page">
         <section className="portal-card">
-          <p className="eyebrow">Access restricted</p>
-          <h1>Admin role required.</h1>
+          <p className="eyebrow">Member account</p>
+          <h1>This email opens the member space.</h1>
           <p>
-            This account is secure, but it does not have an approved Her Africa
-            Table team role.
+            You are signed in successfully, but this email is not set up to
+            manage the platform.
           </p>
           <div className="portal-actions">
             <Link className="button button-primary" href="/home">

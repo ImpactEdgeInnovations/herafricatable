@@ -141,7 +141,7 @@ export function CommunityCommercePanel({
     setMessage(
       error
         ? memberErrorMessage(error, "submit this host plan payment")
-        : "Host plan payment submitted. Your community remains available while Admin verifies it.",
+        : "Host plan payment submitted. Your community remains available while our team checks it.",
     );
     if (!error) router.refresh();
   }
@@ -190,7 +190,7 @@ export function CommunityCommercePanel({
             <p>
               {billing?.pending_order_status === "pending_payment"
                 ? "Secure checkout is awaiting confirmation."
-                : "Your reference is with Admin for verification."}
+                : "Our team is checking your payment reference."}
             </p>
             <small>
               {billing?.pending_order_reference} ·{" "}
@@ -307,9 +307,9 @@ export function CommunityCommercePanel({
           <div className="community-commerce-locked">
             <strong>Host plan selection is not open yet.</strong>
             <p>
-              Your community remains fully available. Admin can assign a plan
-              directly, or open Automatic or Manual plan billing after payment
-              operations pass release review.
+              Your community remains fully available. Our team can assign a plan
+              directly or open online plan payments when secure payment checks
+              are complete.
             </p>
             <small>No payment can be submitted while billing is closed.</small>
           </div>
@@ -503,7 +503,7 @@ export function CommunityCommercePanel({
             <p>
               {billing?.pending_order_status === "pending_payment"
                 ? "Secure checkout is awaiting confirmation."
-                : "Your payment reference is with Admin for verification."}
+                : "Our team is checking your payment reference."}
             </p>
             <small>
               {billing?.pending_order_reference} ·{" "}
@@ -614,8 +614,9 @@ export function CommunityCommercePanel({
           <div className="community-commerce-locked">
             <strong>Online plan changes are currently closed.</strong>
             <p>
-              Your active period is unchanged. Admin can renew the plan
-              directly, or reopen secure plan billing after operational review.
+              Your active period is unchanged. Our team can renew the plan
+              directly or reopen online plan payments when secure checks are
+              complete.
             </p>
           </div>
         )}
@@ -646,7 +647,7 @@ export function CommunityCommercePanel({
                 <small>
                   {payoutReady
                     ? "Verified by the platform."
-                    : "The admin verifies your provider payout identity."}
+                    : "Our team checks your payout details before payments begin."}
                 </small>
               </div>
             </li>
@@ -772,7 +773,7 @@ export function CommunityCommercePanel({
                 name="paymentMode"
               >
                 <option value="closed">Closed — preserve approvals</option>
-                <option value="manual_review">Manual admin verification</option>
+                <option value="manual_review">Our team confirms each payment</option>
                 <option value="automatic">Automatic with Paystack</option>
               </select>
             </label>

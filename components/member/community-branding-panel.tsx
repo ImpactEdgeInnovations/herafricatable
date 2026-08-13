@@ -358,14 +358,13 @@ export function CommunityBrandingPanel({
 
         <footer className="span-two">
           <div>
-            <strong>Private until release</strong>
+            <strong>Private until your Community is ready</strong>
             <small>
-              Updating identity does not publish a draft or bypass Admin release
-              checks.
+              Changing the look does not make the Community visible to members.
             </small>
           </div>
           <button className="button button-primary" disabled={busy}>
-            {busy ? "Saving identity…" : "Save community identity"}
+            {busy ? "Saving…" : "Save look and feel"}
           </button>
         </footer>
       </form>

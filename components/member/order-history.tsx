@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
+import { memberStatusLabel } from "@/lib/member-language";
 
 export type MemberOrder = {
   community: { slug: string; name: string } | null;
@@ -136,7 +137,7 @@ export function OrderHistory({
                   })}
                 </strong>
                 <span className="member-status">
-                  {order.status.replace("_", " ")}
+                  {memberStatusLabel(order.status)}
                 </span>
               </div>
               <div>

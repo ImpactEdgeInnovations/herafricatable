@@ -240,8 +240,8 @@ export function CommunityFinancialStatement({
             <div className="community-statement-empty compact">
               <strong>No payouts yet</strong>
               <p>
-                A payout appears here after your details are verified and an
-                administrator approves it.
+                A payout appears here after your details are verified and our
+                team approves it.
               </p>
             </div>
           )}

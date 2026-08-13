@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
+import { memberStatusLabel } from "@/lib/member-language";
 
 type Ticket = {
   currency: string;
@@ -93,7 +94,7 @@ export function EventRegistrationForm({
           ? "You are on the waitlist. We will contact you when a seat opens."
           : isFree
             ? "Your free place request is with the event team. No payment is required."
-          : "Your registration is awaiting manual review. No automatic charge has been made.",
+          : "Your registration is with the event team. No automatic charge has been made.",
     );
     if (!error) router.refresh();
   }
@@ -101,7 +102,7 @@ export function EventRegistrationForm({
     return (
       <div className={`registration-status-card${embedded ? " is-embedded" : ""}`}>
         <p className="eyebrow">Registration received</p>
-        <h2>{passReady ? "Your place is confirmed" : existingStatus.replaceAll("_", " ")}</h2>
+        <h2>{passReady ? "Your place is confirmed" : memberStatusLabel(existingStatus)}</h2>
         <p>
           {passReady
             ? "Your event pass is ready. Keep its private code with you for check-in."
@@ -123,10 +124,10 @@ export function EventRegistrationForm({
           {mode === "manual_review"
             ? isFree
               ? "Request a complimentary place. The event team will confirm attendance before the guest list closes."
-              : "Submit your ticket request and any offline payment reference. An administrator will verify it before access is granted."
+              : "Send your ticket request and any payment reference. The event team will check it before confirming your place."
             : mode === "waitlist"
               ? "Join the waitlist and we will contact you when a seat becomes available."
-              : "Choose your ticket and continue to Paystack's secure checkout. Access is granted only after server verification."}
+              : "Choose your ticket and continue to Paystack's secure checkout. We confirm your place after payment succeeds."}
         </p>
       </header>
       {mode !== "waitlist" ? (
@@ -225,7 +226,7 @@ export function EventRegistrationForm({
               ? "Continue to secure payment"
               : isFree
                 ? "Request my free place"
-                : "Submit for manual review"}
+                : "Send to the event team"}
       </button>
       {message ? (
         <p className="manager-message" role="status">
