@@ -59,6 +59,67 @@
   line-height: 1.72;
 }
 
+.membership-waiting-preview {
+  max-width: 690px;
+  margin-top: 34px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.membership-waiting-preview-heading {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.membership-waiting-preview-heading .eyebrow {
+  margin-top: 5px;
+}
+
+.membership-waiting-preview-heading h2 {
+  max-width: 480px;
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(1.35rem, 2.1vw, 1.8rem);
+  font-weight: 450;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+
+.membership-waiting-benefits {
+  display: grid;
+  margin-top: 22px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.membership-waiting-benefits article {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 9px;
+}
+
+.membership-waiting-benefits article > span {
+  padding-top: 2px;
+  color: #9a743b;
+  font-family: var(--serif);
+  font-size: 0.68rem;
+}
+
+.membership-waiting-benefits strong {
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.membership-waiting-benefits p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.55;
+}
+
 .membership-waiting-actions {
   display: flex;
   align-items: center;
@@ -200,6 +261,10 @@
     grid-template-columns: 1fr;
     gap: 38px;
   }
+
+  .membership-waiting-preview {
+    max-width: none;
+  }
 }
 
 @media (max-width: 620px) {
@@ -223,6 +288,20 @@
 
   .membership-waiting-copy h1 {
     font-size: clamp(2.8rem, 13vw, 3.8rem);
+  }
+
+  .membership-waiting-preview-heading {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .membership-waiting-preview-heading .eyebrow {
+    margin: 0;
+  }
+
+  .membership-waiting-benefits {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .membership-waiting-actions {

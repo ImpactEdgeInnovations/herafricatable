@@ -45,6 +45,27 @@ export function MembershipWaitingRoom({
               : "Your email is verified. Complete the short private request so our membership team can consider your place at the table."}
           </p>
 
+          <section className="membership-waiting-preview" aria-labelledby="membership-preview-title">
+            <div className="membership-waiting-preview-heading">
+              <p className="eyebrow">What awaits you</p>
+              <h2 id="membership-preview-title">A trusted place to meet, take part and follow through.</h2>
+            </div>
+            <div className="membership-waiting-benefits">
+              <article>
+                <span aria-hidden="true">01</span>
+                <div><strong>Meet the right people</strong><p>Find women with shared interests, experience and goals—only where they choose to be visible.</p></div>
+              </article>
+              <article>
+                <span aria-hidden="true">02</span>
+                <div><strong>Belong to a circle</strong><p>Join thoughtful Communities, take part in conversations and build relationships over time.</p></div>
+              </article>
+              <article>
+                <span aria-hidden="true">03</span>
+                <div><strong>Turn meetings into momentum</strong><p>Discover events, prepare well and keep useful introductions moving afterwards.</p></div>
+              </article>
+            </div>
+          </section>
+
           <div className="membership-waiting-actions">
             {hasRequest ? (
               <>
@@ -103,7 +124,7 @@ export function MembershipWaitingRoom({
 
       <footer className="membership-waiting-footer">
         <p>
-          Member profiles, Communities and private conversations open only after approval and profile setup.
+          For everyone’s privacy, member profiles, Communities and private conversations open only after approval and profile setup.
         </p>
         <div><Link href="/privacy">Privacy</Link><Link href="/community-guidelines">Community guidelines</Link></div>
       </footer>
