@@ -8,6 +8,13 @@ Read-only production readiness was reconfirmed on 11 August 2026: the Community
 event proposal tables and functions are present, unknown events remain private,
 and signed-out visitors cannot read Host or Admin proposal projections.
 
+Gathering-room production readiness was verified against live Supabase on 13 August
+2026. The room tables and protected functions are deployed; signed-out visitors
+cannot list rooms, send live text or read the Gathering safety queue, and an unknown
+room returns no data. The four-account write rehearsal is prepared but requires the
+reserved backup-moderator credential to be refreshed using the ignored local server
+key before it can produce final live-window evidence.
+
 ## Passed with live Supabase accounts
 
 - Two ordinary members, one Community owner and one backup Moderator all hold
@@ -34,6 +41,8 @@ npm run ops:community:accept-test-invitations
 npm run ops:community:accept-member-journeys
 npm run ops:community:accept-membership-lifecycle
 npm run ops:community:accept-safety
+npm run ops:community:gathering-readiness
+npm run ops:community:accept-gatherings
 ```
 
 The full scale rehearsal uses:

@@ -39,6 +39,8 @@ Hosts do not receive unrestricted Admin safety access. Members can report a Gath
 
 Apply [`20260812170000_community_gathering_rooms.sql`](../supabase/migrations/20260812170000_community_gathering_rooms.sql) once in the Supabase SQL editor. It backfills rooms for existing linked events and seeds future rooms automatically.
 
+Then apply [`20260813100000_community_gathering_reminder_delivery.sql`](../supabase/migrations/20260813100000_community_gathering_reminder_delivery.sql). It keeps reminders inside the existing notification outbox and Resend worker, sends members back to the protected Gathering room, alerts Hosts to new pre-event questions and announces a newly published recap. Delivery remains consent-led; choosing **I’m going** does not automatically subscribe a member to email.
+
 After applying it, verify:
 
 ```sql
@@ -64,5 +66,14 @@ Use one Host, one backup moderator, two ordinary members and one Super Admin.
 - Move the event past the close time and confirm the room is read-only.
 - Publish a recap and confirm only that recap enters permanent Conversations.
 - Check keyboard, VoiceOver/TalkBack and 360 px mobile layout.
+
+Automated evidence commands:
+
+```bash
+npm run ops:community:gathering-readiness
+npm run ops:community:accept-gatherings
+```
+
+The first command is read-only and verifies the deployed schema and signed-out boundaries. The second uses only the four reserved `.invalid` test identities. If a test credential has drifted, restore `SUPABASE_SECRET_KEY` locally and run `npm run ops:provision-community-test-cohort` before retrying. No key or password is printed.
 
 Do not enable member-created paid Gatherings or automatic Host settlements until commerce, refund and payout acceptance is separately complete.

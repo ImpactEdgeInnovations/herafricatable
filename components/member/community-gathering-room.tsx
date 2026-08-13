@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -72,14 +72,20 @@ function plainLabel(value: string) {
 
 export function CommunityGatheringRoom({
   attendees: initialAttendees,
+  communityId,
   currentUserId,
+  eventId,
   messages: initialMessages,
+  reminderWindow: initialReminderWindow,
   questions: initialQuestions,
   room: initialRoom,
 }: {
   attendees: CommunityGatheringAttendee[];
+  communityId: string;
   currentUserId: string;
+  eventId: string;
   messages: CommunityGatheringMessage[];
+  reminderWindow: "day_before" | "hour_before" | null;
   questions: CommunityGatheringQuestion[];
   room: CommunityGatheringRoomState;
 }) {
@@ -94,6 +100,7 @@ export function CommunityGatheringRoom({
   const [question, setQuestion] = useState("");
   const [recap, setRecap] = useState(initialRoom.recap_body ?? "");
   const [discoverable, setDiscoverable] = useState(initialRoom.my_discoverable);
+  const [reminderWindow, setReminderWindow] = useState(initialReminderWindow ?? "");
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
   const questionsOpen = Date.now() >= new Date(room.questions_open_at).getTime()
@@ -135,6 +142,24 @@ export function CommunityGatheringRoom({
     setRoom((current) => ({ ...current, my_rsvp: status, my_discoverable: status === "going" && discoverable }));
     setNotice(status === "going" ? "Your place is saved." : "Thanks for letting the Host know.");
     router.refresh();
+  }
+
+  async function saveReminder(event: ChangeEvent<HTMLSelectElement>) {
+    const next = event.target.value as "" | "day_before" | "hour_before";
+    const previous = reminderWindow;
+    setReminderWindow(next);
+    setBusy("reminder"); setNotice("");
+    const { error } = await supabase.rpc("set_my_community_event_reminder", {
+      p_community_id: communityId,
+      p_event_id: eventId,
+      p_reminder_window: next || null,
+    });
+    setBusy("");
+    if (error) {
+      setReminderWindow(previous);
+      return setNotice(memberErrorMessage(error, "save your reminder"));
+    }
+    setNotice(next ? "Your reminder is saved." : "Your reminder was removed.");
   }
 
   async function sendMessage(event: FormEvent) {
@@ -253,6 +278,7 @@ export function CommunityGatheringRoom({
             <button className={room.my_rsvp === "going" ? "button button-primary" : "button button-outline"} disabled={busy === "rsvp"} onClick={() => void saveRsvp("going")} type="button">I’m going</button>
             <button disabled={busy === "rsvp"} onClick={() => void saveRsvp("not_going")} type="button">I can’t make it</button>
             <label><input checked={discoverable} onChange={(event) => setDiscoverable(event.target.checked)} type="checkbox" /> Let other attendees see me</label>
+            {room.my_rsvp === "going" ? <label className="gathering-reminder">Remind me<select aria-label="Gathering reminder" disabled={busy === "reminder"} onChange={(event) => void saveReminder(event)} value={reminderWindow}><option value="">No reminder</option><option value="day_before">One day before</option><option value="hour_before">One hour before</option></select></label> : null}
           </> : null}
           {room.meeting_url ? <a className="button button-primary" href={room.meeting_url} rel="noopener noreferrer" target="_blank">Join online gathering ↗</a> : room.format !== "in_person" && room.my_rsvp === "going" ? <small>The private joining link appears here 30 minutes before the gathering.</small> : null}
         </div>

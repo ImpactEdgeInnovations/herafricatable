@@ -33,11 +33,12 @@ export default async function CommunityGatheringPage({
   const community = ((communitiesResult.data as CommunitySummary[] | null) ?? []).find((item) => item.slug === slug);
   if (!community || community.membership_status !== "active") notFound();
   if (!eventResult.data) notFound();
+  const eventId = eventResult.data.id;
   const canManage = ["owner", "moderator"].includes(community.membership_role ?? "");
 
   const roomResult = await supabase.rpc("get_community_gathering_room", {
     p_community_id: community.community_id,
-    p_event_id: eventResult.data.id,
+    p_event_id: eventId,
   });
   const room = ((roomResult.data as CommunityGatheringRoomState[] | null) ?? [])[0] ?? null;
   if (roomResult.error) {
@@ -55,10 +56,11 @@ export default async function CommunityGatheringPage({
   }
   if (!room) notFound();
 
-  const [messageResult, questionResult, attendeeResult] = await Promise.all([
+  const [messageResult, questionResult, attendeeResult, preferenceResult] = await Promise.all([
     supabase.rpc("list_community_gathering_messages", { p_limit: 200, p_room_id: room.room_id }),
     supabase.rpc("list_community_gathering_questions", { p_room_id: room.room_id }),
     supabase.rpc("list_community_gathering_attendees", { p_room_id: room.room_id }),
+    supabase.rpc("list_my_community_event_preferences", { p_community_id: community.community_id }),
   ]);
 
   return (
@@ -67,9 +69,12 @@ export default async function CommunityGatheringPage({
       <CommunityLocalNavigation active="gatherings" canManage={canManage} slug={slug} />
       <CommunityGatheringRoom
         attendees={(attendeeResult.data as CommunityGatheringAttendee[] | null) ?? []}
+        communityId={community.community_id}
         currentUserId={user.id}
+        eventId={eventId}
         messages={(messageResult.data as CommunityGatheringMessage[] | null) ?? []}
         questions={(questionResult.data as CommunityGatheringQuestion[] | null) ?? []}
+        reminderWindow={((preferenceResult.data as { event_id: string; reminder_window: "day_before" | "hour_before" | null }[] | null) ?? []).find((item) => item.event_id === eventId)?.reminder_window ?? null}
         room={room}
       />
     </main>

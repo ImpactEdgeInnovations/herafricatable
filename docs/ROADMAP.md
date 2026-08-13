@@ -131,7 +131,11 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [x] Route private message reports into the bounded Admin safety queue
 - [x] Return only a Host-reviewed recap to permanent Community Conversations
 - [x] Add a Community-wide **Live now** notice and page-aware Nia gathering guidance
-- [ ] Apply `20260812170000_community_gathering_rooms.sql` in production Supabase
+- [x] Apply `20260812170000_community_gathering_rooms.sql` in production Supabase
+- [x] Verify the deployed schema plus signed-out room, write and safety boundaries
+- [x] Add consent-led on-page reminders that return members to the Gathering room
+- [x] Notify Hosts about new pre-event questions and members when a recap is first published
+- [ ] Apply `20260813100000_community_gathering_reminder_delivery.sql` in production Supabase
 - [ ] Complete the multi-account rehearsal in `docs/COMMUNITY_GATHERINGS_OPERATIONS.md`
 
 ## Community joining and Event-to-Community journey — 12 August 2026

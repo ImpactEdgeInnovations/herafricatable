@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 const root = new URL("../", import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), "utf8");
 const migration = read("supabase/migrations/20260812170000_community_gathering_rooms.sql");
+const reminderMigration = read("supabase/migrations/20260813100000_community_gathering_reminder_delivery.sql");
 const room = read("components/member/community-gathering-room.tsx");
 const navigation = read("components/member/community-local-navigation.tsx");
 const page = read("app/communities/[slug]/gatherings/[eventSlug]/page.tsx");
@@ -25,6 +26,16 @@ for (const contract of [
   "Please pause for a moment before sending another message",
 ]) assert(migration.includes(contract), `Gathering migration must include ${contract}`);
 
+for (const contract of [
+  "queue_due_community_event_reminders",
+  "community_event_reminders",
+  "notify_community_gathering_question",
+  "notify_community_gathering_recap",
+  "enqueue_notification",
+  "community_slug || '/gatherings/' || target.event_slug",
+  "not profile.is_test_account",
+]) assert(reminderMigration.includes(contract), `Gathering delivery must include ${contract}`);
+
 assert(
   migration.includes("meeting_url is null or meeting_url ~ '^https://'") &&
     migration.includes("then room.meeting_url else null end"),
@@ -44,6 +55,8 @@ for (const contract of [
   "Report this message",
   "Host settings",
   "Publish to Conversations",
+  "Gathering reminder",
+  "One day before",
   'target="_blank"',
 ]) assert(room.includes(contract), `Gathering room UI must include ${contract}`);
 
