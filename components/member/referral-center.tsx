@@ -102,7 +102,7 @@ export function ReferralCenter({
         <form onSubmit={(event) => void submit(event)}>
           {campaigns.length > 1 ? (
             <label>
-            Invitation programme
+            Choose an invitation
             <select
               name="campaign_id"
               required
@@ -170,7 +170,7 @@ export function ReferralCenter({
           </div>
           <span>
             {referrals.filter((item) => item.status === "activated").length}{" "}
-            activated
+            joined
           </span>
         </header>
         {referrals.length ? (
@@ -199,7 +199,7 @@ export function ReferralCenter({
           </div>
         ) : (
           <div className="admin-empty">
-            <strong>No referrals submitted</strong>
+            <strong>No introductions yet</strong>
             <p>
               Use your invitation thoughtfully when the right woman comes to
               mind.

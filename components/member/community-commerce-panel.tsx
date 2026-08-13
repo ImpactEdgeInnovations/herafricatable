@@ -657,8 +657,8 @@ export function CommunityCommercePanel({
                 <strong>Community approval</strong>
                 <small>
                   {releaseReady
-                    ? "Creator commerce is enabled."
-                    : "The platform release flag remains safely off."}
+                    ? "Paid member access is open."
+                    : "Paid member access is not open yet."}
                 </small>
               </div>
             </li>

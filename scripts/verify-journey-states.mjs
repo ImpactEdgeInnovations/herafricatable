@@ -438,9 +438,10 @@ for (const contract of [
   );
 }
 for (const [content, contract, description] of [
-  [memberExplore, "More ways to use the table.", "give members one plain-language tool directory"],
-  [memberExplore, "Everything shown here is ready to use", "hide gated tools until they are ready"],
+  [memberExplore, "What would you like to do?", "give members one plain-language tool directory"],
+  [memberExplore, "Only available", "hide gated tools until they are ready"],
   [memberHeader, 'href: "/communities"', "make Community a primary member destination"],
+  [memberHeader, 'href: "/explore"', "keep secondary tools easy to find without crowding Home"],
   [opportunityMarketplace, "initialComposerOpen", "keep the Ask/Offer composer closed until requested"],
   [opportunityMarketplace, "aria-expanded={composerOpen}", "expose composer state accessibly"],
   [membershipCenter, 'className="membership-empty"', "replace an unpublished-plan void with guidance"],
@@ -472,7 +473,7 @@ for (const contract of [
   "Where to participate",
   "What to follow up on",
   "member-home-secondary",
-  "Everything else is here when you need it.",
+  "Your progress, invitations and account details.",
   "Show more",
 ]) {
   assert(
@@ -727,7 +728,7 @@ for (const contract of [
   "Share public page",
   "at least three clear member benefits",
   "Posts, replies, member names",
-  "readiness checks",
+  "final review",
 ]) {
   assert(
     communityPublicProfilePanel.includes(contract),
@@ -1586,7 +1587,7 @@ assert(
 const explorePage = read("app/explore/page.tsx");
 assert(
   explorePage.includes("visibleGroups") &&
-    explorePage.includes("Everything shown here is ready to use") &&
+    explorePage.includes("Only available") &&
     !explorePage.includes('aria-disabled="true"'),
   "Explore must show only member tools that are ready to use",
 );

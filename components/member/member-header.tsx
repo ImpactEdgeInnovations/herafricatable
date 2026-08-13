@@ -7,6 +7,7 @@ type MemberDestination =
   | "account"
   | "community"
   | "events"
+  | "explore"
   | "home"
   | "members"
   | "messages";
@@ -31,7 +32,7 @@ const destinations: {
   {
     href: "/communities",
     key: "community",
-    label: "Community",
+    label: "Communities",
     shortLabel: "Community",
   },
   { href: "/network", key: "members", label: "Members", shortLabel: "Members" },
@@ -42,6 +43,7 @@ const destinations: {
     label: "Messages",
     shortLabel: "Messages",
   },
+  { href: "/explore", key: "explore", label: "More", shortLabel: "More" },
   { href: "/profile", key: "account", label: "My profile", shortLabel: "Me" },
 ];
 
@@ -63,6 +65,14 @@ function MemberIcon({ destination }: { destination: MemberDestination }) {
       <>
         <rect x="4" y="5" width="16" height="15" rx="2" />
         <path d="M8 3v4M16 3v4M4 10h16" />
+      </>
+    ),
+    explore: (
+      <>
+        <circle cx="7" cy="7" r="1.5" />
+        <circle cx="17" cy="7" r="1.5" />
+        <circle cx="7" cy="17" r="1.5" />
+        <circle cx="17" cy="17" r="1.5" />
       </>
     ),
     home: (
@@ -136,7 +146,8 @@ export async function MemberHeader({
       : destination,
   );
   const mobileNavigation = navigation.filter(
-    (destination) => destination.key !== "account",
+    (destination) =>
+      destination.key !== "account" && destination.key !== "explore",
   );
   const memberName = profile?.display_name?.trim() || "Member";
   const memberInitial = memberName.charAt(0).toUpperCase();

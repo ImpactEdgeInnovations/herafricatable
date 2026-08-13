@@ -82,15 +82,15 @@ export default async function CirclesPage({
     <main className="circles-page">
       <MemberHeader label="Circles" />
       <section className="circles-hero">
-        <p className="eyebrow">Deterministic, human-reviewed matching</p>
+        <p className="eyebrow">Small groups, thoughtfully matched</p>
         <h1>
           A smaller table
           <br />
           within the table.
         </h1>
         <p>
-          Time-bound cohorts shaped by shared context, complementary ambition
-          and an explicit human release decision.
+          Short, guided groups shaped around shared goals and complementary
+          experience. Our team reviews every match before a Circle opens.
         </p>
       </section>
       {journeyError ? (

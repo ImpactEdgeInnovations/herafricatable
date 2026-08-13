@@ -253,8 +253,8 @@ export function CommunityDirectory({
               : ["paused", "suspended"].includes(item.membership_status ?? "")
                 ? "Temporarily paused"
               : item.effective_mode === "approval" || item.community_type === "private"
-                ? "Approval required"
-                : "Open to members";
+                ? "Request to join"
+                : "Join now";
 
     return (
       <article
@@ -292,10 +292,10 @@ export function CommunityDirectory({
             <div>
               <small>
                 {item.community_type === "private"
-                  ? "Private community"
+                  ? "Private · Invitation or approval"
                   : item.effective_mode === "approval"
-                    ? "Public · Host approval"
-                    : "Public · Open to members"}
+                    ? "Visible to members · Leader approves requests"
+                    : "Visible to members · Join now"}
               </small>
               <h3>{item.name}</h3>
             </div>

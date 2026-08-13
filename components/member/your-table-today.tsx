@@ -24,9 +24,9 @@ export function YourTableToday({
       <header>
         <div>
           <p className="eyebrow">Your Table Today</p>
-          <h2 id="table-today-title">Three useful places to begin.</h2>
+          <h2 id="table-today-title">A simple place to start.</h2>
         </div>
-        <p>Chosen from what you have shared. Nothing here is automatic.</p>
+        <p>Based on what you told us. You are always in control.</p>
       </header>
       <div className="table-today-grid">
         {suggestions.map((suggestion, index) => (

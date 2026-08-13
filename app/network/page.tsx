@@ -93,7 +93,7 @@ export default async function NetworkPage({
       <section className="network-hero">
         <div>
           <p className="eyebrow">Members</p>
-          <h1>Meet women in the room</h1>
+          <h1>Meet women across the Table</h1>
           <p>
             See who is here, learn what they care about and ask to connect when
             it feels relevant. Messaging opens when you both agree.
@@ -101,10 +101,10 @@ export default async function NetworkPage({
         </div>
         <aside aria-label="Network summary">
           <span>
-            <strong>{accepted.length}</strong> people you know
+            <strong>{accepted.length}</strong> connection{accepted.length === 1 ? "" : "s"}
           </span>
           <span>
-            <strong>{pending.length}</strong> invitations
+            <strong>{pending.length}</strong> waiting for you
           </span>
         </aside>
       </section>

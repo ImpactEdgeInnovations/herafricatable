@@ -59,10 +59,10 @@ export default async function CommunitiesPage() {
   if (!communityAvailable) {
     return (
       <main className="community-page">
-        <MemberHeader active="community" label="Community" />
+        <MemberHeader active="community" label="Communities" />
         <section className="community-hero community-preview-hero">
           <div>
-            <p className="eyebrow">Community</p>
+            <p className="eyebrow">Communities</p>
             <h1>
               Find your people.
               <br />
@@ -175,10 +175,10 @@ export default async function CommunitiesPage() {
 
   return (
     <main className="community-page">
-      <MemberHeader active="community" label="Community" />
+      <MemberHeader active="community" label="Communities" />
       <section className="community-hero community-member-hero">
         <div>
-          <p className="eyebrow">Community</p>
+          <p className="eyebrow">Communities</p>
           <h1>
             Your people,
             <br />

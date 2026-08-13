@@ -709,11 +709,11 @@ export default async function MemberHomePage() {
         <details className="member-home-secondary">
           <summary>
             <div>
-              <p className="eyebrow">Your progress and more</p>
-              <h2>Everything else is here when you need it.</h2>
+              <p className="eyebrow">More from your membership</p>
+              <h2>Your progress, invitations and account details.</h2>
               <p>
-                See your Table Journey, member tools, private feedback and past
-                orders without crowding your home page.
+                Open these only when you need them. Your main Home page stays
+                focused on what matters today.
               </p>
             </div>
             <span>
@@ -928,7 +928,7 @@ export default async function MemberHomePage() {
               {accessStatus === "active" ? (
                 <Link href="/opportunities">
                   <small>Ask or offer</small>
-                  <strong>Opportunities</strong>
+                  <strong>Ask or offer</strong>
                   <span>Share what you need or can offer →</span>
                 </Link>
               ) : null}
@@ -963,13 +963,13 @@ export default async function MemberHomePage() {
               {referralFlagResult.data?.enabled ? (
                 <Link href="/referrals">
                   <small>Invite someone</small>
-                  <strong>Referrals</strong>
+                  <strong>Invite a member</strong>
                   <span>Recommend a woman you trust →</span>
                 </Link>
               ) : null}
               <Link href="/support">
                 <small>Need help?</small>
-                <strong>Support</strong>
+                <strong>Get help</strong>
                 <span>Send a private request →</span>
               </Link>
             </div>

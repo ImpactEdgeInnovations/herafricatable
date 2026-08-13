@@ -41,8 +41,8 @@ const groups: { description: string; label: string; tools: Tool[] }[] = [
     ],
   },
   {
-    label: "Grow and benefit",
-    description: "Use learning, invitations and carefully reviewed benefits.",
+    label: "Learn and invite",
+    description: "Learn, invite someone you trust and use member benefits.",
     tools: [
       {
         label: "Learning studio",
@@ -128,15 +128,15 @@ export default async function ExplorePage() {
 
   return (
     <main className="member-explore-page">
-      <MemberHeader label="Explore" />
+      <MemberHeader active="explore" label="More" />
       <section className="member-explore-hero">
         <div>
-          <p className="eyebrow">Your wider membership</p>
-          <h1>More ways to use the table.</h1>
+          <p className="eyebrow">More from your membership</p>
+          <h1>What would you like to do?</h1>
         </div>
         <p>
-          Everything shown here is ready to use. New member benefits will
-          appear only when they are complete.
+          Connect, learn, invite someone or get private help. Only available
+          areas appear here.
         </p>
       </section>
 
@@ -161,10 +161,9 @@ export default async function ExplorePage() {
                 {group.tools.map((tool) => {
                   const content = (
                     <>
-                      <span>Ready</span>
                       <strong>{tool.label}</strong>
                       <p>{tool.description}</p>
-                      <small>Open →</small>
+                      <small>Go there →</small>
                     </>
                   );
                   return <Link href={tool.href} key={tool.href}>{content}</Link>;

@@ -7,10 +7,10 @@ export type CommunityArea =
   | "people";
 
 const areas: { key: CommunityArea; label: string }[] = [
-  { key: "overview", label: "Overview" },
+  { key: "overview", label: "Home" },
   { key: "conversations", label: "Conversations" },
-  { key: "gatherings", label: "Gatherings" },
-  { key: "people", label: "People" },
+  { key: "gatherings", label: "Events" },
+  { key: "people", label: "Members" },
 ];
 
 export function CommunityLocalNavigation({
@@ -37,7 +37,9 @@ export function CommunityLocalNavigation({
       </div>
       <div className="community-local-more">
         <Link href={`/communities/${slug}/about`}>About</Link>
-        {canManage ? <Link href={`/communities/${slug}/host`}>Host tools</Link> : null}
+        {canManage ? (
+          <Link href={`/communities/${slug}/host`}>Manage community</Link>
+        ) : null}
       </div>
     </nav>
   );

@@ -171,7 +171,7 @@ export function CommunityPublicProfilePanel({
                 <li>Our team must approve the Community.</li>
               ) : null}
               {!profile?.release_ready ? (
-                <li>The Community readiness checks must be complete.</li>
+                <li>Our team must finish the final opening review.</li>
               ) : null}
               {!taglineReady ? (
                 <li>Add a short tagline under Look &amp; feel.</li>
@@ -275,7 +275,7 @@ export function CommunityPublicProfilePanel({
             <span>
               <strong>Make this page shareable</strong>
               <small>
-                This opens after the Community readiness checks are complete.
+                This opens after our team completes the final review.
               </small>
             </span>
           </label>
