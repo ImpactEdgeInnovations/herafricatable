@@ -15,6 +15,12 @@ room returns no data. The four-account write rehearsal is prepared but requires 
 reserved backup-moderator credential to be refreshed using the ignored local server
 key before it can produce final live-window evidence.
 
+Reminder delivery and standalone event-question readiness were verified later on
+13 August 2026. The reminder scheduler is deployed and service-only. Event questions,
+supports and report projections are private; signed-out visitors cannot list, submit,
+support, answer, report or read the Admin queue. Positive member/Host/Admin writes
+remain part of the credentialed multi-account rehearsal.
+
 ## Passed with live Supabase accounts
 
 - Two ordinary members, one Community owner and one backup Moderator all hold

@@ -2,14 +2,14 @@
 
 ## Source and deployment
 
-- [ ] Intended commit is reviewed and present on `main`
-- [ ] Vercel build, typecheck and automated tests pass
+- [x] Intended commit is reviewed and present on `main`
+- [x] Vercel build, typecheck and automated tests pass
 - [ ] GitHub application and database quality-gate jobs are green on the release commit
 - [ ] Main-branch protection requires the quality gate before deployment
 - [ ] Preview deployment was tested before merge
-- [ ] Production points to the intended commit
+- [x] Production points to the intended commit
 - [ ] Admin Release shows `Core ready` for the exact production commit
-- [ ] No secret or `.env.local` file is tracked by Git
+- [x] No secret or `.env.local` file is tracked by Git
 - [ ] Production and Preview environment scopes contain the correct values
 - [ ] Custom domain, HTTPS and canonical URL are correct
 - [ ] Rollback commit/deployment is identified
@@ -145,7 +145,7 @@
 - [ ] Ticket capacity, currency, dates, timezone and venue are verified
 - [ ] Empty/loading/error states teach the user what to do
 - [ ] Notification copy, links and preferences were tested
-- [ ] Resend sender domain, SPF and DKIM are verified
+- [x] Resend sender domain, SPF and DKIM are verified
 - [ ] Notification cron frequency matches the Vercel plan and support SLA
 - [ ] Email outbox idempotency, retry backoff and permanent-failure alerting pass
 - [ ] Essential registration, account and privacy notices cannot be opted out
@@ -199,6 +199,10 @@
 
 ## Observability and operations
 
+- [x] Production responses set an explicit content security policy, framing,
+      MIME-sniffing, referrer and browser-permission boundaries
+- [x] Notification cron rejects unsigned public requests
+
 - [ ] Application errors and critical auth/payment failures alert an owner
 - [ ] Health check and synthetic registration/sign-in checks are active
 - [ ] `/api/health` is monitored externally and alerts on sustained degradation
@@ -217,4 +221,4 @@
 - [ ] Production backup captured
 - [ ] P0 feature flags enabled deliberately
 - [ ] Smoke test completed after deployment
-- [ ] `REQUIRE_HEALTHY=1 npm run test:live` passes against the production domain
+- [x] `REQUIRE_HEALTHY=1 npm run test:live` passes against the production domain

@@ -135,7 +135,7 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [x] Verify the deployed schema plus signed-out room, write and safety boundaries
 - [x] Add consent-led on-page reminders that return members to the Gathering room
 - [x] Notify Hosts about new pre-event questions and members when a recap is first published
-- [ ] Apply `20260813100000_community_gathering_reminder_delivery.sql` in production Supabase
+- [x] Apply `20260813100000_community_gathering_reminder_delivery.sql` in production Supabase
 - [ ] Complete the multi-account rehearsal in `docs/COMMUNITY_GATHERINGS_OPERATIONS.md`
 
 ## Event questions and calmer Community rooms — 13 August 2026
@@ -151,7 +151,7 @@ A feature is not complete merely because its screen exists. It is complete when:
 - [x] Add member-only questions, support ranking, Host answers, private reports,
       rate limits, notifications, blocked-pair protection and audit records
 - [x] Route reported event questions into the bounded Admin safety workspace
-- [ ] Apply `20260813110000_event_host_questions.sql` in production Supabase
+- [x] Apply `20260813110000_event_host_questions.sql` in production Supabase
 - [ ] Rehearse ask, support, answer, hide and report with member, Host and moderator
       accounts before enabling event proposals for the full membership
 
