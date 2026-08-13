@@ -2037,7 +2037,8 @@ for (const contract of [
   "Plan a gathering",
   "Members only",
   "Save private draft",
-  "Send for review",
+  "Open for members",
+  "publish_community_gathering",
   "memberErrorMessage",
 ]) {
   assert(

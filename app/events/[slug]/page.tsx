@@ -178,7 +178,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     return { ...asset, signed_url: signed.data?.signedUrl ?? null };
   }));
 
-  const cta = hasEnded ? "Event completed" : event.registration_mode === "waitlist" ? "Join the waitlist" : event.registration_mode === "closed" ? "Registration closed" : event.registration_mode === "manual_review" ? "Request a seat" : "Register";
+  const gatheringRoomHref = useCommunityGathering && eventCommunity
+    ? `/communities/${eventCommunity.slug}/gatherings/${slug}`
+    : null;
+  const cta = gatheringRoomHref
+    ? hasEnded ? "View gathering recap" : "Open gathering room"
+    : hasEnded ? "Event completed" : event.registration_mode === "waitlist" ? "Join the waitlist" : event.registration_mode === "closed" ? "Registration closed" : event.registration_mode === "manual_review" ? "Request a seat" : "Register";
 
   return (
     <main className="event-detail-page">
@@ -190,7 +195,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <div><p className="eyebrow">{event.audience === "community" ? "Private Community gathering" : event.format.replace("_", " ")} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "A carefully curated Her Africa Table gathering."}</p>{eventCommunity ? <span className="event-community-badge">{event.audience === "community" ? `For active members of ${eventCommunity.name}` : `Hosted with ${eventCommunity.name}`}</span> : null}</div>
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div></dl>
-          {hasEnded || event.registration_mode === "closed" ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}
+          {gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : hasEnded || event.registration_mode === "closed" ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}
         </aside>
       </section>
 
@@ -223,7 +228,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         />
       ) : null}
 
-      {!hasEnded && event.registration_mode !== "closed" ? (
+      {!hasEnded && !gatheringRoomHref && event.registration_mode !== "closed" ? (
         <section className="event-inline-registration" id="registration">
           {user && memberProfile?.access_status === "active" ? (
             <EventRegistrationForm

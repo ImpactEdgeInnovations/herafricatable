@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import "./community-compact.css";
 import "./membership-waiting.css";
+import "./admin-community.css";
 
 export const metadata: Metadata = {
   title: {

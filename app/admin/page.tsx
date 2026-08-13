@@ -77,6 +77,7 @@ export default async function AdminHomePage() {
     marketplaceReports,
     communityReports,
     membershipIntakeResult,
+    communityApplicationResult,
   ] = await Promise.all([
     role === "super_admin"
       ? supabase.rpc("list_admin_members_v3")
@@ -95,6 +96,9 @@ export default async function AdminHomePage() {
       : Promise.resolve({ data: [], error: null }),
     role === "super_admin"
       ? supabase.rpc("get_membership_intake_admin")
+      : Promise.resolve({ data: [], error: null }),
+    role === "super_admin"
+      ? supabase.rpc("list_community_host_applications_admin")
       : Promise.resolve({ data: [], error: null }),
   ]);
 
@@ -169,6 +173,11 @@ export default async function AdminHomePage() {
         },
       }[membershipIntake.mode]
     : null;
+  const pendingCommunityApplications = (
+    (communityApplicationResult.data as { status: string }[] | null) ?? []
+  ).filter((application) =>
+    ["pending", "under_review"].includes(application.status),
+  ).length;
 
   return (
     <main className="admin-command-center admin-cockpit">
@@ -243,6 +252,7 @@ export default async function AdminHomePage() {
         draftEvents={draftEvents}
         hasEvents={events.length > 0}
         openReports={openReports}
+        pendingCommunityApplications={pendingCommunityApplications}
         pendingMembers={pendingMembers}
         pendingRefunds={refundResult.count ?? 0}
         pendingRegistrations={registrationResult.count ?? 0}
@@ -278,6 +288,13 @@ export default async function AdminHomePage() {
               <small>Trust</small>
               <strong>Safety and member concerns</strong>
               <span>Help members and review private reports →</span>
+            </Link>
+          ) : null}
+          {role === "super_admin" ? (
+            <Link href="/admin/communities">
+              <small>Communities</small>
+              <strong>Community oversight</strong>
+              <span>Review new rooms and see Community health →</span>
             </Link>
           ) : null}
           {role === "super_admin" ? (

@@ -215,6 +215,7 @@ for (const specialist of [
 }
 for (const route of [
   "/admin/members",
+  "/admin/communities",
   "/admin/events",
   "/admin/cohort",
   "/admin/safety",
@@ -235,6 +236,7 @@ for (const path of [
   "app/admin/support/page.tsx",
   "app/admin/privacy/page.tsx",
   "app/admin/notifications/page.tsx",
+  "app/admin/communities/page.tsx",
 ]) {
   assert(
     read(path).includes("<AdminHeader"),
@@ -247,6 +249,47 @@ assert(
   "Shared Admin shell must provide mobile navigation and current-page context",
 );
 const adminOperations = read("app/admin/operations/page.tsx");
+const adminCommunitiesPage = read("app/admin/communities/page.tsx");
+const communityCommandCentre = read(
+  "components/admin/community-command-centre.tsx",
+);
+const adminCommunityCss = read("app/admin-community.css");
+for (const contract of [
+  "list_community_host_applications_admin",
+  "list_community_members",
+  "get_community_host_health",
+  "CommunityCommandCentre",
+]) {
+  assert(
+    adminCommunitiesPage.includes(contract),
+    `Dedicated Community Admin route must load ${contract}`,
+  );
+}
+for (const contract of [
+  "review_community_host_application",
+  "manage_community_lifecycle",
+  "Approve and create draft",
+  "View public details",
+  "Review concern",
+  "Community owner",
+  "contributions this week",
+]) {
+  assert(
+    communityCommandCentre.includes(contract),
+    `Community oversight desk must include ${contract}`,
+  );
+}
+for (const contract of [
+  ".community-command-hero",
+  ".community-oversight-layout",
+  ".community-health-strip",
+  "@media (max-width: 620px)",
+]) {
+  assert(
+    adminCommunityCss.includes(contract),
+    `Community oversight styling must include ${contract}`,
+  );
+}
 for (const group of [
   "people-and-launch",
   "event-work",

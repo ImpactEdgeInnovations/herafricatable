@@ -39,7 +39,7 @@ export type CommunityEventProposal = {
   visibility: string;
 };
 
-const steps = ["Purpose", "Time & place", "Safety & review"];
+const steps = ["Purpose", "Time & place", "Safety & open"];
 const statusLabels: Record<CommunityEventProposal["status"], string> = {
   approved: "Approved and open",
   cancelled: "Cancelled",
@@ -180,7 +180,7 @@ export function CommunityEventProposalPanel({
     }
     setBusy(true);
     setMessage("");
-    const { error } = await supabase.rpc("save_community_event_proposal", {
+    const { data: savedProposal, error } = await supabase.rpc("save_community_event_proposal", {
       p_accessibility_notes: values.accessibilityNotes.trim() || null,
       p_address_line: values.addressLine.trim() || null,
       p_capacity: Number(values.capacity),
@@ -196,7 +196,7 @@ export function CommunityEventProposalPanel({
       p_safety_contact_name: values.safetyContactName.trim(),
       p_safety_contact_phone: values.safetyContactPhone.trim(),
       p_starts_at: new Date(values.startsAt).toISOString(),
-      p_submit: submit,
+      p_submit: false,
       p_summary: values.summary.trim(),
       p_timezone: values.timezone,
       p_title: values.title.trim(),
@@ -204,10 +204,20 @@ export function CommunityEventProposalPanel({
     });
     setBusy(false);
     if (error) {
-      setMessage(memberErrorMessage(error, submit ? "send this gathering for review" : "save this private draft"));
+      setMessage(memberErrorMessage(error, submit ? "open this gathering" : "save this private draft"));
       return;
     }
-    setMessage(submit ? "Your gathering is with the review team." : "Private draft saved.");
+    if (submit) {
+      const { error: publishError } = await supabase.rpc(
+        "publish_community_gathering",
+        { p_proposal_id: savedProposal },
+      );
+      if (publishError) {
+        setMessage(memberErrorMessage(publishError, "open this gathering"));
+        return;
+      }
+    }
+    setMessage(submit ? "Your gathering is open to Community members." : "Private draft saved.");
     setExpanded(false);
     setEditingId(null);
     router.refresh();
@@ -241,7 +251,7 @@ export function CommunityEventProposalPanel({
         <div>
           <p className="eyebrow">Community gatherings</p>
           <h2 id="community-event-proposal-title">Bring members together.</h2>
-          <p>Plan a free gathering for this Community. It stays private until the Her Africa Table team has checked it.</p>
+          <p>Plan and open a free gathering for your members. You lead the room; Her Africa Table steps in only for public reach, payment or a safety concern.</p>
         </div>
         {migrationReady ? <button className="button button-primary" onClick={startNew} type="button">Plan a gathering</button> : null}
       </header>
@@ -287,9 +297,9 @@ export function CommunityEventProposalPanel({
                 <label>Responsible person on the day<input maxLength={120} onChange={(event) => update("safetyContactName", event.target.value)} placeholder="Full name" value={values.safetyContactName}/></label>
                 <label>Private contact number<input maxLength={40} onChange={(event) => update("safetyContactPhone", event.target.value)} placeholder="+254…" type="tel" value={values.safetyContactPhone}/></label>
                 <label className="form-wide">Accessibility or arrival information <small>Optional</small><textarea maxLength={1200} onChange={(event) => update("accessibilityNotes", event.target.value)} placeholder="Access needs, building entrance, transport or other useful context." rows={3} value={values.accessibilityNotes}/></label>
-                <label className="form-wide">Private note for the review team <small>Optional</small><textarea maxLength={1200} onChange={(event) => update("hostNote", event.target.value)} placeholder="Anything the team should understand before approving this gathering." rows={3} value={values.hostNote}/></label>
+                <label className="form-wide">Private planning note <small>Optional</small><textarea maxLength={1200} onChange={(event) => update("hostNote", event.target.value)} placeholder="Anything your Host team should remember about this gathering." rows={3} value={values.hostNote}/></label>
               </div>
-              <div className="community-event-review-note"><strong>What happens next</strong><p>The team checks the purpose, timing, venue and safety contact. Approval creates the real event, adds a free member place and opens it only inside this Community.</p></div>
+              <div className="community-event-review-note"><strong>Ready when you are</strong><p>Opening creates the gathering, adds free member places and quietly lets your Community know. It remains private to active members.</p></div>
             </div>
           ) : null}
 
@@ -298,7 +308,7 @@ export function CommunityEventProposalPanel({
             <button className="button button-outline" disabled={busy} onClick={() => step === 0 ? setExpanded(false) : setStep((current) => current - 1)} type="button">{step === 0 ? "Close" : "Back"}</button>
             <div>
               {step === steps.length - 1 ? <button className="button button-outline" disabled={busy} onClick={() => void save(false)} type="button">Save private draft</button> : null}
-              {step < steps.length - 1 ? <button className="button button-primary" onClick={continueForward} type="button">Continue</button> : <button className="button button-primary" disabled={busy} type="submit">{busy ? "Sending…" : "Send for review"}</button>}
+              {step < steps.length - 1 ? <button className="button button-primary" onClick={continueForward} type="button">Continue</button> : <button className="button button-primary" disabled={busy} type="submit">{busy ? "Opening…" : "Open for members"}</button>}
             </div>
           </footer>
         </form>
@@ -318,7 +328,7 @@ export function CommunityEventProposalPanel({
             </article>
           ))}
         </div>
-      ) : migrationReady && !expanded ? <div className="community-panel-empty"><strong>No gatherings proposed yet</strong><p>Begin with one useful reason for members to meet. The review team will help protect the rest.</p></div> : null}
+      ) : migrationReady && !expanded ? <div className="community-panel-empty"><strong>No gatherings planned yet</strong><p>Begin with one useful reason for members to meet. You can save privately before opening it.</p></div> : null}
       {message && !expanded ? <p className="manager-message" role="status">{message}</p> : null}
       {dialog}
     </section>

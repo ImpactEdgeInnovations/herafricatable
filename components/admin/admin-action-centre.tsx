@@ -12,6 +12,7 @@ export function AdminActionCentre({
   hasEvents,
   openReports,
   pendingMembers,
+  pendingCommunityApplications,
   pendingRefunds,
   pendingRegistrations,
   role,
@@ -20,6 +21,7 @@ export function AdminActionCentre({
   hasEvents: boolean;
   openReports: number;
   pendingMembers: number;
+  pendingCommunityApplications: number;
   pendingRefunds: number;
   pendingRegistrations: number;
   role: AdminRole;
@@ -27,14 +29,24 @@ export function AdminActionCentre({
   const actions: ActionItem[] = [];
 
   if (role === "super_admin") {
-    actions.push({
-      count: pendingMembers,
-      description: pendingMembers
-        ? "Approve or decline new membership access."
-        : "No new membership decisions are waiting.",
-      href: "/admin/members",
-      label: "Membership requests",
-    });
+    actions.push(
+      {
+        count: pendingMembers,
+        description: pendingMembers
+          ? "Approve or decline new membership access."
+          : "No new membership decisions are waiting.",
+        href: "/admin/members",
+        label: "Membership requests",
+      },
+      {
+        count: pendingCommunityApplications,
+        description: pendingCommunityApplications
+          ? "Review who wants to start a Community and why."
+          : "No new Community proposals are waiting.",
+        href: "/admin/communities#community-applications",
+        label: "Community proposals",
+      },
+    );
   }
 
   if (role !== "moderator") {

@@ -6,6 +6,7 @@ export type AdminRole = "super_admin" | "event_staff" | "moderator";
 
 type AdminDestination =
   | "cohort"
+  | "communities"
   | "delivery"
   | "events"
   | "invitations"
@@ -30,6 +31,12 @@ function AdminIcon({ destination }: { destination: AdminDestination | "member" }
         <circle cx="8" cy="9" r="3" />
         <circle cx="16" cy="9" r="3" />
         <path d="M3 20c.5-3.8 2.2-5.5 5-5.5s4.5 1.7 5 5.5M11 20c.5-3.8 2.2-5.5 5-5.5s4.5 1.7 5 5.5" />
+      </>
+    ),
+    communities: (
+      <>
+        <path d="M4 6.5h16v11H4z" />
+        <path d="M8 6.5V4h8v2.5M8 12h8M12 9v6" />
       </>
     ),
     delivery: (
@@ -140,6 +147,12 @@ export async function AdminHeader({
             key: "members" as const,
             label: "Members",
             shortLabel: "People",
+          },
+          {
+            href: "/admin/communities",
+            key: "communities" as const,
+            label: "Communities",
+            shortLabel: "Communities",
           },
         ]
       : []),

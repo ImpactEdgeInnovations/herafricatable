@@ -5,9 +5,12 @@ const root = new URL("../", import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), "utf8");
 const migration = read("supabase/migrations/20260812170000_community_gathering_rooms.sql");
 const reminderMigration = read("supabase/migrations/20260813100000_community_gathering_reminder_delivery.sql");
+const ownerLedMigration = read("supabase/migrations/20260813160000_owner_led_private_community_gatherings.sql");
 const room = read("components/member/community-gathering-room.tsx");
+const proposalPanel = read("components/community/community-event-proposal-panel.tsx");
 const navigation = read("components/member/community-local-navigation.tsx");
 const page = read("app/communities/[slug]/gatherings/[eventSlug]/page.tsx");
+const eventPage = read("app/events/[slug]/page.tsx");
 
 for (const contract of [
   "can_access_community_gathering",
@@ -59,5 +62,28 @@ for (const contract of [
   "One day before",
   'target="_blank"',
 ]) assert(room.includes(contract), `Gathering room UI must include ${contract}`);
+
+for (const contract of [
+  "publish_community_gathering",
+  "public.can_manage_community",
+  "community_only",
+  "pricing_mode <> 'free'",
+  "community.gathering_published_by_host",
+  "public.enqueue_notification",
+  "grant execute on function public.publish_community_gathering(uuid) to authenticated",
+]) assert(ownerLedMigration.includes(contract), `Owner-led private gathering contract must include ${contract}`);
+
+for (const contract of [
+  "publish_community_gathering",
+  "Open for members",
+  "Your gathering is open to Community members",
+  "public reach, payment or a safety concern",
+]) assert(proposalPanel.includes(contract), `Owner-led gathering UX must include ${contract}`);
+for (const contract of [
+  "gatheringRoomHref",
+  "Open gathering room",
+  "View gathering recap",
+  "!gatheringRoomHref",
+]) assert(eventPage.includes(contract), `Community event page must keep private gathering participation owner-led through ${contract}`);
 
 console.log("Community gathering contracts verified.");
