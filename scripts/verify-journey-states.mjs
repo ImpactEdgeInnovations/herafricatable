@@ -383,8 +383,6 @@ for (const contract of [
   );
 }
 for (const [route, area] of Object.entries({
-  "app/admin/events/page.tsx": "event-work",
-  "app/admin/members/page.tsx": "people-and-launch",
   "app/admin/programs/page.tsx": "member-programs",
   "app/admin/release/page.tsx": "release-tools",
   "app/admin/safety/page.tsx": "safety-work",
@@ -392,6 +390,77 @@ for (const [route, area] of Object.entries({
   assert(
     read(route).includes(`?area=${area}#${area}`),
     `${route} must preserve its focused operations deep link`,
+  );
+}
+const adminMembersPage = read("app/admin/members/page.tsx");
+const memberCommandCentre = read(
+  "components/admin/member-command-centre.tsx",
+);
+for (const contract of [
+  "list_admin_members_v3",
+  "get_membership_intake_admin",
+  "MemberCommandCentre",
+  'active="members"',
+]) {
+  assert(
+    adminMembersPage.includes(contract),
+    `Dedicated Member Admin route must load ${contract}`,
+  );
+}
+for (const contract of [
+  "review_member",
+  "set_membership_intake_mode",
+  "member-approved:",
+  "Approve and welcome",
+  "Pause access",
+  "Member-led by default",
+]) {
+  assert(
+    memberCommandCentre.includes(contract),
+    `Member oversight desk must include ${contract}`,
+  );
+}
+const adminEventsPage = read("app/admin/events/page.tsx");
+const eventCommandCentre = read(
+  "components/admin/event-command-centre.tsx",
+);
+for (const contract of [
+  "list_managed_events",
+  "list_event_registrations",
+  "list_event_refund_requests",
+  "MemberEventProposalManager",
+  "RegistrationManager",
+  "EventCheckinConsole",
+  "EventCommandCentre",
+]) {
+  assert(
+    adminEventsPage.includes(contract),
+    `Dedicated Event Admin route must load ${contract}`,
+  );
+}
+for (const contract of [
+  "Plan clearly. Welcome people well.",
+  "proposals waiting",
+  "registrations waiting",
+  "refunds waiting",
+  "Clear responsibility",
+]) {
+  assert(
+    eventCommandCentre.includes(contract),
+    `Event oversight desk must include ${contract}`,
+  );
+}
+const adminOversightCss = read("app/admin-oversight.css");
+for (const contract of [
+  ".member-command-page",
+  ".event-command-page",
+  ".member-oversight-layout",
+  ".event-oversight-layout",
+  "@media (max-width: 620px)",
+]) {
+  assert(
+    adminOversightCss.includes(contract),
+    `Member and Event oversight styling must include ${contract}`,
   );
 }
 const adminWorkGroup = read("components/admin/admin-work-group.tsx");

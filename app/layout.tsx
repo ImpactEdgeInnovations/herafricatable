@@ -4,6 +4,7 @@ import "./globals.css";
 import "./community-compact.css";
 import "./membership-waiting.css";
 import "./admin-community.css";
+import "./admin-oversight.css";
 
 export const metadata: Metadata = {
   title: {

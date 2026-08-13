@@ -50,7 +50,7 @@ export function AdminActionCentre({
   }
 
   if (role !== "moderator") {
-    const registrationHref = "/admin/events";
+    const registrationHref = "/admin/events?view=registrations";
     actions.push(
       {
         count: pendingRegistrations,
@@ -77,7 +77,7 @@ export function AdminActionCentre({
         description: draftEvents
           ? "Finish event details before publishing."
           : "There are no draft events requiring attention.",
-        href: "/admin/events",
+        href: "/admin/events?view=edit",
         label: "Draft events",
       },
     );
