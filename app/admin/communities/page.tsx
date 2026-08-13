@@ -7,6 +7,7 @@ import {
 import type { CommunityHostApplicationAdmin } from "@/components/admin/community-host-application-manager";
 import type { CommunityMember } from "@/components/admin/community-manager";
 import type { CommunitySummary } from "@/components/member/community-directory";
+import type { CommunityBrandIdentity } from "@/components/member/community-branding-panel";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -26,10 +27,11 @@ export default async function AdminCommunitiesPage() {
     .maybeSingle();
   if (!role) redirect("/admin");
 
-  const [communityResult, applicationResult, joiningResult] = await Promise.all([
+  const [communityResult, applicationResult, joiningResult, brandingResult] = await Promise.all([
     supabase.rpc("list_communities"),
     supabase.rpc("list_community_host_applications_admin"),
     supabase.rpc("list_community_joining_settings", { p_community_id: null }),
+    supabase.rpc("list_community_brand_identities", { p_community_id: null }),
   ]);
   const joiningByCommunity = new Map(
     ((joiningResult.data as {
@@ -44,6 +46,25 @@ export default async function AdminCommunitiesPage() {
     ...community,
     ...(joiningByCommunity.get(community.community_id) ?? {}),
   }));
+  const branding = await Promise.all(
+    (((brandingResult.data as CommunityBrandIdentity[] | null) ?? [])).map(
+      async (identity) => {
+        const [icon, cover] = await Promise.all([
+          identity.icon_storage_path
+            ? supabase.storage.from("community-media").createSignedUrl(identity.icon_storage_path, 3600)
+            : Promise.resolve({ data: null }),
+          identity.cover_storage_path
+            ? supabase.storage.from("community-media").createSignedUrl(identity.cover_storage_path, 3600)
+            : Promise.resolve({ data: null }),
+        ]);
+        return {
+          ...identity,
+          cover_url: cover.data?.signedUrl ?? null,
+          icon_url: icon.data?.signedUrl ?? null,
+        };
+      },
+    ),
+  );
 
   const [memberResults, healthResults] = await Promise.all([
     Promise.all(
@@ -90,15 +111,17 @@ export default async function AdminCommunitiesPage() {
         role="super_admin"
       />
       <CommunityCommandCentre
+        applicationReady={!applicationResult.error}
         applications={
           (applicationResult.data as CommunityHostApplicationAdmin[] | null) ?? []
         }
         communities={communities}
+        branding={branding}
         health={health}
         members={members}
         migrationReady={
           !communityResult.error &&
-          !applicationResult.error &&
+          !brandingResult.error &&
           memberResults.every((result) => !result.error) &&
           healthResults.every((result) => !result.error)
         }

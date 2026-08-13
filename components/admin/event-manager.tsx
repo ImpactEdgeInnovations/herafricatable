@@ -14,7 +14,7 @@ export type AdminEvent = {
   registration_mode: "automatic" | "manual_review" | "closed" | "waitlist";
   slug: string;
   starts_at: string;
-  status: "draft" | "published" | "cancelled" | "completed";
+  status: "draft" | "published" | "suspended" | "cancelled" | "completed";
   summary: string | null;
   timezone: string;
   title: string;
@@ -359,7 +359,8 @@ export function EventManager({
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="suspended" disabled>Suspended — use Event oversight</option>
+                <option value="cancelled" disabled>Cancelled — use Event oversight</option>
                 <option value="completed">Completed</option>
               </select>
             </label>
@@ -518,16 +519,20 @@ export function EventManager({
             <button
               className="button button-primary"
               type="submit"
-              disabled={saving}
+              disabled={saving || form.status === "suspended"}
             >
               {saving
                 ? "Saving event…"
+                : form.status === "suspended"
+                  ? "Reopen from Event oversight"
                 : form.id
                   ? "Save event"
                   : "Create event"}
             </button>
             <span>
-              {form.status === "published"
+              {form.status === "suspended"
+                ? "Suspended events are preserved and can only be reopened from Event oversight."
+                : form.status === "published"
                 ? "Publishing makes public fields immediately visible."
                 : "Drafts are visible only to authorized event administrators."}
             </span>

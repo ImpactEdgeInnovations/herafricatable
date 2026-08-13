@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminHeader, type AdminRole } from "@/components/admin/admin-header";
-import { EventCommandCentre } from "@/components/admin/event-command-centre";
+import {
+  EventCommandCentre,
+  type EventLifecycleState,
+} from "@/components/admin/event-command-centre";
 import { EventManager, type AdminEvent } from "@/components/admin/event-manager";
 import {
   RegistrationManager,
@@ -22,6 +25,11 @@ import {
   EventCheckinConsole,
   type CheckinAttendee,
 } from "@/components/admin/event-checkin-console";
+import {
+  MemberEventArchiveManager,
+  type EventMediaSubmissionAdmin,
+  type MemberEventArchiveAdmin,
+} from "@/components/admin/member-event-archive-manager";
 import { createClient } from "@/lib/supabase/server";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
@@ -34,7 +42,7 @@ type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   venue_name: string | null;
 };
 
-type EventView = "arrival" | "edit" | "overview" | "proposals" | "registrations";
+type EventView = "arrival" | "edit" | "overview" | "proposals" | "registrations" | "stories";
 
 const views: { href: EventView; label: string }[] = [
   { href: "overview", label: "Overview" },
@@ -42,6 +50,7 @@ const views: { href: EventView; label: string }[] = [
   { href: "edit", label: "Event details" },
   { href: "registrations", label: "Registrations" },
   { href: "arrival", label: "Guest arrival" },
+  { href: "stories", label: "Stories & media" },
 ];
 
 export const dynamic = "force-dynamic";
@@ -52,7 +61,7 @@ export default async function AdminEventsPage({
   searchParams: Promise<{ view?: string }>;
 }) {
   const { view: requestedView } = await searchParams;
-  const view = views.some((item) => item.href === requestedView)
+  let view = views.some((item) => item.href === requestedView)
     ? requestedView as EventView
     : "overview";
   const supabase = await createClient();
@@ -72,8 +81,12 @@ export default async function AdminEventsPage({
       ? "event_staff"
       : null;
   if (!role) redirect("/admin");
+  if (role !== "super_admin" && ["proposals", "stories"].includes(view)) {
+    view = "overview";
+  }
 
   const eventResult = await supabase.rpc("list_managed_events");
+  const lifecycleResult = await supabase.rpc("list_event_lifecycle_admin");
   const managedRows = (eventResult.data as ManagedEventRow[] | null) ?? [];
   const events: AdminEvent[] = managedRows.map((event) => ({
     capacity: event.capacity,
@@ -119,9 +132,7 @@ export default async function AdminEventsPage({
       view === "proposals"
         ? supabase.rpc("list_member_event_proposal_communities")
         : Promise.resolve({ data: [], error: null }),
-      view === "proposals"
-        ? supabase.rpc("list_admin_community_event_proposals")
-        : Promise.resolve({ data: [], error: null }),
+      supabase.rpc("list_admin_community_event_proposals"),
     ]);
     const contexts = (contextResult.data as {
       community_id: string | null;
@@ -172,26 +183,50 @@ export default async function AdminEventsPage({
     checkinReady = checkinResults.every((result) => !result.error);
   }
 
-  const proposalCount = memberProposals.filter((proposal) =>
-    ["submitted", "under_review"].includes(proposal.status),
-  ).length;
+  let archives: MemberEventArchiveAdmin[] = [];
+  let media: EventMediaSubmissionAdmin[] = [];
+  let storiesReady = true;
+  if (view === "stories" && role === "super_admin") {
+    const [archiveResult, mediaResult] = await Promise.all([
+      supabase.rpc("list_admin_member_event_archives"),
+      supabase.rpc("list_admin_event_media_submissions"),
+    ]);
+    archives = (archiveResult.data as MemberEventArchiveAdmin[] | null) ?? [];
+    const rawMedia = (mediaResult.data as EventMediaSubmissionAdmin[] | null) ?? [];
+    media = await Promise.all(rawMedia.map(async (item) => {
+      const signed = await supabase.storage
+        .from("event-media")
+        .createSignedUrl(item.storage_path, 3600);
+      return { ...item, image_url: signed.data?.signedUrl ?? null };
+    }));
+    storiesReady = !archiveResult.error && !mediaResult.error;
+  }
+
+  const proposalCount =
+    memberProposals.filter((proposal) =>
+      ["submitted", "under_review"].includes(proposal.status),
+    ).length +
+    communityProposals.filter((proposal) =>
+      ["submitted", "under_review"].includes(proposal.status),
+    ).length;
 
   return (
     <main className="admin-command-center event-command-page">
       <AdminHeader active="events" label="Event oversight" role={role} />
       <section className="oversight-subnav-shell">
         <nav className="oversight-subnav" aria-label="Event work">
-          {views.filter((item) => role === "super_admin" || item.href !== "proposals").map((item) => (
+          {views.filter((item) => role === "super_admin" || !["proposals", "stories"].includes(item.href)).map((item) => (
             <Link aria-current={view === item.href ? "page" : undefined} href={`/admin/events?view=${item.href}`} key={item.href}>{item.label}</Link>
           ))}
         </nav>
       </section>
 
-      {view === "overview" ? <EventCommandCentre events={events} proposalCount={proposalCount} refunds={refunds} registrations={registrations} /> : null}
-      {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager migrationReady={proposalReady} proposals={memberProposals} />{communityProposals.some((proposal) => ["submitted", "under_review"].includes(proposal.status)) ? <><div className="legacy-gathering-note"><strong>Older private gathering requests</strong><p>New free member-only gatherings are owner-led. This queue remains only so earlier submissions can be completed safely.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></> : null}</section> : null}
+      {view === "overview" ? <EventCommandCentre canControlLifecycle={role === "super_admin"} events={events} lifecycleReady={!lifecycleResult.error} lifecycleStates={(lifecycleResult.data as EventLifecycleState[] | null) ?? []} proposalCount={proposalCount} refunds={refunds} registrations={registrations} /> : null}
+      {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager migrationReady={proposalReady} proposals={memberProposals} /><div className="legacy-gathering-note"><strong>Community gathering history</strong><p>Free member-only gatherings are now owner-led. Earlier submissions remain visible here so Admin can understand the complete decision history.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></section> : null}
       {view === "edit" ? <section className="focused-admin-tool"><EventManager canCreate={role === "super_admin"} initialEvents={events} migrationReady={!eventResult.error} privateEvents={managedRows.map((event) => ({ event_id: event.event_id, online_url: event.online_url }))} /></section> : null}
       {view === "registrations" ? <section className="focused-admin-tool"><RegistrationManager events={events} initialPayments={payments} initialRefunds={refunds} initialRegistrations={registrations} initialTickets={tickets} migrationReady={registrationReady} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY && process.env.SUPABASE_SECRET_KEY && process.env.NEXT_PUBLIC_SITE_URL)} /></section> : null}
       {view === "arrival" ? <section className="focused-admin-tool"><EventCheckinConsole events={events.map((event) => ({ id: event.id, title: event.title, starts_at: event.starts_at, ends_at: event.ends_at }))} initialAttendees={checkinAttendees} migrationReady={checkinReady} /></section> : null}
+      {view === "stories" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventArchiveManager archives={archives} media={media} migrationReady={storiesReady} /></section> : null}
     </main>
   );
 }

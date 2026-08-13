@@ -21,6 +21,15 @@ export type CommunityHealth = {
   upcoming_gatherings: number;
 };
 
+type AdminCommunityBranding = {
+  community_id: string;
+  cover_alt_text: string | null;
+  cover_url: string | null;
+  icon_alt_text: string | null;
+  icon_url: string | null;
+  tagline: string | null;
+};
+
 const applicationLabels: Record<string, string> = {
   business_and_career: "Business and careers",
   creative_industries: "Creative industries",
@@ -38,13 +47,17 @@ function plural(value: number, one: string, many = `${one}s`) {
 }
 
 export function CommunityCommandCentre({
+  applicationReady,
   applications,
+  branding,
   communities,
   health,
   members,
   migrationReady,
 }: {
+  applicationReady: boolean;
   applications: CommunityHostApplicationAdmin[];
+  branding: AdminCommunityBranding[];
   communities: CommunitySummary[];
   health: CommunityHealth[];
   members: CommunityMember[];
@@ -149,25 +162,66 @@ export function CommunityCommandCentre({
 
   async function manageLifecycle(
     community: CommunitySummary,
-    action: "pause" | "close",
+    action: "pause" | "close" | "reopen" | "replace_host",
   ) {
+    const roster = members.filter(
+      (member) => member.community_id === community.community_id,
+    );
+    const successorOptions = roster
+      .filter(
+        (member) =>
+          member.role !== "owner" &&
+          ["active", "paused", "suspended"].includes(member.status),
+      )
+      .map((member) => ({
+        label: `${member.display_name || "Member"} · ${member.role}`,
+        value: member.membership_id,
+      }));
+    if (action === "replace_host" && !successorOptions.length) {
+      setMessage(
+        "Add an active member or backup moderator before replacing the owner.",
+      );
+      return;
+    }
+    const labels = {
+      close: { confirm: "Close and preserve", title: "Close" },
+      pause: { confirm: "Pause and preserve", title: "Pause" },
+      reopen: { confirm: "Reopen Community", title: "Reopen" },
+      replace_host: { confirm: "Transfer ownership", title: "Replace the owner of" },
+    }[action];
     const result = await ask({
-      confirmLabel: action === "pause" ? "Pause and preserve" : "Close and preserve",
+      confirmLabel: labels.confirm,
       description:
         action === "pause"
           ? "Member access and new activity will stop. Posts, memberships and records remain preserved while the issue is reviewed."
-          : "The Community will close to new activity. Its records remain preserved under the platform retention policy.",
-      fields: [{
-        help: "Record the operational or safety reason without adding unnecessary private information.",
-        label: "Reason",
-        maxLength: 1000,
-        minLength: 10,
-        name: "reason",
-        required: true,
-        type: "textarea",
-      }],
-      title: `${action === "pause" ? "Pause" : "Close"} ${community.name}?`,
-      tone: "danger",
+          : action === "reopen"
+            ? "Member access and preserved conversations return after the release checks confirm an active owner and backup moderator."
+            : action === "replace_host"
+              ? "The selected person becomes the owner. The previous owner remains in the Community as a member and the transfer is recorded."
+              : "The Community will close to new activity. Its records remain preserved under the platform retention policy.",
+      fields: [
+        ...(action === "replace_host"
+          ? [{
+              help: "Choose an existing member or backup moderator who has agreed to lead.",
+              label: "New Community owner",
+              name: "successor",
+              options: successorOptions,
+              required: true,
+              type: "select" as const,
+            }]
+          : []),
+        {
+          help: "Record the operational or safety reason without adding unnecessary private information.",
+          label: action === "reopen" ? "Reason for reopening" : "Reason",
+          maxLength: 1000,
+          minLength: 10,
+          name: "reason",
+          required: true,
+          type: "textarea" as const,
+        },
+      ],
+      title: `${labels.title} ${community.name}?`,
+      tone: ["pause", "close"].includes(action) ? "danger" : "default",
     });
     if (!result) return;
     setBusy(`lifecycle-${community.community_id}`);
@@ -176,13 +230,16 @@ export function CommunityCommandCentre({
       p_action: action,
       p_community_id: community.community_id,
       p_reason: String(result.reason ?? ""),
-      p_successor_membership_id: null,
+      p_successor_membership_id:
+        action === "replace_host" ? String(result.successor) : null,
     });
     setBusy("");
     setMessage(
       error
         ? adminErrorMessage(error, `${action} this Community`)
-        : `${community.name} was ${action === "pause" ? "paused" : "closed"}. Members were informed and records were preserved.`,
+        : action === "replace_host"
+          ? `${community.name} now has a new owner. The transfer was recorded.`
+          : `${community.name} was ${action === "pause" ? "paused" : action === "reopen" ? "reopened" : "closed"}. Members were informed and records were preserved.`,
     );
     if (!error) router.refresh();
   }
@@ -222,7 +279,7 @@ export function CommunityCommandCentre({
           <div><p className="eyebrow">Needs your decision</p><h2>New Community proposals</h2><p>See who is starting the Community, why it should exist and how she plans to keep it safe.</p></div>
           <span>{plural(openApplications.length, "proposal")}</span>
         </header>
-        {openApplications.length ? (
+        {!applicationReady ? <div className="community-command-clear"><strong>Community applications need the latest database repair.</strong><p>Existing Communities remain available below. No application decision can be made until the update is applied.</p></div> : openApplications.length ? (
           <div className="community-application-list">
             {openApplications.map((application) => (
               <article key={application.application_id}>
@@ -271,8 +328,10 @@ export function CommunityCommandCentre({
               const roster = members.filter((item) => item.community_id === community.community_id);
               const owner = roster.find((item) => item.role === "owner");
               const linkedApplication = applications.find((item) => item.created_community_id === community.community_id);
-              const isPaused = community.status === "draft" && owner?.status === "suspended";
+              const identity = branding.find((item) => item.community_id === community.community_id);
+              const isPaused = community.status === "draft" && roster.some((member) => ["paused", "suspended"].includes(member.status));
               return <article className="community-oversight-card" key={community.community_id}>
+                {identity?.cover_url || identity?.icon_url ? <div className="community-oversight-branding">{identity.cover_url ? <img className="community-oversight-cover" alt={identity.cover_alt_text || ""} src={identity.cover_url}/> : <span/>}{identity.icon_url ? <img className="community-oversight-icon" alt={identity.icon_alt_text || `${community.name} icon`} src={identity.icon_url}/> : null}</div> : null}
                 <header><div><span>{isPaused ? "Paused" : community.status === "published" ? "Open" : community.status}</span><h3>{community.name}</h3><p>{community.tagline || community.description}</p></div><div className="community-oversight-owner"><small>Community owner</small><strong>{owner?.display_name || linkedApplication?.applicant_name || "Not assigned"}</strong>{linkedApplication?.applicant_email ? <span>{linkedApplication.applicant_email}</span> : null}</div></header>
                 <div className="community-health-strip">
                   <article><strong>{Number(communityHealth?.active_members ?? community.member_count)}</strong><span>members</span></article>
@@ -293,7 +352,9 @@ export function CommunityCommandCentre({
                   <Link className="button button-outline" href={`/communities/${community.slug}/about`}>View public details</Link>
                   <Link className="button button-outline" href={`/admin/cohort?community=${community.community_id}#community-release-title`}>Launch checks</Link>
                   {Number(communityHealth?.open_reports ?? 0) ? <Link className="button button-primary" href="/admin/safety">Review concern</Link> : null}
-                  {community.status !== "archived" ? <button className="button button-quiet" disabled={busy === `lifecycle-${community.community_id}`} onClick={() => void manageLifecycle(community, "pause")}>Pause Community</button> : null}
+                  {isPaused ? <button className="button button-primary" disabled={busy === `lifecycle-${community.community_id}`} onClick={() => void manageLifecycle(community, "reopen")}>Reopen Community</button> : null}
+                  {community.status === "published" ? <button className="button button-quiet" disabled={busy === `lifecycle-${community.community_id}`} onClick={() => void manageLifecycle(community, "pause")}>Pause Community</button> : null}
+                  {community.status !== "archived" && roster.some((member) => member.role !== "owner" && ["active", "paused", "suspended"].includes(member.status)) ? <button className="button button-quiet" disabled={busy === `lifecycle-${community.community_id}`} onClick={() => void manageLifecycle(community, "replace_host")}>Replace owner</button> : null}
                   {community.status !== "archived" ? <button className="button button-quiet danger-action" disabled={busy === `lifecycle-${community.community_id}`} onClick={() => void manageLifecycle(community, "close")}>Close</button> : null}
                 </footer>
               </article>;

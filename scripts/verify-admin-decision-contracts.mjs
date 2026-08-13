@@ -17,6 +17,8 @@ const interfaceContracts = [
   ["components/admin/support-inbox.tsx", "manage_support_ticket"],
   ["components/admin/launch-gate-control.tsx", "save_launch_gate_check"],
   ["components/admin/referral-manager.tsx", "review_vouched_referral"],
+  ["components/admin/event-command-centre.tsx", "manage_event_lifecycle"],
+  ["components/admin/community-command-centre.tsx", "manage_community_lifecycle"],
 ];
 
 for (const [path, rpc] of interfaceContracts) {
@@ -78,6 +80,71 @@ for (const [path, name, launchBoundary] of [
 const registration = read("supabase/migrations/20260722130000_registration_commerce_foundation.sql");
 for (const contract of ["review_manual_registration", "can_manage_event", "fulfill_registration_order", "audit_events"]) {
   assert(registration.includes(contract), `Registration decisions must include ${contract}`);
+}
+
+const lifecycleRepairs = read(
+  "supabase/migrations/20260813190000_admin_lifecycle_repairs.sql",
+);
+for (const contract of [
+  "applicant_user.email::text",
+  "list_event_lifecycle_admin",
+  "manage_event_lifecycle",
+  "enforce_event_lifecycle_transition",
+  "pause_registrations",
+  "resume_registrations",
+  "status = 'suspended'",
+  "refund_pending",
+  "fulfill_registration_order",
+  "event.lifecycle_",
+  "enqueue_notification",
+  "A preserved owner and active backup moderator are required",
+]) {
+  assert(
+    lifecycleRepairs.includes(contract),
+    `Admin lifecycle repairs must include ${contract}`,
+  );
+}
+
+const eventCommand = read("components/admin/event-command-centre.tsx");
+for (const contract of [
+  "Pause registrations",
+  "Suspend event",
+  "Reopen event",
+  "Cancel event",
+  "Stories & media",
+  "Message for the Host and guests",
+]) {
+  assert(
+    eventCommand.includes(contract),
+    `Focused Event oversight must include ${contract}`,
+  );
+}
+
+const communityCommand = read("components/admin/community-command-centre.tsx");
+for (const contract of [
+  "Reopen Community",
+  "Replace owner",
+  "replace_host",
+  "Transfer ownership",
+]) {
+  assert(
+    communityCommand.includes(contract),
+    `Focused Community oversight must include ${contract}`,
+  );
+}
+
+const eventPage = read("app/admin/events/page.tsx");
+for (const contract of [
+  "list_event_lifecycle_admin",
+  "list_admin_member_event_archives",
+  "list_admin_event_media_submissions",
+  "MemberEventArchiveManager",
+  "Community gathering history",
+]) {
+  assert(
+    eventPage.includes(contract),
+    `Focused Event route must load ${contract}`,
+  );
 }
 
 console.log("Super Admin decision contracts verified across member, Community, event, registration, safety and operations interfaces.");

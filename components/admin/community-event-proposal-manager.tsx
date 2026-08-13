@@ -192,7 +192,7 @@ export function CommunityEventProposalManager({
                 </article>
               ))}
             </div>
-          ) : <div className="admin-empty admin-empty-compact"><strong>No proposals in this view</strong><p>New Host submissions will appear here with their private safety details.</p></div>}
+          ) : <div className="admin-empty admin-empty-compact"><strong>No gathering needs a decision</strong><p>Host drafts remain private until they are sent. Earlier decisions are available under Reviewed.</p></div>}
         </>
       )}
       {message ? <p className="manager-message" role="status">{message}</p> : null}

@@ -168,7 +168,7 @@ export function MemberEventProposalManager({
                 {proposal.canonical_event_slug ? <Link className="button button-outline" href={`/events/${proposal.canonical_event_slug}`}>View event</Link> : null}
               </footer>
             </article>
-          ))}</div> : <div className="admin-empty admin-empty-compact"><strong>No proposals in this view</strong><p>New member event ideas will appear here with their private hosting and safety details.</p></div>}
+          ))}</div> : <div className="admin-empty admin-empty-compact"><strong>No proposal needs a decision</strong><p>Member drafts remain private until they are sent. Previously decided applications are available under Reviewed.</p></div>}
         </>
       )}
       {message ? <p className="manager-message" role="status">{message}</p> : null}

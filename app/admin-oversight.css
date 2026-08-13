@@ -171,6 +171,7 @@
 .event-state-dot { background: #b9b3bb; border-radius: 50%; height: 8px; width: 8px; }
 .member-access-dot.is-active,
 .event-state-dot.is-published { background: #3d8b69; }
+.event-state-dot.is-suspended { background: #a65f42; }
 .member-access-dot.is-onboarding,
 .event-state-dot.is-draft { background: #b98b3e; }
 .member-access-dot.is-suspended,
@@ -231,6 +232,14 @@
 .event-health-strip strong { font-size: 1.05rem; }
 .event-health-strip span { color: var(--oversight-muted); font-size: .65rem; margin-top: 2px; }
 .featured-event-label { background: #ede5f0; border-radius: 999px; color: #654c70; font-size: .66rem; padding: 6px 9px; white-space: nowrap; }
+.event-lifecycle-notice { background: #fff7ed; border: 1px solid #ead6bf; border-radius: 12px; margin-top: 18px; padding: 13px 15px; }
+.event-lifecycle-notice.is-suspended { background: #fff1ee; border-color: #e7c8c1; }
+.event-lifecycle-notice strong,
+.event-lifecycle-notice small { display: block; }
+.event-lifecycle-notice strong { font-size: .78rem; }
+.event-lifecycle-notice p { color: #67584e; font-size: .76rem; line-height: 1.5; margin: 4px 0; }
+.event-lifecycle-notice small { color: var(--oversight-muted); font-size: .66rem; }
+.event-lifecycle-unavailable { color: #8a5e44; font-size: .72rem; margin: 12px 0 0; }
 .legacy-gathering-note { background: #fff8eb; border: 1px solid #ecd9ad; border-radius: 14px; margin: 0 0 20px; padding: 16px 18px; }
 .legacy-gathering-note strong { font-size: .84rem; }
 .legacy-gathering-note p { color: #74654b; font-size: .76rem; margin: 4px 0 0; }
