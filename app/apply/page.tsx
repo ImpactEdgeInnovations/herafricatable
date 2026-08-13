@@ -24,9 +24,9 @@ function safeNext(value: string | undefined) {
 export default async function MembershipApplicationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ edit?: string; next?: string }>;
 }) {
-  const { next } = await searchParams;
+  const { edit, next } = await searchParams;
   const nextHref = safeNext(next);
   const supabase = await createClient();
   const {
@@ -130,6 +130,9 @@ export default async function MembershipApplicationPage({
             null
           }
           nextHref={nextHref}
+          startEditing={
+            edit === "1" && applicationResult.data?.status === "submitted"
+          }
         />
       </div>
     </main>

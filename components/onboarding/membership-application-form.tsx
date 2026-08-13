@@ -38,17 +38,20 @@ export function MembershipApplicationForm({
   intakeMode,
   invitationContext,
   nextHref,
+  startEditing = false,
 }: {
   email: string;
   initial: MembershipApplication | null;
   intakeMode: "closed" | "manual_review" | "trusted_auto";
   invitationContext: MembershipInvitationContext | null;
   nextHref: string | null;
+  startEditing?: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(
-    initial?.status === "submitted" || initial?.status === "in_review",
+    !startEditing &&
+      (initial?.status === "submitted" || initial?.status === "in_review"),
   );
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");

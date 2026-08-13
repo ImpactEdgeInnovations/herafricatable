@@ -1,0 +1,247 @@
+.membership-waiting-page {
+  min-height: 100vh;
+  padding: 0 max(24px, calc((100vw - 1120px) / 2));
+  background:
+    radial-gradient(circle at 82% 22%, rgba(169, 127, 69, 0.1), transparent 24%),
+    var(--paper);
+}
+
+.membership-waiting-header {
+  display: flex;
+  min-height: 86px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  gap: 24px;
+}
+
+.membership-waiting-header > div {
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.67rem;
+  gap: 18px;
+}
+
+.membership-waiting-header .session-sign-out {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink);
+}
+
+.membership-waiting-shell {
+  display: grid;
+  min-height: calc(100vh - 180px);
+  align-items: center;
+  padding: clamp(46px, 7vw, 86px) 0;
+  grid-template-columns: minmax(0, 1.1fr) minmax(330px, 0.65fr);
+  gap: clamp(60px, 9vw, 120px);
+}
+
+.membership-waiting-copy h1 {
+  max-width: 720px;
+  margin: 14px 0 20px;
+  font-family: var(--serif);
+  font-size: clamp(3.35rem, 6vw, 5.75rem);
+  font-weight: 400;
+  letter-spacing: -0.058em;
+  line-height: 0.92;
+}
+
+.membership-waiting-copy > p:last-of-type {
+  max-width: 610px;
+  margin: 0;
+  color: #675e59;
+  font-size: 0.9rem;
+  line-height: 1.72;
+}
+
+.membership-waiting-actions {
+  display: flex;
+  align-items: center;
+  margin-top: 30px;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+.membership-waiting-actions .button {
+  min-height: 44px;
+}
+
+.membership-waiting-help {
+  color: var(--wine);
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-underline-offset: 4px;
+}
+
+.membership-waiting-status {
+  padding: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.membership-waiting-status ol {
+  display: grid;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.membership-waiting-status li {
+  position: relative;
+  display: grid;
+  min-height: 76px;
+  padding: 0 0 20px;
+  grid-template-columns: 32px 1fr;
+  gap: 13px;
+}
+
+.membership-waiting-status li:not(:last-child)::after {
+  position: absolute;
+  top: 31px;
+  bottom: 0;
+  left: 15px;
+  width: 1px;
+  background: rgba(43, 31, 26, 0.14);
+  content: "";
+}
+
+.membership-waiting-status li > span {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgba(100, 23, 42, 0.2);
+  border-radius: 50%;
+  color: #8b7d76;
+  font-size: 0.66rem;
+}
+
+.membership-waiting-status li.is-complete > span {
+  border-color: rgba(68, 112, 82, 0.28);
+  background: rgba(68, 112, 82, 0.08);
+  color: #3f7350;
+}
+
+.membership-waiting-status li.is-current > span {
+  border-color: var(--wine);
+  background: var(--wine);
+  color: #fff;
+}
+
+.membership-waiting-status li > div {
+  display: grid;
+  align-content: start;
+  padding-top: 2px;
+  gap: 5px;
+}
+
+.membership-waiting-status li strong {
+  font-size: 0.75rem;
+}
+
+.membership-waiting-status li small {
+  color: var(--muted);
+  font-size: 0.65rem;
+  line-height: 1.5;
+}
+
+.membership-waiting-time {
+  display: grid;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  gap: 5px;
+}
+
+.membership-waiting-time span,
+.membership-waiting-time small {
+  color: var(--muted);
+  font-size: 0.61rem;
+}
+
+.membership-waiting-time strong {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.membership-waiting-footer {
+  display: flex;
+  min-height: 74px;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.63rem;
+  gap: 24px;
+}
+
+.membership-waiting-footer p {
+  max-width: 650px;
+  margin: 0;
+}
+
+.membership-waiting-footer > div {
+  display: flex;
+  gap: 18px;
+}
+
+.membership-waiting-footer a {
+  color: var(--muted);
+}
+
+@media (max-width: 800px) {
+  .membership-waiting-shell {
+    grid-template-columns: 1fr;
+    gap: 38px;
+  }
+}
+
+@media (max-width: 620px) {
+  .membership-waiting-page {
+    padding: 0 16px 24px;
+  }
+
+  .membership-waiting-header {
+    min-height: 72px;
+  }
+
+  .membership-waiting-header > div > span {
+    display: none;
+  }
+
+  .membership-waiting-shell {
+    min-height: 0;
+    padding: 38px 0 32px;
+    gap: 30px;
+  }
+
+  .membership-waiting-copy h1 {
+    font-size: clamp(2.8rem, 13vw, 3.8rem);
+  }
+
+  .membership-waiting-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .membership-waiting-actions .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .membership-waiting-status {
+    padding: 24px 20px;
+  }
+
+  .membership-waiting-footer {
+    align-items: flex-start;
+    padding: 22px 0;
+    flex-direction: column;
+  }
+}

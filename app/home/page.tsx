@@ -17,6 +17,7 @@ import {
   YourTableToday,
   type TableTodaySuggestion,
 } from "@/components/member/your-table-today";
+import { MembershipWaitingRoom } from "@/components/onboarding/membership-waiting-room";
 
 export const dynamic = "force-dynamic";
 
@@ -95,11 +96,29 @@ export default async function MemberHomePage() {
     accessStatus === "pending"
       ? await supabase
           .from("membership_applications")
-          .select("status")
+          .select("status,submitted_at")
           .eq("user_id", user.id)
           .maybeSingle()
       : { data: null, error: null };
   const applicationStatus = membershipApplicationResult.data?.status ?? null;
+  if (
+    accessStatus === "pending" &&
+    !membershipApplicationResult.error &&
+    applicationStatus !== "declined"
+  ) {
+    return (
+      <MembershipWaitingRoom
+        displayName={profile?.display_name ?? null}
+        email={user.email ?? ""}
+        status={
+          applicationStatus === "submitted" || applicationStatus === "in_review"
+            ? applicationStatus
+            : null
+        }
+        submittedAt={membershipApplicationResult.data?.submitted_at ?? null}
+      />
+    );
+  }
   const { data: nextEventRow } = await supabase
     .from("events")
     .select(

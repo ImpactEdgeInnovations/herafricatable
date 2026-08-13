@@ -369,6 +369,8 @@ for (const contract of [
   "member-activation-progress",
   "Recommended now",
   "View every setup step",
+  "MembershipWaitingRoom",
+  'applicationStatus !== "declined"',
   "{orders.length ?",
 ]) {
   assert(
@@ -598,6 +600,13 @@ const communityStartPath = read(
 );
 const communityCompactCss = read("app/community-compact.css");
 const rootLayout = read("app/layout.tsx");
+const membershipWaitingRoom = read(
+  "components/onboarding/membership-waiting-room.tsx",
+);
+const membershipWaitingCss = read("app/membership-waiting.css");
+const membershipAdminNotificationMigration = read(
+  "supabase/migrations/20260813140000_membership_admin_request_notifications.sql",
+);
 const tableJourney = read("components/member/table-journey.tsx");
 const communityWelcomeQueue = read(
   "components/member/community-welcome-queue.tsx",
@@ -786,6 +795,8 @@ for (const contract of [
   "Private membership request",
   "membership_applications",
   "MembershipApplicationForm",
+  'edit === "1"',
+  "startEditing",
   'redirect("/home")',
 ]) {
   assert(
@@ -798,6 +809,7 @@ for (const contract of [
   "Your purpose",
   "Review",
   "submit_membership_application",
+  "!startEditing",
   "Request received",
   "Community Guidelines",
   "Your invitation is recognised",
@@ -961,6 +973,46 @@ for (const contract of [
   assert(
     communityCompactCss.includes(contract),
     `Compact Community experience must include ${contract}`,
+  );
+}
+for (const contract of [
+  "Membership request under review",
+  "Within 2 business days",
+  "Update my request",
+  "Explore public events",
+  "Member profiles, Communities and private conversations open only after approval",
+]) {
+  assert(
+    membershipWaitingRoom.includes(contract),
+    `Pending-member waiting room must include ${contract}`,
+  );
+}
+for (const contract of [
+  ".membership-waiting-shell",
+  ".membership-waiting-status",
+  "@media (max-width: 620px)",
+]) {
+  assert(
+    membershipWaitingCss.includes(contract),
+    `Pending-member waiting room styling must include ${contract}`,
+  );
+}
+assert(
+  rootLayout.includes('import "./membership-waiting.css"'),
+  "Root layout must load the pending-member waiting room styling",
+);
+for (const contract of [
+  "notify_admins_of_membership_request",
+  "assignment.role = 'super_admin'",
+  "assignment.expires_at is null or assignment.expires_at > now()",
+  "public.enqueue_notification",
+  "'system'",
+  "'/admin/members'",
+  "membership-application-submitted:",
+]) {
+  assert(
+    membershipAdminNotificationMigration.includes(contract),
+    `Membership request Admin notification must include ${contract}`,
   );
 }
 for (const contract of [

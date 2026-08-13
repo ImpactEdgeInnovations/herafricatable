@@ -44,6 +44,8 @@ const operatorSignIn = await operator.auth.signInWithPassword({
   password: adminPassword,
 });
 assert.equal(operatorSignIn.error, null, "Primary Admin sign-in failed");
+const startedAt = new Date().toISOString();
+let preparedUsers = null;
 
 const current = await operator.rpc("get_membership_intake_admin");
 assert.equal(current.error, null, "Membership intake migration is not ready");
@@ -133,10 +135,36 @@ let outcomes;
 try {
   await setMode("manual_review");
   const users = await prepareIdentities();
+  preparedUsers = users;
 
   const manual = await submit(...identities.manual);
   assert.equal(manual.error, null, "Manual-review submission failed");
   assert.equal(manual.data, "submitted", "Manual applicant did not remain queued");
+  const manualUser = users.get(identities.manual[0]);
+  assert(manualUser, "Manual applicant identity is unavailable");
+  const adminNotice = await service
+    .from("notification_jobs")
+    .select("dedupe_key,status,to_email")
+    .eq("user_id", operatorSignIn.data.user.id)
+    .like(
+      "dedupe_key",
+      `membership-application-submitted:${manualUser.id}:%`,
+    )
+    .gte("created_at", startedAt)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  assert.equal(
+    adminNotice.error,
+    null,
+    "Primary Admin membership-request email job could not be checked",
+  );
+  assert(adminNotice.data, "Primary Admin membership-request email was not queued");
+  assert.equal(
+    adminNotice.data.to_email.toLowerCase(),
+    adminEmail.toLowerCase(),
+    "Membership-request email was not addressed to the official Primary Admin email",
+  );
 
   await setMode("trusted_auto");
   const uninvited = await submit(...identities.uninvited);
@@ -173,6 +201,7 @@ try {
   assert.match(paused.error.message, /temporarily paused/i);
 
   outcomes = {
+    adminOfficialEmail: "queued",
     invited: "approved_to_onboarding",
     manual: "waiting_for_review",
     paused: "submission_blocked",
@@ -180,6 +209,25 @@ try {
   };
 } finally {
   await setMode(originalMode);
+  if (preparedUsers) {
+    for (const user of preparedUsers.values()) {
+      const prefix = `membership-application-submitted:${user.id}:%`;
+      const jobs = await service
+        .from("notification_jobs")
+        .delete()
+        .eq("user_id", operatorSignIn.data.user.id)
+        .like("dedupe_key", prefix)
+        .gte("created_at", startedAt);
+      assert.equal(jobs.error, null, "Test Admin email jobs could not be cleaned up");
+      const notices = await service
+        .from("notifications")
+        .delete()
+        .eq("user_id", operatorSignIn.data.user.id)
+        .like("dedupe_key", prefix)
+        .gte("created_at", startedAt);
+      assert.equal(notices.error, null, "Test Admin notices could not be cleaned up");
+    }
+  }
   await operator.auth.signOut();
 }
 
