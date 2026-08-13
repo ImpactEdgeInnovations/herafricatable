@@ -1,6 +1,6 @@
 # Community production acceptance
 
-Last completed rehearsal: 9 August 2026
+Last completed rehearsal: 13 August 2026
 Community: Nairobi Founding Table  
 Mode: controlled tagged-account rehearsal
 
@@ -8,18 +8,16 @@ Read-only production readiness was reconfirmed on 11 August 2026: the Community
 event proposal tables and functions are present, unknown events remain private,
 and signed-out visitors cannot read Host or Admin proposal projections.
 
-Gathering-room production readiness was verified against live Supabase on 13 August
-2026. The room tables and protected functions are deployed; signed-out visitors
-cannot list rooms, send live text or read the Gathering safety queue, and an unknown
-room returns no data. The four-account write rehearsal is prepared but requires the
-reserved backup-moderator credential to be refreshed using the ignored local server
-key before it can produce final live-window evidence.
+Gathering-room production readiness and positive writes were verified against live
+Supabase on 13 August 2026. The isolated event passed attendee privacy, questions,
+support, Host answers, open live text, Moderator pinning and blocked-pair visibility,
+then its event and Community fixtures were cancelled and archived.
 
 Reminder delivery and standalone event-question readiness were verified later on
 13 August 2026. The reminder scheduler is deployed and service-only. Event questions,
 supports and report projections are private; signed-out visitors cannot list, submit,
-support, answer, report or read the Admin queue. Positive member/Host/Admin writes
-remain part of the credentialed multi-account rehearsal.
+support, answer, report or read the Admin queue. Positive member, Host and Super
+Admin event writes also passed in the credentialed multi-account rehearsal.
 
 ## Passed with live Supabase accounts
 
@@ -39,6 +37,11 @@ remain part of the credentialed multi-account rehearsal.
   evidence to the Host or Community Moderator.
 - Reserved `.invalid` test recipients were suppressed from external email while
   their delivery jobs were completed safely.
+- Forty-five conversations load without duplication across three cursor pages.
+- The platform Community module has four of four release checks passed and the
+  global feature flag is enabled after an audited data-preserving pause and restore.
+- The Nairobi Founding Table has four of eight publication checks passed and remains
+  a private draft until its final operational and human checks are complete.
 
 ## Evidence-producing commands
 
@@ -47,8 +50,10 @@ npm run ops:community:accept-test-invitations
 npm run ops:community:accept-member-journeys
 npm run ops:community:accept-membership-lifecycle
 npm run ops:community:accept-safety
+npm run ops:community:accept-events
 npm run ops:community:gathering-readiness
 npm run ops:community:accept-gatherings
+npm run ops:community:accept-release
 ```
 
 The full scale rehearsal uses:
@@ -60,20 +65,16 @@ HAT_COMMUNITY_SCALE_WRITE=1 npm run ops:community:accept-scale
 It requires the tagged cohort credentials plus a Super Admin acceptance identity
 in `.env.test.local`. The command does not print passwords or tokens.
 
-## Remaining before declaring the module fully accepted
+## Remaining before publishing the Nairobi Founding Table
 
-- Restore `SUPABASE_SECRET_KEY` in the ignored local `.env.local` file so the
-  four reserved test identities can be refreshed without using a real account.
-- Supply `HAT_ADMIN_TEST_EMAIL` and `HAT_ADMIN_TEST_PASSWORD` locally and run the
-  five-role scale command.
-- Confirm at least 45 conversations load across three stable cursor pages with
-  no duplicates and with pins ordered first.
-- Review and dismiss the controlled safety report from Admin → Safety after its
-  evidence boundary has been inspected.
+- Verify Community notification preferences, weekly briefing deduplication and
+  delivery retry with the production email provider.
+- Verify private contacts, test-account exclusions, retention thresholds and the
+  three-person anonymous outcome threshold with separate member sessions.
 - Record Safari, Chrome, iPhone and Android results with two member sessions open
   at the same time.
-- Complete the Nairobi release checklist in Admin and end acceptance mode before
-  deciding whether to open Communities to real members.
+- Rehearse programming changes, unanswered-Ask follow-up, read-only closure and
+  ownership handover, then complete the remaining Nairobi checks in Admin Release.
 
-No second chapter or automatic creator payout should open before these items are
-recorded as passed.
+No second chapter, unrestricted public campaign or automatic creator payout should
+open before these items are recorded as passed.

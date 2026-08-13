@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const secret = process.env.SUPABASE_SECRET_KEY;
 const password = process.env.HAT_COMMUNITY_TEST_PASSWORD;
+const communitySlug =
+  process.env.HAT_COMMUNITY_TEST_SLUG ?? "nairobi-founding-table";
 if (!url || !secret || !password || password.length < 12) {
   throw new Error("Supabase server credentials and a 12+ character HAT_COMMUNITY_TEST_PASSWORD are required.");
 }
@@ -12,6 +14,7 @@ const identities = [
   ["community.member.two@hat-test.invalid", "Test Member Two"],
   ["community.host@hat-test.invalid", "Test Community Host"],
   ["community.moderator@hat-test.invalid", "Test Backup Moderator"],
+  ["community.scale@hat-test.invalid", "Test Scale Member"],
 ];
 const admin = createClient(url, secret, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -58,4 +61,41 @@ for (const [email, displayName] of identities) {
   results.push({ created, displayName, email, userId: user.id });
 }
 
-process.stdout.write(`${JSON.stringify({ identities: results, passwordPrinted: false }, null, 2)}\n`);
+const scaleIdentity = results.find(
+  (identity) => identity.email === "community.scale@hat-test.invalid",
+);
+const community = await admin
+  .from("communities")
+  .select("id")
+  .eq("slug", communitySlug)
+  .maybeSingle();
+if (community.error) throw community.error;
+let scaleMembershipPrepared = false;
+if (community.data && scaleIdentity) {
+  const membership = await admin.from("community_memberships").upsert(
+    {
+      community_id: community.data.id,
+      joined_at: new Date().toISOString(),
+      role: "member",
+      status: "active",
+      updated_at: new Date().toISOString(),
+      user_id: scaleIdentity.userId,
+    },
+    { onConflict: "community_id,user_id" },
+  );
+  if (membership.error) throw membership.error;
+  scaleMembershipPrepared = true;
+}
+
+process.stdout.write(
+  `${JSON.stringify(
+    {
+      communitySlug,
+      identities: results,
+      passwordPrinted: false,
+      scaleMembershipPrepared,
+    },
+    null,
+    2,
+  )}\n`,
+);

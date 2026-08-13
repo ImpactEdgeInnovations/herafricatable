@@ -28,11 +28,24 @@ Passed:
 - Public DNS exposes Resend DKIM, SPF and return-path MX records for
   `caseready.africa`.
 
+Credentialed acceptance completed later the same day:
+
+- Membership intake passed invited, manual, paused and trusted-mode paths and
+  restored manual review.
+- Community invitations, member lifecycle, interactions and safety passed using
+  separate tagged member, Host, Moderator and Super Admin accounts.
+- Forty-five conversations passed stable three-page cursor pagination.
+- A private Community event passed Host draft, Admin requested changes, approval,
+  free manual registration and audience boundaries.
+- A live isolated Gathering passed RSVP privacy, questions, support, Host answer,
+  live text, moderator pinning, blocked-pair visibility and cleanup.
+- Communities passed all four module release checks and were enabled after an
+  audited pause/data-preservation/restore rehearsal.
+- The Nairobi Founding Table advanced to four of eight publication checks and
+  remains a private draft.
+
 Still required before go-live:
 
-- Run positive approve, decline, request-changes and restore paths using tagged
-  member, Host, moderator, event-staff and Super Admin credentials. Those
-  credentials are intentionally absent from the local test environment.
 - Inspect Resend provider status and prove inbox delivery, bounce handling and
   notification retry using a sending-capable local key or the provider dashboard.
 - Publish and rehearse the final launch event; the public Events page currently

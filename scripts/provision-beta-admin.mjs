@@ -2,7 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 
 const email = process.argv[2]?.trim().toLowerCase();
 const durationDays = Number(process.argv[3] ?? 60);
-const password = process.env.HAT_BETA_ADMIN_PASSWORD;
+const password =
+  process.env.HAT_BETA_ADMIN_PASSWORD ?? process.env.HAT_ADMIN_TEST_PASSWORD;
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const secretKey = process.env.SUPABASE_SECRET_KEY;

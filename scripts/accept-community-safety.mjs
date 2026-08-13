@@ -3,20 +3,33 @@ import { createClient } from "@supabase/supabase-js";
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishable = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const password = process.env.HAT_COMMUNITY_TEST_PASSWORD;
+const adminEmail = process.env.HAT_PRIMARY_ADMIN_EMAIL;
+const adminPassword = process.env.HAT_PRIMARY_ADMIN_PASSWORD;
 const communitySlug =
   process.env.HAT_COMMUNITY_TEST_SLUG ?? "nairobi-founding-table";
 
-if (!url || !publishable || !password || password.length < 12) {
+if (
+  !url ||
+  !publishable ||
+  !password ||
+  password.length < 12 ||
+  !adminEmail ||
+  !adminPassword ||
+  adminPassword.length < 12
+) {
   throw new Error(
-    "Supabase public credentials and a 12+ character HAT_COMMUNITY_TEST_PASSWORD are required.",
+    "Supabase public credentials plus 12+ character Community and primary Admin test credentials are required.",
   );
 }
 
-async function signIn(email) {
+async function signIn(email, accountPassword = password) {
   const client = createClient(url, publishable, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-  const result = await client.auth.signInWithPassword({ email, password });
+  const result = await client.auth.signInWithPassword({
+    email,
+    password: accountPassword,
+  });
   if (result.error) throw new Error(`${email}: test sign-in failed`);
   return client;
 }
@@ -36,6 +49,18 @@ const host = await signIn("community.host@hat-test.invalid");
 const communityModerator = await signIn(
   "community.moderator@hat-test.invalid",
 );
+const platformAdmin = await signIn(adminEmail, adminPassword);
+let reportId = null;
+
+async function dismissActiveReport(id, reason) {
+  const result = await platformAdmin.rpc("review_community_safety_report", {
+    p_action: "dismiss",
+    p_content_type: "post",
+    p_outcome: reason,
+    p_report_id: id,
+  });
+  if (result.error) throw result.error;
+}
 
 try {
   const community = await communityFor(reporter);
@@ -54,6 +79,21 @@ try {
   );
   if (!target) throw new Error("Safety rehearsal conversation not found");
 
+  const priorQueue = await platformAdmin.rpc("list_community_safety_reports");
+  if (priorQueue.error) throw priorQueue.error;
+  const prior = (priorQueue.data ?? []).find(
+    (item) =>
+      item.content_type === "post" &&
+      item.evidence_snapshot?.post_id === target.post_id &&
+      ["open", "reviewing"].includes(item.status),
+  );
+  if (prior) {
+    await dismissActiveReport(
+      prior.report_id,
+      "Closed stale tagged rehearsal report before a repeatable acceptance run.",
+    );
+  }
+
   const report = await reporter.rpc("report_community_post", {
     p_category: "other",
     p_details:
@@ -63,6 +103,7 @@ try {
   if (report.error || typeof report.data !== "string") {
     throw report.error ?? new Error("Safety rehearsal report was not created");
   }
+  reportId = report.data;
 
   const hostHealth = await host.rpc("get_community_host_health", {
     p_community_id: community.community_id,
@@ -87,13 +128,38 @@ try {
     );
   }
 
+  const adminQueue = await platformAdmin.rpc("list_community_safety_reports");
+  if (
+    adminQueue.error ||
+    !(adminQueue.data ?? []).some(
+      (item) => item.report_id === reportId && item.status === "open",
+    )
+  ) {
+    throw adminQueue.error ?? new Error("Admin safety queue did not receive the report");
+  }
+  await dismissActiveReport(
+    reportId,
+    "Controlled acceptance rehearsal completed; original content retained.",
+  );
+  const resolvedQueue = await platformAdmin.rpc("list_community_safety_reports");
+  if (
+    resolvedQueue.error ||
+    !(resolvedQueue.data ?? []).some(
+      (item) => item.report_id === reportId && item.status === "dismissed",
+    )
+  ) {
+    throw resolvedQueue.error ?? new Error("Admin moderation outcome was not recorded");
+  }
+
   process.stdout.write(
     `${JSON.stringify(
       {
         communitySlug,
         passwordPrinted: false,
-        reportId: report.data,
+        reportId,
         checks: {
+          adminModerationOutcome: "passed and restored",
+          adminQueueVisibility: "passed",
           communityModeratorEvidenceBoundary: "passed",
           hostEvidenceBoundary: "passed",
           hostOpenReportCount: Number(hostHealth.data[0].open_reports),
@@ -105,9 +171,23 @@ try {
     )}\n`,
   );
 } finally {
+  if (reportId) {
+    const queue = await platformAdmin.rpc("list_community_safety_reports");
+    const active = (queue.data ?? []).find(
+      (item) =>
+        item.report_id === reportId && ["open", "reviewing"].includes(item.status),
+    );
+    if (active) {
+      await dismissActiveReport(
+        reportId,
+        "Acceptance cleanup after an interrupted Community safety rehearsal.",
+      );
+    }
+  }
   await Promise.all([
     reporter.auth.signOut(),
     host.auth.signOut(),
     communityModerator.auth.signOut(),
+    platformAdmin.auth.signOut(),
   ]);
 }

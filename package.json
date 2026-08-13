@@ -17,7 +17,7 @@
     "test": "npm run verify && npm run test:journeys && npm run test:accessibility && npm run test:operations && npm run test:community-gatherings && npm run test:event-questions && npm run test:admin-decisions && npm run typecheck",
     "test:live": "node scripts/smoke-live.mjs",
     "ops:auth-readiness": "node --env-file=.env.local scripts/smoke-authenticated.mjs",
-    "ops:provision-beta-admin": "node --env-file=.env.local scripts/provision-beta-admin.mjs",
+    "ops:provision-beta-admin": "node --env-file=.env.local --env-file=.env.test.local scripts/provision-beta-admin.mjs",
     "ops:provision-community-test-cohort": "node --env-file=.env.local --env-file=.env.test.local scripts/provision-community-test-cohort.mjs",
     "ops:community:accept-test-invitations": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-test-invitations.mjs",
     "ops:community:accept-member-journeys": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-member-journeys.mjs",
@@ -31,9 +31,11 @@
     "ops:admin:decision-readiness": "node --env-file=.env.local scripts/verify-super-admin-decision-readiness.mjs",
     "ops:community:accept-events": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-events.mjs",
     "ops:community:accept-gatherings": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-gatherings.mjs",
+    "ops:community:accept-release": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-module-release.mjs",
     "ops:verify-admin": "node --env-file=.env.local scripts/verify-admin-identity.mjs",
     "ops:email-readiness": "node --env-file=.env.local scripts/verify-email-provider-readiness.mjs",
-    "ops:membership:intake-readiness": "node --env-file=.env.local scripts/verify-membership-intake-readiness.mjs",
+    "ops:membership:intake-readiness": "node --env-file=.env.local --env-file=.env.test.local scripts/verify-membership-intake-readiness.mjs",
+    "ops:admin:sync-test-passwords": "node --env-file=.env.local --env-file=.env.test.local scripts/sync-test-admin-passwords.mjs",
     "ops:membership:accept-intake": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-membership-intake.mjs"
   },
   "dependencies": {

@@ -3,9 +3,18 @@ import { createClient } from "@supabase/supabase-js";
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishable = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const password = process.env.HAT_COMMUNITY_TEST_PASSWORD;
+const adminEmail = process.env.HAT_ADMIN_TEST_EMAIL;
+const adminPassword = process.env.HAT_ADMIN_TEST_PASSWORD;
 const communitySlug = process.env.HAT_COMMUNITY_TEST_SLUG ?? "nairobi-founding-table";
-if (!url || !publishable || !password || password.length < 8) {
-  throw new Error("Supabase public credentials and HAT_COMMUNITY_TEST_PASSWORD are required.");
+const isolatedFixture = communitySlug === "hat-community-event-acceptance";
+if (
+  !url ||
+  !publishable ||
+  !password ||
+  password.length < 8 ||
+  (isolatedFixture && (!adminEmail || !adminPassword))
+) {
+  throw new Error("Supabase public credentials and rehearsal account details are required.");
 }
 
 const identities = {
@@ -33,6 +42,9 @@ async function requireCommunity(identity, label) {
 }
 
 const signedIn = {};
+let cleanupAdmin = null;
+let cleanupCard = null;
+let cleanupCommunityId = null;
 const signInFailures = [];
 for (const [label, email] of Object.entries(identities)) {
   try {
@@ -51,6 +63,7 @@ try {
     Object.entries(signedIn).map(async ([label, identity]) => [label, await requireCommunity(identity, label)]),
   ));
   const communityId = communities.memberOne.community_id;
+  cleanupCommunityId = communityId;
   if (!Object.values(communities).every((item) => item.community_id === communityId)) {
     throw new Error("The rehearsal identities do not share one Community");
   }
@@ -62,6 +75,7 @@ try {
   if (cardResult.error) throw cardResult.error;
   const card = (cardResult.data ?? []).find((item) => new Date(item.ends_at).getTime() > Date.now());
   if (!card) throw new Error("Schedule one future linked Community event before running the Gathering rehearsal");
+  cleanupCard = card;
 
   const roomResult = await signedIn.memberOne.client.rpc("get_community_gathering_room", { p_community_id: communityId, p_event_id: card.event_id });
   const room = roomResult.data?.[0];
@@ -121,5 +135,47 @@ try {
     anonymousBoundary: "passed", attendeeConsent: "passed", questions: "submit, support and answer passed", roleCoverage: "passed", ...liveChecks,
   } }, null, 2)}\n`);
 } finally {
+  if (isolatedFixture && cleanupCard && cleanupCommunityId) {
+    cleanupAdmin = createClient(url, publishable, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const adminSignIn = await cleanupAdmin.auth.signInWithPassword({
+      email: adminEmail,
+      password: adminPassword,
+    });
+    if (adminSignIn.error) throw new Error("Isolated Gathering cleanup Admin sign-in failed");
+    const eventCleanup = await cleanupAdmin.rpc("save_event", {
+      p_address_line: "Private rehearsal venue, arrival desk confirmed",
+      p_capacity: 12,
+      p_city: cleanupCard.city,
+      p_country: cleanupCard.country,
+      p_ends_at: cleanupCard.ends_at,
+      p_event_id: cleanupCard.event_id,
+      p_format: cleanupCard.format,
+      p_is_featured: false,
+      p_map_url: null,
+      p_online_url: null,
+      p_registration_mode: "closed",
+      p_slug: cleanupCard.event_slug,
+      p_starts_at: cleanupCard.starts_at,
+      p_status: "cancelled",
+      p_summary: cleanupCard.summary,
+      p_timezone: cleanupCard.timezone,
+      p_title: cleanupCard.title,
+      p_venue_name: cleanupCard.venue_name,
+    });
+    if (eventCleanup.error) throw new Error("Isolated Gathering event cleanup failed");
+    const communityCleanup = await cleanupAdmin.rpc("save_community", {
+      p_community_id: cleanupCommunityId,
+      p_description:
+        "A private, archived-after-use Community for production event boundary acceptance.",
+      p_name: "HAT Event Acceptance",
+      p_slug: communitySlug,
+      p_status: "archived",
+      p_type: "private",
+    });
+    if (communityCleanup.error) throw new Error("Isolated Gathering Community cleanup failed");
+    await cleanupAdmin.auth.signOut();
+  }
   await Promise.all(Object.values(signedIn).map((identity) => identity.client.auth.signOut()));
 }

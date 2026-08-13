@@ -6,6 +6,8 @@ const publishable = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const communityPassword = process.env.HAT_COMMUNITY_TEST_PASSWORD;
 const adminEmail = process.env.HAT_ADMIN_TEST_EMAIL;
 const adminPassword = process.env.HAT_ADMIN_TEST_PASSWORD;
+const preserveGatheringFixture =
+  process.env.HAT_PRESERVE_GATHERING_FIXTURE === "1";
 
 if (
   !url ||
@@ -320,9 +322,34 @@ try {
     participants: 5,
     secretsPrinted: false,
   };
+  if (preserveGatheringFixture) {
+    startsAt = new Date(Date.now() + 5 * 60_000);
+    endsAt = new Date(startsAt.getTime() + 60 * 60_000);
+    await rpc(adminClient, "save_event", {
+      p_address_line: "Private rehearsal venue, arrival desk confirmed",
+      p_capacity: 12,
+      p_city: "Nairobi",
+      p_country: "Kenya",
+      p_ends_at: endsAt.toISOString(),
+      p_event_id: eventId,
+      p_format: "in_person",
+      p_is_featured: false,
+      p_map_url: null,
+      p_online_url: null,
+      p_registration_mode: "manual_review",
+      p_slug: eventSlug,
+      p_starts_at: startsAt.toISOString(),
+      p_status: "published",
+      p_summary:
+        "A controlled rehearsal proving that a Community gathering room works inside its approved audience.",
+      p_timezone: "Africa/Nairobi",
+      p_title: eventTitle,
+      p_venue_name: "Private acceptance venue",
+    });
+  }
 } finally {
   const cleanupErrors = [];
-  if (eventId && eventSlug && startsAt && endsAt) {
+  if (!preserveGatheringFixture && eventId && eventSlug && startsAt && endsAt) {
     const eventCleanup = await adminClient.rpc("save_event", {
       p_address_line: "Private rehearsal venue, arrival desk confirmed",
       p_capacity: 12,
@@ -346,7 +373,7 @@ try {
     });
     if (eventCleanup.error) cleanupErrors.push("event cleanup");
   }
-  if (communityId) {
+  if (!preserveGatheringFixture && communityId) {
     const communityCleanup = await adminClient.rpc("save_community", {
       p_community_id: communityId,
       p_description:
@@ -369,7 +396,9 @@ if (acceptanceSummary) {
     `${JSON.stringify(
       {
         ...acceptanceSummary,
-        cleanup: "event cancelled and Community archived",
+        cleanup: preserveGatheringFixture
+          ? "isolated fixture preserved for the immediate Gathering rehearsal"
+          : "event cancelled and Community archived",
       },
       null,
       2,

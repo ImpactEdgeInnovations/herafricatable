@@ -28,6 +28,7 @@ const identities = [
   { email: "community.member.two@hat-test.invalid", role: "member-two" },
   { email: "community.host@hat-test.invalid", role: "host" },
   { email: "community.moderator@hat-test.invalid", role: "moderator" },
+  { email: "community.scale@hat-test.invalid", role: "scale-member" },
 ];
 
 async function signIn(identity, credential = password) {
@@ -106,7 +107,7 @@ async function seedToFortyFive(signedIn, communityId, existingCount) {
     );
   }
   const needed = 45 - existingCount;
-  if (needed > identities.length * 9) {
+  if (needed > identities.length * 12) {
     throw new Error(
       `The rehearsal needs ${needed} new conversations, above the safe per-run limit. Run the normal member journey first, then retry.`,
     );
@@ -114,24 +115,38 @@ async function seedToFortyFive(signedIn, communityId, existingCount) {
   const run = new Date().toISOString().replace(/[:.]/g, "-");
   let created = 0;
   for (let index = 0; index < needed; index += 1) {
-    const identity = signedIn[index % signedIn.length];
-    const result = await identity.client.rpc(
-      "create_structured_community_post",
-      {
-        p_body: `Community scale rehearsal ${run} · ${identity.role} · ${index + 1}. This tagged conversation verifies stable loading across a busy room.`,
-        p_category: index % 3 === 0 ? "ask" : index % 3 === 1 ? "offer" : "discussion",
-        p_community_id: communityId,
-      },
-    );
-    if (result.error) {
-      throw new Error(`${identity.role}: scale conversation ${index + 1} failed`);
+    let saved = false;
+    const errorCodes = [];
+    for (let attempt = 0; attempt < signedIn.length; attempt += 1) {
+      const identity = signedIn[(index + attempt) % signedIn.length];
+      const result = await identity.client.rpc(
+        "create_structured_community_post",
+        {
+          p_body: `Community scale rehearsal ${run} · ${identity.role} · ${index + 1}. This tagged conversation verifies stable loading across a busy room.`,
+          p_category: index % 3 === 0 ? "ask" : index % 3 === 1 ? "offer" : "discussion",
+          p_community_id: communityId,
+        },
+      );
+      if (!result.error) {
+        saved = true;
+        break;
+      }
+      errorCodes.push(result.error.code ?? "database_rejected");
+    }
+    if (!saved) {
+      throw new Error(
+        `Scale conversation ${index + 1} failed for every tagged identity (${[...new Set(errorCodes)].join(", ")})`,
+      );
     }
     created += 1;
   }
   return created;
 }
 
-const signedIn = await Promise.all(identities.map(signIn));
+const signedIn = [];
+for (const identity of identities) {
+  signedIn.push(await signIn(identity));
+}
 const adminIdentity = await signIn(
   { email: adminEmail, role: "super-admin" },
   adminPassword,
@@ -153,7 +168,8 @@ try {
     roleCoverage["member-one"] !== "member" ||
     roleCoverage["member-two"] !== "member" ||
     !["owner", "host"].includes(roleCoverage.host) ||
-    roleCoverage.moderator !== "moderator"
+    roleCoverage.moderator !== "moderator" ||
+    roleCoverage["scale-member"] !== "member"
   ) {
     throw new Error("The two-member, host and moderator role coverage is incomplete");
   }
