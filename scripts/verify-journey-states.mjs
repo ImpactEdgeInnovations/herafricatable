@@ -607,6 +607,14 @@ const membershipWaitingCss = read("app/membership-waiting.css");
 const membershipAdminNotificationMigration = read(
   "supabase/migrations/20260813140000_membership_admin_request_notifications.sql",
 );
+const memberWelcomeMigration = read(
+  "supabase/migrations/20260813150000_member_welcome_email.sql",
+);
+const memberWelcomeEmail = read("lib/notifications/email.ts");
+const membershipApprovalReview = read("components/admin/member-review.tsx");
+const targetedNotificationRoute = read(
+  "app/api/admin/notifications/process/route.ts",
+);
 const tableJourney = read("components/member/table-journey.tsx");
 const communityWelcomeQueue = read(
   "components/member/community-welcome-queue.tsx",
@@ -980,7 +988,11 @@ for (const contract of [
   "Within 2 business days",
   "Update my request",
   "Explore public events",
-  "Member profiles, Communities and private conversations open only after approval",
+  "What awaits you",
+  "Meet the right people",
+  "Belong to a circle",
+  "Turn meetings into momentum",
+  "member profiles, Communities and private conversations open only after approval",
 ]) {
   assert(
     membershipWaitingRoom.includes(contract),
@@ -997,6 +1009,35 @@ for (const contract of [
     `Pending-member waiting room styling must include ${contract}`,
   );
 }
+for (const contract of [
+  "member_welcome",
+  "Welcome, ",
+  "Complete your profile",
+  "notification_jobs",
+  "member-approved:",
+]) {
+  assert(
+    memberWelcomeMigration.includes(contract),
+    `Member welcome migration must include ${contract}`,
+  );
+}
+for (const contract of [
+  "isMemberWelcome",
+  "A simple place to begin",
+  "Complete my profile",
+  "Welcome to the Table",
+]) {
+  assert(
+    memberWelcomeEmail.includes(contract),
+    `Member welcome email must include ${contract}`,
+  );
+}
+assert(
+  membershipApprovalReview.includes("member-approved:") &&
+    membershipApprovalReview.includes("welcome email was sent") &&
+    targetedNotificationRoute.includes("member-approved"),
+  "Admin approval must attempt exact welcome-email delivery without losing the retry queue",
+);
 assert(
   rootLayout.includes('import "./membership-waiting.css"'),
   "Root layout must load the pending-member waiting room styling",

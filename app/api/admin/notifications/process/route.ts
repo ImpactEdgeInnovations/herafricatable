@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   } | null;
   const requestedKey =
     typeof body?.dedupeKey === "string" ? body.dedupeKey.trim() : "";
-  const dedupeKey = /^(?:referral-invite|table-invitation):[0-9a-f-]{36}$/i.test(
+  const dedupeKey = /^(?:referral-invite|table-invitation|member-approved):[0-9a-f-]{36}$/i.test(
     requestedKey,
   )
     ? requestedKey

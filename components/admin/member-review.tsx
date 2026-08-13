@@ -85,7 +85,30 @@ export function MemberReview({
             : member,
         ),
       );
-      setMessage(`Member status updated to ${String(data).replace("_", " ")}.`);
+      if (decision === "approve") {
+        try {
+          const response = await fetch("/api/admin/notifications/process", {
+            body: JSON.stringify({ dedupeKey: `member-approved:${memberId}` }),
+            headers: { "content-type": "application/json" },
+            method: "POST",
+          });
+          const delivery = (await response.json().catch(() => ({}))) as {
+            error?: string;
+            sent?: number;
+          };
+          setMessage(
+            response.ok && (delivery.sent ?? 0) > 0
+              ? "Membership approved and the welcome email was sent."
+              : "Membership approved. The welcome email is safely queued under Message delivery.",
+          );
+        } catch {
+          setMessage(
+            "Membership approved. The welcome email is safely queued under Message delivery.",
+          );
+        }
+      } else {
+        setMessage(`Member status updated to ${String(data).replace("_", " ")}.`);
+      }
     }
     setWorkingId(null);
   }
