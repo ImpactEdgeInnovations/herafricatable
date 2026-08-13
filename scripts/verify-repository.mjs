@@ -190,6 +190,12 @@ for (const contract of [
     `Referral launch readiness must include ${contract}`,
   );
 }
+assert(
+  !/update\s+public\.feature_flags[\s\S]*?set\s+enabled\s*=\s*true[\s\S]*?where\s+key\s*=\s*'referrals'/i.test(
+    referralLaunchMigration,
+  ),
+  "Referral migrations must not bypass the authenticated Admin Release gate",
+);
 const targetedNotificationWorker = read("lib/notifications/worker.ts");
 const targetedNotificationProcessRoute = read(
   "app/api/admin/notifications/process/route.ts",
@@ -1986,6 +1992,10 @@ for (const contract of [
   "get_my_membership_invitation_context",
   '"pending_review", "approved", "claimed", "activated"',
   "queued_with_targeted_delivery",
+  "HAT_CONFIRM_REFERRAL_RELEASE_ACCEPTANCE",
+  "save_module_release_check",
+  "set_feature_flag",
+  "list_referrals_admin",
   "secretsPrinted: false",
 ]) {
   assert(

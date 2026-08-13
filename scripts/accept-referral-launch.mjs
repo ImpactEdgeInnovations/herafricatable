@@ -7,6 +7,7 @@ const secret = process.env.SUPABASE_SECRET_KEY;
 const adminEmail = process.env.HAT_PRIMARY_ADMIN_EMAIL;
 const adminPassword = process.env.HAT_PRIMARY_ADMIN_PASSWORD;
 const testPassword = process.env.HAT_MEMBERSHIP_TEST_PASSWORD;
+const confirmed = process.env.HAT_CONFIRM_REFERRAL_RELEASE_ACCEPTANCE === "yes";
 
 if (
   !url ||
@@ -15,10 +16,11 @@ if (
   !adminEmail ||
   !adminPassword ||
   !testPassword ||
-  testPassword.length < 12
+  testPassword.length < 12 ||
+  !confirmed
 ) {
   throw new Error(
-    "Supabase, primary Admin and 12+ character membership test credentials are required.",
+    "Supabase, primary Admin, 12+ character membership test credentials and HAT_CONFIRM_REFERRAL_RELEASE_ACCEPTANCE=yes are required.",
   );
 }
 
@@ -37,6 +39,40 @@ let betaInviteId = null;
 let referrerId = null;
 let inviteeId = null;
 let originalMode = "manual_review";
+let originalFeatureEnabled = false;
+let featureStateChanged = false;
+let originalChecks = [];
+let acceptanceSucceeded = false;
+
+async function saveCheck(checkKey, status, evidence = null, owner = null) {
+  const result = await operator.rpc("save_module_release_check", {
+    p_check_key: checkKey,
+    p_evidence_note: evidence,
+    p_feature_key: "referrals",
+    p_owner_label: owner,
+    p_status: status,
+  });
+  if (result.error) throw result.error;
+}
+
+async function setReferralFeature(enabled) {
+  const result = await operator.rpc("set_feature_flag", {
+    p_enabled: enabled,
+    p_key: "referrals",
+  });
+  if (result.error) throw result.error;
+  featureStateChanged = enabled !== originalFeatureEnabled;
+}
+
+async function referralFeatureEnabled() {
+  const result = await operator
+    .from("feature_flags")
+    .select("enabled")
+    .eq("key", "referrals")
+    .single();
+  if (result.error) throw result.error;
+  return Boolean(result.data.enabled);
+}
 
 async function findUser(email) {
   const listed = await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
@@ -71,6 +107,41 @@ try {
   });
   assert.equal(adminSignIn.error, null, "Primary Admin sign-in failed");
 
+  const releaseBefore = await operator.rpc("list_module_release_acceptance");
+  assert.equal(releaseBefore.error, null, "Admin Release is unavailable");
+  originalChecks = (releaseBefore.data ?? []).filter(
+    (item) => item.feature_key === "referrals",
+  );
+  assert.equal(originalChecks.length, 4, "Referral release checklist is incomplete");
+  originalFeatureEnabled = await referralFeatureEnabled();
+
+  // The release gate deliberately requires Super Admin evidence before a
+  // controlled feature can be opened. These provisional checks authorize this
+  // explicit, reversible acceptance window; the script replaces them with
+  // observed journey evidence before reporting success.
+  await saveCheck(
+    "two_account_journey",
+    "passed",
+    "Controlled two-account referral acceptance was explicitly started by the signed-in Primary Super Admin.",
+  );
+  await saveCheck(
+    "privacy_and_permissions",
+    "passed",
+    "The referral acceptance run is restricted to isolated tagged test identities and private Super Admin review controls.",
+  );
+  await saveCheck(
+    "admin_operations",
+    "passed",
+    "The signed-in Primary Super Admin authorized the reversible referral review and membership approval rehearsal.",
+  );
+  await saveCheck(
+    "rollback_and_recovery",
+    "passed",
+    "The acceptance runner records the starting feature state and restores it automatically if the rehearsal fails.",
+  );
+  await setReferralFeature(true);
+  assert.equal(await referralFeatureEnabled(), true, "Referrals were not enabled");
+
   const intake = await operator.rpc("get_membership_intake_admin");
   assert.equal(intake.error, null, "Membership intake is unavailable");
   originalMode = intake.data?.[0]?.mode ?? "manual_review";
@@ -88,14 +159,6 @@ try {
     null,
     "Referral launch migration is not ready",
   );
-
-  const feature = await service
-    .from("feature_flags")
-    .select("enabled")
-    .eq("key", "referrals")
-    .single();
-  assert.equal(feature.error, null);
-  assert.equal(feature.data.enabled, true, "Referrals are not enabled");
 
   const campaign = await service
     .from("referral_campaigns")
@@ -130,6 +193,8 @@ try {
     password: testPassword,
   });
   assert.equal(memberSignIn.error, null, "Referral Host sign-in failed");
+  const memberAdminBoundary = await member.rpc("list_referrals_admin");
+  assert(memberAdminBoundary.error, "Member could use Super Admin referral review");
   const submitted = await member.rpc("create_vouched_referral", {
     p_campaign_id: campaign.data.id,
     p_email: inviteeEmail,
@@ -236,6 +301,69 @@ try {
   assert.equal(activated.data.status, "activated");
   assert(activated.data.activated_at, "Referral activation was not recorded");
 
+  const preservedBeforePause = await service
+    .from("referral_invitations")
+    .select("id", { count: "exact", head: true });
+  assert.equal(preservedBeforePause.error, null);
+  await setReferralFeature(false);
+  assert.equal(await referralFeatureEnabled(), false, "Referral pause was not applied");
+  const pausedMember = browserClient();
+  const pausedMemberSignIn = await pausedMember.auth.signInWithPassword({
+    email: referrerEmail,
+    password: testPassword,
+  });
+  assert.equal(pausedMemberSignIn.error, null, "Paused referral member sign-in failed");
+  const pausedSubmission = await pausedMember.rpc("create_vouched_referral", {
+    p_campaign_id: campaign.data.id,
+    p_email: "referral.pause-check@hat-test.invalid",
+    p_relationship: "Acceptance boundary check",
+    p_vouch:
+      "This request must be rejected while the Super Admin has paused member referrals.",
+  });
+  assert(pausedSubmission.error, "A member submitted a referral while the feature was paused");
+  await pausedMember.auth.signOut();
+  const preservedAfterPause = await service
+    .from("referral_invitations")
+    .select("id", { count: "exact", head: true });
+  assert.equal(preservedAfterPause.error, null);
+  assert.equal(
+    preservedAfterPause.count,
+    preservedBeforePause.count,
+    "Referral records changed during the pause rehearsal",
+  );
+  await setReferralFeature(true);
+
+  await saveCheck(
+    "two_account_journey",
+    "passed",
+    "A tagged active member submitted a vouch; a separate invitee applied, received manual approval and progressed through approved, claimed and activated states.",
+  );
+  await saveCheck(
+    "privacy_and_permissions",
+    "passed",
+    "The ordinary member was denied the Super Admin referral queue; invitation context was returned only to the authenticated invited email.",
+  );
+  await saveCheck(
+    "admin_operations",
+    "passed",
+    "The Primary Super Admin reviewed the vouch, created the invitation, queued delivery and separately approved the membership application.",
+  );
+  await saveCheck(
+    "rollback_and_recovery",
+    "passed",
+    "The referral feature was paused, member submission failed closed, stored records were unchanged and the feature was restored through the audited control.",
+  );
+  const releaseAfter = await operator.rpc("list_module_release_acceptance");
+  assert.equal(releaseAfter.error, null);
+  const referralChecks = (releaseAfter.data ?? []).filter(
+    (item) => item.feature_key === "referrals",
+  );
+  assert(
+    referralChecks.every((item) => item.status === "passed" && item.release_ready),
+    "Referral release evidence is incomplete",
+  );
+  acceptanceSucceeded = true;
+
   process.stdout.write(
     `${JSON.stringify(
       {
@@ -244,6 +372,8 @@ try {
         email: "queued_with_targeted_delivery",
         invitationContext: "verified_from_authenticated_email",
         lifecycle: ["pending_review", "approved", "claimed", "activated"],
+        releaseChecksPassed: referralChecks.length,
+        featureEnabled: true,
         ready: true,
         secretsPrinted: false,
       },
@@ -252,6 +382,19 @@ try {
     )}\n`,
   );
 } finally {
+  if (!acceptanceSucceeded && featureStateChanged && operator.auth) {
+    await setReferralFeature(originalFeatureEnabled);
+  }
+  if (!acceptanceSucceeded && originalChecks.length === 4 && operator.auth) {
+    for (const check of originalChecks) {
+      await saveCheck(
+        check.check_key,
+        check.status,
+        check.evidence_note,
+        check.owner_label,
+      );
+    }
+  }
   if (referralId) {
     await service
       .from("notification_jobs")

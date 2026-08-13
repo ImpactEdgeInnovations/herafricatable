@@ -227,16 +227,6 @@ on conflict (slug) do update set
   max_total_referrals = excluded.max_total_referrals,
   updated_at = now();
 
-update public.feature_flags
-set enabled = true,
-    updated_by = (
-      select account.id from auth.users account
-      where lower(account.email) = 'impactedgeinnovations@gmail.com'
-      limit 1
-    ),
-    updated_at = now()
-where key = 'referrals';
-
 revoke all on function public.get_my_membership_invitation_context() from public;
 grant execute on function public.get_my_membership_invitation_context() to authenticated;
 revoke all on function public.claim_notification_job(text) from public;
@@ -248,5 +238,11 @@ comment on function public.sync_referral_membership_progress() is
   'Keeps vouched-referral tracking accurate through manual approval and member activation.';
 comment on function public.claim_notification_job(text) is
   'Claims one exact queued notification so approved invitations can be delivered promptly.';
+comment on function public.notify_vouched_referral_submission() is
+  'Alerts every active Super Admin when a member submits a vouched invitation for review.';
+comment on trigger sync_referral_membership_progress_trigger on public.profiles is
+  'Keeps referral progress aligned with the separately approved membership lifecycle.';
+comment on trigger notify_vouched_referral_submission_trigger on public.referral_invitations is
+  'Queues private Admin review notices without enabling or approving the referral module.';
 
 commit;
