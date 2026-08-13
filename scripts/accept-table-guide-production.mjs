@@ -55,6 +55,9 @@ const candidate = await signIn(candidateEmail);
 const optedOut = await signIn(optedOutEmail);
 const startedAt = new Date().toISOString();
 let originalFeatureEnabled = false;
+let featureStateChanged = false;
+let temporaryBlockActive = false;
+let acceptanceResult = null;
 const original = new Map();
 
 async function snapshot(member) {
@@ -105,20 +108,25 @@ async function prepare(member, recommend) {
 async function restore(member) {
   const state = original.get(member.user.id);
   if (!state) return;
-  await member.client.rpc("set_profile_visibility", { p_paused: false });
-  await member.client.rpc("set_my_connection_preferences", {
+  const visible = await member.client.rpc("set_profile_visibility", { p_paused: false });
+  assert.equal(visible.error, null, `${member.user.email}: visibility restore failed`);
+  const open = await member.client.rpc("set_my_connection_preferences", {
     p_request_mode: "open",
   });
-  await member.client.rpc("set_my_table_guide_preferences", {
+  assert.equal(open.error, null, `${member.user.email}: temporary introduction restore failed`);
+  const guide = await member.client.rpc("set_my_table_guide_preferences", {
     p_assistant_enabled: state.assistant,
     p_recommend_me: state.recommend,
   });
-  await member.client.rpc("set_my_connection_preferences", {
+  assert.equal(guide.error, null, `${member.user.email}: Nia choices restore failed`);
+  const mode = await member.client.rpc("set_my_connection_preferences", {
     p_request_mode: state.mode,
   });
-  await member.client.rpc("set_profile_visibility", {
+  assert.equal(mode.error, null, `${member.user.email}: introduction choices restore failed`);
+  const visibility = await member.client.rpc("set_profile_visibility", {
     p_paused: state.visibilityPaused,
   });
+  assert.equal(visibility.error, null, `${member.user.email}: final visibility restore failed`);
 }
 
 try {
@@ -134,7 +142,10 @@ try {
     original.set(member.user.id, await snapshot(member));
   }
 
-  if (!originalFeatureEnabled) await setFeature(true);
+  if (!originalFeatureEnabled) {
+    await setFeature(true);
+    featureStateChanged = true;
+  }
   await prepare(requester, false);
   await prepare(candidate, true);
   await prepare(optedOut, false);
@@ -172,6 +183,7 @@ try {
     p_reason: "Nia production acceptance boundary",
   });
   assert.equal(blocked.error, null);
+  temporaryBlockActive = true;
   const blockedSuggestions = await requester.client.rpc(
     "list_table_guide_connections",
     { p_limit: 12 },
@@ -181,8 +193,6 @@ try {
     !blockedSuggestions.data.some((member) => member.user_id === candidate.user.id),
     "Blocked candidate appeared in suggestions",
   );
-  await requester.client.rpc("unblock_member", { p_member_id: candidate.user.id });
-
   const memberAdminBoundary = await requester.client.rpc(
     "get_table_guide_feedback_admin",
   );
@@ -216,43 +226,65 @@ try {
   assert.equal(storedChoice.error, null);
   assert.equal(storedChoice.data.relevant, false);
 
-  console.log(
-    JSON.stringify(
-      {
-        adminBoundary: "passed",
-        blockedPair: "excluded",
-        feedbackAggregate: "passed",
-        hiddenMember: "excluded",
-        optedInCandidate: "included",
-        optedOutMember: "excluded",
-        promptsStored: false,
-        relevanceChoice: "persisted",
-      },
-      null,
-      2,
-    ),
-  );
+  acceptanceResult = {
+    adminBoundary: "passed",
+    blockedPair: "excluded",
+    feedbackAggregate: "passed",
+    hiddenMember: "excluded",
+    optedInCandidate: "included",
+    optedOutMember: "excluded",
+    promptsStored: false,
+    relevanceChoice: "persisted",
+  };
 } finally {
-  await requester.client.rpc("unblock_member", { p_member_id: candidate.user.id });
-  for (const member of [requester, candidate, optedOut]) {
-    await restore(member).catch(() => undefined);
+  if (temporaryBlockActive) {
+    const unblocked = await requester.client.rpc("unblock_member", {
+      p_member_id: candidate.user.id,
+    });
+    assert.equal(unblocked.error, null, "Acceptance block cleanup failed");
   }
-  await service
+  for (const member of [requester, candidate, optedOut]) {
+    await restore(member);
+  }
+  const feedbackCleanup = await service
     .from("table_guide_feedback")
     .delete()
     .eq("user_id", requester.user.id)
     .gte("created_at", startedAt);
-  await service
+  assert.equal(feedbackCleanup.error, null, "Feedback cleanup failed");
+  const suggestionCleanup = await service
     .from("table_guide_suggestion_feedback")
     .delete()
     .eq("user_id", requester.user.id)
     .eq("target_kind", "member")
     .eq("target_key", candidate.user.id);
-  if (!originalFeatureEnabled) await setFeature(false).catch(() => undefined);
+  assert.equal(suggestionCleanup.error, null, "Suggestion cleanup failed");
+  if (featureStateChanged) await setFeature(false);
+
+  for (const member of [requester, candidate, optedOut]) {
+    assert.deepEqual(
+      await snapshot(member),
+      original.get(member.user.id),
+      `${member.user.email}: acceptance state was not restored`,
+    );
+  }
+  const restoredFeature = await service
+    .from("feature_flags")
+    .select("enabled")
+    .eq("key", "table_guide")
+    .single();
+  assert.equal(restoredFeature.error, null);
+  assert.equal(Boolean(restoredFeature.data.enabled), originalFeatureEnabled);
+
   await Promise.all([
     admin.client.auth.signOut(),
     requester.client.auth.signOut(),
     candidate.client.auth.signOut(),
     optedOut.client.auth.signOut(),
   ]);
+  if (acceptanceResult) {
+    console.log(
+      JSON.stringify({ ...acceptanceResult, testStateRestored: true }, null, 2),
+    );
+  }
 }
