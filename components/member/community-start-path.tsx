@@ -124,21 +124,21 @@ export function CommunityStartPath({
 
   return (
     <section
-      className="community-room-overview community-start-path"
+      className={`community-room-overview community-start-path${allComplete ? " is-complete" : ""}`}
       aria-labelledby="community-start-title"
     >
       <header>
         <p className="eyebrow">
-          {allComplete ? "You’re all set" : "Your next step"}
+          {allComplete ? "Welcome back" : "Your next step"}
         </p>
         <h2 id="community-start-title">
           {allComplete
-            ? "Keep in touch when it matters."
+            ? "What would you like to do?"
             : recommended?.label ?? "Choose where to begin."}
         </h2>
         <p>
           {allComplete
-            ? "Come back when you want to ask, share, meet someone or join an event. You never have to post just to stay active."
+            ? "See what members are discussing, meet someone relevant or check the next event. You never have to post just to stay active."
             : recommended?.description ??
               "Use this community to ask questions, share useful ideas and meet members. Private messages open only after both people agree to connect."}
         </p>
@@ -157,7 +157,7 @@ export function CommunityStartPath({
       </header>
       {supportingSteps.length ? (
         <details className="community-progress">
-          <summary>See your Community progress <span>{steps.filter((step) => step.complete).length} of {steps.length}</span></summary>
+          <summary>Your progress <span>{steps.filter((step) => step.complete).length} of {steps.length}</span></summary>
           <div aria-label="Other ways to participate in this community">
             {supportingSteps.map((step) => (
               <Link className={step.complete ? "is-complete" : undefined} href={step.href} key={step.label}>

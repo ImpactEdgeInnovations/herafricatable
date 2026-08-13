@@ -410,14 +410,17 @@ export default async function CommunityPage({
             </Link>
           </nav>
           {!checkInResult.error ? (
-            checkIns.length ? (
+            <details className="community-room-more">
+              <summary>
+                <span>Quick check-in</span>
+                <strong>
+                  {checkIns.length
+                    ? `${checkIns.length} question${checkIns.length === 1 ? "" : "s"} from this Community`
+                    : "Ask members one clear question"}
+                </strong>
+              </summary>
               <CommunityCheckIns checkIns={checkIns} communityId={community.community_id} currentUserId={user.id} />
-            ) : (
-              <details className="community-room-more">
-                <summary><span>Quick check-in</span><strong>Ask members one clear question</strong></summary>
-                <CommunityCheckIns checkIns={checkIns} communityId={community.community_id} currentUserId={user.id} />
-              </details>
-            )
+            </details>
           ) : null}
         </>
       ) : null}

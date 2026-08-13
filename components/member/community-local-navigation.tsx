@@ -36,9 +36,8 @@ export function CommunityLocalNavigation({
         ))}
       </div>
       <div className="community-local-more">
-        <Link href={`/communities/${slug}/about`}>About</Link>
         {canManage ? (
-          <Link href={`/communities/${slug}/host`}>Manage community</Link>
+          <Link href={`/communities/${slug}/host`}>Manage</Link>
         ) : null}
       </div>
     </nav>
