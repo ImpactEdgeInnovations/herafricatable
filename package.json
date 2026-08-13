@@ -36,7 +36,8 @@
     "ops:email-readiness": "node --env-file=.env.local scripts/verify-email-provider-readiness.mjs",
     "ops:membership:intake-readiness": "node --env-file=.env.local --env-file=.env.test.local scripts/verify-membership-intake-readiness.mjs",
     "ops:admin:sync-test-passwords": "node --env-file=.env.local --env-file=.env.test.local scripts/sync-test-admin-passwords.mjs",
-    "ops:membership:accept-intake": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-membership-intake.mjs"
+    "ops:membership:accept-intake": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-membership-intake.mjs",
+    "ops:referrals:accept-launch": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-referral-launch.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.3",

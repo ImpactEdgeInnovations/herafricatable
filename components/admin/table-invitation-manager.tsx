@@ -97,6 +97,10 @@ export function TableInvitationManager({
     if (action === "approve") {
       try {
         const response = await fetch("/api/admin/notifications/process", {
+          body: JSON.stringify({
+            dedupeKey: `table-invitation:${invitation.invitation_id}`,
+          }),
+          headers: { "content-type": "application/json" },
           method: "POST",
         });
         const delivery = (await response.json()) as {

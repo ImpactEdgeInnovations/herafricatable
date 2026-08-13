@@ -35,7 +35,9 @@ export async function sendNotificationEmail(job: EmailJob) {
   const href = job.payload.href?.startsWith("/")
     ? `${siteUrl}${job.payload.href}`
     : siteUrl;
-  const isInvitation = job.template_key === "table_invitation";
+  const isInvitation = ["referral_invitation", "table_invitation"].includes(
+    job.template_key,
+  );
   const buttonLabel = isInvitation ? "Open your invitation" : "Open Her Africa Table";
   const preferenceNote = isInvitation
     ? "This personal invitation was sent by a Her Africa Table member and reviewed before delivery."

@@ -6,6 +6,13 @@ import {
 } from "@/components/onboarding/membership-application-form";
 import { createClient } from "@/lib/supabase/server";
 
+type MembershipInvitationContext = {
+  context_label: string | null;
+  introduced_by: string;
+  source_label: string;
+  verified: boolean;
+};
+
 export const dynamic = "force-dynamic";
 
 function safeNext(value: string | undefined) {
@@ -27,13 +34,14 @@ export default async function MembershipApplicationPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?next=/apply");
 
-  const [profileResult, intakeResult] = await Promise.all([
+  const [profileResult, intakeResult, invitationContextResult] = await Promise.all([
     supabase
       .from("profiles")
       .select("access_status")
       .eq("id", user.id)
       .maybeSingle(),
     supabase.rpc("get_membership_intake_mode"),
+    supabase.rpc("get_my_membership_invitation_context"),
   ]);
   const profile = profileResult.data;
   const intakeMode =
@@ -117,6 +125,10 @@ export default async function MembershipApplicationPage({
           email={user.email ?? ""}
           initial={applicationResult.data as MembershipApplication | null}
           intakeMode={intakeMode}
+          invitationContext={
+            ((invitationContextResult.data as MembershipInvitationContext[] | null) ?? [])[0] ??
+            null
+          }
           nextHref={nextHref}
         />
       </div>

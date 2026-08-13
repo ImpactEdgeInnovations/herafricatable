@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { processNotificationQueue } from "@/lib/notifications/worker";
 import { createClient } from "@/lib/supabase/server";
 
-export async function POST() {
+export async function POST(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,5 +24,16 @@ export async function POST() {
     );
   }
 
-  return processNotificationQueue();
+  const body = (await request.json().catch(() => null)) as {
+    dedupeKey?: unknown;
+  } | null;
+  const requestedKey =
+    typeof body?.dedupeKey === "string" ? body.dedupeKey.trim() : "";
+  const dedupeKey = /^(?:referral-invite|table-invitation):[0-9a-f-]{36}$/i.test(
+    requestedKey,
+  )
+    ? requestedKey
+    : undefined;
+
+  return processNotificationQueue({ dedupeKey });
 }

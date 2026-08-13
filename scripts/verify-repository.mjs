@@ -172,6 +172,45 @@ assert(
   referralMigration.includes("Super Admin review before a beta invitation"),
   "Referral access boundary must remain documented in schema",
 );
+const referralLaunchMigration = read(
+  "supabase/migrations/20260813120000_referral_launch_readiness.sql",
+);
+for (const contract of [
+  "get_my_membership_invitation_context",
+  "sync_referral_membership_progress",
+  "notify_vouched_referral_submission",
+  "claim_notification_job",
+  "thoughtful-introductions",
+  "Verified member invitation",
+  "then 'activated'",
+  "grant execute on function public.claim_notification_job(text) to service_role",
+]) {
+  assert(
+    referralLaunchMigration.includes(contract),
+    `Referral launch readiness must include ${contract}`,
+  );
+}
+const targetedNotificationWorker = read("lib/notifications/worker.ts");
+const targetedNotificationProcessRoute = read(
+  "app/api/admin/notifications/process/route.ts",
+);
+const invitationNotificationEmail = read("lib/notifications/email.ts");
+assert(
+  targetedNotificationWorker.includes('admin.rpc("claim_notification_job"') &&
+    targetedNotificationWorker.includes("dedupeKey"),
+  "Approved invitations must target their exact notification job",
+);
+assert(
+  targetedNotificationProcessRoute.includes("referral-invite") &&
+    targetedNotificationProcessRoute.includes("table-invitation") &&
+    targetedNotificationProcessRoute.includes("processNotificationQueue({ dedupeKey })"),
+  "Admin notification processing must validate invitation delivery keys",
+);
+assert(
+  invitationNotificationEmail.includes('"referral_invitation"') &&
+    invitationNotificationEmail.includes('"table_invitation"'),
+  "Both invitation types must use the invitation email experience",
+);
 const env = read(".env.example");
 for (const secret of [
   "SUPABASE_SECRET_KEY",
@@ -1939,6 +1978,24 @@ assert(
   packageJson.scripts?.["ops:membership:accept-intake"] &&
     packageJson.scripts?.["ops:membership:intake-readiness"],
   "Package scripts must expose membership intake readiness and acceptance",
+);
+const referralLaunchAcceptance = read("scripts/accept-referral-launch.mjs");
+for (const contract of [
+  "referral.host@hat-test.invalid",
+  "referral.invitee@hat-test.invalid",
+  "get_my_membership_invitation_context",
+  '"pending_review", "approved", "claimed", "activated"',
+  "queued_with_targeted_delivery",
+  "secretsPrinted: false",
+]) {
+  assert(
+    referralLaunchAcceptance.includes(contract),
+    `Referral launch acceptance must include ${contract}`,
+  );
+}
+assert(
+  packageJson.scripts?.["ops:referrals:accept-launch"],
+  "Package scripts must expose referral launch acceptance",
 );
 const communityEventProposalMigration = read(
   "supabase/migrations/20260809140000_community_hosted_event_proposals.sql",

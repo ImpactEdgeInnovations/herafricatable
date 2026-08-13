@@ -16,6 +16,7 @@ const interfaceContracts = [
   ["components/admin/privacy-operations.tsx", "manage_privacy_request"],
   ["components/admin/support-inbox.tsx", "manage_support_ticket"],
   ["components/admin/launch-gate-control.tsx", "save_launch_gate_check"],
+  ["components/admin/referral-manager.tsx", "review_vouched_referral"],
 ];
 
 for (const [path, rpc] of interfaceContracts) {
@@ -37,6 +38,14 @@ assert(
   read("supabase/migrations/20260727110000_founding_cohort_activation.sql").includes("notify_member_approval_trigger"),
   "Member approval must notify the approved member",
 );
+
+const referralLaunch = read("supabase/migrations/20260813120000_referral_launch_readiness.sql");
+for (const contract of [
+  "sync_referral_membership_progress",
+  "claim_notification_job",
+  "notify_vouched_referral_submission",
+  "service_role",
+]) assert(referralLaunch.includes(contract), `Referral launch must include ${contract}`);
 
 const communityHost = read("supabase/migrations/20260801170000_community_host_applications.sql");
 for (const contract of [

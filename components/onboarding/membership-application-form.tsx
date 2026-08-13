@@ -17,17 +17,32 @@ export type MembershipApplication = {
   submitted_at: string;
 };
 
+type MembershipInvitationContext = {
+  context_label: string | null;
+  introduced_by: string;
+  source_label: string;
+  verified: boolean;
+};
+
 const STEPS = ["About you", "Your purpose", "Review"];
+const sourcesThatMayNameSomeone = [
+  "Member invitation",
+  "Friend or colleague",
+  "Event",
+  "Partner organisation",
+];
 
 export function MembershipApplicationForm({
   email,
   initial,
   intakeMode,
+  invitationContext,
   nextHref,
 }: {
   email: string;
   initial: MembershipApplication | null;
   intakeMode: "closed" | "manual_review" | "trusted_auto";
+  invitationContext: MembershipInvitationContext | null;
   nextHref: string | null;
 }) {
   const supabase = useMemo(() => createClient(), []);
@@ -43,10 +58,16 @@ export function MembershipApplicationForm({
     displayName: initial?.display_name ?? "",
     professionalFocus: initial?.professional_focus ?? "",
     reason: initial?.reason ?? "",
-    referralSource: initial?.referral_source ?? "",
-    referredBy: initial?.referred_by ?? "",
+    referralSource:
+      initial?.referral_source ?? invitationContext?.source_label ?? "",
+    referredBy:
+      initial?.referred_by ?? invitationContext?.introduced_by ?? "",
     acknowledged: false,
   });
+  const verifiedInvitation = Boolean(invitationContext?.verified);
+  const asksWhoIntroduced = sourcesThatMayNameSomeone.includes(
+    values.referralSource,
+  );
 
   function update(key: keyof typeof values, value: string | boolean) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -199,20 +220,50 @@ export function MembershipApplicationForm({
               <textarea maxLength={1200} minLength={20} onChange={(event) => update("reason", event.target.value)} placeholder="Tell us what you hope to learn, share or build with other women." required rows={5} value={values.reason}/>
               <small>{values.reason.length}/1200 characters</small>
             </label>
-            <label>How did you hear about us?
-              <select onChange={(event) => update("referralSource", event.target.value)} required value={values.referralSource}>
-                <option value="">Choose one</option>
-                <option value="Member invitation">A member invited me</option>
-                <option value="Event">At an event</option>
-                <option value="Instagram or social media">Instagram or social media</option>
-                <option value="Partner organisation">A partner organisation</option>
-                <option value="Web search">Online search</option>
-                <option value="Other">Somewhere else</option>
-              </select>
-            </label>
-            <label>Who introduced you? <small>Optional</small>
-              <input maxLength={180} onChange={(event) => update("referredBy", event.target.value)} placeholder="Name or organisation" value={values.referredBy}/>
-            </label>
+            {verifiedInvitation ? (
+              <div className="application-verified-invitation form-wide">
+                <span aria-hidden="true">✓</span>
+                <div>
+                  <strong>Your invitation is recognised</strong>
+                  <p>
+                    {invitationContext?.introduced_by} invited you
+                    {invitationContext?.context_label
+                      ? ` through ${invitationContext.context_label}`
+                      : " to Her Africa Table"}
+                    . You do not need to enter these details again.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <label>How did you first hear about Her Africa Table?
+                  <select onChange={(event) => {
+                    const source = event.target.value;
+                    update("referralSource", source);
+                    if (!sourcesThatMayNameSomeone.includes(source)) {
+                      update("referredBy", "");
+                    }
+                  }} required value={values.referralSource}>
+                    <option value="">Choose the closest answer</option>
+                    <option value="Verified member invitation">A verified member invitation</option>
+                    <option value="Personal invitation">A personal invitation</option>
+                    <option value="Member invitation">A member personally invited me</option>
+                    <option value="Friend or colleague">A friend or colleague told me</option>
+                    <option value="Event">At an event</option>
+                    <option value="Instagram or social media">Instagram or social media</option>
+                    <option value="Partner organisation">Through an organisation</option>
+                    <option value="Press, podcast or newsletter">A story, podcast or newsletter</option>
+                    <option value="Web search">Online search</option>
+                    <option value="Other">Somewhere else</option>
+                  </select>
+                </label>
+                {asksWhoIntroduced ? (
+                  <label>Who should we thank? <small>Optional</small>
+                    <input maxLength={180} onChange={(event) => update("referredBy", event.target.value)} placeholder="Her name or the organisation" value={values.referredBy}/>
+                  </label>
+                ) : null}
+              </>
+            )}
           </div>
         </section>
       ) : null}

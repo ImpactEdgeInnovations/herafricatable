@@ -24,6 +24,17 @@ export type MemberReferral = {
   claimed_at: string | null;
   activated_at: string | null;
 };
+
+const referralStatus: Record<string, string> = {
+  activated: "Now a member",
+  approved: "Invitation approved",
+  claimed: "Membership in progress",
+  expired: "Invitation expired",
+  pending_review: "With our team",
+  rejected: "Not approved",
+  revoked: "Invitation closed",
+};
+
 export function ReferralCenter({
   campaigns,
   referrals,
@@ -37,7 +48,8 @@ export function ReferralCenter({
   const [message, setMessage] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     setBusy(true);
     const { error } = await supabase.rpc("create_vouched_referral", {
       p_campaign_id: form.get("campaign_id"),
@@ -49,24 +61,48 @@ export function ReferralCenter({
     setMessage(
       error
         ? memberErrorMessage(error, "submit this referral")
-        : "Your vouch has been submitted for private review. No access is granted until approval.",
+        : "Thank you. Your introduction is with our team for a private review.",
     );
-    if (!error) router.refresh();
+    if (!error) {
+      formElement.reset();
+      router.refresh();
+    }
   }
+  const firstCampaign = campaigns[0];
+  const usedForFirstCampaign = referrals.filter(
+    (item) =>
+      item.campaign_id === firstCampaign?.id &&
+      !["expired", "rejected", "revoked"].includes(item.status),
+  ).length;
   return (
     <>
+      <section className="referral-promise" aria-label="How member invitations work">
+        <div><span>1</span><p><strong>You make a thoughtful introduction</strong><small>Tell us how you know her and why she belongs at the table.</small></p></div>
+        <div><span>2</span><p><strong>Our team checks it privately</strong><small>Her email is not contacted before approval.</small></p></div>
+        <div><span>3</span><p><strong>She chooses whether to join</strong><small>Every woman still completes her own membership journey.</small></p></div>
+      </section>
       <section className="referral-intro">
         <div>
-          <p className="eyebrow">Vouch with intention</p>
-          <h2>Invite a woman whose presence strengthens the table.</h2>
+          <p className="eyebrow">A personal introduction</p>
+          <h2>Bring one remarkable woman to the table.</h2>
           <p>
-            A referral is a statement of trust, not an automatic membership
-            approval. Our team reviews each vouch before sending an invitation.
+            Think of someone you know well enough to introduce with confidence.
+            Your note stays private between you and our membership team.
           </p>
+          {firstCampaign ? (
+            <aside className="referral-campaign-note">
+              <strong>{firstCampaign.name}</strong>
+              <p>{firstCampaign.description}</p>
+              <small>
+                {Math.max(firstCampaign.max_referrals_per_member - usedForFirstCampaign, 0)} of {firstCampaign.max_referrals_per_member} introductions available
+              </small>
+            </aside>
+          ) : null}
         </div>
         <form onSubmit={(event) => void submit(event)}>
-          <label>
-            Campaign
+          {campaigns.length > 1 ? (
+            <label>
+            Invitation programme
             <select
               name="campaign_id"
               required
@@ -79,9 +115,12 @@ export function ReferralCenter({
               ))}
             </select>
             <small className="form-help" id="referral-campaign-help">
-              Choose the invitation programme that best fits this referral.
+              Choose the invitation that best fits this introduction.
             </small>
-          </label>
+            </label>
+          ) : (
+            <input name="campaign_id" type="hidden" value={firstCampaign?.id ?? ""}/>
+          )}
           <label>
             Her email address
             <input
@@ -91,8 +130,7 @@ export function ReferralCenter({
               aria-describedby="referral-email-help"
             />
             <small className="form-help" id="referral-email-help">
-              We only contact her after the team reviews and approves your
-              vouch.
+              We contact her only if your introduction is approved.
             </small>
           </label>
           <label>
@@ -106,22 +144,21 @@ export function ReferralCenter({
             />
           </label>
           <label>
-            Why are you vouching for her?
+            Why would she strengthen the table?
             <textarea
               name="vouch"
               minLength={20}
               maxLength={1200}
               required
-              placeholder="Share the professional context, values or contribution that makes her right for this network."
+              placeholder="Share one or two specific qualities, experiences or contributions that make you think of her."
               aria-describedby="referral-vouch-help"
             />
             <small className="form-help" id="referral-vouch-help">
-              Give one or two specific examples that help reviewers understand
-              the relationship and her contribution.
+              Keep it warm and specific. She will not see this private note.
             </small>
           </label>
           <button className="button button-primary" disabled={busy}>
-            {busy ? "Submitting…" : "Submit private vouch"}
+            {busy ? "Sending…" : "Send for private review"}
           </button>
         </form>
       </section>
@@ -129,7 +166,7 @@ export function ReferralCenter({
         <header>
           <div>
             <p className="eyebrow">Your invitations</p>
-            <h2>Referral journey</h2>
+            <h2>Your introductions</h2>
           </div>
           <span>
             {referrals.filter((item) => item.status === "activated").length}{" "}
@@ -150,7 +187,7 @@ export function ReferralCenter({
                   </small>
                 </div>
                 <span className={`member-status status-${item.status}`}>
-                  {item.status.replace("_", " ")}
+                  {referralStatus[item.status] ?? "In progress"}
                 </span>
                 <p>{item.relationship}</p>
                 {item.review_note &&

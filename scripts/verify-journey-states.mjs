@@ -796,10 +796,26 @@ for (const contract of [
   "submit_membership_application",
   "Request received",
   "Community Guidelines",
+  "Your invitation is recognised",
+  "Choose the closest answer",
+  "Who should we thank?",
 ]) {
   assert(
     membershipApplicationForm.includes(contract),
     `Membership application journey must include ${contract}`,
+  );
+}
+const referralCenter = read("components/member/referral-center.tsx");
+for (const contract of [
+  "You make a thoughtful introduction",
+  "Our team checks it privately",
+  "She chooses whether to join",
+  "Send for private review",
+  "Now a member",
+]) {
+  assert(
+    referralCenter.includes(contract),
+    `Member referral journey must include ${contract}`,
   );
 }
 for (const contract of [
@@ -1708,7 +1724,8 @@ assert(
 );
 const emailSender = read("lib/notifications/email.ts");
 assert(
-  emailSender.includes('job.template_key === "table_invitation"') &&
+  emailSender.includes('"table_invitation"') &&
+    emailSender.includes('"referral_invitation"') &&
     emailSender.includes("https://api.resend.com/emails") &&
     emailSender.includes("Open your invitation"),
   "Approved personal invitations must use the real Resend notification sender",

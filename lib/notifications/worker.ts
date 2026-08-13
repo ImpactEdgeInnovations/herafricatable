@@ -28,7 +28,11 @@ function migrationPending(error: RpcError | null, functionName: string) {
   );
 }
 
-export async function processNotificationQueue() {
+export async function processNotificationQueue({
+  dedupeKey,
+}: {
+  dedupeKey?: string;
+} = {}) {
   const admin = createAdminClient();
   const { data: lifecycleData, error: lifecycleError } = await admin.rpc(
     "reconcile_community_host_subscriptions",
@@ -86,9 +90,18 @@ export async function processNotificationQueue() {
     );
   }
 
-  const { data, error } = await admin.rpc("claim_notification_jobs", {
-    p_limit: 25,
-  });
+  let claimResult = dedupeKey
+    ? await admin.rpc("claim_notification_job", {
+        p_dedupe_key: dedupeKey,
+      })
+    : await admin.rpc("claim_notification_jobs", { p_limit: 25 });
+  if (
+    dedupeKey &&
+    migrationPending(claimResult.error as RpcError | null, "claim_notification_job")
+  ) {
+    claimResult = await admin.rpc("claim_notification_jobs", { p_limit: 25 });
+  }
+  const { data, error } = claimResult;
   if (error) {
     return NextResponse.json(
       { briefingsQueued, error: "Queue unavailable" },
@@ -142,5 +155,6 @@ export async function processNotificationQueue() {
     eventRemindersQueued,
     sent,
     suppressed,
+    targeted: Boolean(dedupeKey),
   });
 }

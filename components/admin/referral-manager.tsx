@@ -157,10 +157,34 @@ export function ReferralManager({
     setMessage(
       error
         ? adminErrorMessage(error, `${action} this referral`)
-        : action === "approve"
-          ? "Invitation approved and queued for email delivery."
-          : `Referral ${action}d.`,
+        : `Referral ${action}d.`,
     );
+    if (!error && action === "approve") {
+      try {
+        const response = await fetch("/api/admin/notifications/process", {
+          body: JSON.stringify({ dedupeKey: `referral-invite:${id}` }),
+          headers: { "content-type": "application/json" },
+          method: "POST",
+        });
+        const delivery = (await response.json()) as {
+          error?: string;
+          failed?: number;
+          sent?: number;
+          suppressed?: number;
+        };
+        setMessage(
+          response.ok && ((delivery.sent ?? 0) + (delivery.suppressed ?? 0)) > 0
+            ? "Invitation approved and sent."
+            : response.ok
+              ? "Invitation approved. Its delivery record is ready under Message delivery."
+              : `Invitation approved and safely queued. ${delivery.error ?? "Use Message delivery to try again."}`,
+        );
+      } catch {
+        setMessage(
+          "Invitation approved and safely queued. Use Message delivery to send waiting emails.",
+        );
+      }
+    }
     if (!error) router.refresh();
   }
   if (!migrationReady)
