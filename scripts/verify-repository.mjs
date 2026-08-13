@@ -50,6 +50,25 @@ for (const path of migrations.filter(
 }
 const cron = read("app/api/cron/notifications/route.ts");
 const notificationWorker = read("lib/notifications/worker.ts");
+const nextConfig = read("next.config.ts");
+for (const contract of [
+  "Content-Security-Policy",
+  "frame-ancestors 'none'",
+  "X-Content-Type-Options",
+  "Referrer-Policy",
+  "Permissions-Policy",
+  "https://*.supabase.co",
+  "https://checkout.paystack.com",
+]) {
+  assert(
+    nextConfig.includes(contract),
+    `Production response headers must include ${contract}`,
+  );
+}
+assert(
+  nextConfig.includes('process.env.NODE_ENV === "development"'),
+  "unsafe-eval must remain limited to local development",
+);
 assert(
   cron.includes("timingSafeEqual"),
   "Cron authorization must use constant-time comparison",

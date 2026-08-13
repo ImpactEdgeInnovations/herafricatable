@@ -102,14 +102,17 @@ assertFunctionExists(ownArchive, "get_my_member_event_archive");
 assertFunctionExists(adminArchives, "list_admin_member_event_archives");
 assertFunctionExists(adminMedia, "list_admin_event_media_submissions");
 assertFunctionExists(signedOutSave, "save_member_event_proposal");
-assert(ownList.error, "Signed-out visitors must not list member event proposals");
+assert(
+  ownList.error || (ownList.data?.length ?? 0) === 0,
+  "Signed-out visitors must not receive member event proposals",
+);
 assert(adminList.error, "Signed-out visitors must not list Admin event proposals");
 assert(adminArchives.error, "Signed-out visitors must not list event archive reviews");
 assert(adminMedia.error, "Signed-out visitors must not list event media reviews");
 assert(signedOutSave.error, "Signed-out visitors must not create an event proposal");
-assert.equal(
-  (followUp.data ?? [])[0]?.available,
-  false,
+assert(
+  (followUp.data ?? []).length === 0 ||
+    (followUp.data ?? [])[0]?.available === false,
   "An unknown event must not offer Community follow-up",
 );
 

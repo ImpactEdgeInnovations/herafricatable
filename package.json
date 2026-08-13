@@ -26,6 +26,7 @@
     "ops:community:event-readiness": "node --env-file=.env.local scripts/verify-community-event-readiness.mjs",
     "ops:community:member-events-readiness": "node --env-file=.env.local scripts/verify-member-event-readiness.mjs",
     "ops:community:gathering-readiness": "node --env-file=.env.local scripts/verify-community-gathering-readiness.mjs",
+    "ops:events:question-readiness": "node --env-file=.env.local scripts/verify-event-question-readiness.mjs",
     "ops:community:accept-events": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-events.mjs",
     "ops:community:accept-gatherings": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-gatherings.mjs",
     "ops:verify-admin": "node --env-file=.env.local scripts/verify-admin-identity.mjs",
