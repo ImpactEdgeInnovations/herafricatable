@@ -2,8 +2,8 @@
 
 Last updated: 13 August 2026<br />
 Production: `https://herafricatable.vercel.app`<br />
-Verified production release: `2e72038`<br />
-Latest credentialed acceptance: local release candidate pending push
+Verified production release: `b6bb161`<br />
+Latest credentialed acceptance: deployed and exact-release smoke-tested
 
 ## Proven automatically
 
