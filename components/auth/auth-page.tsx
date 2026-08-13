@@ -3,9 +3,11 @@ import { AuthPanel } from "@/components/auth/auth-panel";
 
 export function AuthPage({
   destination,
+  initialJourney,
   intent,
 }: {
   destination?: string;
+  initialJourney?: "apply" | "sign-in";
   intent: "member" | "admin";
 }) {
   const isAdmin = intent === "admin";
@@ -24,7 +26,7 @@ export function AuthPage({
         <p className="auth-quote">“When women gather with intention, possibility becomes practical.”</p>
       </section>
       <section className="auth-panel-wrap" aria-label={`${isAdmin ? "Team" : "Member"} sign in`}>
-        <AuthPanel destination={destination} intent={intent} />
+        <AuthPanel destination={destination} initialJourney={initialJourney} intent={intent} />
       </section>
     </main>
   );

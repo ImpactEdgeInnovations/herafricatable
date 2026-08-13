@@ -3,18 +3,26 @@
 import { PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { GuideListenButton } from "@/components/member/guide-listen-button";
+import {
+  GuideCopyButton,
+  GuideFeedback,
+  GuideResultCards,
+} from "@/components/member/guide-result-cards";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
-
-type GuideMessage = {
-  action?: { href: string; label: string };
-  content: string;
-  role: "assistant" | "user";
-};
+import {
+  clearGuideSession,
+  loadGuideSession,
+  saveGuideSession,
+  type GuideCategory,
+  type GuideMessage,
+  type GuideSuggestion,
+} from "@/lib/table-guide-session";
 
 type Position = { x: number; y: number };
 
 const STORAGE_KEY = "hat-table-guide-position-v1";
+const HIDDEN_KEY = "hat-table-guide-hidden-date-v1";
 const DOCK_SIZE = 64;
 const EDGE_GAP = 16;
 
@@ -70,6 +78,19 @@ function clampPosition(position: Position): Position {
   };
 }
 
+function defaultPosition(): Position {
+  return clampPosition({
+    x: window.innerWidth - DOCK_SIZE - 24,
+    y: window.innerHeight - DOCK_SIZE - 104,
+  });
+}
+
+function quotaLabel(remaining: number) {
+  return remaining <= 5
+    ? `${remaining} question${remaining === 1 ? "" : "s"} left today`
+    : "Available today";
+}
+
 export function FloatingTableGuide({
   assistantEnabled,
   featureEnabled,
@@ -108,6 +129,8 @@ export function FloatingTableGuide({
   const [enabled, setEnabled] = useState(assistantEnabled);
   const [notice, setNotice] = useState("");
   const [remaining, setRemaining] = useState(remainingToday);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [hiddenToday, setHiddenToday] = useState(false);
   const [messages, setMessages] = useState<GuideMessage[]>([
     {
       content: `Hello ${firstName}. I’m Nia, your Table Guide. I am here when you want a little help.`,
@@ -123,13 +146,21 @@ export function FloatingTableGuide({
   } | null>(null);
 
   useEffect(() => {
-    const fallback = clampPosition({
-      x: window.innerWidth - DOCK_SIZE - 24,
-      y: window.innerHeight - DOCK_SIZE - 104,
-    });
+    if (pathname === "/guide") return;
+    const fallback = defaultPosition();
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY);
-      setPosition(saved ? clampPosition(JSON.parse(saved) as Position) : fallback);
+      setPosition(
+        window.innerWidth <= 620
+          ? fallback
+          : saved
+            ? clampPosition(JSON.parse(saved) as Position)
+            : fallback,
+      );
+      setHiddenToday(
+        window.localStorage.getItem(HIDDEN_KEY) ===
+          new Date().toISOString().slice(0, 10),
+      );
     } catch {
       setPosition(fallback);
     }
@@ -137,7 +168,17 @@ export function FloatingTableGuide({
       setPosition((current) => (current ? clampPosition(current) : fallback));
     window.addEventListener("resize", keepInView);
     return () => window.removeEventListener("resize", keepInView);
-  }, []);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (pathname === "/guide") return;
+    setMessages((current) => loadGuideSession(current));
+    setSessionReady(true);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (sessionReady && pathname !== "/guide") saveGuideSession(messages);
+  }, [messages, pathname, sessionReady]);
 
   function beginDrag(event: PointerEvent<HTMLButtonElement>) {
     if (!position) return;
@@ -153,6 +194,7 @@ export function FloatingTableGuide({
 
   function move(event: PointerEvent<HTMLButtonElement>) {
     if (!drag.current) return;
+    if (window.innerWidth <= 620) return;
     const dx = event.clientX - drag.current.pointerX;
     const dy = event.clientY - drag.current.pointerY;
     if (Math.abs(dx) + Math.abs(dy) > 5) drag.current.moved = true;
@@ -186,18 +228,21 @@ export function FloatingTableGuide({
       const result = (await response.json()) as {
         actions?: { href: string; label: string }[];
         answer?: string;
+        category?: GuideCategory;
         error?: string;
+        suggestions?: GuideSuggestion[];
       };
       if (response.ok) setRemaining((current) => Math.max(0, current - 1));
       setMessages((current) => [
         ...current,
         {
-          action: result.actions?.[0],
+          category: result.category,
           content:
             result.answer ??
             result.error ??
             "I could not answer just now. Please open Support if you need a person.",
           role: "assistant",
+          suggestions: result.suggestions,
         },
       ]);
     } catch {
@@ -236,6 +281,7 @@ export function FloatingTableGuide({
   }
 
   function clearConversation() {
+    clearGuideSession();
     setMessages([
       {
         content: `Fresh start, ${firstName}. What would you like help with?`,
@@ -243,10 +289,55 @@ export function FloatingTableGuide({
       },
     ]);
     setQuestion("");
-    setNotice("");
+    setNotice("Cleared. Nia’s conversation is not kept as a permanent transcript.");
+  }
+
+  function placeGuide(side: "left" | "right") {
+    if (!position) return;
+    const next = clampPosition({
+      x:
+        side === "left"
+          ? EDGE_GAP
+          : window.innerWidth - DOCK_SIZE - EDGE_GAP,
+      y: position.y,
+    });
+    setPosition(next);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  }
+
+  function resetPosition() {
+    const next = defaultPosition();
+    setPosition(next);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  }
+
+  function hideForToday() {
+    window.localStorage.setItem(
+      HIDDEN_KEY,
+      new Date().toISOString().slice(0, 10),
+    );
+    setOpen(false);
+    setHiddenToday(true);
+  }
+
+  function restoreGuide() {
+    window.localStorage.removeItem(HIDDEN_KEY);
+    setHiddenToday(false);
   }
 
   if (!position) return null;
+  if (pathname === "/guide") return null;
+  if (hiddenToday) {
+    return (
+      <button
+        className="floating-guide-restore"
+        onClick={restoreGuide}
+        type="button"
+      >
+        Show Nia
+      </button>
+    );
+  }
 
   const dockedLeft = position.x < window.innerWidth / 2;
   const ready = installed && featureEnabled && enabled && keyConfigured;
@@ -280,13 +371,17 @@ export function FloatingTableGuide({
                 {messages.slice(-4).map((message, index) => (
                   <div className={message.role} key={`${message.role}-${index}`}>
                     <p>{message.content}</p>
-                    {message.role === "assistant" && message.action ? (
-                      <a className="floating-guide-action" href={message.action.href}>
-                        {message.action.label} <span aria-hidden="true">→</span>
-                      </a>
+                    {message.role === "assistant" ? (
+                      <GuideResultCards compact suggestions={message.suggestions ?? []} />
                     ) : null}
                     {message.role === "assistant" && featureEnabled ? (
-                      <GuideListenButton compact text={message.content} />
+                      <div className="guide-response-tools">
+                        <GuideListenButton compact text={message.content} />
+                        <GuideCopyButton compact text={message.content} />
+                      </div>
+                    ) : null}
+                    {message.role === "assistant" ? (
+                      <GuideFeedback category={message.category} compact />
                     ) : null}
                   </div>
                 ))}
@@ -317,9 +412,10 @@ export function FloatingTableGuide({
                 <button disabled={busy || !question.trim() || remaining < 1}>Ask</button>
               </form>
               <footer>
-                <span>{remaining} questions left today</span>
+                <span>{quotaLabel(remaining)}</span>
                 <button onClick={clearConversation} type="button">Clear conversation</button>
               </footer>
+              {notice ? <p className="floating-guide-notice" role="status">{notice}</p> : null}
             </>
           ) : (
             <div className="floating-guide-welcome">
@@ -344,9 +440,14 @@ export function FloatingTableGuide({
               {notice ? <small role="status">{notice}</small> : null}
             </div>
           )}
-          <button className="floating-guide-quiet" onClick={() => setQuiet((current) => !current)} type="button">
-            {quiet ? "Allow gentle movement" : "Keep the Guide still"}
-          </button>
+          <div className="floating-guide-position-controls" aria-label="Nia display choices">
+            <button onClick={() => setQuiet((current) => !current)} type="button">
+              {quiet ? "Allow gentle movement" : "Keep still"}
+            </button>
+            <button onClick={() => placeGuide(dockedLeft ? "right" : "left")} type="button">Dock {dockedLeft ? "right" : "left"}</button>
+            <button onClick={resetPosition} type="button">Reset position</button>
+            <button onClick={hideForToday} type="button">Hide today</button>
+          </div>
         </section>
       ) : null}
       <button

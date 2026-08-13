@@ -1887,6 +1887,45 @@ svg {
 .auth-description strong {
   color: var(--ink);
 }
+.auth-member-choice {
+  display: grid;
+  margin: -4px 0 26px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #ebe6dd;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+.auth-member-choice button {
+  display: grid;
+  min-height: 66px;
+  align-content: center;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  gap: 3px;
+}
+.auth-member-choice button[aria-pressed="true"] {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 2px 8px rgba(57, 42, 34, 0.08);
+}
+.auth-member-choice strong,
+.auth-member-choice span {
+  display: block;
+}
+.auth-member-choice strong {
+  font-size: 0.7rem;
+}
+.auth-member-choice span {
+  font-size: 0.61rem;
+}
 .auth-journey {
   display: grid;
   margin: -4px 0 28px;
@@ -2050,6 +2089,15 @@ svg {
   color: var(--wine);
   font-weight: 800;
   text-decoration: none;
+}
+.auth-inline-switch {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--wine);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
 }
 
 .portal-page {
@@ -2823,7 +2871,7 @@ svg {
   text-transform: uppercase;
 }
 
-.table-guide-messages article p {
+.table-guide-messages article > p {
   margin: 0;
   padding: 15px 17px;
   border: 1px solid var(--line);
@@ -2833,13 +2881,13 @@ svg {
   white-space: pre-wrap;
 }
 
-.table-guide-messages article.user p {
+.table-guide-messages article.user > p {
   border-color: var(--wine);
   background: var(--wine);
   color: #fff;
 }
 
-.table-guide-thinking p {
+.table-guide-thinking > p {
   color: var(--muted);
   font-style: italic;
 }
@@ -2904,6 +2952,178 @@ svg {
 
 .floating-guide-messages .guide-listen {
   margin: 3px 0 0 3px;
+}
+
+.guide-result-cards {
+  display: grid;
+  width: 100%;
+  margin-top: 7px;
+  gap: 7px;
+}
+
+.guide-result-card {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid rgba(75, 47, 68, 0.14);
+  border-radius: 8px;
+  background: #fffdf8;
+}
+
+.guide-result-card > a {
+  display: grid;
+  padding: 14px 15px;
+  color: var(--ink);
+  text-decoration: none;
+  gap: 4px;
+}
+
+.guide-result-card:hover,
+.guide-result-card:focus-within {
+  border-color: rgba(103, 33, 51, 0.42);
+  background: #fff;
+}
+
+.guide-result-card > a:focus-visible {
+  outline: none;
+}
+
+.guide-result-cards span,
+.guide-result-cards small {
+  color: var(--muted);
+  font-size: 0.52rem;
+}
+
+.guide-result-cards span {
+  color: var(--wine);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.guide-result-cards strong {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.guide-result-cards p {
+  margin: 4px 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--muted) !important;
+  font-size: 0.56rem !important;
+  line-height: 1.55 !important;
+}
+
+.guide-result-cards b {
+  margin-top: 5px;
+  color: var(--wine);
+  font-size: 0.54rem;
+}
+
+.guide-result-cards b i {
+  font-style: normal;
+}
+
+.guide-result-card > button {
+  width: fit-content;
+  margin: 0 15px 11px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.51rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.guide-result-cards.is-compact .guide-result-card > a {
+  padding: 11px 12px;
+}
+
+.guide-result-cards.is-compact .guide-result-card {
+  border-radius: 11px;
+}
+
+.guide-result-cards.is-compact .guide-result-card > button {
+  margin: 0 12px 9px;
+  font-size: 0.66rem;
+}
+
+.guide-result-cards.is-compact strong {
+  font-size: 0.9rem;
+}
+
+.guide-result-cards.is-compact p {
+  font-size: 0.72rem !important;
+}
+
+.guide-result-notice {
+  color: var(--muted);
+  font-size: 0.52rem;
+}
+
+.guide-response-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.guide-feedback {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 0.53rem;
+  gap: 5px;
+}
+
+.guide-feedback button {
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--wine);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+}
+
+.guide-feedback.is-compact {
+  padding: 4px 3px 0;
+  font-size: 0.68rem;
+}
+
+.guide-feedback.is-compact button {
+  min-height: 26px;
+  background: transparent;
+}
+
+.guide-copy {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid rgba(95, 23, 34, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 252, 246, 0.92);
+  color: var(--wine);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.53rem;
+  font-weight: 750;
+}
+
+.guide-copy.is-compact {
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: #70404b;
+  font-size: 0.68rem;
 }
 
 .table-guide-quick-questions {
@@ -3210,7 +3430,7 @@ svg {
 
 .table-guide-admin-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
   gap: 10px;
 }
 
@@ -3383,7 +3603,7 @@ svg {
   box-shadow: 0 17px 35px rgba(62, 25, 39, 0.22), 0 3px 9px rgba(62, 25, 39, 0.14);
   user-select: none;
   -webkit-user-select: none;
-  animation: table-guide-breathe 3.8s ease-in-out infinite;
+  animation: table-guide-breathe 5.6s ease-in-out infinite;
 }
 
 .floating-guide-character:active {
@@ -3437,7 +3657,7 @@ svg {
   font-weight: 700;
   background: #f2d89d;
   box-shadow: 0 5px 12px rgba(57, 31, 61, 0.18);
-  animation: table-guide-spark 5s ease-in-out infinite;
+  animation: table-guide-spark 7.2s ease-in-out infinite;
 }
 
 .floating-guide-shadow {
@@ -3538,7 +3758,7 @@ svg {
   justify-self: end;
 }
 
-.floating-guide-messages p {
+.floating-guide-messages > div > p {
   margin: 0;
   padding: 10px 12px;
   border-radius: 13px 13px 13px 4px;
@@ -3548,7 +3768,7 @@ svg {
   background: #f1ece6;
 }
 
-.floating-guide-messages div.user p {
+.floating-guide-messages div.user > p {
   border-radius: 13px 13px 4px 13px;
   color: #fff;
   background: #672133;
@@ -3644,6 +3864,14 @@ svg {
   cursor: pointer;
 }
 
+.floating-guide-notice {
+  margin: 0;
+  padding: 0 20px 12px;
+  color: #655d59;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
 .floating-guide-welcome {
   display: grid;
   gap: 15px;
@@ -3687,23 +3915,48 @@ svg {
   line-height: 1.45;
 }
 
-.floating-guide-quiet {
-  margin: 0 20px 14px;
+.floating-guide-position-controls {
+  display: flex;
+  padding: 9px 20px 14px;
+  border-top: 1px solid rgba(75, 47, 68, 0.1);
+  flex-wrap: wrap;
+  gap: 6px 13px;
+}
+
+.floating-guide-position-controls button {
   padding: 0;
   border: 0;
   color: #796b74;
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   text-decoration: underline;
   text-underline-offset: 3px;
   background: transparent;
   cursor: pointer;
 }
 
+.floating-guide-restore {
+  position: fixed;
+  z-index: 91;
+  right: 0;
+  bottom: 104px;
+  padding: 10px 9px 10px 12px;
+  border: 1px solid rgba(95, 23, 34, 0.2);
+  border-right: 0;
+  border-radius: 18px 0 0 18px;
+  background: #fffaf1;
+  color: var(--wine);
+  box-shadow: 0 8px 25px rgba(49, 29, 45, 0.12);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
 @keyframes table-guide-breathe {
   0%, 100% { transform: translateY(0) rotate(-1deg); }
-  45% { transform: translateY(-7px) rotate(1deg); }
-  58% { transform: translateY(-5px) rotate(0); }
+  45% { transform: translateY(-3px) rotate(0.5deg); }
+  58% { transform: translateY(-2px) rotate(0); }
 }
 
 @keyframes table-guide-spark {
@@ -3742,6 +3995,12 @@ svg {
 
   .floating-guide-messages {
     max-height: 210px;
+  }
+
+  .floating-guide-position-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
   }
 }
 
@@ -20826,6 +21085,9 @@ body {
   }
   .auth-back {
     margin-bottom: 28px;
+  }
+  .auth-member-choice {
+    grid-template-columns: 1fr;
   }
   .auth-journey {
     padding: 14px 0;

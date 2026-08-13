@@ -16,12 +16,22 @@ export type TableGuideAdmin = {
   requests_24h: number;
 };
 
+export type TableGuideFeedbackAdmin = {
+  feedback_7d: number;
+  helpful_7d: number;
+  helpful_percent_7d: number | null;
+  last_feedback_at: string | null;
+  not_helpful_7d: number;
+};
+
 export function TableGuideControl({
   configuration,
+  feedback,
   keyConfigured,
   migrationReady,
 }: {
   configuration: TableGuideAdmin | null;
+  feedback: TableGuideFeedbackAdmin | null;
   keyConfigured: boolean;
   migrationReady: boolean;
 }) {
@@ -116,6 +126,10 @@ export function TableGuideControl({
         <article><strong>{configuration.recommended_members}</strong><span>Open to suggestions</span></article>
         <article><strong>{configuration.requests_24h}</strong><span>Questions · 24 hours</span></article>
         <article><strong>{configuration.handoffs_24h}</strong><span>Human handoffs</span></article>
+        <article>
+          <strong>{feedback?.feedback_7d ? `${feedback.helpful_percent_7d ?? 0}%` : "—"}</strong>
+          <span>{feedback?.feedback_7d ? `${feedback.helpful_7d} of ${feedback.feedback_7d} answers rated useful · 7 days` : "Member usefulness · awaiting feedback"}</span>
+        </article>
       </div>
       <div className="table-guide-admin-readiness">
         <span className={keyConfigured ? "ready" : "blocked"}>

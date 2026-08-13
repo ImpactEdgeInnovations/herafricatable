@@ -158,8 +158,9 @@ assert(
   "Authentication errors must pass through the auth-safe message filter",
 );
 for (const contract of [
-  "This is the only sign-in most people need.",
-  "approved team accounts go to their workspace",
+  "I’m already a member",
+  "I’m new here",
+  "No password is needed",
   'destinationFor(intent)',
 ]) {
   assert(

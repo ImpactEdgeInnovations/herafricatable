@@ -17,6 +17,7 @@ import { RoadmapOverview } from "@/components/admin/roadmap-overview";
 import {
   TableGuideControl,
   type TableGuideAdmin,
+  type TableGuideFeedbackAdmin,
 } from "@/components/admin/table-guide-control";
 import {
   EventManager,
@@ -358,6 +359,10 @@ export default async function AdminOperationsPage({
   const tableGuideAdminResult =
     role.role === "super_admin" && loadPeople
       ? await supabase.rpc("get_table_guide_admin")
+      : { data: [], error: null };
+  const tableGuideFeedbackResult =
+    role.role === "super_admin" && loadPeople
+      ? await supabase.rpc("get_table_guide_feedback_admin")
       : { data: [], error: null };
   const members = (memberResult.data as AdminMember[] | null) ?? [];
   const memberEventProposalContexts = (memberEventProposalContextResult.data as
@@ -948,6 +953,11 @@ export default async function AdminOperationsPage({
             configuration={
               ((tableGuideAdminResult.data as TableGuideAdmin[] | null) ?? [])[0] ??
               null
+            }
+            feedback={
+              ((tableGuideFeedbackResult.data as
+                | TableGuideFeedbackAdmin[]
+                | null) ?? [])[0] ?? null
             }
             keyConfigured={Boolean(
               process.env.OPENAI_API_KEY && process.env.AI_SAFETY_SALT,

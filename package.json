@@ -14,7 +14,8 @@
     "test:community-gatherings": "node scripts/verify-community-gathering-contracts.mjs",
     "test:event-questions": "node scripts/verify-event-question-contracts.mjs",
     "test:admin-decisions": "node scripts/verify-admin-decision-contracts.mjs",
-    "test": "npm run verify && npm run test:journeys && npm run test:accessibility && npm run test:operations && npm run test:community-gatherings && npm run test:event-questions && npm run test:admin-decisions && npm run typecheck",
+    "test:table-guide": "node scripts/verify-table-guide-experience.mjs",
+    "test": "npm run verify && npm run test:journeys && npm run test:accessibility && npm run test:operations && npm run test:community-gatherings && npm run test:event-questions && npm run test:admin-decisions && npm run test:table-guide && npm run typecheck",
     "test:live": "node scripts/smoke-live.mjs",
     "ops:auth-readiness": "node --env-file=.env.local scripts/smoke-authenticated.mjs",
     "ops:provision-beta-admin": "node --env-file=.env.local --env-file=.env.test.local scripts/provision-beta-admin.mjs",
@@ -37,7 +38,8 @@
     "ops:membership:intake-readiness": "node --env-file=.env.local --env-file=.env.test.local scripts/verify-membership-intake-readiness.mjs",
     "ops:admin:sync-test-passwords": "node --env-file=.env.local --env-file=.env.test.local scripts/sync-test-admin-passwords.mjs",
     "ops:membership:accept-intake": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-membership-intake.mjs",
-    "ops:referrals:accept-launch": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-referral-launch.mjs"
+    "ops:referrals:accept-launch": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-referral-launch.mjs",
+    "ops:table-guide:accept": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-table-guide-production.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.3",

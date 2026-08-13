@@ -1,12 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { GuideListenButton } from "@/components/member/guide-listen-button";
+import {
+  GuideCopyButton,
+  GuideFeedback,
+  GuideResultCards,
+} from "@/components/member/guide-result-cards";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
+import {
+  clearGuideSession,
+  loadGuideSession,
+  saveGuideSession,
+  type GuideCategory,
+  type GuideMessage,
+  type GuideSuggestion,
+} from "@/lib/table-guide-session";
 
 export type TableGuideAccess = {
   assistant_enabled: boolean;
@@ -31,11 +44,6 @@ export type TableGuideConnection = {
   user_id: string;
 };
 
-type GuideMessage = {
-  content: string;
-  role: "assistant" | "user";
-};
-
 const quickQuestions = [
   "Help me get started",
   "Who could I connect with?",
@@ -44,6 +52,12 @@ const quickQuestions = [
 
 function goalLabel(value: string) {
   return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function quotaDisplay(remaining: number) {
+  return remaining <= 5
+    ? { label: "questions left today", value: String(remaining) }
+    : { label: "Ready when you need help", value: "Available" };
 }
 
 export function TableGuide({
@@ -68,12 +82,23 @@ export function TableGuide({
   const [notice, setNotice] = useState("");
   const [question, setQuestion] = useState("");
   const [remaining, setRemaining] = useState(access?.remaining_today ?? 0);
+  const [sessionReady, setSessionReady] = useState(false);
   const [messages, setMessages] = useState<GuideMessage[]>([
     {
       content: `Welcome, ${firstName}. I’m Nia, your AI Table Guide. I can help you find your way around the table, discover relevant people, understand Communities and prepare for upcoming events.`,
       role: "assistant",
     },
   ]);
+  const quota = quotaDisplay(remaining);
+
+  useEffect(() => {
+    setMessages((current) => loadGuideSession(current));
+    setSessionReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (sessionReady) saveGuideSession(messages);
+  }, [messages, sessionReady]);
 
   async function updatePreferences(
     assistantEnabled: boolean,
@@ -113,26 +138,36 @@ export function TableGuide({
         method: "POST",
       });
       const result = (await response.json()) as {
+        actions?: { href: string; label: string }[];
         answer?: string;
+        category?: GuideCategory;
         error?: string;
         needsHuman?: boolean;
+        suggestions?: GuideSuggestion[];
       };
       if (response.ok) setRemaining((current) => Math.max(0, current - 1));
       if (!response.ok || !result.answer) {
         setMessages((current) => [
           ...current,
           {
+            category: result.category,
             content:
               result.error ??
               "I could not answer just now. Please try again or ask a person.",
             role: "assistant",
+            suggestions: result.suggestions,
           },
         ]);
         return;
       }
       setMessages((current) => [
         ...current,
-        { content: result.answer!, role: "assistant" },
+        {
+          category: result.category,
+          content: result.answer!,
+          role: "assistant",
+          suggestions: result.suggestions,
+        },
       ]);
       if (result.needsHuman)
         setNotice("A person can help with this too. Use Ask a person when you are ready.");
@@ -189,6 +224,7 @@ export function TableGuide({
   }
 
   function clearConversation() {
+    clearGuideSession();
     setMessages([
       {
         content: `Fresh start, ${firstName}. What would you like help with?`,
@@ -276,8 +312,8 @@ export function TableGuide({
         </div>
         <aside>
           <span>Today</span>
-          <strong>{remaining}</strong>
-          <small>questions remaining</small>
+          <strong>{quota.value}</strong>
+          <small>{quota.label}</small>
         </aside>
       </header>
 
@@ -290,7 +326,14 @@ export function TableGuide({
                 <span>{message.role === "assistant" ? "Nia · AI Table Guide" : "You"}</span>
                 <p>{message.content}</p>
                 {message.role === "assistant" ? (
-                  <GuideListenButton text={message.content} />
+                  <>
+                    <GuideResultCards suggestions={message.suggestions ?? []} />
+                    <div className="guide-response-tools">
+                      <GuideListenButton text={message.content} />
+                      <GuideCopyButton text={message.content} />
+                      <GuideFeedback category={message.category} />
+                    </div>
+                  </>
                 ) : null}
               </article>
             ))}

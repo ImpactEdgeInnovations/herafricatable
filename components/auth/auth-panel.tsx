@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type AuthIntent = "member" | "admin";
 type Step = "request" | "verify";
+type MemberJourney = "apply" | "sign-in";
 
 const destinationFor = (intent: AuthIntent) => intent === "admin" ? "/admin" : "/continue";
 
@@ -22,14 +23,17 @@ function safeMessage(message: string) {
 
 export function AuthPanel({
   destination: requestedDestination,
+  initialJourney = "sign-in",
   intent,
 }: {
   destination?: string;
+  initialJourney?: MemberJourney;
   intent: AuthIntent;
 }) {
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [step, setStep] = useState<Step>("request");
+  const [memberJourney, setMemberJourney] = useState<MemberJourney>(initialJourney);
   const [busy, setBusy] = useState(false);
   const [resendIn, setResendIn] = useState(0);
   const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
@@ -40,6 +44,14 @@ export function AuthPanel({
       ? requestedDestination
       : destinationFor(intent);
   const isAdmin = intent === "admin";
+
+  function chooseMemberJourney(nextJourney: MemberJourney) {
+    setMemberJourney(nextJourney);
+    setStep("request");
+    setToken("");
+    setMessage(null);
+    setResendIn(0);
+  }
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -116,21 +128,44 @@ export function AuthPanel({
         <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 10h11m-4-4 4 4-4 4" /></svg>
         Back to Her Africa Table
       </Link>
-      <p className="auth-kicker">{isAdmin ? "Approved team only" : "Membership"}</p>
-      <h2>{isAdmin ? "Admin sign in" : step === "verify" ? "Check your email" : "Welcome"}</h2>
+      <p className="auth-kicker">{isAdmin ? "Approved team only" : memberJourney === "apply" ? "Membership request" : "Member sign in"}</p>
+      <h2>{isAdmin ? "Admin sign in" : step === "verify" ? "Check your email" : memberJourney === "apply" ? "Begin your request" : "Welcome back"}</h2>
       <p className="auth-description">
         {isAdmin
           ? <>Enter an approved team email. We will send a private sign-in code, then confirm your Admin access.</>
           : step === "verify"
             ? <>We sent a sign-in code to <strong>{email}</strong>. Enter it below to continue.</>
-            : <>Enter your email and we will send a one-time code. Members go to their home, approved team accounts go to their workspace, and new visitors can request membership.</>}
+            : memberJourney === "apply"
+              ? <>First, confirm your email. You will then answer a few short questions, and we will email you after your membership request has been reviewed.</>
+              : <>Enter the email you use for Her Africa Table. We’ll email you a one-time code. No password is needed.</>}
       </p>
 
       {!isAdmin && step === "request" ? (
-        <ol className="auth-journey" aria-label="How membership works">
-          <li><span>1</span><div><strong>Confirm your email</strong><small>We send a private sign-in code.</small></div></li>
-          <li><span>2</span><div><strong>Tell us about you</strong><small>A short membership request.</small></div></li>
-          <li><span>3</span><div><strong>Private review</strong><small>We email you when your seat is ready.</small></div></li>
+        <div className="auth-member-choice" aria-label="Choose how to continue" role="group">
+          <button
+            aria-pressed={memberJourney === "sign-in"}
+            onClick={() => chooseMemberJourney("sign-in")}
+            type="button"
+          >
+            <strong>I’m already a member</strong>
+            <span>Sign in with my email</span>
+          </button>
+          <button
+            aria-pressed={memberJourney === "apply"}
+            onClick={() => chooseMemberJourney("apply")}
+            type="button"
+          >
+            <strong>I’m new here</strong>
+            <span>Request membership</span>
+          </button>
+        </div>
+      ) : null}
+
+      {!isAdmin && step === "request" && memberJourney === "apply" ? (
+        <ol className="auth-journey" aria-label="How a membership request works">
+          <li><span>1</span><div><strong>Confirm your email</strong><small>We send you a private code.</small></div></li>
+          <li><span>2</span><div><strong>Complete your request</strong><small>Answer a few short questions.</small></div></li>
+          <li><span>3</span><div><strong>Receive our decision</strong><small>We email you after review.</small></div></li>
         </ol>
       ) : null}
 
@@ -148,7 +183,7 @@ export function AuthPanel({
             required
           />
           <button className="button button-primary" type="submit" disabled={busy}>
-            {busy ? "Sending…" : "Send my sign-in code"}
+            {busy ? "Sending…" : isAdmin || memberJourney === "sign-in" ? "Email me a sign-in code" : "Confirm my email"}
           </button>
         </form>
       ) : (
@@ -188,7 +223,7 @@ export function AuthPanel({
         Guidelines. Need help? <a href="mailto:support@herafricatable.com">Contact us</a>.
       </p>
       <p className="intent-switch">
-        {isAdmin ? <>Not signing in for the team? <Link href="/sign-in">Use the main sign-in</Link></> : <>This is the only sign-in most people need. We will take you to the right place automatically.</>}
+        {isAdmin ? <>Not signing in for the team? <Link href="/sign-in">Use the member sign-in</Link></> : memberJourney === "sign-in" ? <>New to Her Africa Table? <button className="auth-inline-switch" onClick={() => chooseMemberJourney("apply")} type="button">Request membership</button>.</> : <>Already approved? <button className="auth-inline-switch" onClick={() => chooseMemberJourney("sign-in")} type="button">Return to member sign in</button>.</>}
       </p>
     </div>
   );

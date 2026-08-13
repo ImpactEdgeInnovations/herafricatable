@@ -51,7 +51,7 @@ export default function HomePage() {
         </nav>
         <nav className="header-actions" aria-label="Account navigation">
           <Link className="editorial-sign-in" href="/sign-in">Sign in</Link>
-          <Link className="button button-small button-primary" href="/sign-in">
+          <Link className="button button-small button-primary" href="/sign-in?mode=apply">
             Request membership
           </Link>
         </nav>
@@ -69,7 +69,7 @@ export default function HomePage() {
             invest and create—with relationships that continue beyond the room.
           </p>
           <div className="hero-actions">
-            <Link className="button button-primary" href="/sign-in">
+            <Link className="button button-primary" href="/sign-in?mode=apply">
               Request membership <ArrowIcon />
             </Link>
             <Link className="text-link" href="/events">View gatherings</Link>
@@ -180,7 +180,7 @@ export default function HomePage() {
         <h2 id="closing-title">Bring your work.<br />Find your people.</h2>
         <p>Request membership and help shape the table from its first chapter.</p>
         <div>
-          <Link className="button button-light" href="/sign-in">Request membership <ArrowIcon /></Link>
+          <Link className="button button-light" href="/sign-in?mode=apply">Request membership <ArrowIcon /></Link>
           <a href="mailto:support@herafricatable.com">Ask us a question</a>
         </div>
       </section>

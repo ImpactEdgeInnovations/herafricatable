@@ -6,9 +6,9 @@ suggestions. It does not approve access, publish content, send messages, create
 connections, process payments or read private conversations.
 
 Nia may prepare a clearly labelled draft, summarise recent Community posts that the
-signed-in member is already allowed to read, and offer one relevant next-step link.
-The answer remains inside the panel. Following a link, sending a request, publishing
-or registering is always a separate member-controlled action.
+signed-in member is already allowed to read, and offer permission-filtered member,
+Community, event or next-step cards inside the answer. Following a card, sending a
+request, publishing or registering is always a separate member-controlled action.
 
 ## Privacy boundary
 
@@ -37,9 +37,10 @@ them. Keep the Admin feature switch closed until the live acceptance checks pass
 
 ## Release sequence
 
-1. Apply `20260811210000_table_guide_foundation.sql`.
+1. Apply `20260811210000_table_guide_foundation.sql`, then
+   `20260813130000_table_guide_experience_feedback.sql`.
 2. Add the three Vercel variables and redeploy.
-3. Open Admin → All tools → People and confirm the key and migration checks.
+3. Open Admin → Work areas → Members and pilot health and confirm the key and database checks.
 4. Leave the feature closed while one Super Admin and two test members complete
    the acceptance journeys.
 5. Opt one test member into recommendations and keep the other opted out.
@@ -53,9 +54,9 @@ them. Keep the Admin feature switch closed until the live acceptance checks pass
 ## Operational controls
 
 The Super Admin control shows opt-in totals, recommendation participation, the
-last 24 hours of requests and human handoffs. It never exposes member prompts or
-responses. Closing the switch immediately stops new AI requests while preserving
-member choices and privacy-safe operational totals.
+last 24 hours of requests and human handoffs, plus seven-day aggregate usefulness.
+It never exposes member prompts or responses. Closing the switch immediately stops
+new AI requests while preserving member choices and privacy-safe operational totals.
 
 Each member is limited to 60 delivered or safely refused answers per day. Provider
 errors do not consume that allowance: Nia falls back to permission-filtered platform
@@ -67,12 +68,20 @@ available when the provider or feature is unavailable.
 When the feature is active, Nia appears as a small wine-and-aubergine companion on
 signed-in member pages. A member turns her on inside the floating panel, without a
 redirect, then sees page-aware suggestions and a question box immediately. Nia can
-be placed anywhere inside the safe viewport and kept still. Her saved position
-remains on that browser only.
+be placed anywhere inside the safe desktop viewport, kept still, docked to either
+side, reset or hidden for the day. On mobile she stays safely above navigation.
+Her saved display choices remain on that browser only.
 
-The visible conversation exists only in the current browser screen. **Clear
-conversation** removes it immediately, and refreshing the page also starts fresh.
-Prompts and answers are not stored as chat transcripts in Her Africa Table.
+The visible conversation exists only in the current browser session. It follows the
+member between the floating companion and the full Guide page during that session.
+**Clear conversation** removes it immediately. Closing the browser session starts
+fresh. Prompts and answers are not stored as chat transcripts in Her Africa Table.
+
+Nia shows usefulness choices after an answer. Her Africa Table stores only the broad
+question category and whether the answer was useful; it never stores the question,
+answer or result-card content. The Super Admin sees only seven-day aggregate feedback.
+Members may also choose **Not for me** on a member, Community or event card. Nia stores
+only that entity key and excludes it from that member's future result cards.
 
 The companion uses restrained movement, honours `prefers-reduced-motion`, stays
 clear of the mobile navigation and never reports internal development or deployment
