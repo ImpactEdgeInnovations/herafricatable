@@ -596,6 +596,8 @@ const communityFinanceAdmin = read(
 const communityStartPath = read(
   "components/member/community-start-path.tsx",
 );
+const communityCompactCss = read("app/community-compact.css");
+const rootLayout = read("app/layout.tsx");
 const tableJourney = read("components/member/table-journey.tsx");
 const communityWelcomeQueue = read(
   "components/member/community-welcome-queue.tsx",
@@ -940,6 +942,25 @@ for (const contract of [
   assert(
     communityStartPath.includes(contract),
     `Member Community start path must include ${contract}`,
+  );
+}
+assert(
+  rootLayout.includes('import "./community-compact.css"'),
+  "Root layout must load the final Community compact layer",
+);
+for (const contract of [
+  "--community-shell",
+  ".community-member-rooms .community-directory-card",
+  ".community-room-hero.has-cover",
+  ".community-start-path",
+  ".community-overview-links",
+  ".community-conversation-shell",
+  "@media (max-width: 620px)",
+  "backdrop-filter: blur(14px)",
+]) {
+  assert(
+    communityCompactCss.includes(contract),
+    `Compact Community experience must include ${contract}`,
   );
 }
 for (const contract of [
