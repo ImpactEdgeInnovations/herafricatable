@@ -193,11 +193,11 @@ const workAreas: {
 }[] = [
   {
     description:
-      "Review applications, member readiness and privacy-safe launch health.",
+      "Review applications, member access and limited-pilot health.",
     id: "people-and-launch",
     label: "People",
     roles: ["super_admin"],
-    title: "Membership and readiness",
+    title: "Members and joining",
   },
   {
     description:
@@ -213,7 +213,7 @@ const workAreas: {
     id: "safety-work",
     label: "Safety",
     roles: ["super_admin", "moderator"],
-    title: "Trust and moderation",
+    title: "Safety and member concerns",
   },
   {
     description:
@@ -227,9 +227,9 @@ const workAreas: {
     description:
       "Review the delivery roadmap and control the public event countdown.",
     id: "release-tools",
-    label: "Release",
+    label: "Launch",
     roles: ["super_admin", "event_staff", "moderator"],
-    title: "Launch controls",
+    title: "Launch and public site",
   },
 ];
 
@@ -899,12 +899,12 @@ export default async function AdminOperationsPage({
     <main className="admin-command-center">
       <AdminHeader
         active="operations"
-        label="Full operations workspace"
+        label="Work areas"
         role={role.role}
       />
       <section className="admin-area-hero" id="overview">
         <div>
-          <p className="eyebrow">Focused workspace</p>
+          <p className="eyebrow">Work area</p>
           <h1>{activeAreaDetails.title}</h1>
           <p>{activeAreaDetails.description}</p>
         </div>
@@ -929,8 +929,8 @@ export default async function AdminOperationsPage({
           defaultOpen
           description="Check launch health and make member access decisions. Most daily work starts here."
           id="people-and-launch"
-          label="People and readiness"
-          title="Is the platform ready, and who needs a decision?"
+          label="Members and pilot health"
+          title="Who needs a decision?"
         >
           <AnalyticsReadiness
             metrics={(readinessResult.data as ReadinessMetric[] | null) ?? []}
@@ -1316,8 +1316,8 @@ export default async function AdminOperationsPage({
           defaultOpen
           description="Record launch evidence, review delivery progress and control the public landing-page event timer."
           id="release-tools"
-          label="Release controls"
-          title="Launch evidence and public controls"
+          label="Launch and public site"
+          title="Is everything safe to open?"
         >
           {operationalHealth ? (
             <OperationalHealthPanel assessment={operationalHealth} />

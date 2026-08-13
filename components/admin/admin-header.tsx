@@ -126,6 +126,11 @@ export async function AdminHeader({
   );
   const canManageEvents = role === "super_admin" || role === "event_staff";
   const canModerate = role === "super_admin" || role === "moderator";
+  const roleLabel = {
+    event_staff: "Event team",
+    moderator: "Safety moderator",
+    super_admin: "Super Admin",
+  }[role];
   const primary: NavigationItem[] = [
     { href: "/admin", key: "today", label: "Today", shortLabel: "Today" },
     ...(role === "super_admin"
@@ -161,8 +166,8 @@ export async function AdminHeader({
     {
       href: "/admin/operations",
       key: "operations",
-      label: "All tools",
-      shortLabel: "Tools",
+      label: "Work areas",
+      shortLabel: "Work",
     },
   ];
   const services: NavigationItem[] =
@@ -241,7 +246,7 @@ export async function AdminHeader({
           {services.length ? (
             <details className="admin-tools-menu">
               <summary className={activeService ? "is-current" : undefined}>
-                Admin services
+                More
               </summary>
               <div>
                 {services.map((item) => (
@@ -261,7 +266,7 @@ export async function AdminHeader({
         </nav>
         <div className="admin-session-actions">
           <span className="admin-role">
-            {role.replace("_", " ")}
+            {roleLabel}
             {hasBetaExpiry ? (
               <small>
                 Temporary access until{" "}

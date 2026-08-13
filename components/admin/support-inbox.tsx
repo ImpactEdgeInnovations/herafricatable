@@ -126,7 +126,7 @@ export function SupportInbox({
     <div className="support-shell admin-support-shell">
       <aside className="support-sidebar">
         <header>
-          <p className="eyebrow">Operations</p>
+          <p className="eyebrow">Member care</p>
           <h1>Support inbox</h1>
           <p>
             {
@@ -134,7 +134,7 @@ export function SupportInbox({
                 (item) => !["resolved", "closed"].includes(item.status),
               ).length
             }{" "}
-            requests need operational visibility.
+            request{tickets.filter((item) => !["resolved", "closed"].includes(item.status)).length === 1 ? "" : "s"} waiting for a reply.
           </p>
         </header>
         <div className="support-ticket-list">

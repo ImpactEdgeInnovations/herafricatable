@@ -65,7 +65,7 @@ export function ModuleReleaseGate({
       title: `Record “${check.check_label}”?`,
       description:
         "Record a concise result without passwords, OTPs, payment credentials or private member content. This change is audited.",
-      confirmLabel: "Save acceptance result",
+      confirmLabel: "Save result",
       fields: [
         {
           name: "status",
@@ -129,8 +129,8 @@ export function ModuleReleaseGate({
     setBusy("");
     setMessage(
       error
-        ? adminErrorMessage(error, "save this module opening check")
-        : `${check.feature_label} acceptance updated and audited.`,
+        ? adminErrorMessage(error, "save this feature check")
+        : `${check.feature_label} check saved.`,
     );
     if (!error) router.refresh();
   }
@@ -139,10 +139,10 @@ export function ModuleReleaseGate({
     return (
       <section className="module-release-gate" id="module-release-gate">
         <div className="admin-empty">
-          <strong>Module opening checks are not installed yet</strong>
+          <strong>Feature checks need a database update</strong>
           <p>
             Apply <code>20260803050000_module_release_acceptance.sql</code>, then
-            reload this page. Existing module settings will not be changed.
+            reload this page. Existing feature settings will not be changed.
           </p>
         </div>
       </section>
@@ -170,7 +170,7 @@ export function ModuleReleaseGate({
             <strong>
               {readyCount}/{modules.length}
             </strong>
-            <span>Modules ready to open</span>
+            <span>Features ready to open</span>
           </aside>
         </header>
 

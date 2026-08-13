@@ -264,8 +264,8 @@ export function EventContentManager({
         <div className="admin-empty">
           <strong>Create an event first</strong>
           <p>
-            Programme, announcements, partners, and staff scopes attach to an
-            operational event.
+            Sessions, announcements, partners and team access are added to an
+            event after it has been created.
           </p>
         </div>
       </section>

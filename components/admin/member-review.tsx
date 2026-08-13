@@ -136,8 +136,8 @@ export function MemberReview({
     >
       <div className="admin-section-heading">
         <div>
-          <p className="eyebrow">Member operations</p>
-          <h2 id="member-review-title">Review the table</h2>
+          <p className="eyebrow">Membership decisions</p>
+          <h2 id="member-review-title">Review membership requests</h2>
           <p>
             Review completed membership requests, follow onboarding, and pause
             access when required.

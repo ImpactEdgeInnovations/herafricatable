@@ -35,7 +35,7 @@ export default async function AdminPrivacyPage() {
           <strong>Privacy requests are temporarily unavailable</strong>
           <p>
             No account request has been changed. Reload in a moment or check
-            platform health from All tools.
+            platform health from Work areas.
           </p>
           <a className="button button-outline" href="/admin/privacy">
             Try again

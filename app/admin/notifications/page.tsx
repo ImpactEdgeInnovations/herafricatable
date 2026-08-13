@@ -80,7 +80,7 @@ export default async function AdminNotificationsPage() {
           <strong>Delivery activity is temporarily unavailable</strong>
           <p>
             No messages have been changed. Reload in a moment or check platform
-            health from All tools.
+            health from Work areas.
           </p>
           <a className="button button-outline" href="/admin/notifications">
             Try again

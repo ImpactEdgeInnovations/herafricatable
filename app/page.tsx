@@ -186,14 +186,31 @@ export default function HomePage() {
       </section>
 
       <footer className="site-footer complete-footer editorial-footer">
-        <div className="footer-intro">
-          <div className="brand footer-brand"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></div>
-          <p>A private professional Community for African women, beginning in Nairobi.</p>
+        <div className="footer-signature">
+          <div className="brand footer-brand">
+            <span className="brand-mark" aria-hidden="true">H</span>
+            <span>Her Africa Table<small>Private membership · Nairobi</small></span>
+          </div>
+          <p>Meet. Connect. Rise.</p>
+          <span>A trusted place for African women to build relationships that continue beyond the room.</span>
         </div>
-        <div className="footer-column"><strong>Explore</strong><a href="#why">Why join</a><a href="#inside">Inside the table</a><Link href="/events">Events</Link><Link href="/faq">FAQ</Link></div>
-        <div className="footer-column"><strong>Account</strong><Link href="/sign-in">Sign in</Link><Link href="/sign-in">Request membership</Link><a href="mailto:support@herafricatable.com">Support</a></div>
-        <div className="footer-column"><strong>Trust</strong><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/community-guidelines">Community guidelines</Link></div>
-        <div className="footer-bottom"><span>© {new Date().getFullYear()} Her Africa Table</span><span>Built with intention in Nairobi.</span></div>
+        <div className="footer-navigation">
+          <nav aria-label="Explore Her Africa Table">
+            <Link href="/events">Events</Link>
+            <Link href="/faq">Questions</Link>
+            <Link href="/sign-in">Membership</Link>
+            <a href="mailto:support@herafricatable.com">Contact</a>
+          </nav>
+          <nav aria-label="Trust and policies">
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/terms">Terms</Link>
+            <Link href="/community-guidelines">Community guidelines</Link>
+          </nav>
+        </div>
+        <div className="footer-bottom">
+          <span>© {new Date().getFullYear()} Her Africa Table</span>
+          <span>Nairobi, Kenya · Limited founding pilot</span>
+        </div>
       </footer>
     </main>
   );

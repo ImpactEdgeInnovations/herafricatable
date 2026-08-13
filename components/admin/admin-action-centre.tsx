@@ -83,6 +83,7 @@ export function AdminActionCentre({
   }
 
   const total = actions.reduce((sum, action) => sum + action.count, 0);
+  const openActions = actions.filter((action) => action.count > 0);
 
   return (
     <section
@@ -103,23 +104,29 @@ export function AdminActionCentre({
           {total ? `${total} open task${total === 1 ? "" : "s"}` : "All clear"}
         </span>
       </header>
-      <div className="admin-action-grid">
-        {actions.map((action) => (
-          <a
-            className={action.count ? "has-work" : "all-clear"}
-            href={action.href}
-            key={action.label}
-          >
-            <span>{action.count}</span>
-            <strong>{action.label}</strong>
-            <p>{action.description}</p>
-            <small>
-              {action.count ? "Review now" : "View area"}{" "}
-              <span aria-hidden="true">→</span>
-            </small>
-          </a>
-        ))}
-      </div>
+      {openActions.length ? (
+        <div className="admin-action-grid">
+          {openActions.map((action) => (
+            <a className="has-work" href={action.href} key={action.label}>
+              <span>{action.count}</span>
+              <strong>{action.label}</strong>
+              <p>{action.description}</p>
+              <small>
+                Review now{" "}
+                <span aria-hidden="true">→</span>
+              </small>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div className="admin-action-clear">
+          <span aria-hidden="true">✓</span>
+          <div>
+            <strong>Nothing needs a decision right now.</strong>
+            <p>Use the work areas below whenever you need to make an update.</p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

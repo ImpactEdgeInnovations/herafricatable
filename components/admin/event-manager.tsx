@@ -190,7 +190,7 @@ export function EventManager({
     setMessage(
       form.status === "published"
         ? "Event saved and published. The public event page is now available."
-        : "Event saved as an operational draft.",
+        : "Event saved as a private draft.",
     );
     setSaving(false);
     if (!form.id && data) {
@@ -253,11 +253,11 @@ export function EventManager({
     >
       <div className="admin-section-heading">
         <div>
-          <p className="eyebrow">Event operations</p>
-          <h2 id="event-manager-title">Events and access</h2>
+          <p className="eyebrow">Events</p>
+          <h2 id="event-manager-title">Plan and publish events</h2>
           <p>
-            Create operational drafts, control registration mode, and publish
-            only when dates and venue information are confirmed.
+            Start with a private draft, choose how people register and publish
+            only when the date and venue are confirmed.
           </p>
         </div>
         {canCreate ? (

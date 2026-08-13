@@ -21,6 +21,11 @@ type ReportRow = {
   status: string;
 };
 
+type MembershipIntakeRow = {
+  mode: "closed" | "manual_review" | "trusted_auto";
+  pending_applications: number;
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomePage() {
@@ -71,6 +76,7 @@ export default async function AdminHomePage() {
     memberReports,
     marketplaceReports,
     communityReports,
+    membershipIntakeResult,
   ] = await Promise.all([
     role === "super_admin"
       ? supabase.rpc("list_admin_members_v3")
@@ -86,6 +92,9 @@ export default async function AdminHomePage() {
       : Promise.resolve({ data: [], error: null }),
     canModerate
       ? supabase.rpc("list_community_safety_reports")
+      : Promise.resolve({ data: [], error: null }),
+    role === "super_admin"
+      ? supabase.rpc("get_membership_intake_admin")
       : Promise.resolve({ data: [], error: null }),
   ]);
 
@@ -141,6 +150,25 @@ export default async function AdminHomePage() {
   const openReports = reports.filter((report) =>
     ["open", "reviewing"].includes(report.status),
   ).length;
+  const membershipIntake = (
+    (membershipIntakeResult.data as MembershipIntakeRow[] | null) ?? []
+  )[0];
+  const joiningMode = membershipIntake
+    ? {
+        closed: {
+          label: "New requests are paused",
+          detail: "Existing members can still sign in.",
+        },
+        manual_review: {
+          label: "Every request waits for your review",
+          detail: "This is the recommended setting for the limited pilot.",
+        },
+        trusted_auto: {
+          label: "Verified invitations can join automatically",
+          detail: "Other applications still wait for your review.",
+        },
+      }[membershipIntake.mode]
+    : null;
 
   return (
     <main className="admin-command-center admin-cockpit">
@@ -153,7 +181,7 @@ export default async function AdminHomePage() {
             Today, at a glance.
           </h1>
           <p>
-            Begin with anything waiting for your decision. Open All tools when
+            Begin with anything waiting for your decision. Open Work areas when
             you need to manage something in more detail.
           </p>
         </div>
@@ -191,6 +219,26 @@ export default async function AdminHomePage() {
         </div>
       </section>
 
+      {role === "super_admin" ? (
+        <section className="admin-pilot-status" aria-label="Limited pilot status">
+          <div>
+            <p className="eyebrow">Limited pilot</p>
+            <strong>{joiningMode?.label ?? "Manual membership review"}</strong>
+            <span>
+              {joiningMode?.detail ??
+                "Admit members in small batches and check their first journey personally."}
+            </span>
+          </div>
+          <div>
+            <strong>
+              {membershipIntake?.pending_applications ?? pendingMembers}
+            </strong>
+            <span>request{(membershipIntake?.pending_applications ?? pendingMembers) === 1 ? "" : "s"} waiting</span>
+          </div>
+          <Link href="/admin/members">Review requests →</Link>
+        </section>
+      ) : null}
+
       <AdminActionCentre
         draftEvents={draftEvents}
         hasEvents={events.length > 0}
@@ -204,7 +252,7 @@ export default async function AdminHomePage() {
       <section className="admin-workspaces" aria-labelledby="workspaces-title">
         <header>
           <p className="eyebrow">Work areas</p>
-          <h2 id="workspaces-title">Choose what you need to manage.</h2>
+          <h2 id="workspaces-title">Where do you want to work?</h2>
           <p>
             Each area opens with the controls and information needed for that
             job, while this page stays quick and calm.
@@ -215,7 +263,7 @@ export default async function AdminHomePage() {
             <Link href="/admin/members">
               <small>People</small>
               <strong>Membership and access</strong>
-              <span>Review applications and member readiness →</span>
+              <span>Review applications and member access →</span>
             </Link>
           ) : null}
           {canManageEvents ? (
@@ -247,15 +295,15 @@ export default async function AdminHomePage() {
             </Link>
           ) : null}
           <Link href="/admin/release">
-            <small>Launch control</small>
-            <strong>Readiness and public countdown</strong>
-            <span>Review delivery and update the next-event timer →</span>
+              <small>Launch and public site</small>
+              <strong>Pilot checks and event countdown</strong>
+              <span>Review what is ready and update the public timer →</span>
           </Link>
         </div>
       </section>
 
       <footer className="admin-footer">
-        <span>Her Africa Table · Production workspace</span>
+        <span>Her Africa Table · Private admin workspace</span>
         <Link href="/">View public site</Link>
       </footer>
     </main>

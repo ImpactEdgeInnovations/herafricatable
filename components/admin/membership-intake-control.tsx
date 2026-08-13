@@ -47,7 +47,7 @@ export function MembershipIntakeControl({
     return (
       <section className="admin-section membership-intake-control">
         <div className="admin-empty">
-          <strong>Membership intake controls are not installed yet</strong>
+          <strong>New-member settings are not available yet</strong>
           <p>New applications remain under manual Admin review.</p>
         </div>
       </section>
@@ -63,7 +63,7 @@ export function MembershipIntakeControl({
     const confirmed = await ask({
       confirmLabel: mode === "closed" ? "Pause requests" : "Use this setting",
       description: `${choice.summary} Existing member access and submitted applications are not removed.`,
-      title: `Change membership intake to “${choice.label}”?`,
+      title: `Change how new members join to “${choice.label}”?`,
       tone: mode === "closed" ? "danger" : "default",
     });
     if (!confirmed) return;
@@ -78,7 +78,7 @@ export function MembershipIntakeControl({
     setMessage(
       error
         ? adminErrorMessage(error, "change how membership requests are reviewed")
-        : "Membership intake updated and recorded.",
+        : "New-member setting saved and recorded.",
     );
     if (!error) router.refresh();
   }
@@ -88,10 +88,10 @@ export function MembershipIntakeControl({
       <div className="admin-section-heading">
         <div>
           <p className="eyebrow">Who enters the table</p>
-          <h2>Membership intake</h2>
+          <h2>How new members join</h2>
           <p>Choose how new membership requests are handled. Email verification alone never grants member access.</p>
         </div>
-        <span className="status-count">{choices[configuration.mode].label}</span>
+        <span className="status-count">Current: {choices[configuration.mode].label}</span>
       </div>
 
       <div className="membership-intake-layout">
@@ -110,7 +110,7 @@ export function MembershipIntakeControl({
           </label>
           <p>{choices[selectedMode].summary}</p>
           <button className="button button-primary" disabled={busy} type="submit">
-            {busy ? "Saving…" : "Save intake choice"}
+            {busy ? "Saving…" : "Save joining setting"}
           </button>
         </form>
 

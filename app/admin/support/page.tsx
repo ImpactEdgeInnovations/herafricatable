@@ -56,7 +56,7 @@ export default async function AdminSupportPage({
           <strong>Support requests are temporarily unavailable</strong>
           <p>
             Reload this page in a moment. If the problem continues, check
-            platform health from All tools before responding to members.
+            platform health from Work areas before responding to members.
           </p>
           <a className="button button-outline" href="/admin/support">
             Try again

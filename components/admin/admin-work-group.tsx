@@ -51,8 +51,8 @@ export function AdminWorkGroup({
           <p>{description}</p>
         </div>
         <span className="admin-work-group-action">
-          <span className="when-closed">Open tools</span>
-          <span className="when-open">Hide tools</span>
+          <span className="when-closed">Open this area</span>
+          <span className="when-open">Close this area</span>
         </span>
       </summary>
       <div className="admin-work-group-content">{children}</div>
