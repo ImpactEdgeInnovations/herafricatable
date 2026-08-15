@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   },
   description:
     "A trusted professional network for African women, built around real-world events.",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: "/icon.svg",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
