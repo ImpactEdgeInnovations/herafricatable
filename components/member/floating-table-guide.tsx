@@ -451,17 +451,18 @@ export function FloatingTableGuide({
         </section>
       ) : null}
       <button
-        aria-label="Open or move the Table Guide"
+        aria-label="Open Nia, or drag to move her"
         className="floating-guide-character"
         onPointerCancel={finishDrag}
         onPointerDown={beginDrag}
         onPointerMove={move}
         onPointerUp={finishDrag}
-        title={featureEnabled ? "Drag me, or tap for help" : "The Table Guide is resting"}
+        title={featureEnabled ? "Ask Nia · drag to move" : "Nia is resting"}
         type="button"
       >
         <span className="floating-guide-spark" aria-hidden="true">H</span>
-        <span className="floating-guide-face" aria-hidden="true"><i /><i /><b /></span>
+        <span className="floating-guide-monogram" aria-hidden="true">N</span>
+        <span className="floating-guide-name" aria-hidden="true">Nia</span>
         <span className="floating-guide-shadow" aria-hidden="true" />
       </button>
     </aside>

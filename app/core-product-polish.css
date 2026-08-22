@@ -1,0 +1,252 @@
+/* Core product finish — one editorial system for Members, Communities, Events and Admin. */
+
+:root {
+  --hat-paper: #fbf8f1;
+  --hat-surface: #fffdf8;
+  --hat-wine: #641d2e;
+  --hat-wine-deep: #321c26;
+  --hat-brass: #a8792f;
+  --hat-rule: rgba(63, 42, 47, 0.15);
+}
+
+/* Nia is a discreet concierge mark, not a novelty chatbot. */
+.floating-guide-character {
+  width: 58px;
+  height: 58px;
+  overflow: visible;
+  border: 1px solid rgba(232, 208, 159, 0.48);
+  border-radius: 50%;
+  background: var(--hat-wine-deep);
+  box-shadow: 0 13px 30px rgba(50, 28, 38, 0.19), inset 0 0 0 5px rgba(255, 253, 248, 0.045);
+}
+
+.floating-table-guide {
+  width: 58px;
+  height: 58px;
+}
+
+.floating-guide-monogram {
+  position: absolute;
+  inset: 6px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(210, 174, 105, 0.42);
+  border-radius: 50%;
+  color: #fff8ea;
+  font-family: var(--serif);
+  font-size: 1.72rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.floating-guide-name {
+  position: absolute;
+  right: 50%;
+  bottom: -19px;
+  color: #5b4c4f;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  transform: translateX(50%);
+}
+
+.floating-guide-spark {
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-color: var(--hat-paper);
+  color: var(--hat-wine);
+  font-size: 0.48rem;
+  background: #d8b66f;
+  animation: none;
+}
+
+.floating-guide-shadow { right: 8px; bottom: -9px; left: 8px; opacity: 0.62; }
+
+.floating-guide-panel {
+  bottom: 73px;
+  border-color: var(--hat-rule);
+  border-radius: 12px;
+  background: rgba(255, 253, 248, 0.985);
+  box-shadow: 0 24px 64px rgba(49, 29, 45, 0.17);
+}
+
+.floating-guide-panel > header { background: var(--hat-wine-deep); }
+.floating-guide-messages > div > p,
+.floating-guide-suggestion,
+.floating-guide-panel form input,
+.floating-guide-panel form button { border-radius: 6px; }
+.floating-guide-suggestion { background: #f7f1e7; }
+
+/* Communities: compact rooms with typographic hierarchy instead of dashboard tiles. */
+.community-directory { margin-top: 46px; }
+.community-directory + .community-directory { margin-top: 58px; padding-top: 48px; }
+.community-directory-heading { margin-bottom: 21px; padding-bottom: 15px; }
+.community-directory-heading h2 { font-size: clamp(2.1rem, 3.5vw, 3.15rem); }
+
+.community-member-rooms,
+.community-discovery-grid {
+  border-color: var(--hat-rule);
+  background: var(--hat-rule);
+  gap: 1px;
+}
+
+.community-directory-card,
+.community-directory-empty {
+  border: 0;
+  background: var(--hat-surface);
+}
+
+.community-directory-card {
+  min-height: 270px;
+  padding: 24px;
+}
+
+.community-directory-card.is-member { min-height: 250px; }
+.community-directory-card.is-member::before { width: 3px; }
+.community-directory-title { margin-top: 23px; }
+.community-directory-title h3 { font-size: clamp(1.55rem, 2.2vw, 2rem); }
+.community-directory-card > p { margin-top: 13px; -webkit-line-clamp: 3; }
+.community-directory-card > footer { margin-top: 20px; }
+.community-directory-icon { border-radius: 50%; }
+.community-directory-activity-badge,
+.community-directory-card .button { border-radius: 3px; }
+
+.community-directory-empty {
+  min-height: 98px;
+  padding: 20px 23px;
+  border-top: 1px solid var(--hat-rule);
+  border-bottom: 1px solid var(--hat-rule);
+}
+
+/* Events: a programme, not a collection of generic cards. */
+.events-intro { padding-top: 38px; }
+.public-event-list { border-top: 1px solid var(--hat-rule); }
+.public-event-list > article {
+  border-right: 0;
+  border-bottom: 1px solid var(--hat-rule);
+  border-left: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.public-event-list > article:hover { background: rgba(255, 253, 248, 0.62); }
+.events-empty {
+  min-height: 142px;
+  padding: 24px 0;
+  border: 0;
+  border-bottom: 1px solid var(--hat-rule);
+  background: transparent;
+}
+.events-empty-icon { border-radius: 50%; background: #f1e8d9; }
+.events-empty-actions .button,
+.member-event-proposals .button,
+.event-proposal-panel .button { border-radius: 3px; }
+
+/* Members: make relationships feel personal and remove note-card clutter. */
+.network-connections article {
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.network-connections article + article { border-top: 1px solid var(--hat-rule); }
+.network-introduction-note {
+  padding: 10px 0 0;
+  border: 0;
+  border-top: 1px solid var(--hat-rule);
+  border-radius: 0;
+  background: transparent;
+}
+.member-suggestions article,
+.member-directory-browser,
+.member-directory .directory-grid > article {
+  border-radius: 4px;
+  box-shadow: none;
+}
+.member-suggestions article { border-top: 2px solid var(--hat-wine); }
+.network-view-tabs button small,
+.member-status { border-radius: 2px; }
+
+/* Admin: branded decision desks, with the existing RPC actions left intact. */
+.member-command-page,
+.event-command-page {
+  --oversight-ink: #2c2024;
+  --oversight-muted: #746a66;
+  --oversight-line: var(--hat-rule);
+  --oversight-wash: #f7f2e9;
+  background: var(--hat-paper);
+}
+.oversight-metrics,
+.member-intake-summary,
+.member-request-desk,
+.member-directory-desk,
+.event-oversight-desk,
+.member-request-grid > article,
+.member-oversight-card,
+.event-oversight-card,
+.oversight-clear,
+.oversight-unavailable,
+.event-health-strip,
+.event-lifecycle-notice,
+.legacy-gathering-note { border-radius: 4px; }
+.member-intake-summary { background: var(--hat-wine-deep); }
+.oversight-metrics article.has-work,
+.member-oversight-card aside,
+.event-oversight-card aside { background: #f4ecdf; }
+.member-request-grid article header span,
+.member-oversight-card > header span,
+.event-oversight-card > header span,
+.member-oversight-card > header > strong { color: var(--hat-wine); }
+.member-request-grid blockquote { border-color: var(--hat-brass); }
+.oversight-heading > span,
+.featured-event-label { border-radius: 2px; background: #eee3d2; color: var(--hat-wine); }
+.member-oversight-layout nav button,
+.event-oversight-layout nav button,
+.oversight-heading input { border-radius: 3px; }
+
+/* Install and offline surfaces. */
+.pwa-install-card-copy { display: flex; align-items: center; gap: 18px; }
+.pwa-install-card-copy img { border-radius: 16px; box-shadow: 0 10px 24px rgba(71, 38, 47, 0.13); }
+.pwa-install-control { display: grid; justify-items: start; gap: 10px; }
+.pwa-install-control.is-compact { position: relative; display: inline-block; }
+.pwa-install-link {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  background: transparent;
+}
+.pwa-installed-label { color: var(--muted); font-size: inherit; }
+.pwa-install-instructions {
+  max-width: 430px;
+  padding: 12px 14px;
+  border-left: 2px solid var(--hat-brass);
+  color: var(--ink);
+  background: #f7f1e7;
+}
+.pwa-install-instructions strong { font-size: 0.76rem; }
+.pwa-install-instructions p { margin: 4px 0 0; color: var(--muted); font-size: 0.7rem; line-height: 1.55; }
+.public-footer .pwa-install-instructions { position: absolute; right: 0; bottom: 28px; width: 290px; text-align: left; }
+.offline-page { display: grid; min-height: 100vh; place-items: center; padding: 28px; background: var(--hat-paper); }
+.offline-card { width: min(560px, 100%); padding: 42px 0; border-top: 1px solid var(--hat-brass); border-bottom: 1px solid var(--hat-rule); }
+.offline-card h1 { margin: 8px 0 12px; font-family: var(--serif); font-size: clamp(2.4rem, 8vw, 4.4rem); font-weight: 400; line-height: 0.98; }
+.offline-card p:not(.eyebrow) { color: var(--muted); line-height: 1.7; }
+
+@media (max-width: 760px) {
+  .community-directory { margin-top: 34px; }
+  .community-member-rooms,
+  .community-discovery-grid { grid-template-columns: 1fr; }
+  .public-event-list > article { padding-right: 0; padding-left: 0; }
+  .pwa-install-card-copy { align-items: flex-start; }
+}
+
+@media (max-width: 620px) {
+  .floating-guide-name { display: none; }
+  .floating-guide-panel { bottom: 84px; border-radius: 10px; }
+  .community-directory-card { min-height: 0; padding: 21px 18px; }
+  .events-empty { padding: 21px 0; }
+  .pwa-install-card-copy { display: grid; }
+}

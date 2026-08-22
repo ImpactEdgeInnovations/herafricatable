@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
+import { InstallAppCard } from "@/components/pwa/install-app";
 
 export type PrivacyRequest = {
   id: string;
@@ -352,6 +353,7 @@ export function AccountSettings({
           ) : null}
         </section>
       ) : null}
+      <InstallAppCard />
       <section className="settings-card settings-action">
         <div>
           <p className="eyebrow">Your information</p>

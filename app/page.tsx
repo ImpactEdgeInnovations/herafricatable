@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstallAppButton } from "@/components/pwa/install-app";
 import { EventCountdown } from "@/components/event-countdown";
 
 const ArrowIcon = () => (
@@ -199,6 +200,7 @@ export default function HomePage() {
             <Link href="/events">Events</Link>
             <Link href="/faq">Questions</Link>
             <Link href="/sign-in">Membership</Link>
+            <InstallAppButton compact />
             <a href="mailto:support@herafricatable.com">Contact</a>
           </nav>
           <nav aria-label="Trust and policies">
