@@ -67,6 +67,7 @@ for (const contract of [
   "search_visible_communities",
   "search_upcoming_events",
   "safeToolResult",
+  "suggestionsFromTool",
   "tool_choice: \"auto\"",
   "parallel_tool_calls: false",
   'kind: "member"',

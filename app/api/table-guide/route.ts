@@ -275,6 +275,66 @@ function toolCalls(response: OpenAIResponse) {
   );
 }
 
+function suggestionsFromTool(
+  name: string,
+  rawArguments: string | undefined,
+  context: GuideContext,
+): GuideSuggestion[] {
+  const rows = safeToolResult(name, rawArguments, context) as Record<string, unknown>[];
+  if (name === "search_visible_members") {
+    return rows.flatMap((row) =>
+      typeof row.id === "string" && typeof row.name === "string"
+        ? [{
+            description:
+              Array.isArray(row.shared_interests) && row.shared_interests.length
+                ? `You share ${row.shared_interests.join(", ")}. You decide whether to request an introduction.`
+                : "This member matches part of what you searched for. Review her profile before deciding.",
+            href: `/members/${row.id}`,
+            id: row.id,
+            kind: "member" as const,
+            meta: [row.role, row.company, row.city].filter(Boolean).join(" · "),
+            title: row.name,
+          }]
+        : [],
+    );
+  }
+  if (name === "search_visible_communities") {
+    return rows.flatMap((row) =>
+      typeof row.slug === "string" && typeof row.name === "string"
+        ? [{
+            description:
+              typeof row.description === "string"
+                ? row.description
+                : "See what this Community is for and how to take part.",
+            href: `/communities/${row.slug}`,
+            id: row.slug,
+            kind: "community" as const,
+            meta: typeof row.access === "string" ? row.access : undefined,
+            title: row.name,
+          }]
+        : [],
+    );
+  }
+  if (name === "search_upcoming_events") {
+    return rows.flatMap((row) =>
+      typeof row.slug === "string" && typeof row.title === "string"
+        ? [{
+            description:
+              row.registration === "manual"
+                ? "Request a place and the team will review it."
+                : "Open the event to see availability and registration details.",
+            href: `/events/${row.slug}`,
+            id: row.slug,
+            kind: "event" as const,
+            meta: [row.starts_at, row.format].filter(Boolean).join(" · "),
+            title: row.title,
+          }]
+        : [],
+    );
+  }
+  return [];
+}
+
 function safeHistory(value: unknown): GuideHistoryItem[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -716,6 +776,12 @@ ${JSON.stringify(context)}`,
     let parsedResponse = (await response.json()) as OpenAIResponse;
     const calls = toolCalls(parsedResponse);
     if (calls.length) {
+      const focusedSuggestions = suggestionsFromTool(
+        calls[0].name!,
+        calls[0].arguments,
+        context,
+      );
+      if (focusedSuggestions.length) suggestions = focusedSuggestions;
       const toolInput = [
         ...initialInput,
         ...calls.map((call) => ({
