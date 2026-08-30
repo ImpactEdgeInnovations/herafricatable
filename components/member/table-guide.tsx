@@ -155,7 +155,7 @@ export function TableGuide({
             category: result.category,
             content:
               result.error ??
-              "I could not answer just now. Please try again or ask a person.",
+              "I’m having a short pause. Try again in a moment, or ask our team for help.",
             role: "assistant",
             suggestions: result.suggestions,
           },
@@ -177,7 +177,7 @@ export function TableGuide({
       setMessages((current) => [
         ...current,
         {
-          content: "I could not answer just now. Please try again or ask a person.",
+          content: "I’m having a short pause. Please try again in a moment, or ask our team for help.",
           role: "assistant",
         },
       ]);
@@ -247,15 +247,13 @@ export function TableGuide({
     );
   }
 
-  if (!access.feature_enabled || !keyConfigured) {
+  if (!access.feature_enabled) {
     return (
       <section className="table-guide-unavailable">
         <p className="eyebrow">Nia, your Table Guide</p>
-        <h1>{!access.feature_enabled ? "Nia is taking a short break." : "Nia is being prepared."}</h1>
+        <h1>Nia is taking a short break.</h1>
         <p>
-          {!access.feature_enabled
-            ? "You can still use every other part of your membership. Nia will return here when she is available."
-            : "You can still use every other part of your membership. Ask our team if you need help now."}
+          You can still use every other part of your membership. Nia will return here when she is available.
         </p>
         <div>
           <Link className="button button-primary" href="/home">Return home</Link>

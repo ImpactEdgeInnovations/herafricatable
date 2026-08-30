@@ -248,7 +248,7 @@ export function FloatingTableGuide({
           content:
             result.answer ??
             result.error ??
-            "I could not answer just now. Please open Support if you need a person.",
+            "I’m having a short pause. Try that question again, or ask our team for help.",
           role: "assistant",
           suggestions: result.suggestions,
         },
@@ -257,7 +257,7 @@ export function FloatingTableGuide({
       setMessages((current) => [
         ...current,
         {
-          content: "I could not answer just now. Please try again shortly.",
+          content: "I’m having a short pause. Please try again in a moment, or ask our team for help.",
           role: "assistant",
         },
       ]);
@@ -348,14 +348,14 @@ export function FloatingTableGuide({
   }
 
   const dockedLeft = position.x < window.innerWidth / 2;
-  const ready = installed && featureEnabled && enabled && keyConfigured;
+  // The Guide has a safe local answer mode, so a temporary provider outage
+  // should not hide the member-facing helper or force a redirect.
+  const ready = installed && featureEnabled && enabled;
   const restingMessage = !installed
     ? "Your Table Guide is being prepared. It will open here when setup is complete."
     : !featureEnabled
       ? "The Table Guide is resting while Her Africa Table prepares it for members."
-      : !keyConfigured
-        ? "The Guide’s secure connection is being prepared. You can still explore the platform normally."
-        : "Turn on the Guide here. It will open immediately without taking you to another page.";
+    : "Turn on the Guide here. It will open immediately without taking you to another page.";
 
   return (
     <aside
@@ -428,7 +428,7 @@ export function FloatingTableGuide({
           ) : (
             <div className="floating-guide-welcome">
               <p>{restingMessage}</p>
-              {installed && featureEnabled && keyConfigured && !enabled ? (
+              {installed && featureEnabled && !enabled ? (
                 <>
                   <ul>
                     <li>Ask questions without leaving this page</li>

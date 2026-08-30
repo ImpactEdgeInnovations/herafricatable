@@ -568,13 +568,8 @@ export async function POST(request: Request) {
       { status: 400 },
     );
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  const safetySalt = process.env.AI_SAFETY_SALT;
-  if (!apiKey || !safetySalt)
-    return NextResponse.json(
-      { error: "The Table Guide is being prepared. Please try again later." },
-      { status: 503 },
-    );
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  const safetySalt = process.env.AI_SAFETY_SALT?.trim();
 
   const supabase = await createClient();
   const {
@@ -725,6 +720,23 @@ export async function POST(request: Request) {
     };
     safeFallback = platformAnswer(category, context);
     suggestions = suggestionsFor(category, context);
+
+    // Nia can still answer the simple, platform-specific questions when the
+    // external model is unavailable. This keeps the member journey useful
+    // during a provider outage or while secrets are being rotated. It uses
+    // the same authorised context and usage record as an AI response, and
+    // never attempts to infer or expose anything outside that context.
+    if (!apiKey || !safetySalt) {
+      await record("success", safeFallback.length);
+      return NextResponse.json({
+        actions: actionsFor(category),
+        answer: safeFallback,
+        category,
+        limited: true,
+        needsHuman: category === "support",
+        suggestions,
+      });
+    }
 
     const moderationResponse = await openAIRequest(
       "/moderations",
