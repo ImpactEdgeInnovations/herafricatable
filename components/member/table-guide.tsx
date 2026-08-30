@@ -67,14 +67,12 @@ export function TableGuide({
   connectionMode,
   connections,
   firstName,
-  keyConfigured,
   profileStatus,
 }: {
   access: TableGuideAccess | null;
   connectionMode: "curated_only" | "open" | "paused";
   connections: TableGuideConnection[];
   firstName: string;
-  keyConfigured: boolean;
   profileStatus: string;
 }) {
   const router = useRouter();

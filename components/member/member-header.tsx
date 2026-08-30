@@ -277,7 +277,6 @@ export async function MemberHeader({
           featureEnabled={Boolean(guideAccess?.feature_enabled)}
           firstName={memberName.split(/\s+/)[0] || "Member"}
           installed={Boolean(guideAccess)}
-          keyConfigured={Boolean(process.env.OPENAI_API_KEY && process.env.AI_SAFETY_SALT)}
           remainingToday={guideAccess?.remaining_today ?? 60}
         />
       ) : null}

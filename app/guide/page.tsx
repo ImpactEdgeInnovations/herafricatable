@@ -57,9 +57,6 @@ export default async function TableGuidePage() {
           (connectionResult.data as TableGuideConnection[] | null) ?? []
         }
         firstName={profile.display_name?.trim().split(/\s+/)[0] || "Member"}
-        keyConfigured={Boolean(
-          process.env.OPENAI_API_KEY && process.env.AI_SAFETY_SALT,
-        )}
         profileStatus={profile.access_status}
       />
     </main>

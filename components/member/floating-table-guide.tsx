@@ -104,14 +104,12 @@ export function FloatingTableGuide({
   featureEnabled,
   firstName,
   installed,
-  keyConfigured,
   remainingToday,
 }: {
   assistantEnabled: boolean;
   featureEnabled: boolean;
   firstName: string;
   installed: boolean;
-  keyConfigured: boolean;
   remainingToday: number;
 }) {
   const pathname = usePathname();
