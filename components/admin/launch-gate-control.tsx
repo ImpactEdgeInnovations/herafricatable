@@ -21,7 +21,7 @@ export type LaunchGateCheck = {
   verified_by_name: string | null;
 };
 
-type EnvironmentSignal = {
+export type EnvironmentSignal = {
   label: string;
   ready: boolean;
 };

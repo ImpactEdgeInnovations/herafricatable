@@ -131,8 +131,10 @@ import {
 } from "@/components/admin/analytics-readiness";
 import {
   LaunchGateControl,
+  type EnvironmentSignal,
   type LaunchGateCheck,
 } from "@/components/admin/launch-gate-control";
+import { LaunchReadinessSummary } from "@/components/admin/launch-readiness-summary";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { AdminWorkGroup } from "@/components/admin/admin-work-group";
 import {
@@ -900,6 +902,26 @@ export default async function AdminOperationsPage({
     ...((gatheringReportResult.data as CommunityReport[] | null) ?? []),
     ...((eventQuestionReportResult.data as CommunityReport[] | null) ?? []),
   ];
+  const environmentSignals: EnvironmentSignal[] = [
+    {
+      label: "Server integration",
+      ready:
+        operationalHealth?.checks.find((check) => check.key === "server")
+          ?.status === "ready",
+    },
+    {
+      label: "Online payments",
+      ready:
+        operationalHealth?.checks.find((check) => check.key === "payments")
+          ?.status === "ready",
+    },
+    {
+      label: "Email delivery",
+      ready:
+        operationalHealth?.checks.find((check) => check.key === "email")
+          ?.status === "ready",
+    },
+  ];
   return (
     <main className="admin-command-center">
       <AdminHeader
@@ -1334,6 +1356,27 @@ export default async function AdminOperationsPage({
           ) : null}
           {role.role === "super_admin" ? (
             <>
+              <LaunchReadinessSummary
+                environmentSignals={environmentSignals}
+                metrics={(readinessResult.data as ReadinessMetric[] | null) ?? []}
+                databaseChecks={
+                  (databaseReadinessResult.data as
+                    | DatabaseReleaseCheck[]
+                    | null) ?? []
+                }
+                moduleChecks={
+                  (moduleReleaseResult.data as ModuleReleaseCheck[] | null) ?? []
+                }
+                launchChecks={
+                  (launchGateResult.data as LaunchGateCheck[] | null) ?? []
+                }
+                migrationsReady={{
+                  database: !databaseReadinessResult.error,
+                  modules: !moduleReleaseResult.error,
+                  launch: !launchGateResult.error,
+                  reporting: !readinessResult.error && !analyticsResult.error,
+                }}
+              />
               <DatabaseReadinessPanel
                 checks={
                   (databaseReadinessResult.data as
@@ -1352,29 +1395,7 @@ export default async function AdminOperationsPage({
                 checks={
                   (launchGateResult.data as LaunchGateCheck[] | null) ?? []
                 }
-                environmentSignals={[
-                  {
-                    label: "Server integration",
-                    ready:
-                      operationalHealth?.checks.find(
-                        (check) => check.key === "server",
-                      )?.status === "ready",
-                  },
-                  {
-                    label: "Online payments",
-                    ready:
-                      operationalHealth?.checks.find(
-                        (check) => check.key === "payments",
-                      )?.status === "ready",
-                  },
-                  {
-                    label: "Email delivery",
-                    ready:
-                      operationalHealth?.checks.find(
-                        (check) => check.key === "email",
-                      )?.status === "ready",
-                  },
-                ]}
+                environmentSignals={environmentSignals}
                 migrationReady={!launchGateResult.error}
                 release={
                   process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local"
