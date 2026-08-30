@@ -56,6 +56,7 @@ for (const contract of [
   "frame-ancestors 'none'",
   "X-Content-Type-Options",
   "Referrer-Policy",
+  "Strict-Transport-Security",
   "Permissions-Policy",
   "https://*.supabase.co",
   "https://checkout.paystack.com",
