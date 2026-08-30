@@ -31,14 +31,14 @@ const routeHelp: Record<string, { prompts: string[]; title: string }> = {
     prompts: [
       "What can I do in this Community?",
       "Help me prepare for a gathering.",
-      "Help me write a useful question.",
+      "Draft a warm Community post.",
     ],
     title: "Taking part in Community?",
   },
   "/events": {
     prompts: [
       "Which event might suit me?",
-      "Help me write an event invitation.",
+      "Draft an event invitation.",
       "What happens after I request a seat?",
     ],
     title: "Planning to gather?",
@@ -54,7 +54,7 @@ const routeHelp: Record<string, { prompts: string[]; title: string }> = {
   "/network": {
     prompts: [
       "Who could I thoughtfully connect with?",
-      "How do introductions work?",
+      "Draft a respectful introduction.",
       "Help me find someone in my industry.",
     ],
     title: "Looking for an introduction?",

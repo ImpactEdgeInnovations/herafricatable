@@ -68,6 +68,7 @@ for (const contract of [
   "search_upcoming_events",
   "safeToolResult",
   "suggestionsFromTool",
+  "Draft — review before using:",
   "tool_choice: \"auto\"",
   "parallel_tool_calls: false",
   'kind: "member"',
