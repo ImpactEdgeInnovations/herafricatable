@@ -62,6 +62,13 @@ for (const contract of [
 const api = read("app/api/table-guide/route.ts");
 for (const contract of [
   "suggestionsFor",
+  "GUIDE_TOOLS",
+  "search_visible_members",
+  "search_visible_communities",
+  "search_upcoming_events",
+  "safeToolResult",
+  "tool_choice: \"auto\"",
+  "parallel_tool_calls: false",
   'kind: "member"',
   'kind: "community"',
   'kind: "event"',

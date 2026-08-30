@@ -10,6 +10,11 @@ signed-in member is already allowed to read, and offer permission-filtered membe
 Community, event or next-step cards inside the answer. Following a card, sending a
 request, publishing or registering is always a separate member-controlled action.
 
+Nia also has three read-only discovery tools: visible members, accessible Communities
+and published upcoming events. They search only the authorised context already loaded
+for the signed-in member and return at most three results. Tool results can explain or
+rank a suggestion, but never grant access or perform the follow-up action.
+
 ## Privacy boundary
 
 - Every member chooses whether to use the Guide.
