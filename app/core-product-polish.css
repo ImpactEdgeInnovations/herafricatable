@@ -322,6 +322,180 @@
 .offline-card h1 { margin: 8px 0 12px; font-family: var(--serif); font-size: clamp(2.4rem, 8vw, 4.4rem); font-weight: 400; line-height: 0.98; }
 .offline-card p:not(.eyebrow) { color: var(--muted); line-height: 1.7; }
 
+/* Events: a quiet, obvious path from “I’m curious” to “I have a place”.
+   These are presentation-only overrides; registration, payment and moderation
+   actions continue to use the existing server-side flows. */
+.event-detail-page .legal-header {
+  width: min(1120px, calc(100% - 48px));
+  min-height: 72px;
+  margin: 0 auto;
+  padding: 0;
+  border-bottom: 1px solid var(--hat-rule);
+}
+
+.event-detail-hero {
+  min-height: 0;
+  padding: 68px 0 72px;
+  align-items: start;
+  gap: 44px;
+}
+
+.event-detail-hero:not(:has(.event-detail-poster)) {
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 340px);
+}
+
+.event-detail-hero h1 {
+  max-width: 680px;
+  font-size: clamp(3.25rem, 6.2vw, 5.7rem);
+  line-height: .94;
+}
+
+.event-detail-hero > div > p:last-child {
+  max-width: 590px;
+  margin-top: 22px;
+  font-size: .9rem;
+  line-height: 1.72;
+}
+
+.event-detail-hero .event-community-badge {
+  margin-top: 20px;
+  border: 1px solid rgba(100, 29, 46, .14);
+  border-radius: 3px;
+  background: #f8f0e7;
+  color: var(--hat-wine);
+  letter-spacing: .01em;
+  text-transform: none;
+}
+
+.event-detail-poster {
+  min-height: 300px;
+  border: 1px solid var(--hat-rule);
+  border-radius: 4px;
+  background: #eee4d6;
+  box-shadow: 0 16px 30px rgba(50, 28, 38, .08);
+}
+
+.event-detail-poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  object-fit: cover;
+}
+
+.event-detail-hero aside {
+  position: sticky;
+  top: 18px;
+  padding: 24px;
+  border: 1px solid var(--hat-rule);
+  border-top: 3px solid var(--hat-brass);
+  border-radius: 4px;
+  background: var(--hat-surface);
+  box-shadow: 0 12px 28px rgba(50, 28, 38, .05);
+}
+
+.event-detail-hero dl { margin-bottom: 22px; gap: 0; }
+.event-detail-hero dl div { padding: 13px 0; }
+.event-detail-hero dl div:first-child { padding-top: 0; }
+.event-detail-hero dl div:last-child { padding-bottom: 0; border-bottom: 0; }
+.event-detail-hero dt { color: var(--hat-brass); }
+.event-detail-hero dd { font-size: .78rem; }
+.event-detail-hero aside .button { min-height: 46px; border-radius: 3px; }
+
+.event-community-companion,
+.event-inline-registration {
+  width: min(1120px, calc(100% - 48px));
+  margin-top: 20px;
+  border: 1px solid var(--hat-rule);
+  border-radius: 4px;
+  background: var(--hat-surface);
+  box-shadow: none;
+}
+
+.event-community-companion { padding: 28px 30px; gap: 30px; }
+.event-community-companion h2,
+.event-registration-entry h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); }
+.event-community-companion aside { padding-left: 26px; gap: 10px; }
+.event-community-companion aside > span { border-radius: 3px; background: #f8f0e7; }
+.event-community-companion .button { min-height: 42px; }
+
+.event-inline-registration { margin-bottom: 28px; }
+.event-registration-form.is-embedded,
+.registration-status-card.is-embedded,
+.event-registration-entry { padding: 30px; }
+.event-registration-form.is-embedded > header h2 { font-size: clamp(1.9rem, 3.6vw, 3rem); }
+.event-payment-boundary { padding: 12px 30px; font-size: .65rem; }
+
+.event-content-section,
+.event-menu-section,
+.event-gallery-section {
+  padding-top: 64px;
+  padding-bottom: 64px;
+}
+
+.event-content-section { gap: 52px; }
+.event-content-section h2 { font-size: clamp(2.2rem, 4vw, 3rem); }
+.event-content-section > div:first-child .eyebrow { margin-bottom: 9px; }
+.announcement-list article,
+.programme-list article { padding: 20px 0; }
+.announcement-list h3,
+.programme-list h3 { font-size: .95rem; }
+
+.event-questions {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 46px 0;
+  border-top: 1px solid var(--hat-rule);
+  border-bottom: 1px solid var(--hat-rule);
+}
+
+.event-questions > header,
+.event-questions-community { padding: 0; }
+.event-questions h2 { font-size: clamp(2.1rem, 4vw, 3rem); }
+.event-question-list { margin-top: 24px; }
+.event-question-list > article { padding: 21px 0; }
+.event-question-list > article > p { font-size: clamp(.95rem, 1.8vw, 1.12rem); }
+
+.event-public-recap,
+.event-public-reflections { border-radius: 4px; box-shadow: none; }
+.event-menu-section > header h2,
+.event-gallery-section > header h2 { font-size: clamp(2.8rem, 5vw, 4.8rem); }
+.public-gallery-album { padding: 42px 0; gap: 48px; }
+.public-gallery-grid { gap: 10px; }
+.public-gallery-grid img { height: 220px; }
+.sponsor-section article { min-height: 110px; padding: 16px; }
+
+@media (max-width: 820px) {
+  .event-detail-page .legal-header { width: calc(100% - 32px); }
+  .event-detail-hero,
+  .event-detail-hero:not(:has(.event-detail-poster)) { grid-template-columns: 1fr; gap: 30px; }
+  .event-detail-hero aside { position: static; }
+  .event-detail-poster,
+  .event-detail-poster img { min-height: 250px; max-height: 360px; }
+  .event-community-companion { grid-template-columns: 1fr; }
+  .event-community-companion aside { padding: 20px 0 0; border-top: 1px solid var(--hat-rule); border-left: 0; }
+  .event-questions { width: calc(100% - 32px); }
+}
+
+@media (max-width: 620px) {
+  .event-detail-page .legal-header { min-height: 64px; }
+  .event-detail-hero { padding: 48px 0 52px; }
+  .event-detail-hero h1 { font-size: clamp(2.9rem, 13vw, 4.3rem); }
+  .event-community-companion,
+  .event-inline-registration { width: calc(100% - 32px); }
+  .event-community-companion { padding: 22px 20px; }
+  .event-registration-form.is-embedded,
+  .registration-status-card.is-embedded,
+  .event-registration-entry { padding: 24px 20px; }
+  .event-payment-boundary { padding: 12px 20px; }
+  .event-content-section { padding-top: 48px; padding-bottom: 48px; }
+  .event-menu-section,
+  .event-gallery-section { padding-top: 56px; padding-bottom: 56px; }
+  .event-questions { padding: 38px 0; }
+  .public-gallery-album { grid-template-columns: 1fr; gap: 24px; }
+  .public-gallery-grid img { height: 180px; }
+}
+
 @media (max-width: 760px) {
   .community-directory { margin-top: 34px; }
   .community-member-rooms,
