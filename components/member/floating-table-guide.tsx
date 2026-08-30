@@ -373,7 +373,7 @@ export function FloatingTableGuide({
           </header>
           {ready ? (
             <>
-              <div aria-live="polite" className="floating-guide-messages">
+              <div aria-busy={Boolean(busy)} aria-live="polite" className="floating-guide-messages">
                 {messages.slice(-4).map((message, index) => (
                   <div className={message.role} key={`${message.role}-${index}`}>
                     <p>{message.content}</p>

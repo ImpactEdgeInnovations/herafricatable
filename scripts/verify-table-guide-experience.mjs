@@ -76,6 +76,8 @@ for (const contract of [
   'kind: "event"',
   "user_id: item.user_id",
   "untrusted reference material",
+  "if (!apiKey || !safetySalt)",
+  "limited: true",
 ]) {
   assert(api.includes(contract), `Nia response API is missing: ${contract}`);
 }

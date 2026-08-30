@@ -318,7 +318,7 @@ export function TableGuide({
       <div className="table-guide-layout">
         <section className="table-guide-chat" aria-labelledby="table-guide-chat-title">
           <h2 className="sr-only" id="table-guide-chat-title">Conversation with the Table Guide</h2>
-          <div aria-live="polite" className="table-guide-messages">
+          <div aria-busy={busy === "question"} aria-live="polite" className="table-guide-messages">
             {messages.map((message, index) => (
               <article className={message.role} key={`${message.role}-${index}`}>
                 <span>{message.role === "assistant" ? "Nia · AI Table Guide" : "You"}</span>
