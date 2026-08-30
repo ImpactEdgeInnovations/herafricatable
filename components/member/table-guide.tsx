@@ -49,6 +49,7 @@ const quickQuestions = [
   "Who could I connect with?",
   "What is coming up?",
   "Draft an introduction for me",
+  "How do referrals work?",
 ];
 
 function goalLabel(value: string) {

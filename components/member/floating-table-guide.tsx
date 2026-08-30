@@ -67,6 +67,14 @@ const routeHelp: Record<string, { prompts: string[]; title: string }> = {
     ],
     title: "Shaping your profile?",
   },
+  "/referrals": {
+    prompts: [
+      "How do referrals work?",
+      "Draft a personal invitation.",
+      "What happens after someone joins?",
+    ],
+    title: "Growing the table thoughtfully?",
+  },
 };
 
 function clampPosition(position: Position): Position {

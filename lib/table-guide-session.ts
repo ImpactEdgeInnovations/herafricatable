@@ -3,6 +3,7 @@ export type GuideCategory =
   | "connections"
   | "events"
   | "getting_started"
+  | "referrals"
   | "other"
   | "support";
 
