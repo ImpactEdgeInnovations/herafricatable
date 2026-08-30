@@ -9,6 +9,9 @@ import "./admin-oversight.css";
 import "./core-product-polish.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.herafricatable.com",
+  ),
   title: {
     default: "Her Africa Table",
     template: "%s | Her Africa Table",
@@ -22,6 +25,21 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.webmanifest",
   applicationName: "Her Africa Table",
+  openGraph: {
+    type: "website",
+    locale: "en_KE",
+    siteName: "Her Africa Table",
+    title: "Her Africa Table — Meet. Connect. Rise.",
+    description:
+      "A trusted professional network for African women, built around real-world events and relationships that continue beyond the room.",
+    url: "/",
+  },
+  twitter: {
+    card: "summary",
+    title: "Her Africa Table — Meet. Connect. Rise.",
+    description:
+      "A trusted professional network for African women, built around real-world events.",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
