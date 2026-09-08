@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-type CountdownEvent = {
+export type CountdownEvent = {
   city: string;
   event_name: string;
   starts_at: string;
@@ -31,11 +31,18 @@ function calculateTimeLeft(startsAt: string): TimeLeft | null {
 
 const twoDigits = (value: number) => String(value).padStart(2, "0");
 
-export function EventCountdown() {
-  const [event, setEvent] = useState<CountdownEvent | null>(null);
-  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
+export function EventCountdown({
+  initialEvent,
+}: {
+  initialEvent?: CountdownEvent | null;
+}) {
+  const [event, setEvent] = useState<CountdownEvent | null>(initialEvent ?? null);
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(() =>
+    initialEvent ? calculateTimeLeft(initialEvent.starts_at) : null,
+  );
 
   useEffect(() => {
+    if (initialEvent !== undefined) return;
     const supabase = createClient();
 
     void supabase
@@ -50,7 +57,7 @@ export function EventCountdown() {
         setEvent(configuredEvent);
         setTimeLeft(calculateTimeLeft(configuredEvent.starts_at));
       });
-  }, []);
+  }, [initialEvent]);
 
   useEffect(() => {
     if (!event) return;
@@ -71,10 +78,10 @@ export function EventCountdown() {
 
       {event && timeLeft ? (
         <div className="countdown-clock" role="timer" aria-live="off">
-          <span><b>{twoDigits(timeLeft.days)}</b><small>Days</small></span>
-          <span><b>{twoDigits(timeLeft.hours)}</b><small>Hours</small></span>
-          <span><b>{twoDigits(timeLeft.minutes)}</b><small>Minutes</small></span>
-          <span><b>{twoDigits(timeLeft.seconds)}</b><small>Seconds</small></span>
+          <span><b suppressHydrationWarning>{twoDigits(timeLeft.days)}</b><small>Days</small></span>
+          <span><b suppressHydrationWarning>{twoDigits(timeLeft.hours)}</b><small>Hours</small></span>
+          <span><b suppressHydrationWarning>{twoDigits(timeLeft.minutes)}</b><small>Minutes</small></span>
+          <span><b suppressHydrationWarning>{twoDigits(timeLeft.seconds)}</b><small>Seconds</small></span>
         </div>
       ) : (
         <div className="countdown-clock countdown-clock-pending" aria-label="Event date awaiting publication">

@@ -968,10 +968,12 @@ for (const contract of [
 const publicHome = read("app/page.tsx");
 for (const contract of [
   "Where African women",
-  "Your people, in one calm place.",
-  "Verify your email",
-  "Thoughtful review",
-  "Private by design",
+  "Meet women doing meaningful work",
+  "What happens at the table",
+  "Your member space",
+  "Confirm your email",
+  "Private review",
+  "Relationships with purpose",
 ]) {
   assert(publicHome.includes(contract), `Public home must include ${contract}`);
 }
