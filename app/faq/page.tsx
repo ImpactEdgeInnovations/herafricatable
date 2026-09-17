@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { faqs } from "@/lib/content/faqs";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Questions",
-  description: "Answers about Her Africa Table membership, privacy, events, and access.",
-};
+export const metadata = publicPageMetadata("Membership Questions", "How Her Africa Table membership works: applying, email sign-in codes, Communities, events and keeping your information private.", "/faq");
 
 export default function FrequentlyAskedQuestionsPage() {
   return (

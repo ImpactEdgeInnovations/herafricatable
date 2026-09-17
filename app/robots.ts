@@ -1,8 +1,7 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/seo";
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://www.herafricatable.com";
+const siteUrl = getSiteUrl();
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -11,6 +10,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: ["/", "/events", "/faq", "/privacy", "/terms", "/community-guidelines"],
       disallow: [
         "/admin/",
+        "/auth/",
         "/api/",
         "/apply",
         "/circles",
@@ -18,9 +18,17 @@ export default function robots(): MetadataRoute.Robots {
         "/communities/",
         "/continue",
         "/guide",
+        "/explore",
         "/home",
         "/join/",
         "/learning/",
+        "/learning",
+        "/orders/",
+        "/offline",
+        "/events/*/register",
+        "/events/*/pass",
+        "/events/*/feedback",
+        "/events/*/follow-up",
         "/members/",
         "/membership",
         "/messages",

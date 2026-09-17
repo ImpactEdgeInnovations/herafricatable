@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/legal-page";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Community Guidelines" };
+export const metadata: Metadata = publicPageMetadata("Community Guidelines", "The shared standards for respectful conversations, privacy, useful introductions and member safety at Her Africa Table.", "/community-guidelines");
 
 export default function CommunityGuidelinesPage() {
   return (

@@ -20,7 +20,21 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {
+    const privateRoutes = [
+      "admin", "api", "auth", "apply", "circles", "communities", "continue",
+      "explore", "guide", "home", "join", "learning", "members", "membership", "messages",
+      "network", "notifications", "onboarding", "opportunities", "orders", "perks",
+      "profile", "referrals", "search", "settings", "sign-in", "support", "offline",
+    ];
     return [
+      ...privateRoutes.map((route) => ({
+        source: `/${route}/:path*`,
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }],
+      })),
+      ...["register", "pass", "feedback", "follow-up"].map((area) => ({
+        source: `/events/:slug/${area}/:path*`,
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }],
+      })),
       {
         source: "/sw.js",
         headers: [
@@ -31,6 +45,9 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: [
+          ...(process.env.VERCEL_ENV === "preview"
+            ? [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }]
+            : []),
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },

@@ -5,8 +5,13 @@ import {
   type CountdownEvent,
 } from "@/components/event-countdown";
 import { getSupabasePublicEnv } from "@/lib/env";
+import { absoluteUrl, publicPageMetadata, serializeJsonLd, siteDescription } from "@/lib/seo";
 
 export const revalidate = 60;
+export const metadata = {
+  ...publicPageMetadata("African Women’s Network", siteDescription, "/"),
+  title: { absolute: "Her Africa Table | African Women’s Network" },
+};
 
 const ArrowIcon = () => (
   <svg aria-hidden="true" viewBox="0 0 20 20">
@@ -87,6 +92,13 @@ export default async function HomePage() {
 
   return (
     <main className="site-shell editorial-home">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd({
+        "@context": "https://schema.org",
+        "@graph": [
+          { "@type": "Organization", "@id": absoluteUrl("/#organization"), name: "Her Africa Table", url: absoluteUrl(), description: siteDescription, logo: absoluteUrl("/icons/her-africa-table-512.png"), email: "support@herafricatable.com" },
+          { "@type": "WebSite", "@id": absoluteUrl("/#website"), name: "Her Africa Table", url: absoluteUrl(), publisher: { "@id": absoluteUrl("/#organization") }, inLanguage: "en" },
+        ],
+      }) }} />
       <header className="site-header editorial-header">
         <Link className="brand" href="/" aria-label="Her Africa Table home">
           <span className="brand-mark" aria-hidden="true">H</span>

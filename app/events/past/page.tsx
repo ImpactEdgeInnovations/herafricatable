@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { MemberHeader } from "@/components/member/member-header";
 import { createClient } from "@/lib/supabase/server";
+import { publicPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+export const metadata = publicPageMetadata("Past Gatherings", "Explore past Her Africa Table gatherings and their published recaps, highlights and stories of women building useful relationships.", "/events/past");
 
 type PastEvent = {
   city: string | null;

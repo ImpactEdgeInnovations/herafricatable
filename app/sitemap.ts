@@ -1,17 +1,25 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl, absoluteUrl } from "@/lib/seo";
+import { getPublicEventSeo } from "@/lib/public-event-seo";
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://www.herafricatable.com";
+export const revalidate = 300;
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const siteUrl = getSiteUrl();
+  const events = await getPublicEventSeo();
   return [
-    { url: siteUrl, lastModified, changeFrequency: "weekly", priority: 1 },
-    { url: `${siteUrl}/events`, lastModified, changeFrequency: "daily", priority: 0.9 },
-    { url: `${siteUrl}/faq`, lastModified, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${siteUrl}/community-guidelines`, lastModified, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${siteUrl}/privacy`, lastModified, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${siteUrl}/terms`, lastModified, changeFrequency: "yearly", priority: 0.3 },
+    { url: siteUrl, changeFrequency: "weekly", priority: 1 },
+    { url: `${siteUrl}/events`, changeFrequency: "daily", priority: 0.9 },
+    { url: `${siteUrl}/events/past`, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${siteUrl}/faq`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${siteUrl}/community-guidelines`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${siteUrl}/privacy`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${siteUrl}/terms`, changeFrequency: "yearly", priority: 0.3 },
+    ...events.map((event) => ({
+      url: absoluteUrl(`/events/${encodeURIComponent(event.slug)}`),
+      ...(event.updated_at && !Number.isNaN(Date.parse(event.updated_at)) ? { lastModified: new Date(event.updated_at) } : {}),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    })),
   ];
 }

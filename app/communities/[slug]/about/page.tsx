@@ -66,7 +66,8 @@ export async function generateMetadata({
   if (!about) return { title: "Community" };
   return {
     description: about.tagline || about.about_summary,
-    title: `${about.name} | Her Africa Table`,
+    title: about.name,
+    robots: { index: false, follow: false },
   };
 }
 

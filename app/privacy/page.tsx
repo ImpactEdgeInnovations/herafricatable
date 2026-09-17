@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/legal-page";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Privacy Notice" };
+export const metadata: Metadata = publicPageMetadata("Privacy Notice", "Understand how Her Africa Table handles member information, privacy choices, safety reviews and requests about your personal data.", "/privacy");
 
 export default function PrivacyPage() {
   return (

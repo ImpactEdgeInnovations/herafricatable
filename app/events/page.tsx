@@ -7,8 +7,10 @@ import {
   type MemberEventProposal,
 } from "@/components/events/member-event-proposal";
 import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
+import { publicPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+export const metadata = publicPageMetadata("Upcoming Gatherings & Events", "Discover Her Africa Table gatherings for African women. Explore upcoming events, useful conversations and opportunities to connect in Nairobi and beyond.", "/events");
 
 type PublicEvent = {
   audience: "community" | "public";

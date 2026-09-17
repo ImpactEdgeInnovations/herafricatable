@@ -1,4 +1,7 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import { absoluteUrl, publicPageMetadata, serializeJsonLd } from "@/lib/seo";
+import { getPublicEventSeo } from "@/lib/public-event-seo";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MenuFeedbackControls } from "@/components/events/menu-feedback-controls";
@@ -22,6 +25,14 @@ import {
 } from "@/components/member/destination-invitation-panel";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const event = (await getPublicEventSeo(slug))[0];
+  if (!event) return { title: "Gathering", robots: { index: false, follow: false } };
+  const description = (event.summary || `Explore ${event.title}, a Her Africa Table gathering for meaningful conversations and connections.`).slice(0, 160);
+  return publicPageMetadata(event.title, description, `/events/${encodeURIComponent(event.slug)}`);
+}
 
 type EventDetail = {
   audience: "community" | "public";
@@ -47,6 +58,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     .maybeSingle();
   if (!data) notFound();
   const event = data as unknown as EventDetail;
+  const publiclyIndexable = event.audience === "public" && Boolean((await getPublicEventSeo(slug))[0]);
   const { data: posterRows } = await supabase.rpc("list_public_event_proposal_posters", { p_event_ids: [event.id] });
   const poster = ((posterRows as { alt_text: string; storage_path: string }[] | null) ?? [])[0] ?? null;
   const posterSigned = poster
@@ -192,6 +204,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
   return (
     <main className="event-detail-page">
+      {publiclyIndexable ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Her Africa Table", item: absoluteUrl() },
+          { "@type": "ListItem", position: 2, name: "Gatherings", item: absoluteUrl("/events") },
+          { "@type": "ListItem", position: 3, name: event.title, item: absoluteUrl(`/events/${encodeURIComponent(slug)}`) },
+        ],
+      }) }} /> : null}
       <header className="legal-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></Link>
         <Link href={eventCommunity ? `/communities/${eventCommunity.slug}?view=people` : "/events"}>{eventCommunity ? `Back to ${eventCommunity.name}` : "All events"}</Link>

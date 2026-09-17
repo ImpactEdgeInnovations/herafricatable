@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/legal-page";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Terms of Membership" };
+export const metadata: Metadata = publicPageMetadata("Terms of Membership", "Read Her Africa Table membership responsibilities, approval requirements, event and payment terms, and moderation policies.", "/terms");
 
 export default function TermsPage() {
   return (

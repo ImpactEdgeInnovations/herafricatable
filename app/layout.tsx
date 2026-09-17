@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { PwaProvider } from "@/components/pwa/pwa-provider";
+import { getSiteUrl, siteDescription } from "@/lib/seo";
 import "./globals.css";
 import "./community-compact.css";
 import "./membership-waiting.css";
@@ -9,15 +10,13 @@ import "./admin-oversight.css";
 import "./core-product-polish.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://www.herafricatable.com",
-  ),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "Her Africa Table",
     template: "%s | Her Africa Table",
   },
-  description:
-    "A trusted professional network for African women, built around real-world events.",
+  description: siteDescription,
+  verification: { google: process.env.GOOGLE_SITE_VERIFICATION || undefined },
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     shortcut: "/icon.svg",
@@ -30,15 +29,14 @@ export const metadata: Metadata = {
     locale: "en_KE",
     siteName: "Her Africa Table",
     title: "Her Africa Table — Meet. Connect. Rise.",
-    description:
-      "A trusted professional network for African women, built around real-world events and relationships that continue beyond the room.",
+    description: siteDescription,
     url: "/",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Her Africa Table — Meet. Connect. Rise.",
-    description:
-      "A trusted professional network for African women, built around real-world events.",
+    description: siteDescription,
+    images: ["/opengraph-image"],
   },
   appleWebApp: {
     capable: true,
