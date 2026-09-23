@@ -102,6 +102,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const { data: { user } } = await supabase.auth.getUser();
   const { data: memberProfile } = user ? await supabase.from("profiles").select("access_status").eq("id", user.id).maybeSingle() : { data: null };
   const activeMember = Boolean(user && memberProfile?.access_status === "active");
+  const { data: eventGuestFlag } = user && event.audience === "public" && !activeMember
+    ? await supabase.from("feature_flags").select("enabled").eq("key", "event_guest_access").maybeSingle()
+    : { data: null };
+  const eventGuestEligible = Boolean(
+    user && event.audience === "public" && eventGuestFlag?.enabled &&
+    memberProfile?.access_status === "pending",
+  );
   const { data: communityMembership } = activeMember && communityLink?.community_id
     ? await supabase.from("community_memberships").select("status").eq("community_id", communityLink.community_id).eq("user_id", user!.id).maybeSingle()
     : { data: null };
@@ -155,8 +162,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const isConfirmedGuest = ["confirmed", "attended"].includes(ownMembership?.status ?? "");
   const [{ data: attendeePreference }, attendeeDirectoryResult, followUpResult] = isConfirmedGuest
     ? await Promise.all([
-        supabase.from("event_attendee_preferences").select("discoverable, show_company, introduction").eq("event_id", event.id).eq("user_id", user!.id).maybeSingle(),
-        supabase.rpc("list_event_attendee_directory", { p_event_id: event.id, p_limit: 30, p_offset: 0 }),
+        activeMember
+          ? supabase.from("event_attendee_preferences").select("discoverable, show_company, introduction").eq("event_id", event.id).eq("user_id", user!.id).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        activeMember
+          ? supabase.rpc("list_event_attendee_directory", { p_event_id: event.id, p_limit: 30, p_offset: 0 })
+          : Promise.resolve({ data: [], error: null }),
         supabase.rpc("get_my_event_follow_up_interest", { p_event_id: event.id }),
       ])
     : [{ data: null }, { data: [] }, { data: [] }];
@@ -257,27 +268,32 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       {!hasEnded && !gatheringRoomHref && event.registration_mode !== "closed" ? (
         <section className="event-inline-registration" id="registration">
-          {user && memberProfile?.access_status === "active" ? (
-            <EventRegistrationForm
-              embedded
-              eventId={event.id}
-              eventSlug={slug}
-              eventTitle={event.title}
-              existingStatus={registration?.status ?? ownMembership?.status ?? null}
-              mode={event.registration_mode}
-              passReady={["confirmed", "attended"].includes(ownMembership?.status ?? "")}
-              tickets={tickets ?? []}
-            />
+          {activeMember || eventGuestEligible ? (
+            <>
+              <EventRegistrationForm
+                embedded
+                eventId={event.id}
+                eventSlug={slug}
+                eventTitle={event.title}
+                existingStatus={registration?.status ?? ownMembership?.status ?? null}
+                mode={event.registration_mode}
+                passReady={["confirmed", "attended"].includes(ownMembership?.status ?? "")}
+                tickets={tickets ?? []}
+              />
+              {eventGuestEligible ? (
+                <p className="event-payment-boundary">Your place gives you access to this event. Joining the member network is a separate, reviewed request.</p>
+              ) : null}
+            </>
           ) : (
             <div className="event-registration-entry">
               <p className="eyebrow">Your place at the table</p>
-              <h2>{user ? "Finish your membership first." : "Sign in to join this event."}</h2>
-              <p>{user ? "Event registration opens after your Her Africa Table membership is active." : "Use your approved email and one-time code. You will return directly to this page."}</p>
+              <h2>{user ? "Your account cannot request a place yet." : "Confirm your email to join this event."}</h2>
+              <p>{user ? "Membership access and event places are reviewed separately. Contact our team if you need help." : "We’ll email you a one-time code and return you to this event."}</p>
               <Link
                 className="button button-primary"
-                href={user ? "/home" : `/sign-in?next=${encodeURIComponent(`/events/${slug}#registration`)}`}
+                href={user ? "/apply" : `/sign-in?next=${encodeURIComponent(`/events/${slug}#registration`)}`}
               >
-                {user ? "View membership status" : "Sign in and continue"}
+                {user ? "View membership request" : "Email me a code"}
               </Link>
             </div>
           )}
@@ -310,7 +326,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       {galleryAlbums?.length && galleryAssets.some((asset) => asset.signed_url) ? <section className="event-gallery-section"><header><p className="eyebrow">In the room</p><h2>Moments from the table.</h2></header>{galleryAlbums.map((album) => { const albumAssets = galleryAssets.filter((asset) => asset.album_id === album.id && asset.signed_url); return albumAssets.length ? <article className="public-gallery-album" key={album.id}><div><h3>{album.title}</h3><p>{album.introduction}</p></div><div className="public-gallery-grid">{albumAssets.map((asset) => <figure className={asset.is_featured ? "featured" : ""} key={asset.id}><img src={asset.signed_url!} alt={asset.alt_text} width={asset.width ?? undefined} height={asset.height ?? undefined} loading="lazy" /><figcaption><span>{asset.caption}</span>{asset.credit ? <small>Photo: {asset.credit}</small> : null}</figcaption></figure>)}</div></article> : null; })}</section> : null}
 
       {sponsors?.length ? <section className="event-content-section sponsor-section"><div><p className="eyebrow">With thanks</p><h2>Event partners</h2></div><div>{sponsors.map((sponsor) => <article key={sponsor.id}><span>{sponsor.tier || "Partner"}</span><strong>{sponsor.name}</strong></article>)}</div></section> : null}
-      {isConfirmedGuest ? (
+      {isConfirmedGuest && activeMember ? (
         <EventAttendeeDirectory
           attendees={(attendeeDirectoryResult.data as EventAttendee[] | null) ?? []}
           eventId={event.id}

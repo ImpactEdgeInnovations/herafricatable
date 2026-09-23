@@ -10,6 +10,17 @@ export async function POST(request:Request){
   const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user?.email)return NextResponse.json({error:"Authentication required"},{status:401});
   const body=await request.json() as {attendeeNote?:string;communityHostPlanId?:string;communityId?:string;communityOfferId?:string;courseId?:string;eventId?:string;membershipPlanId?:string;quantity?:number;ticketTypeId?:string};
   if((body.communityHostPlanId&&!body.communityId)||(!body.communityHostPlanId&&!body.communityOfferId&&!body.courseId&&!body.membershipPlanId&&(!body.eventId||!body.ticketTypeId)))return NextResponse.json({error:"A host plan, community offer, membership, course or event ticket is required"},{status:400});
+  if (body.eventId && !body.communityHostPlanId && !body.communityOfferId && !body.courseId && !body.membershipPlanId) {
+   const [{data:profile},{data:event}]=await Promise.all([
+    supabase.from("profiles").select("access_status").eq("id",user.id).maybeSingle(),
+    supabase.from("events").select("audience").eq("id",body.eventId).eq("status","published").maybeSingle(),
+   ]);
+   if(!event||!profile||["suspended","deleted"].includes(profile.access_status))return NextResponse.json({error:"Event registration is unavailable for this account"},{status:403});
+   if(profile.access_status!=="active"){
+    const {data:guestFlag}=await supabase.from("feature_flags").select("enabled").eq("key","event_guest_access").maybeSingle();
+    if(profile.access_status!=="pending"||event.audience!=="public"||!guestFlag?.enabled)return NextResponse.json({error:"Event guest access is not open"},{status:403});
+   }
+  }
   const {data:orderId,error:createError}=body.communityHostPlanId?await supabase.rpc("create_community_host_plan_order",{p_community_id:body.communityId,p_manual_note:"",p_manual_reference:"",p_plan_id:body.communityHostPlanId}):body.communityOfferId?await supabase.rpc("create_community_order",{p_offer_id:body.communityOfferId,p_manual_note:"",p_manual_reference:""}):body.membershipPlanId?await supabase.rpc("create_membership_order",{p_plan_id:body.membershipPlanId,p_manual_note:"",p_manual_reference:""}):body.courseId?await supabase.rpc("create_course_order",{p_course_id:body.courseId,p_manual_note:"",p_manual_reference:""}):await supabase.rpc("create_event_registration",{p_attendee_note:body.attendeeNote??"",p_event_id:body.eventId,p_manual_note:"",p_manual_reference:"",p_quantity:Number(body.quantity)||1,p_ticket_type_id:body.ticketTypeId});
   if(createError||!orderId)return NextResponse.json({error:createError?.message??"Order creation failed"},{status:400});
   const {data:order,error:orderError}=await supabase.from("orders").select("id,reference,total_minor,currency,event_id,order_type,order_items(course_id,membership_plan_id,community_offer_id,community_host_plan_id)").eq("id",orderId).single();

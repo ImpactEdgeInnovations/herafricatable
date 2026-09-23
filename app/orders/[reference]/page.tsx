@@ -28,12 +28,12 @@ export default async function ReceiptPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/sign-in");
+  if (!user) redirect(`/sign-in?next=${encodeURIComponent(`/orders/${reference}`)}`);
 
   const { data } = await supabase
     .from("orders")
     .select(
-      "id,reference,status,processing_mode,currency,subtotal_minor,total_minor,fulfilled_at,created_at,order_type,events(title,starts_at,timezone,venues(name,city,country)),order_items(quantity,unit_price_minor,line_total_minor,ticket_types(name,description),courses(title,summary,slug),membership_plans(name,slug),community_offers(name,communities(name,slug)),community_host_plans(name)),community_host_plan_orders(communities(name,slug)),payment_attempts(provider,provider_reference,status,created_at)",
+      "id,reference,status,processing_mode,currency,subtotal_minor,total_minor,fulfilled_at,created_at,order_type,events(slug,title,starts_at,timezone,venues(name,city,country)),order_items(quantity,unit_price_minor,line_total_minor,ticket_types(name,description),courses(title,summary,slug),membership_plans(name,slug),community_offers(name,communities(name,slug)),community_host_plans(name)),community_host_plan_orders(communities(name,slug)),payment_attempts(provider,provider_reference,status,created_at)",
     )
     .eq("reference", reference)
     .eq("user_id", user.id)
@@ -41,6 +41,7 @@ export default async function ReceiptPage({
   if (!data) notFound();
 
   const event = data.events as unknown as {
+    slug: string;
     starts_at: string;
     timezone: string;
     title: string;
@@ -82,7 +83,9 @@ export default async function ReceiptPage({
             Her Africa Table<small>{recordLabel}</small>
           </span>
         </Link>
-        <Link href="/home">Member home</Link>
+        <Link href={data.order_type === "event" && event ? `/events/${event.slug}` : "/home"}>
+          {data.order_type === "event" ? "Event details" : "Member home"}
+        </Link>
       </header>
       <article className="receipt-card">
         <header>
@@ -158,6 +161,11 @@ export default async function ReceiptPage({
             Open course
           </Link>
         ) : null}
+        {data.order_type === "event" && event && data.status === "fulfilled" ? (
+          <Link className="button button-primary" href={`/events/${event.slug}/pass`}>
+            Open my event pass
+          </Link>
+        ) : null}
         {community && data.order_type === "community" && data.status === "fulfilled" ? (
           <Link
             className="button button-primary"
@@ -175,9 +183,10 @@ export default async function ReceiptPage({
           </Link>
         ) : null}
         <p className="receipt-note">
-          This record confirms platform order status. Payment is considered
-          complete only when the status is fulfilled. For support, quote
-          reference <strong>{data.reference}</strong>.
+          {data.order_type === "event" && data.total_minor === 0
+            ? "Your place is confirmed only when this record says fulfilled. No payment is needed for this free event."
+            : "This record confirms order status. Payment is complete only when this record says fulfilled."}
+          {" "}For support, quote reference <strong>{data.reference}</strong>.
         </p>
       </article>
     </main>

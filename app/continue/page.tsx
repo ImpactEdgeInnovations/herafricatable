@@ -45,6 +45,33 @@ export default async function ContinueAfterSignInPage({
   // before authentication.
   if (!memberDestination && hasActiveAdminRole) redirect("/admin");
 
+  // A verified visitor may return to a published public event when the
+  // event-only guest pilot is enabled. An existing event registration remains
+  // accessible after new guest requests are paused.
+  if (memberDestination && profile?.access_status === "pending") {
+    const eventPath = memberDestination.split(/[?#]/, 1)[0];
+    const eventMatch = /^\/events\/([a-z0-9-]+)(?:\/(?:register|pass))?\/?$/.exec(eventPath);
+    if (eventMatch) {
+      const [{ data: guestFlag }, { data: publicEvent }] = await Promise.all([
+        supabase.from("feature_flags").select("enabled").eq("key", "event_guest_access").maybeSingle(),
+        supabase.from("events").select("id").eq("slug", eventMatch[1]).eq("audience", "public").in("status", ["published", "completed"]).maybeSingle(),
+      ]);
+      if (publicEvent) {
+        const { data: ownRegistration } = await supabase.from("registration_requests")
+          .select("id").eq("event_id", publicEvent.id).eq("user_id", user.id).maybeSingle();
+        if (guestFlag?.enabled || ownRegistration) redirect(memberDestination);
+      }
+    }
+
+    const orderMatch = /^\/orders\/([A-Za-z0-9-]+)\/?$/.exec(eventPath);
+    if (orderMatch) {
+      const { data: ownEventOrder } = await supabase.from("orders")
+        .select("id").eq("reference", orderMatch[1]).eq("user_id", user.id)
+        .eq("order_type", "event").maybeSingle();
+      if (ownEventOrder) redirect(memberDestination);
+    }
+  }
+
   if (profile?.access_status === "onboarding") {
     redirect(
       memberDestination

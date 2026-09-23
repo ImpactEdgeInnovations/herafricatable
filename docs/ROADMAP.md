@@ -1,5 +1,9 @@
 # Her Africa Table — 30-Day Production Roadmap
 
+> Current event-first pilot execution and sprint gates: [Event-first pilot
+> execution](./EVENT_FIRST_PILOT_EXECUTION.md). This is the active completion
+> sequence following the September 2026 MVP gap assessment.
+
 ## Mission
 
 Her Africa Table is a trust-gated professional network for African women. Curated
