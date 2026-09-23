@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { EventOrderActions } from "@/components/events/event-order-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,11 @@ export default async function ReceiptPage({
     .eq("user_id", user.id)
     .maybeSingle();
   if (!data) notFound();
+
+  const { data: refund } = data.order_type === "event"
+    ? await supabase.from("refund_requests")
+        .select("status").eq("order_id", data.id).maybeSingle()
+    : { data: null };
 
   const event = data.events as unknown as {
     slug: string;
@@ -165,6 +171,15 @@ export default async function ReceiptPage({
           <Link className="button button-primary" href={`/events/${event.slug}/pass`}>
             Open my event pass
           </Link>
+        ) : null}
+        {data.order_type === "event" && event ? (
+          <EventOrderActions
+            orderId={data.id}
+            status={data.status}
+            eventHasStarted={Date.parse(event.starts_at) <= Date.now()}
+            totalMinor={data.total_minor}
+            refundStatus={refund?.status ?? null}
+          />
         ) : null}
         {community && data.order_type === "community" && data.status === "fulfilled" ? (
           <Link

@@ -43,6 +43,7 @@ export function EventRegistrationForm({
   const [message, setMessage] = useState("");
   const ticket = tickets.find((x) => x.id === ticketId);
   const isFree = ticket?.price_minor === 0;
+  const canRequestAgain = existingStatus === "cancelled";
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -98,7 +99,7 @@ export function EventRegistrationForm({
     );
     if (!error) router.refresh();
   }
-  if (existingStatus)
+  if (existingStatus && !canRequestAgain)
     return (
       <div className={`registration-status-card${embedded ? " is-embedded" : ""}`}>
         <p className="eyebrow">Registration received</p>
@@ -106,7 +107,11 @@ export function EventRegistrationForm({
         <p>
           {passReady
             ? "Your event pass is ready. Keep its private code with you for check-in."
-            : "Your request is recorded. We’ll notify you here and by email after the event team reviews it."}
+            : existingStatus === "rejected"
+              ? "This request was not approved. If you need help understanding the decision, contact the event team."
+              : existingStatus === "waitlisted"
+                ? "You are on the waitlist. We’ll email you if a place becomes available."
+                : "Your request is recorded. We’ll notify you here and by email after the event team reviews it."}
         </p>
         {passReady && eventSlug ? (
           <a className="button button-primary" href={`/events/${eventSlug}/pass`}>
@@ -120,6 +125,7 @@ export function EventRegistrationForm({
       <header>
         <p className="eyebrow">Request your seat</p>
         {embedded ? <h2>Choose your place</h2> : <h1>{eventTitle}</h1>}
+        {canRequestAgain ? <p>Your earlier request was cancelled. You can request a new place while registration is open.</p> : null}
         <p>
           {mode === "manual_review"
             ? isFree

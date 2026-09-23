@@ -138,6 +138,8 @@ export function RegistrationManager({
     router.refresh();
   }
   async function review(orderId: string, action: "approve" | "reject") {
+    const registration = initialRegistrations.find((item) => item.order_id === orderId);
+    const freePlace = registration?.total_minor === 0;
     const result = await ask({
       title:
         action === "approve"
@@ -145,8 +147,10 @@ export function RegistrationManager({
           : "Decline this registration?",
       description:
         action === "approve"
-          ? "Confirm that you checked the payment proof. The member will receive the same event access as someone who paid online."
-          : "The member will not receive event access. Record a clear reason so the decision can be audited.",
+          ? freePlace
+            ? "Confirm this free place. The guest will receive an event pass; membership remains a separate decision."
+            : "Confirm that you checked the payment details. The guest will receive an event pass; membership remains a separate decision."
+          : "The guest will not receive an event pass. Add a clear reason for the decision record.",
       confirmLabel:
         action === "approve" ? "Approve registration" : "Decline registration",
       tone: action === "reject" ? "danger" : "default",
@@ -163,7 +167,9 @@ export function RegistrationManager({
           maxLength: 500,
           help:
             action === "approve"
-              ? "Include the payment reference or verification detail when useful."
+              ? freePlace
+                ? "Add any useful event context. No payment reference is needed for a free place."
+                : "Include the payment reference or verification detail when useful."
               : "Use at least 5 characters. This note is retained in the audit history.",
         },
       ],
@@ -178,7 +184,7 @@ export function RegistrationManager({
     });
     if (fail(error)) return;
     setBusy(false);
-    setMessage(`Registration ${action}d and audit logged.`);
+    setMessage(action === "approve" ? "Event place confirmed and saved." : "Event place declined and saved.");
     router.refresh();
   }
   async function reviewRefund(refundId: string, action: "approve" | "reject") {

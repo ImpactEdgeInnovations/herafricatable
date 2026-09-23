@@ -27,6 +27,8 @@ respect small-sample privacy thresholds.
   event only after `event_guest_access` is enabled.
 - Event approval grants `event_access` and a private event pass. It does not
   change `profiles.access_status` or grant `member_onboarding`.
+- A visitor may cancel and request a new place while registration is open.
+  A declined request remains closed unless the event team intervenes.
 - The member directory, member connections, private Communities, Community
   events and member messaging still require their existing permission checks.
 - A Community invitation or linked event never enrolls someone automatically.
@@ -66,11 +68,14 @@ closed behind a flag; a green build alone is not an exit.
 - [x] Event sign-in return, registration, checkout and pass screens have been
   updated for the limited guest journey.
 - [x] `supabase/tests/002_event_guest_access.sql` covers the event/member
-  boundary, approval, pass and suspended account.
+  boundary, approval, pass, cancellation, reapplication and suspended account.
+- [x] `20260923100000_event_guest_cancellation_and_reapply.sql` allows a guest
+  to withdraw a pending request or release an unused free place; reapplication
+  creates a new order and a fresh private pass.
 - [x] Live read on 23 September 2026 confirmed the existing release is healthy,
   with no published public event and no guest-access flag yet installed.
-- [ ] Apply the new migration in the intended Supabase environment and run the
-  pgTAP test. Do not enable the flag yet.
+- [ ] Apply both September event-guest migrations in order in the intended
+  Supabase environment and run the pgTAP test. Do not enable the flag yet.
 - [ ] Inspect existing event orders that already granted a `member_onboarding`
   entitlement and review affected accounts individually before any correction.
 - [ ] Create the real future launch event as a private draft with owner, city or

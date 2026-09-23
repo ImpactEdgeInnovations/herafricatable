@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(24);
 
 insert into auth.users(id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at)
 values
@@ -138,6 +138,76 @@ select throws_ok(
   $$select * from public.list_member_directory(null, null, null, 24, 0)$$,
   'P0001', 'Active visible membership required',
   'event access does not open the full member directory'
+);
+
+select lives_ok(
+  $$select public.cancel_my_event_place(
+    (select order_id from public.registration_requests
+     where event_id = 'a1000000-0000-4000-8000-000000000001'
+       and user_id = 'a0000000-0000-4000-8000-000000000002'),
+    'Plans changed')$$,
+  'guest can release an unused free place before the event'
+);
+select is(
+  (select status from public.event_memberships
+   where event_id = 'a1000000-0000-4000-8000-000000000001'
+     and user_id = 'a0000000-0000-4000-8000-000000000002'),
+  'cancelled', 'free cancellation removes confirmed event access'
+);
+select is(
+  (select status from public.entitlements
+   where event_id = 'a1000000-0000-4000-8000-000000000001'
+     and user_id = 'a0000000-0000-4000-8000-000000000002'
+     and entitlement_type = 'event_access'),
+  'revoked', 'free cancellation revokes the event entitlement'
+);
+select throws_ok(
+  $$select * from public.get_my_event_pass(
+    'a1000000-0000-4000-8000-000000000001')$$,
+  'P0001', 'A confirmed event registration is required',
+  'cancelled guest cannot open the old pass'
+);
+select is(
+  (select count(*) from public.event_checkin_credentials
+   where event_id = 'a1000000-0000-4000-8000-000000000001'
+     and user_id = 'a0000000-0000-4000-8000-000000000002'),
+  0::bigint, 'self-cancellation destroys the old unused pass code'
+);
+select lives_ok(
+  $$select public.create_event_registration(
+    'a1000000-0000-4000-8000-000000000001',
+    'a2000000-0000-4000-8000-000000000001', 1, '', '', '')$$,
+  'cancelled guest can request a new place with a new order'
+);
+select is(
+  (select count(*) from public.orders
+   where event_id = 'a1000000-0000-4000-8000-000000000001'
+     and user_id = 'a0000000-0000-4000-8000-000000000002'),
+  2::bigint, 'reapplication preserves both order records for audit'
+);
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000001', true);
+select lives_ok(
+  $$select public.review_manual_registration(
+    (select order_id from public.registration_requests
+     where event_id = 'a1000000-0000-4000-8000-000000000001'
+       and user_id = 'a0000000-0000-4000-8000-000000000002'),
+    'approve', 'New event place approved')$$,
+  'Super Admin can review the new request independently'
+);
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000002', true);
+select is(
+  (select membership.order_id from public.event_memberships membership
+   where membership.event_id = 'a1000000-0000-4000-8000-000000000001'
+     and membership.user_id = 'a0000000-0000-4000-8000-000000000002'),
+  (select order_id from public.registration_requests
+   where event_id = 'a1000000-0000-4000-8000-000000000001'
+     and user_id = 'a0000000-0000-4000-8000-000000000002'),
+  'reapproved event access points to the new order'
+);
+select is(
+  (select count(*) from public.get_my_event_pass(
+    'a1000000-0000-4000-8000-000000000001')),
+  1::bigint, 'reapproved guest receives a fresh pass'
 );
 
 select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000003', true);
