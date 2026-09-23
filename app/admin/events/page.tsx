@@ -140,15 +140,20 @@ export default async function AdminEventsPage({
   let proposalMedia: ApplicationProposalMedia[] = [];
   let communityProposals: CommunityEventProposalAdmin[] = [];
   let proposalReady = true;
+  let hostHandoffReady = false;
   if (role === "super_admin") {
-    const [memberResult, contextResult, communityResult, proposalMediaResult] = await Promise.all([
+    const [memberResult, contextResult, communityResult, proposalMediaResult, handoffResult] = await Promise.all([
       supabase.rpc("list_admin_member_event_proposals"),
       view === "proposals"
         ? supabase.rpc("list_member_event_proposal_communities")
         : Promise.resolve({ data: [], error: null }),
       supabase.rpc("list_admin_community_event_proposals"),
       supabase.rpc("list_admin_application_proposal_media"),
+      view === "proposals"
+        ? supabase.rpc("member_event_host_handoff_ready")
+        : Promise.resolve({ data: false, error: null }),
     ]);
+    hostHandoffReady = !handoffResult.error && handoffResult.data === true;
     const contexts = (contextResult.data as {
       community_id: string | null;
       community_name: string | null;
@@ -246,7 +251,7 @@ export default async function AdminEventsPage({
 
       {view === "overview" ? <EventCommandCentre canControlLifecycle={role === "super_admin"} events={events} lifecycleReady={!lifecycleResult.error} lifecycleStates={(lifecycleResult.data as EventLifecycleState[] | null) ?? []} proposalCount={proposalCount} refunds={refunds} registrations={registrations} /> : null}
       {view === "overview" && role === "super_admin" ? <EventGuestAccessControl enabled={Boolean(guestAccessResult.data?.enabled)} migrationReady={Boolean(guestAccessResult.data) && !guestAccessResult.error} /> : null}
-      {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager media={proposalMedia} migrationReady={proposalReady} proposals={memberProposals} /><div className="legacy-gathering-note"><strong>Community gathering history</strong><p>Free member-only gatherings are now owner-led. Earlier submissions remain visible here so Admin can understand the complete decision history.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></section> : null}
+      {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager media={proposalMedia} hostHandoffReady={hostHandoffReady} migrationReady={proposalReady} proposals={memberProposals} /><div className="legacy-gathering-note"><strong>Community gathering history</strong><p>Free member-only gatherings are now owner-led. Earlier submissions remain visible here so Admin can understand the complete decision history.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></section> : null}
       {view === "host" && role === "super_admin" ? <EventHostReviewManager events={events} workspaces={hostWorkspaces} migrationReady={!hostResult.error} /> : null}
       {view === "edit" ? <section className="focused-admin-tool"><EventManager canCreate={role === "super_admin"} initialEvents={events} migrationReady={!eventResult.error} privateEvents={managedRows.map((event) => ({ event_id: event.event_id, online_url: event.online_url }))} /></section> : null}
       {view === "registrations" ? <section className="focused-admin-tool"><RegistrationManager events={events} initialPayments={payments} initialRefunds={refunds} initialRegistrations={registrations} initialTickets={tickets} migrationReady={registrationReady} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY && process.env.SUPABASE_SECRET_KEY && process.env.NEXT_PUBLIC_SITE_URL)} /></section> : null}

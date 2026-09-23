@@ -2,8 +2,10 @@ import { notFound, redirect } from "next/navigation";
 import { MemberHeader } from "@/components/member/member-header";
 import { EventHostWorkspace, type EventHostWorkspaceRow } from "@/components/events/event-host-workspace";
 import { createClient } from "@/lib/supabase/server";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function EventHostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

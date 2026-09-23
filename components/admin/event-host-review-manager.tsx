@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { adminErrorMessage } from "@/lib/admin-error";
 import type { AdminEvent } from "@/components/admin/event-manager";
+import { useActionDialog } from "@/components/ui/action-dialog";
 
 export type AdminEventHostWorkspace = {
   event_id: string;
@@ -32,7 +33,8 @@ export function EventHostReviewManager({ events, workspaces, migrationReady }: {
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const [eventId, setEventId] = useState(events[0]?.id ?? "");
+  const { ask, dialog } = useActionDialog();
+  const [eventId, setEventId] = useState(events.find((event) => ["draft", "published"].includes(event.status))?.id ?? "");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -40,7 +42,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady }: {
 
   async function assign() {
     if (!eventId || !email.trim()) return;
-    if (!window.confirm("Give this member private Host access to the selected event? This replaces any existing Host.")) return;
+    if (!await ask({ title: "Give this member Host access?", description: "This member will prepare this event privately. If another Host is assigned, their access ends. Guest lists and payments remain with the event team.", confirmLabel: "Assign Host" })) return;
     setBusy(true);
     setMessage("");
     const { error } = await supabase.rpc("assign_event_host", { p_event_id: eventId, p_email: email.trim() });
@@ -55,9 +57,13 @@ export function EventHostReviewManager({ events, workspaces, migrationReady }: {
       setMessage("Write at least 10 characters explaining what the Host should change.");
       return;
     }
-    if (!window.confirm(action === "approve"
-      ? `Approve ${item.event_title}? This publishes the reviewed content and may make a draft event public.`
-      : `Send ${item.event_title} back to its Host with your note?`)) return;
+    if (!await ask({
+      title: action === "approve" ? `Publish ${item.event_title}?` : `Ask the Host to update ${item.event_title}?`,
+      description: action === "approve"
+        ? "The reviewed content goes live. If this event is a draft, guests will be able to discover and request places. Check venue, capacity, safety contact and private joining link before continuing."
+        : "Your note will return the draft to the Host. The event stays as it is until you approve a revised draft.",
+      confirmLabel: action === "approve" ? "Approve and publish" : "Send guidance",
+    })) return;
     setBusy(true);
     setMessage("");
     const { error } = await supabase.rpc("review_event_host_workspace", {
@@ -103,5 +109,6 @@ export function EventHostReviewManager({ events, workspaces, migrationReady }: {
       </article>)}
     </section>
     {message ? <p className="manager-message" role="status">{message}</p> : null}
+    {dialog}
   </div>;
 }

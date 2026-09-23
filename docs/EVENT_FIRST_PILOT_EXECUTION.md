@@ -80,17 +80,20 @@ closed behind a flag; a green build alone is not an exit.
   permissions.
 - [x] `supabase/tests/003_event_host_workspace.sql` specifies the Host/Admin
   permission boundary and draft-to-public review sequence.
+- [x] `20260923120000_member_event_private_host_handoff.sql` changes new
+  member-proposal approvals to create a private event, draft free ticket and
+  scoped Host assignment. The Admin approval button is disabled until this
+  migration's readiness function exists. `supabase/tests/004_member_event_private_handoff.sql`
+  checks the private handoff.
 - [x] Live read on 23 September 2026 confirmed the existing release is healthy,
   with no published public event and no guest-access flag yet installed.
 - [ ] Apply both September event-guest migrations in order in the intended
   Supabase environment and run the pgTAP test. Do not enable the flag yet.
-- [ ] Apply the scoped Event Host migration after those two, then run the new
-  pgTAP test and a separate-account Host/Admin rehearsal. Until then, the new
-  screens correctly show setup needed or remain unavailable.
-- [ ] Change member-event proposal approval to create a **private** canonical
-  event and assign its proposer as Host. The current legacy decision still
-  publishes a free event immediately; do not use it as the new Host-review
-  journey until this gate is closed.
+- [ ] Apply the scoped Event Host migration and private handoff migration after
+  the two guest migrations, then run pgTAP tests 003 and 004 and a separate-account
+  Host/Admin rehearsal. Until then, the new screens show setup needed and the
+  member-event approval button stays disabled. Do not call the handoff accepted
+  from a green TypeScript build alone.
 - [ ] Extend Host drafts with approved media and a clear venue/format review;
   keep private online joining links out of public arrival copy.
 - [ ] Inspect existing event orders that already granted a `member_onboarding`

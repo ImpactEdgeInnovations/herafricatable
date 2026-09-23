@@ -60,10 +60,12 @@ const labels: Record<string, string> = {
 };
 
 export function MemberEventProposalManager({
+  hostHandoffReady,
   media = [],
   migrationReady,
   proposals,
 }: {
+  hostHandoffReady: boolean;
   media?: ApplicationProposalMedia[];
   migrationReady: boolean;
   proposals: MemberEventProposalAdmin[];
@@ -86,10 +88,10 @@ export function MemberEventProposalManager({
     let note = "";
     if (action !== "start_review") {
       const result = await ask({
-        confirmLabel: action === "approve" ? "Approve and publish" : action === "request_changes" ? "Send guidance" : "Decline proposal",
+        confirmLabel: action === "approve" ? "Approve idea" : action === "request_changes" ? "Send guidance" : "Decline proposal",
         description:
           action === "approve"
-            ? "This creates a free public event with manually reviewed registration. The member cannot publish, charge guests or access private attendee data directly."
+            ? "This creates a private free-event draft and gives the member a Host workspace. The event only becomes public after you review the finished details. The Host cannot access guest lists or payments."
             : action === "request_changes"
               ? "The member can update her private proposal and return it for review."
               : "This closes the proposal without creating an event. The decision remains in the audit record.",
@@ -103,7 +105,7 @@ export function MemberEventProposalManager({
           required: action !== "approve",
           type: "textarea",
         }],
-        title: action === "approve" ? `Publish ${proposal.title}?` : action === "request_changes" ? `Ask ${proposal.proposer_name || "the member"} for an update?` : `Decline ${proposal.title}?`,
+        title: action === "approve" ? `Approve the idea for ${proposal.title}?` : action === "request_changes" ? `Ask ${proposal.proposer_name || "the member"} for an update?` : `Decline ${proposal.title}?`,
         tone: action === "decline" ? "danger" : "default",
       });
       if (!result) return;
@@ -122,7 +124,7 @@ export function MemberEventProposalManager({
       error
         ? adminErrorMessage(error, "review this public event proposal")
         : action === "approve"
-          ? "Event approved and published with manual registration review."
+          ? "Idea approved. The event remains private while the Host prepares details for final review."
           : action === "request_changes"
             ? "Guidance sent to the member."
             : action === "decline"
@@ -138,7 +140,7 @@ export function MemberEventProposalManager({
         <div>
           <p className="eyebrow">Member-proposed public events</p>
           <h2 id="member-event-review-title">Review events from members</h2>
-          <p>Check the idea, host readiness, venue and safety contact. This launch tier is free, public only after approval and uses manual registration review.</p>
+          <p>Check the idea, Host readiness, venue and safety contact. Approval creates a private working event. A second review publishes it.</p>
         </div>
         <span className="status-count">{openCount} need review</span>
       </div>
@@ -146,6 +148,7 @@ export function MemberEventProposalManager({
         <div className="admin-empty"><strong>Public event proposals need their database update</strong><p>No member can submit or publish through this journey until the migration is applied.</p></div>
       ) : (
         <>
+          {!hostHandoffReady ? <p role="alert">Apply the private Event Host handoff migration before approving new proposals. This prevents an older approval from publishing an unfinished event.</p> : null}
           <nav className="admin-filter-tabs" aria-label="Filter member event proposals">
             {(["open", "closed", "all"] as const).map((value) => <button aria-pressed={filter === value} key={value} onClick={() => setFilter(value)} type="button">{value === "open" ? "Needs a decision" : value === "closed" ? "Reviewed" : "All proposals"}</button>)}
           </nav>
@@ -169,8 +172,8 @@ export function MemberEventProposalManager({
               </dl>
               <footer>
                 {proposal.status === "submitted" ? <button className="button button-outline" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "start_review")} type="button">Begin review</button> : null}
-                {openStatuses.has(proposal.status) ? <><button className="button button-primary" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "approve")} type="button">Approve free public event</button><button className="button button-outline" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "request_changes")} type="button">Request changes</button><button className="button button-outline danger-action" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "decline")} type="button">Decline</button></> : null}
-                {proposal.canonical_event_slug ? <Link className="button button-outline" href={`/events/${proposal.canonical_event_slug}`}>View event</Link> : null}
+                {openStatuses.has(proposal.status) ? <><button className="button button-primary" disabled={busy === proposal.proposal_id || !hostHandoffReady} onClick={() => void review(proposal, "approve")} type="button">Approve idea</button><button className="button button-outline" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "request_changes")} type="button">Request changes</button><button className="button button-outline danger-action" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "decline")} type="button">Decline</button></> : null}
+                {proposal.canonical_event_slug ? <Link className="button button-outline" href="/admin/events?view=host">Review Host draft</Link> : null}
               </footer>
             </article>
           ))}</div> : <div className="admin-empty admin-empty-compact"><strong>No proposal needs a decision</strong><p>Member drafts remain private until they are sent. Previously decided applications are available under Reviewed.</p></div>}

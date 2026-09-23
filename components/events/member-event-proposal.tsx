@@ -105,16 +105,20 @@ function initialValues() {
 }
 
 export function MemberEventProposalPanel({
+  hostEventIds,
   hostedCommunities,
   media,
   mediaReady,
   migrationReady,
+  publishedEventIds,
   proposals,
 }: {
+  hostEventIds: string[];
   hostedCommunities: HostedCommunity[];
   media: ApplicationProposalMedia[];
   mediaReady: boolean;
   migrationReady: boolean;
+  publishedEventIds: string[];
   proposals: MemberEventProposal[];
 }) {
   const router = useRouter();
@@ -374,12 +378,12 @@ export function MemberEventProposalPanel({
       <div className="member-event-promise" aria-label="How member events work">
         <span><b>1</b> Share your idea</span>
         <span><b>2</b> Our team reviews it</span>
-        <span><b>3</b> The approved event becomes public</span>
+        <span><b>3</b> Prepare the details together</span>
         <span><b>4</b> Attendees choose whether to stay connected</span>
       </div>
 
       {!migrationReady ? (
-        <div className="community-panel-empty"><strong>Starting an event is temporarily unavailable</strong><p>Please try again later. Events you already started are safe.</p></div>
+        <div className="community-panel-empty"><strong>Starting an event is temporarily unavailable</strong><p>We are finishing the private Host review. Your existing proposals remain safe.</p></div>
       ) : null}
 
       {expanded && migrationReady ? (
@@ -486,7 +490,7 @@ export function MemberEventProposalPanel({
               <label className="member-event-community-choice"><input checked={values.communityAfterEvent} onChange={(event) => update("communityAfterEvent", event.target.checked)} type="checkbox"/><span><strong>This event may grow into a Community</strong><small>Guests will be asked separately whether they want to hear about it. Nobody is added automatically.</small></span></label>
               {values.communityAfterEvent ? <label>What might continue after the event?<textarea maxLength={800} minLength={20} onChange={(event) => update("communityIdea", event.target.value)} placeholder="Describe the shared purpose and what members could do together after meeting." rows={4} value={values.communityIdea}/></label> : null}
               {mediaReady ? <ApplicationImageField altText={posterAltText} existing={editingMedia} file={posterFile} label="Event poster" onAltText={setPosterAltText} onFile={setPosterFile} onRemoveExisting={() => void removePoster()} removing={busy} /> : <p className="application-image-unavailable">Optional poster uploads will appear after the latest database update. You can still send the Event proposal now.</p>}
-              <div className="community-event-review-note"><strong>What happens next</strong><p>Our team checks the purpose, time, venue and safety details. If approved, the event appears publicly and guests can request a free place. After the event, you can apply to start a Community; each guest chooses whether to receive that invitation.</p></div>
+              <div className="community-event-review-note"><strong>What happens next</strong><p>Our team checks the purpose, time, venue and safety details. If your idea is approved, you prepare the event page privately. A final review opens it to guests. After the event, you can apply to start a Community; each guest chooses whether to receive that invitation.</p></div>
             </div>
           ) : null}
 
@@ -500,14 +504,15 @@ export function MemberEventProposalPanel({
 
       {proposals.length ? <div className="community-event-proposal-list member-event-proposal-list">{proposals.map((proposal) => (
         <article key={proposal.proposal_id}>
-          <header><div><span className={`proposal-state state-${proposal.status}`}>{statusLabels[proposal.status]}</span><h3>{proposal.title}</h3><p>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: proposal.timezone }).format(new Date(proposal.starts_at))} · {proposal.format.replaceAll("_", " ")}</p></div><strong>{proposal.capacity} places</strong></header>
+          <header><div><span className={`proposal-state state-${proposal.status}`}>{proposal.status === "approved" ? publishedEventIds.includes(proposal.canonical_event_id ?? "") ? "Event is public" : "Prepare your event" : statusLabels[proposal.status]}</span><h3>{proposal.title}</h3><p>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: proposal.timezone }).format(new Date(proposal.starts_at))} · {proposal.format.replaceAll("_", " ")}</p></div><strong>{proposal.capacity} places</strong></header>
           {proposal.review_note ? <div className="proposal-review-guidance"><strong>Review guidance</strong><p>{proposal.review_note}</p></div> : null}
           {proposal.community_name ? <p className="member-event-community-note">Connected to <Link href={`/communities/${proposal.community_slug}/about`}>{proposal.community_name}</Link>. Its name and join route appear on the approved event.</p> : null}
           {proposal.community_after_event ? <p className="member-event-community-note">A possible follow-up Community is included. Guests must opt in before receiving any invitation.</p> : null}
           {media.filter((item) => item.context_type === "member_event_proposal" && item.context_id === proposal.proposal_id).map((item) => <div className="application-image-member-summary" key={item.media_id}>{item.image_url ? <img alt={item.alt_text} src={item.image_url}/> : null}<div><strong>{applicationMediaStatus(item.status)}</strong><p>{item.alt_text}</p>{item.review_note ? <small>{item.review_note}</small> : null}</div></div>)}
           {mediaReady && !["cancelled", "declined"].includes(proposal.status) ? <ApplicationImageQuickEdit contextId={proposal.proposal_id} contextType="member_event_proposal" existing={media.find((item) => item.context_type === "member_event_proposal" && item.context_id === proposal.proposal_id) ?? null} label="Event poster" /> : null}
           <footer>
-            {proposal.status === "approved" && proposal.canonical_event_slug ? <Link className="button button-primary" href={`/events/${proposal.canonical_event_slug}`}>View public event</Link> : null}
+            {proposal.status === "approved" && proposal.canonical_event_slug && hostEventIds.includes(proposal.canonical_event_id ?? "") ? <Link className="button button-primary" href={`/events/${proposal.canonical_event_slug}/host`}>Open Host workspace</Link> : null}
+            {proposal.status === "approved" && proposal.canonical_event_slug && publishedEventIds.includes(proposal.canonical_event_id ?? "") ? <Link className="button button-outline" href={`/events/${proposal.canonical_event_slug}`}>View public event</Link> : null}
             {proposal.status === "approved" && new Date(proposal.ends_at) < new Date() ? <Link className="button button-outline" href="/communities#create-community">Apply for a follow-up Community</Link> : null}
             {["draft", "changes_requested"].includes(proposal.status) ? <button className="button button-primary" onClick={() => edit(proposal)} type="button">{proposal.status === "changes_requested" ? "Update and resend" : "Continue draft"}</button> : null}
             {["draft", "submitted", "changes_requested"].includes(proposal.status) ? <button className="button button-outline" disabled={busy} onClick={() => void cancel(proposal)} type="button">Cancel</button> : null}

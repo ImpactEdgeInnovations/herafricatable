@@ -77,6 +77,12 @@ export default async function EventsPage() {
         .maybeSingle()
     : { data: null };
   const isActiveMember = memberProfile?.access_status === "active";
+  const hostHandoffResult = isActiveMember
+    ? await supabase.rpc("member_event_host_handoff_ready")
+    : { data: false, error: null };
+  const hostAssignmentResult = isActiveMember && !hostHandoffResult.error
+    ? await supabase.from("event_hosts").select("event_id").eq("user_id", user!.id).eq("status", "active")
+    : { data: [], error: null };
   const [proposalResult, proposalContextResult, communitiesResult, proposalMediaResult] = isActiveMember
     ? await Promise.all([
         supabase.rpc("list_my_member_event_proposals"),
@@ -164,10 +170,12 @@ export default async function EventsPage() {
       </section>
       {isActiveMember ? (
         <MemberEventProposalPanel
+          hostEventIds={((hostAssignmentResult.data as { event_id: string }[] | null) ?? []).map((item) => item.event_id)}
           hostedCommunities={hostedCommunities}
           media={proposalMedia}
           mediaReady={!proposalMediaResult.error}
-          migrationReady={!proposalResult.error && !proposalContextResult.error}
+          migrationReady={!proposalResult.error && !proposalContextResult.error && !hostHandoffResult.error && hostHandoffResult.data === true}
+          publishedEventIds={events.map((event) => event.id)}
           proposals={proposals}
         />
       ) : null}

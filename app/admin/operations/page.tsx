@@ -313,6 +313,7 @@ export default async function AdminOperationsPage({
     operationalHealth,
     communityEventProposalResult,
     memberEventProposalResult,
+    memberEventHandoffResult,
     memberEventProposalContextResult,
     memberEventArchiveResult,
     memberEventMediaResult,
@@ -342,6 +343,9 @@ export default async function AdminOperationsPage({
     role.role === "super_admin" && loadEvents
       ? supabase.rpc("list_admin_member_event_proposals")
       : Promise.resolve({ data: [], error: null }),
+    role.role === "super_admin" && loadEvents
+      ? supabase.rpc("member_event_host_handoff_ready")
+      : Promise.resolve({ data: false, error: null }),
     role.role === "super_admin" && loadEvents
       ? supabase.rpc("list_member_event_proposal_communities")
       : Promise.resolve({ data: [], error: null }),
@@ -1028,6 +1032,7 @@ export default async function AdminOperationsPage({
           {role.role === "super_admin" ? (
             <>
               <MemberEventProposalManager
+                hostHandoffReady={!memberEventHandoffResult.error && memberEventHandoffResult.data === true}
                 migrationReady={!memberEventProposalResult.error && !memberEventProposalContextResult.error}
                 proposals={memberEventProposals}
               />
