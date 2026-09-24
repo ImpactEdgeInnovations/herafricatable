@@ -2,30 +2,58 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select plan(6);
 
-insert into auth.users(id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at)
-values
-  ('c0000000-0000-4000-8000-000000000001', 'handoff-admin@test.invalid', 'authenticated', 'authenticated', '{}', '{}', now()),
-  ('c0000000-0000-4000-8000-000000000002', 'handoff-host@test.invalid', 'authenticated', 'authenticated', '{}', '{}', now());
-update public.profiles set access_status = 'active'
-where id in ('c0000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000002');
-insert into public.user_roles(user_id, role, granted_by)
-values ('c0000000-0000-4000-8000-000000000001', 'super_admin', 'c0000000-0000-4000-8000-000000000001');
+-- Keep setup failures attributable to a step when run in the Supabase SQL
+-- Editor, which otherwise may omit the source line and trigger context.
+do $setup$
+begin
+  insert into auth.users(id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at)
+  values
+    ('c0000000-0000-4000-8000-000000000001', 'handoff-admin@test.invalid', 'authenticated', 'authenticated', '{}', '{}', now()),
+    ('c0000000-0000-4000-8000-000000000002', 'handoff-host@test.invalid', 'authenticated', 'authenticated', '{}', '{}', now());
+exception when others then
+  raise exception '004 setup: create test accounts: %', sqlerrm;
+end
+$setup$;
 
-insert into public.member_event_proposals(
-  id, proposed_by, title, summary, format, starts_at, ends_at, timezone,
-  online_url, capacity, safety_contact_name, safety_contact_phone,
-  host_experience, status, submitted_at
-) values (
-  'c1000000-0000-4000-8000-000000000001',
-  'c0000000-0000-4000-8000-000000000002',
-  'Private Handoff Test',
-  'A useful free gathering for members and event-only guests to meet safely.',
-  'virtual', now() + interval '12 days', now() + interval '12 days 2 hours',
-  'Africa/Nairobi', 'https://meet.example.test/private', 25,
-  'Event Safety Lead', '+254700000000',
-  'I have hosted several small gatherings with a clear safety contact.',
-  'submitted', now()
-);
+do $setup$
+begin
+  update public.profiles set access_status = 'active'
+  where id in ('c0000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000002');
+exception when others then
+  raise exception '004 setup: activate test profiles: %', sqlerrm;
+end
+$setup$;
+
+do $setup$
+begin
+  insert into public.user_roles(user_id, role, granted_by)
+  values ('c0000000-0000-4000-8000-000000000001', 'super_admin', 'c0000000-0000-4000-8000-000000000001');
+exception when others then
+  raise exception '004 setup: grant test Super Admin: %', sqlerrm;
+end
+$setup$;
+
+do $setup$
+begin
+  insert into public.member_event_proposals(
+    id, proposed_by, title, summary, format, starts_at, ends_at, timezone,
+    online_url, capacity, safety_contact_name, safety_contact_phone,
+    host_experience, status, submitted_at
+  ) values (
+    'c1000000-0000-4000-8000-000000000001',
+    'c0000000-0000-4000-8000-000000000002',
+    'Private Handoff Test',
+    'A useful free gathering for members and event-only guests to meet safely.',
+    'virtual', now() + interval '12 days', now() + interval '12 days 2 hours',
+    'Africa/Nairobi', 'https://meet.example.test/private', 25,
+    'Event Safety Lead', '+254700000000',
+    'I have hosted several small gatherings with a clear safety contact.',
+    'submitted', now()
+  );
+exception when others then
+  raise exception '004 setup: create test event proposal: %', sqlerrm;
+end
+$setup$;
 
 set local role authenticated;
 select set_config('request.jwt.claim.role', 'authenticated', true);
