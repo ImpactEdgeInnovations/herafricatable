@@ -63,6 +63,31 @@ select lives_ok(
   $$select public.review_member_event_proposal('c1000000-0000-4000-8000-000000000001', 'approve', 'A suitable pilot event.')$$,
   'Admin can approve the idea into a private canonical event'
 );
+-- The SQL Editor reports only a bare relation error for an unwrapped read.
+-- Probe the three permission-filtered reads before the pgTAP comparisons so
+-- any database-side failure identifies the exact boundary it crossed.
+do $diagnose$
+declare
+  step text;
+begin
+  step := 'approved event lookup';
+  perform event.status from public.member_event_proposals proposal
+  join public.events event on event.id = proposal.canonical_event_id
+  where proposal.id = 'c1000000-0000-4000-8000-000000000001';
+
+  step := 'free ticket lookup';
+  perform ticket.status from public.member_event_proposals proposal
+  join public.ticket_types ticket on ticket.event_id = proposal.canonical_event_id
+  where proposal.id = 'c1000000-0000-4000-8000-000000000001';
+
+  step := 'Host assignment lookup';
+  perform host.user_id from public.member_event_proposals proposal
+  join public.event_hosts host on host.event_id = proposal.canonical_event_id
+  where proposal.id = 'c1000000-0000-4000-8000-000000000001';
+exception when others then
+  raise exception '004 read: %: %', step, sqlerrm;
+end
+$diagnose$;
 select is(
   (select event.status from public.member_event_proposals proposal
    join public.events event on event.id = proposal.canonical_event_id
@@ -84,6 +109,16 @@ select is(
 );
 
 select set_config('request.jwt.claim.sub', 'c0000000-0000-4000-8000-000000000002', true);
+do $diagnose$
+begin
+  perform count(*) from public.get_my_event_host_workspace(
+    (select event.slug from public.events event
+     join public.member_event_proposals proposal on proposal.canonical_event_id = event.id
+     where proposal.id = 'c1000000-0000-4000-8000-000000000001'));
+exception when others then
+  raise exception '004 read: Host workspace lookup: %', sqlerrm;
+end
+$diagnose$;
 select is(
   (select count(*) from public.get_my_event_host_workspace(
     (select event.slug from public.events event
