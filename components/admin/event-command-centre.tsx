@@ -9,6 +9,7 @@ import { useActionDialog } from "@/components/ui/action-dialog";
 import type { AdminEvent } from "@/components/admin/event-manager";
 import type { AdminRefund, AdminRegistration } from "@/components/admin/registration-manager";
 import type { PilotReadinessStep } from "@/lib/event-pilot-readiness";
+import { EventIntroSafety } from "@/components/admin/event-intro-safety";
 
 const eventStatus: Record<string, string> = {
   cancelled: "Cancelled",
@@ -243,6 +244,7 @@ export function EventCommandCentre({
                   <small>These checks describe event setup, not launch approval. Guest access stays under Admin Release.</small>
                 </section>
               ) : null}
+              {canControlLifecycle && ["published", "completed"].includes(event.status) ? <EventIntroSafety eventId={event.id} /> : null}
               <aside><strong>Clear responsibility</strong><p>Event Hosts shape the experience and answer attendee questions. Admin controls public publication, registration decisions, payments, refunds and safety intervention.</p></aside>
               <footer>
                 {event.status === "published" ? <Link className="button button-outline" href={`/events/${event.slug}`}>View event page</Link> : null}

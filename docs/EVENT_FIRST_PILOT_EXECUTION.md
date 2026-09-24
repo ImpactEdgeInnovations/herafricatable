@@ -111,6 +111,19 @@ closed behind a flag; a green build alone is not an exit.
   database-backed setup checklist for event basics, place/link, free manual
   ticket, active Host, reviewed Host content and safety contact. It names the
   next action without treating setup completion as launch approval.
+- [x] `20260924130000_event_intro_cards.sql` defines opt-in, event-scoped
+  introduction cards for confirmed members and confirmed event-only guests.
+  A separate QR or 16-character manual code opens a short hello only for
+  another confirmed attendee. A request is not a connection until the
+  recipient accepts; neither outcome reveals private contact details or
+  grants wider membership. Opt-out, code rotation, blocked pairs, expiry and
+  Admin pause/restore are enforced in Postgres. The feature is off by default
+  for each event; Super Admin opens it after rehearsal. The attendee and Admin
+  screens are wired, and the entry-pass QR remains entirely separate.
+- [ ] Apply `20260924130000_event_intro_cards.sql`, then rehearse with two
+  different confirmed accounts, an unconfirmed visitor, a blocked pair and
+  Super Admin. Run `supabase/tests/008_event_intro_cards.sql` only in an
+  isolated CI/local/staging database, never in the production SQL Editor.
 - [x] `ops:events:accept-private-host` passed with one Super Admin and two
   separate tagged members. It created `hat-private-host-rehearsal-20260924`
   as a closed, unfeatured draft; verified scoped Host access, private drafting,

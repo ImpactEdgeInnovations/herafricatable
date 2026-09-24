@@ -170,7 +170,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       ])
     : [{ data: [] }, { data: null }];
   const isConfirmedGuest = ["confirmed", "attended"].includes(ownMembership?.status ?? "");
-  const [{ data: attendeePreference }, attendeeDirectoryResult, followUpResult] = isConfirmedGuest
+  const [{ data: attendeePreference }, attendeeDirectoryResult, followUpResult, introReadyResult] = isConfirmedGuest
     ? await Promise.all([
         activeMember
           ? supabase.from("event_attendee_preferences").select("discoverable, show_company, introduction").eq("event_id", event.id).eq("user_id", user!.id).maybeSingle()
@@ -179,8 +179,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           ? supabase.rpc("list_event_attendee_directory", { p_event_id: event.id, p_limit: 30, p_offset: 0 })
           : Promise.resolve({ data: [], error: null }),
         supabase.rpc("get_my_event_follow_up_interest", { p_event_id: event.id }),
+        supabase.rpc("get_my_event_intro_card", { p_event_id: event.id }),
       ])
-    : [{ data: null }, { data: [] }, { data: [] }];
+    : [{ data: null }, { data: [] }, { data: [] }, { data: null, error: null }];
   const followUp = ((followUpResult.data as { available: boolean; interested: boolean }[] | null) ?? [])[0] ?? null;
   const archiveResult = user && memberProfile?.access_status === "active" && hasEnded
     ? await supabase.rpc("get_my_member_event_archive", { p_event_id: event.id })
@@ -336,6 +337,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       {galleryAlbums?.length && galleryAssets.some((asset) => asset.signed_url) ? <section className="event-gallery-section"><header><p className="eyebrow">In the room</p><h2>Moments from the table.</h2></header>{galleryAlbums.map((album) => { const albumAssets = galleryAssets.filter((asset) => asset.album_id === album.id && asset.signed_url); return albumAssets.length ? <article className="public-gallery-album" key={album.id}><div><h3>{album.title}</h3><p>{album.introduction}</p></div><div className="public-gallery-grid">{albumAssets.map((asset) => <figure className={asset.is_featured ? "featured" : ""} key={asset.id}><img src={asset.signed_url!} alt={asset.alt_text} width={asset.width ?? undefined} height={asset.height ?? undefined} loading="lazy" /><figcaption><span>{asset.caption}</span>{asset.credit ? <small>Photo: {asset.credit}</small> : null}</figcaption></figure>)}</div></article> : null; })}</section> : null}
 
       {sponsors?.length ? <section className="event-content-section sponsor-section"><div><p className="eyebrow">With thanks</p><h2>Event partners</h2></div><div>{sponsors.map((sponsor) => <article key={sponsor.id}><span>{sponsor.tier || "Partner"}</span><strong>{sponsor.name}</strong></article>)}</div></section> : null}
+      {isConfirmedGuest && !introReadyResult.error ? <section className="event-intro-entry"><div><p className="eyebrow">For confirmed guests</p><h2>Meet someone at this event</h2><p>Share an optional introduction QR or enter another guest’s manual code. Your entry pass and private contact details stay separate.</p></div><Link className="button button-outline" href={`/events/${slug}/meet`}>Open introductions</Link></section> : null}
       {isConfirmedGuest && activeMember ? (
         <EventAttendeeDirectory
           attendees={(attendeeDirectoryResult.data as EventAttendee[] | null) ?? []}
