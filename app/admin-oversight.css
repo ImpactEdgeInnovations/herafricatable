@@ -231,6 +231,17 @@
 .event-health-strip span { display: block; }
 .event-health-strip strong { font-size: 1.05rem; }
 .event-health-strip span { color: var(--oversight-muted); font-size: .65rem; margin-top: 2px; }
+.event-pilot-preparation { border: 1px solid var(--oversight-line); border-radius: 4px; margin: 20px 0; padding: 18px; }
+.event-pilot-preparation h4 { font-family: var(--font-display, Georgia, serif); font-size: 1.25rem; font-weight: 500; margin: 5px 0; }
+.event-pilot-preparation > div > p { color: var(--oversight-muted); font-size: .79rem; line-height: 1.55; margin: 5px 0 12px; }
+.event-pilot-preparation .button { min-height: 42px; }
+.event-pilot-preparation details { border-top: 1px solid var(--oversight-line); margin-top: 16px; padding-top: 12px; }
+.event-pilot-preparation summary { cursor: pointer; font-size: .76rem; font-weight: 700; min-height: 34px; }
+.event-pilot-preparation ol { display: grid; gap: 10px; list-style: none; margin: 8px 0; padding: 0; }
+.event-pilot-preparation li { display: flex; gap: 9px; font-size: .75rem; }
+.event-pilot-preparation li > span { color: var(--hat-wine, #68172b); font-size: 1rem; line-height: 1; }
+.event-pilot-preparation li p { color: var(--oversight-muted); line-height: 1.45; margin: 3px 0 0; }
+.event-pilot-preparation > small { color: var(--oversight-muted); display: block; font-size: .68rem; line-height: 1.45; margin-top: 12px; }
 .featured-event-label { background: #ede5f0; border-radius: 999px; color: #654c70; font-size: .66rem; padding: 6px 9px; white-space: nowrap; }
 .event-lifecycle-notice { background: #fff7ed; border: 1px solid #ead6bf; border-radius: 12px; margin-top: 18px; padding: 13px 15px; }
 .event-lifecycle-notice.is-suspended { background: #fff1ee; border-color: #e7c8c1; }

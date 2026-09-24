@@ -34,6 +34,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 import { EventGuestAccessControl } from "@/components/admin/event-guest-access-control";
 import { EventHostReviewManager, type AdminEventHostCover, type AdminEventHostWorkspace, type EventHostReviewContext } from "@/components/admin/event-host-review-manager";
+import { eventPilotReadiness, type PilotReadinessStep } from "@/lib/event-pilot-readiness";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -119,6 +120,28 @@ export default async function AdminEventsPage({
     } : null,
   }));
   const eventIds = events.map((event) => event.id);
+  const pilotSources = role === "super_admin" && view === "overview" && eventIds.length
+    ? await Promise.all([
+        supabase.from("ticket_types").select("event_id,inventory_quantity,price_minor,status").in("event_id", eventIds),
+        supabase.from("event_hosts").select("event_id,status").in("event_id", eventIds),
+        supabase.from("event_host_workspaces").select("event_id,status").in("event_id", eventIds),
+        supabase.from("event_safety_contacts").select("event_id").in("event_id", eventIds),
+      ])
+    : null;
+  const pilotReadiness: Record<string, PilotReadinessStep[]> | null = pilotSources && pilotSources.every((result) => !result.error)
+    ? Object.fromEntries(events.map((event) => {
+        const [tickets, hosts, drafts, contacts] = pilotSources;
+        const privateEvent = managedRows.find((row) => row.event_id === event.id);
+        return [event.id, eventPilotReadiness({
+          event,
+          hasSafetyContact: (contacts.data ?? []).some((row) => row.event_id === event.id),
+          hostActive: (hosts.data ?? []).some((row) => row.event_id === event.id && row.status === "active"),
+          hostDraftStatus: (drafts.data ?? []).find((row) => row.event_id === event.id)?.status ?? null,
+          onlineLinkReady: Boolean(privateEvent?.online_url?.trim()),
+          tickets: (tickets.data ?? []).filter((row) => row.event_id === event.id),
+        })];
+      }))
+    : null;
   const hostResult = role === "super_admin" && view === "host"
     ? await supabase.rpc("list_admin_event_host_workspaces")
     : { data: [], error: null };
@@ -280,7 +303,7 @@ export default async function AdminEventsPage({
         </nav>
       </section>
 
-      {view === "overview" ? <EventCommandCentre canControlLifecycle={role === "super_admin"} events={events} lifecycleReady={!lifecycleResult.error} lifecycleStates={(lifecycleResult.data as EventLifecycleState[] | null) ?? []} proposalCount={proposalCount} refunds={refunds} registrations={registrations} /> : null}
+      {view === "overview" ? <EventCommandCentre canControlLifecycle={role === "super_admin"} events={events} lifecycleReady={!lifecycleResult.error} lifecycleStates={(lifecycleResult.data as EventLifecycleState[] | null) ?? []} proposalCount={proposalCount} refunds={refunds} registrations={registrations} pilotReadiness={pilotReadiness} /> : null}
       {view === "overview" && role === "super_admin" ? <EventGuestAccessControl enabled={Boolean(guestAccessResult.data?.enabled)} migrationReady={Boolean(guestAccessResult.data) && !guestAccessResult.error} /> : null}
       {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager media={proposalMedia} hostHandoffReady={hostHandoffReady} migrationReady={proposalReady} proposals={memberProposals} /><div className="legacy-gathering-note"><strong>Community gathering history</strong><p>Free member-only gatherings are now owner-led. Earlier submissions remain visible here so Admin can understand the complete decision history.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></section> : null}
       {view === "host" && role === "super_admin" ? <EventHostReviewManager events={events} workspaces={hostWorkspaces} reviewContexts={hostReviewContexts} safetyContacts={(safetyContactResult.data as { event_id: string; contact_name: string; contact_phone: string }[] | null) ?? []} safetyReady={!safetyReadyResult.error && safetyReadyResult.data === true && !safetyContactResult.error} migrationReady={!hostResult.error} lifecycleReady={!hostLifecycleResult.error && hostLifecycleResult.data === true} covers={hostCovers} coversReady={!hostCoverResult.error} /> : null}

@@ -59,7 +59,7 @@ Each sprint ends with the relevant migration, database permission check, UI
 states, operational note and acceptance record. An unfinished item remains
 closed behind a flag; a green build alone is not an exit.
 
-## Current implementation checkpoint — 23 September 2026
+## Current implementation checkpoint — 24 September 2026
 
 - [x] The event-only guest model is specified above.
 - [x] `20260923090000_event_limited_guest_access.sql` creates a default-off flag,
@@ -103,6 +103,14 @@ closed behind a flag; a green build alone is not an exit.
   flag as present and disabled; the Host assignment/workspace/safety-contact
   tables were available. Signed-in Super Admin returned true from all three
   new readiness functions. There were no published public events.
+- [x] On 24 September 2026, the connected project exposed the reviewed-cover
+  table and public-cover function after the migration was applied. The public
+  guest flag remained disabled. A read-only check found zero event orders with
+  an older `member_onboarding` entitlement; no account correction was made.
+- [x] Admin → Events → Overview now gives each upcoming event a compact,
+  database-backed setup checklist for event basics, place/link, free manual
+  ticket, active Host, reviewed Host content and safety contact. It names the
+  next action without treating setup completion as launch approval.
 - [x] `ops:events:accept-private-host` passed with one Super Admin and two
   separate tagged members. It created `hat-private-host-rehearsal-20260924`
   as a closed, unfeatured draft; verified scoped Host access, private drafting,
@@ -132,11 +140,12 @@ closed behind a flag; a green build alone is not an exit.
   poster. `20260924110000_event_host_reviewed_covers.sql` also blocks links in
   public Host arrival notes at the database boundary. The image is optional;
   the Admin must still review venue, format and private online-link readiness.
-- [ ] Apply `20260924110000_event_host_reviewed_covers.sql` in the connected
-  Supabase project. Run `supabase/tests/007_event_host_reviewed_covers.sql`
+- [x] `20260924110000_event_host_reviewed_covers.sql` is available in the
+  connected Supabase project. Run `supabase/tests/007_event_host_reviewed_covers.sql`
   only in isolated CI/local/staging, never in the production SQL Editor.
-- [ ] Inspect existing event orders that already granted a `member_onboarding`
-  entitlement and review affected accounts individually before any correction.
+- [x] The read-only existing-entitlement check returned zero event orders with
+  `member_onboarding` on 24 September 2026. Recheck before opening a future
+  guest pilot if historical data changes; never bulk revoke without review.
 - [ ] Create the real future launch event as a private draft with owner, city or
   online format, time zone, capacity, registration mode and complete basic copy.
 - [ ] Name the Event Host, check-in lead, support/safety lead, Admin reviewer and

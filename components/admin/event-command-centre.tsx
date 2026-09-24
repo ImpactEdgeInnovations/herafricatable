@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import type { AdminEvent } from "@/components/admin/event-manager";
 import type { AdminRefund, AdminRegistration } from "@/components/admin/registration-manager";
+import type { PilotReadinessStep } from "@/lib/event-pilot-readiness";
 
 const eventStatus: Record<string, string> = {
   cancelled: "Cancelled",
@@ -43,6 +44,7 @@ export function EventCommandCentre({
   proposalCount,
   refunds,
   registrations,
+  pilotReadiness,
 }: {
   events: AdminEvent[];
   canControlLifecycle: boolean;
@@ -51,6 +53,7 @@ export function EventCommandCentre({
   proposalCount: number;
   refunds: AdminRefund[];
   registrations: AdminRegistration[];
+  pilotReadiness: Record<string, PilotReadinessStep[]> | null;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -69,6 +72,8 @@ export function EventCommandCentre({
   const lifecycle = event
     ? lifecycleStates.find((item) => item.event_id === event.id)
     : undefined;
+  const preparation = event ? pilotReadiness?.[event.id] ?? null : null;
+  const nextPreparationStep = preparation?.find((step) => !step.ready);
 
   async function manageLifecycle(
     action: "cancel" | "pause_registrations" | "reopen" | "resume_registrations" | "suspend",
@@ -223,6 +228,21 @@ export function EventCommandCentre({
                 <article><strong>{eventRegistrations.filter((item) => item.status === "pending_review").length}</strong><span>waiting for review</span></article>
                 <article><strong>{refunds.filter((item) => eventRegistrations.some((registration) => registration.order_id === item.order_id) && item.status === "requested").length}</strong><span>refunds waiting</span></article>
               </div>
+              {canControlLifecycle && ["draft", "published"].includes(event.status) && new Date(event.ends_at) > new Date() ? (
+                <section className="event-pilot-preparation" aria-label="Event pilot preparation">
+                  <div>
+                    <span className="eyebrow">For the first pilot</span>
+                    <h4>{preparation ? `${preparation.filter((step) => step.ready).length} of ${preparation.length} setup checks complete` : "Setup checks unavailable"}</h4>
+                    <p>{preparation ? nextPreparationStep ? `${nextPreparationStep.label}: ${nextPreparationStep.guidance}` : "The event setup checks are complete. Separate live rehearsals and Admin Release checks are still required before opening guest access." : "We could not load the event setup checks. Refresh the page before making a release decision."}</p>
+                    {nextPreparationStep ? <Link className="button button-outline" href={nextPreparationStep.href}>Continue setup</Link> : null}
+                  </div>
+                  {preparation ? <details>
+                    <summary>See every setup check</summary>
+                    <ol>{preparation.map((step) => <li key={step.label}><span aria-hidden="true">{step.ready ? "✓" : "○"}</span><div><strong>{step.label}</strong>{!step.ready ? <p>{step.guidance}</p> : null}</div></li>)}</ol>
+                  </details> : null}
+                  <small>These checks describe event setup, not launch approval. Guest access stays under Admin Release.</small>
+                </section>
+              ) : null}
               <aside><strong>Clear responsibility</strong><p>Event Hosts shape the experience and answer attendee questions. Admin controls public publication, registration decisions, payments, refunds and safety intervention.</p></aside>
               <footer>
                 {event.status === "published" ? <Link className="button button-outline" href={`/events/${event.slug}`}>View event page</Link> : null}
