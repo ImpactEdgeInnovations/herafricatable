@@ -32,25 +32,77 @@ export type EventHostWorkspaceRow = {
   review_note: string | null;
 };
 
+export type EventHostCover = {
+  draft_storage_path: string;
+  draft_alt_text: string;
+  published_storage_path: string | null;
+  draft_url: string | null;
+  published_url: string | null;
+};
+
 function localDateTime(value: string) {
   if (!value) return "";
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "" : new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
-export function EventHostWorkspace({ initial }: { initial: EventHostWorkspaceRow }) {
+export function EventHostWorkspace({ initial, cover, coverReady }: { initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [summary, setSummary] = useState(initial.summary);
   const [arrivalInfo, setArrivalInfo] = useState(initial.arrival_info);
   const [programme, setProgramme] = useState<HostProgrammeItem[]>(initial.programme ?? []);
   const [partners, setPartners] = useState(initial.partners ?? []);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverAlt, setCoverAlt] = useState(cover?.draft_alt_text ?? "");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const locked = initial.workspace_status === "submitted";
 
   function updateProgramme(key: string, field: keyof HostProgrammeItem, value: string) {
     setProgramme((items) => items.map((item) => item.key === key ? { ...item, [field]: value } : item));
+  }
+
+  async function uploadCover() {
+    if (!coverFile) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(coverFile.type) || coverFile.size > 6 * 1024 * 1024) {
+      setMessage("Choose a JPG, PNG or WebP image smaller than 6 MB.");
+      return;
+    }
+    if (coverAlt.trim().length < 10 || coverAlt.trim().length > 240) {
+      setMessage("Describe the image in 10 to 240 characters so everyone can understand it.");
+      return;
+    }
+    setBusy(true);
+    setMessage("");
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) { setBusy(false); setMessage("Please sign in again before uploading."); return; }
+    const extension = coverFile.type === "image/png" ? "png" : coverFile.type === "image/webp" ? "webp" : "jpg";
+    const path = `${initial.event_id}/${auth.user.id}/${crypto.randomUUID()}.${extension}`;
+    const uploaded = await supabase.storage.from("event-host-covers").upload(path, coverFile, {
+      cacheControl: "3600", contentType: coverFile.type, upsert: false,
+    });
+    if (uploaded.error) {
+      setBusy(false);
+      setMessage(memberErrorMessage(uploaded.error, "upload the event image"));
+      return;
+    }
+    const saved = await supabase.rpc("save_event_host_cover", {
+      p_event_id: initial.event_id, p_storage_path: path, p_alt_text: coverAlt.trim(),
+    });
+    if (saved.error) {
+      await supabase.storage.from("event-host-covers").remove([path]);
+      setBusy(false);
+      setMessage(memberErrorMessage(saved.error, "save the event image"));
+      return;
+    }
+    if (cover?.draft_storage_path && cover.draft_storage_path !== cover.published_storage_path) {
+      await supabase.storage.from("event-host-covers").remove([cover.draft_storage_path]);
+    }
+    setCoverFile(null);
+    setBusy(false);
+    setMessage("Image saved privately. Send your event to the team for review before it appears to guests.");
+    router.refresh();
   }
 
   async function save(sendForReview: boolean) {
@@ -112,6 +164,23 @@ export function EventHostWorkspace({ initial }: { initial: EventHostWorkspaceRow
         <textarea id="host-summary" value={summary} disabled={locked || busy} maxLength={2000} rows={5} onChange={(event) => setSummary(event.target.value)} />
         <label htmlFor="host-arrival">What should guests know before they arrive?</label>
         <textarea id="host-arrival" value={arrivalInfo} disabled={locked || busy} maxLength={2000} rows={4} onChange={(event) => setArrivalInfo(event.target.value)} placeholder="Arrival time, what to bring and any useful access information. Do not include a private online link here." />
+        <p className="form-hint">For online or hybrid events, the event team adds the private joining link in Event details. Please keep all links out of these public notes.</p>
+      </div>
+
+      <div className="admin-section">
+        <h2>Event image</h2>
+        <p>One clear image helps guests recognise your gathering. Only the event team can approve it. A previously approved image stays live while a replacement is reviewed.</p>
+        {!coverReady ? <p role="status">Event image uploads will be available after the latest database update.</p> : <>
+          {cover?.draft_url ? <figure className="event-host-cover-preview"><img src={cover.draft_url} alt={cover.draft_alt_text} /><figcaption>{cover.draft_storage_path === cover.published_storage_path ? "Live image" : "Private image awaiting review"}</figcaption></figure> : <p>No image added yet. You can still send your draft without one.</p>}
+          {cover?.published_url && cover.draft_storage_path !== cover.published_storage_path ? <p>The last approved image remains on the public event page until this one is approved.</p> : null}
+          {!locked ? <div className="event-host-cover-controls">
+            <label htmlFor="host-cover-file">Choose an image (JPG, PNG or WebP, under 6 MB)</label>
+            <input id="host-cover-file" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)} />
+            <label htmlFor="host-cover-alt">Describe what the image shows</label>
+            <input id="host-cover-alt" value={coverAlt} maxLength={240} disabled={busy} onChange={(event) => setCoverAlt(event.target.value)} placeholder="Women gathered around a table in Nairobi" />
+            <button className="button button-outline" type="button" disabled={busy || !coverFile} onClick={() => void uploadCover()}>Save image privately</button>
+          </div> : null}
+        </>}
       </div>
 
       <div className="admin-section">

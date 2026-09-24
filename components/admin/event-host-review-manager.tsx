@@ -33,7 +33,14 @@ export type EventHostReviewContext = {
   safety_contact_phone: string | null;
 };
 
-export function EventHostReviewManager({ events, workspaces, migrationReady, lifecycleReady, reviewContexts, safetyContacts, safetyReady }: {
+export type AdminEventHostCover = {
+  event_id: string;
+  draft_alt_text: string;
+  draft_url: string | null;
+  published: boolean;
+};
+
+export function EventHostReviewManager({ events, workspaces, migrationReady, lifecycleReady, reviewContexts, safetyContacts, safetyReady, covers, coversReady }: {
   events: AdminEvent[];
   workspaces: AdminEventHostWorkspace[];
   migrationReady: boolean;
@@ -41,6 +48,8 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
   reviewContexts: EventHostReviewContext[];
   safetyContacts: { event_id: string; contact_name: string; contact_phone: string }[];
   safetyReady: boolean;
+  covers: AdminEventHostCover[];
+  coversReady: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -146,10 +155,11 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
     <section className="admin-section">
       <p className="eyebrow">Event Hosts</p>
       <h1>Prepare, review, then publish</h1>
-      <p>Hosts can prepare event words, arrival notes, programme moments and partners. They cannot see guest lists, payments or check-in. You make the final publication decision.</p>
+      <p>Hosts can prepare event words, an image, arrival notes, programme moments and partners. They cannot see guest lists, payments or check-in. You make the final publication decision.</p>
       {!migrationReady ? <p role="alert">Apply the scoped Event Host migration before using this workspace.</p> : null}
       {migrationReady && !lifecycleReady ? <p role="status">Host pause and safe replacement controls become available after the Host lifecycle migration.</p> : null}
       {migrationReady && !safetyReady ? <p role="alert">Apply the event safety contact migration before publishing Host-reviewed events.</p> : null}
+      {migrationReady && !coversReady ? <p role="status">Reviewed event images will appear after the latest database update.</p> : null}
     </section>
     {migrationReady ? <section className="admin-section">
       <h2>Give a member Host access</h2>
@@ -164,6 +174,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
         const event = events.find((candidate) => candidate.id === item.event_id);
         const context = reviewContexts.find((candidate) => candidate.event_id === item.event_id);
         const savedContact = safetyContacts.find((candidate) => candidate.event_id === item.event_id);
+        const cover = covers.find((candidate) => candidate.event_id === item.event_id);
         const contact = contactDrafts[item.event_id] ?? { name: savedContact?.contact_name ?? context?.safety_contact_name ?? "", phone: savedContact?.contact_phone ?? context?.safety_contact_phone ?? "" };
         return <article className="admin-section" key={item.event_id}>
         <p className="eyebrow">{item.workspace_status.replaceAll("_", " ")} · {item.event_status}</p>
@@ -180,6 +191,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
             <div><dt>Guest requests</dt><dd>{event?.registration_mode.replaceAll("_", " ") ?? "Not available"}</dd></div>
             <div><dt>Safety contact</dt><dd>{savedContact ? `${savedContact.contact_name} · ${savedContact.contact_phone}` : "Not saved for this event yet"}</dd></div>
           </dl>
+          <p>Confirm the venue or online format in Event details before approval. The private joining link stays there; it must never appear in the public arrival notes.</p>
           {safetyReady ? <div className="admin-section">
             <h4>On-the-day safety contact</h4>
             <p>Private to the event team. Save a reachable person before publication.</p>
@@ -188,6 +200,8 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
             <button className="button button-outline" disabled={busy} onClick={() => void saveSafetyContact(item)} type="button">Save safety contact</button>
           </div> : null}
           <Link href="/admin/events?view=edit">Review event details</Link>
+          <h4>Event image</h4>
+          {cover?.draft_url ? <figure className="event-host-cover-preview"><img src={cover.draft_url} alt={cover.draft_alt_text} /><figcaption>{cover.published ? "This is already the live image" : "Private image; approval will publish it"}</figcaption></figure> : <p>No new image. {coversReady ? "Any approved image stays as it is." : "Image review is not available yet."}</p>}
           <h4>Event introduction</h4><p>{item.summary}</p>
           <h4>Arrival details</h4><p>{item.arrival_info}</p>
           <h4>Programme</h4><ul>{item.programme.map((entry, index) => <li key={index}><strong>{entry.title}</strong> · {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(entry.starts_at))}{entry.speaker_name ? ` · ${entry.speaker_name}` : ""}<p>{entry.description}</p></li>)}</ul>

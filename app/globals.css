@@ -33872,3 +33872,32 @@ textarea {
     max-height: 220px;
   }
 }
+
+.event-host-cover-preview {
+  margin: .85rem 0;
+  width: min(100%, 420px);
+}
+
+.event-host-cover-preview img {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.event-host-cover-preview figcaption {
+  margin-top: .45rem;
+  color: #655f58;
+  font-size: .84rem;
+}
+
+.event-host-cover-controls {
+  display: grid;
+  gap: .6rem;
+  max-width: 520px;
+}
+
+.event-host-cover-controls .button {
+  justify-self: start;
+}

@@ -124,8 +124,17 @@ closed behind a flag; a green build alone is not an exit.
 - [ ] Record a real on-the-day safety contact for the first event before
   publication. Keep the public guest flag disabled until the full event-entry
   and guest/membership boundary tests pass.
-- [ ] Extend Host drafts with approved media and a clear venue/format review;
-  keep private online joining links out of public arrival copy.
+- [x] Host drafts now accept one private event image. Super Admin sees the
+  submitted image beside venue, format, capacity and safety details; the image
+  becomes public only with Host-draft approval. A replacement remains private
+  while the previous approved image stays live. The public event page and
+  event list use the approved Host image, falling back to the approved proposal
+  poster. `20260924110000_event_host_reviewed_covers.sql` also blocks links in
+  public Host arrival notes at the database boundary. The image is optional;
+  the Admin must still review venue, format and private online-link readiness.
+- [ ] Apply `20260924110000_event_host_reviewed_covers.sql` in the connected
+  Supabase project. Run `supabase/tests/007_event_host_reviewed_covers.sql`
+  only in isolated CI/local/staging, never in the production SQL Editor.
 - [ ] Inspect existing event orders that already granted a `member_onboarding`
   entitlement and review affected accounts individually before any correction.
 - [ ] Create the real future launch event as a private draft with owner, city or

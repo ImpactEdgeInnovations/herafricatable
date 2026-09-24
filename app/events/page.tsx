@@ -66,6 +66,15 @@ export default async function EventsPage() {
       return [poster.event_id, { alt: poster.alt_text, url: signed.data?.signedUrl ?? null }] as const;
     })),
   );
+  const { data: hostCoverRows } = events.length
+    ? await supabase.rpc("list_public_event_host_covers", { p_event_ids: events.map((event) => event.id) })
+    : { data: [] };
+  const hostCovers = new Map(
+    await Promise.all((((hostCoverRows as { alt_text: string; event_id: string; storage_path: string }[] | null) ?? [])).map(async (cover) => {
+      const signed = await supabase.storage.from("event-host-covers").createSignedUrl(cover.storage_path, 3600);
+      return [cover.event_id, { alt: cover.alt_text, url: signed.data?.signedUrl ?? null }] as const;
+    })),
+  );
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -158,7 +167,7 @@ export default async function EventsPage() {
           </div>
         ) : events.length ? events.map((event) => {
           const eventCommunity = eventCommunities.find((item) => item.event_id === event.id)?.communities;
-          const poster = eventPosters.get(event.id);
+          const poster = hostCovers.get(event.id)?.url ? hostCovers.get(event.id) : eventPosters.get(event.id);
           return (
           <article key={event.id}>
             {poster?.url ? <img className="public-event-poster" alt={poster.alt} src={poster.url} /> : null}
