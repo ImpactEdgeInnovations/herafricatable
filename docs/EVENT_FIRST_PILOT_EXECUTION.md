@@ -114,6 +114,11 @@ closed behind a flag; a green build alone is not an exit.
   browser account does not have dashboard access to that project, and no direct
   database test connection is configured locally. The API rehearsal is not a
   substitute for rollback-safe SQL tests or a browser/mobile rehearsal.
+- [ ] Rerun the revised `002_event_guest_access.sql`: it now proves the release
+  gate rejects an early toggle, then uses transaction-local Super Admin evidence
+  to exercise guest registration. Its final `rollback` leaves the real guest
+  flag and launch-check statuses unchanged. Do not mark actual release checks
+  passed based on this synthetic fixture.
 - [ ] Record a real on-the-day safety contact for the first event before
   publication. Keep the public guest flag disabled until the full event-entry
   and guest/membership boundary tests pass.

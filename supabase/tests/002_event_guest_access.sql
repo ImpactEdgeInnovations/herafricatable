@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(26);
 
 insert into auth.users(id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at)
 values
@@ -63,8 +63,38 @@ select throws_ok(
   'pending guest cannot register while the pilot flag is off'
 );
 
-set local role postgres;
-update public.feature_flags set enabled = true where key = 'event_guest_access';
+-- Prove the production release gate stays closed without acceptance evidence.
+-- All following evidence is a transaction-local test fixture and rolls back.
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000001', true);
+select throws_ok(
+  $$select public.set_feature_flag('event_guest_access', true)$$,
+  'P0001', 'Complete this module in Admin Release before enabling it',
+  'Admin cannot open guest entry before release checks are complete'
+);
+select public.save_module_release_check(
+  'event_guest_access', 'database_boundary', 'passed', 'SQL test fixture',
+  'Transaction-local SQL test fixture for the guest registration boundary; not real launch evidence.'
+);
+select public.save_module_release_check(
+  'event_guest_access', 'two_account_journey', 'passed', 'SQL test fixture',
+  'Transaction-local SQL test fixture for the guest registration boundary; not real launch evidence.'
+);
+select public.save_module_release_check(
+  'event_guest_access', 'admin_operations', 'passed', 'SQL test fixture',
+  'Transaction-local SQL test fixture for the guest registration boundary; not real launch evidence.'
+);
+select public.save_module_release_check(
+  'event_guest_access', 'privacy_and_permissions', 'passed', 'SQL test fixture',
+  'Transaction-local SQL test fixture for the guest registration boundary; not real launch evidence.'
+);
+select public.save_module_release_check(
+  'event_guest_access', 'rollback_and_recovery', 'passed', 'SQL test fixture',
+  'Transaction-local SQL test fixture for the guest registration boundary; not real launch evidence.'
+);
+select lives_ok(
+  $$select public.set_feature_flag('event_guest_access', true)$$,
+  'Admin can open guest entry only after the transactional release fixtures are complete'
+);
 set local role authenticated;
 select set_config('request.jwt.claim.role', 'authenticated', true);
 select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000002', true);
