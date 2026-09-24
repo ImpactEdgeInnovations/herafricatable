@@ -28,5 +28,14 @@ assert(scanPage.includes("resolve_event_intro_card") && scanPage.includes("list_
 assert(!ownPage.includes("get_my_event_pass") && !scanPage.includes("get_my_event_pass"));
 assert(passPage.includes("get_my_event_pass"), "The entry QR must remain a separate route");
 assert(eventPage.includes("isConfirmedGuest && !introReadyResult.error"), "Only confirmed guests should see introduction entry");
+assert(
+  eventPage.includes("const { data: ownMembership } = user\n") &&
+    !eventPage.includes("const { data: ownMembership } = user && memberProfile?.access_status === \"active\""),
+  "A confirmed event-only guest must be able to see her own place and introduction entry",
+);
+assert(
+  eventPage.includes("activeMember || eventGuestEligible || isConfirmedGuest"),
+  "An already-confirmed guest must retain her pass entry even if new guest requests are paused",
+);
 assert(admin.includes("close_event_intro_card") && admin.includes("restore_event_intro_card") && admin.includes("set_event_intro_enabled"));
 console.log("Event QR introduction boundaries verified: opt-in, event-only access, mutual choice and Admin pause.");

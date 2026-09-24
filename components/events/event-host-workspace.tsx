@@ -156,6 +156,7 @@ export function EventHostWorkspace({ initial, cover, coverReady }: { initial: Ev
         <p><strong>{initial.workspace_status === "submitted" ? "With the event team" : initial.workspace_status === "changes_requested" ? "Changes requested" : initial.workspace_status === "approved" ? "Published" : "Private draft"}</strong> · {new Intl.DateTimeFormat("en-KE", { dateStyle: "full", timeStyle: "short", timeZone: initial.timezone }).format(new Date(initial.starts_at))}</p>
         {initial.review_note ? <p role="status"><strong>From the event team:</strong> {initial.review_note}</p> : null}
         {initial.event_status === "published" ? <Link href={`/events/${initial.event_slug}`}>View public event</Link> : null}
+        {initial.event_status === "published" ? <p><Link className="button button-outline" href={`/events/${initial.event_slug}/rounds/host`}>Plan table conversations</Link></p> : null}
       </div>
 
       <div className="admin-section">

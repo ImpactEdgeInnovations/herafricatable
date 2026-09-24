@@ -10,6 +10,7 @@ import type { AdminEvent } from "@/components/admin/event-manager";
 import type { AdminRefund, AdminRegistration } from "@/components/admin/registration-manager";
 import type { PilotReadinessStep } from "@/lib/event-pilot-readiness";
 import { EventIntroSafety } from "@/components/admin/event-intro-safety";
+import { EventRoundReview } from "@/components/admin/event-round-review";
 
 const eventStatus: Record<string, string> = {
   cancelled: "Cancelled",
@@ -245,6 +246,7 @@ export function EventCommandCentre({
                 </section>
               ) : null}
               {canControlLifecycle && ["published", "completed"].includes(event.status) ? <EventIntroSafety eventId={event.id} /> : null}
+              {canControlLifecycle && ["published", "completed"].includes(event.status) ? <EventRoundReview eventId={event.id} /> : null}
               <aside><strong>Clear responsibility</strong><p>Event Hosts shape the experience and answer attendee questions. Admin controls public publication, registration decisions, payments, refunds and safety intervention.</p></aside>
               <footer>
                 {event.status === "published" ? <Link className="button button-outline" href={`/events/${event.slug}`}>View event page</Link> : null}

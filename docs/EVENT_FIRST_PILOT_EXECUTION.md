@@ -124,6 +124,20 @@ closed behind a flag; a green build alone is not an exit.
   different confirmed accounts, an unconfirmed visitor, a blocked pair and
   Super Admin. Run `supabase/tests/008_event_intro_cards.sql` only in an
   isolated CI/local/staging database, never in the production SQL Editor.
+- [x] The event detail page now reads a confirmed place for an event-only guest,
+  not only for an active member. The guest retains her pass entry even if new
+  guest requests are later paused. The pass page is explicitly non-indexable.
+- [x] `20260924140000_event_table_rounds.sql` implements the next sprint's
+  default-off table-round opt-in, scoped Host volunteer list and private plan,
+  two-to-eight-person table capacity, blocked-pair and eligibility checks,
+  Super Admin review/pause, and attendee-only schedules. Hosts cannot see
+  unconsenting guests or approve their own plans. The attendee, Host and Admin
+  screens are wired; table rounds never grant member-network access.
+- [ ] Apply `20260924140000_event_table_rounds.sql` **after** the introduction
+  migration. Run `supabase/tests/009_event_table_rounds.sql` only in an isolated
+  CI/local/staging database. Rehearse twenty separate opted-in guests, blocked
+  pairs, opt-outs after assignment, capacity, Host replacement, mobile schedule
+  visibility and Admin pause before opening this setting for a real event.
 - [x] `ops:events:accept-private-host` passed with one Super Admin and two
   separate tagged members. It created `hat-private-host-rehearsal-20260924`
   as a closed, unfeatured draft; verified scoped Host access, private drafting,

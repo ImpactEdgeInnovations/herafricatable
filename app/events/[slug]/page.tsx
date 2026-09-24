@@ -158,7 +158,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const recap = recapResult.data as { highlights: string[]; summary: string; title: string } | null;
   const testimonials = (testimonialResult.data as { attribution: string; quote: string }[] | null) ?? [];
   const continuation = continuationResult.data?.communities as unknown as { name: string; slug: string } | null;
-  const { data: ownMembership } = user && memberProfile?.access_status === "active"
+  const { data: ownMembership } = user
     ? await supabase.from("event_memberships").select("status").eq("event_id", event.id).eq("user_id", user.id).maybeSingle()
     : { data: null };
   const [{ data: tickets }, { data: registration }] = !hasEnded
@@ -170,7 +170,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       ])
     : [{ data: [] }, { data: null }];
   const isConfirmedGuest = ["confirmed", "attended"].includes(ownMembership?.status ?? "");
-  const [{ data: attendeePreference }, attendeeDirectoryResult, followUpResult, introReadyResult] = isConfirmedGuest
+  const [{ data: attendeePreference }, attendeeDirectoryResult, followUpResult, introReadyResult, roundStatusResult] = isConfirmedGuest
     ? await Promise.all([
         activeMember
           ? supabase.from("event_attendee_preferences").select("discoverable, show_company, introduction").eq("event_id", event.id).eq("user_id", user!.id).maybeSingle()
@@ -180,9 +180,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           : Promise.resolve({ data: [], error: null }),
         supabase.rpc("get_my_event_follow_up_interest", { p_event_id: event.id }),
         supabase.rpc("get_my_event_intro_card", { p_event_id: event.id }),
+        supabase.rpc("get_my_event_round_status", { p_event_id: event.id }),
       ])
-    : [{ data: null }, { data: [] }, { data: [] }, { data: null, error: null }];
+    : [{ data: null }, { data: [] }, { data: [] }, { data: null, error: null }, { data: [] }];
   const followUp = ((followUpResult.data as { available: boolean; interested: boolean }[] | null) ?? [])[0] ?? null;
+  const roundStatus = ((roundStatusResult.data as { enabled: boolean; opted_in: boolean }[] | null) ?? [])[0] ?? null;
   const archiveResult = user && memberProfile?.access_status === "active" && hasEnded
     ? await supabase.rpc("get_my_member_event_archive", { p_event_id: event.id })
     : { data: [], error: null };
@@ -279,7 +281,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       {!hasEnded && !gatheringRoomHref && event.registration_mode !== "closed" ? (
         <section className="event-inline-registration" id="registration">
-          {activeMember || eventGuestEligible ? (
+          {activeMember || eventGuestEligible || isConfirmedGuest ? (
             <>
               <EventRegistrationForm
                 embedded
@@ -338,6 +340,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       {sponsors?.length ? <section className="event-content-section sponsor-section"><div><p className="eyebrow">With thanks</p><h2>Event partners</h2></div><div>{sponsors.map((sponsor) => <article key={sponsor.id}><span>{sponsor.tier || "Partner"}</span><strong>{sponsor.name}</strong></article>)}</div></section> : null}
       {isConfirmedGuest && !introReadyResult.error ? <section className="event-intro-entry"><div><p className="eyebrow">For confirmed guests</p><h2>Meet someone at this event</h2><p>Share an optional introduction QR or enter another guest’s manual code. Your entry pass and private contact details stay separate.</p></div><Link className="button button-outline" href={`/events/${slug}/meet`}>Open introductions</Link></section> : null}
+      {isConfirmedGuest && roundStatus?.enabled ? <section className="event-intro-entry"><div><p className="eyebrow">Optional table conversations</p><h2>A seat for better conversations</h2><p>Ask to join a small guided table round. Only opted-in guests appear in the Host’s plan, and the event team reviews each private schedule.</p></div><Link className="button button-outline" href={`/events/${slug}/rounds`}>{roundStatus.opted_in ? "View my table choice" : "Join a table round"}</Link></section> : null}
       {isConfirmedGuest && activeMember ? (
         <EventAttendeeDirectory
           attendees={(attendeeDirectoryResult.data as EventAttendee[] | null) ?? []}
