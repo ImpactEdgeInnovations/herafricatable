@@ -40,7 +40,9 @@ Production: [herafricatable.vercel.app](https://herafricatable.vercel.app)
 
 Before committing, run `npm test` and `npm run build`. Database migrations and pgTAP
 authorization tests run in an isolated Supabase stack in GitHub Actions; they do not
-connect to the production project.
+connect to the production project. Do not paste `supabase/tests/*.sql` into the
+production SQL Editor: tests create temporary users and events and end with
+`rollback`; they are not migrations.
 
 The local `.env.local` file is ignored by Git. Never commit Supabase secret keys,
 Paystack secret keys, webhook secrets, database passwords, or Resend API keys.
