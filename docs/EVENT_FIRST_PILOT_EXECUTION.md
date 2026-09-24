@@ -94,6 +94,11 @@ closed behind a flag; a green build alone is not an exit.
   readiness, registration mode and the member proposal's safety contact next
   to the submitted content. For Admin-created events without a proposal, the
   safety contact must still be checked separately before publication.
+- [x] `20260924100000_event_safety_contact_gate.sql` creates a private,
+  Admin-maintained safety contact for every Host-reviewed event. Existing and
+  new member proposals seed it; an Admin-created Host event cannot transition
+  from draft to published without it. The Admin review screen can save it.
+  `supabase/tests/006_event_safety_contact_gate.sql` specifies the gate.
 - [x] Live read on 23 September 2026 confirmed the existing release is healthy,
   with no published public event and no guest-access flag yet installed.
 - [ ] Apply both September event-guest migrations in order in the intended
@@ -107,6 +112,9 @@ closed behind a flag; a green build alone is not an exit.
   run pgTAP test 005 and rehearse pause, restore and replacement with distinct
   Host accounts. The Admin controls remain hidden until its readiness check
   succeeds.
+- [ ] Apply the event safety contact migration last, run pgTAP test 006 and
+  record a real on-the-day contact for the first event. Publishing from the
+  Host review UI stays disabled until the migration and contact are present.
 - [ ] Extend Host drafts with approved media and a clear venue/format review;
   keep private online joining links out of public arrival copy.
 - [ ] Inspect existing event orders that already granted a `member_onboarding`

@@ -33,12 +33,14 @@ export type EventHostReviewContext = {
   safety_contact_phone: string | null;
 };
 
-export function EventHostReviewManager({ events, workspaces, migrationReady, lifecycleReady, reviewContexts }: {
+export function EventHostReviewManager({ events, workspaces, migrationReady, lifecycleReady, reviewContexts, safetyContacts, safetyReady }: {
   events: AdminEvent[];
   workspaces: AdminEventHostWorkspace[];
   migrationReady: boolean;
   lifecycleReady: boolean;
   reviewContexts: EventHostReviewContext[];
+  safetyContacts: { event_id: string; contact_name: string; contact_phone: string }[];
+  safetyReady: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -46,6 +48,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
   const [eventId, setEventId] = useState(events.find((event) => ["draft", "published"].includes(event.status))?.id ?? "");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [contactDrafts, setContactDrafts] = useState<Record<string, { name: string; phone: string }>>({});
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -67,6 +70,10 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
 
   async function review(item: AdminEventHostWorkspace, action: "approve" | "request_changes") {
     const note = notes[item.event_id] ?? "";
+    if (action === "approve" && (!safetyReady || !safetyContacts.some((entry) => entry.event_id === item.event_id))) {
+      setMessage("Save the event safety contact before publishing this event.");
+      return;
+    }
     if (action === "request_changes" && note.trim().length < 10) {
       setMessage("Write at least 10 characters explaining what the Host should change.");
       return;
@@ -87,6 +94,26 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
     });
     setBusy(false);
     setMessage(error ? adminErrorMessage(error, "review the Host draft") : action === "approve" ? "Reviewed content published." : "Your guidance was sent to the Host.");
+    if (!error) router.refresh();
+  }
+
+  async function saveSafetyContact(item: AdminEventHostWorkspace) {
+    if (!safetyReady) return;
+    const existing = safetyContacts.find((entry) => entry.event_id === item.event_id);
+    const draft = contactDrafts[item.event_id] ?? { name: existing?.contact_name ?? "", phone: existing?.contact_phone ?? "" };
+    if (draft.name.trim().length < 2 || draft.phone.trim().length < 7) {
+      setMessage("Add the full name and a reachable phone number for the event safety contact.");
+      return;
+    }
+    setBusy(true);
+    setMessage("");
+    const { error } = await supabase.rpc("save_event_safety_contact", {
+      p_event_id: item.event_id,
+      p_name: draft.name,
+      p_phone: draft.phone,
+    });
+    setBusy(false);
+    setMessage(error ? adminErrorMessage(error, "save the event safety contact") : "Safety contact saved privately for the event team.");
     if (!error) router.refresh();
   }
 
@@ -122,6 +149,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
       <p>Hosts can prepare event words, arrival notes, programme moments and partners. They cannot see guest lists, payments or check-in. You make the final publication decision.</p>
       {!migrationReady ? <p role="alert">Apply the scoped Event Host migration before using this workspace.</p> : null}
       {migrationReady && !lifecycleReady ? <p role="status">Host pause and safe replacement controls become available after the Host lifecycle migration.</p> : null}
+      {migrationReady && !safetyReady ? <p role="alert">Apply the event safety contact migration before publishing Host-reviewed events.</p> : null}
     </section>
     {migrationReady ? <section className="admin-section">
       <h2>Give a member Host access</h2>
@@ -135,6 +163,8 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
       {workspaces.length === 0 ? <p>No Event Hosts have been assigned yet.</p> : workspaces.map((item) => {
         const event = events.find((candidate) => candidate.id === item.event_id);
         const context = reviewContexts.find((candidate) => candidate.event_id === item.event_id);
+        const savedContact = safetyContacts.find((candidate) => candidate.event_id === item.event_id);
+        const contact = contactDrafts[item.event_id] ?? { name: savedContact?.contact_name ?? context?.safety_contact_name ?? "", phone: savedContact?.contact_phone ?? context?.safety_contact_phone ?? "" };
         return <article className="admin-section" key={item.event_id}>
         <p className="eyebrow">{item.workspace_status.replaceAll("_", " ")} · {item.event_status}</p>
         <h3>{item.event_title}</h3>
@@ -148,15 +178,22 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
             <div><dt>Venue</dt><dd>{event?.venues ? `${event.venues.name}, ${event.venues.city}` : event?.format === "virtual" ? "Online" : "Venue missing"}</dd></div>
             {event?.format !== "in_person" ? <div><dt>Private online link</dt><dd>{context?.online_link_ready ? "Ready; shared privately with confirmed guests" : "Missing — add it before publishing"}</dd></div> : null}
             <div><dt>Guest requests</dt><dd>{event?.registration_mode.replaceAll("_", " ") ?? "Not available"}</dd></div>
-            <div><dt>Safety contact</dt><dd>{context?.safety_contact_name ? `${context.safety_contact_name} · ${context.safety_contact_phone ?? "No phone recorded"}` : "Not recorded in this member proposal — confirm separately before publishing"}</dd></div>
+            <div><dt>Safety contact</dt><dd>{savedContact ? `${savedContact.contact_name} · ${savedContact.contact_phone}` : "Not saved for this event yet"}</dd></div>
           </dl>
+          {safetyReady ? <div className="admin-section">
+            <h4>On-the-day safety contact</h4>
+            <p>Private to the event team. Save a reachable person before publication.</p>
+            <label>Name<input maxLength={120} value={contact.name} onChange={(event) => setContactDrafts((all) => ({ ...all, [item.event_id]: { ...contact, name: event.target.value } }))} /></label>
+            <label>Phone<input maxLength={40} type="tel" value={contact.phone} onChange={(event) => setContactDrafts((all) => ({ ...all, [item.event_id]: { ...contact, phone: event.target.value } }))} /></label>
+            <button className="button button-outline" disabled={busy} onClick={() => void saveSafetyContact(item)} type="button">Save safety contact</button>
+          </div> : null}
           <Link href="/admin/events?view=edit">Review event details</Link>
           <h4>Event introduction</h4><p>{item.summary}</p>
           <h4>Arrival details</h4><p>{item.arrival_info}</p>
           <h4>Programme</h4><ul>{item.programme.map((entry, index) => <li key={index}><strong>{entry.title}</strong> · {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(entry.starts_at))}{entry.speaker_name ? ` · ${entry.speaker_name}` : ""}<p>{entry.description}</p></li>)}</ul>
           <h4>Partners</h4>{item.partners.length ? <ul>{item.partners.map((entry, index) => <li key={index}>{entry.name}{entry.website_url ? ` · ${entry.website_url}` : ""}</li>)}</ul> : <p>None listed.</p>}
           <label>Note to Host<textarea rows={3} value={notes[item.event_id] ?? ""} onChange={(event) => setNotes((all) => ({ ...all, [item.event_id]: event.target.value }))} placeholder="Explain what needs to change, if anything." /></label>
-          <div className="portal-actions"><button className="button button-primary" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "approve")}>Approve and publish</button><button className="button button-outline" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "request_changes")}>Ask for changes</button></div>
+          <div className="portal-actions"><button className="button button-primary" type="button" disabled={busy || item.host_status !== "active" || !safetyReady || !savedContact} onClick={() => void review(item, "approve")}>Approve and publish</button><button className="button button-outline" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "request_changes")}>Ask for changes</button></div>
         </div> : item.review_note ? <p>Last review note: {item.review_note}</p> : null}
         {item.event_status === "published" ? <Link href={`/events/${item.event_slug}`}>View public page</Link> : null}
       </article>})}
