@@ -30,6 +30,7 @@
     "ops:community:accept-membership-lifecycle": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-community-membership-lifecycle.mjs",
     "ops:community:event-readiness": "node --env-file=.env.local scripts/verify-community-event-readiness.mjs",
     "ops:community:member-events-readiness": "node --env-file=.env.local scripts/verify-member-event-readiness.mjs",
+    "ops:events:accept-private-host": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-event-host-private.mjs",
     "ops:community:gathering-readiness": "node --env-file=.env.local scripts/verify-community-gathering-readiness.mjs",
     "ops:events:question-readiness": "node --env-file=.env.local scripts/verify-event-question-readiness.mjs",
     "ops:admin:decision-readiness": "node --env-file=.env.local scripts/verify-super-admin-decision-readiness.mjs",

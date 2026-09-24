@@ -99,22 +99,24 @@ closed behind a flag; a green build alone is not an exit.
   new member proposals seed it; an Admin-created Host event cannot transition
   from draft to published without it. The Admin review screen can save it.
   `supabase/tests/006_event_safety_contact_gate.sql` specifies the gate.
-- [x] Live read on 23 September 2026 confirmed the existing release is healthy,
-  with no published public event and no guest-access flag yet installed.
-- [ ] Apply both September event-guest migrations in order in the intended
-  Supabase environment and run the pgTAP test. Do not enable the flag yet.
-- [ ] Apply the scoped Event Host migration and private handoff migration after
-  the two guest migrations, then run pgTAP tests 003 and 004 and a separate-account
-  Host/Admin rehearsal. Until then, the new screens show setup needed and the
-  member-event approval button stays disabled. Do not call the handoff accepted
-  from a green TypeScript build alone.
-- [ ] Apply the Host pause/transfer migration after the private handoff, then
-  run pgTAP test 005 and rehearse pause, restore and replacement with distinct
-  Host accounts. The Admin controls remain hidden until its readiness check
-  succeeds.
-- [ ] Apply the event safety contact migration last, run pgTAP test 006 and
-  record a real on-the-day contact for the first event. Publishing from the
-  Host review UI stays disabled until the migration and contact are present.
+- [x] On 24 September 2026, the connected Supabase project returned the guest
+  flag as present and disabled; the Host assignment/workspace/safety-contact
+  tables were available. Signed-in Super Admin returned true from all three
+  new readiness functions. There were no published public events.
+- [x] `ops:events:accept-private-host` passed with one Super Admin and two
+  separate tagged members. It created `hat-private-host-rehearsal-20260924`
+  as a closed, unfeatured draft; verified scoped Host access, private drafting,
+  request-changes/resubmission, pause/restore, private safety-contact visibility,
+  and replacement reset. The event remained private throughout.
+- [x] The live health endpoint returned HTTP 200, database reachable, server
+  integration ready, and deployed release `d32e760` on 24 September 2026.
+- [ ] Run pgTAP tests 002–006 in the intended Supabase project. The connected
+  browser account does not have dashboard access to that project, and no direct
+  database test connection is configured locally. The API rehearsal is not a
+  substitute for rollback-safe SQL tests or a browser/mobile rehearsal.
+- [ ] Record a real on-the-day safety contact for the first event before
+  publication. Keep the public guest flag disabled until the full event-entry
+  and guest/membership boundary tests pass.
 - [ ] Extend Host drafts with approved media and a clear venue/format review;
   keep private online joining links out of public arrival copy.
 - [ ] Inspect existing event orders that already granted a `member_onboarding`
