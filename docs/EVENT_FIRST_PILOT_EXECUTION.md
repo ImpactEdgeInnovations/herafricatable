@@ -90,6 +90,10 @@ closed behind a flag; a green build alone is not an exit.
   but resets the submission, so the successor must review and resubmit it.
   `supabase/tests/005_event_host_lifecycle.sql` specifies that permission and
   content-transfer boundary.
+- [x] The Host review screen now shows capacity, format, venue/online-link
+  readiness, registration mode and the member proposal's safety contact next
+  to the submitted content. For Admin-created events without a proposal, the
+  safety contact must still be checked separately before publication.
 - [x] Live read on 23 September 2026 confirmed the existing release is healthy,
   with no published public event and no guest-access flag yet installed.
 - [ ] Apply both September event-guest migrations in order in the intended

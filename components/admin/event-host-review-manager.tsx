@@ -26,11 +26,19 @@ export type AdminEventHostWorkspace = {
   submitted_at: string | null;
 };
 
-export function EventHostReviewManager({ events, workspaces, migrationReady, lifecycleReady }: {
+export type EventHostReviewContext = {
+  event_id: string;
+  online_link_ready: boolean;
+  safety_contact_name: string | null;
+  safety_contact_phone: string | null;
+};
+
+export function EventHostReviewManager({ events, workspaces, migrationReady, lifecycleReady, reviewContexts }: {
   events: AdminEvent[];
   workspaces: AdminEventHostWorkspace[];
   migrationReady: boolean;
   lifecycleReady: boolean;
+  reviewContexts: EventHostReviewContext[];
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -124,13 +132,25 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
     </section> : null}
     <section className="admin-section">
       <h2>Host drafts</h2>
-      {workspaces.length === 0 ? <p>No Event Hosts have been assigned yet.</p> : workspaces.map((item) => <article className="admin-section" key={item.event_id}>
+      {workspaces.length === 0 ? <p>No Event Hosts have been assigned yet.</p> : workspaces.map((item) => {
+        const event = events.find((candidate) => candidate.id === item.event_id);
+        const context = reviewContexts.find((candidate) => candidate.event_id === item.event_id);
+        return <article className="admin-section" key={item.event_id}>
         <p className="eyebrow">{item.workspace_status.replaceAll("_", " ")} · {item.event_status}</p>
         <h3>{item.event_title}</h3>
         <p>Host: {item.host_name || item.host_email} · {item.host_email} · {item.host_status === "paused" ? "Access paused" : "Access active"}</p>
         {lifecycleReady ? <button className="button button-outline" type="button" disabled={busy} onClick={() => void changeHostStatus(item)}>{item.host_status === "paused" ? "Restore Host access" : "Pause Host access"}</button> : null}
         <p>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.starts_at))}</p>
         {item.workspace_status === "submitted" ? <div>
+          <h4>Before you decide</h4>
+          <dl>
+            <div><dt>Format and capacity</dt><dd>{event?.format.replaceAll("_", " ") ?? "Not available"} · {event?.capacity ?? "No capacity set"} places</dd></div>
+            <div><dt>Venue</dt><dd>{event?.venues ? `${event.venues.name}, ${event.venues.city}` : event?.format === "virtual" ? "Online" : "Venue missing"}</dd></div>
+            {event?.format !== "in_person" ? <div><dt>Private online link</dt><dd>{context?.online_link_ready ? "Ready; shared privately with confirmed guests" : "Missing — add it before publishing"}</dd></div> : null}
+            <div><dt>Guest requests</dt><dd>{event?.registration_mode.replaceAll("_", " ") ?? "Not available"}</dd></div>
+            <div><dt>Safety contact</dt><dd>{context?.safety_contact_name ? `${context.safety_contact_name} · ${context.safety_contact_phone ?? "No phone recorded"}` : "Not recorded in this member proposal — confirm separately before publishing"}</dd></div>
+          </dl>
+          <Link href="/admin/events?view=edit">Review event details</Link>
           <h4>Event introduction</h4><p>{item.summary}</p>
           <h4>Arrival details</h4><p>{item.arrival_info}</p>
           <h4>Programme</h4><ul>{item.programme.map((entry, index) => <li key={index}><strong>{entry.title}</strong> · {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(entry.starts_at))}{entry.speaker_name ? ` · ${entry.speaker_name}` : ""}<p>{entry.description}</p></li>)}</ul>
@@ -139,7 +159,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
           <div className="portal-actions"><button className="button button-primary" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "approve")}>Approve and publish</button><button className="button button-outline" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "request_changes")}>Ask for changes</button></div>
         </div> : item.review_note ? <p>Last review note: {item.review_note}</p> : null}
         {item.event_status === "published" ? <Link href={`/events/${item.event_slug}`}>View public page</Link> : null}
-      </article>)}
+      </article>})}
     </section>
     {message ? <p className="manager-message" role="status">{message}</p> : null}
     {dialog}
