@@ -122,6 +122,9 @@ export default async function AdminEventsPage({
   const hostResult = role === "super_admin" && view === "host"
     ? await supabase.rpc("list_admin_event_host_workspaces")
     : { data: [], error: null };
+  const hostLifecycleResult = role === "super_admin" && view === "host"
+    ? await supabase.rpc("event_host_lifecycle_ready")
+    : { data: false, error: null };
   const hostWorkspaces = (hostResult.data as AdminEventHostWorkspace[] | null) ?? [];
   const registrationResults = await Promise.all(
     eventIds.map((eventId) => supabase.rpc("list_event_registrations", { p_event_id: eventId })),
@@ -252,7 +255,7 @@ export default async function AdminEventsPage({
       {view === "overview" ? <EventCommandCentre canControlLifecycle={role === "super_admin"} events={events} lifecycleReady={!lifecycleResult.error} lifecycleStates={(lifecycleResult.data as EventLifecycleState[] | null) ?? []} proposalCount={proposalCount} refunds={refunds} registrations={registrations} /> : null}
       {view === "overview" && role === "super_admin" ? <EventGuestAccessControl enabled={Boolean(guestAccessResult.data?.enabled)} migrationReady={Boolean(guestAccessResult.data) && !guestAccessResult.error} /> : null}
       {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager media={proposalMedia} hostHandoffReady={hostHandoffReady} migrationReady={proposalReady} proposals={memberProposals} /><div className="legacy-gathering-note"><strong>Community gathering history</strong><p>Free member-only gatherings are now owner-led. Earlier submissions remain visible here so Admin can understand the complete decision history.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></section> : null}
-      {view === "host" && role === "super_admin" ? <EventHostReviewManager events={events} workspaces={hostWorkspaces} migrationReady={!hostResult.error} /> : null}
+      {view === "host" && role === "super_admin" ? <EventHostReviewManager events={events} workspaces={hostWorkspaces} migrationReady={!hostResult.error} lifecycleReady={!hostLifecycleResult.error && hostLifecycleResult.data === true} /> : null}
       {view === "edit" ? <section className="focused-admin-tool"><EventManager canCreate={role === "super_admin"} initialEvents={events} migrationReady={!eventResult.error} privateEvents={managedRows.map((event) => ({ event_id: event.event_id, online_url: event.online_url }))} /></section> : null}
       {view === "registrations" ? <section className="focused-admin-tool"><RegistrationManager events={events} initialPayments={payments} initialRefunds={refunds} initialRegistrations={registrations} initialTickets={tickets} migrationReady={registrationReady} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY && process.env.SUPABASE_SECRET_KEY && process.env.NEXT_PUBLIC_SITE_URL)} /></section> : null}
       {view === "arrival" ? <section className="focused-admin-tool"><EventCheckinConsole events={events.map((event) => ({ id: event.id, title: event.title, starts_at: event.starts_at, ends_at: event.ends_at }))} initialAttendees={checkinAttendees} migrationReady={checkinReady} /></section> : null}

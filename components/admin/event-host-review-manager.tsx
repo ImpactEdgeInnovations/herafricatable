@@ -26,10 +26,11 @@ export type AdminEventHostWorkspace = {
   submitted_at: string | null;
 };
 
-export function EventHostReviewManager({ events, workspaces, migrationReady }: {
+export function EventHostReviewManager({ events, workspaces, migrationReady, lifecycleReady }: {
   events: AdminEvent[];
   workspaces: AdminEventHostWorkspace[];
   migrationReady: boolean;
+  lifecycleReady: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -42,7 +43,12 @@ export function EventHostReviewManager({ events, workspaces, migrationReady }: {
 
   async function assign() {
     if (!eventId || !email.trim()) return;
-    if (!await ask({ title: "Give this member Host access?", description: "This member will prepare this event privately. If another Host is assigned, their access ends. Guest lists and payments remain with the event team.", confirmLabel: "Assign Host" })) return;
+    const existing = workspaces.find((item) => item.event_id === eventId);
+    if (existing && !lifecycleReady) {
+      setMessage("Apply the Host pause and transfer migration before replacing an existing Host.");
+      return;
+    }
+    if (!await ask({ title: existing ? "Replace this Event Host?" : "Give this member Host access?", description: existing ? `This ends ${existing.host_name || existing.host_email}'s Host access. The new Host inherits the private draft and must review and submit it again. Published content stays live until another approval.` : "This member will prepare this event privately. Guest lists and payments remain with the event team.", confirmLabel: existing ? "Replace Host" : "Assign Host" })) return;
     setBusy(true);
     setMessage("");
     const { error } = await supabase.rpc("assign_event_host", { p_event_id: eventId, p_email: email.trim() });
@@ -76,12 +82,38 @@ export function EventHostReviewManager({ events, workspaces, migrationReady }: {
     if (!error) router.refresh();
   }
 
+  async function changeHostStatus(item: AdminEventHostWorkspace) {
+    if (!lifecycleReady) return;
+    const pausing = item.host_status === "active";
+    const result = await ask({
+      title: pausing ? `Pause ${item.host_name || item.host_email}'s Host access?` : `Restore ${item.host_name || item.host_email}'s Host access?`,
+      description: pausing
+        ? "The Host immediately loses access to this private workspace. The event and any published guest information remain unchanged. You can restore or replace the Host later."
+        : "The Host may return to this private workspace. You still make all publication decisions.",
+      confirmLabel: pausing ? "Pause Host access" : "Restore Host access",
+      tone: pausing ? "danger" : "default",
+      fields: pausing ? [{ name: "reason", label: "Reason sent to the Host", type: "textarea", required: true, minLength: 10, maxLength: 500, placeholder: "Explain the pause clearly." }] : [],
+    });
+    if (!result) return;
+    setBusy(true);
+    setMessage("");
+    const { error } = await supabase.rpc("set_event_host_status", {
+      p_event_id: item.event_id,
+      p_status: pausing ? "paused" : "active",
+      p_note: pausing ? String(result.reason ?? "") : "",
+    });
+    setBusy(false);
+    setMessage(error ? adminErrorMessage(error, "change Host access") : pausing ? "Host access paused. The event itself is unchanged." : "Host access restored.");
+    if (!error) router.refresh();
+  }
+
   return <div className="focused-admin-tool">
     <section className="admin-section">
       <p className="eyebrow">Event Hosts</p>
       <h1>Prepare, review, then publish</h1>
       <p>Hosts can prepare event words, arrival notes, programme moments and partners. They cannot see guest lists, payments or check-in. You make the final publication decision.</p>
       {!migrationReady ? <p role="alert">Apply the scoped Event Host migration before using this workspace.</p> : null}
+      {migrationReady && !lifecycleReady ? <p role="status">Host pause and safe replacement controls become available after the Host lifecycle migration.</p> : null}
     </section>
     {migrationReady ? <section className="admin-section">
       <h2>Give a member Host access</h2>
@@ -95,7 +127,8 @@ export function EventHostReviewManager({ events, workspaces, migrationReady }: {
       {workspaces.length === 0 ? <p>No Event Hosts have been assigned yet.</p> : workspaces.map((item) => <article className="admin-section" key={item.event_id}>
         <p className="eyebrow">{item.workspace_status.replaceAll("_", " ")} · {item.event_status}</p>
         <h3>{item.event_title}</h3>
-        <p>Host: {item.host_name || item.host_email} · {item.host_email}</p>
+        <p>Host: {item.host_name || item.host_email} · {item.host_email} · {item.host_status === "paused" ? "Access paused" : "Access active"}</p>
+        {lifecycleReady ? <button className="button button-outline" type="button" disabled={busy} onClick={() => void changeHostStatus(item)}>{item.host_status === "paused" ? "Restore Host access" : "Pause Host access"}</button> : null}
         <p>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.starts_at))}</p>
         {item.workspace_status === "submitted" ? <div>
           <h4>Event introduction</h4><p>{item.summary}</p>
@@ -103,7 +136,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady }: {
           <h4>Programme</h4><ul>{item.programme.map((entry, index) => <li key={index}><strong>{entry.title}</strong> · {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(entry.starts_at))}{entry.speaker_name ? ` · ${entry.speaker_name}` : ""}<p>{entry.description}</p></li>)}</ul>
           <h4>Partners</h4>{item.partners.length ? <ul>{item.partners.map((entry, index) => <li key={index}>{entry.name}{entry.website_url ? ` · ${entry.website_url}` : ""}</li>)}</ul> : <p>None listed.</p>}
           <label>Note to Host<textarea rows={3} value={notes[item.event_id] ?? ""} onChange={(event) => setNotes((all) => ({ ...all, [item.event_id]: event.target.value }))} placeholder="Explain what needs to change, if anything." /></label>
-          <div className="portal-actions"><button className="button button-primary" type="button" disabled={busy} onClick={() => void review(item, "approve")}>Approve and publish</button><button className="button button-outline" type="button" disabled={busy} onClick={() => void review(item, "request_changes")}>Ask for changes</button></div>
+          <div className="portal-actions"><button className="button button-primary" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "approve")}>Approve and publish</button><button className="button button-outline" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "request_changes")}>Ask for changes</button></div>
         </div> : item.review_note ? <p>Last review note: {item.review_note}</p> : null}
         {item.event_status === "published" ? <Link href={`/events/${item.event_slug}`}>View public page</Link> : null}
       </article>)}

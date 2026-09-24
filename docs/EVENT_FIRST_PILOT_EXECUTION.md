@@ -85,6 +85,11 @@ closed behind a flag; a green build alone is not an exit.
   scoped Host assignment. The Admin approval button is disabled until this
   migration's readiness function exists. `supabase/tests/004_member_event_private_handoff.sql`
   checks the private handoff.
+- [x] `20260924090000_event_host_pause_and_transfer.sql` gives Super Admin a
+  reasoned pause/restore control. Replacing a Host keeps the working content
+  but resets the submission, so the successor must review and resubmit it.
+  `supabase/tests/005_event_host_lifecycle.sql` specifies that permission and
+  content-transfer boundary.
 - [x] Live read on 23 September 2026 confirmed the existing release is healthy,
   with no published public event and no guest-access flag yet installed.
 - [ ] Apply both September event-guest migrations in order in the intended
@@ -94,6 +99,10 @@ closed behind a flag; a green build alone is not an exit.
   Host/Admin rehearsal. Until then, the new screens show setup needed and the
   member-event approval button stays disabled. Do not call the handoff accepted
   from a green TypeScript build alone.
+- [ ] Apply the Host pause/transfer migration after the private handoff, then
+  run pgTAP test 005 and rehearse pause, restore and replacement with distinct
+  Host accounts. The Admin controls remain hidden until its readiness check
+  succeeds.
 - [ ] Extend Host drafts with approved media and a clear venue/format review;
   keep private online joining links out of public arrival copy.
 - [ ] Inspect existing event orders that already granted a `member_onboarding`
