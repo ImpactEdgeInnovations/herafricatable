@@ -132,7 +132,7 @@ select lives_ok($$select public.respond_to_marketplace_post('60000000-0000-4000-
 select throws_ok($$select public.respond_to_marketplace_post('60000000-0000-4000-8000-000000000001','A second response should not create a duplicate.')$$,'P0001','You already responded to this post','duplicate marketplace response is rejected');
 select is((select count(*)from public.marketplace_responses),1::bigint,'responder reads own private response only');
 select lives_ok($$select public.report_marketplace_post('60000000-0000-4000-8000-000000000001','other','Test report for report-scoped moderation coverage.')$$,'active member can report a visible marketplace post');
-select is((select count(*)from public.list_communities()),2::bigint,'active member lists published communities behind enabled flag');
+select is((select count(*)from public.list_communities()),3::bigint,'active member lists published communities behind enabled flag');
 select lives_ok($$select public.request_community_access('70000000-0000-4000-8000-000000000002')$$,'active member requests access to a private community');
 select is((select status from public.community_memberships where community_id='70000000-0000-4000-8000-000000000002'and user_id='10000000-0000-4000-8000-000000000002'),'requested','private community request remains pending');
 select throws_ok($$select *from public.list_community_posts('70000000-0000-4000-8000-000000000002',30,0)$$,'P0001','Active community membership required','pending member cannot read private community feed');
