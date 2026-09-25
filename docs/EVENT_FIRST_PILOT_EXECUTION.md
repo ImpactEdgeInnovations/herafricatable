@@ -59,7 +59,7 @@ Each sprint ends with the relevant migration, database permission check, UI
 states, operational note and acceptance record. An unfinished item remains
 closed behind a flag; a green build alone is not an exit.
 
-## Current implementation checkpoint — 24 September 2026
+## Current implementation checkpoint — 25 September 2026
 
 - [x] The event-only guest model is specified above.
 - [x] `20260923090000_event_limited_guest_access.sql` creates a default-off flag,
@@ -133,6 +133,28 @@ closed behind a flag; a green build alone is not an exit.
   Super Admin review/pause, and attendee-only schedules. Hosts cannot see
   unconsenting guests or approve their own plans. The attendee, Host and Admin
   screens are wired; table rounds never grant member-network access.
+- [x] The isolated GitHub quality gate for `189f0ab` applied all migrations and
+  passed all 391 database assertions. Application verification, TypeScript and
+  production build passed. Its previously stale Host, Community and referral
+  test fixtures are now aligned with current permission and manual-review rules.
+- [x] On published or completed event pages, signed-in approved members can
+  open Nia in place. Her event answer is grounded in the event and published
+  programme visible through that member's database session; private seats,
+  passes, joining links and safety contacts are excluded. Missing programme
+  details are identified rather than invented, and the provider fallback gives
+  a useful event-specific answer. This is a Sprint 7 implementation step, not
+  live acceptance or permission to open the feature for event-only guests.
+- [x] `20260925100000_table_guide_referral_category.sql` aligns Nia's referral
+  topic with the database's allowed usage and feedback categories. The
+  isolated `010_table_guide_referral_category.sql` test checks that referral
+  answers record normally while unknown categories remain rejected.
+- [ ] Apply `20260925100000_table_guide_referral_category.sql` to the connected
+  Supabase project after reviewing the GitHub database gate. Do not run the
+  `010_` test file in the production SQL Editor.
+- [ ] Rehearse Nia on a real published pilot event with a signed-in member,
+  including a missing programme, closed registration, a private/draft event
+  slug, provider outage and mobile view. Confirm that the member receives only
+  published facts and no private booking or joining data before Sprint 7 exits.
 - [ ] Apply `20260924140000_event_table_rounds.sql` **after** the introduction
   migration. Run `supabase/tests/009_event_table_rounds.sql` only in an isolated
   CI/local/staging database. Rehearse twenty separate opted-in guests, blocked

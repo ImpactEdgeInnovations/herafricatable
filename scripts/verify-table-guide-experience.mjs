@@ -55,6 +55,8 @@ for (const contract of [
   "Dock ",
   'pathname === "/guide"',
   "remaining <= 5",
+  "eventSlug: pathname.match",
+  "What is on the published programme?",
 ]) {
   assert(floating.includes(contract), `Floating Nia is missing: ${contract}`);
 }
@@ -78,12 +80,37 @@ for (const contract of [
   "untrusted reference material",
   "if (!apiKey || !safetySalt)",
   "limited: true",
+  "currentEventResult.error ? null",
+  '.in("status", ["published", "completed"])',
+  '.eq("status", "published")',
+  "I cannot see your private seat, pass or joining link",
 ]) {
   assert(api.includes(contract), `Nia response API is missing: ${contract}`);
 }
+const eventPage = read("app/events/[slug]/page.tsx");
+assert(
+  eventPage.includes("<FloatingTableGuide") && eventPage.includes("get_my_table_guide_access"),
+  "Published event pages must offer Nia only to eligible signed-in members",
+);
+assert(
+  !api.includes('.from("event_private_details")') &&
+    !api.includes('.from("event_safety_contacts")'),
+  "Nia event context must not read private joining or safety details",
+);
 
 const feedback = read(
   "supabase/migrations/20260813130000_table_guide_experience_feedback.sql",
+);
+const referralCategory = read(
+  "supabase/migrations/20260925100000_table_guide_referral_category.sql",
+);
+assert(
+  referralCategory.includes("table_guide_usage_category_check") &&
+    referralCategory.includes("table_guide_feedback_category_check") &&
+    referralCategory.includes("'referrals'") &&
+    referralCategory.includes("record_table_guide_usage") &&
+    referralCategory.includes("record_table_guide_feedback"),
+  "Nia referral answers and feedback must use an accepted database category",
 );
 for (const contract of [
   "table_guide_feedback",

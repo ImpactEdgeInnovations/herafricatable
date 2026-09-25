@@ -115,8 +115,16 @@ export function FloatingTableGuide({
   const pathname = usePathname();
   const supabase = useMemo(() => createClient(), []);
   const route = useMemo(
-    () =>
-      Object.entries(routeHelp).find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? {
+    () => pathname.match(/^\/events\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/|$)/)
+      ? {
+          prompts: [
+            "What time and where is this event?",
+            "What is on the published programme?",
+            "How do I request a seat?",
+          ],
+          title: "Questions about this gathering?",
+        }
+      : Object.entries(routeHelp).find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? {
         prompts: [
           "Help me find my way around.",
           "What can I do here?",
@@ -227,7 +235,11 @@ export function FloatingTableGuide({
     setBusy(true);
     try {
       const response = await fetch("/api/table-guide", {
-        body: JSON.stringify({ history, message: clean }),
+        body: JSON.stringify({
+          eventSlug: pathname.match(/^\/events\/([a-z0-9]+(?:-[a-z0-9]+)*)(?:\/|$)/)?.[1],
+          history,
+          message: clean,
+        }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       });

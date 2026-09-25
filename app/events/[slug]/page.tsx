@@ -23,6 +23,7 @@ import {
   DestinationInvitationPanel,
   type DestinationInvitation,
 } from "@/components/member/destination-invitation-panel";
+import { FloatingTableGuide } from "@/components/member/floating-table-guide";
 
 export const dynamic = "force-dynamic";
 
@@ -110,8 +111,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     ? await supabase.from("menu_items").select("id, course_id, name, description, cultural_origin, cultural_story, ingredients, dietary_tags, allergen_notes, sort_order").in("course_id", menuCourseIds).eq("status", "published").order("sort_order", { ascending: true })
     : { data: [] };
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: memberProfile } = user ? await supabase.from("profiles").select("access_status").eq("id", user.id).maybeSingle() : { data: null };
+  const { data: memberProfile } = user ? await supabase.from("profiles").select("access_status,display_name").eq("id", user.id).maybeSingle() : { data: null };
   const activeMember = Boolean(user && memberProfile?.access_status === "active");
+  const { data: guideAccessRows } = activeMember
+    ? await supabase.rpc("get_my_table_guide_access")
+    : { data: null };
+  const guideAccess = (guideAccessRows as {
+    assistant_enabled: boolean;
+    feature_enabled: boolean;
+    remaining_today: number;
+  }[] | null)?.[0] ?? null;
   const { data: eventGuestFlag } = user && event.audience === "public" && !activeMember
     ? await supabase.from("feature_flags").select("enabled").eq("key", "event_guest_access").maybeSingle()
     : { data: null };
@@ -362,6 +371,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           eventTitle={event.title}
           media={mediaSubmissions}
           userId={user.id}
+        />
+      ) : null}
+      {guideAccess?.feature_enabled ? (
+        <FloatingTableGuide
+          assistantEnabled={guideAccess.assistant_enabled}
+          featureEnabled
+          firstName={memberProfile?.display_name?.trim().split(/\s+/)[0] || "Member"}
+          installed
+          remainingToday={guideAccess.remaining_today}
         />
       ) : null}
     </main>
