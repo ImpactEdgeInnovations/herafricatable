@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(27);
+select plan(28);
 
 insert into auth.users(id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at)
 values
@@ -106,10 +106,19 @@ select throws_ok(
   'Admin cannot invite into an unpublished Community');
 
 set local role postgres;
-update public.communities set status = 'published'
-where id = 'e3000000-0000-4000-8000-000000000001';
+insert into public.community_memberships(community_id, user_id, role, status, joined_at)
+values
+  ('e3000000-0000-4000-8000-000000000001', 'e0000000-0000-4000-8000-000000000002', 'owner', 'active', now()),
+  ('e3000000-0000-4000-8000-000000000001', 'e0000000-0000-4000-8000-000000000001', 'moderator', 'active', now());
+update public.community_release_checks
+set status = 'passed', verified_by = 'e0000000-0000-4000-8000-000000000001',
+  verified_at = now(), evidence_note = 'Isolated database fixture for the invitation boundary only.'
+where community_id = 'e3000000-0000-4000-8000-000000000001';
 set local role authenticated;
 select set_config('request.jwt.claim.sub', 'e0000000-0000-4000-8000-000000000001', true);
+select lives_ok(
+  $$select public.publish_community_after_acceptance('e3000000-0000-4000-8000-000000000001', true)$$,
+  'the existing Community release gate publishes only after its fixture checks and backup moderator are present');
 select lives_ok(
   $$select public.invite_event_follow_up_guest('e1000000-0000-4000-8000-000000000001', 'e0000000-0000-4000-8000-000000000003')$$,
   'Admin queues a reviewed private Community invitation');

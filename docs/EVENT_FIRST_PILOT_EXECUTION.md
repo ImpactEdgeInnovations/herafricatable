@@ -207,7 +207,9 @@ closed behind a flag; a green build alone is not an exit.
   the Admin queue so the separate-account rehearsal can use the same path.
 - [ ] Apply `20260925130000_event_follow_up_invitations.sql` only after the
   isolated CI migration and `supabase/tests/013_event_follow_up_invitations.sql`
-  pass. Then rehearse one pending guest, one active member, Host denial, Admin
+  pass. The test Community must satisfy the existing eight release checks and
+  backup-moderator gate; this is never bypassed to exercise invitations.
+  Then rehearse one pending guest, one active member, Host denial, Admin
   send, delivery, claim, withdrawal and the published Community approval path
   using distinct real test accounts. Keep `event_guest_access` off until the
   complete release gate passes.
