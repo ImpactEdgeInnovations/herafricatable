@@ -42,10 +42,21 @@ export default async function PastEventsPage() {
   const { data: mine } = user
     ? await supabase.rpc("list_my_past_events")
     : { data: [] };
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("access_status").eq("id", user.id).maybeSingle()
+    : { data: null };
+  const activeMember = profile?.access_status === "active";
+  const myPastEvents = ((mine as { event_id: string; feedback_id: string | null; slug: string }[] | null) ?? []);
+  const guestFollowUpResults = user && !activeMember && profile?.access_status === "pending"
+    ? await Promise.all(myPastEvents.map((event) =>
+        supabase.rpc("can_leave_event_feedback", { p_event_id: event.event_id })))
+    : [];
+  const guestFollowUpEvents = new Set(
+    myPastEvents.filter((event, index) => guestFollowUpResults[index]?.data === true)
+      .map((event) => event.event_id),
+  );
   const eligible = new Map(
-    (
-      (mine as { feedback_id: string | null; slug: string }[] | null) ?? []
-    ).map((item) => [item.slug, item.feedback_id]),
+    myPastEvents.map((item) => [item.slug, item.feedback_id]),
   );
   const events = (past as PastEvent[] | null) ?? [];
   const [testimonialResults, continuationResult] = await Promise.all([
@@ -77,7 +88,7 @@ export default async function PastEventsPage() {
 
   return (
     <main className="past-events-page">
-      {user ? (
+      {activeMember ? (
         <MemberHeader active="events" label="Past events" />
       ) : (
         <header className="legal-header">
@@ -166,9 +177,9 @@ export default async function PastEventsPage() {
                   <span>{event.recap_summary ? "Recap published" : "Recap pending"}</span>
                   <div className="past-event-member-actions">
                     <Link href={`/events/${event.slug}`}>View event story</Link>
-                    {continuations.has(event.event_id) ? <Link href={`/communities/${continuations.get(event.event_id)!.slug}`}>View {continuations.get(event.event_id)!.name}</Link> : null}
-                    {eligible.has(event.slug) ? <>
-                      <Link href={`/events/${event.slug}/follow-up`}>Continue connections</Link>
+                    {continuations.has(event.event_id) ? <Link href={`/communities/${continuations.get(event.event_id)!.slug}${activeMember ? "" : "/about"}`}>View {continuations.get(event.event_id)!.name}</Link> : null}
+                    {eligible.has(event.slug) && (activeMember || guestFollowUpEvents.has(event.event_id)) ? <>
+                      <Link href={`/events/${event.slug}/follow-up`}>{activeMember ? "Continue connections" : "My event follow-up"}</Link>
                       <Link href={`/events/${event.slug}/feedback`}>{eligible.get(event.slug) ? "Update feedback" : "Share private feedback"}</Link>
                     </> : null}
                   </div>
@@ -185,7 +196,7 @@ export default async function PastEventsPage() {
               <p>After a gathering ends, approved recaps, your private feedback and attendee follow-up will become available in this archive.</p>
               <div className="past-events-empty-actions">
                 <Link className="button button-primary" href="/events">View upcoming events</Link>
-                {user ? <Link className="button button-outline" href="/home">Return home</Link> : null}
+                {activeMember ? <Link className="button button-outline" href="/home">Return home</Link> : null}
               </div>
             </div>
           </div>

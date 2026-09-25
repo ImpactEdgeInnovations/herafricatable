@@ -120,10 +120,12 @@ closed behind a flag; a green build alone is not an exit.
   Admin pause/restore are enforced in Postgres. The feature is off by default
   for each event; Super Admin opens it after rehearsal. The attendee and Admin
   screens are wired, and the entry-pass QR remains entirely separate.
-- [ ] Apply `20260924130000_event_intro_cards.sql`, then rehearse with two
-  different confirmed accounts, an unconfirmed visitor, a blocked pair and
-  Super Admin. Run `supabase/tests/008_event_intro_cards.sql` only in an
-  isolated CI/local/staging database, never in the production SQL Editor.
+- [x] On 25 September, the connected project exposed `event_intro_settings`
+  after the introduction migration. The isolated GitHub database gate covers
+  its pgTAP contract. This is installation evidence, not a live rehearsal.
+- [ ] Rehearse introductions with two different confirmed accounts, an
+  unconfirmed visitor, a blocked pair and Super Admin before enabling them
+  for the pilot event.
 - [x] The event detail page now reads a confirmed place for an event-only guest,
   not only for an active member. The guest retains her pass entry even if new
   guest requests are later paused. The pass page is explicitly non-indexable.
@@ -155,11 +157,24 @@ closed behind a flag; a green build alone is not an exit.
   including a missing programme, closed registration, a private/draft event
   slug, provider outage and mobile view. Confirm that the member receives only
   published facts and no private booking or joining data before Sprint 7 exits.
-- [ ] Apply `20260924140000_event_table_rounds.sql` **after** the introduction
-  migration. Run `supabase/tests/009_event_table_rounds.sql` only in an isolated
-  CI/local/staging database. Rehearse twenty separate opted-in guests, blocked
-  pairs, opt-outs after assignment, capacity, Host replacement, mobile schedule
-  visibility and Admin pause before opening this setting for a real event.
+- [x] On 25 September, the connected project exposed `event_round_settings`
+  after the table-round migration. The isolated GitHub database gate covers
+  its pgTAP contract. This is installation evidence, not a live rehearsal.
+- [ ] Rehearse twenty separate opted-in guests, blocked pairs, opt-outs after
+  assignment, capacity, Host replacement, mobile schedule visibility and Admin
+  pause before opening table rounds for a real event.
+- [x] `20260925110000_event_guest_follow_up.sql` adds event-scoped after-event
+  access for a confirmed public-event guest with a current event entitlement.
+  She can leave private feedback and, where an approved Host proposal offers
+  a future Community, express interest without receiving membership. The
+  interface shows her recap and feedback on the same event journey; anonymous
+  guest quotes are attributed as event guests. Private and future events,
+  unrelated users and revoked entitlements remain excluded.
+- [ ] Apply `20260925110000_event_guest_follow_up.sql` after its isolated
+  database test passes. Run `supabase/tests/011_event_guest_follow_up.sql`
+  only in CI/local/staging, never in the production SQL Editor. Rehearse a
+  confirmed event-only guest and a full member separately, including feedback,
+  Community interest, entitlement revocation and mobile views.
 - [x] `ops:events:accept-private-host` passed with one Super Admin and two
   separate tagged members. It created `hat-private-host-rehearsal-20260924`
   as a closed, unfeatured draft; verified scoped Host access, private drafting,

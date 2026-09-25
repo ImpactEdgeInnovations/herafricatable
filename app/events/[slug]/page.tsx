@@ -179,6 +179,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       ])
     : [{ data: [] }, { data: null }];
   const isConfirmedGuest = ["confirmed", "attended"].includes(ownMembership?.status ?? "");
+  const { data: guestFollowUpAccess } = hasEnded && isConfirmedGuest && !activeMember
+    ? await supabase.rpc("can_leave_event_feedback", { p_event_id: event.id })
+    : { data: false };
   const [{ data: attendeePreference }, attendeeDirectoryResult, followUpResult, introReadyResult, roundStatusResult] = isConfirmedGuest
     ? await Promise.all([
         activeMember
@@ -340,6 +343,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       <section className="event-content-section"><div><p className="eyebrow">The gathering</p><h2>Programme</h2></div>{sessions?.length ? <div className="programme-list">{sessions.map((session) => { const speakers = speakersFor(session.id); return <article key={session.id}><time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(session.starts_at))}</time><div><h3>{session.title}</h3>{speakers.map((speaker) => <p className="programme-speaker" key={`${session.id}-${speaker.name}`}><strong>{speaker.name}</strong>{[speaker.job_title, speaker.company].filter(Boolean).join(" · ") ? ` · ${[speaker.job_title, speaker.company].filter(Boolean).join(" · ")}` : ""}</p>)}<p>{session.description}</p>{session.room ? <span>{session.room}</span> : null}</div></article>; })}</div> : <div className="events-empty"><strong>Programme arriving soon.</strong><p>Confirmed attendees will receive programme updates as they are published.</p></div>}</section>
 
       {hasEnded && recap ? <section className="event-public-recap"><div><p className="eyebrow">From the Host</p><h2>{recap.title}</h2><p>{recap.summary}</p>{recap.highlights?.length ? <ul>{recap.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}</ul> : null}</div>{continuation ? <aside><span>The conversation continues</span><strong>{continuation.name}</strong><p>Join the approved Community for future gatherings and ongoing conversation.</p><Link className="button button-primary" href={`/communities/${continuation.slug}`}>View Community</Link></aside> : null}</section> : null}
+      {hasEnded && isConfirmedGuest && (activeMember || guestFollowUpAccess) ? <section className="event-intro-entry"><div><p className="eyebrow">For guests who attended</p><h2>Continue after the table</h2><p>Read the approved recap, share private feedback and choose whether to hear about the next gathering. An event place does not approve network membership.</p></div><Link className="button button-outline" href={`/events/${slug}/follow-up`}>Open my follow-up</Link></section> : null}
 
       {hasEnded && testimonials.length ? <section className="event-public-reflections"><header><p className="eyebrow">Shared with permission</p><h2>What guests carried forward.</h2></header><div>{testimonials.map((item) => <blockquote key={`${item.attribution}-${item.quote}`}><p>“{item.quote}”</p><cite>— {item.attribution}</cite></blockquote>)}</div></section> : null}
 

@@ -185,7 +185,7 @@ export function PostEventFeedbackForm({
             >
               <option value="none">Keep everything private</option>
               <option value="anonymous">May publish anonymously</option>
-              <option value="named">May publish with my member name</option>
+              <option value="named">May publish with my name</option>
             </select>
           </label>
           {consent !== "none" ? (

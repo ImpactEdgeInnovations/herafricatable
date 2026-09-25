@@ -1,14 +1,17 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import {
   EventAttendeeDirectory,
   type EventAttendee,
   type EventAttendeePreference,
 } from "@/components/events/event-attendee-directory";
+import { EventCommunityFollowUp } from "@/components/events/event-community-follow-up";
 import { MemberHeader } from "@/components/member/member-header";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 type MemberPastEvent = {
   ends_at: string;
@@ -44,7 +47,8 @@ export default async function EventFollowUpPage({
     .select("access_status")
     .eq("id", user.id)
     .maybeSingle();
-  if (profile?.access_status !== "active") redirect("/home");
+  const activeMember = profile?.access_status === "active";
+  if (!activeMember && profile?.access_status !== "pending") notFound();
 
   const { data: pastEvents, error: pastError } =
     await supabase.rpc("list_my_past_events");
@@ -52,6 +56,10 @@ export default async function EventFollowUpPage({
     (item) => item.slug === slug,
   );
   if (pastError || !event) notFound();
+  const { data: guestFollowUpAccess } = !activeMember
+    ? await supabase.rpc("can_leave_event_feedback", { p_event_id: event.event_id })
+    : { data: false };
+  if (!activeMember && !guestFollowUpAccess) notFound();
 
   const [
     recapResult,
@@ -59,6 +67,8 @@ export default async function EventFollowUpPage({
     attendeeResult,
     communityFlagResult,
     linkedCommunityResult,
+    followUpResult,
+    introResult,
   ] =
     await Promise.all([
       supabase
@@ -67,17 +77,21 @@ export default async function EventFollowUpPage({
         .eq("event_id", event.event_id)
         .eq("status", "published")
         .maybeSingle(),
-      supabase
-        .from("event_attendee_preferences")
-        .select("discoverable,show_company,introduction")
-        .eq("event_id", event.event_id)
-        .eq("user_id", user.id)
-        .maybeSingle(),
-      supabase.rpc("list_event_attendee_directory", {
-        p_event_id: event.event_id,
-        p_limit: 30,
-        p_offset: 0,
-      }),
+      activeMember
+        ? supabase
+            .from("event_attendee_preferences")
+            .select("discoverable,show_company,introduction")
+            .eq("event_id", event.event_id)
+            .eq("user_id", user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      activeMember
+        ? supabase.rpc("list_event_attendee_directory", {
+            p_event_id: event.event_id,
+            p_limit: 30,
+            p_offset: 0,
+          })
+        : Promise.resolve({ data: [] }),
       supabase
         .from("feature_flags")
         .select("enabled")
@@ -89,6 +103,10 @@ export default async function EventFollowUpPage({
         .eq("event_id", event.event_id)
         .limit(1)
         .maybeSingle(),
+      supabase.rpc("get_my_event_follow_up_interest", { p_event_id: event.event_id }),
+      !activeMember
+        ? supabase.rpc("get_my_event_intro_card", { p_event_id: event.event_id })
+        : Promise.resolve({ data: null, error: null }),
     ]);
   const recap = recapResult.data;
   const linkedRelation = (linkedCommunityResult.data as LinkedCommunity | null)
@@ -99,17 +117,25 @@ export default async function EventFollowUpPage({
   const communityReady = Boolean(
     communityFlagResult.data?.enabled && linkedCommunity?.slug,
   );
+  const followUp = ((followUpResult.data as { available: boolean; interested: boolean }[] | null) ?? [])[0] ?? null;
+  const introAvailable = !activeMember && !introResult.error;
 
   return (
     <main className="event-follow-up-page">
-      <MemberHeader active="events" label="After the table" />
+      {activeMember ? <MemberHeader active="events" label="After the table" /> : (
+        <header className="legal-header">
+          <Link className="brand" href="/">Her Africa Table</Link>
+          <Link href={`/events/${slug}`}>Back to event</Link>
+        </header>
+      )}
       <section className="follow-up-hero">
         <div>
           <p className="eyebrow">Your private event follow-up</p>
           <h1>{event.title}</h1>
           <p>
-            Return to the ideas and people from the room, then choose the
-            follow-up that feels useful to you.
+            {activeMember
+              ? "Return to the ideas and people from the room, then choose the follow-up that feels useful to you."
+              : "Revisit the event and choose what you would like to do next. Your event place does not make you a network member."}
           </p>
         </div>
         <time>
@@ -127,17 +153,25 @@ export default async function EventFollowUpPage({
           </strong>
           <small>Private unless you separately permit a testimonial</small>
         </Link>
-        <Link href="/network">
+        {activeMember ? <Link href="/network">
           <span>02</span>
           <strong>Find someone from the room</strong>
           <small>Connection requests still require mutual consent</small>
-        </Link>
-        <Link href="/opportunities">
+        </Link> : introAvailable ? <Link href={`/events/${slug}/meet`}>
+          <span>02</span>
+          <strong>See your event introductions</strong>
+          <small>Only people who both agreed can connect here</small>
+        </Link> : null}
+        {activeMember ? <Link href="/opportunities">
           <span>03</span>
           <strong>Share an ask or offer</strong>
           <small>Turn a useful conversation into a clear next step</small>
-        </Link>
-        <Link
+        </Link> : <a href="#recap">
+          <span>03</span>
+          <strong>Read the event reflection</strong>
+          <small>The Host’s reviewed recap appears below when ready</small>
+        </a>}
+        {activeMember ? <Link
           href={
             communityReady
               ? `/communities/${linkedCommunity!.slug}?view=conversations&moment=event-follow-up#create-conversation`
@@ -159,11 +193,15 @@ export default async function EventFollowUpPage({
               ? "Share a reflection, question or useful next step with the room"
               : "Use the private space that matches your relationship"}
           </small>
-        </Link>
+        </Link> : <Link href={communityReady ? `/communities/${linkedCommunity!.slug}/about` : "/apply"}>
+          <span>04</span>
+          <strong>{communityReady ? `Discover ${linkedCommunity!.name}` : "Explore membership"}</strong>
+          <small>Joining a Community requires a separate membership decision</small>
+        </Link>}
       </nav>
 
       {recap ? (
-        <section className="follow-up-recap">
+        <section className="follow-up-recap" id="recap">
           <div>
             <p className="eyebrow">From the table</p>
             <h2>{recap.title}</h2>
@@ -180,26 +218,28 @@ export default async function EventFollowUpPage({
           </div>
         </section>
       ) : (
-        <section className="follow-up-recap is-pending">
+        <section className="follow-up-recap is-pending" id="recap">
           <div>
             <p className="eyebrow">Event reflection</p>
             <h2>The recap is being prepared.</h2>
           </div>
           <p>
-            You can still reconnect with opted-in attendees or share private
-            feedback while the team prepares the event reflection.
+            {activeMember
+              ? "You can still reconnect with opted-in attendees or share private feedback while the team prepares the event reflection."
+              : "You can still share private feedback while the team prepares the event reflection."}
           </p>
         </section>
       )}
 
-      <EventAttendeeDirectory
+      {followUp?.available ? <EventCommunityFollowUp eventId={event.event_id} initialInterested={followUp.interested} /> : null}
+      {activeMember ? <EventAttendeeDirectory
         attendees={(attendeeResult.data as EventAttendee[] | null) ?? []}
         eventId={event.event_id}
         initialPreference={
           (preferenceResult.data as EventAttendeePreference | null) ?? null
         }
         mode="after"
-      />
+      /> : null}
     </main>
   );
 }

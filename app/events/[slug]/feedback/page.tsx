@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import {
   PostEventFeedbackForm,
@@ -8,6 +9,7 @@ import { MemberHeader } from "@/components/member/member-header";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function FeedbackPage({
   params,
@@ -24,6 +26,9 @@ export default async function FeedbackPage({
       `/sign-in?next=${encodeURIComponent(`/events/${slug}/feedback`)}`,
     );
   }
+  const { data: profile } = await supabase.from("profiles")
+    .select("access_status").eq("id", user.id).maybeSingle();
+  const activeMember = profile?.access_status === "active";
 
   const { data: events, error } = await supabase.rpc("list_my_past_events");
   const event = (
@@ -33,7 +38,12 @@ export default async function FeedbackPage({
   if (error) {
     return (
       <main className="event-feedback-page">
-        <MemberHeader active="events" label="Private event feedback" />
+        {activeMember ? <MemberHeader active="events" label="Private event feedback" /> : (
+          <header className="legal-header">
+            <Link className="brand" href="/">Her Africa Table</Link>
+            <Link href="/events/past">Past events</Link>
+          </header>
+        )}
         <section className="admin-empty opportunity-error" role="alert">
           <strong>Feedback is temporarily unavailable</strong>
           <p>
@@ -54,6 +64,14 @@ export default async function FeedbackPage({
   }
   if (!event) notFound();
 
+  if (!activeMember) {
+    if (profile?.access_status !== "pending") notFound();
+    const { data: allowed } = await supabase.rpc("can_leave_event_feedback", {
+      p_event_id: event.event_id,
+    });
+    if (!allowed) notFound();
+  }
+
   const { data: existing } = await supabase
     .from("event_feedback")
     .select(
@@ -65,7 +83,12 @@ export default async function FeedbackPage({
 
   return (
     <main className="event-feedback-page">
-      <MemberHeader active="events" label="Private event feedback" />
+      {activeMember ? <MemberHeader active="events" label="Private event feedback" /> : (
+        <header className="legal-header">
+          <Link className="brand" href="/">Her Africa Table</Link>
+          <Link href={`/events/${slug}/follow-up`}>Back to event follow-up</Link>
+        </header>
+      )}
       <PostEventFeedbackForm
         eventId={event.event_id}
         eventTitle={event.title}
