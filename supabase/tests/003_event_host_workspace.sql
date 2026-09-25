@@ -70,7 +70,7 @@ select lives_ok(
   )$$,
   'Host saves programme content privately'
 );
-select is((select status from public.events where id = 'b1000000-0000-4000-8000-000000000001'), 'draft', 'saving never publishes the event');
+select is((select event_status from public.get_my_event_host_workspace('host-workspace-test')), 'draft', 'saving never publishes the event');
 select lives_ok(
   $$select public.submit_event_host_workspace('b1000000-0000-4000-8000-000000000001')$$,
   'Host sends a complete draft for review'
@@ -100,6 +100,7 @@ select lives_ok(
 );
 select public.submit_event_host_workspace('b1000000-0000-4000-8000-000000000001');
 select set_config('request.jwt.claim.sub', 'b0000000-0000-4000-8000-000000000001', true);
+select public.save_event_safety_contact('b1000000-0000-4000-8000-000000000001', 'Test Safety Lead', '+254700000099');
 select lives_ok(
   $$select public.review_event_host_workspace('b1000000-0000-4000-8000-000000000001', 'approve', 'Ready to welcome guests.')$$,
   'Admin approves the prepared event'

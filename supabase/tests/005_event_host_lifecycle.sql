@@ -62,6 +62,7 @@ select lives_ok(
 );
 select set_config('request.jwt.claim.sub', 'd0000000-0000-4000-8000-000000000003', true);
 select ok(not public.can_host_event('d1000000-0000-4000-8000-000000000001'), 'paused Host cannot use the workspace');
+select set_config('request.jwt.claim.sub', 'd0000000-0000-4000-8000-000000000001', true);
 select is(
   (select status from public.events where id = 'd1000000-0000-4000-8000-000000000001'),
   'draft', 'pausing a Host does not publish or cancel the event'

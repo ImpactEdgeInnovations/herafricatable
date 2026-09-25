@@ -108,22 +108,24 @@ select is(
   'the proposing member gets scoped Host access'
 );
 
+-- The draft event is deliberately hidden from a Host's direct events query.
+-- Carry the Admin-visible slug into the scoped workspace lookup instead.
+select set_config('test.handoff_slug',
+  (select event.slug from public.events event
+   join public.member_event_proposals proposal on proposal.canonical_event_id = event.id
+   where proposal.id = 'c1000000-0000-4000-8000-000000000001'), true);
 select set_config('request.jwt.claim.sub', 'c0000000-0000-4000-8000-000000000002', true);
 do $diagnose$
 begin
   perform count(*) from public.get_my_event_host_workspace(
-    (select event.slug from public.events event
-     join public.member_event_proposals proposal on proposal.canonical_event_id = event.id
-     where proposal.id = 'c1000000-0000-4000-8000-000000000001'));
+    current_setting('test.handoff_slug'));
 exception when others then
   raise exception '004 read: Host workspace lookup: %', sqlerrm;
 end
 $diagnose$;
 select is(
   (select count(*) from public.get_my_event_host_workspace(
-    (select event.slug from public.events event
-     join public.member_event_proposals proposal on proposal.canonical_event_id = event.id
-     where proposal.id = 'c1000000-0000-4000-8000-000000000001'))),
+    current_setting('test.handoff_slug'))),
   1::bigint, 'the Host can open the private workspace'
 );
 

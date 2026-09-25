@@ -66,7 +66,7 @@ update public.feature_flags set enabled=true where key='communities';
 insert into public.communities(id,slug,name,description,community_type,status,created_by)values
  ('70000000-0000-4000-8000-000000000001','test-official-community','Test Official Community','An official production boundary test community for active members.','official','published','10000000-0000-4000-8000-000000000001'),
  ('70000000-0000-4000-8000-000000000002','test-private-community','Test Private Community','A private production boundary test community requiring host approval.','private','published','10000000-0000-4000-8000-000000000001'),
- ('70000000-0000-4000-8000-000000000003','test-offboarding-community','Test Offboarding Community','A controlled draft room used to prove host transition and record-preservation boundaries.','private','draft','10000000-0000-4000-8000-000000000001');
+ ('70000000-0000-4000-8000-000000000003','test-offboarding-community','Test Offboarding Community','A controlled open room used to prove host transition and record-preservation boundaries.','private','published','10000000-0000-4000-8000-000000000001');
 insert into public.community_memberships(community_id,user_id,role,status,joined_at)values
  ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','owner','active',now()),
  ('70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','owner','active',now()),
@@ -324,7 +324,7 @@ insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,em
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',true);
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
-select is((select status from public.referral_invitations where invitee_email='referred-member@test.invalid'),'claimed','accepted auth invite links referral attribution to the new identity');
+select is((select status from public.referral_invitations where invitee_email='referred-member@test.invalid'),'approved','manual-review intake leaves a referral approved until membership is granted');
 set local role postgres;
 update public.profiles set access_status='active'where id='90000000-0000-4000-8000-000000000002';
 set local role authenticated;
