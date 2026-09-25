@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { MemberHeader } from "@/components/member/member-header";
-import { EventHostWorkspace, type EventHostCover, type EventHostWorkspaceRow } from "@/components/events/event-host-workspace";
+import { EventHostWorkspace, type EventHostCover, type EventHostOutcomes, type EventHostWorkspaceRow } from "@/components/events/event-host-workspace";
 import { createClient } from "@/lib/supabase/server";
 import type { Metadata } from "next";
 
@@ -15,9 +15,15 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
   const { data, error } = await supabase.rpc("get_my_event_host_workspace", { p_slug: slug });
   const workspace = ((data as EventHostWorkspaceRow[] | null) ?? [])[0];
   if (error || !workspace) notFound();
-  const coverResult = await supabase.from("event_host_covers")
-    .select("draft_storage_path,draft_alt_text,published_storage_path")
-    .eq("event_id", workspace.event_id).maybeSingle();
+  const hasEnded = new Date(workspace.ends_at).getTime() < Date.now();
+  const [coverResult, outcomesResult] = await Promise.all([
+    hasEnded ? Promise.resolve({ data: null, error: null }) : supabase.from("event_host_covers")
+      .select("draft_storage_path,draft_alt_text,published_storage_path")
+      .eq("event_id", workspace.event_id).maybeSingle(),
+    hasEnded
+      ? supabase.rpc("get_event_host_outcomes", { p_event_id: workspace.event_id })
+      : Promise.resolve({ data: null, error: null }),
+  ]);
   const savedCover = coverResult.data as Omit<EventHostCover, "draft_url" | "published_url"> | null;
   const [draftSigned, publishedSigned] = savedCover
     ? await Promise.all([
@@ -32,5 +38,6 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
     draft_url: draftSigned.data?.signedUrl ?? null,
     published_url: publishedSigned.data?.signedUrl ?? null,
   } : null;
-  return <main className="admin-command-center event-command-page"><MemberHeader active="events" label="Your event" /><EventHostWorkspace initial={workspace} cover={cover} coverReady={!coverResult.error} /></main>;
+  const outcomes = ((outcomesResult.data as EventHostOutcomes[] | null) ?? [])[0] ?? null;
+  return <main className="admin-command-center event-command-page"><MemberHeader active="events" label="Your event" /><EventHostWorkspace initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} /></main>;
 }

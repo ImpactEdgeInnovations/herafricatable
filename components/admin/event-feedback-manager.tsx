@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { AdminEvent } from "@/components/admin/event-manager";
+import type { EventHostOutcomes } from "@/components/events/event-host-workspace";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { adminErrorMessage } from "@/lib/admin-error";
 export type AdminEventFeedback = {
@@ -44,12 +45,16 @@ export function EventFeedbackManager({
   events,
   feedback,
   summaries,
+  hostOutcomes,
+  hostOutcomesReady,
   recaps,
   migrationReady,
 }: {
   events: AdminEvent[];
   feedback: (AdminEventFeedback & { event_id: string })[];
   summaries: EventFeedbackSummary[];
+  hostOutcomes: (EventHostOutcomes & { event_id: string })[];
+  hostOutcomesReady: boolean;
   recaps: EventRecap[];
   migrationReady: boolean;
 }) {
@@ -62,6 +67,7 @@ export function EventFeedbackManager({
   const selected = events.find((event) => event.id === eventId);
   const rows = feedback.filter((item) => item.event_id === eventId);
   const summary = summaries.find((item) => item.event_id === eventId);
+  const hostOutcome = hostOutcomes.find((item) => item.event_id === eventId);
   const recap = recaps.find((item) => item.event_id === eventId);
   async function saveRecap(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -192,6 +198,16 @@ export function EventFeedbackManager({
               <span>Follow-ups</span>
             </article>
           </div>
+          {new Date(selected.ends_at).getTime() < Date.now() ? <div className="admin-section">
+            <p className="eyebrow">Host-facing group report</p>
+            <h3>What the Host can see</h3>
+            {!hostOutcomesReady || !hostOutcome ? <p>The group report is not available yet.</p>
+              : !hostOutcome.report_ready ? <p>Group figures stay hidden until five real guests have checked in.</p>
+              : <p>
+                {hostOutcome.confirmed_places ?? "Under 5"} confirmed places · {hostOutcome.checked_in ?? "Under 5"} checked in · {hostOutcome.feedback_responses ?? "Under 5"} private responses · {hostOutcome.community_interest ?? "Under 5"} interested in a future Community · {hostOutcome.accepted_introductions ?? "Under 5"} introductions accepted.
+              </p>}
+            <p className="form-hint">These figures exclude test accounts and hide cells under five. The Host cannot see private responses, guest identities or payment details here.</p>
+          </div> : null}
           <div className="feedback-admin-layout">
             <form
               onSubmit={(event) => void saveRecap(event)}

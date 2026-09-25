@@ -40,13 +40,22 @@ export type EventHostCover = {
   published_url: string | null;
 };
 
+export type EventHostOutcomes = {
+  report_ready: boolean;
+  confirmed_places: number | null;
+  checked_in: number | null;
+  feedback_responses: number | null;
+  community_interest: number | null;
+  accepted_introductions: number | null;
+};
+
 function localDateTime(value: string) {
   if (!value) return "";
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "" : new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
-export function EventHostWorkspace({ initial, cover, coverReady }: { initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean }) {
+export function EventHostWorkspace({ initial, cover, coverReady, outcomes }: { initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean; outcomes: EventHostOutcomes | null }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [summary, setSummary] = useState(initial.summary);
@@ -57,7 +66,8 @@ export function EventHostWorkspace({ initial, cover, coverReady }: { initial: Ev
   const [coverAlt, setCoverAlt] = useState(cover?.draft_alt_text ?? "");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const locked = initial.workspace_status === "submitted";
+  const hasEnded = new Date(initial.ends_at).getTime() < Date.now();
+  const locked = initial.workspace_status === "submitted" || hasEnded;
 
   function updateProgramme(key: string, field: keyof HostProgrammeItem, value: string) {
     setProgramme((items) => items.map((item) => item.key === key ? { ...item, [field]: value } : item));
@@ -146,6 +156,33 @@ export function EventHostWorkspace({ initial, cover, coverReady }: { initial: Ev
     setMessage(sendForReview ? "Sent to the event team for review. Your changes are not public yet." : "Draft saved privately.");
     router.refresh();
   }
+
+  if (hasEnded) return (
+    <section className="focused-admin-tool" aria-labelledby="host-workspace-heading">
+      <div className="admin-section">
+        <p className="eyebrow">After your event</p>
+        <h1 id="host-workspace-heading">{initial.event_title}</h1>
+        <p>Your event draft is now read-only. The team reviews and publishes the public recap; private guest feedback stays with the event team.</p>
+        <Link className="button button-outline" href={`/events/${initial.event_slug}`}>View event page</Link>
+      </div>
+      <div className="admin-section">
+        <p className="eyebrow">The group picture</p>
+        <h2>How the gathering went</h2>
+        {!outcomes ? <p role="status">The after-event report is not available yet. Your event details and guest records have not changed.</p>
+          : !outcomes.report_ready ? <p role="status">Group figures will appear when at least five real guests have checked in. Test accounts are not counted.</p>
+          : <>
+            <div className="feedback-admin-metrics">
+              <article><strong>{outcomes.confirmed_places ?? "Under 5"}</strong><span>Confirmed places</span></article>
+              <article><strong>{outcomes.checked_in ?? "Under 5"}</strong><span>Guests checked in</span></article>
+              <article><strong>{outcomes.feedback_responses ?? "Under 5"}</strong><span>Private responses received</span></article>
+              <article><strong>{outcomes.community_interest ?? "Under 5"}</strong><span>Asked about a future Community</span></article>
+              <article><strong>{outcomes.accepted_introductions ?? "Under 5"}</strong><span>Introductions accepted</span></article>
+            </div>
+            <p className="form-hint">A figure under five is hidden to protect individual choices. These totals exclude test accounts and do not identify any guest. An accepted introduction is not a confirmed ongoing connection.</p>
+          </>}
+      </div>
+    </section>
+  );
 
   return (
     <section className="focused-admin-tool" aria-labelledby="host-workspace-heading">

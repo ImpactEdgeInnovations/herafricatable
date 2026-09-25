@@ -66,6 +66,7 @@ import {
   type EventFeedbackSummary,
   type EventRecap,
 } from "@/components/admin/event-feedback-manager";
+import type { EventHostOutcomes } from "@/components/events/event-host-workspace";
 import {
   CommunityManager,
   type CommunityMember,
@@ -879,6 +880,14 @@ export default async function AdminOperationsPage({
       (result.data as Omit<EventFeedbackSummary, "event_id">[] | null) ?? []
     ).map((entry) => ({ ...entry, event_id: eventIds[index] })),
   );
+  const endedEventIds = (loadEvents ? events : [])
+    .filter((event) => ["published", "completed"].includes(event.status) && new Date(event.ends_at).getTime() < Date.now())
+    .map((event) => event.id);
+  const hostOutcomeResults = await Promise.all(endedEventIds.map((eventId) =>
+    supabase.rpc("get_event_host_outcomes", { p_event_id: eventId })));
+  const hostOutcomes = hostOutcomeResults.flatMap((result, index) =>
+    ((result.data as EventHostOutcomes[] | null) ?? [])
+      .map((row) => ({ ...row, event_id: endedEventIds[index] })));
   const recapResult = loadEvents && eventIds.length
     ? await supabase
         .from("event_recaps")
@@ -1149,6 +1158,8 @@ export default async function AdminOperationsPage({
               events={events}
               feedback={eventFeedback}
               summaries={feedbackSummaries}
+              hostOutcomes={hostOutcomes}
+              hostOutcomesReady={hostOutcomeResults.every((result) => !result.error)}
               recaps={(recapResult.data as EventRecap[] | null) ?? []}
               migrationReady={
                 feedbackResults.every((result) => !result.error) &&

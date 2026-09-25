@@ -175,6 +175,22 @@ closed behind a flag; a green build alone is not an exit.
   only in CI/local/staging, never in the production SQL Editor. Rehearse a
   confirmed event-only guest and a full member separately, including feedback,
   Community interest, entitlement revocation and mobile views.
+- [x] The 25 September GitHub gate for `0d749ae` passed application tests,
+  production build and all 414 isolated database assertions, including the
+  guest follow-up permissions. This does not verify its live deployment or
+  separate-account browser journey.
+- [x] `20260925120000_event_host_outcomes.sql` gives the current Host a
+  read-only view of her completed event and source-derived group totals.
+  Confirmed places, active check-ins, private-response count, future-Community
+  interest and accepted introductions exclude test accounts. The report stays
+  hidden below five real check-ins, with each smaller cell suppressed; it
+  never exposes names, private feedback, contact details or payment records.
+  Super Admin can see the same Host-facing view alongside private operations.
+- [ ] Apply `20260925120000_event_host_outcomes.sql` after its isolated gate
+  passes. Run `supabase/tests/012_event_host_outcomes.sql` only in isolated
+  CI/local/staging. Reconcile the live totals with actual source records,
+  test a paused/replaced Host and confirm the finished-event workspace is
+  read-only on mobile before Sprint 8 exits.
 - [x] `ops:events:accept-private-host` passed with one Super Admin and two
   separate tagged members. It created `hat-private-host-rehearsal-20260924`
   as a closed, unfeatured draft; verified scoped Host access, private drafting,
