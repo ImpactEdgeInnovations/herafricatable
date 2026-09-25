@@ -48,7 +48,7 @@ export default async function EventFollowUpPage({
     .eq("id", user.id)
     .maybeSingle();
   const activeMember = profile?.access_status === "active";
-  if (!activeMember && profile?.access_status !== "pending") notFound();
+  if (!activeMember && !["pending", "onboarding"].includes(profile?.access_status ?? "")) notFound();
 
   const { data: pastEvents, error: pastError } =
     await supabase.rpc("list_my_past_events");

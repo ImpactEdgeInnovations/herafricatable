@@ -34,6 +34,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 import { EventGuestAccessControl } from "@/components/admin/event-guest-access-control";
 import { EventHostReviewManager, type AdminEventHostCover, type AdminEventHostWorkspace, type EventHostReviewContext } from "@/components/admin/event-host-review-manager";
+import { EventFollowUpInvitations, type EventFollowUpCandidate } from "@/components/admin/event-follow-up-invitations";
 import { eventPilotReadiness, type PilotReadinessStep } from "@/lib/event-pilot-readiness";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
@@ -46,7 +47,7 @@ type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   venue_name: string | null;
 };
 
-type EventView = "arrival" | "edit" | "host" | "overview" | "proposals" | "registrations" | "stories";
+type EventView = "arrival" | "edit" | "follow-up" | "host" | "overview" | "proposals" | "registrations" | "stories";
 
 const views: { href: EventView; label: string }[] = [
   { href: "overview", label: "Overview" },
@@ -56,6 +57,7 @@ const views: { href: EventView; label: string }[] = [
   { href: "registrations", label: "Registrations" },
   { href: "arrival", label: "Guest arrival" },
   { href: "stories", label: "Stories & media" },
+  { href: "follow-up", label: "After-event invites" },
 ];
 
 export const dynamic = "force-dynamic";
@@ -86,7 +88,7 @@ export default async function AdminEventsPage({
       ? "event_staff"
       : null;
   if (!role) redirect("/admin");
-  if (role !== "super_admin" && ["proposals", "host", "stories"].includes(view)) {
+  if (role !== "super_admin" && ["proposals", "host", "stories", "follow-up"].includes(view)) {
     view = "overview";
   }
 
@@ -274,6 +276,10 @@ export default async function AdminEventsPage({
     }));
     storiesReady = !archiveResult.error && !mediaResult.error;
   }
+  const followUpResult = view === "follow-up" && role === "super_admin"
+    ? await supabase.rpc("list_event_follow_up_candidates_admin")
+    : { data: [], error: null };
+  const followUpCandidates = (followUpResult.data as EventFollowUpCandidate[] | null) ?? [];
 
   const proposalCount =
     memberProposals.filter((proposal) =>
@@ -297,7 +303,7 @@ export default async function AdminEventsPage({
       <AdminHeader active="events" label="Event oversight" role={role} />
       <section className="oversight-subnav-shell">
         <nav className="oversight-subnav" aria-label="Event work">
-          {views.filter((item) => role === "super_admin" || !["proposals", "host", "stories"].includes(item.href)).map((item) => (
+          {views.filter((item) => role === "super_admin" || !["proposals", "host", "stories", "follow-up"].includes(item.href)).map((item) => (
             <Link aria-current={view === item.href ? "page" : undefined} href={`/admin/events?view=${item.href}`} key={item.href}>{item.label}</Link>
           ))}
         </nav>
@@ -311,6 +317,7 @@ export default async function AdminEventsPage({
       {view === "registrations" ? <section className="focused-admin-tool"><RegistrationManager events={events} initialPayments={payments} initialRefunds={refunds} initialRegistrations={registrations} initialTickets={tickets} migrationReady={registrationReady} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY && process.env.SUPABASE_SECRET_KEY && process.env.NEXT_PUBLIC_SITE_URL)} /></section> : null}
       {view === "arrival" ? <section className="focused-admin-tool"><EventCheckinConsole events={events.map((event) => ({ id: event.id, title: event.title, starts_at: event.starts_at, ends_at: event.ends_at }))} initialAttendees={checkinAttendees} migrationReady={checkinReady} /></section> : null}
       {view === "stories" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventArchiveManager archives={archives} media={media} migrationReady={storiesReady} /></section> : null}
+      {view === "follow-up" && role === "super_admin" ? <EventFollowUpInvitations candidates={followUpCandidates} ready={!followUpResult.error} /> : null}
     </main>
   );
 }

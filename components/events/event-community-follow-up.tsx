@@ -32,7 +32,7 @@ export function EventCommunityFollowUp({
     setMessage(
       next
         ? "Your interest is saved for the event team. You have not joined a Community or gained membership."
-        : "Your interest has been withdrawn. You will not receive a Community invitation from this event.",
+        : "Your interest is withdrawn. Any unused invitation from this event is closed. An email already sent cannot be taken back.",
     );
   }
 
@@ -41,7 +41,7 @@ export function EventCommunityFollowUp({
       <div>
         <p className="eyebrow">After the gathering</p>
         <h2 id="event-follow-up-title">Would you like to stay connected?</h2>
-        <p>The host may apply to create a Community after this event. Choose whether the event team may consider you for an invitation. This does not add you to a Community or approve membership.</p>
+        <p>If an approved Community follows this event, our team can send you a private invitation. You decide whether to accept. This does not approve membership or add you to the Community.</p>
       </div>
       <button
         aria-pressed={interested}

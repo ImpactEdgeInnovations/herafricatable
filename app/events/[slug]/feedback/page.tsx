@@ -65,7 +65,7 @@ export default async function FeedbackPage({
   if (!event) notFound();
 
   if (!activeMember) {
-    if (profile?.access_status !== "pending") notFound();
+    if (!["pending", "onboarding"].includes(profile?.access_status ?? "")) notFound();
     const { data: allowed } = await supabase.rpc("can_leave_event_feedback", {
       p_event_id: event.event_id,
     });

@@ -170,9 +170,10 @@ closed behind a flag; a green build alone is not an exit.
   interface shows her recap and feedback on the same event journey; anonymous
   guest quotes are attributed as event guests. Private and future events,
   unrelated users and revoked entitlements remain excluded.
-- [ ] Apply `20260925110000_event_guest_follow_up.sql` after its isolated
-  database test passes. Run `supabase/tests/011_event_guest_follow_up.sql`
-  only in CI/local/staging, never in the production SQL Editor. Rehearse a
+- [x] `20260925110000_event_guest_follow_up.sql` is installed on the connected
+  project; the read-only 25 September audit confirmed its live function.
+  Run `supabase/tests/011_event_guest_follow_up.sql` only in CI/local/staging,
+  never in the production SQL Editor. Still rehearse a
   confirmed event-only guest and a full member separately, including feedback,
   Community interest, entitlement revocation and mobile views.
 - [x] The 25 September GitHub gate for `0d749ae` passed application tests,
@@ -186,13 +187,30 @@ closed behind a flag; a green build alone is not an exit.
   hidden below five real check-ins, with each smaller cell suppressed; it
   never exposes names, private feedback, contact details or payment records.
   Super Admin can see the same Host-facing view alongside private operations.
-- [ ] Apply `20260925120000_event_host_outcomes.sql` after its isolated gate
-  passes. Run `supabase/tests/012_event_host_outcomes.sql` only in isolated
-  CI/local/staging. Reconcile the live totals with actual source records,
+- [x] `20260925120000_event_host_outcomes.sql` is installed on the connected
+  project; the read-only 25 September audit confirmed its live function.
+  Run `supabase/tests/012_event_host_outcomes.sql` only in isolated CI/local/staging.
+- [ ] Reconcile the live Host totals with actual source records,
   test a paused/replaced Host and confirm the finished-event workspace is
   read-only on mobile before Sprint 8 exits.
 - [x] GitHub's `cf7e825` production quality gate passed the application build
   and all 430 isolated database assertions, including Host-outcome permissions.
+- [x] The event-to-Community invitation bridge is implemented behind
+  `20260925130000_event_follow_up_invitations.sql`. It gives Super Admin a
+  separate **Events → After-event invites** queue of opted-in eligible guests.
+  A published linked Community is required before Admin can email a private
+  invitation through the existing notification engine. An attendee's withdrawal
+  closes her unused event-specific link and suppresses an unsent email. It does
+  not undo an email already delivered or a separate Community join request.
+  Revoked event access and suspended/deleted accounts also invalidate their
+  unused event-specific links. Tagged test accounts remain visible as such in
+  the Admin queue so the separate-account rehearsal can use the same path.
+- [ ] Apply `20260925130000_event_follow_up_invitations.sql` only after the
+  isolated CI migration and `supabase/tests/013_event_follow_up_invitations.sql`
+  pass. Then rehearse one pending guest, one active member, Host denial, Admin
+  send, delivery, claim, withdrawal and the published Community approval path
+  using distinct real test accounts. Keep `event_guest_access` off until the
+  complete release gate passes.
 - [x] The read-only 25 September production audit found the canonical site at
   `www.herafricatable.com`, HTTP 200 health, reachable database and deployed
   release `cf7e825`. Public/auth-boundary smoke checks passed on that host.

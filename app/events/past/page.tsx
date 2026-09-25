@@ -47,7 +47,7 @@ export default async function PastEventsPage() {
     : { data: null };
   const activeMember = profile?.access_status === "active";
   const myPastEvents = ((mine as { event_id: string; feedback_id: string | null; slug: string }[] | null) ?? []);
-  const guestFollowUpResults = user && !activeMember && profile?.access_status === "pending"
+  const guestFollowUpResults = user && !activeMember && ["pending", "onboarding"].includes(profile?.access_status ?? "")
     ? await Promise.all(myPastEvents.map((event) =>
         supabase.rpc("can_leave_event_feedback", { p_event_id: event.event_id })))
     : [];

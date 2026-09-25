@@ -49,7 +49,7 @@ export async function sendNotificationEmail(job: EmailJob) {
         : "Enter my Member Home"
       : "Open Her Africa Table";
   const preferenceNote = isInvitation
-    ? "This personal invitation was sent by a Her Africa Table member and reviewed before delivery."
+    ? "This private invitation was reviewed before delivery. You decide whether to accept it."
     : isMemberWelcome
       ? "This membership message is private and was sent to the email address you verified."
       : "You can change non-essential email preferences in your notification centre.";
