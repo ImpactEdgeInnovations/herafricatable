@@ -191,6 +191,27 @@ closed behind a flag; a green build alone is not an exit.
   CI/local/staging. Reconcile the live totals with actual source records,
   test a paused/replaced Host and confirm the finished-event workspace is
   read-only on mobile before Sprint 8 exits.
+- [x] GitHub's `cf7e825` production quality gate passed the application build
+  and all 430 isolated database assertions, including Host-outcome permissions.
+- [x] The read-only 25 September production audit found the canonical site at
+  `www.herafricatable.com`, HTTP 200 health, reachable database and deployed
+  release `cf7e825`. Public/auth-boundary smoke checks passed on that host.
+  The bare domain redirects to `www`; it is not a failed deployment.
+- [ ] The same live audit found event introductions and table rounds installed,
+  but the guest-feedback and Host-outcomes functions absent. The public-guest
+  flag is still off. There is no real future published public event or real
+  future private draft; the one future draft is an internal rehearsal fixture.
+  The five public-guest release checks are all `not_started`. The configured
+  Admin test credential is the untagged primary Super Admin account, not a
+  separate tagged Admin test identity. These are explicit Sprint 9/10 evidence
+  gaps; a green CI run and healthy deployment do not close them.
+- [x] The same read-only audit signed in as three distinct tagged accounts:
+  an ordinary member, the scoped Event Host and a Community moderator. All
+  three were active, lacked event-Admin authority and were denied Super Admin
+  release evidence. Only the assigned Host could open the private rehearsal
+  Host workspace; only the Community moderator held a moderator seat. This
+  proves a narrow live permission boundary, not the full mobile, registration,
+  safety, check-in or post-event journey.
 - [x] `ops:events:accept-private-host` passed with one Super Admin and two
   separate tagged members. It created `hat-private-host-rehearsal-20260924`
   as a closed, unfeatured draft; verified scoped Host access, private drafting,
