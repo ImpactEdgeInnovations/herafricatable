@@ -239,6 +239,12 @@ closed behind a flag; a green build alone is not an exit.
   Host workspace; only the Community moderator held a moderator seat. This
   proves a narrow live permission boundary, not the full mobile, registration,
   safety, check-in or post-event journey.
+- [x] The 27 September expanded live audit additionally confirmed that the
+  primary Super Admin can see the private rehearsal draft and call its
+  check-in roster. The ordinary member, Event Host and Community moderator
+  cannot read the raw private draft or call the roster; the assigned Host can
+  still open only her scoped Host workspace. These are read-only permission
+  checks against separate real sessions, not a live door or guest rehearsal.
 - [x] `ops:events:accept-private-host` passed with one Super Admin and two
   separate tagged members. It created `hat-private-host-rehearsal-20260924`
   as a closed, unfeatured draft; verified scoped Host access, private drafting,

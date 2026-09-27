@@ -115,28 +115,39 @@ if (selectedPilot) {
 }
 const privateDrafts = realEvents.filter((event) => event.status === "draft");
 const rehearsalEvent = events.find((event) => event.status === "draft" && rehearsal(event));
-let adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false, releaseChecks: [] };
+let adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false,
+  rehearsalDraftVisible: false, rehearsalRosterAccessible: false, releaseChecks: [] };
 const email = process.env.HAT_ADMIN_TEST_EMAIL;
 const password = process.env.HAT_ADMIN_TEST_PASSWORD;
 if (email && password) {
   try {
     const { data: session, error: signInError } = await admin.auth.signInWithPassword({ email, password });
     if (signInError || !session.user) throw new Error("Tagged Admin sign-in failed");
-    const [profile, release] = await Promise.all([
+    const [profile, release, draft, roster] = await Promise.all([
       admin.from("profiles").select("is_test_account").eq("id", session.user.id).single(),
       admin.rpc("list_module_release_acceptance"),
+      rehearsalEvent
+        ? admin.from("events").select("id").eq("id", rehearsalEvent.id).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      rehearsalEvent
+        ? admin.rpc("list_event_checkins", { p_event_id: rehearsalEvent.id })
+        : Promise.resolve({ data: null, error: null }),
     ]);
-    if (profile.error || release.error) throw new Error("Tagged Admin release read failed");
+    if (profile.error || release.error || draft.error || roster.error)
+      throw new Error("Admin read-only boundary check failed");
     adminEvidence = {
       authenticated: true,
       tagged: profile.data.is_test_account === true,
       usesPrimaryAccount: email.toLowerCase() === process.env.HAT_PRIMARY_ADMIN_EMAIL?.toLowerCase(),
+      rehearsalDraftVisible: draft.data?.id === rehearsalEvent?.id,
+      rehearsalRosterAccessible: Array.isArray(roster.data),
       releaseChecks: (release.data ?? [])
         .filter((row) => row.feature_key === "event_guest_access")
         .map((row) => ({ key: row.check_key, status: row.status })),
     };
   } catch {
-    adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false, releaseChecks: [] };
+    adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false,
+      rehearsalDraftVisible: false, rehearsalRosterAccessible: false, releaseChecks: [] };
   } finally {
     await admin.auth.signOut();
   }
@@ -150,7 +161,8 @@ async function inspectTaggedRole(emailAddress) {
       password: process.env.HAT_COMMUNITY_TEST_PASSWORD,
     });
     if (signed.error || !signed.data.user) return { authenticated: false };
-    const [profile, adminScope, adminRelease, hostWorkspace, moderatorSeat] = await Promise.all([
+    const [profile, adminScope, adminRelease, hostWorkspace, moderatorSeat,
+      draft, roster] = await Promise.all([
       client.from("profiles").select("access_status,is_test_account")
         .eq("id", signed.data.user.id).single(),
       rehearsalEvent
@@ -162,8 +174,14 @@ async function inspectTaggedRole(emailAddress) {
         : Promise.resolve({ data: [], error: null }),
       client.from("community_memberships").select("id").eq("user_id", signed.data.user.id)
         .eq("role", "moderator").eq("status", "active").limit(1),
+      rehearsalEvent
+        ? client.from("events").select("id").eq("id", rehearsalEvent.id).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      rehearsalEvent
+        ? client.rpc("list_event_checkins", { p_event_id: rehearsalEvent.id })
+        : Promise.resolve({ data: null, error: null }),
     ]);
-    if (profile.error || adminScope.error || hostWorkspace.error || moderatorSeat.error)
+    if (profile.error || adminScope.error || hostWorkspace.error || moderatorSeat.error || draft.error)
       return { authenticated: true, readError: true };
     return {
       authenticated: true,
@@ -173,6 +191,8 @@ async function inspectTaggedRole(emailAddress) {
       adminReleaseDenied: adminRelease.error?.code === "P0001",
       rehearsalHostWorkspace: (hostWorkspace.data ?? []).length > 0,
       communityModeratorSeat: (moderatorSeat.data ?? []).length > 0,
+      rehearsalDraftHidden: draft.data === null,
+      rehearsalRosterDenied: roster.error?.code === "P0001",
     };
   } finally {
     await client.auth.signOut();
@@ -201,9 +221,15 @@ else for (const [check, ready] of Object.entries(pilotChecks))
 if (!adminEvidence.authenticated || adminEvidence.releaseChecks.length !== 5
   || adminEvidence.releaseChecks.some((check) => check.status !== "passed"))
   blockers.push("public_guest_release_checks_incomplete");
+if (!adminEvidence.rehearsalDraftVisible || !adminEvidence.rehearsalRosterAccessible)
+  blockers.push("admin_private_event_boundary_missing");
 if (!flagResult.data?.enabled) blockers.push("public_guest_registration_closed");
 if (!taggedRoles || Object.values(taggedRoles).some((role) =>
-  !role.authenticated || !role.active || !role.tagged || !role.adminReleaseDenied))
+  !role.authenticated || !role.active || !role.tagged || role.adminScope
+  || !role.adminReleaseDenied || !role.rehearsalDraftHidden || !role.rehearsalRosterDenied)
+  || taggedRoles.member.rehearsalHostWorkspace || taggedRoles.member.communityModeratorSeat
+  || !taggedRoles.eventHost.rehearsalHostWorkspace || taggedRoles.eventHost.communityModeratorSeat
+  || taggedRoles.communityModerator.rehearsalHostWorkspace || !taggedRoles.communityModerator.communityModeratorSeat)
   blockers.push("separate_account_boundary_evidence_missing");
 
 const result = {
