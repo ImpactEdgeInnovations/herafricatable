@@ -326,6 +326,12 @@ invitations, then rerun the read-only audit. There is no real future pilot event
 draft or published free/manual public event, the five public-guest release
 checks remain `not_started`, and `event_guest_access` remains off. A green CI
 gate proves code contracts in an isolated stack, not the missing live journeys.
+The 27 September read-only email audit found eight provider-accepted jobs in
+the preceding seven days and no queued, processing or failed jobs. DKIM, SPF
+and return-path DNS were visible; the sending-only Resend key cannot inspect
+the provider's domain status. Membership intake was `manual_review` with two
+pending applications. These checks support operational readiness but do not
+replace a fresh OTP or invitation delivery rehearsal.
 
 A critical capability is finished only when the attendee, member, Host,
 Moderator and Super Admin roles pass their applicable live journeys with
