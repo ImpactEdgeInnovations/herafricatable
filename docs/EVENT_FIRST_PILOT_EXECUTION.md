@@ -208,9 +208,10 @@ closed behind a flag; a green build alone is not an exit.
 - [x] The read-only 27 September audit found the table from
   `20260925130000_event_follow_up_invitations.sql` already installed on the
   connected project. Do not rerun that table-creating migration there.
-- [ ] Apply `20260925140000_table_invitation_crypto_search_path.sql` only after
-  the isolated CI migration and `supabase/tests/013_event_follow_up_invitations.sql`
-  pass. This migration fixes Supabase pgcrypto lookup for sending, opening and
+- [ ] Apply `20260925140000_table_invitation_crypto_search_path.sql` to the
+  connected Supabase project. The isolated CI migration and
+  `supabase/tests/013_event_follow_up_invitations.sql` have passed. This
+  migration fixes Supabase pgcrypto lookup for sending, opening and
   claiming private links, including the already-installed after-event sender.
   The live audit currently reports `invitationCrypto: false`; sending
   invitations must wait. The test Community must satisfy the existing eight release checks and
@@ -245,13 +246,14 @@ closed behind a flag; a green build alone is not an exit.
   and replacement reset. The event remained private throughout.
 - [x] The live health endpoint returned HTTP 200, database reachable, server
   integration ready, and deployed release `d32e760` on 24 September 2026.
-- [ ] Run pgTAP tests 002–006 in the isolated CI/local Supabase stack or a
-  disposable staging project, not the production SQL Editor. Files under
+- [x] Run pgTAP tests 002–006 in the isolated CI Supabase stack, not the
+  production SQL Editor. The 27 September quality gate passed all 462 isolated
+  database assertions, including tests 002–013. Files under
   `supabase/tests/` create temporary identities and events, then `rollback`;
   they do not install product features. Files under `supabase/migrations/` are
   versioned database changes. The live API rehearsal is not a substitute for
   these isolated database tests or a browser/mobile rehearsal.
-- [ ] Rerun the revised `002_event_guest_access.sql` only in that isolated test
+- [x] Rerun the revised `002_event_guest_access.sql` in that isolated CI test
   database: it proves the release gate rejects an early toggle, then uses
   transaction-local Super Admin evidence to exercise guest registration. Its
   final `rollback` leaves the flag and launch-check statuses unchanged. Do not
@@ -316,10 +318,10 @@ gate checks the signed-in Super Admin identity.
 ### Engineering checkpoint — 27 September 2026
 
 **Recommendation: hold the public-guest pilot; no final owner go/no-go decision
-has been recorded.** The deployed `f83a54f` site returned HTTP 200 and the
+has been recorded.** The deployed `ed1c4b8` site returned HTTP 200 and the
 separate member, Host and moderator boundary checks passed. The [GitHub quality
-gate](https://github.com/ImpactEdgeInnovations/herafricatable/actions/runs/36296559176)
-passed the application build and 462 isolated database assertions on rerun.
+gate](https://github.com/ImpactEdgeInnovations/herafricatable/actions/runs/36297320118)
+passed the application build and 462 isolated database assertions.
 Production nevertheless reports `invitationCrypto: false`; apply the pending
 `20260925140000_table_invitation_crypto_search_path.sql` before sending any
 invitations, then rerun the read-only audit. There is no real future pilot event
@@ -332,6 +334,28 @@ and return-path DNS were visible; the sending-only Resend key cannot inspect
 the provider's domain status. Membership intake was `manual_review` with two
 pending applications. These checks support operational readiness but do not
 replace a fresh OTP or invitation delivery rehearsal.
+
+### Next owner actions, in order
+
+1. In Supabase SQL Editor, apply **only**
+   `supabase/migrations/20260925140000_table_invitation_crypto_search_path.sql`.
+   Do not rerun the already-installed `20260925130000` migration, and do not
+   paste a file from `supabase/tests/` into production. Engineering will rerun
+   the read-only audit and confirm `invitationCrypto: true` before any after-event
+   link is sent.
+2. Provide the first real event's title, future Nairobi date/time and time zone,
+   venue or online format, capacity, Event Host, check-in lead and safety contact.
+   Create it as a private draft; the internal `[TEST]` rehearsal event is not a
+   substitute. Keep automatic payments and public-guest access off.
+3. Review the complete event page, registration method and a zero-price on-sale
+   ticket before publishing. On a disposable staging project, rehearse a member
+   and a guest separately through OTP, request, Admin decision, email, pass,
+   check-in and after-event follow-up. Production guest access remains off
+   during this rehearsal.
+4. Record the five evidence-backed Public event guests release checks in Admin
+   Release, then make a human go/no-go decision. Only after those checks pass
+   should Super Admin enable the guest flag for a small live pilot; never flip
+   it directly in SQL. Repeat the guest journey on live with a limited cohort.
 
 A critical capability is finished only when the attendee, member, Host,
 Moderator and Super Admin roles pass their applicable live journeys with
