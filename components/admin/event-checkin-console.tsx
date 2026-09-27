@@ -138,7 +138,12 @@ export function EventCheckinConsole({
         video: { facingMode: { ideal: "environment" } },
       });
       streamRef.current = stream;
-      if (!videoRef.current) return;
+      if (!videoRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        setCameraMessage("Camera preview was unavailable. Enter the attendee’s manual code below.");
+        return;
+      }
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
       setCameraActive(true);
@@ -236,7 +241,7 @@ export function EventCheckinConsole({
           <p className="eyebrow">Door operations</p>
           <h2>Event check-in</h2>
           <p>
-            Scan a private member pass or enter its manual fallback. Every
+            Scan a private event pass or enter its manual fallback. Every
             action is event-scoped and audited.
           </p>
         </div>

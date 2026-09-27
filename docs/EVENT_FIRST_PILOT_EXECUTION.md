@@ -247,7 +247,7 @@ closed behind a flag; a green build alone is not an exit.
 - [x] The live health endpoint returned HTTP 200, database reachable, server
   integration ready, and deployed release `d32e760` on 24 September 2026.
 - [x] Run pgTAP tests 002–006 in the isolated CI Supabase stack, not the
-  production SQL Editor. The 27 September quality gate passed all 462 isolated
+  production SQL Editor. The 27 September quality gate passed all 470 isolated
   database assertions, including tests 002–013. Files under
   `supabase/tests/` create temporary identities and events, then `rollback`;
   they do not install product features. Files under `supabase/migrations/` are
@@ -318,10 +318,12 @@ gate checks the signed-in Super Admin identity.
 ### Engineering checkpoint — 27 September 2026
 
 **Recommendation: hold the public-guest pilot; no final owner go/no-go decision
-has been recorded.** The deployed `ed1c4b8` site returned HTTP 200 and the
+has been recorded.** The deployed `22568e9` site returned HTTP 200 and the
 separate member, Host and moderator boundary checks passed. The [GitHub quality
-gate](https://github.com/ImpactEdgeInnovations/herafricatable/actions/runs/36297320118)
-passed the application build and 462 isolated database assertions.
+gate](https://github.com/ImpactEdgeInnovations/herafricatable/actions/runs/36297671082)
+passed the application build and 470 isolated database assertions, including
+guest manual/QR check-in, duplicate-scan and reversal tests. This is isolated
+database evidence, not a live door rehearsal.
 Production nevertheless reports `invitationCrypto: false`; apply the pending
 `20260925140000_table_invitation_crypto_search_path.sql` before sending any
 invitations, then rerun the read-only audit. There is no real future pilot event
