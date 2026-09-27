@@ -184,7 +184,7 @@ begin
     raise exception 'This event already has an invitation for this attendee';
   end if;
 
-  raw_token := encode(gen_random_bytes(32), 'hex');
+  raw_token := encode(extensions.gen_random_bytes(32), 'hex');
   insert into public.table_invitations (
     inviter_id, invitee_email, invitee_user_id, destination_type,
     community_id, personal_note, status, token_hash, reviewed_by,
@@ -192,7 +192,7 @@ begin
   ) values (
     actor, recipient, p_user_id, 'community', destination.id,
     'You asked to hear about the Community after your event. You can decide whether to join.',
-    'sent', encode(digest(raw_token, 'sha256'), 'hex'), actor,
+    'sent', encode(extensions.digest(raw_token, 'sha256'), 'hex'), actor,
     now(), now(), now() + interval '30 days'
   ) returning id into saved;
   insert into public.event_follow_up_invitation_links(event_id, user_id, invitation_id)

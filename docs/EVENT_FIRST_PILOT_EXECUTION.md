@@ -205,9 +205,12 @@ closed behind a flag; a green build alone is not an exit.
   Revoked event access and suspended/deleted accounts also invalidate their
   unused event-specific links. Tagged test accounts remain visible as such in
   the Admin queue so the separate-account rehearsal can use the same path.
-- [ ] Apply `20260925130000_event_follow_up_invitations.sql` only after the
+- [ ] Apply `20260925130000_event_follow_up_invitations.sql` and then
+  `20260925140000_table_invitation_crypto_search_path.sql` only after the
   isolated CI migration and `supabase/tests/013_event_follow_up_invitations.sql`
-  pass. The test Community must satisfy the existing eight release checks and
+  pass. The second migration fixes the existing invitation engine's Supabase
+  pgcrypto lookup for sending, opening and claiming private links; neither
+  file is a test. The test Community must satisfy the existing eight release checks and
   backup-moderator gate; this is never bypassed to exercise invitations.
   Then rehearse one pending guest, one active member, Host denial, Admin
   send, delivery, claim, withdrawal and the published Community approval path

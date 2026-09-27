@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(28);
+select plan(32);
 
 insert into auth.users(id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at)
 values
@@ -119,6 +119,27 @@ select set_config('request.jwt.claim.sub', 'e0000000-0000-4000-8000-000000000001
 select lives_ok(
   $$select public.publish_community_after_acceptance('e3000000-0000-4000-8000-000000000001', true)$$,
   'the existing Community release gate publishes only after its fixture checks and backup moderator are present');
+
+select set_config('request.jwt.claim.sub', 'e0000000-0000-4000-8000-000000000002', true);
+select lives_ok(
+  $$select * from public.create_table_invitation('community', 'e3000000-0000-4000-8000-000000000001', 'bridge-other@test.invalid', 'You are welcome to request a place at this Community.')$$,
+  'an owner can create an ordinary reviewed invitation with the trusted crypto schema');
+select set_config('request.jwt.claim.sub', 'e0000000-0000-4000-8000-000000000001', true);
+select lives_ok(
+  $$select public.review_table_invitation((select id from public.table_invitations where invitee_email = 'bridge-other@test.invalid'), 'approve', null)$$,
+  'Super Admin approval generates the ordinary invitation token');
+set local role postgres;
+update public.table_invitations
+set token_hash = encode(extensions.digest(repeat('a', 64), 'sha256'), 'hex')
+where invitee_email = 'bridge-other@test.invalid';
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'e0000000-0000-4000-8000-000000000004', true);
+select is((select destination_type from public.preview_table_invitation(repeat('a', 64))),
+  'community', 'a recipient can open the protected ordinary invitation');
+select is((select claim_status from public.claim_table_invitation(repeat('a', 64))),
+  'membership_pending', 'claiming an ordinary invitation still requires membership approval');
+
+select set_config('request.jwt.claim.sub', 'e0000000-0000-4000-8000-000000000001', true);
 select lives_ok(
   $$select public.invite_event_follow_up_guest('e1000000-0000-4000-8000-000000000001', 'e0000000-0000-4000-8000-000000000003')$$,
   'Admin queues a reviewed private Community invitation');

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20260925130000_event_follow_up_invitations.sql");
+const cryptoRepair = read("supabase/migrations/20260925140000_table_invitation_crypto_search_path.sql");
 const adminPage = read("app/admin/events/page.tsx");
 const adminView = read("components/admin/event-follow-up-invitations.tsx");
 const guestView = read("components/events/event-community-follow-up.tsx");
@@ -22,7 +23,11 @@ for (const boundary of [
   "status = 'revoked', token_hash = null",
   "status = 'suppressed'",
   "'table-invitation:' || saved",
+  "extensions.gen_random_bytes(32)",
+  "extensions.digest(raw_token, 'sha256')",
 ]) assert(migration.includes(boundary), `Event follow-up bridge must retain ${boundary}`);
+for (const operation of ["create_table_invitation", "review_table_invitation", "preview_table_invitation", "claim_table_invitation"])
+  assert(cryptoRepair.includes(`alter function public.${operation}`), `Private invitation ${operation} must resolve Supabase pgcrypto`);
 assert(!migration.includes("insert into public.community_memberships"), "Sending an invitation must not enroll a guest");
 assert(!migration.includes("insert into public.beta_invites"), "A follow-up invitation must not create a general membership allowlist entry");
 assert(adminPage.includes('href: "follow-up"') && adminPage.includes("list_event_follow_up_candidates_admin"));
