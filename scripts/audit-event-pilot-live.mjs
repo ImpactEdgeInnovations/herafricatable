@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
 import { createClient } from "@supabase/supabase-js";
+import { assessPilotEvent } from "./lib/assess-pilot-event.mjs";
 
 const base = (process.env.BASE_URL ?? "https://www.herafricatable.com").replace(/\/$/, "");
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const secretKey = process.env.SUPABASE_SECRET_KEY;
 assert(url && publishableKey && secretKey, "Supabase URL, publishable key and secret key are required");
+const pilotSlug = (process.argv.find((arg) => arg.startsWith("--pilot-slug="))?.slice(13)
+  ?? process.env.HAT_PILOT_EVENT_SLUG ?? "").trim();
+assert(!pilotSlug || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pilotSlug),
+  "Pilot event slug must be lowercase words separated by hyphens");
 
 const options = { auth: { autoRefreshToken: false, persistSession: false } };
 const service = createClient(url, secretKey, options);
@@ -53,7 +58,7 @@ const [guestFeedback, hostOutcomes, introductions, rounds, followUpInvitations,
     invitationCryptoReady(),
     service.from("feature_flags").select("enabled").eq("key", "event_guest_access").maybeSingle(),
     service.from("events")
-      .select("id,slug,title,status,audience,registration_mode,starts_at,ends_at,capacity")
+      .select("id,slug,title,status,audience,format,summary,timezone,venue_id,registration_mode,starts_at,ends_at,capacity")
       .gte("starts_at", new Date().toISOString())
       .in("status", ["draft", "published"]),
   ]);
@@ -64,19 +69,50 @@ const events = eventResult.data ?? [];
 const rehearsal = (event) => event.title?.startsWith("[TEST]") || event.slug?.startsWith("hat-private-host-rehearsal-");
 const realEvents = events.filter((event) => !rehearsal(event));
 const publicFuture = realEvents.filter((event) => event.status === "published" && event.audience === "public");
-const ticketResult = publicFuture.length
-  ? await service.from("ticket_types")
-    .select("event_id,price_minor,status,sales_start_at,sales_end_at")
-    .in("event_id", publicFuture.map((event) => event.id))
-  : { data: [], error: null };
-assert.ifError(ticketResult.error);
-const saleReady = (ticketResult.data ?? []).filter((ticket) =>
-  ticket.status === "on_sale" && Number(ticket.price_minor) === 0
-  && (!ticket.sales_start_at || new Date(ticket.sales_start_at).getTime() <= Date.now())
-  && (!ticket.sales_end_at || new Date(ticket.sales_end_at).getTime() > Date.now()));
-const freeManualPublic = publicFuture.filter((event) =>
-  event.registration_mode === "manual_review"
-  && saleReady.some((ticket) => ticket.event_id === event.id));
+const selectedPilot = pilotSlug
+  ? realEvents.find((event) => event.slug === pilotSlug) ?? null : null;
+let pilotChecks = null;
+if (selectedPilot) {
+  const id = selectedPilot.id;
+  const [tickets, host, workspace, safety, joining, venue, staff] = await Promise.all([
+    service.from("ticket_types").select("price_minor,status,inventory_quantity,sales_start_at,sales_end_at").eq("event_id", id),
+    service.from("event_hosts").select("user_id,status").eq("event_id", id).maybeSingle(),
+    service.from("event_host_workspaces").select("status").eq("event_id", id).maybeSingle(),
+    service.from("event_safety_contacts").select("event_id").eq("event_id", id).maybeSingle(),
+    service.from("event_private_details").select("online_url").eq("event_id", id).maybeSingle(),
+    selectedPilot.venue_id
+      ? service.from("venues").select("name,city,country").eq("id", selectedPilot.venue_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    service.from("event_staff_scopes").select("user_id").eq("event_id", id),
+  ]);
+  for (const result of [tickets, host, workspace, safety, joining, venue, staff])
+    assert.ifError(result.error);
+  const accountIds = [...new Set([host.data?.user_id, ...(staff.data ?? []).map((row) => row.user_id)].filter(Boolean))];
+  const [profiles, roles] = await Promise.all([
+    accountIds.length
+      ? service.from("profiles").select("id,access_status").in("id", accountIds)
+      : Promise.resolve({ data: [], error: null }),
+    staff.data?.length
+      ? service.from("user_roles").select("user_id,role").in("user_id", staff.data.map((row) => row.user_id)).eq("role", "event_staff")
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  assert.ifError(profiles.error);
+  assert.ifError(roles.error);
+  const active = (userId) => profiles.data?.some((profile) =>
+    profile.id === userId && profile.access_status === "active");
+  pilotChecks = assessPilotEvent({
+    event: selectedPilot,
+    tickets: tickets.data ?? [],
+    host: host.data,
+    hostProfile: { access_status: active(host.data?.user_id) ? "active" : "inactive" },
+    workspace: workspace.data,
+    safetyContact: safety.data,
+    onlineLink: joining.data?.online_url,
+    venue: venue.data,
+    doorStaffActive: (staff.data ?? []).some((scope) => active(scope.user_id)
+      && roles.data?.some((role) => role.user_id === scope.user_id)),
+  });
+}
 const privateDrafts = realEvents.filter((event) => event.status === "draft");
 const rehearsalEvent = events.find((event) => event.status === "draft" && rehearsal(event));
 let adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false, releaseChecks: [] };
@@ -158,8 +194,10 @@ if (!guestFeedback || !hostOutcomes || !introductions || !rounds || !followUpInv
   blockers.push("event_database_boundary_missing");
 if (!invitationCrypto) blockers.push("invitation_crypto_not_ready");
 if (!privateDrafts.length && !publicFuture.length) blockers.push("real_pilot_event_not_created");
-if (!freeManualPublic.length)
-  blockers.push("free_manual_public_event_not_published");
+if (!pilotSlug) blockers.push("pilot_event_not_selected");
+else if (!selectedPilot) blockers.push("selected_pilot_event_not_found_or_not_future");
+else for (const [check, ready] of Object.entries(pilotChecks))
+  if (!ready) blockers.push(`pilot_${check}`);
 if (!adminEvidence.authenticated || adminEvidence.releaseChecks.length !== 5
   || adminEvidence.releaseChecks.some((check) => check.status !== "passed"))
   blockers.push("public_guest_release_checks_incomplete");
@@ -177,7 +215,7 @@ const result = {
   guestRegistrationOpen: flagResult.data?.enabled === true,
   events: { futurePublicPublished: publicFuture.length, futurePrivateDrafts: privateDrafts.length,
     futureRehearsalDrafts: events.filter((event) => event.status === "draft" && rehearsal(event)).length,
-    futureFreeManualPublic: freeManualPublic.length },
+    selectedPilotSlug: pilotSlug || null, selectedPilotChecks: pilotChecks },
   adminSession: adminEvidence,
   taggedRoles,
   engineeringRecommendation: blockers.length ? "hold" : "ready_for_human_go_no_go",

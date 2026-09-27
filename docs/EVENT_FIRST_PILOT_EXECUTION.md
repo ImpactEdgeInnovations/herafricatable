@@ -348,7 +348,13 @@ replace a fresh OTP or invitation delivery rehearsal.
 2. Provide the first real event's title, future Nairobi date/time and time zone,
    venue or online format, capacity, Event Host, check-in lead and safety contact.
    Create it as a private draft; the internal `[TEST]` rehearsal event is not a
-   substitute. Keep automatic payments and public-guest access off.
+   substitute. Keep automatic payments and public-guest access off. Once its
+   slug exists, run the read-only audit with
+   `npm run ops:events:audit-live -- --pilot-slug=the-real-event-slug`.
+   The audit will not treat a different future event as pilot evidence; it
+   checks the selected event's content, venue or private joining link, free
+   on-sale place, active Host, approved Host draft, safety contact and active
+   scoped check-in staff.
 3. Review the complete event page, registration method and a zero-price on-sale
    ticket before publishing. On a disposable staging project, rehearse a member
    and a guest separately through OTP, request, Admin decision, email, pass,
