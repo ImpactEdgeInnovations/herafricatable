@@ -26,7 +26,7 @@ for (const boundary of [
   "extensions.gen_random_bytes(32)",
   "extensions.digest(raw_token, 'sha256')",
 ]) assert(migration.includes(boundary), `Event follow-up bridge must retain ${boundary}`);
-for (const operation of ["create_table_invitation", "review_table_invitation", "preview_table_invitation", "claim_table_invitation"])
+for (const operation of ["create_table_invitation", "review_table_invitation", "preview_table_invitation", "claim_table_invitation", "invite_event_follow_up_guest"])
   assert(cryptoRepair.includes(`alter function public.${operation}`), `Private invitation ${operation} must resolve Supabase pgcrypto`);
 assert(!migration.includes("insert into public.community_memberships"), "Sending an invitation must not enroll a guest");
 assert(!migration.includes("insert into public.beta_invites"), "A follow-up invitation must not create a general membership allowlist entry");

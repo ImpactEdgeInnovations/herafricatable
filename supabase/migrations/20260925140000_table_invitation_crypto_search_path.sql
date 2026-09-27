@@ -13,5 +13,9 @@ alter function public.preview_table_invitation(text)
   set search_path = 'extensions';
 alter function public.claim_table_invitation(text)
   set search_path = 'extensions';
+-- The after-event sender may already have been installed from the previous
+-- version of 013, so repair its saved function configuration as well.
+alter function public.invite_event_follow_up_guest(uuid, uuid)
+  set search_path = 'extensions';
 
 commit;

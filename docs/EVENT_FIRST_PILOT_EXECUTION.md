@@ -205,12 +205,15 @@ closed behind a flag; a green build alone is not an exit.
   Revoked event access and suspended/deleted accounts also invalidate their
   unused event-specific links. Tagged test accounts remain visible as such in
   the Admin queue so the separate-account rehearsal can use the same path.
-- [ ] Apply `20260925130000_event_follow_up_invitations.sql` and then
-  `20260925140000_table_invitation_crypto_search_path.sql` only after the
-  isolated CI migration and `supabase/tests/013_event_follow_up_invitations.sql`
-  pass. The second migration fixes the existing invitation engine's Supabase
-  pgcrypto lookup for sending, opening and claiming private links; neither
-  file is a test. The test Community must satisfy the existing eight release checks and
+- [x] The read-only 27 September audit found the table from
+  `20260925130000_event_follow_up_invitations.sql` already installed on the
+  connected project. Do not rerun that table-creating migration there.
+- [ ] Apply `20260925140000_table_invitation_crypto_search_path.sql` only after
+  the isolated CI migration and `supabase/tests/013_event_follow_up_invitations.sql`
+  pass. This migration fixes Supabase pgcrypto lookup for sending, opening and
+  claiming private links, including the already-installed after-event sender.
+  The live audit currently reports `invitationCrypto: false`; sending
+  invitations must wait. The test Community must satisfy the existing eight release checks and
   backup-moderator gate; this is never bypassed to exercise invitations.
   Then rehearse one pending guest, one active member, Host denial, Admin
   send, delivery, claim, withdrawal and the published Community approval path
@@ -220,9 +223,9 @@ closed behind a flag; a green build alone is not an exit.
   `www.herafricatable.com`, HTTP 200 health, reachable database and deployed
   release `cf7e825`. Public/auth-boundary smoke checks passed on that host.
   The bare domain redirects to `www`; it is not a failed deployment.
-- [ ] The same live audit found event introductions and table rounds installed,
-  but the guest-feedback and Host-outcomes functions absent. The public-guest
-  flag is still off. There is no real future published public event or real
+- [x] The read-only 25 September live audit found event introductions, table
+  rounds, guest feedback and Host outcomes installed. The public-guest flag
+  is still off. There is no real future published public event or real
   future private draft; the one future draft is an internal rehearsal fixture.
   The five public-guest release checks are all `not_started`. The configured
   Admin test credential is the untagged primary Super Admin account, not a
