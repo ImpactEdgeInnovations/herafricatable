@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(26);
+select plan(34);
 
 insert into auth.users(id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at)
 values
@@ -238,6 +238,77 @@ select is(
   (select count(*) from public.get_my_event_pass(
     'a1000000-0000-4000-8000-000000000001')),
   1::bigint, 'reapproved guest receives a fresh pass'
+);
+
+-- Move the isolated fixture into its door window. The published event was in
+-- the future while registrations were requested; no live event is modified.
+reset role;
+update public.events
+set starts_at = now(), ends_at = now() + interval '2 hours'
+where id = 'a1000000-0000-4000-8000-000000000001';
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000001', true);
+select is(
+  (select outcome from public.check_in_event_member(
+    'a1000000-0000-4000-8000-000000000001',
+    (select manual_code from public.event_checkin_credentials
+     where event_id = 'a1000000-0000-4000-8000-000000000001'
+       and user_id = 'a0000000-0000-4000-8000-000000000002'),
+    'manual', 'pgTAP guest rehearsal')),
+  'checked_in', 'event staff accepts the confirmed guest manual pass'
+);
+select is(
+  (select status from public.event_memberships
+   where event_id = 'a1000000-0000-4000-8000-000000000001'
+     and user_id = 'a0000000-0000-4000-8000-000000000002'),
+  'attended', 'guest attendance is recorded after manual check-in'
+);
+select is(
+  (select outcome from public.check_in_event_member(
+    'a1000000-0000-4000-8000-000000000001',
+    (select manual_code from public.event_checkin_credentials
+     where event_id = 'a1000000-0000-4000-8000-000000000001'
+       and user_id = 'a0000000-0000-4000-8000-000000000002'),
+    'manual', 'pgTAP guest rehearsal')),
+  'already_checked_in', 'repeat scan cannot count the guest twice'
+);
+select lives_ok(
+  $$select public.reverse_event_checkin(
+    (select id from public.event_checkins
+     where event_id = 'a1000000-0000-4000-8000-000000000001'
+       and user_id = 'a0000000-0000-4000-8000-000000000002'
+       and reversed_at is null), 'Incorrect door scan')$$,
+  'event staff can reverse an incorrect guest scan with an audit reason'
+);
+select is(
+  (select status from public.event_memberships
+   where event_id = 'a1000000-0000-4000-8000-000000000001'
+     and user_id = 'a0000000-0000-4000-8000-000000000002'),
+  'confirmed', 'reversal returns the guest to the expected list'
+);
+select is(
+  (select outcome from public.check_in_event_member(
+    'a1000000-0000-4000-8000-000000000001',
+    (select 'HATCHECKIN:' || event_id::text || ':' || qr_token
+     from public.event_checkin_credentials
+     where event_id = 'a1000000-0000-4000-8000-000000000001'
+       and user_id = 'a0000000-0000-4000-8000-000000000002'),
+    'qr', 'pgTAP guest rehearsal')),
+  'checked_in', 'the same guest can enter with the event-scoped QR pass'
+);
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000002', true);
+select is(
+  (select count(*) from public.event_checkins
+   where event_id = 'a1000000-0000-4000-8000-000000000001'
+     and user_id = 'a0000000-0000-4000-8000-000000000002'
+     and reversed_at is null),
+  1::bigint, 'guest sees one active attendance record after the QR scan'
+);
+select is(
+  (select access_status::text from public.profiles
+   where id = 'a0000000-0000-4000-8000-000000000002'),
+  'pending', 'event check-in still does not grant network membership'
 );
 
 select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000003', true);
