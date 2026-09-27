@@ -171,9 +171,12 @@ select is((select count(*) from public.table_invitations invitation
   where invitation.invitee_user_id = auth.uid() and invitation.status = 'revoked'
     and invitation.token_hash is null),
   1::bigint, 'withdrawal closes the event-specific unused invitation');
+set local role postgres;
 select is((select count(*) from public.notification_jobs job
-  where job.user_id = auth.uid() and job.status = 'suppressed'),
+  where job.user_id = 'e0000000-0000-4000-8000-000000000003'
+    and job.status = 'suppressed'),
   1::bigint, 'withdrawal suppresses the unsent email job');
+set local role authenticated;
 select lives_ok(
   $$select public.set_my_event_follow_up_interest('e1000000-0000-4000-8000-000000000001', true)$$,
   'guest may choose to hear about the Community again');
@@ -193,9 +196,12 @@ select is((select count(*) from public.table_invitations invitation
   where invitation.invitee_user_id = auth.uid() and invitation.status = 'revoked'
     and invitation.token_hash is null),
   2::bigint, 'revoking event access invalidates a later unused invitation');
+set local role postgres;
 select is((select count(*) from public.notification_jobs job
-  where job.user_id = auth.uid() and job.status = 'suppressed'),
+  where job.user_id = 'e0000000-0000-4000-8000-000000000003'
+    and job.status = 'suppressed'),
   2::bigint, 'revoking event access suppresses its later unsent email');
+set local role authenticated;
 select lives_ok(
   $$select public.set_my_event_follow_up_interest('e1000000-0000-4000-8000-000000000001', false)$$,
   'guest can withdraw an existing choice even after entitlement revocation');
