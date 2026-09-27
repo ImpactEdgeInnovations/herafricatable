@@ -138,6 +138,23 @@ const taggedRoles = process.env.HAT_COMMUNITY_TEST_PASSWORD
     }
   : null;
 
+const blockers = [];
+if (!healthResponse.ok || health.database !== "reachable" || health.server_integration !== "ready")
+  blockers.push("site_or_database_health");
+if (!guestFeedback || !hostOutcomes || !introductions || !rounds || !followUpInvitations)
+  blockers.push("event_database_boundary_missing");
+if (!invitationCrypto) blockers.push("invitation_crypto_not_ready");
+if (!privateDrafts.length && !publicFuture.length) blockers.push("real_pilot_event_not_created");
+if (!publicFuture.some((event) => event.registration_mode === "manual_review"))
+  blockers.push("free_manual_public_event_not_published");
+if (!adminEvidence.authenticated || adminEvidence.releaseChecks.length !== 5
+  || adminEvidence.releaseChecks.some((check) => check.status !== "passed"))
+  blockers.push("public_guest_release_checks_incomplete");
+if (!flagResult.data?.enabled) blockers.push("public_guest_registration_closed");
+if (!taggedRoles || Object.values(taggedRoles).some((role) =>
+  !role.authenticated || !role.active || !role.tagged || !role.adminReleaseDenied))
+  blockers.push("separate_account_boundary_evidence_missing");
+
 const result = {
   checkedAt: new Date().toISOString(),
   site: { base, healthStatus: healthResponse.status, release: health.release ?? null,
@@ -150,6 +167,8 @@ const result = {
     futureFreeManualPublic: publicFuture.filter((event) => event.registration_mode === "manual_review").length },
   adminSession: adminEvidence,
   taggedRoles,
+  engineeringRecommendation: blockers.length ? "hold" : "ready_for_human_go_no_go",
+  readinessBlockers: blockers,
   pilotDecision: "not_decided",
 };
 console.log(JSON.stringify(result, null, 2));

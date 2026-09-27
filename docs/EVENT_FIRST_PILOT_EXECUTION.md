@@ -313,6 +313,20 @@ gate checks the signed-in Super Admin identity.
 
 ## Definition of done
 
+### Engineering checkpoint — 27 September 2026
+
+**Recommendation: hold the public-guest pilot; no final owner go/no-go decision
+has been recorded.** The deployed `f83a54f` site returned HTTP 200 and the
+separate member, Host and moderator boundary checks passed. The [GitHub quality
+gate](https://github.com/ImpactEdgeInnovations/herafricatable/actions/runs/36296559176)
+passed the application build and 462 isolated database assertions on rerun.
+Production nevertheless reports `invitationCrypto: false`; apply the pending
+`20260925140000_table_invitation_crypto_search_path.sql` before sending any
+invitations, then rerun the read-only audit. There is no real future pilot event
+draft or published free/manual public event, the five public-guest release
+checks remain `not_started`, and `event_guest_access` remains off. A green CI
+gate proves code contracts in an isolated stack, not the missing live journeys.
+
 A critical capability is finished only when the attendee, member, Host,
 Moderator and Super Admin roles pass their applicable live journeys with
 separate accounts. Postgres or server permission checks must protect every
