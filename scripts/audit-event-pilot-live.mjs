@@ -64,6 +64,19 @@ const events = eventResult.data ?? [];
 const rehearsal = (event) => event.title?.startsWith("[TEST]") || event.slug?.startsWith("hat-private-host-rehearsal-");
 const realEvents = events.filter((event) => !rehearsal(event));
 const publicFuture = realEvents.filter((event) => event.status === "published" && event.audience === "public");
+const ticketResult = publicFuture.length
+  ? await service.from("ticket_types")
+    .select("event_id,price_minor,status,sales_start_at,sales_end_at")
+    .in("event_id", publicFuture.map((event) => event.id))
+  : { data: [], error: null };
+assert.ifError(ticketResult.error);
+const saleReady = (ticketResult.data ?? []).filter((ticket) =>
+  ticket.status === "on_sale" && Number(ticket.price_minor) === 0
+  && (!ticket.sales_start_at || new Date(ticket.sales_start_at).getTime() <= Date.now())
+  && (!ticket.sales_end_at || new Date(ticket.sales_end_at).getTime() > Date.now()));
+const freeManualPublic = publicFuture.filter((event) =>
+  event.registration_mode === "manual_review"
+  && saleReady.some((ticket) => ticket.event_id === event.id));
 const privateDrafts = realEvents.filter((event) => event.status === "draft");
 const rehearsalEvent = events.find((event) => event.status === "draft" && rehearsal(event));
 let adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false, releaseChecks: [] };
@@ -145,7 +158,7 @@ if (!guestFeedback || !hostOutcomes || !introductions || !rounds || !followUpInv
   blockers.push("event_database_boundary_missing");
 if (!invitationCrypto) blockers.push("invitation_crypto_not_ready");
 if (!privateDrafts.length && !publicFuture.length) blockers.push("real_pilot_event_not_created");
-if (!publicFuture.some((event) => event.registration_mode === "manual_review"))
+if (!freeManualPublic.length)
   blockers.push("free_manual_public_event_not_published");
 if (!adminEvidence.authenticated || adminEvidence.releaseChecks.length !== 5
   || adminEvidence.releaseChecks.some((check) => check.status !== "passed"))
@@ -164,7 +177,7 @@ const result = {
   guestRegistrationOpen: flagResult.data?.enabled === true,
   events: { futurePublicPublished: publicFuture.length, futurePrivateDrafts: privateDrafts.length,
     futureRehearsalDrafts: events.filter((event) => event.status === "draft" && rehearsal(event)).length,
-    futureFreeManualPublic: publicFuture.filter((event) => event.registration_mode === "manual_review").length },
+    futureFreeManualPublic: freeManualPublic.length },
   adminSession: adminEvidence,
   taggedRoles,
   engineeringRecommendation: blockers.length ? "hold" : "ready_for_human_go_no_go",
