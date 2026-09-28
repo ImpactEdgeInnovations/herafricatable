@@ -709,13 +709,13 @@ export default async function AdminOperationsPage({
   const publicationSources = loadEvents && eventIds.length
     ? await Promise.all([
         supabase.from("event_hosts").select("event_id").in("event_id", eventIds),
-        supabase.from("event_safety_contacts").select("event_id").in("event_id", eventIds),
+        supabase.from("event_safety_contacts").select("event_id,contact_name,contact_phone").in("event_id", eventIds),
       ])
     : null;
   const hostedEventIds = publicationSources?.[0].error
     ? eventIds : (publicationSources?.[0].data ?? []).map((row) => row.event_id);
-  const safetyContactEventIds = publicationSources?.[1].error
-    ? [] : (publicationSources?.[1].data ?? []).map((row) => row.event_id);
+  const publicationSafetyContacts = publicationSources?.[1].error
+    ? [] : publicationSources?.[1].data ?? [];
   const [
     { data: sessionData },
     { data: announcementData },
@@ -1080,7 +1080,7 @@ export default async function AdminOperationsPage({
             initialEvents={events}
             privateEvents={privateEvents}
             hostedEventIds={hostedEventIds}
-            safetyContactEventIds={safetyContactEventIds}
+            initialSafetyContacts={publicationSafetyContacts}
             canCreate={role.role === "super_admin"}
             migrationReady={!eventResult.error}
           />

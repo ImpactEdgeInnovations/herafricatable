@@ -28,6 +28,7 @@ export type AdminEvent = {
 };
 
 type PrivateEvent = { event_id: string; online_url: string | null };
+type SafetyContact = { event_id: string; contact_name: string; contact_phone: string };
 
 type EventForm = {
   addressLine: string;
@@ -124,14 +125,14 @@ export function EventManager({
   initialEvents,
   privateEvents,
   hostedEventIds,
-  safetyContactEventIds,
+  initialSafetyContacts,
   canCreate,
   migrationReady,
 }: {
   initialEvents: AdminEvent[];
   privateEvents: PrivateEvent[];
   hostedEventIds: string[];
-  safetyContactEventIds: string[];
+  initialSafetyContacts: SafetyContact[];
   canCreate: boolean;
   migrationReady: boolean;
 }) {
@@ -139,16 +140,26 @@ export function EventManager({
   const supabase = useMemo(() => createClient(), []);
   const [events, setEvents] = useState(initialEvents);
   const [savedPrivateEvents, setSavedPrivateEvents] = useState(privateEvents);
+  const [safetyContacts, setSafetyContacts] = useState(initialSafetyContacts);
+  const [safetyDrafts, setSafetyDrafts] = useState<Record<string, { name: string; phone: string }>>({});
   const [form, setForm] = useState<EventForm>(() =>
     initialEvents[0]
       ? formFromEvent(initialEvents[0], privateEvents)
       : blankForm(),
   );
   const [saving, setSaving] = useState(false);
+  const [savingSafety, setSavingSafety] = useState(false);
   const [message, setMessage] = useState("");
   const persistedStatus = events.find((item) => item.id === form.id)?.status;
   const hostOwnsPublication = Boolean(form.id && hostedEventIds.includes(form.id));
-  const safetyContactReady = Boolean(form.id && safetyContactEventIds.includes(form.id));
+  const savedSafetyContact = safetyContacts.find((item) => item.event_id === form.id);
+  const safetyContactReady = Boolean(savedSafetyContact);
+  const safetyDraft = form.id
+    ? safetyDrafts[form.id] ?? {
+        name: savedSafetyContact?.contact_name ?? "",
+        phone: savedSafetyContact?.contact_phone ?? "",
+      }
+    : { name: "", phone: "" };
   const canPublishHere = Boolean(form.id && (persistedStatus === "published" ||
     (!hostOwnsPublication && safetyContactReady)));
 
@@ -162,6 +173,41 @@ export function EventManager({
       setForm(formFromEvent(selected, savedPrivateEvents));
       setMessage("");
     }
+  }
+
+  function updateSafetyDraft(field: "name" | "phone", value: string) {
+    const eventId = form.id;
+    if (!eventId) return;
+    setSafetyDrafts((current) => ({
+      ...current,
+      [eventId]: { ...(current[eventId] ?? safetyDraft), [field]: value },
+    }));
+  }
+
+  async function saveSafetyContact() {
+    const eventId = form.id;
+    if (!eventId || !canCreate) return;
+    if (safetyDraft.name.trim().length < 2 || safetyDraft.phone.trim().length < 7) {
+      setMessage("Add the contact's name and a reachable phone number.");
+      return;
+    }
+    setSavingSafety(true);
+    setMessage("");
+    const { error } = await supabase.rpc("save_event_safety_contact", {
+      p_event_id: eventId,
+      p_name: safetyDraft.name.trim(),
+      p_phone: safetyDraft.phone.trim(),
+    });
+    setSavingSafety(false);
+    if (error) {
+      setMessage(adminErrorMessage(error, "save the event safety contact"));
+      return;
+    }
+    setSafetyContacts((current) => [
+      { event_id: eventId, contact_name: safetyDraft.name.trim(), contact_phone: safetyDraft.phone.trim() },
+      ...current.filter((item) => item.event_id !== eventId),
+    ]);
+    setMessage("On-the-day contact saved privately. Now review the other event details before publishing.");
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -389,7 +435,7 @@ export function EventManager({
               {form.id && form.status === "draft" && !canPublishHere ? <small>
                 {hostOwnsPublication
                   ? "A Host is assigned. Review and publish their draft in Host drafts."
-                  : "Assign a Host and record a safety contact before opening this event to guests."}
+                  : "Save an on-the-day contact below before opening this event to guests."}
               </small> : null}
             </label>
             <label>
@@ -529,6 +575,18 @@ export function EventManager({
               </div>
             </fieldset>
           ) : null}
+
+          {canCreate && form.id ? <fieldset className="event-fieldset">
+            <legend>On-the-day contact</legend>
+            <p className="admin-form-guide">Private to the event team. Name someone guests or staff can reach if a problem arises.</p>
+            <div className="form-grid">
+              <label>Name<input autoComplete="name" maxLength={120} onChange={(event) => updateSafetyDraft("name", event.target.value)} value={safetyDraft.name} /></label>
+              <label>Phone<input autoComplete="tel" maxLength={40} onChange={(event) => updateSafetyDraft("phone", event.target.value)} type="tel" value={safetyDraft.phone} /></label>
+            </div>
+            <button className="button button-outline" disabled={savingSafety || saving} onClick={() => void saveSafetyContact()} type="button">
+              {savingSafety ? "Saving contact…" : safetyContactReady ? "Update contact" : "Save contact"}
+            </button>
+          </fieldset> : null}
 
           <label className="feature-event-control">
             <input

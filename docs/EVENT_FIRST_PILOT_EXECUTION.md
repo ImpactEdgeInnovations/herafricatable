@@ -125,6 +125,9 @@ closed behind a flag; a green build alone is not an exit.
   a real Admin rehearsal on the connected project are still pending. The
   read-only live audit reports `publicationSequence` from a permission-aware
   database check so an uninstalled migration cannot be mistaken for readiness.
+  Event details now lets Super Admin save the private on-the-day contact on an
+  existing draft, so an Admin-operated event has a complete in-product path;
+  assigned-Host events still publish through Host drafts.
 - [x] `20260924130000_event_intro_cards.sql` defines opt-in, event-scoped
   introduction cards for confirmed members and confirmed event-only guests.
   A separate QR or 16-character manual code opens a short hello only for

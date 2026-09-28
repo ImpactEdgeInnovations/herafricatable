@@ -128,6 +128,8 @@ for (const contract of [
   'setSavedPrivateEvents((current) => [',
   'disabled={!canPublishHere}>Published — after private setup',
   'hostOwnsPublication',
+  'supabase.rpc("save_event_safety_contact"',
+  'setSafetyContacts((current) => [',
 ]) {
   assert(eventEditor.includes(contract),
     `Admin event creation must preserve its saved identity and private setup: ${contract}`);
