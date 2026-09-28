@@ -160,13 +160,16 @@ closed behind a flag; a green build alone is not an exit.
 - [x] On 25 September, the connected project exposed `event_round_settings`
   after the table-round migration. The isolated GitHub database gate covers
   its pgTAP contract. This is installation evidence, not a live rehearsal.
-- [x] The [28 September isolated quality gate](https://github.com/ImpactEdgeInnovations/herafricatable/actions/runs/36385813606)
-  passed `014_event_table_round_scale.sql` and all 483 database assertions.
+- [x] The [28 September isolated quality gate](https://github.com/ImpactEdgeInnovations/herafricatable/actions/runs/36386331294)
+  passed `014_event_table_round_scale.sql` and all 490 database assertions.
   Twenty-one attendees opted in; twenty occupied four tables of five, a
   blocked pairing and overflow seat were refused, Super Admin approved the
   plan, every seated attendee saw only her table, and a guest withdrawal
-  paused all schedules. This proves the database contract in a disposable
-  stack, not twenty live mobile users or delivered emails.
+  paused all schedules. Admin then replaced the Host: the former Host lost
+  access, the replacement submitted the paused plan for fresh review, and
+  schedules returned only after Admin reapproval. This proves the database
+  contract in a disposable stack, not twenty live mobile users or delivered
+  emails.
 - [ ] Rehearse twenty separate opted-in guests, blocked pairs, opt-outs after
   assignment, capacity, Host replacement, mobile schedule visibility and Admin
   pause before opening table rounds for a real event.
