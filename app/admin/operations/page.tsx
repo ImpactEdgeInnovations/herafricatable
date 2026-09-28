@@ -706,6 +706,16 @@ export default async function AdminOperationsPage({
     ),
   );
   const eventIds = events.map((event) => event.id);
+  const publicationSources = loadEvents && eventIds.length
+    ? await Promise.all([
+        supabase.from("event_hosts").select("event_id").in("event_id", eventIds),
+        supabase.from("event_safety_contacts").select("event_id").in("event_id", eventIds),
+      ])
+    : null;
+  const hostedEventIds = publicationSources?.[0].error
+    ? eventIds : (publicationSources?.[0].data ?? []).map((row) => row.event_id);
+  const safetyContactEventIds = publicationSources?.[1].error
+    ? [] : (publicationSources?.[1].data ?? []).map((row) => row.event_id);
   const [
     { data: sessionData },
     { data: announcementData },
@@ -1069,6 +1079,8 @@ export default async function AdminOperationsPage({
           <EventManager
             initialEvents={events}
             privateEvents={privateEvents}
+            hostedEventIds={hostedEventIds}
+            safetyContactEventIds={safetyContactEventIds}
             canCreate={role.role === "super_admin"}
             migrationReady={!eventResult.error}
           />

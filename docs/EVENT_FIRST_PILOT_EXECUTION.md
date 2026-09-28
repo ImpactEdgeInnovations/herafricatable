@@ -111,6 +111,18 @@ closed behind a flag; a green build alone is not an exit.
   database-backed setup checklist for event basics, place/link, free manual
   ticket, active Host, reviewed Host content and safety contact. It names the
   next action without treating setup completion as launch approval.
+- [x] Admin → Events → Event details now keeps a newly created event selected
+  after its first save, including its private online-link field. The first save
+  is draft-only, so Admin cannot accidentally make a new event public while
+  entering its basics. This is editor-state and build evidence; the real pilot
+  draft and publication rehearsal remain outstanding.
+- [x] `20260928100000_admin_event_publication_sequence.sql` also enforces the
+  private-first sequence in the authenticated event-save RPC. An assigned
+  Host's draft must go through Host review, and an unhosted public draft needs
+  a saved private safety contact before publication. The internal save
+  function is not executable by API users. `015_admin_event_publication_sequence.sql`
+  specifies those boundaries for the isolated database gate; installation and
+  a real Admin rehearsal on the connected project are still pending.
 - [x] `20260924130000_event_intro_cards.sql` defines opt-in, event-scoped
   introduction cards for confirmed members and confirmed event-only guests.
   A separate QR or 16-character manual code opens a short hello only for
@@ -373,12 +385,14 @@ live Sprint 6 rehearsal or a controlled-pilot go/no-go decision.
 
 ### Next owner actions, in order
 
-1. In Supabase SQL Editor, apply **only**
-   `supabase/migrations/20260925140000_table_invitation_crypto_search_path.sql`.
-   Do not rerun the already-installed `20260925130000` migration, and do not
-   paste a file from `supabase/tests/` into production. Engineering will rerun
-   the read-only audit and confirm `invitationCrypto: true` before any after-event
-   link is sent.
+1. In Supabase SQL Editor, apply the pending migrations in order:
+   `supabase/migrations/20260925140000_table_invitation_crypto_search_path.sql`,
+   then `supabase/migrations/20260928100000_admin_event_publication_sequence.sql`
+   after its isolated GitHub database gate passes. Do not rerun the
+   already-installed `20260925130000` migration, and do not paste any file
+   from `supabase/tests/` into production. Engineering will rerun the read-only
+   audit and confirm `invitationCrypto: true` before any after-event link is
+   sent, then rehearse the Admin private-first event save.
 2. Confirm the working title **The Founding Table — Nairobi**, plus its future
    Nairobi date/time and time zone, venue or online format, capacity, Event Host,
    check-in lead and safety contact.

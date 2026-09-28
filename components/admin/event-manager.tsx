@@ -123,17 +123,22 @@ function formFromEvent(
 export function EventManager({
   initialEvents,
   privateEvents,
+  hostedEventIds,
+  safetyContactEventIds,
   canCreate,
   migrationReady,
 }: {
   initialEvents: AdminEvent[];
   privateEvents: PrivateEvent[];
+  hostedEventIds: string[];
+  safetyContactEventIds: string[];
   canCreate: boolean;
   migrationReady: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [events, setEvents] = useState(initialEvents);
+  const [savedPrivateEvents, setSavedPrivateEvents] = useState(privateEvents);
   const [form, setForm] = useState<EventForm>(() =>
     initialEvents[0]
       ? formFromEvent(initialEvents[0], privateEvents)
@@ -141,6 +146,11 @@ export function EventManager({
   );
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const persistedStatus = events.find((item) => item.id === form.id)?.status;
+  const hostOwnsPublication = Boolean(form.id && hostedEventIds.includes(form.id));
+  const safetyContactReady = Boolean(form.id && safetyContactEventIds.includes(form.id));
+  const canPublishHere = Boolean(form.id && (persistedStatus === "published" ||
+    (!hostOwnsPublication && safetyContactReady)));
 
   function update<K extends keyof EventForm>(field: K, value: EventForm[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -149,7 +159,7 @@ export function EventManager({
   function chooseEvent(id: string) {
     const selected = events.find((event) => event.id === id);
     if (selected) {
-      setForm(formFromEvent(selected, privateEvents));
+      setForm(formFromEvent(selected, savedPrivateEvents));
       setMessage("");
     }
   }
@@ -157,6 +167,16 @@ export function EventManager({
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!form.startsAt || !form.endsAt) return;
+    if (!form.id && form.status !== "draft") {
+      setMessage("Save this event privately first. Add its Host, safety contact and places before publishing.");
+      return;
+    }
+    if (form.status === "published" && !canPublishHere) {
+      setMessage(hostOwnsPublication
+        ? "Review and approve this event in Host drafts to publish it."
+        : "Save an on-the-day safety contact before publishing this event.");
+      return;
+    }
     setSaving(true);
     setMessage("");
 
@@ -187,48 +207,51 @@ export function EventManager({
       return;
     }
 
-    setMessage(
-      form.status === "published"
-        ? "Event saved and published. The public event page is now available."
-        : "Event saved as a private draft.",
-    );
-    setSaving(false);
-    if (!form.id && data) {
+    const savedId = form.id ?? data;
+    if (!savedId) {
+      setMessage("The event was saved, but this page could not load its record. Reload before editing it again.");
+      setSaving(false);
       router.refresh();
-    } else {
-      setEvents((current) =>
-        current.map((item) =>
-          item.id === form.id
-            ? {
-                ...item,
-                capacity: form.capacity ? Number(form.capacity) : null,
-                ends_at: new Date(form.endsAt).toISOString(),
-                format: form.format,
-                is_featured: form.isFeatured,
-                registration_mode: form.registrationMode,
-                slug: slugify(form.slug || form.title),
-                starts_at: new Date(form.startsAt).toISOString(),
-                status: form.status,
-                summary: form.summary || null,
-                timezone: form.timezone,
-                title: form.title,
-                venues:
-                  form.format === "virtual"
-                    ? null
-                    : {
-                        address_line: form.addressLine || null,
-                        city: form.city,
-                        country: form.country,
-                        map_url: form.mapUrl || null,
-                        name: form.venueName,
-                      },
-              }
-            : form.isFeatured
-              ? { ...item, is_featured: false }
-              : item,
-        ),
-      );
+      return;
     }
+    const savedEvent: AdminEvent = {
+      capacity: form.capacity ? Number(form.capacity) : null,
+      ends_at: new Date(form.endsAt).toISOString(),
+      format: form.format,
+      id: savedId,
+      is_featured: form.isFeatured,
+      registration_mode: form.registrationMode,
+      slug: slugify(form.slug || form.title),
+      starts_at: new Date(form.startsAt).toISOString(),
+      status: form.status,
+      summary: form.summary || null,
+      timezone: form.timezone,
+      title: form.title,
+      venues: form.format === "virtual" ? null : {
+        address_line: form.addressLine || null,
+        city: form.city,
+        country: form.country,
+        map_url: form.mapUrl || null,
+        name: form.venueName,
+      },
+    };
+    setEvents((current) => [
+      savedEvent,
+      ...current.filter((item) => item.id !== savedId).map((item) =>
+        form.isFeatured ? { ...item, is_featured: false } : item),
+    ]);
+    setSavedPrivateEvents((current) => [
+      { event_id: savedId, online_url: form.format === "in_person" ? null : form.onlineUrl || null },
+      ...current.filter((item) => item.event_id !== savedId),
+    ]);
+    setForm((current) => ({ ...current, id: savedId }));
+    setMessage(form.status === "published"
+      ? "Event saved and published. The public event page is now available."
+      : form.status === "draft"
+        ? "Private draft saved. You can now set up its Host, safety contact and places."
+        : "Event changes saved.");
+    setSaving(false);
+    router.refresh();
   }
 
   if (!migrationReady) {
@@ -358,11 +381,16 @@ export function EventManager({
                 }
               >
                 <option value="draft">Draft</option>
-                <option value="published">Published</option>
+                <option value="published" disabled={!canPublishHere}>Published — after private setup</option>
                 <option value="suspended" disabled>Suspended — use Event oversight</option>
                 <option value="cancelled" disabled>Cancelled — use Event oversight</option>
-                <option value="completed">Completed</option>
+                <option value="completed" disabled={!form.id}>Completed</option>
               </select>
+              {form.id && form.status === "draft" && !canPublishHere ? <small>
+                {hostOwnsPublication
+                  ? "A Host is assigned. Review and publish their draft in Host drafts."
+                  : "Assign a Host and record a safety contact before opening this event to guests."}
+              </small> : null}
             </label>
             <label>
               Registration mode

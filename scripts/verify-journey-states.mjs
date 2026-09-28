@@ -120,6 +120,19 @@ for (const path of refreshModules) {
   );
 }
 
+const eventEditor = read("components/admin/event-manager.tsx");
+for (const contract of [
+  'if (!form.id && form.status !== "draft")',
+  'const savedId = form.id ?? data',
+  'setForm((current) => ({ ...current, id: savedId }))',
+  'setSavedPrivateEvents((current) => [',
+  'disabled={!canPublishHere}>Published — after private setup',
+  'hostOwnsPublication',
+]) {
+  assert(eventEditor.includes(contract),
+    `Admin event creation must preserve its saved identity and private setup: ${contract}`);
+}
+
 const actionStateModules = [
   "components/events/event-registration-form.tsx",
   "components/events/menu-feedback-controls.tsx",
