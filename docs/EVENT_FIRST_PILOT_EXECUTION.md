@@ -160,6 +160,13 @@ closed behind a flag; a green build alone is not an exit.
 - [x] On 25 September, the connected project exposed `event_round_settings`
   after the table-round migration. The isolated GitHub database gate covers
   its pgTAP contract. This is installation evidence, not a live rehearsal.
+- [x] The [28 September isolated quality gate](https://github.com/ImpactEdgeInnovations/herafricatable/actions/runs/36385813606)
+  passed `014_event_table_round_scale.sql` and all 483 database assertions.
+  Twenty-one attendees opted in; twenty occupied four tables of five, a
+  blocked pairing and overflow seat were refused, Super Admin approved the
+  plan, every seated attendee saw only her table, and a guest withdrawal
+  paused all schedules. This proves the database contract in a disposable
+  stack, not twenty live mobile users or delivered emails.
 - [ ] Rehearse twenty separate opted-in guests, blocked pairs, opt-outs after
   assignment, capacity, Host replacement, mobile schedule visibility and Admin
   pause before opening table rounds for a real event.
@@ -343,6 +350,18 @@ the provider's domain status. Membership intake was `manual_review` with two
 pending applications. These checks support operational readiness but do not
 replace a fresh OTP or invitation delivery rehearsal.
 
+### Engineering checkpoint — 28 September 2026
+
+The canonical site serves `bfa7253` with HTTP 200 and a reachable database.
+The live role-boundary audit still passes, while `invitationCrypto: false`,
+zero real future event drafts, five `not_started` release checks and the closed
+guest flag keep the recommendation at **hold**. The owner asked engineering to
+choose the first event title; the working title is **The Founding Table —
+Nairobi**. No event record has been created because its future date/time,
+venue or online format, capacity, Host, check-in lead and safety contact have
+not yet been confirmed. The isolated twenty-person test does not replace the
+live Sprint 6 rehearsal or a controlled-pilot go/no-go decision.
+
 ### Next owner actions, in order
 
 1. In Supabase SQL Editor, apply **only**
@@ -351,8 +370,9 @@ replace a fresh OTP or invitation delivery rehearsal.
    paste a file from `supabase/tests/` into production. Engineering will rerun
    the read-only audit and confirm `invitationCrypto: true` before any after-event
    link is sent.
-2. Provide the first real event's title, future Nairobi date/time and time zone,
-   venue or online format, capacity, Event Host, check-in lead and safety contact.
+2. Confirm the working title **The Founding Table — Nairobi**, plus its future
+   Nairobi date/time and time zone, venue or online format, capacity, Event Host,
+   check-in lead and safety contact.
    Create it as a private draft; the internal `[TEST]` rehearsal event is not a
    substitute. Keep automatic payments and public-guest access off. Once its
    slug exists, run the read-only audit with
