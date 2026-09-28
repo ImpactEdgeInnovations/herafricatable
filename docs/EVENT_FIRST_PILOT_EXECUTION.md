@@ -146,6 +146,12 @@ closed behind a flag; a green build alone is not an exit.
   details are identified rather than invented, and the provider fallback gives
   a useful event-specific answer. This is a Sprint 7 implementation step, not
   live acceptance or permission to open the feature for event-only guests.
+- [x] The isolated Sprint 7 event-answer test now covers published facts,
+  missing programme, closed registration, completed events, inaccessible event
+  links, invalid time zones and the deterministic provider fallback. An
+  inaccessible event link receives a neutral response before the external
+  provider is called; it is not replaced with another public event. This is
+  code-contract evidence, not a live provider-outage or mobile rehearsal.
 - [x] `20260925100000_table_guide_referral_category.sql` aligns Nia's referral
   topic with the database's allowed usage and feedback categories. The
   isolated `010_table_guide_referral_category.sql` test checks that referral

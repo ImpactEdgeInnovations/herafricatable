@@ -83,11 +83,15 @@ for (const contract of [
   "currentEventResult.error ? null",
   '.in("status", ["published", "completed"])',
   '.eq("status", "published")',
-  "I cannot see your private seat, pass or joining link",
 ]) {
   assert(api.includes(contract), `Nia response API is missing: ${contract}`);
 }
 const eventPage = read("app/events/[slug]/page.tsx");
+const eventAnswer = read("lib/table-guide-event-answer.ts");
+assert(
+  eventAnswer.includes("I cannot see your private seat, pass or joining link"),
+  "Nia's event answer must explicitly exclude private passes and joining details",
+);
 assert(
   eventPage.includes("<FloatingTableGuide") && eventPage.includes("get_my_table_guide_access"),
   "Published event pages must offer Nia only to eligible signed-in members",

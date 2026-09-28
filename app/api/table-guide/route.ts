@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { eventFallbackAnswer, type GuideEventContext as CurrentEventContext } from "@/lib/table-guide-event-answer";
 import type {
   GuideCategory,
   GuideSuggestion,
@@ -61,20 +62,6 @@ type EventContextRow = {
   slug?: string | null;
   starts_at?: string | null;
   title?: string | null;
-};
-
-type CurrentEventContext = {
-  ends_at: string;
-  format: string;
-  programme: { description: string | null; starts_at: string; title: string }[];
-  registration_mode: string;
-  slug: string;
-  starts_at: string;
-  status: string;
-  summary: string | null;
-  timezone: string;
-  title: string;
-  venue: { city: string; country: string; name: string } | null;
 };
 
 type GuideContext = {
@@ -375,39 +362,12 @@ function safetyIdentifier(userId: string, salt: string) {
     .digest("hex");
 }
 
-function platformAnswer(category: GuideCategory, context?: GuideContext) {
+function platformAnswer(category: GuideCategory, context?: GuideContext, requestedEventSlug: string | null = null) {
   const firstName = context?.member.display_name?.trim().split(/\s+/)[0];
   const hello = firstName ? `${firstName}, ` : "";
   if (category === "events") {
-    if (context?.currentEvent) {
-      const event = context.currentEvent;
-      const date = new Intl.DateTimeFormat("en-KE", {
-        dateStyle: "full",
-        timeStyle: "short",
-        timeZone: event.timezone,
-      }).format(new Date(event.starts_at));
-      const place = event.venue
-        ? `${event.venue.name}, ${event.venue.city}`
-        : "online; confirmed guests receive joining details privately";
-      const programme = event.programme.length
-        ? `The published programme includes ${event.programme.slice(0, 3).map((item) => item.title).join(", ")}.`
-        : "The programme has not been published here yet.";
-      const timing = event.status === "completed" ? "was held" : "is scheduled";
-      const placeRequest = event.status === "completed"
-        ? "This event has ended."
-        : event.registration_mode === "manual_review"
-          ? "You may request a place on this page; the event team reviews each request."
-          : event.registration_mode === "waitlist"
-            ? "You may join the waitlist on this page."
-            : event.registration_mode === "closed"
-              ? "Registration is closed."
-              : "Open this page to see whether places are available.";
-      return `${hello}${event.title} ${timing} for ${date} at ${place}. ${programme} ${placeRequest} I cannot see your private seat, pass or joining link.`;
-    }
-    const events = context?.upcomingEvents.filter((event) => event.title).slice(0, 3) ?? [];
-    return events.length
-      ? `${hello}these are the next events I can see for you: ${events.map((event) => event.title).join(", ")}. Open Events to see the date, place and request a seat without leaving the event page.`
-      : `${hello}there are no published upcoming events in your view right now. You can still open Events to review past gatherings or propose an open event. Member events are free at launch and become public only after Admin approval.`;
+    return eventFallbackAnswer({ firstName, currentEvent: context?.currentEvent ?? null,
+      upcomingEvents: context?.upcomingEvents ?? [], requestedEventSlug });
   }
   if (category === "communities") {
     const communities = context?.accessibleCommunities.filter((community) => community.name).slice(0, 4) ?? [];
@@ -664,7 +624,7 @@ export async function POST(request: Request) {
 
   let category = categoryFor(message);
   const model = process.env.OPENAI_MODEL?.trim() || DEFAULT_MODEL;
-  let safeFallback = platformAnswer(category);
+  let safeFallback = platformAnswer(category, undefined, eventSlug);
   let currentEventForFallback: CurrentEventContext | null = null;
   let suggestions: GuideSuggestion[] = [];
   const record = async (
@@ -825,8 +785,22 @@ export async function POST(request: Request) {
         (event) => !event.slug || !dismissed.has(`event:${event.slug}`),
       ),
     };
-    safeFallback = platformAnswer(category, context);
+    safeFallback = platformAnswer(category, context, eventSlug);
     suggestions = suggestionsFor(category, context);
+
+    // A page hint is never proof that an event is visible. Do not ask the
+    // provider to identify an inaccessible draft or substitute a public event.
+    if (eventSlug && !currentEvent && category === "events") {
+      await record("success", safeFallback.length);
+      return NextResponse.json({
+        actions: actionsFor(category, null),
+        answer: safeFallback,
+        category,
+        limited: true,
+        needsHuman: false,
+        suggestions: [],
+      });
+    }
 
     // Nia can still answer the simple, platform-specific questions when the
     // external model is unavailable. This keeps the member journey useful
