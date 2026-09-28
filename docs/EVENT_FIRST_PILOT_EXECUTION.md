@@ -122,7 +122,9 @@ closed behind a flag; a green build alone is not an exit.
   a saved private safety contact before publication. The internal save
   function is not executable by API users. `015_admin_event_publication_sequence.sql`
   specifies those boundaries for the isolated database gate; installation and
-  a real Admin rehearsal on the connected project are still pending.
+  a real Admin rehearsal on the connected project are still pending. The
+  read-only live audit reports `publicationSequence` from a permission-aware
+  database check so an uninstalled migration cannot be mistaken for readiness.
 - [x] `20260924130000_event_intro_cards.sql` defines opt-in, event-scoped
   introduction cards for confirmed members and confirmed event-only guests.
   A separate QR or 16-character manual code opens a short hello only for
@@ -392,7 +394,8 @@ live Sprint 6 rehearsal or a controlled-pilot go/no-go decision.
    already-installed `20260925130000` migration, and do not paste any file
    from `supabase/tests/` into production. Engineering will rerun the read-only
    audit and confirm `invitationCrypto: true` before any after-event link is
-   sent, then rehearse the Admin private-first event save.
+   sent, confirm `publicationSequence: true`, then rehearse the Admin
+   private-first event save.
 2. Confirm the working title **The Founding Table — Nairobi**, plus its future
    Nairobi date/time and time zone, venue or online format, capacity, Event Host,
    check-in lead and safety contact.

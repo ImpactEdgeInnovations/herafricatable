@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { assessPilotEvent } from "./lib/assess-pilot-event.mjs";
 
 const now = new Date("2026-09-27T12:00:00Z");
@@ -31,4 +32,7 @@ assert.equal(checks({ ...ready, hostProfile: { access_status: "suspended" } }).h
 assert.equal(checks({ ...ready, workspace: { status: "submitted" } }).hostContentApproved, false);
 assert.equal(checks({ ...ready, safetyContact: null }).safetyContactReady, false);
 assert.equal(checks({ ...ready, doorStaffActive: false }).doorStaffAssigned, false);
+const liveAudit = readFileSync(new URL("./audit-event-pilot-live.mjs", import.meta.url), "utf8");
+assert(liveAudit.includes('service.rpc("event_publication_sequence_ready")'));
+assert(liveAudit.includes('blockers.push("admin_event_publication_guard_not_ready")'));
 console.log("Pilot event audit rejects unrelated, incomplete, unsaleable and unstaffed events.");

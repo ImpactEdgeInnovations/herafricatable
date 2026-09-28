@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(11);
+select plan(12);
 
 insert into auth.users(id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at)
 values
@@ -100,6 +100,8 @@ select is(
   false,
   'authenticated callers have no permission to invoke the internal save function'
 );
+select ok(public.event_publication_sequence_ready(),
+  'the read-only live audit can detect this installed publication guard');
 
 select * from finish();
 rollback;

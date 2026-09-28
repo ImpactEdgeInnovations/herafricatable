@@ -98,6 +98,20 @@ grant execute on function public.save_event(
 comment on function public.save_event is
   'Audited Admin event save; new public events must start private, and publication requires a safety contact and Host review when assigned.';
 
+create or replace function public.event_publication_sequence_ready()
+returns boolean language sql stable security definer set search_path = ''
+as $$
+  select coalesce((
+    select not pg_catalog.has_function_privilege('authenticated', routine.oid, 'EXECUTE')
+    from pg_catalog.pg_proc routine
+    join pg_catalog.pg_namespace namespace on namespace.oid = routine.pronamespace
+    where namespace.nspname = 'public' and routine.proname = 'save_event_core'
+  ), false);
+$$;
+revoke all on function public.event_publication_sequence_ready() from public;
+grant execute on function public.event_publication_sequence_ready()
+  to authenticated, service_role;
+
 notify pgrst, 'reload schema';
 
 commit;
