@@ -92,13 +92,13 @@ select throws_ok(
   'P0001', 'Approve the Event Host draft to publish this event',
   'Admin cannot skip the Host review by saving the event directly'
 );
-select throws_ok(
-  $$select public.save_event_core(null, 'Bypass', 'bypass-sequence-test',
-    'This direct call must never be available to authenticated API users.',
-    'in_person', 'draft', now() + interval '10 days', now() + interval '10 days 2 hours',
-    'Africa/Nairobi', 'The Table', 'Nairobi', 'Kenya', '', '', '', 20, 'manual_review', false)$$,
-  '42501', 'permission denied for function save_event_core',
-  'authenticated callers cannot bypass the publication wrapper'
+select is(
+  (select pg_catalog.has_function_privilege('authenticated', routine.oid, 'EXECUTE')
+   from pg_catalog.pg_proc routine
+   join pg_catalog.pg_namespace namespace on namespace.oid = routine.pronamespace
+   where namespace.nspname = 'public' and routine.proname = 'save_event_core'),
+  false,
+  'authenticated callers have no permission to invoke the internal save function'
 );
 
 select * from finish();
