@@ -1,7 +1,7 @@
 -- Isolated 21-person table-round rehearsal. Never run in the live SQL Editor.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(13);
+select plan(20);
 
 insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
 values
@@ -151,6 +151,36 @@ select set_config('request.jwt.claim.sub','f0000000-0000-4000-8000-000000000001'
 select is((select count(*)::integer from public.list_my_event_round_schedule(
   'f1000000-0000-4000-8000-000000000001')),0,
   'A paused plan disappears from every attendee schedule');
+select set_config('request.jwt.claim.sub','f0000000-0000-4000-8000-000000000101',true);
+select lives_ok($$select public.assign_event_host(
+  'f1000000-0000-4000-8000-000000000001','round-scale-21@test.invalid')$$,
+  'Admin can replace the Host while a round needs replanning');
+select set_config('request.jwt.claim.sub','f0000000-0000-4000-8000-000000000102',true);
+select throws_ok($$select public.get_event_round_plan(
+  'f1000000-0000-4000-8000-000000000001')$$,
+  'P0001','Event Host or Super Admin required',
+  'Former Host immediately loses the private table plan');
+select set_config('request.jwt.claim.sub','f0000000-0000-4000-8000-000000000021',true);
+select is((public.get_event_round_plan(
+  'f1000000-0000-4000-8000-000000000001')->0->>'status'),
+  'paused','Replacement Host receives the paused plan without Admin-wide access');
+select set_config('request.jwt.claim.sub','f0000000-0000-4000-8000-000000000101',true);
+select lives_ok($$select public.review_event_round(
+  current_setting('test.round_id')::uuid,'request_changes',
+  'Replan the table after the guest withdrew')$$,
+  'Admin returns the paused plan for a new Host review');
+select set_config('request.jwt.claim.sub','f0000000-0000-4000-8000-000000000021',true);
+select lives_ok($$select public.submit_event_round(
+  current_setting('test.round_id')::uuid)$$,
+  'Replacement Host resubmits the valid four-table plan');
+select set_config('request.jwt.claim.sub','f0000000-0000-4000-8000-000000000101',true);
+select lives_ok($$select public.review_event_round(
+  current_setting('test.round_id')::uuid,'approve','')$$,
+  'Admin approves the replacement Host plan only after revalidation');
+select set_config('request.jwt.claim.sub','f0000000-0000-4000-8000-000000000001',true);
+select is((select count(*)::integer from public.list_my_event_round_schedule(
+  'f1000000-0000-4000-8000-000000000001')),1,
+  'Remaining attendees regain their private schedule after the new approval');
 
 select * from finish();
 rollback;
