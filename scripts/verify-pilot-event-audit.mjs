@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { assessPilotEvent } from "./lib/assess-pilot-event.mjs";
+import { recommendPilotRelease } from "./lib/recommend-pilot-release.mjs";
 
 const now = new Date("2026-09-27T12:00:00Z");
 const ready = {
@@ -35,4 +36,9 @@ assert.equal(checks({ ...ready, doorStaffActive: false }).doorStaffAssigned, fal
 const liveAudit = readFileSync(new URL("./audit-event-pilot-live.mjs", import.meta.url), "utf8");
 assert(liveAudit.includes('service.rpc("event_publication_sequence_ready")'));
 assert(liveAudit.includes('blockers.push("admin_event_publication_guard_not_ready")'));
+assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
+assert.equal(recommendPilotRelease({ blockers: ["missing_pilot"], guestRegistrationOpen: false }), "hold");
+assert.equal(recommendPilotRelease({ blockers: [], guestRegistrationOpen: false }), "ready_for_human_go_no_go");
+assert.equal(recommendPilotRelease({ blockers: ["missing_pilot"], guestRegistrationOpen: true }), "pause_and_review");
+assert.equal(recommendPilotRelease({ blockers: [], guestRegistrationOpen: true }), "open_monitor");
 console.log("Pilot event audit rejects unrelated, incomplete, unsaleable and unstaffed events.");

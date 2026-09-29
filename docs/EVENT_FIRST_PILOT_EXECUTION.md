@@ -394,6 +394,26 @@ venue or online format, capacity, Host, check-in lead and safety contact have
 not yet been confirmed. The isolated twenty-person test does not replace the
 live Sprint 6 rehearsal or a controlled-pilot go/no-go decision.
 
+### Engineering checkpoint — 30 September 2026
+
+The product owner asked engineering to choose the pilot title, so **The
+Founding Table — Nairobi** is now the selected working title. Its date, place,
+capacity and named event team remain open; no event has been created or made
+public. Read-only checks confirmed membership intake is `manual_review` with
+two pending applications, member-event proposal boundaries are private, and
+signed-out callers cannot perform the eight checked Admin decisions. These
+checks do not prove positive approval, OTP delivery or a complete attendee
+journey. The latest isolated quality gate passed the guest pause/reopen and
+existing-pass rollback assertions. The pilot remains **hold** until the pending
+migrations, real event, release evidence and separate-account rehearsal are
+complete.
+
+The live audit now treats a closed guest-registration flag as the correct
+pre-decision state, not a failed launch check. With no other machine-checkable
+blockers, it can recommend a human go/no-go while the flag is still off. If the
+flag is on and a check fails, the recommendation is to pause and review.
+Neither state substitutes for a recorded owner decision or live rehearsal.
+
 ### Next owner actions, in order
 
 1. In Supabase SQL Editor, apply the pending migrations in order:
@@ -405,8 +425,8 @@ live Sprint 6 rehearsal or a controlled-pilot go/no-go decision.
    audit and confirm `invitationCrypto: true` before any after-event link is
    sent, confirm `publicationSequence: true`, then rehearse the Admin
    private-first event save.
-2. Confirm the working title **The Founding Table — Nairobi**, plus its future
-   Nairobi date/time and time zone, venue or online format, capacity, Event Host,
+2. Use the selected working title **The Founding Table — Nairobi** and confirm
+   its future Nairobi date/time and time zone, venue or online format, capacity, Event Host,
    check-in lead and safety contact.
    Create it as a private draft; the internal `[TEST]` rehearsal event is not a
    substitute. Keep automatic payments and public-guest access off. Once its

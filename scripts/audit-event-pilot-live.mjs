@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createClient } from "@supabase/supabase-js";
 import { assessPilotEvent } from "./lib/assess-pilot-event.mjs";
+import { recommendPilotRelease } from "./lib/recommend-pilot-release.mjs";
 
 const base = (process.env.BASE_URL ?? "https://www.herafricatable.com").replace(/\/$/, "");
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -232,7 +233,6 @@ if (!adminEvidence.authenticated || adminEvidence.releaseChecks.length !== 5
   blockers.push("public_guest_release_checks_incomplete");
 if (!adminEvidence.rehearsalDraftVisible || !adminEvidence.rehearsalRosterAccessible)
   blockers.push("admin_private_event_boundary_missing");
-if (!flagResult.data?.enabled) blockers.push("public_guest_registration_closed");
 if (!taggedRoles || Object.values(taggedRoles).some((role) =>
   !role.authenticated || !role.active || !role.tagged || role.adminScope
   || !role.adminReleaseDenied || !role.rehearsalDraftHidden || !role.rehearsalRosterDenied)
@@ -253,7 +253,10 @@ const result = {
     selectedPilotSlug: pilotSlug || null, selectedPilotChecks: pilotChecks },
   adminSession: adminEvidence,
   taggedRoles,
-  engineeringRecommendation: blockers.length ? "hold" : "ready_for_human_go_no_go",
+  engineeringRecommendation: recommendPilotRelease({
+    blockers,
+    guestRegistrationOpen: flagResult.data?.enabled === true,
+  }),
   readinessBlockers: blockers,
   pilotDecision: "not_decided",
 };
