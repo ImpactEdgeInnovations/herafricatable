@@ -127,7 +127,10 @@ closed behind a flag; a green build alone is not an exit.
   database check so an uninstalled migration cannot be mistaken for readiness.
   Event details now lets Super Admin save the private on-the-day contact on an
   existing draft, so an Admin-operated event has a complete in-product path;
-  assigned-Host events still publish through Host drafts.
+  assigned-Host events still publish through Host drafts. Until the migration
+  is installed, the Admin event editor fails closed for first-time public
+  release while continuing to allow private draft saves and edits to events
+  that were already published.
 - [x] `20260924130000_event_intro_cards.sql` defines opt-in, event-scoped
   introduction cards for confirmed members and confirmed event-only guests.
   A separate QR or 16-character manual code opens a short hello only for

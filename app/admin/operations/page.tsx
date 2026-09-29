@@ -716,6 +716,10 @@ export default async function AdminOperationsPage({
     ? eventIds : (publicationSources?.[0].data ?? []).map((row) => row.event_id);
   const publicationSafetyContacts = publicationSources?.[1].error
     ? [] : publicationSources?.[1].data ?? [];
+  const publicationGuardResult = loadEvents
+    ? await supabase.rpc("event_publication_sequence_ready")
+    : { data: false, error: null };
+  const publicationGuardReady = !publicationGuardResult.error && publicationGuardResult.data === true;
   const [
     { data: sessionData },
     { data: announcementData },
@@ -1083,6 +1087,7 @@ export default async function AdminOperationsPage({
             initialSafetyContacts={publicationSafetyContacts}
             canCreate={role.role === "super_admin"}
             migrationReady={!eventResult.error}
+            publicationGuardReady={publicationGuardReady}
           />
           {!eventResult.error ? (
             <EventContentManager

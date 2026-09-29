@@ -128,6 +128,7 @@ export function EventManager({
   initialSafetyContacts,
   canCreate,
   migrationReady,
+  publicationGuardReady,
 }: {
   initialEvents: AdminEvent[];
   privateEvents: PrivateEvent[];
@@ -135,6 +136,7 @@ export function EventManager({
   initialSafetyContacts: SafetyContact[];
   canCreate: boolean;
   migrationReady: boolean;
+  publicationGuardReady: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -161,7 +163,7 @@ export function EventManager({
       }
     : { name: "", phone: "" };
   const canPublishHere = Boolean(form.id && (persistedStatus === "published" ||
-    (!hostOwnsPublication && safetyContactReady)));
+    (publicationGuardReady && !hostOwnsPublication && safetyContactReady)));
 
   function update<K extends keyof EventForm>(field: K, value: EventForm[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -218,9 +220,11 @@ export function EventManager({
       return;
     }
     if (form.status === "published" && !canPublishHere) {
-      setMessage(hostOwnsPublication
-        ? "Review and approve this event in Host drafts to publish it."
-        : "Save an on-the-day safety contact before publishing this event.");
+      setMessage(!publicationGuardReady
+        ? "New event publishing is paused until the database update is installed. You can still save a private draft."
+        : hostOwnsPublication
+          ? "Review and approve this event in Host drafts to publish it."
+          : "Save an on-the-day safety contact before publishing this event.");
       return;
     }
     setSaving(true);
@@ -433,9 +437,11 @@ export function EventManager({
                 <option value="completed" disabled={!form.id}>Completed</option>
               </select>
               {form.id && form.status === "draft" && !canPublishHere ? <small>
-                {hostOwnsPublication
-                  ? "A Host is assigned. Review and publish their draft in Host drafts."
-                  : "Save an on-the-day contact below before opening this event to guests."}
+                {!publicationGuardReady
+                  ? "Public release is paused until the event database update is installed. Private drafts can still be saved."
+                  : hostOwnsPublication
+                    ? "A Host is assigned. Review and publish their draft in Host drafts."
+                    : "Save an on-the-day contact below before opening this event to guests."}
               </small> : null}
             </label>
             <label>
