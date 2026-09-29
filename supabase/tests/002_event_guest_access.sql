@@ -1,12 +1,13 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(34);
+select plan(38);
 
 insert into auth.users(id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at)
 values
   ('a0000000-0000-4000-8000-000000000001', 'event-admin@test.invalid', 'authenticated', 'authenticated', '{}', '{}', now()),
   ('a0000000-0000-4000-8000-000000000002', 'event-guest@test.invalid', 'authenticated', 'authenticated', '{}', '{}', now()),
-  ('a0000000-0000-4000-8000-000000000003', 'event-suspended@test.invalid', 'authenticated', 'authenticated', '{}', '{}', now());
+  ('a0000000-0000-4000-8000-000000000003', 'event-suspended@test.invalid', 'authenticated', 'authenticated', '{}', '{}', now()),
+  ('a0000000-0000-4000-8000-000000000004', 'event-new-guest@test.invalid', 'authenticated', 'authenticated', '{}', '{}', now());
 update public.profiles set access_status = 'active'
 where id = 'a0000000-0000-4000-8000-000000000001';
 update public.profiles set access_status = 'suspended'
@@ -169,6 +170,34 @@ select throws_ok(
   'P0001', 'Active visible membership required',
   'event access does not open the full member directory'
 );
+
+-- Rehearse the release rollback without erasing an approved guest's place.
+-- This flag change and all test identities are transaction-local.
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000001', true);
+select lives_ok(
+  $$select public.set_feature_flag('event_guest_access', false)$$,
+  'Super Admin can pause new guest registration without changing the event'
+);
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000002', true);
+select is(
+  (select count(*) from public.get_my_event_pass(
+    'a1000000-0000-4000-8000-000000000001')),
+  1::bigint, 'approved guest keeps her private pass after new entry is paused'
+);
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000004', true);
+select throws_ok(
+  $$select public.create_event_registration(
+    'a1000000-0000-4000-8000-000000000001',
+    'a2000000-0000-4000-8000-000000000001', 1, '', '', '')$$,
+  'P0001', 'Event registration is available after membership approval',
+  'new guest cannot request a place while guest entry is paused'
+);
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000001', true);
+select lives_ok(
+  $$select public.set_feature_flag('event_guest_access', true)$$,
+  'Super Admin can reopen entry after the transaction-local release checks still pass'
+);
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000002', true);
 
 select lives_ok(
   $$select public.cancel_my_event_place(

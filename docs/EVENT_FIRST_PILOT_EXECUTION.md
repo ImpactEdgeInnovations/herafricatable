@@ -69,6 +69,9 @@ closed behind a flag; a green build alone is not an exit.
   updated for the limited guest journey.
 - [x] `supabase/tests/002_event_guest_access.sql` covers the event/member
   boundary, approval, pass, cancellation, reapplication and suspended account.
+  It also rehearses a transaction-local pause and reopen: a new guest is
+  refused while entry is paused, but an already-approved guest keeps her pass.
+  This is isolated rollback proof, not the required live Super Admin exercise.
 - [x] `20260923100000_event_guest_cancellation_and_reapply.sql` allows a guest
   to withdraw a pending request or release an unused free place; reapplication
   creates a new order and a fresh private pass.
