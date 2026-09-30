@@ -72,6 +72,21 @@ closed behind a flag; a green build alone is not an exit.
   It also rehearses a transaction-local pause and reopen: a new guest is
   refused while entry is paused, but an already-approved guest keeps her pass.
   This is isolated rollback proof, not the required live Super Admin exercise.
+- [x] The event form now offers one place per email, because the order currently
+  creates only one attendee membership and private check-in pass. The Paystack
+  endpoint rejects multi-place event checkout before a charge begins.
+  `20260930100000_one_pass_per_event_account.sql` adds the database guard for
+  manual and direct API requests; the expanded `002` test rejects both free
+  guest and paid member multi-place requests without leaving an order. Existing
+  orders are not changed by the migration. Named companion passes would need
+  a separate, fully reviewed attendee-and-check-in design before group booking
+  could reopen.
+- [ ] Apply `20260930100000_one_pass_per_event_account.sql` to the connected
+  Supabase project after its isolated GitHub gate passes. Until the live audit
+  confirms `singleSeatGuard: true`, do not open public-guest registration or
+  automatic paid-event checkout. Review any historical event order with more
+  than one ticket individually; do not bulk change paid records. A read-only
+  count on 30 September found zero historical multi-ticket event order items.
 - [x] `20260923100000_event_guest_cancellation_and_reapply.sql` allows a guest
   to withdraw a pending request or release an unused free place; reapplication
   creates a new order and a fresh private pass.
@@ -418,12 +433,13 @@ Neither state substitutes for a recorded owner decision or live rehearsal.
 
 1. In Supabase SQL Editor, apply the pending migrations in order:
    `supabase/migrations/20260925140000_table_invitation_crypto_search_path.sql`,
-   then `supabase/migrations/20260928100000_admin_event_publication_sequence.sql`
+   then `supabase/migrations/20260928100000_admin_event_publication_sequence.sql`,
+   then `supabase/migrations/20260930100000_one_pass_per_event_account.sql`
    after its isolated GitHub database gate passes. Do not rerun the
    already-installed `20260925130000` migration, and do not paste any file
    from `supabase/tests/` into production. Engineering will rerun the read-only
    audit and confirm `invitationCrypto: true` before any after-event link is
-   sent, confirm `publicationSequence: true`, then rehearse the Admin
+   sent, confirm `publicationSequence: true` and `singleSeatGuard: true`, then rehearse the Admin
    private-first event save.
 2. Use the selected working title **The Founding Table — Nairobi** and confirm
    its future Nairobi date/time and time zone, venue or online format, capacity, Event Host,

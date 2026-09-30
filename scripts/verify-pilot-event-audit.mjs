@@ -36,7 +36,14 @@ assert.equal(checks({ ...ready, doorStaffActive: false }).doorStaffAssigned, fal
 const liveAudit = readFileSync(new URL("./audit-event-pilot-live.mjs", import.meta.url), "utf8");
 assert(liveAudit.includes('service.rpc("event_publication_sequence_ready")'));
 assert(liveAudit.includes('blockers.push("admin_event_publication_guard_not_ready")'));
+assert(liveAudit.includes('service.rpc("event_single_seat_guard_ready")'));
+assert(liveAudit.includes('blockers.push("one_pass_per_attendee_guard_not_ready")'));
 assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
+const registrationForm = readFileSync(new URL("../components/events/event-registration-form.tsx", import.meta.url), "utf8");
+const checkout = readFileSync(new URL("../app/api/payments/paystack/initialize/route.ts", import.meta.url), "utf8");
+assert(registrationForm.includes("p_quantity: 1"));
+assert(!registrationForm.includes('type="number"'));
+assert(checkout.includes("body.quantity!==1"));
 assert.equal(recommendPilotRelease({ blockers: ["missing_pilot"], guestRegistrationOpen: false }), "hold");
 assert.equal(recommendPilotRelease({ blockers: [], guestRegistrationOpen: false }), "ready_for_human_go_no_go");
 assert.equal(recommendPilotRelease({ blockers: ["missing_pilot"], guestRegistrationOpen: true }), "pause_and_review");

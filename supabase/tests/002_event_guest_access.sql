@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(38);
+select plan(43);
 
 insert into auth.users(id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at)
 values
@@ -46,12 +46,19 @@ insert into public.ticket_types(
     'a2000000-0000-4000-8000-000000000002',
     'a1000000-0000-4000-8000-000000000002',
     'Community place', 0, 'KES', 20, 'on_sale'
+  ),
+  (
+    'a2000000-0000-4000-8000-000000000003',
+    'a1000000-0000-4000-8000-000000000001',
+    'Paid place', 500, 'KES', 20, 'on_sale'
   );
 
 select is(
   (select enabled from public.feature_flags where key = 'event_guest_access'),
   false, 'event-only guest access begins disabled'
 );
+select ok(public.event_single_seat_guard_ready(),
+  'event order-item one-pass guard is installed and enabled');
 
 set local role authenticated;
 select set_config('request.jwt.claim.role', 'authenticated', true);
@@ -99,12 +106,47 @@ select lives_ok(
 set local role authenticated;
 select set_config('request.jwt.claim.role', 'authenticated', true);
 select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000002', true);
+select throws_ok(
+  $$select public.create_event_registration(
+    'a1000000-0000-4000-8000-000000000001',
+    'a2000000-0000-4000-8000-000000000001', 2, '', '', '')$$,
+  'P0001', 'Each attendee must request their own event place',
+  'guest cannot reserve two free places when only one pass would be issued'
+);
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000001', true);
+select throws_ok(
+  $$select public.create_event_registration(
+    'a1000000-0000-4000-8000-000000000001',
+    'a2000000-0000-4000-8000-000000000003', 2, '', '', '')$$,
+  'P0001', 'Each attendee must request their own event place',
+  'active member cannot pay for two places when only one pass would be issued'
+);
+select is(
+  (select count(*) from public.orders
+   where event_id = 'a1000000-0000-4000-8000-000000000001'),
+  0::bigint, 'rejected multi-place requests leave no chargeable event order'
+);
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000002', true);
 select lives_ok(
   $$select public.create_event_registration(
     'a1000000-0000-4000-8000-000000000001',
     'a2000000-0000-4000-8000-000000000001', 1, '', '', '')$$,
   'verified pending guest requests a public event place'
 );
+reset role;
+select throws_ok(
+  $$update public.order_items set quantity = 2
+    where order_id = (
+      select order_id from public.registration_requests
+      where event_id = 'a1000000-0000-4000-8000-000000000001'
+        and user_id = 'a0000000-0000-4000-8000-000000000002'
+    )$$,
+  'P0001', 'Each attendee must request their own event place',
+  'direct order-item updates cannot turn one private pass into two charged seats'
+);
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000002', true);
 select is(
   (select status from public.registration_requests
    where event_id = 'a1000000-0000-4000-8000-000000000001'

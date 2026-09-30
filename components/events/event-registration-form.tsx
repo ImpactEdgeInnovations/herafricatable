@@ -35,7 +35,6 @@ export function EventRegistrationForm({
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [ticketId, setTicketId] = useState(tickets[0]?.id ?? "");
-  const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState("");
   const [reference, setReference] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
@@ -56,7 +55,7 @@ export function EventRegistrationForm({
           body: JSON.stringify({
             attendeeNote: note,
             eventId,
-            quantity,
+            quantity: 1,
             ticketTypeId: ticketId,
           }),
         });
@@ -84,7 +83,7 @@ export function EventRegistrationForm({
       p_event_id: eventId,
       p_manual_note: paymentNote,
       p_manual_reference: reference,
-      p_quantity: quantity,
+      p_quantity: 1,
       p_ticket_type_id: ticketId || null,
     });
     setBusy(false);
@@ -135,6 +134,7 @@ export function EventRegistrationForm({
               ? "Join the waitlist and we will contact you when a seat becomes available."
               : "Choose your ticket and continue to Paystack's secure checkout. We confirm your place after payment succeeds."}
         </p>
+        <p>One place per person. Each attendee uses her own email so she receives her own event pass.</p>
       </header>
       {mode !== "waitlist" ? (
         <div className="ticket-choice-list">
@@ -165,18 +165,6 @@ export function EventRegistrationForm({
         </div>
       ) : null}
       <div className="form-grid registration-fields">
-        {mode !== "waitlist" ? (
-          <label>
-            Quantity
-            <input
-              type="number"
-              min="1"
-              max="10"
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-            />
-          </label>
-        ) : null}
         <label className="form-wide">
           Note for the event team
           <textarea
@@ -212,7 +200,7 @@ export function EventRegistrationForm({
           <span>Total</span>
           <strong>
             {ticket.currency}{" "}
-            {((ticket.price_minor * quantity) / 100).toLocaleString("en-KE", {
+          {(ticket.price_minor / 100).toLocaleString("en-KE", {
               minimumFractionDigits: 2,
             })}
           </strong>

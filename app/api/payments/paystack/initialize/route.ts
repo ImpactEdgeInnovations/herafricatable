@@ -10,6 +10,7 @@ export async function POST(request:Request){
   const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user?.email)return NextResponse.json({error:"Authentication required"},{status:401});
   const body=await request.json() as {attendeeNote?:string;communityHostPlanId?:string;communityId?:string;communityOfferId?:string;courseId?:string;eventId?:string;membershipPlanId?:string;quantity?:number;ticketTypeId?:string};
   if((body.communityHostPlanId&&!body.communityId)||(!body.communityHostPlanId&&!body.communityOfferId&&!body.courseId&&!body.membershipPlanId&&(!body.eventId||!body.ticketTypeId)))return NextResponse.json({error:"A host plan, community offer, membership, course or event ticket is required"},{status:400});
+  if(body.eventId&&body.quantity!==undefined&&body.quantity!==1)return NextResponse.json({error:"Each attendee must request her own event place"},{status:400});
   if (body.eventId && !body.communityHostPlanId && !body.communityOfferId && !body.courseId && !body.membershipPlanId) {
    const [{data:profile},{data:event}]=await Promise.all([
     supabase.from("profiles").select("access_status").eq("id",user.id).maybeSingle(),
