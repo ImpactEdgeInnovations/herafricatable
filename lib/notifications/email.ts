@@ -42,7 +42,9 @@ export async function sendNotificationEmail(job: EmailJob) {
     job.template_key === "member_welcome" ||
     job.dedupe_key.startsWith("member-approved:");
   const isEventReview = job.dedupe_key.startsWith("event-registration-review:");
+  const isWaitlistOpening = job.dedupe_key.startsWith("event-waitlist-open:");
   const isEventNotice = isEventReview ||
+    isWaitlistOpening ||
     job.dedupe_key.startsWith("event-registration-declined:") ||
     [
       "We have your event request",
@@ -60,6 +62,8 @@ export async function sendNotificationEmail(job: EmailJob) {
         : "Enter my Member Home"
       : isEventReview
         ? "Review event requests"
+        : isWaitlistOpening
+          ? "See available places"
         : isEventNotice
           ? "View event details"
           : "Open Her Africa Table";

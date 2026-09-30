@@ -250,7 +250,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         : "Booking unavailable";
   const cta = gatheringRoomHref
     ? hasEnded ? "View gathering recap" : "Open gathering room"
-    : hasEnded ? "Event completed" : isConfirmedGuest ? "Open my event pass" : event.registration_mode === "waitlist" ? "Join the waitlist" : event.registration_mode === "closed" ? "Registration closed" : bookingClosed ? bookingClosedLabel : event.registration_mode === "manual_review" ? "Request a seat" : "Register";
+    : hasEnded ? "Event completed" : isConfirmedGuest ? "Open my event pass"
+      : registration?.status === "waitlisted" && event.registration_mode === "manual_review" && !bookingClosed
+        ? "Request a place from the waiting list"
+        : registration?.status === "waitlisted" ? "View my waiting-list status"
+          : event.registration_mode === "waitlist" ? "Join the waiting list"
+            : event.registration_mode === "closed" ? "Registration closed"
+              : bookingClosed ? bookingClosedLabel
+                : event.registration_mode === "manual_review" ? "Request a seat" : "Register";
 
   return (
     <main className="event-detail-page">
@@ -272,7 +279,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         {eventImage ? <figure className="event-detail-poster"><img alt={eventImage.alt} src={eventImage.url} /></figure> : null}
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div></dl>
-          {gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : !hasEnded && isConfirmedGuest ? <Link className="button button-primary" href={`/events/${slug}/pass`}>{cta}</Link> : hasEnded || event.registration_mode === "closed" || bookingClosed ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}
+          {gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : !hasEnded && isConfirmedGuest ? <Link className="button button-primary" href={`/events/${slug}/pass`}>{cta}</Link> : !hasEnded && registration?.status === "waitlisted" ? <a className="button button-primary" href="#registration">{cta}</a> : hasEnded || event.registration_mode === "closed" || bookingClosed ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}
         </aside>
       </section>
 
@@ -305,7 +312,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         />
       ) : null}
 
-      {!hasEnded && !gatheringRoomHref && event.registration_mode !== "closed" ? (
+      {!hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || registration?.status === "waitlisted") ? (
         <section className="event-inline-registration" id="registration">
           {bookingClosed && !registration && !isConfirmedGuest ? (
             <div className="event-registration-entry">

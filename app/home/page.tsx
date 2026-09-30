@@ -446,9 +446,9 @@ export default async function MemberHomePage() {
           action: "View registration",
         },
         waitlisted: {
-          label: "Waitlist joined",
+          label: "On the waiting list",
           description:
-            "You are on the guest list waitlist. We will notify you as soon as a seat opens.",
+            "No seat is held yet. The event team may email you if bookings reopen, or you can check the event page.",
           action: "View event details",
         },
         rejected: {

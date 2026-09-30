@@ -48,7 +48,20 @@ export function EventRegistrationForm({
   const ticket = tickets.find((item) => item.id === ticketId && item.bookingState === "available")
     ?? tickets.find((item) => item.bookingState === "available");
   const isFree = ticket?.price_minor === 0;
-  const canRequestAgain = existingStatus === "cancelled";
+  const canClaimWaitlist = existingStatus === "waitlisted" && mode === "manual_review";
+  const canRequestAgain = existingStatus === "cancelled" || canClaimWaitlist;
+  async function leaveWaitlist() {
+    setBusy(true);
+    setMessage("");
+    const { error } = await supabase.rpc("leave_event_waitlist", {
+      p_event_id: eventId,
+    });
+    setBusy(false);
+    setMessage(error
+      ? memberErrorMessage(error, "leave the waiting list")
+      : "You have left the waiting list.");
+    if (!error) router.refresh();
+  }
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (mode !== "waitlist" && (!availabilityReady || !ticket)) {
@@ -88,20 +101,28 @@ export function EventRegistrationForm({
         return;
       }
     }
-    const { error } = await supabase.rpc("create_event_registration", {
-      p_attendee_note: note,
-      p_event_id: eventId,
-      p_manual_note: paymentNote,
-      p_manual_reference: reference,
-      p_quantity: 1,
-      p_ticket_type_id: ticket?.id ?? null,
-    });
+    const { error } = canClaimWaitlist
+      ? await supabase.rpc("request_event_place_from_waitlist", {
+          p_attendee_note: note,
+          p_event_id: eventId,
+          p_manual_note: paymentNote,
+          p_manual_reference: reference,
+          p_ticket_type_id: ticket?.id ?? null,
+        })
+      : await supabase.rpc("create_event_registration", {
+          p_attendee_note: note,
+          p_event_id: eventId,
+          p_manual_note: paymentNote,
+          p_manual_reference: reference,
+          p_quantity: 1,
+          p_ticket_type_id: ticket?.id ?? null,
+        });
     setBusy(false);
     setMessage(
       error
         ? memberErrorMessage(error, "submit your event registration")
         : mode === "waitlist"
-          ? "You are on the waitlist. We will contact you when a seat opens."
+          ? "You are on the waiting list. No seat is held; the event team may email you if bookings reopen."
           : isFree
             ? "Your free place request is with the event team. No payment is required."
           : "Your registration is with the event team. No automatic charge has been made.",
@@ -119,7 +140,7 @@ export function EventRegistrationForm({
             : existingStatus === "rejected"
               ? "This request was not approved. If you need help understanding the decision, contact the event team."
               : existingStatus === "waitlisted"
-                ? "You are on the waitlist. We’ll email you if a place becomes available."
+                ? "You are on the waiting list. No seat is held. The event team may email you if bookings reopen."
                 : "Your request is recorded. We’ll notify you here and by email after the event team reviews it."}
         </p>
         {passReady && eventSlug ? (
@@ -127,6 +148,12 @@ export function EventRegistrationForm({
             Open my event pass
           </a>
         ) : null}
+        {existingStatus === "waitlisted" ? (
+          <button className="button button-outline" type="button" disabled={busy} onClick={() => void leaveWaitlist()}>
+            {busy ? "Leaving…" : "Leave waiting list"}
+          </button>
+        ) : null}
+        {message ? <p className="manager-message" role="status">{message}</p> : null}
       </div>
     );
   return (
@@ -134,7 +161,16 @@ export function EventRegistrationForm({
       <header>
         <p className="eyebrow">Request your seat</p>
         {embedded ? <h2>Choose your place</h2> : <h1>{eventTitle}</h1>}
-        {canRequestAgain ? <p>Your earlier request was cancelled. You can request a new place while registration is open.</p> : null}
+        {canClaimWaitlist
+          ? <p>Bookings have reopened. You can request a place now, but your waiting-list entry did not hold a seat.</p>
+          : existingStatus === "cancelled"
+            ? <p>Your earlier request was cancelled. You can request a new place while registration is open.</p>
+            : null}
+        {canClaimWaitlist ? (
+          <button className="button button-outline" type="button" disabled={busy} onClick={() => void leaveWaitlist()}>
+            {busy ? "Leaving…" : "Leave waiting list"}
+          </button>
+        ) : null}
         <p>
           {mode === "manual_review"
             ? !ticket
@@ -143,7 +179,7 @@ export function EventRegistrationForm({
               ? "Request a complimentary place. The event team will confirm attendance before the guest list closes."
               : "Send your ticket request and any payment reference. The event team will check it before confirming your place."
             : mode === "waitlist"
-              ? "Join the waitlist and we will contact you when a seat becomes available."
+              ? "Join the waiting list. No seat is reserved; the event team may email you if bookings reopen."
               : "Choose your ticket and continue to Paystack's secure checkout. We confirm your place after payment succeeds."}
         </p>
         <p>One place per person. Each attendee uses her own email so she receives her own event pass.</p>

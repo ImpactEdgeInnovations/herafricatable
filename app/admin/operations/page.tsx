@@ -47,6 +47,7 @@ import {
   type AdminRefund,
   type AdminRegistration,
   type AdminTicket,
+  type AdminWaitlistEntry,
 } from "@/components/admin/registration-manager";
 import {
   ModerationQueue,
@@ -843,6 +844,14 @@ export default async function AdminOperationsPage({
   const registrations = registrationResults.flatMap(
     (result) => (result.data as AdminRegistration[] | null) ?? [],
   );
+  const waitlistResults = await Promise.all(
+    (loadEvents ? eventIds : []).map((eventId) =>
+      supabase.rpc("list_event_waitlist", { p_event_id: eventId }),
+    ),
+  );
+  const waitlist = waitlistResults.flatMap(
+    (result) => (result.data as AdminWaitlistEntry[] | null) ?? [],
+  );
   const registrationOrderIds = registrations.map(
     (registration) => registration.order_id,
   );
@@ -1142,6 +1151,8 @@ export default async function AdminOperationsPage({
               events={events}
               initialTickets={(ticketResult.data as AdminTicket[] | null) ?? []}
               initialRegistrations={registrations}
+              initialWaitlist={waitlist}
+              waitlistReady={waitlistResults.every((result) => !result.error)}
               initialPayments={
                 (paymentResult.data as AdminPaymentAttempt[] | null) ?? []
               }

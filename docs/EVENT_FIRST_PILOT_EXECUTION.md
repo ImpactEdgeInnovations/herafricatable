@@ -169,6 +169,19 @@ closed behind a flag; a green build alone is not an exit.
   read-only audit, then test one real manual request, Super Admin inbox,
   approval and attendee inbox with separate accounts. Provider acceptance
   alone does not prove inbox delivery.
+- [x] `20260930130000_event_waitlist_lifecycle.sql` closes the previously
+  misleading waitlist path. Event managers can see the private list, email a
+  person only after manual bookings reopen with an available ticket, and see
+  that the notice is not a reservation. A member can leave, or request an
+  available place herself; the existing one-pass, capacity and Admin approval
+  checks then apply. Withdrawal suppresses an unsent opening email. The
+  `018_event_waitlist_lifecycle.sql` isolated test covers permissions,
+  idempotent email, withdrawal, claim and final approval.
+- [ ] Apply `20260930130000_event_waitlist_lifecycle.sql` after the preceding
+  notification migration and its isolated GitHub gate. Confirm
+  `waitlistLifecycle: true` in the live read-only audit, then rehearse a
+  waiting member and Admin with separate accounts. Opening notices remain
+  manual and never guarantee a seat; the first pilot stays free/manual review.
 - [x] Admin → Events → Event details now keeps a newly created event selected
   after its first save, including its private online-link field. The first save
   is draft-only, so Admin cannot accidentally make a new event public while
@@ -487,10 +500,12 @@ is delivery-operations evidence, not a fresh OTP or event-decision inbox test.
 
 ### Next owner actions, in order
 
-1. Apply `20260930120000_event_registration_notifications.sql` after its
-   isolated GitHub gate passes. Use only the file under `supabase/migrations/`,
-   not the similarly named file under `supabase/tests/`. Engineering will
-   confirm `registrationNotifications: true` on the connected project.
+1. Apply `20260930120000_event_registration_notifications.sql`, then
+   `20260930130000_event_waitlist_lifecycle.sql`, after their isolated GitHub
+   gate passes. Use only files under `supabase/migrations/`, not the similarly
+   named files under `supabase/tests/`. Engineering will confirm
+   `registrationNotifications: true` and `waitlistLifecycle: true` on the
+   connected project.
 2. Use the selected working title **The Founding Table — Nairobi** and confirm
    its future Nairobi date/time and time zone, venue or online format, capacity, Event Host,
    check-in lead and safety contact.

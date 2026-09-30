@@ -36,6 +36,15 @@ export type AdminRegistration = {
   total_minor: number;
   user_id: string;
 };
+export type AdminWaitlistEntry = {
+  display_name: string | null;
+  email: string;
+  event_id: string;
+  is_test_account: boolean;
+  joined_at: string;
+  request_id: string;
+  user_id: string;
+};
 export type AdminPaymentAttempt = {
   amount_minor: number;
   created_at: string;
@@ -83,18 +92,22 @@ export function RegistrationManager({
   events,
   initialTickets,
   initialRegistrations,
+  initialWaitlist,
   initialPayments,
   initialRefunds,
   paystackConfigured,
   migrationReady,
+  waitlistReady,
 }: {
   events: AdminEvent[];
   initialTickets: AdminTicket[];
   initialRegistrations: AdminRegistration[];
+  initialWaitlist: AdminWaitlistEntry[];
   initialPayments: AdminPaymentAttempt[];
   initialRefunds: AdminRefund[];
   paystackConfigured: boolean;
   migrationReady: boolean;
+  waitlistReady: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -107,6 +120,8 @@ export function RegistrationManager({
   const registrations = initialRegistrations.filter(
     (x) => x.event_id === eventId,
   );
+  const waitlist = initialWaitlist.filter((x) => x.event_id === eventId);
+  const workingEvent = events.find((item) => item.id === eventId);
   function fail(error: { message: string } | null) {
     if (!error) return false;
     setBusy(false);
@@ -185,6 +200,26 @@ export function RegistrationManager({
     if (fail(error)) return;
     setBusy(false);
     setMessage(action === "approve" ? "Event place confirmed and saved." : "Event place declined and saved.");
+    router.refresh();
+  }
+  async function emailWaitlistOpening(requestId: string) {
+    const person = initialWaitlist.find((item) => item.request_id === requestId);
+    if (!person) return;
+    const confirmed = await ask({
+      title: `Email ${person.display_name || person.email}?`,
+      description: "Tell this person that bookings have reopened. This does not hold a seat or approve a place; availability may change before she responds.",
+      confirmLabel: "Send opening notice",
+      tone: "default",
+    });
+    if (!confirmed) return;
+    setBusy(true);
+    setMessage("");
+    const { error } = await supabase.rpc("notify_waitlisted_event_guest", {
+      p_request_id: requestId,
+    });
+    if (fail(error)) return;
+    setBusy(false);
+    setMessage("Opening notice queued for email. The place is not reserved.");
     router.refresh();
   }
   async function reviewRefund(refundId: string, action: "approve" | "reject") {
@@ -503,6 +538,35 @@ export function RegistrationManager({
                 evidence.
               </p>
             </div>
+          )}
+        </div>
+        <div className="registration-review">
+          <p className="eyebrow">Waiting list</p>
+          <h3>People waiting for a place</h3>
+          <p>
+            A name here is not a booking. When places reopen, change this event
+            to manual review, then email people from this list. They must request
+            a place themselves and be approved before receiving a pass.
+          </p>
+          {!waitlistReady ? (
+            <div className="admin-empty"><strong>Waiting list is unavailable</strong><p>No notice was sent. Reload after the waitlist update is installed.</p></div>
+          ) : waitlist.length ? (
+            <div className="member-table-wrap">
+              <table className="member-table">
+                <thead><tr><th>Person</th><th>Joined</th><th></th></tr></thead>
+                <tbody>
+                  {waitlist.map((person) => (
+                    <tr key={person.request_id}>
+                      <td><strong>{person.display_name || person.email}</strong><small>{person.email}{person.is_test_account ? " · Test account" : ""}</small></td>
+                      <td>{new Date(person.joined_at).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}</td>
+                      <td><button type="button" disabled={busy || workingEvent?.registration_mode !== "manual_review"} onClick={() => void emailWaitlistOpening(person.request_id)}>Email opening</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="admin-empty"><strong>No one is waiting</strong><p>People who join this event’s waiting list will appear here.</p></div>
           )}
         </div>
         {initialPayments.length ? (
