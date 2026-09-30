@@ -425,7 +425,10 @@ closed behind a flag; a green build alone is not an exit.
 - [ ] Name the Event Host, check-in lead, support/safety lead, Admin reviewer and
   launch rollback owner.
 - [ ] Prepare at least two attendees, a Host, a Moderator and a Super Admin as
-  distinct rehearsal accounts.
+  distinct rehearsal accounts. The Super Admin rehearsal must use a dedicated,
+  tagged test account with time-limited access; the primary owner account is
+  not a substitute. Do not promote a member or create a new Super Admin
+  without the owner's explicit choice.
 - [ ] Verify the deployed release and complete the event guest rehearsal before
   enabling `event_guest_access`.
 
@@ -513,6 +516,12 @@ pre-decision state, not a failed launch check. With no other machine-checkable
 blockers, it can recommend a human go/no-go while the flag is still off. If the
 flag is on and a check fails, the recommendation is to pause and review.
 Neither state substitutes for a recorded owner decision or live rehearsal.
+The audit also requires a tagged Super Admin rehearsal account distinct from
+the primary owner before it can recommend go/no-go. On 30 September the local
+test configuration still points `HAT_ADMIN_TEST_EMAIL` at the primary owner,
+and the live profile is not tagged as a test account. Read-only Admin access
+therefore proves only the primary owner's visibility, not a separate-role
+rehearsal; no new elevated account was created automatically.
 
 ### Database checkpoint — 30 September 2026
 

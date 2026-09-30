@@ -299,6 +299,8 @@ else for (const [check, ready] of Object.entries(pilotChecks))
 if (!adminEvidence.authenticated || adminEvidence.releaseChecks.length !== 5
   || adminEvidence.releaseChecks.some((check) => check.status !== "passed"))
   blockers.push("public_guest_release_checks_incomplete");
+if (!adminEvidence.authenticated || !adminEvidence.tagged || adminEvidence.usesPrimaryAccount)
+  blockers.push("dedicated_admin_rehearsal_account_missing");
 if (!adminEvidence.rehearsalDraftVisible || !adminEvidence.rehearsalRosterAccessible)
   blockers.push("admin_private_event_boundary_missing");
 if (!taggedRoles || Object.values(taggedRoles).some((role) =>
