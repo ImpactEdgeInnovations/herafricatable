@@ -38,6 +38,8 @@ assert(liveAudit.includes('service.rpc("event_publication_sequence_ready")'));
 assert(liveAudit.includes('blockers.push("admin_event_publication_guard_not_ready")'));
 assert(liveAudit.includes('service.rpc("event_single_seat_guard_ready")'));
 assert(liveAudit.includes('blockers.push("one_pass_per_attendee_guard_not_ready")'));
+assert(liveAudit.includes('service.rpc("event_capacity_guard_ready")'));
+assert(liveAudit.includes('blockers.push("shared_event_capacity_guard_not_ready")'));
 assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
 const registrationForm = readFileSync(new URL("../components/events/event-registration-form.tsx", import.meta.url), "utf8");
 const checkout = readFileSync(new URL("../app/api/payments/paystack/initialize/route.ts", import.meta.url), "utf8");

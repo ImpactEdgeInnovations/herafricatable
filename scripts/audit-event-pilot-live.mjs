@@ -58,12 +58,20 @@ async function singleSeatGuardReady() {
   return data === true;
 }
 
+async function capacityGuardReady() {
+  const { data, error } = await service.rpc("event_capacity_guard_ready");
+  if (error?.code === "PGRST202") return false;
+  if (error) throw new Error(`Could not check event capacity guard: ${error.code || "network error"}`);
+  return data === true;
+}
+
 const healthResponse = await fetch(`${base}/api/health`, {
   headers: { "user-agent": "HerAfricaTable-PilotAudit/1.0" },
 });
 const health = await healthResponse.json();
 const [guestFeedback, hostOutcomes, introductions, rounds, followUpInvitations,
-  invitationCrypto, publicationSequence, singleSeatGuard, flagResult, eventResult] =
+  invitationCrypto, publicationSequence, singleSeatGuard, capacityGuard,
+  flagResult, eventResult] =
   await Promise.all([
     functionInstalled("can_leave_event_feedback"),
     functionInstalled("get_event_host_outcomes"),
@@ -73,6 +81,7 @@ const [guestFeedback, hostOutcomes, introductions, rounds, followUpInvitations,
     invitationCryptoReady(),
     publicationSequenceReady(),
     singleSeatGuardReady(),
+    capacityGuardReady(),
     service.from("feature_flags").select("enabled").eq("key", "event_guest_access").maybeSingle(),
     service.from("events")
       .select("id,slug,title,status,audience,format,summary,timezone,venue_id,registration_mode,starts_at,ends_at,capacity")
@@ -232,6 +241,7 @@ if (!guestFeedback || !hostOutcomes || !introductions || !rounds || !followUpInv
 if (!invitationCrypto) blockers.push("invitation_crypto_not_ready");
 if (!publicationSequence) blockers.push("admin_event_publication_guard_not_ready");
 if (!singleSeatGuard) blockers.push("one_pass_per_attendee_guard_not_ready");
+if (!capacityGuard) blockers.push("shared_event_capacity_guard_not_ready");
 if (!privateDrafts.length && !publicFuture.length) blockers.push("real_pilot_event_not_created");
 if (!pilotSlug) blockers.push("pilot_event_not_selected");
 else if (!selectedPilot) blockers.push("selected_pilot_event_not_found_or_not_future");
@@ -255,7 +265,8 @@ const result = {
   site: { base, healthStatus: healthResponse.status, release: health.release ?? null,
     databaseReachable: health.database === "reachable", serverReady: health.server_integration === "ready" },
   database: { guestFeedback, hostOutcomes, introductions, rounds,
-    followUpInvitations, invitationCrypto, publicationSequence, singleSeatGuard },
+    followUpInvitations, invitationCrypto, publicationSequence, singleSeatGuard,
+    capacityGuard },
   guestRegistrationOpen: flagResult.data?.enabled === true,
   events: { futurePublicPublished: publicFuture.length, futurePrivateDrafts: privateDrafts.length,
     futureRehearsalDrafts: events.filter((event) => event.status === "draft" && rehearsal(event)).length,

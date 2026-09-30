@@ -87,6 +87,17 @@ closed behind a flag; a green build alone is not an exit.
   automatic paid-event checkout. Review any historical event order with more
   than one ticket individually; do not bulk change paid records. A read-only
   count on 30 September found zero historical multi-ticket event order items.
+- [x] `20260930110000_event_capacity_across_ticket_types.sql` adds a shared
+  event-capacity guard across ticket types. A requested place reserves capacity;
+  cancellation releases it. An expired/cancelled order cannot reactivate after
+  its place is taken, and Admin cannot lower capacity below existing requests.
+  Reservations for different ticket types serialize on the event, preventing
+  two simultaneous requests from taking the final place. The isolated `016`
+  test exercises the cross-ticket boundary and recovery path.
+- [ ] Apply `20260930110000_event_capacity_across_ticket_types.sql` after the
+  isolated GitHub database gate passes and the earlier migrations are applied.
+  Confirm `capacityGuard: true` in the live read-only audit before publishing
+  the first pilot event.
 - [x] `20260923100000_event_guest_cancellation_and_reapply.sql` allows a guest
   to withdraw a pending request or release an unused free place; reapplication
   creates a new order and a fresh private pass.
@@ -434,12 +445,14 @@ Neither state substitutes for a recorded owner decision or live rehearsal.
 1. In Supabase SQL Editor, apply the pending migrations in order:
    `supabase/migrations/20260925140000_table_invitation_crypto_search_path.sql`,
    then `supabase/migrations/20260928100000_admin_event_publication_sequence.sql`,
-   then `supabase/migrations/20260930100000_one_pass_per_event_account.sql`
+   then `supabase/migrations/20260930100000_one_pass_per_event_account.sql`,
+   then `supabase/migrations/20260930110000_event_capacity_across_ticket_types.sql`
    after its isolated GitHub database gate passes. Do not rerun the
    already-installed `20260925130000` migration, and do not paste any file
    from `supabase/tests/` into production. Engineering will rerun the read-only
    audit and confirm `invitationCrypto: true` before any after-event link is
-   sent, confirm `publicationSequence: true` and `singleSeatGuard: true`, then rehearse the Admin
+   sent, confirm `publicationSequence: true`, `singleSeatGuard: true` and
+   `capacityGuard: true`, then rehearse the Admin
    private-first event save.
 2. Use the selected working title **The Founding Table — Nairobi** and confirm
    its future Nairobi date/time and time zone, venue or online format, capacity, Event Host,
