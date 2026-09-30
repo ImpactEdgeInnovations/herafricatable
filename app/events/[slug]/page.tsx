@@ -18,6 +18,7 @@ import {
   type MemberEventArchiveAccess,
 } from "@/components/events/member-event-archive";
 import { EventRegistrationForm } from "@/components/events/event-registration-form";
+import { loadEventBookingAvailability } from "@/lib/events/server-booking-availability";
 import { EventQuestions, type EventQuestion } from "@/components/events/event-questions";
 import {
   DestinationInvitationPanel,
@@ -37,6 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 type EventDetail = {
   audience: "community" | "public";
+  capacity: number | null;
   ends_at: string;
   format: string;
   id: string;
@@ -53,7 +55,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const supabase = await createClient();
   const { data } = await supabase
     .from("events")
-    .select("id, title, summary, format, audience, starts_at, ends_at, timezone, registration_mode, venues(name, city, country, address_line, map_url)")
+    .select("id, title, summary, format, audience, capacity, starts_at, ends_at, timezone, registration_mode, venues(name, city, country, address_line, map_url)")
     .eq("slug", slug)
     .in("status", ["published", "completed"])
     .maybeSingle();
@@ -172,12 +174,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     : { data: null };
   const [{ data: tickets }, { data: registration }] = !hasEnded
     ? await Promise.all([
-        supabase.from("ticket_types").select("id,name,description,price_minor,currency,inventory_quantity").eq("event_id", event.id).eq("status", "on_sale").order("sort_order"),
+        supabase.from("ticket_types").select("id,name,description,price_minor,currency,inventory_quantity,sales_start_at,sales_end_at").eq("event_id", event.id).eq("status", "on_sale").order("sort_order"),
         user
           ? supabase.from("registration_requests").select("status").eq("event_id", event.id).eq("user_id", user.id).maybeSingle()
           : Promise.resolve({ data: null, error: null }),
       ])
     : [{ data: [] }, { data: null }];
+  const availability = !hasEnded && !["waitlist", "closed"].includes(event.registration_mode)
+    ? await loadEventBookingAvailability(event.id, event.capacity, tickets ?? [])
+    : null;
   const isConfirmedGuest = ["confirmed", "attended"].includes(ownMembership?.status ?? "");
   const { data: guestFollowUpAccess } = hasEnded && isConfirmedGuest && !activeMember
     ? await supabase.rpc("can_leave_event_feedback", { p_event_id: event.id })
@@ -234,9 +239,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const gatheringRoomHref = useCommunityGathering && eventCommunity
     ? `/communities/${eventCommunity.slug}/gatherings/${slug}`
     : null;
+  const bookingClosed = Boolean(availability &&
+    !availability.tickets.some((ticket) => ticket.bookingState === "available"));
+  const bookingClosedLabel = availability?.checkFailed
+    ? "Places unavailable"
+    : availability?.eventFull
+      ? "Fully booked"
+      : availability?.tickets.some((ticket) => ticket.bookingState === "not_open")
+        ? "Bookings open soon"
+        : "Booking unavailable";
   const cta = gatheringRoomHref
     ? hasEnded ? "View gathering recap" : "Open gathering room"
-    : hasEnded ? "Event completed" : event.registration_mode === "waitlist" ? "Join the waitlist" : event.registration_mode === "closed" ? "Registration closed" : event.registration_mode === "manual_review" ? "Request a seat" : "Register";
+    : hasEnded ? "Event completed" : isConfirmedGuest ? "Open my event pass" : event.registration_mode === "waitlist" ? "Join the waitlist" : event.registration_mode === "closed" ? "Registration closed" : bookingClosed ? bookingClosedLabel : event.registration_mode === "manual_review" ? "Request a seat" : "Register";
 
   return (
     <main className="event-detail-page">
@@ -258,7 +272,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         {eventImage ? <figure className="event-detail-poster"><img alt={eventImage.alt} src={eventImage.url} /></figure> : null}
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div></dl>
-          {gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : hasEnded || event.registration_mode === "closed" ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}
+          {gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : !hasEnded && isConfirmedGuest ? <Link className="button button-primary" href={`/events/${slug}/pass`}>{cta}</Link> : hasEnded || event.registration_mode === "closed" || bookingClosed ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}
         </aside>
       </section>
 
@@ -293,7 +307,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       {!hasEnded && !gatheringRoomHref && event.registration_mode !== "closed" ? (
         <section className="event-inline-registration" id="registration">
-          {activeMember || eventGuestEligible || isConfirmedGuest ? (
+          {bookingClosed && !registration && !isConfirmedGuest ? (
+            <div className="event-registration-entry">
+              <p className="eyebrow">Your place at the table</p>
+              <h2>{bookingClosedLabel}</h2>
+              <p>{availability?.checkFailed
+                ? "We could not check places right now. Refresh this page to try again."
+                : availability?.eventFull
+                  ? "All places are currently requested. Please check back for cancellations."
+                  : "No places can be requested right now. Please check back later."}</p>
+              {availability?.checkFailed ? <a className="button button-outline" href={`/events/${slug}`}>Check again</a> : null}
+            </div>
+          ) : activeMember || eventGuestEligible || isConfirmedGuest ? (
             <>
               <EventRegistrationForm
                 embedded
@@ -303,7 +328,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 existingStatus={registration?.status ?? ownMembership?.status ?? null}
                 mode={event.registration_mode}
                 passReady={["confirmed", "attended"].includes(ownMembership?.status ?? "")}
-                tickets={tickets ?? []}
+                tickets={availability?.tickets ?? []}
+                availabilityReady={!availability?.checkFailed}
+                eventFull={availability?.eventFull ?? false}
               />
               {eventGuestEligible ? (
                 <p className="event-payment-boundary">Your place gives you access to this event. Joining the member network is a separate, reviewed request.</p>

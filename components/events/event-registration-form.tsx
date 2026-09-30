@@ -4,14 +4,15 @@ import { FormEvent, useMemo, useState } from "react";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
 import { memberStatusLabel } from "@/lib/member-language";
+import type { AvailableTicket, BookingState } from "@/lib/events/booking-availability";
 
-type Ticket = {
-  currency: string;
-  description: string | null;
-  id: string;
-  inventory_quantity: number | null;
-  name: string;
-  price_minor: number;
+const bookingLabels: Record<BookingState, string> = {
+  available: "Available",
+  ended: "Bookings closed",
+  event_full: "Event fully booked",
+  not_open: "Bookings open soon",
+  ticket_full: "This option is fully booked",
+  unavailable: "Availability could not be checked",
 };
 export function EventRegistrationForm({
   eventId,
@@ -22,29 +23,38 @@ export function EventRegistrationForm({
   embedded = false,
   eventSlug,
   passReady = false,
+  availabilityReady = true,
+  eventFull = false,
 }: {
   eventId: string;
   eventTitle: string;
   mode: string;
-  tickets: Ticket[];
+  tickets: AvailableTicket[];
   existingStatus: string | null;
   embedded?: boolean;
   eventSlug?: string;
   passReady?: boolean;
+  availabilityReady?: boolean;
+  eventFull?: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const [ticketId, setTicketId] = useState(tickets[0]?.id ?? "");
+  const [ticketId, setTicketId] = useState(tickets.find((item) => item.bookingState === "available")?.id ?? "");
   const [note, setNote] = useState("");
   const [reference, setReference] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const ticket = tickets.find((x) => x.id === ticketId);
+  const ticket = tickets.find((item) => item.id === ticketId && item.bookingState === "available")
+    ?? tickets.find((item) => item.bookingState === "available");
   const isFree = ticket?.price_minor === 0;
   const canRequestAgain = existingStatus === "cancelled";
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (mode !== "waitlist" && (!availabilityReady || !ticket)) {
+      setMessage("We could not confirm an available place. Please refresh this page and try again.");
+      return;
+    }
     setBusy(true);
     setMessage("");
     if (mode === "automatic") {
@@ -56,7 +66,7 @@ export function EventRegistrationForm({
             attendeeNote: note,
             eventId,
             quantity: 1,
-            ticketTypeId: ticketId,
+            ticketTypeId: ticket?.id,
           }),
         });
         const payload = (await response.json()) as {
@@ -84,7 +94,7 @@ export function EventRegistrationForm({
       p_manual_note: paymentNote,
       p_manual_reference: reference,
       p_quantity: 1,
-      p_ticket_type_id: ticketId || null,
+      p_ticket_type_id: ticket?.id ?? null,
     });
     setBusy(false);
     setMessage(
@@ -127,7 +137,9 @@ export function EventRegistrationForm({
         {canRequestAgain ? <p>Your earlier request was cancelled. You can request a new place while registration is open.</p> : null}
         <p>
           {mode === "manual_review"
-            ? isFree
+            ? !ticket
+              ? "Booking options are not available right now."
+              : isFree
               ? "Request a complimentary place. The event team will confirm attendance before the guest list closes."
               : "Send your ticket request and any payment reference. The event team will check it before confirming your place."
             : mode === "waitlist"
@@ -136,23 +148,41 @@ export function EventRegistrationForm({
         </p>
         <p>One place per person. Each attendee uses her own email so she receives her own event pass.</p>
       </header>
+      {mode !== "waitlist" && !ticket ? (
+        <div className="manager-message" role="status">
+          <p>{!availabilityReady
+            ? "We could not check places right now."
+            : eventFull
+              ? "This event is fully booked. No new places can be requested right now."
+              : tickets.length === 0
+                ? "Booking options have not opened yet."
+                : "No places can be requested right now. Please check back later."}</p>
+          {!availabilityReady ? (
+            <button className="button button-outline" type="button" onClick={() => router.refresh()}>
+              Check again
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       {mode !== "waitlist" ? (
         <div className="ticket-choice-list">
           {tickets.map((item) => (
             <label
-              className={ticketId === item.id ? "selected" : ""}
+              className={ticket?.id === item.id ? "selected" : item.bookingState !== "available" ? "is-unavailable" : ""}
               key={item.id}
             >
               <input
                 type="radio"
                 name="ticket"
                 value={item.id}
-                checked={ticketId === item.id}
+                checked={ticket?.id === item.id}
+                disabled={item.bookingState !== "available"}
                 onChange={() => setTicketId(item.id)}
               />
               <span>
                 <strong>{item.name}</strong>
                 <small>{item.description}</small>
+                {item.bookingState !== "available" ? <small>{bookingLabels[item.bookingState]}</small> : null}
               </span>
               <b>
                 {item.currency}{" "}
@@ -200,7 +230,7 @@ export function EventRegistrationForm({
           <span>Total</span>
           <strong>
             {ticket.currency}{" "}
-          {(ticket.price_minor / 100).toLocaleString("en-KE", {
+            {(ticket.price_minor / 100).toLocaleString("en-KE", {
               minimumFractionDigits: 2,
             })}
           </strong>
@@ -209,7 +239,7 @@ export function EventRegistrationForm({
       <button
         className="button button-primary"
         disabled={
-          busy || mode === "closed" || (mode !== "waitlist" && !ticketId)
+          busy || mode === "closed" || (mode !== "waitlist" && (!ticket || !availabilityReady))
         }
       >
         {busy

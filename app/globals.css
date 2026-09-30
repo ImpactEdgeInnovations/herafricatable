@@ -16927,14 +16927,14 @@ body {
 }
 .ticket-choice-list {
   display: grid;
-  margin: 48px 0 34px;
+  margin: 28px 0 26px;
   gap: 10px;
 }
 .ticket-choice-list label {
   display: grid;
-  min-height: 88px;
+  min-height: 76px;
   align-items: center;
-  padding: 18px 20px;
+  padding: 14px 18px;
   border: 1px solid var(--line);
   background: #fff;
   grid-template-columns: 22px 1fr auto;
@@ -16945,6 +16945,11 @@ body {
   border-color: var(--wine);
   background: var(--cream);
 }
+.ticket-choice-list label.is-unavailable {
+  background: var(--cream);
+  color: var(--muted);
+  cursor: not-allowed;
+}
 .ticket-choice-list input {
   accent-color: var(--wine);
 }
@@ -16954,7 +16959,7 @@ body {
 }
 .ticket-choice-list small {
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: 0.78rem;
 }
 .ticket-choice-list b {
   font-family: var(--serif);

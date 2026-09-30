@@ -146,6 +146,14 @@ closed behind a flag; a green build alone is not an exit.
   review and payment orders count; cancelled, expired and refunded orders do
   not. This is an audit of the selected real event, not a substitute for the
   separate-account booking rehearsal.
+- [x] The public event page and registration form now show whether each ticket
+  can actually be requested, accounting for shared event capacity, per-ticket
+  inventory and sale dates. Unavailable choices cannot be selected, confirmed
+  attendees still get their pass, and a failed availability lookup offers a
+  plain **Check again** action. The server sends only ticket states to the
+  browser, not attendee orders. The database remains the final authority if
+  places change between page load and submission. Unit, type and build checks
+  do not replace a live mobile booking rehearsal.
 - [x] Admin → Events → Event details now keeps a newly created event selected
   after its first save, including its private online-link field. The first save
   is draft-only, so Admin cannot accidentally make a new event public while

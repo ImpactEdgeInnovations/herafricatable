@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EventRegistrationForm } from "@/components/events/event-registration-form";
+import { loadEventBookingAvailability } from "@/lib/events/server-booking-availability";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function RegisterPage({
 
   const [{ data: event }, { data: profile }] = await Promise.all([
     supabase.from("events")
-      .select("id,title,audience,registration_mode")
+      .select("id,title,audience,registration_mode,capacity")
       .eq("slug", slug).eq("status", "published").maybeSingle(),
     supabase.from("profiles")
       .select("access_status")
@@ -39,7 +40,7 @@ export default async function RegisterPage({
   const [{ data: tickets }, { data: registration }, { data: membership }] =
     await Promise.all([
       supabase.from("ticket_types")
-        .select("id,name,description,price_minor,currency,inventory_quantity")
+        .select("id,name,description,price_minor,currency,inventory_quantity,sales_start_at,sales_end_at")
         .eq("event_id", event.id).eq("status", "on_sale").order("sort_order"),
       supabase.from("registration_requests")
         .select("status").eq("event_id", event.id)
@@ -48,6 +49,9 @@ export default async function RegisterPage({
         .select("status").eq("event_id", event.id)
         .eq("user_id", user.id).maybeSingle(),
     ]);
+  const availability = ["waitlist", "closed"].includes(event.registration_mode)
+    ? { checkFailed: false, eventFull: false, tickets: [] }
+    : await loadEventBookingAvailability(event.id, event.capacity, tickets ?? []);
 
   return (
     <main className="event-registration-page">
@@ -63,7 +67,9 @@ export default async function RegisterPage({
         eventSlug={slug}
         eventTitle={event.title}
         mode={event.registration_mode}
-        tickets={tickets ?? []}
+        tickets={availability.tickets}
+        availabilityReady={!availability.checkFailed}
+        eventFull={availability.eventFull}
         existingStatus={registration?.status ?? membership?.status ?? null}
         passReady={["confirmed", "attended"].includes(membership?.status ?? "")}
       />
