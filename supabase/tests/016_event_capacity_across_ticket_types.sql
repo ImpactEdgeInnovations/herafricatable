@@ -47,6 +47,7 @@ select lives_ok(
     'c2000000-0000-4000-8000-000000000002', 1, '', '', '')$$,
   'second attendee reserves the final place from another ticket type'
 );
+reset role;
 select is(
   (select sum(item.quantity)::bigint from public.order_items item
    join public.orders booking on booking.id = item.order_id
@@ -54,6 +55,8 @@ select is(
      and booking.status = 'pending_review'),
   2::bigint, 'both ticket types share the two-seat event capacity'
 );
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
 select set_config('request.jwt.claim.sub', 'c0000000-0000-4000-8000-000000000003', true);
 select throws_ok(
   $$select public.create_event_registration(
@@ -62,11 +65,14 @@ select throws_ok(
   'P0001', 'Event is full',
   'third request is refused even though its ticket type still has inventory'
 );
+reset role;
 select is(
   (select count(*) from public.orders
    where event_id = 'c1000000-0000-4000-8000-000000000001'),
   2::bigint, 'a refused request leaves no extra order'
 );
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
 select set_config('request.jwt.claim.sub', 'c0000000-0000-4000-8000-000000000001', true);
 select lives_ok(
   $$select public.cancel_my_event_place(
