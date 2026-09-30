@@ -11,10 +11,11 @@ const ready = {
     status: "published", summary: "A hosted Nairobi gathering for trusted introductions and useful conversations.",
     timezone: "Africa/Nairobi",
   },
-  tickets: [{ inventory_quantity: 20, price_minor: 0, sales_start_at: null,
+  tickets: [{ id: "free", inventory_quantity: 20, price_minor: 0, sales_start_at: null,
     sales_end_at: null, status: "on_sale" }],
   host: { status: "active" }, hostProfile: { access_status: "active" },
   workspace: { status: "approved" }, safetyContact: { event_id: "pilot" },
+  orders: [],
   onlineLink: "https://meet.example.test/private", venue: { name: "The Table", city: "Nairobi", country: "Kenya" },
   doorStaffActive: true,
 };
@@ -24,6 +25,12 @@ assert.equal(checks({ ...ready, event: { ...ready.event, audience: "community" }
 assert.equal(checks({ ...ready, event: { ...ready.event, status: "draft" } }).publicAndPublished, false);
 assert.equal(checks({ ...ready, event: { ...ready.event, capacity: null } }).basics, false);
 assert.equal(checks({ ...ready, event: { ...ready.event, starts_at: "2026-09-26T17:00:00Z" } }).basics, false);
+assert.equal(checks({ ...ready, orders: [{ status: "pending_review", order_items: [{ ticket_type_id: "free", quantity: 20 }] }] }).placeAvailable, false);
+assert.equal(checks({ ...ready, orders: [{ status: "pending_review", order_items: [{ ticket_type_id: "free", quantity: 20 }] }] }).freeManualTicket, false);
+assert.equal(checks({ ...ready, event: { ...ready.event, capacity: 25 }, orders: [{ status: "pending_review", order_items: [{ ticket_type_id: "free", quantity: 20 }] }] }).placeAvailable, true);
+assert.equal(checks({ ...ready, event: { ...ready.event, capacity: 25 }, orders: [{ status: "pending_review", order_items: [{ ticket_type_id: "free", quantity: 20 }] }] }).freeManualTicket, false);
+assert.equal(checks({ ...ready, orders: [{ status: "cancelled", order_items: [{ ticket_type_id: "free", quantity: 20 }] }] }).placeAvailable, true);
+assert.equal(checks({ ...ready, orders: [{ status: "cancelled", order_items: [{ ticket_type_id: "free", quantity: 20 }] }] }).freeManualTicket, true);
 assert.equal(checks({ ...ready, onlineLink: "" }).placeReady, false);
 assert.equal(checks({ ...ready, venue: null }).placeReady, false);
 assert.equal(checks({ ...ready, tickets: [{ ...ready.tickets[0], status: "draft" }] }).freeManualTicket, false);
@@ -40,6 +47,7 @@ assert(liveAudit.includes('service.rpc("event_single_seat_guard_ready")'));
 assert(liveAudit.includes('blockers.push("one_pass_per_attendee_guard_not_ready")'));
 assert(liveAudit.includes('service.rpc("event_capacity_guard_ready")'));
 assert(liveAudit.includes('blockers.push("shared_event_capacity_guard_not_ready")'));
+assert(liveAudit.includes("eventReservationOrders(id)"));
 assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
 const registrationForm = readFileSync(new URL("../components/events/event-registration-form.tsx", import.meta.url), "utf8");
 const checkout = readFileSync(new URL("../app/api/payments/paystack/initialize/route.ts", import.meta.url), "utf8");

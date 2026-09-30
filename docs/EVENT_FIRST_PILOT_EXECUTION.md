@@ -140,6 +140,12 @@ closed behind a flag; a green build alone is not an exit.
   database-backed setup checklist for event basics, place/link, free manual
   ticket, active Host, reviewed Host content and safety contact. It names the
   next action without treating setup completion as launch approval.
+- [x] The read-only pilot audit now counts actual event reservations across all
+  ticket types. It refuses to call a free ticket available once its inventory
+  is used, or the event bookable once its overall capacity is reserved. Pending
+  review and payment orders count; cancelled, expired and refunded orders do
+  not. This is an audit of the selected real event, not a substitute for the
+  separate-account booking rehearsal.
 - [x] Admin → Events → Event details now keeps a newly created event selected
   after its first save, including its private online-link field. The first save
   is draft-only, so Admin cannot accidentally make a new event public while

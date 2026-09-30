@@ -65,6 +65,20 @@ async function capacityGuardReady() {
   return data === true;
 }
 
+async function eventReservationOrders(eventId) {
+  const pageSize = 1000;
+  const rows = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await service.from("orders")
+      .select("id,status,order_items(ticket_type_id,quantity)")
+      .eq("event_id", eventId).eq("order_type", "event")
+      .order("id").range(offset, offset + pageSize - 1);
+    if (error) throw new Error(`Could not count pilot reservations: ${error.code || "network error"}`);
+    rows.push(...(data ?? []));
+    if ((data ?? []).length < pageSize) return rows;
+  }
+}
+
 const healthResponse = await fetch(`${base}/api/health`, {
   headers: { "user-agent": "HerAfricaTable-PilotAudit/1.0" },
 });
@@ -100,8 +114,9 @@ const selectedPilot = pilotSlug
 let pilotChecks = null;
 if (selectedPilot) {
   const id = selectedPilot.id;
-  const [tickets, host, workspace, safety, joining, venue, staff] = await Promise.all([
-    service.from("ticket_types").select("price_minor,status,inventory_quantity,sales_start_at,sales_end_at").eq("event_id", id),
+  const [tickets, host, workspace, safety, joining, venue, staff,
+    reservationOrders] = await Promise.all([
+    service.from("ticket_types").select("id,price_minor,status,inventory_quantity,sales_start_at,sales_end_at").eq("event_id", id),
     service.from("event_hosts").select("user_id,status").eq("event_id", id).maybeSingle(),
     service.from("event_host_workspaces").select("status").eq("event_id", id).maybeSingle(),
     service.from("event_safety_contacts").select("event_id").eq("event_id", id).maybeSingle(),
@@ -110,6 +125,7 @@ if (selectedPilot) {
       ? service.from("venues").select("name,city,country").eq("id", selectedPilot.venue_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     service.from("event_staff_scopes").select("user_id").eq("event_id", id),
+    eventReservationOrders(id),
   ]);
   for (const result of [tickets, host, workspace, safety, joining, venue, staff])
     assert.ifError(result.error);
@@ -129,6 +145,7 @@ if (selectedPilot) {
   pilotChecks = assessPilotEvent({
     event: selectedPilot,
     tickets: tickets.data ?? [],
+    orders: reservationOrders,
     host: host.data,
     hostProfile: { access_status: active(host.data?.user_id) ? "active" : "inactive" },
     workspace: workspace.data,
