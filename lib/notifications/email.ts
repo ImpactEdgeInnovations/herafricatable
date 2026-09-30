@@ -41,17 +41,34 @@ export async function sendNotificationEmail(job: EmailJob) {
   const isMemberWelcome =
     job.template_key === "member_welcome" ||
     job.dedupe_key.startsWith("member-approved:");
+  const isEventReview = job.dedupe_key.startsWith("event-registration-review:");
+  const isEventNotice = isEventReview ||
+    job.dedupe_key.startsWith("event-registration-declined:") ||
+    [
+      "We have your event request",
+      "Complete your event payment",
+      "Your event place is confirmed",
+      "Your event reservation expired",
+      "Your event refund needs review",
+      "Your event refund was recorded",
+    ].includes(title);
   const buttonLabel = isInvitation
     ? "Open your invitation"
     : isMemberWelcome
       ? job.payload.href === "/onboarding"
         ? "Complete my profile"
         : "Enter my Member Home"
-      : "Open Her Africa Table";
+      : isEventReview
+        ? "Review event requests"
+        : isEventNotice
+          ? "View event details"
+          : "Open Her Africa Table";
   const preferenceNote = isInvitation
     ? "This private invitation was reviewed before delivery. You decide whether to accept it."
     : isMemberWelcome
       ? "This membership message is private and was sent to the email address you verified."
+      : isEventNotice
+        ? "This event message was sent to the email address on your account."
       : "You can change non-essential email preferences in your notification centre.";
   const text = isMemberWelcome
     ? `${body}\n\nYour first steps:\n1. Complete your profile so introductions feel relevant.\n2. Discover a Community where you feel at home.\n3. Find an event or conversation worth joining.\n\n${buttonLabel}: ${href}\n\nWelcome to the Table.\nThe Her Africa Table team`

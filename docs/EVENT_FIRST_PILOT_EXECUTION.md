@@ -154,6 +154,21 @@ closed behind a flag; a green build alone is not an exit.
   browser, not attendee orders. The database remains the final authority if
   places change between page load and submission. Unit, type and build checks
   do not replace a live mobile booking rehearsal.
+- [x] `20260930120000_event_registration_notifications.sql` routes each new
+  manually reviewed place request to active Super Admin accounts through the
+  existing in-app and email queue. It excludes the attendee's private note
+  and email from the alert. Reapplication after cancellation gets a fresh
+  alert. Attendees receive plain-language request, confirmation and decline
+  messages; the intermediate `approved` order state no longer generates a
+  second confirmation email. Non-event commerce notifications remain unchanged.
+  The isolated `017_event_registration_notifications.sql` test covers the
+  queue, idempotency, decision wording and absence of a pass after decline.
+- [ ] After the isolated GitHub database gate passes, apply
+  `20260930120000_event_registration_notifications.sql` to the connected
+  Supabase project. Confirm `registrationNotifications: true` in the live
+  read-only audit, then test one real manual request, Super Admin inbox,
+  approval and attendee inbox with separate accounts. Provider acceptance
+  alone does not prove inbox delivery.
 - [x] Admin → Events → Event details now keeps a newly created event selected
   after its first save, including its private online-link field. The first save
   is draft-only, so Admin cannot accidentally make a new event public while
@@ -164,8 +179,8 @@ closed behind a flag; a green build alone is not an exit.
   Host's draft must go through Host review, and an unhosted public draft needs
   a saved private safety contact before publication. The internal save
   function is not executable by API users. `015_admin_event_publication_sequence.sql`
-  specifies those boundaries for the isolated database gate; installation and
-  a real Admin rehearsal on the connected project are still pending. The
+  specifies those boundaries for the isolated database gate. The 30 September
+  live audit confirms installation; a real Admin rehearsal is still pending. The
   read-only live audit reports `publicationSequence` from a permission-aware
   database check so an uninstalled migration cannot be mistaken for readiness.
   Event details now lets Super Admin save the private on-the-day contact on an
@@ -472,7 +487,11 @@ is delivery-operations evidence, not a fresh OTP or event-decision inbox test.
 
 ### Next owner actions, in order
 
-1. Use the selected working title **The Founding Table — Nairobi** and confirm
+1. Apply `20260930120000_event_registration_notifications.sql` after its
+   isolated GitHub gate passes. Use only the file under `supabase/migrations/`,
+   not the similarly named file under `supabase/tests/`. Engineering will
+   confirm `registrationNotifications: true` on the connected project.
+2. Use the selected working title **The Founding Table — Nairobi** and confirm
    its future Nairobi date/time and time zone, venue or online format, capacity, Event Host,
    check-in lead and safety contact.
    Create it as a private draft; the internal `[TEST]` rehearsal event is not a
@@ -483,12 +502,12 @@ is delivery-operations evidence, not a fresh OTP or event-decision inbox test.
    checks the selected event's content, venue or private joining link, free
    on-sale place, active Host, approved Host draft, safety contact and active
    scoped check-in staff.
-2. Review the complete event page, registration method and a zero-price on-sale
+3. Review the complete event page, registration method and a zero-price on-sale
    ticket before publishing. On a disposable staging project, rehearse a member
    and a guest separately through OTP, request, Admin decision, email, pass,
    check-in and after-event follow-up. Production guest access remains off
    during this rehearsal.
-3. Record the five evidence-backed Public event guests release checks in Admin
+4. Record the five evidence-backed Public event guests release checks in Admin
    Release, then make a human go/no-go decision. Only after those checks pass
    should Super Admin enable the guest flag for a small live pilot; never flip
    it directly in SQL. Repeat the guest journey on live with a limited cohort.

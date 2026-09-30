@@ -47,6 +47,8 @@ assert(liveAudit.includes('service.rpc("event_single_seat_guard_ready")'));
 assert(liveAudit.includes('blockers.push("one_pass_per_attendee_guard_not_ready")'));
 assert(liveAudit.includes('service.rpc("event_capacity_guard_ready")'));
 assert(liveAudit.includes('blockers.push("shared_event_capacity_guard_not_ready")'));
+assert(liveAudit.includes('service.rpc("event_registration_notification_ready")'));
+assert(liveAudit.includes('blockers.push("event_registration_notifications_not_ready")'));
 assert(liveAudit.includes("eventReservationOrders(id)"));
 assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
 const registrationForm = readFileSync(new URL("../components/events/event-registration-form.tsx", import.meta.url), "utf8");
