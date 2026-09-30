@@ -10,18 +10,26 @@ import { adminErrorMessage } from "@/lib/admin-error";
 export function EventGuestAccessControl({
   enabled,
   migrationReady,
+  safetyChecks,
 }: {
   enabled: boolean;
   migrationReady: boolean;
+  safetyChecks: { label: string; ready: boolean }[];
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const missingChecks = safetyChecks.filter((check) => !check.ready);
+  const canOpen = migrationReady && missingChecks.length === 0;
 
   async function changeAccess() {
     const opening = !enabled;
+    if (opening && !canOpen) {
+      setMessage("Guest requests need the remaining safety setup before they can open.");
+      return;
+    }
     const confirmed = await ask({
       title: opening ? "Open public events to verified guests?" : "Pause new guest requests?",
       description: opening
@@ -34,6 +42,19 @@ export function EventGuestAccessControl({
 
     setBusy(true);
     setMessage("");
+    if (opening) {
+      const checks = await Promise.all([
+        supabase.rpc("event_registration_notification_ready"),
+        supabase.rpc("event_single_seat_guard_ready"),
+        supabase.rpc("event_capacity_guard_ready"),
+      ]);
+      if (checks.some((check) => check.error || check.data !== true)) {
+        setBusy(false);
+        setMessage("A guest safety check changed. Refresh this page before opening requests.");
+        router.refresh();
+        return;
+      }
+    }
     const { error } = await supabase.rpc("set_feature_flag", {
       p_key: "event_guest_access",
       p_enabled: opening,
@@ -55,17 +76,18 @@ export function EventGuestAccessControl({
           <h2 id="event-guest-access-title">Guests who are not members</h2>
           <p>Verified visitors can attend a public event after event approval. They do not enter the member network automatically.</p>
         </div>
-        <span className="status-count">{migrationReady ? enabled ? "Open" : "Paused" : "Setup needed"}</span>
+        <span className="status-count">{enabled ? canOpen ? "Open" : "Review needed" : canOpen ? "Paused" : "Setup needed"}</span>
       </header>
-      {migrationReady ? (
+      {missingChecks.length ? <p role="status">Before opening guest requests, complete: {missingChecks.map((check) => check.label).join(", ")}.</p> : null}
+      {migrationReady || enabled ? (
         <div className="portal-actions">
-          <button className={enabled ? "button button-outline" : "button button-primary"} disabled={busy} onClick={() => void changeAccess()} type="button">
+          <button className={enabled ? "button button-outline" : "button button-primary"} disabled={busy || (!enabled && !canOpen)} onClick={() => void changeAccess()} type="button">
             {busy ? "Saving…" : enabled ? "Pause guest requests" : "Open guest requests"}
           </button>
           <Link className="button button-outline" href="/admin/release">Review launch checks</Link>
         </div>
       ) : (
-        <p>Apply the event guest access migration before using this control.</p>
+        <p>Guest entry needs its database safety setup. Ask the platform team to check the event migrations.</p>
       )}
       {message ? <p className="manager-message" role="status">{message}</p> : null}
       {dialog}

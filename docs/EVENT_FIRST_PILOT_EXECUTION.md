@@ -207,6 +207,13 @@ closed behind a flag; a green build alone is not an exit.
   Successful SQL-editor execution elsewhere is not installation evidence for
   this connected project. Recheck the SQL editor's project URL/ref, apply
   only the numbered migration files above in order, then rerun the audit.
+- [x] Admin → Events → Overview now checks the live registration-email,
+  one-place-per-guest and event-capacity protections before offering **Open
+  guest requests**. A stale Admin page rechecks them at the moment of
+  opening. **Pause guest requests** remains available even if a protection
+  becomes unavailable. This prevents the normal Admin path from opening
+  guest entry merely because the original feature flag exists; the database
+  release-evidence gate remains authoritative as well.
 - [x] Admin → Events → Event details now keeps a newly created event selected
   after its first save, including its private online-link field. The first save
   is draft-only, so Admin cannot accidentally make a new event public while
@@ -523,14 +530,39 @@ The 10:13 UTC read-only email audit showed eight provider-accepted jobs in
 the preceding seven days, with zero queued, processing or failed jobs. This
 is delivery-operations evidence, not a fresh OTP or event-decision inbox test.
 
+### Connected-project migration check
+
+In the Supabase SQL Editor for project `gtzwqromwvzqytygebfc`, run this
+read-only query before applying or rerunning an event migration:
+
+```sql
+select
+  to_regprocedure('public.event_registration_notification_ready()') is not null as registration_notifications,
+  to_regprocedure('public.event_waitlist_ready()') is not null as waitlist,
+  to_regprocedure('public.event_automatic_checkout_guard_ready()') is not null as automatic_payment_guard;
+```
+
+A false value means that function is absent in that SQL Editor's database.
+If all are true there but the app's live API still reports them missing,
+investigate schema-cache visibility or the project's URL before rerunning
+any migration. The readiness functions themselves must also return `true`;
+mere existence is not a full operational pass.
+
 ### Next owner actions, in order
 
-1. Apply `20260930120000_event_registration_notifications.sql`, then
-   `20260930130000_event_waitlist_lifecycle.sql`, after their isolated GitHub
-   gate passes. Use only files under `supabase/migrations/`, not the similarly
-   named files under `supabase/tests/`. Engineering will confirm
-   `registrationNotifications: true` and `waitlistLifecycle: true` on the
-   connected project.
+1. In the SQL Editor for project `gtzwqromwvzqytygebfc`, first run the
+   read-only `to_regprocedure` verification above.
+   If a function is absent, apply the corresponding migrations in order:
+   `20260930120000_event_registration_notifications.sql`,
+   `20260930130000_event_waitlist_lifecycle.sql`, then
+   `20260930140000_event_automatic_checkout_gate.sql`. The isolated [GitHub
+   gate](https://github.com/ImpactEdgeInnovations/herafricatable/actions/runs/36753083883)
+   passed all migrations and database tests. Use only files under
+   `supabase/migrations/`, not similarly named files under `supabase/tests/`.
+   If the SQL Editor sees a function but the live API does not, investigate
+   API schema visibility rather than rerunning a migration blindly. The live
+   audit must show `registrationNotifications`, `waitlistLifecycle` and
+   `automaticCheckoutGuard` as true, while automatic event payments stay off.
 2. Use the selected working title **The Founding Table — Nairobi** and confirm
    its future Nairobi date/time and time zone, venue or online format, capacity, Event Host,
    check-in lead and safety contact.

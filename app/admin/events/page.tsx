@@ -98,6 +98,18 @@ export default async function AdminEventsPage({
     ? await supabase.from("feature_flags").select("enabled")
         .eq("key", "event_guest_access").maybeSingle()
     : { data: null, error: null };
+  const guestSafetyResults = role === "super_admin" && view === "overview"
+    ? await Promise.all([
+        supabase.rpc("event_registration_notification_ready"),
+        supabase.rpc("event_single_seat_guard_ready"),
+        supabase.rpc("event_capacity_guard_ready"),
+      ])
+    : null;
+  const guestSafetyChecks = [
+    { label: "registration emails", ready: guestSafetyResults?.[0].data === true && !guestSafetyResults[0].error },
+    { label: "one place per guest", ready: guestSafetyResults?.[1].data === true && !guestSafetyResults[1].error },
+    { label: "event capacity protection", ready: guestSafetyResults?.[2].data === true && !guestSafetyResults[2].error },
+  ];
   const automaticCheckoutResult = ["overview", "edit"].includes(view)
     ? await supabase.from("feature_flags").select("enabled")
         .eq("key", "event_automatic_checkout").maybeSingle()
@@ -346,7 +358,7 @@ export default async function AdminEventsPage({
       </section>
 
       {view === "overview" ? <EventCommandCentre canControlLifecycle={role === "super_admin"} events={events} lifecycleReady={!lifecycleResult.error} lifecycleStates={(lifecycleResult.data as EventLifecycleState[] | null) ?? []} proposalCount={proposalCount} refunds={refunds} registrations={registrations} pilotReadiness={pilotReadiness} /> : null}
-      {view === "overview" && role === "super_admin" ? <EventGuestAccessControl enabled={Boolean(guestAccessResult.data?.enabled)} migrationReady={Boolean(guestAccessResult.data) && !guestAccessResult.error} /> : null}
+      {view === "overview" && role === "super_admin" ? <EventGuestAccessControl enabled={Boolean(guestAccessResult.data?.enabled)} migrationReady={Boolean(guestAccessResult.data) && !guestAccessResult.error} safetyChecks={guestSafetyChecks} /> : null}
       {view === "overview" && role === "super_admin" ? <EventAutomaticCheckoutControl enabled={automaticCheckoutOpen} migrationReady={automaticCheckoutReady} /> : null}
       {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager media={proposalMedia} hostHandoffReady={hostHandoffReady} migrationReady={proposalReady} proposals={memberProposals} /><div className="legacy-gathering-note"><strong>Community gathering history</strong><p>Free member-only gatherings are now owner-led. Earlier submissions remain visible here so Admin can understand the complete decision history.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></section> : null}
       {view === "host" && role === "super_admin" ? <EventHostReviewManager events={events} workspaces={hostWorkspaces} reviewContexts={hostReviewContexts} safetyContacts={(safetyContactResult.data as { event_id: string; contact_name: string; contact_phone: string }[] | null) ?? []} safetyReady={!safetyReadyResult.error && safetyReadyResult.data === true && !safetyContactResult.error} migrationReady={!hostResult.error} lifecycleReady={!hostLifecycleResult.error && hostLifecycleResult.data === true} covers={hostCovers} coversReady={!hostCoverResult.error} /> : null}
