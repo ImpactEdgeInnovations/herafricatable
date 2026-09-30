@@ -6,7 +6,6 @@ import { initializePaystackTransaction } from "@/lib/paystack";
 
 export async function POST(request:Request){
  try{
-  const {siteUrl}=getServerPaymentEnv();
   const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user?.email)return NextResponse.json({error:"Authentication required"},{status:401});
   const body=await request.json() as {attendeeNote?:string;communityHostPlanId?:string;communityId?:string;communityOfferId?:string;courseId?:string;eventId?:string;membershipPlanId?:string;quantity?:number;ticketTypeId?:string};
   if((body.communityHostPlanId&&!body.communityId)||(!body.communityHostPlanId&&!body.communityOfferId&&!body.courseId&&!body.membershipPlanId&&(!body.eventId||!body.ticketTypeId)))return NextResponse.json({error:"A host plan, community offer, membership, course or event ticket is required"},{status:400});
@@ -14,14 +13,18 @@ export async function POST(request:Request){
   if (body.eventId && !body.communityHostPlanId && !body.communityOfferId && !body.courseId && !body.membershipPlanId) {
    const [{data:profile},{data:event}]=await Promise.all([
     supabase.from("profiles").select("access_status").eq("id",user.id).maybeSingle(),
-    supabase.from("events").select("audience").eq("id",body.eventId).eq("status","published").maybeSingle(),
+    supabase.from("events").select("audience,registration_mode").eq("id",body.eventId).eq("status","published").maybeSingle(),
    ]);
    if(!event||!profile||["suspended","deleted"].includes(profile.access_status))return NextResponse.json({error:"Event registration is unavailable for this account"},{status:403});
+   if(event.registration_mode!=="automatic")return NextResponse.json({error:"This event is not using online payment. Request a place on the event page instead."},{status:409});
+   const {data:eventPaymentFlag,error:eventPaymentError}=await supabase.from("feature_flags").select("enabled").eq("key","event_automatic_checkout").maybeSingle();
+   if(eventPaymentError||!eventPaymentFlag?.enabled)return NextResponse.json({error:"Online event payment is paused. No charge has been made."},{status:409});
    if(profile.access_status!=="active"){
     const {data:guestFlag}=await supabase.from("feature_flags").select("enabled").eq("key","event_guest_access").maybeSingle();
     if(profile.access_status!=="pending"||event.audience!=="public"||!guestFlag?.enabled)return NextResponse.json({error:"Event guest access is not open"},{status:403});
    }
   }
+  const {siteUrl}=getServerPaymentEnv();
   const {data:orderId,error:createError}=body.communityHostPlanId?await supabase.rpc("create_community_host_plan_order",{p_community_id:body.communityId,p_manual_note:"",p_manual_reference:"",p_plan_id:body.communityHostPlanId}):body.communityOfferId?await supabase.rpc("create_community_order",{p_offer_id:body.communityOfferId,p_manual_note:"",p_manual_reference:""}):body.membershipPlanId?await supabase.rpc("create_membership_order",{p_plan_id:body.membershipPlanId,p_manual_note:"",p_manual_reference:""}):body.courseId?await supabase.rpc("create_course_order",{p_course_id:body.courseId,p_manual_note:"",p_manual_reference:""}):await supabase.rpc("create_event_registration",{p_attendee_note:body.attendeeNote??"",p_event_id:body.eventId,p_manual_note:"",p_manual_reference:"",p_quantity:Number(body.quantity)||1,p_ticket_type_id:body.ticketTypeId});
   if(createError||!orderId)return NextResponse.json({error:createError?.message??"Order creation failed"},{status:400});
   const {data:order,error:orderError}=await supabase.from("orders").select("id,reference,total_minor,currency,event_id,order_type,order_items(course_id,membership_plan_id,community_offer_id,community_host_plan_id)").eq("id",orderId).single();
@@ -31,6 +34,10 @@ export async function POST(request:Request){
    const initialized=await initializePaystackTransaction({email:user.email,amount:order.total_minor,currency:order.currency,reference:order.reference,callbackUrl:`${siteUrl}/api/payments/paystack/callback`,metadata:{order_id:order.id,order_type:order.order_type,event_id:order.event_id??"",community_id:body.communityId??"",community_host_plan_id:item?.community_host_plan_id??"",community_offer_id:item?.community_offer_id??"",course_id:item?.course_id??"",membership_plan_id:item?.membership_plan_id??""}});
    const {error:recordError}=await supabase.rpc("record_payment_initialization",{p_authorization_url:initialized.authorization_url,p_order_id:order.id,p_provider_reference:initialized.reference,p_provider_response:initialized});
    if(recordError)throw recordError;
+   if(order.order_type==="event"){
+    const {data:stillOpen,error:flagError}=await supabase.from("feature_flags").select("enabled").eq("key","event_automatic_checkout").maybeSingle();
+    if(flagError||!stillOpen?.enabled)return NextResponse.json({error:"Online event payment was paused before checkout opened. No charge has been made."},{status:409});
+   }
    return NextResponse.json({authorizationUrl:initialized.authorization_url,reference:initialized.reference});
   }catch(error){
    const admin=createAdminClient();await admin.rpc("process_paystack_payment",{p_amount_minor:order.total_minor,p_currency:order.currency,p_event_type:"initialization.failed",p_payload:{message:error instanceof Error?error.message:"Initialization failed"},p_provider_event_id:`init-failed:${order.reference}`,p_reference:order.reference,p_signature_verified:true,p_status:"failed"});

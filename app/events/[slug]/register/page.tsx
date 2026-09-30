@@ -52,6 +52,9 @@ export default async function RegisterPage({
   const availability = ["waitlist", "closed"].includes(event.registration_mode)
     ? { checkFailed: false, eventFull: false, tickets: [] }
     : await loadEventBookingAvailability(event.id, event.capacity, tickets ?? []);
+  const { data: automaticCheckoutOpen } = event.registration_mode === "automatic"
+    ? await supabase.rpc("event_automatic_checkout_open")
+    : { data: false };
 
   return (
     <main className="event-registration-page">
@@ -69,6 +72,7 @@ export default async function RegisterPage({
         mode={event.registration_mode}
         tickets={availability.tickets}
         availabilityReady={!availability.checkFailed}
+        automaticCheckoutOpen={event.registration_mode !== "automatic" || automaticCheckoutOpen === true}
         eventFull={availability.eventFull}
         existingStatus={registration?.status ?? membership?.status ?? null}
         passReady={["confirmed", "attended"].includes(membership?.status ?? "")}

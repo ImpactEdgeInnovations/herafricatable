@@ -79,6 +79,13 @@ async function eventWaitlistReady() {
   return data === true;
 }
 
+async function automaticCheckoutGuardReady() {
+  const { data, error } = await service.rpc("event_automatic_checkout_guard_ready");
+  if (error?.code === "PGRST202") return false;
+  if (error) throw new Error(`Could not check event payment guard: ${error.code || "network error"}`);
+  return data === true;
+}
+
 async function eventReservationOrders(eventId) {
   const pageSize = 1000;
   const rows = [];
@@ -99,8 +106,8 @@ const healthResponse = await fetch(`${base}/api/health`, {
 const health = await healthResponse.json();
 const [guestFeedback, hostOutcomes, introductions, rounds, followUpInvitations,
   invitationCrypto, publicationSequence, singleSeatGuard, capacityGuard,
-  registrationNotifications, waitlistLifecycle,
-  flagResult, eventResult] =
+  registrationNotifications, waitlistLifecycle, automaticCheckoutGuard,
+  flagResult, automaticCheckoutFlagResult, eventResult] =
   await Promise.all([
     functionInstalled("can_leave_event_feedback"),
     functionInstalled("get_event_host_outcomes"),
@@ -113,13 +120,16 @@ const [guestFeedback, hostOutcomes, introductions, rounds, followUpInvitations,
     capacityGuardReady(),
     registrationNotificationReady(),
     eventWaitlistReady(),
+    automaticCheckoutGuardReady(),
     service.from("feature_flags").select("enabled").eq("key", "event_guest_access").maybeSingle(),
+    service.from("feature_flags").select("enabled").eq("key", "event_automatic_checkout").maybeSingle(),
     service.from("events")
       .select("id,slug,title,status,audience,format,summary,timezone,venue_id,registration_mode,starts_at,ends_at,capacity")
       .gte("starts_at", new Date().toISOString())
       .in("status", ["draft", "published"]),
   ]);
 assert.ifError(flagResult.error);
+assert.ifError(automaticCheckoutFlagResult.error);
 assert.ifError(eventResult.error);
 
 const events = eventResult.data ?? [];
@@ -278,6 +288,9 @@ if (!singleSeatGuard) blockers.push("one_pass_per_attendee_guard_not_ready");
 if (!capacityGuard) blockers.push("shared_event_capacity_guard_not_ready");
 if (!registrationNotifications) blockers.push("event_registration_notifications_not_ready");
 if (!waitlistLifecycle) blockers.push("event_waitlist_lifecycle_not_ready");
+if (!automaticCheckoutGuard) blockers.push("event_automatic_checkout_guard_not_ready");
+if (automaticCheckoutFlagResult.data?.enabled === true)
+  blockers.push("automatic_event_payments_open_before_pilot_acceptance");
 if (!privateDrafts.length && !publicFuture.length) blockers.push("real_pilot_event_not_created");
 if (!pilotSlug) blockers.push("pilot_event_not_selected");
 else if (!selectedPilot) blockers.push("selected_pilot_event_not_found_or_not_future");
@@ -302,8 +315,9 @@ const result = {
     databaseReachable: health.database === "reachable", serverReady: health.server_integration === "ready" },
   database: { guestFeedback, hostOutcomes, introductions, rounds,
     followUpInvitations, invitationCrypto, publicationSequence, singleSeatGuard,
-    capacityGuard, registrationNotifications, waitlistLifecycle },
+    capacityGuard, registrationNotifications, waitlistLifecycle, automaticCheckoutGuard },
   guestRegistrationOpen: flagResult.data?.enabled === true,
+  automaticEventPaymentsOpen: automaticCheckoutFlagResult.data?.enabled === true,
   events: { futurePublicPublished: publicFuture.length, futurePrivateDrafts: privateDrafts.length,
     futureRehearsalDrafts: events.filter((event) => event.status === "draft" && rehearsal(event)).length,
     selectedPilotSlug: pilotSlug || null, selectedPilotChecks: pilotChecks },

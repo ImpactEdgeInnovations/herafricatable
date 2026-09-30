@@ -51,6 +51,9 @@ assert(liveAudit.includes('service.rpc("event_registration_notification_ready")'
 assert(liveAudit.includes('blockers.push("event_registration_notifications_not_ready")'));
 assert(liveAudit.includes('service.rpc("event_waitlist_ready")'));
 assert(liveAudit.includes('blockers.push("event_waitlist_lifecycle_not_ready")'));
+assert(liveAudit.includes('service.rpc("event_automatic_checkout_guard_ready")'));
+assert(liveAudit.includes('blockers.push("event_automatic_checkout_guard_not_ready")'));
+assert(liveAudit.includes('automaticEventPaymentsOpen: automaticCheckoutFlagResult.data?.enabled === true'));
 assert(liveAudit.includes("eventReservationOrders(id)"));
 assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
 const registrationForm = readFileSync(new URL("../components/events/event-registration-form.tsx", import.meta.url), "utf8");
@@ -58,6 +61,9 @@ const checkout = readFileSync(new URL("../app/api/payments/paystack/initialize/r
 assert(registrationForm.includes("p_quantity: 1"));
 assert(!registrationForm.includes('type="number"'));
 assert(checkout.includes("body.quantity!==1"));
+assert(checkout.includes('event.registration_mode!=="automatic"'));
+assert(checkout.includes('eventPaymentFlag?.enabled'));
+assert(registrationForm.includes("automaticCheckoutOpen"));
 assert.equal(recommendPilotRelease({ blockers: ["missing_pilot"], guestRegistrationOpen: false }), "hold");
 assert.equal(recommendPilotRelease({ blockers: [], guestRegistrationOpen: false }), "ready_for_human_go_no_go");
 assert.equal(recommendPilotRelease({ blockers: ["missing_pilot"], guestRegistrationOpen: true }), "pause_and_review");

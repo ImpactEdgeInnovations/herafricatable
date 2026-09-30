@@ -180,6 +180,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           : Promise.resolve({ data: null, error: null }),
       ])
     : [{ data: [] }, { data: null }];
+  const { data: automaticCheckoutOpen } = event.registration_mode === "automatic"
+    ? await supabase.rpc("event_automatic_checkout_open")
+    : { data: false };
+  const paymentPaused = event.registration_mode === "automatic" && automaticCheckoutOpen !== true;
   const availability = !hasEnded && !["waitlist", "closed"].includes(event.registration_mode)
     ? await loadEventBookingAvailability(event.id, event.capacity, tickets ?? [])
     : null;
@@ -239,9 +243,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const gatheringRoomHref = useCommunityGathering && eventCommunity
     ? `/communities/${eventCommunity.slug}/gatherings/${slug}`
     : null;
-  const bookingClosed = Boolean(availability &&
+  const bookingClosed = paymentPaused || Boolean(availability &&
     !availability.tickets.some((ticket) => ticket.bookingState === "available"));
-  const bookingClosedLabel = availability?.checkFailed
+  const bookingClosedLabel = paymentPaused
+    ? "Online payment paused"
+    : availability?.checkFailed
     ? "Places unavailable"
     : availability?.eventFull
       ? "Fully booked"
@@ -318,7 +324,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             <div className="event-registration-entry">
               <p className="eyebrow">Your place at the table</p>
               <h2>{bookingClosedLabel}</h2>
-              <p>{availability?.checkFailed
+              <p>{paymentPaused
+                ? "No card charge can begin right now. The event team will update this page when online payment opens."
+                : availability?.checkFailed
                 ? "We could not check places right now. Refresh this page to try again."
                 : availability?.eventFull
                   ? "All places are currently requested. Please check back for cancellations."
@@ -337,6 +345,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 passReady={["confirmed", "attended"].includes(ownMembership?.status ?? "")}
                 tickets={availability?.tickets ?? []}
                 availabilityReady={!availability?.checkFailed}
+                automaticCheckoutOpen={!paymentPaused}
                 eventFull={availability?.eventFull ?? false}
               />
               {eventGuestEligible ? (

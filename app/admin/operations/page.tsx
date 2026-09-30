@@ -721,6 +721,17 @@ export default async function AdminOperationsPage({
     ? await supabase.rpc("event_publication_sequence_ready")
     : { data: false, error: null };
   const publicationGuardReady = !publicationGuardResult.error && publicationGuardResult.data === true;
+  const automaticCheckoutResult = loadEvents
+    ? await supabase.from("feature_flags").select("enabled")
+      .eq("key", "event_automatic_checkout").maybeSingle()
+    : { data: null, error: null };
+  const automaticCheckoutGuardResult = loadEvents
+    ? await supabase.rpc("event_automatic_checkout_guard_ready")
+    : { data: false, error: null };
+  const automaticCheckoutReady = Boolean(automaticCheckoutResult.data)
+    && !automaticCheckoutResult.error
+    && !automaticCheckoutGuardResult.error
+    && automaticCheckoutGuardResult.data === true;
   const [
     { data: sessionData },
     { data: announcementData },
@@ -1090,6 +1101,8 @@ export default async function AdminOperationsPage({
             </>
           ) : null}
           <EventManager
+            automaticCheckoutOpen={automaticCheckoutResult.data?.enabled === true}
+            automaticCheckoutReady={automaticCheckoutReady}
             initialEvents={events}
             privateEvents={privateEvents}
             hostedEventIds={hostedEventIds}

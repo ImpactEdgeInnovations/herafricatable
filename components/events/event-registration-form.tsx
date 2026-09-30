@@ -25,6 +25,7 @@ export function EventRegistrationForm({
   passReady = false,
   availabilityReady = true,
   eventFull = false,
+  automaticCheckoutOpen,
 }: {
   eventId: string;
   eventTitle: string;
@@ -36,6 +37,7 @@ export function EventRegistrationForm({
   passReady?: boolean;
   availabilityReady?: boolean;
   eventFull?: boolean;
+  automaticCheckoutOpen: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -64,6 +66,10 @@ export function EventRegistrationForm({
   }
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (mode === "automatic" && !automaticCheckoutOpen) {
+      setMessage("Online payment is paused. No charge has been made.");
+      return;
+    }
     if (mode !== "waitlist" && (!availabilityReady || !ticket)) {
       setMessage("We could not confirm an available place. Please refresh this page and try again.");
       return;
@@ -180,6 +186,8 @@ export function EventRegistrationForm({
               : "Send your ticket request and any payment reference. The event team will check it before confirming your place."
             : mode === "waitlist"
               ? "Join the waiting list. No seat is reserved; the event team may email you if bookings reopen."
+              : !automaticCheckoutOpen
+                ? "Online payment is paused. No card charge can begin until the event team reopens checkout."
               : "Choose your ticket and continue to Paystack's secure checkout. We confirm your place after payment succeeds."}
         </p>
         <p>One place per person. Each attendee uses her own email so she receives her own event pass.</p>
@@ -275,7 +283,8 @@ export function EventRegistrationForm({
       <button
         className="button button-primary"
         disabled={
-          busy || mode === "closed" || (mode !== "waitlist" && (!ticket || !availabilityReady))
+          busy || mode === "closed" || (mode === "automatic" && !automaticCheckoutOpen) ||
+          (mode !== "waitlist" && (!ticket || !availabilityReady))
         }
       >
         {busy

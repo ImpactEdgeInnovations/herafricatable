@@ -129,6 +129,8 @@ export function EventManager({
   canCreate,
   migrationReady,
   publicationGuardReady,
+  automaticCheckoutOpen,
+  automaticCheckoutReady,
 }: {
   initialEvents: AdminEvent[];
   privateEvents: PrivateEvent[];
@@ -137,6 +139,8 @@ export function EventManager({
   canCreate: boolean;
   migrationReady: boolean;
   publicationGuardReady: boolean;
+  automaticCheckoutOpen: boolean;
+  automaticCheckoutReady: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -225,6 +229,10 @@ export function EventManager({
         : hostOwnsPublication
           ? "Review and approve this event in Host drafts to publish it."
           : "Save an on-the-day safety contact before publishing this event.");
+      return;
+    }
+    if (form.status === "published" && form.registrationMode === "automatic" && !automaticCheckoutOpen) {
+      setMessage("Online event payment is paused. Choose manual review or complete the payment launch checks before publishing.");
       return;
     }
     setSaving(true);
@@ -456,10 +464,15 @@ export function EventManager({
                 }
               >
                 <option value="manual_review">Manual review</option>
-                <option value="automatic">Automatic payment</option>
+                <option value="automatic" disabled={!automaticCheckoutOpen}>Automatic payment — after approval</option>
                 <option value="waitlist">Waitlist</option>
                 <option value="closed">Closed</option>
               </select>
+              {!automaticCheckoutOpen ? (
+                <small>{automaticCheckoutReady
+                  ? "Online event payment is paused until the payment launch checks pass. Free manual-review events can proceed."
+                  : "Online event payment needs its database safety update. Keep this event on manual review."}</small>
+              ) : null}
             </label>
             <label>
               Starts

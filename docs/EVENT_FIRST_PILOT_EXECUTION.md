@@ -59,7 +59,7 @@ Each sprint ends with the relevant migration, database permission check, UI
 states, operational note and acceptance record. An unfinished item remains
 closed behind a flag; a green build alone is not an exit.
 
-## Current implementation checkpoint — 25 September 2026
+## Current implementation checkpoint — 30 September 2026
 
 - [x] The event-only guest model is specified above.
 - [x] `20260923090000_event_limited_guest_access.sql` creates a default-off flag,
@@ -182,6 +182,31 @@ closed behind a flag; a green build alone is not an exit.
   `waitlistLifecycle: true` in the live read-only audit, then rehearse a
   waiting member and Admin with separate accounts. Opening notices remain
   manual and never guarantee a seat; the first pilot stays free/manual review.
+- [x] `20260930140000_event_automatic_checkout_gate.sql` adds a separate,
+  default-off event card-payment switch. The database refuses publication of
+  automatic-payment events and creation of new automatic event orders while
+  the switch is closed. The Paystack entry point and public event pages also
+  fail closed without beginning a charge. Super Admin sees one pause/open
+  control under Events → Overview; opening requires six recorded release
+  checks covering provider approval, two-account checkout, refund/reversal,
+  Admin operations, privacy and recovery. Existing paid or pending orders
+  remain available for reconciliation when new checkout is paused. The
+  isolated `019_event_automatic_checkout_gate.sql` test exercises both sides
+  of the switch; its acceptance evidence is transaction-local test data only.
+- [ ] After the isolated GitHub database gate passes, apply
+  `20260930140000_event_automatic_checkout_gate.sql` after the notification
+  and waitlist migrations. Confirm `automaticCheckoutGuard: true` and
+  `automaticEventPaymentsOpen: false` in the live audit. Do not mark the
+  six payment-release checks as passed or open the switch until real
+  provider, charge, refund and reversal rehearsals are complete. This switch
+  does not hold up a free/manual-review pilot event.
+- [ ] On 30 September 2026, a read-only query against the Supabase project
+  used by the deployed site returned `PGRST202` (function not found) for
+  `event_registration_notification_ready`, `event_waitlist_ready` and
+  `event_automatic_checkout_guard_ready`; the new payment flag was absent.
+  Successful SQL-editor execution elsewhere is not installation evidence for
+  this connected project. Recheck the SQL editor's project URL/ref, apply
+  only the numbered migration files above in order, then rerun the audit.
 - [x] Admin → Events → Event details now keeps a newly created event selected
   after its first save, including its private online-link field. The first save
   is draft-only, so Admin cannot accidentally make a new event public while

@@ -34,6 +34,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 import { EventGuestAccessControl } from "@/components/admin/event-guest-access-control";
+import { EventAutomaticCheckoutControl } from "@/components/admin/event-automatic-checkout-control";
 import { EventHostReviewManager, type AdminEventHostCover, type AdminEventHostWorkspace, type EventHostReviewContext } from "@/components/admin/event-host-review-manager";
 import { EventFollowUpInvitations, type EventFollowUpCandidate } from "@/components/admin/event-follow-up-invitations";
 import { eventPilotReadiness, type PilotReadinessStep } from "@/lib/event-pilot-readiness";
@@ -97,6 +98,18 @@ export default async function AdminEventsPage({
     ? await supabase.from("feature_flags").select("enabled")
         .eq("key", "event_guest_access").maybeSingle()
     : { data: null, error: null };
+  const automaticCheckoutResult = ["overview", "edit"].includes(view)
+    ? await supabase.from("feature_flags").select("enabled")
+        .eq("key", "event_automatic_checkout").maybeSingle()
+    : { data: null, error: null };
+  const automaticCheckoutGuardResult = ["overview", "edit"].includes(view)
+    ? await supabase.rpc("event_automatic_checkout_guard_ready")
+    : { data: false, error: null };
+  const automaticCheckoutOpen = automaticCheckoutResult.data?.enabled === true;
+  const automaticCheckoutReady = Boolean(automaticCheckoutResult.data)
+    && !automaticCheckoutResult.error
+    && !automaticCheckoutGuardResult.error
+    && automaticCheckoutGuardResult.data === true;
 
   const eventResult = await supabase.rpc("list_managed_events");
   const lifecycleResult = await supabase.rpc("list_event_lifecycle_admin");
@@ -334,9 +347,10 @@ export default async function AdminEventsPage({
 
       {view === "overview" ? <EventCommandCentre canControlLifecycle={role === "super_admin"} events={events} lifecycleReady={!lifecycleResult.error} lifecycleStates={(lifecycleResult.data as EventLifecycleState[] | null) ?? []} proposalCount={proposalCount} refunds={refunds} registrations={registrations} pilotReadiness={pilotReadiness} /> : null}
       {view === "overview" && role === "super_admin" ? <EventGuestAccessControl enabled={Boolean(guestAccessResult.data?.enabled)} migrationReady={Boolean(guestAccessResult.data) && !guestAccessResult.error} /> : null}
+      {view === "overview" && role === "super_admin" ? <EventAutomaticCheckoutControl enabled={automaticCheckoutOpen} migrationReady={automaticCheckoutReady} /> : null}
       {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager media={proposalMedia} hostHandoffReady={hostHandoffReady} migrationReady={proposalReady} proposals={memberProposals} /><div className="legacy-gathering-note"><strong>Community gathering history</strong><p>Free member-only gatherings are now owner-led. Earlier submissions remain visible here so Admin can understand the complete decision history.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></section> : null}
       {view === "host" && role === "super_admin" ? <EventHostReviewManager events={events} workspaces={hostWorkspaces} reviewContexts={hostReviewContexts} safetyContacts={(safetyContactResult.data as { event_id: string; contact_name: string; contact_phone: string }[] | null) ?? []} safetyReady={!safetyReadyResult.error && safetyReadyResult.data === true && !safetyContactResult.error} migrationReady={!hostResult.error} lifecycleReady={!hostLifecycleResult.error && hostLifecycleResult.data === true} covers={hostCovers} coversReady={!hostCoverResult.error} /> : null}
-      {view === "edit" ? <section className="focused-admin-tool"><EventManager canCreate={role === "super_admin"} hostedEventIds={hostedEventIds} initialSafetyContacts={publicationSafetyContacts} initialEvents={events} migrationReady={!eventResult.error} publicationGuardReady={publicationGuardReady} privateEvents={managedRows.map((event) => ({ event_id: event.event_id, online_url: event.online_url }))} /></section> : null}
+      {view === "edit" ? <section className="focused-admin-tool"><EventManager automaticCheckoutOpen={automaticCheckoutOpen} automaticCheckoutReady={automaticCheckoutReady} canCreate={role === "super_admin"} hostedEventIds={hostedEventIds} initialSafetyContacts={publicationSafetyContacts} initialEvents={events} migrationReady={!eventResult.error} publicationGuardReady={publicationGuardReady} privateEvents={managedRows.map((event) => ({ event_id: event.event_id, online_url: event.online_url }))} /></section> : null}
       {view === "registrations" ? <section className="focused-admin-tool"><RegistrationManager events={events} initialPayments={payments} initialRefunds={refunds} initialRegistrations={registrations} initialTickets={tickets} initialWaitlist={waitlist} waitlistReady={waitlistReady} migrationReady={registrationReady} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY && process.env.SUPABASE_SECRET_KEY && process.env.NEXT_PUBLIC_SITE_URL)} /></section> : null}
       {view === "arrival" ? <section className="focused-admin-tool"><EventCheckinConsole events={events.map((event) => ({ id: event.id, title: event.title, starts_at: event.starts_at, ends_at: event.ends_at }))} initialAttendees={checkinAttendees} migrationReady={checkinReady} /></section> : null}
       {view === "stories" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventArchiveManager archives={archives} media={media} migrationReady={storiesReady} /></section> : null}
