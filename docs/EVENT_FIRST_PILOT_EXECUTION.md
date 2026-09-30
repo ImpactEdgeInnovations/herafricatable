@@ -81,12 +81,12 @@ closed behind a flag; a green build alone is not an exit.
   orders are not changed by the migration. Named companion passes would need
   a separate, fully reviewed attendee-and-check-in design before group booking
   could reopen.
-- [ ] Apply `20260930100000_one_pass_per_event_account.sql` to the connected
-  Supabase project after its isolated GitHub gate passes. Until the live audit
-  confirms `singleSeatGuard: true`, do not open public-guest registration or
-  automatic paid-event checkout. Review any historical event order with more
-  than one ticket individually; do not bulk change paid records. A read-only
-  count on 30 September found zero historical multi-ticket event order items.
+- [x] `20260930100000_one_pass_per_event_account.sql` is active on the
+  connected Supabase project: the 30 September live read-only audit reports
+  `singleSeatGuard: true`. Automatic paid-event checkout remains closed pending
+  its separate payment and reversal acceptance. Review any historical event
+  order with more than one ticket individually; do not bulk change paid
+  records. A read-only count on 30 September found zero such order items.
 - [x] `20260930110000_event_capacity_across_ticket_types.sql` adds a shared
   event-capacity guard across ticket types. A requested place reserves capacity;
   cancellation releases it. An expired/cancelled order cannot reactivate after
@@ -94,10 +94,10 @@ closed behind a flag; a green build alone is not an exit.
   Reservations for different ticket types serialize on the event, preventing
   two simultaneous requests from taking the final place. The isolated `016`
   test exercises the cross-ticket boundary and recovery path.
-- [ ] Apply `20260930110000_event_capacity_across_ticket_types.sql` after the
-  isolated GitHub database gate passes and the earlier migrations are applied.
-  Confirm `capacityGuard: true` in the live read-only audit before publishing
-  the first pilot event.
+- [x] `20260930110000_event_capacity_across_ticket_types.sql` is active on
+  the connected Supabase project: the 30 September live read-only audit reports
+  `capacityGuard: true`. The live registration journey still needs rehearsal
+  before the first pilot event is published.
 - [x] `20260923100000_event_guest_cancellation_and_reapply.sql` allows a guest
   to withdraw a pending request or release an unused free place; reapplication
   creates a new order and a fresh private pass.
@@ -287,15 +287,15 @@ closed behind a flag; a green build alone is not an exit.
 - [x] The read-only 27 September audit found the table from
   `20260925130000_event_follow_up_invitations.sql` already installed on the
   connected project. Do not rerun that table-creating migration there.
-- [ ] Apply `20260925140000_table_invitation_crypto_search_path.sql` to the
-  connected Supabase project. The isolated CI migration and
+- [x] `20260925140000_table_invitation_crypto_search_path.sql` is active on
+  the connected Supabase project. The isolated CI migration and
   `supabase/tests/013_event_follow_up_invitations.sql` have passed. This
   migration fixes Supabase pgcrypto lookup for sending, opening and
   claiming private links, including the already-installed after-event sender.
-  The live audit currently reports `invitationCrypto: false`; sending
-  invitations must wait. The test Community must satisfy the existing eight release checks and
+  The 30 September live audit reports `invitationCrypto: true`. The test
+  Community must still satisfy the existing eight release checks and
   backup-moderator gate; this is never bypassed to exercise invitations.
-  Then rehearse one pending guest, one active member, Host denial, Admin
+  Rehearse one pending guest, one active member, Host denial, Admin
   send, delivery, claim, withdrawal and the published Community approval path
   using distinct real test accounts. Keep `event_guest_access` off until the
   complete release gate passes.
@@ -454,21 +454,25 @@ blockers, it can recommend a human go/no-go while the flag is still off. If the
 flag is on and a check fails, the recommendation is to pause and review.
 Neither state substitutes for a recorded owner decision or live rehearsal.
 
+### Database checkpoint — 30 September 2026
+
+The product owner applied the four pending SQL migrations. The subsequent
+read-only production audit at 10:07 UTC confirmed `invitationCrypto`,
+`publicationSequence`, `singleSeatGuard` and `capacityGuard` are all `true`.
+The canonical site serves release `4da3a1b` with HTTP 200 and a reachable
+database. The distinct member, Event Host and Community moderator permission
+checks still pass. The guest-registration flag correctly remains off. The
+recommendation is still **hold**: there is no real future private pilot event,
+no selected pilot slug and none of the five public-guest release checks is
+recorded as passed. This checkpoint verifies installation, not a positive
+Admin publication rehearsal or attendee email and check-in delivery.
+The 10:13 UTC read-only email audit showed eight provider-accepted jobs in
+the preceding seven days, with zero queued, processing or failed jobs. This
+is delivery-operations evidence, not a fresh OTP or event-decision inbox test.
+
 ### Next owner actions, in order
 
-1. In Supabase SQL Editor, apply the pending migrations in order:
-   `supabase/migrations/20260925140000_table_invitation_crypto_search_path.sql`,
-   then `supabase/migrations/20260928100000_admin_event_publication_sequence.sql`,
-   then `supabase/migrations/20260930100000_one_pass_per_event_account.sql`,
-   then `supabase/migrations/20260930110000_event_capacity_across_ticket_types.sql`
-   after its isolated GitHub database gate passes. Do not rerun the
-   already-installed `20260925130000` migration, and do not paste any file
-   from `supabase/tests/` into production. Engineering will rerun the read-only
-   audit and confirm `invitationCrypto: true` before any after-event link is
-   sent, confirm `publicationSequence: true`, `singleSeatGuard: true` and
-   `capacityGuard: true`, then rehearse the Admin
-   private-first event save.
-2. Use the selected working title **The Founding Table — Nairobi** and confirm
+1. Use the selected working title **The Founding Table — Nairobi** and confirm
    its future Nairobi date/time and time zone, venue or online format, capacity, Event Host,
    check-in lead and safety contact.
    Create it as a private draft; the internal `[TEST]` rehearsal event is not a
@@ -479,12 +483,12 @@ Neither state substitutes for a recorded owner decision or live rehearsal.
    checks the selected event's content, venue or private joining link, free
    on-sale place, active Host, approved Host draft, safety contact and active
    scoped check-in staff.
-3. Review the complete event page, registration method and a zero-price on-sale
+2. Review the complete event page, registration method and a zero-price on-sale
    ticket before publishing. On a disposable staging project, rehearse a member
    and a guest separately through OTP, request, Admin decision, email, pass,
    check-in and after-event follow-up. Production guest access remains off
    during this rehearsal.
-4. Record the five evidence-backed Public event guests release checks in Admin
+3. Record the five evidence-backed Public event guests release checks in Admin
    Release, then make a human go/no-go decision. Only after those checks pass
    should Super Admin enable the guest flag for a small live pilot; never flip
    it directly in SQL. Repeat the guest journey on live with a limited cohort.
