@@ -541,6 +541,14 @@ event or separate tagged Admin rehearsal account exists and none of the five
 public-guest release checks has been completed. This verifies installation,
 not real inbox delivery, booking, check-in or rollback rehearsal.
 
+The same day's canonical-domain smoke test passed on release `d5dea5a`:
+public pages loaded, anonymous private routes returned to sign-in, the
+notification cron rejected an unsigned call, and health reported a reachable
+database and ready server integration. The read-only notification audit at
+03:40 UTC counted eight provider-accepted jobs in the preceding seven days,
+with zero queued, processing or failed. Neither check proves fresh event
+request, decision or OTP delivery to a real inbox.
+
 In the Supabase SQL Editor for project `gtzwqromwvzqytygebfc`, run this
 read-only query before applying or rerunning a future event migration:
 
