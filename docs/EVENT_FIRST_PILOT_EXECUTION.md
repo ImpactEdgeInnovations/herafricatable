@@ -163,12 +163,11 @@ closed behind a flag; a green build alone is not an exit.
   second confirmation email. Non-event commerce notifications remain unchanged.
   The isolated `017_event_registration_notifications.sql` test covers the
   queue, idempotency, decision wording and absence of a pass after decline.
-- [ ] After the isolated GitHub database gate passes, apply
-  `20260930120000_event_registration_notifications.sql` to the connected
-  Supabase project. Confirm `registrationNotifications: true` in the live
-  read-only audit, then test one real manual request, Super Admin inbox,
-  approval and attendee inbox with separate accounts. Provider acceptance
-  alone does not prove inbox delivery.
+- [x] `20260930120000_event_registration_notifications.sql` is active on the
+  connected project: the 1 October live audit reports
+  `registrationNotifications: true`. A real manual request, Super Admin inbox,
+  approval and attendee inbox still need separate-account rehearsal. Provider
+  acceptance alone does not prove inbox delivery.
 - [x] `20260930130000_event_waitlist_lifecycle.sql` closes the previously
   misleading waitlist path. Event managers can see the private list, email a
   person only after manual bookings reopen with an available ticket, and see
@@ -177,11 +176,11 @@ closed behind a flag; a green build alone is not an exit.
   checks then apply. Withdrawal suppresses an unsent opening email. The
   `018_event_waitlist_lifecycle.sql` isolated test covers permissions,
   idempotent email, withdrawal, claim and final approval.
-- [ ] Apply `20260930130000_event_waitlist_lifecycle.sql` after the preceding
-  notification migration and its isolated GitHub gate. Confirm
-  `waitlistLifecycle: true` in the live read-only audit, then rehearse a
-  waiting member and Admin with separate accounts. Opening notices remain
-  manual and never guarantee a seat; the first pilot stays free/manual review.
+- [x] `20260930130000_event_waitlist_lifecycle.sql` is active on the connected
+  project: the 1 October live audit reports `waitlistLifecycle: true`.
+  Rehearse a waiting member and Admin with separate accounts. Opening notices
+  remain manual and never guarantee a seat; the first pilot stays free/manual
+  review.
 - [x] `20260930140000_event_automatic_checkout_gate.sql` adds a separate,
   default-off event card-payment switch. The database refuses publication of
   automatic-payment events and creation of new automatic event orders while
@@ -193,20 +192,12 @@ closed behind a flag; a green build alone is not an exit.
   remain available for reconciliation when new checkout is paused. The
   isolated `019_event_automatic_checkout_gate.sql` test exercises both sides
   of the switch; its acceptance evidence is transaction-local test data only.
-- [ ] After the isolated GitHub database gate passes, apply
-  `20260930140000_event_automatic_checkout_gate.sql` after the notification
-  and waitlist migrations. Confirm `automaticCheckoutGuard: true` and
-  `automaticEventPaymentsOpen: false` in the live audit. Do not mark the
-  six payment-release checks as passed or open the switch until real
-  provider, charge, refund and reversal rehearsals are complete. This switch
-  does not hold up a free/manual-review pilot event.
-- [ ] On 30 September 2026, a read-only query against the Supabase project
-  used by the deployed site returned `PGRST202` (function not found) for
-  `event_registration_notification_ready`, `event_waitlist_ready` and
-  `event_automatic_checkout_guard_ready`; the new payment flag was absent.
-  Successful SQL-editor execution elsewhere is not installation evidence for
-  this connected project. Recheck the SQL editor's project URL/ref, apply
-  only the numbered migration files above in order, then rerun the audit.
+- [x] `20260930140000_event_automatic_checkout_gate.sql` is active on the
+  connected project: the 1 October live audit reports
+  `automaticCheckoutGuard: true` and `automaticEventPaymentsOpen: false`.
+  Do not mark the six payment-release checks as passed or open the switch until
+  real provider, charge, refund and reversal rehearsals are complete. This
+  switch does not hold up a free/manual-review pilot event.
 - [x] Admin → Events → Overview now checks the live registration-email,
   one-place-per-guest and event-capacity protections before offering **Open
   guest requests**. A stale Admin page rechecks them at the moment of
@@ -541,8 +532,17 @@ is delivery-operations evidence, not a fresh OTP or event-decision inbox test.
 
 ### Connected-project migration check
 
+The 1 October 2026 live audit at 03:38 UTC confirmed
+`registrationNotifications`, `waitlistLifecycle` and
+`automaticCheckoutGuard` are all `true` on the database used by release
+`d054e28`. The public-guest and automatic-payment switches remain off. The
+engineering recommendation is still **hold** because no real future pilot
+event or separate tagged Admin rehearsal account exists and none of the five
+public-guest release checks has been completed. This verifies installation,
+not real inbox delivery, booking, check-in or rollback rehearsal.
+
 In the Supabase SQL Editor for project `gtzwqromwvzqytygebfc`, run this
-read-only query before applying or rerunning an event migration:
+read-only query before applying or rerunning a future event migration:
 
 ```sql
 select
@@ -559,20 +559,7 @@ mere existence is not a full operational pass.
 
 ### Next owner actions, in order
 
-1. In the SQL Editor for project `gtzwqromwvzqytygebfc`, first run the
-   read-only `to_regprocedure` verification above.
-   If a function is absent, apply the corresponding migrations in order:
-   `20260930120000_event_registration_notifications.sql`,
-   `20260930130000_event_waitlist_lifecycle.sql`, then
-   `20260930140000_event_automatic_checkout_gate.sql`. The isolated [GitHub
-   gate](https://github.com/ImpactEdgeInnovations/herafricatable/actions/runs/36753083883)
-   passed all migrations and database tests. Use only files under
-   `supabase/migrations/`, not similarly named files under `supabase/tests/`.
-   If the SQL Editor sees a function but the live API does not, investigate
-   API schema visibility rather than rerunning a migration blindly. The live
-   audit must show `registrationNotifications`, `waitlistLifecycle` and
-   `automaticCheckoutGuard` as true, while automatic event payments stay off.
-2. Use the selected working title **The Founding Table — Nairobi** and confirm
+1. Use the selected working title **The Founding Table — Nairobi** and confirm
    its future Nairobi date/time and time zone, venue or online format, capacity, Event Host,
    check-in lead and safety contact.
    Create it as a private draft; the internal `[TEST]` rehearsal event is not a
@@ -583,6 +570,10 @@ mere existence is not a full operational pass.
    checks the selected event's content, venue or private joining link, free
    on-sale place, active Host, approved Host draft, safety contact and active
    scoped check-in staff.
+2. Designate a separate, tagged Super Admin rehearsal account, with the
+   product owner's explicit approval of the email and access. Keep the primary
+   owner account distinct from test evidence; do not silently promote an
+   existing member. This account is needed for the positive Admin rehearsal.
 3. Review the complete event page, registration method and a zero-price on-sale
    ticket before publishing. On a disposable staging project, rehearse a member
    and a guest separately through OTP, request, Admin decision, email, pass,
