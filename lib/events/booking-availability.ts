@@ -19,6 +19,16 @@ export type BookingState =
 
 export type AvailableTicket = BookingTicket & { bookingState: BookingState };
 
+export function canClaimEventWaitlistPlace(
+  existingStatus: string | null,
+  mode: string,
+  tickets: AvailableTicket[],
+  availabilityReady: boolean,
+) {
+  return existingStatus === "waitlisted" && mode === "manual_review"
+    && availabilityReady && tickets.some((ticket) => ticket.bookingState === "available");
+}
+
 export type ReservationOrder = {
   order_items: { quantity: number; ticket_type_id: string }[] | null;
   status: string;

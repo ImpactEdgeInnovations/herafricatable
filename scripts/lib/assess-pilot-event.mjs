@@ -29,7 +29,8 @@ export function assessPilotEvent({ event, tickets, host, hostProfile, workspace,
       && event.timezone?.trim() && Number.isFinite(start) && Number.isFinite(end)
       && start > current && end > start),
     placeReady: (!needsVenue || Boolean(venue?.name?.trim() && venue?.city?.trim()
-      && venue?.country?.trim())) && (!needsOnlineLink || Boolean(onlineLink?.trim())),
+      && venue?.country?.trim() && (venue?.address_line?.trim() || venue?.map_url?.trim())))
+      && (!needsOnlineLink || Boolean(onlineLink?.trim())),
     placeAvailable: Number.isInteger(event.capacity)
       && event.capacity - reservedSeats > 0,
     freeManualTicket: event.registration_mode === "manual_review" && freeOnSale,

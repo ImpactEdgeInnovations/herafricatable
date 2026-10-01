@@ -6,7 +6,7 @@ export type PilotEvent = {
   starts_at: string;
   status: "draft" | "published" | "suspended" | "cancelled" | "completed";
   summary: string | null;
-  venues: { city: string; country: string; name: string } | null;
+  venues: { address_line: string | null; city: string; country: string; map_url: string | null; name: string } | null;
 };
 
 export type PilotTicket = {
@@ -37,7 +37,8 @@ export function eventPilotReadiness(input: PilotReadinessInput, now = new Date()
   const endsAt = new Date(event.ends_at).getTime();
   const requiresVenue = event.format !== "virtual";
   const requiresOnlineLink = event.format !== "in_person";
-  const hasVenue = Boolean(event.venues?.name?.trim() && event.venues?.city?.trim() && event.venues?.country?.trim());
+  const hasVenue = Boolean(event.venues?.name?.trim() && event.venues?.city?.trim() && event.venues?.country?.trim()
+    && (event.venues?.address_line?.trim() || event.venues?.map_url?.trim()));
   const hasFreeTicket = input.tickets.some((ticket) =>
     ticket.price_minor === 0 && ["draft", "on_sale"].includes(ticket.status) &&
     (ticket.inventory_quantity === null || ticket.inventory_quantity > 0));
@@ -55,7 +56,7 @@ export function eventPilotReadiness(input: PilotReadinessInput, now = new Date()
       label: "Place and joining details",
       ready: (!requiresVenue || hasVenue) && (!requiresOnlineLink || input.onlineLinkReady),
       guidance: requiresVenue && !hasVenue
-        ? "Add the venue and city."
+        ? "Add the exact venue address or map link so guests can find it."
         : "Add the private online joining link in Event details, not in public arrival notes.",
       href: "/admin/events?view=edit",
     },

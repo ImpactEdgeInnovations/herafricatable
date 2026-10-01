@@ -4,7 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
 import { memberStatusLabel } from "@/lib/member-language";
-import type { AvailableTicket, BookingState } from "@/lib/events/booking-availability";
+import { canClaimEventWaitlistPlace, type AvailableTicket, type BookingState } from "@/lib/events/booking-availability";
 
 const bookingLabels: Record<BookingState, string> = {
   available: "Available",
@@ -50,7 +50,7 @@ export function EventRegistrationForm({
   const ticket = tickets.find((item) => item.id === ticketId && item.bookingState === "available")
     ?? tickets.find((item) => item.bookingState === "available");
   const isFree = ticket?.price_minor === 0;
-  const canClaimWaitlist = existingStatus === "waitlisted" && mode === "manual_review";
+  const canClaimWaitlist = canClaimEventWaitlistPlace(existingStatus, mode, tickets, availabilityReady);
   const canRequestAgain = existingStatus === "cancelled" || canClaimWaitlist;
   async function leaveWaitlist() {
     setBusy(true);
@@ -146,7 +146,11 @@ export function EventRegistrationForm({
             : existingStatus === "rejected"
               ? "This request was not approved. If you need help understanding the decision, contact the event team."
               : existingStatus === "waitlisted"
-                ? "You are on the waiting list. No seat is held. The event team may email you if bookings reopen."
+                ? !availabilityReady
+                  ? "You are on the waiting list. We could not check whether bookings have reopened. No seat is held."
+                  : mode === "manual_review" && !ticket
+                    ? "You are on the waiting list. No place is available to request right now, and no seat is held."
+                    : "You are on the waiting list. No seat is held. The event team may email you if bookings reopen."
                 : "Your request is recorded. We’ll notify you here and by email after the event team reviews it."}
         </p>
         {passReady && eventSlug ? (
@@ -155,9 +159,16 @@ export function EventRegistrationForm({
           </a>
         ) : null}
         {existingStatus === "waitlisted" ? (
-          <button className="button button-outline" type="button" disabled={busy} onClick={() => void leaveWaitlist()}>
-            {busy ? "Leaving…" : "Leave waiting list"}
-          </button>
+          <div className="registration-status-actions">
+            {!availabilityReady && mode === "manual_review" ? (
+              <button className="button button-outline" type="button" disabled={busy} onClick={() => router.refresh()}>
+                Check again
+              </button>
+            ) : null}
+            <button className="button button-outline" type="button" disabled={busy} onClick={() => void leaveWaitlist()}>
+              {busy ? "Leaving…" : "Leave waiting list"}
+            </button>
+          </div>
         ) : null}
         {message ? <p className="manager-message" role="status">{message}</p> : null}
       </div>

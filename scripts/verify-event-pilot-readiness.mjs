@@ -18,7 +18,7 @@ const ready = {
     starts_at: "2026-10-01T13:00:00.000Z",
     status: "draft",
     summary: "A carefully hosted gathering for useful conversations and trusted introductions.",
-    venues: { city: "Nairobi", country: "Kenya", name: "The Table" },
+    venues: { address_line: "Mbaazi Road", city: "Nairobi", country: "Kenya", map_url: null, name: "The Table" },
   },
   hasSafetyContact: true,
   hostActive: true,
@@ -32,6 +32,7 @@ assert(steps(ready).every((step) => step.ready));
 const status = (input, label) => steps(input).find((step) => step.label === label)?.ready;
 assert.equal(status({ ...ready, onlineLinkReady: false }, "Place and joining details"), false);
 assert.equal(status({ ...ready, event: { ...ready.event, venues: null } }, "Place and joining details"), false);
+assert.equal(status({ ...ready, event: { ...ready.event, venues: { ...ready.event.venues, address_line: null } } }, "Place and joining details"), false);
 assert.equal(status({ ...ready, event: { ...ready.event, registration_mode: "automatic" } }, "Free place with private review"), false);
 assert.equal(status({ ...ready, tickets: [{ inventory_quantity: 25, price_minor: 500, status: "draft" }] }, "Free place with private review"), false);
 assert.equal(status({ ...ready, hostActive: false }, "Event Host"), false);

@@ -579,19 +579,40 @@ investigate schema-cache visibility or the project's URL before rerunning
 any migration. The readiness functions themselves must also return `true`;
 mere existence is not a full operational pass.
 
+### Selected pilot draft — 1 October 2026
+
+The owner chose **Geco Cafe, Nairobi, Tuesday 6 October 2026,
+18:00–20:00 EAT**. The private event draft **The Founding Table — Nairobi**
+now exists as `the-founding-table-nairobi-2026-10-06` (event ID
+`836f9030-a69e-4e2b-8599-29470d39ab17`). Engineering set a working
+capacity of 20 and a draft zero-price ticket, but left registration
+**closed**, publication **draft**, and featuring **off**. The exact Geco
+branch/address, venue booking, Host, check-in lead and safety contact are
+unconfirmed. The draft does not invite or register anyone. Six October is
+only five days after this checkpoint, so it may need to be a closed rehearsal
+or be rescheduled if the human and live-journey gates cannot pass.
+
+The read-only live audit at 04:01 UTC found both private draft routes hidden
+from signed-out visitors. The selected event passed only `basics` and
+`placeAvailable`; publication, exact arrival details, free/manual on-sale
+ticket, Host, approved content, safety contact and check-in staff were not
+ready. The five Public event guests release checks remain `not_started`,
+the separate tagged Admin rehearsal account is missing, and guest access and
+automatic payments remain off. The engineering recommendation is **hold**.
+In-person arrival readiness now requires an exact address or map link in
+addition to a venue name and city; a shared venue brand is not sufficient.
+
 ### Next owner actions, in order
 
-1. Use the selected working title **The Founding Table — Nairobi** and confirm
-   its future Nairobi date/time and time zone, venue or online format, capacity, Event Host,
-   check-in lead and safety contact.
-   Create it as a private draft; the internal `[TEST]` rehearsal event is not a
-   substitute. Keep automatic payments and public-guest access off. Once its
-   slug exists, run the read-only audit with
-   `npm run ops:events:audit-live -- --pilot-slug=the-real-event-slug`.
-   The audit will not treat a different future event as pilot evidence; it
-   checks the selected event's content, venue or private joining link, free
-   on-sale place, active Host, approved Host draft, safety contact and active
-   scoped check-in staff.
+1. Confirm the Geco branch and exact arrival address, venue booking and
+   capacity of 20, and name an Event Host, check-in lead and reachable safety
+   contact. Decide whether 6 October is a closed rehearsal or a public pilot;
+   keep this existing draft private and registration closed until that choice
+   and the gates pass. Do not create a duplicate event. Repeat the read-only
+   audit with `npm run ops:events:audit-live -- --pilot-slug=the-founding-table-nairobi-2026-10-06`.
+   The audit checks only this selected event's content, exact arrival details,
+   free on-sale place, active Host, approved Host draft, safety contact and
+   active scoped check-in staff.
 2. Designate a separate, tagged Super Admin rehearsal account, with the
    product owner's explicit approval of the email and access. Keep the primary
    owner account distinct from test evidence; do not silently promote an

@@ -150,7 +150,7 @@ if (selectedPilot) {
     service.from("event_safety_contacts").select("event_id").eq("event_id", id).maybeSingle(),
     service.from("event_private_details").select("online_url").eq("event_id", id).maybeSingle(),
     selectedPilot.venue_id
-      ? service.from("venues").select("name,city,country").eq("id", selectedPilot.venue_id).maybeSingle()
+      ? service.from("venues").select("name,city,country,address_line,map_url").eq("id", selectedPilot.venue_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     service.from("event_staff_scopes").select("user_id").eq("event_id", id),
     eventReservationOrders(id),

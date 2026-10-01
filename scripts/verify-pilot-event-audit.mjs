@@ -26,7 +26,7 @@ const ready = {
   host: { status: "active" }, hostProfile: { access_status: "active" },
   workspace: { status: "approved" }, safetyContact: { event_id: "pilot" },
   orders: [],
-  onlineLink: "https://meet.example.test/private", venue: { name: "The Table", city: "Nairobi", country: "Kenya" },
+  onlineLink: "https://meet.example.test/private", venue: { name: "The Table", city: "Nairobi", country: "Kenya", address_line: "Mbaazi Road", map_url: null },
   doorStaffActive: true,
 };
 const checks = (input) => assessPilotEvent(input, now);
@@ -43,6 +43,7 @@ assert.equal(checks({ ...ready, orders: [{ status: "cancelled", order_items: [{ 
 assert.equal(checks({ ...ready, orders: [{ status: "cancelled", order_items: [{ ticket_type_id: "free", quantity: 20 }] }] }).freeManualTicket, true);
 assert.equal(checks({ ...ready, onlineLink: "" }).placeReady, false);
 assert.equal(checks({ ...ready, venue: null }).placeReady, false);
+assert.equal(checks({ ...ready, venue: { ...ready.venue, address_line: null } }).placeReady, false);
 assert.equal(checks({ ...ready, tickets: [{ ...ready.tickets[0], status: "draft" }] }).freeManualTicket, false);
 assert.equal(checks({ ...ready, tickets: [{ ...ready.tickets[0], sales_start_at: "2026-10-11T00:00:00Z" }] }).freeManualTicket, false);
 assert.equal(checks({ ...ready, tickets: [{ ...ready.tickets[0], price_minor: 100 }] }).freeManualTicket, false);
