@@ -418,8 +418,13 @@ closed behind a flag; a green build alone is not an exit.
   private rehearsal event anonymously. Its public URL rendered a streamed
   not-found page with `noindex`, no draft title and no cached response. The
   audit now fails closed if that privacy boundary changes. The streamed HTTP
-  status was 200 rather than 404; review this soft-404 SEO behavior separately,
-  without treating it as a disclosure or a substitute for real-event review.
+  status was 200 rather than 404, which is [documented Next.js
+  behavior](https://nextjs.org/docs/app/api-reference/functions/not-found#calling-notfound-after-streaming-has-started);
+  its `noindex` tag keeps the soft 404 out of search results. Do not add a
+  proxy-level database lookup solely to change this status for the pilot; that
+  would alter the access path for member-only events without improving the
+  observed privacy boundary. This check is not a substitute for real-event
+  review.
 - [ ] Create the real future launch event as a private draft with owner, city or
   online format, time zone, capacity, registration mode and complete basic copy.
 - [ ] Name the Event Host, check-in lead, support/safety lead, Admin reviewer and
