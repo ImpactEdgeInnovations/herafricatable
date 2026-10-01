@@ -270,9 +270,12 @@ closed behind a flag; a green build alone is not an exit.
   topic with the database's allowed usage and feedback categories. The
   isolated `010_table_guide_referral_category.sql` test checks that referral
   answers record normally while unknown categories remain rejected.
-- [ ] Apply `20260925100000_table_guide_referral_category.sql` to the connected
-  Supabase project after reviewing the GitHub database gate. Do not run the
-  `010_` test file in the production SQL Editor.
+- [x] The connected project's Nia referral-category behavior was verified on
+  1 October with an active tagged member: referral usage and feedback both
+  recorded successfully, while an unknown category was rejected by both
+  functions. This is live behavioral evidence for the migration, not a
+  rehearsal of Nia's event answers or the member-facing experience. The
+  `010_` test file must still never run in the production SQL Editor.
 - [ ] Rehearse Nia on a real published pilot event with a signed-in member,
   including a missing programme, closed registration, a private/draft event
   slug, provider outage and mobile view. Confirm that the member receives only
