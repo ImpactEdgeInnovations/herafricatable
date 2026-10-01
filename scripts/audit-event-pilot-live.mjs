@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createClient } from "@supabase/supabase-js";
 import { assessPilotEvent } from "./lib/assess-pilot-event.mjs";
+import { privateDraftHidden } from "./lib/private-draft-hidden.mjs";
 import { recommendPilotRelease } from "./lib/recommend-pilot-release.mjs";
 
 const base = (process.env.BASE_URL ?? "https://www.herafricatable.com").replace(/\/$/, "");
@@ -185,6 +186,24 @@ if (selectedPilot) {
 }
 const privateDrafts = realEvents.filter((event) => event.status === "draft");
 const rehearsalEvent = events.find((event) => event.status === "draft" && rehearsal(event));
+const privateDraftRoutes = [rehearsalEvent,
+  selectedPilot?.status === "draft" ? selectedPilot : null].filter(Boolean);
+const privateDraftAnonymousHidden = privateDraftRoutes.length > 0 &&
+  (await Promise.all(privateDraftRoutes.map(async (event) => {
+    try {
+      const response = await fetch(`${base}/events/${encodeURIComponent(event.slug)}`, {
+        headers: { "user-agent": "HerAfricaTable-PilotAudit/1.0" },
+        redirect: "manual",
+      });
+      return privateDraftHidden({
+        status: response.status,
+        body: await response.text(),
+        title: event.title,
+      });
+    } catch {
+      return false;
+    }
+  }))).every(Boolean);
 let adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false,
   rehearsalDraftVisible: false, rehearsalRosterAccessible: false, releaseChecks: [] };
 const email = process.env.HAT_ADMIN_TEST_EMAIL;
@@ -291,6 +310,7 @@ if (!waitlistLifecycle) blockers.push("event_waitlist_lifecycle_not_ready");
 if (!automaticCheckoutGuard) blockers.push("event_automatic_checkout_guard_not_ready");
 if (automaticCheckoutFlagResult.data?.enabled === true)
   blockers.push("automatic_event_payments_open_before_pilot_acceptance");
+if (!privateDraftAnonymousHidden) blockers.push("private_draft_public_route_not_verified_hidden");
 if (!privateDrafts.length && !publicFuture.length) blockers.push("real_pilot_event_not_created");
 if (!pilotSlug) blockers.push("pilot_event_not_selected");
 else if (!selectedPilot) blockers.push("selected_pilot_event_not_found_or_not_future");
@@ -322,7 +342,9 @@ const result = {
   automaticEventPaymentsOpen: automaticCheckoutFlagResult.data?.enabled === true,
   events: { futurePublicPublished: publicFuture.length, futurePrivateDrafts: privateDrafts.length,
     futureRehearsalDrafts: events.filter((event) => event.status === "draft" && rehearsal(event)).length,
-    selectedPilotSlug: pilotSlug || null, selectedPilotChecks: pilotChecks },
+    privateDraftAnonymousHidden, privateDraftRoutesChecked: privateDraftRoutes.length,
+    selectedPilotSlug: pilotSlug || null,
+    selectedPilotChecks: pilotChecks },
   adminSession: adminEvidence,
   taggedRoles,
   engineeringRecommendation: recommendPilotRelease({

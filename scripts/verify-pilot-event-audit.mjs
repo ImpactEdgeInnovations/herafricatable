@@ -1,7 +1,17 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { assessPilotEvent } from "./lib/assess-pilot-event.mjs";
+import { privateDraftHidden } from "./lib/private-draft-hidden.mjs";
 import { recommendPilotRelease } from "./lib/recommend-pilot-release.mjs";
+
+const hiddenTitle = "[TEST] Private Event Host Rehearsal";
+const noIndex = '<meta name="robots" content="noindex"/>';
+assert.equal(privateDraftHidden({ status: 404, body: noIndex, title: hiddenTitle }), true);
+assert.equal(privateDraftHidden({ status: 200,
+  body: `${noIndex}NEXT_HTTP_ERROR_FALLBACK;404`, title: hiddenTitle }), true);
+assert.equal(privateDraftHidden({ status: 200, body: noIndex, title: hiddenTitle }), false);
+assert.equal(privateDraftHidden({ status: 404, body: hiddenTitle, title: hiddenTitle }), false);
+assert.equal(privateDraftHidden({ status: 503, body: noIndex, title: hiddenTitle }), false);
 
 const now = new Date("2026-09-27T12:00:00Z");
 const ready = {
@@ -56,6 +66,7 @@ assert(liveAudit.includes('blockers.push("event_automatic_checkout_guard_not_rea
 assert(liveAudit.includes('automaticEventPaymentsOpen: automaticCheckoutFlagResult.data?.enabled === true'));
 assert(liveAudit.includes('!adminEvidence.tagged || adminEvidence.usesPrimaryAccount'));
 assert(liveAudit.includes('blockers.push("dedicated_admin_rehearsal_account_missing")'));
+assert(liveAudit.includes('blockers.push("private_draft_public_route_not_verified_hidden")'));
 assert(liveAudit.includes("eventReservationOrders(id)"));
 assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
 const registrationForm = readFileSync(new URL("../components/events/event-registration-form.tsx", import.meta.url), "utf8");

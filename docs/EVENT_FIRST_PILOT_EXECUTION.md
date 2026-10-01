@@ -414,6 +414,12 @@ closed behind a flag; a green build alone is not an exit.
 - [x] The read-only existing-entitlement check returned zero event orders with
   `member_onboarding` on 24 September 2026. Recheck before opening a future
   guest pilot if historical data changes; never bulk revoke without review.
+- [x] On 1 October, the expanded live audit fetched the existing tagged
+  private rehearsal event anonymously. Its public URL rendered a streamed
+  not-found page with `noindex`, no draft title and no cached response. The
+  audit now fails closed if that privacy boundary changes. The streamed HTTP
+  status was 200 rather than 404; review this soft-404 SEO behavior separately,
+  without treating it as a disclosure or a substitute for real-event review.
 - [ ] Create the real future launch event as a private draft with owner, city or
   online format, time zone, capacity, registration mode and complete basic copy.
 - [ ] Name the Event Host, check-in lead, support/safety lead, Admin reviewer and
