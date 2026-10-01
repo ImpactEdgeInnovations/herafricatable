@@ -589,8 +589,10 @@ capacity of 20 and a draft zero-price ticket, but left registration
 **closed**, publication **draft**, and featuring **off**. The exact Geco
 branch/address, venue booking, Host, check-in lead and safety contact are
 unconfirmed. The draft does not invite or register anyone. Six October is
-only five days after this checkpoint, so it may need to be a closed rehearsal
-or be rescheduled if the human and live-journey gates cannot pass.
+only five days after this checkpoint. The owner confirmed this is intended as
+a **public pilot**, not a closed rehearsal. If the human and live-journey
+gates cannot pass in time, reschedule rather than quietly treating an
+unrehearsed public event as launch-ready.
 
 The read-only live audit at 04:01 UTC found both private draft routes hidden
 from signed-out visitors. The selected event passed only `basics` and
@@ -601,14 +603,18 @@ the separate tagged Admin rehearsal account is missing, and guest access and
 automatic payments remain off. The engineering recommendation is **hold**.
 In-person arrival readiness now requires an exact address or map link in
 addition to a venue name and city; a shared venue brand is not sufficient.
+The companion `20261001090000_public_event_arrival_details_guard.sql` makes
+that a database boundary for new public publication and preserves the address
+or map on already-published public events. Apply it to Supabase before the
+pilot can publish; the live audit reports `arrivalDetailsGuard` separately.
 
 ### Next owner actions, in order
 
 1. Confirm the Geco branch and exact arrival address, venue booking and
    capacity of 20, and name an Event Host, check-in lead and reachable safety
-   contact. Decide whether 6 October is a closed rehearsal or a public pilot;
-   keep this existing draft private and registration closed until that choice
-   and the gates pass. Do not create a duplicate event. Repeat the read-only
+   contact. Six October is the chosen public pilot; keep this existing draft
+   private and registration closed until the gates pass and the owner records
+   a go/no-go decision. Do not create a duplicate event. Repeat the read-only
    audit with `npm run ops:events:audit-live -- --pilot-slug=the-founding-table-nairobi-2026-10-06`.
    The audit checks only this selected event's content, exact arrival details,
    free on-sale place, active Host, approved Host draft, safety contact and

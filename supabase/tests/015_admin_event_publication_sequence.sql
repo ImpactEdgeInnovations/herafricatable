@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(13);
 
 insert into auth.users(id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at)
 values
@@ -48,12 +48,21 @@ select lives_ok(
     'Safety Lead', '+254700000002')$$,
   'Admin records the safety contact'
 );
-select lives_ok(
+select throws_ok(
   $$select public.save_event((select id from public.events where slug = 'sequence-test-public'),
     'Sequence Test', 'sequence-test-public',
     'A considered gathering for useful introductions and local relationships.',
     'in_person', 'published', now() + interval '10 days', now() + interval '10 days 2 hours',
     'Africa/Nairobi', 'The Table', 'Nairobi', 'Kenya', '', '', '', 20, 'manual_review', false)$$,
+  'P0001', 'Add the exact venue address or map link before publishing',
+  'public in-person event cannot publish with only a venue brand and city'
+);
+select lives_ok(
+  $$select public.save_event((select id from public.events where slug = 'sequence-test-public'),
+    'Sequence Test', 'sequence-test-public',
+    'A considered gathering for useful introductions and local relationships.',
+    'in_person', 'published', now() + interval '10 days', now() + interval '10 days 2 hours',
+    'Africa/Nairobi', 'The Table', 'Nairobi', 'Kenya', 'Example Road, Nairobi', '', '', 20, 'manual_review', false)$$,
   'unhosted event may publish only after its safety contact exists'
 );
 select is((select status from public.events where slug = 'sequence-test-public'),
@@ -63,7 +72,7 @@ select lives_ok(
     'Sequence Test Updated', 'sequence-test-public',
     'A considered gathering for useful introductions and local relationships.',
     'in_person', 'published', now() + interval '10 days', now() + interval '10 days 2 hours',
-    'Africa/Nairobi', 'The Table', 'Nairobi', 'Kenya', '', '', '', 20, 'manual_review', false)$$,
+    'Africa/Nairobi', 'The Table', 'Nairobi', 'Kenya', 'Example Road, Nairobi', '', '', 20, 'manual_review', false)$$,
   'existing published event can still be edited'
 );
 

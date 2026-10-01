@@ -166,7 +166,11 @@ export function EventManager({
         phone: savedSafetyContact?.contact_phone ?? "",
       }
     : { name: "", phone: "" };
-  const canPublishHere = Boolean(form.id && (persistedStatus === "published" ||
+  const arrivalDetailsReady = form.format === "virtual" || Boolean(
+    form.venueName.trim() && form.city.trim() && form.country.trim()
+    && (form.addressLine.trim() || form.mapUrl.trim()),
+  );
+  const canPublishHere = Boolean(form.id && arrivalDetailsReady && (persistedStatus === "published" ||
     (publicationGuardReady && !hostOwnsPublication && safetyContactReady)));
 
   function update<K extends keyof EventForm>(field: K, value: EventForm[K]) {
@@ -224,7 +228,9 @@ export function EventManager({
       return;
     }
     if (form.status === "published" && !canPublishHere) {
-      setMessage(!publicationGuardReady
+      setMessage(!arrivalDetailsReady
+        ? "Add the exact venue address or map link before publishing. Guests need to know where to arrive."
+        : !publicationGuardReady
         ? "New event publishing is paused until the database update is installed. You can still save a private draft."
         : hostOwnsPublication
           ? "Review and approve this event in Host drafts to publish it."
@@ -445,7 +451,9 @@ export function EventManager({
                 <option value="completed" disabled={!form.id}>Completed</option>
               </select>
               {form.id && form.status === "draft" && !canPublishHere ? <small>
-                {!publicationGuardReady
+                {!arrivalDetailsReady
+                  ? "Add the exact venue address or map link before publishing."
+                  : !publicationGuardReady
                   ? "Public release is paused until the event database update is installed. Private drafts can still be saved."
                   : hostOwnsPublication
                     ? "A Host is assigned. Review and publish their draft in Host drafts."

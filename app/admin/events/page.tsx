@@ -161,7 +161,11 @@ export default async function AdminEventsPage({
   const publicationGuardResult = view === "edit"
     ? await supabase.rpc("event_publication_sequence_ready")
     : { data: false, error: null };
-  const publicationGuardReady = !publicationGuardResult.error && publicationGuardResult.data === true;
+  const arrivalGuardResult = view === "edit"
+    ? await supabase.rpc("event_arrival_details_guard_ready")
+    : { data: false, error: null };
+  const publicationGuardReady = !publicationGuardResult.error && publicationGuardResult.data === true
+    && !arrivalGuardResult.error && arrivalGuardResult.data === true;
   const pilotSources = role === "super_admin" && view === "overview" && eventIds.length
     ? await Promise.all([
         supabase.from("ticket_types").select("event_id,inventory_quantity,price_minor,status").in("event_id", eventIds),

@@ -52,6 +52,13 @@ async function publicationSequenceReady() {
   return data === true;
 }
 
+async function arrivalDetailsGuardReady() {
+  const { data, error } = await service.rpc("event_arrival_details_guard_ready");
+  if (error?.code === "PGRST202") return false;
+  if (error) throw new Error(`Could not check event arrival guard: ${error.code || "network error"}`);
+  return data === true;
+}
+
 async function singleSeatGuardReady() {
   const { data, error } = await service.rpc("event_single_seat_guard_ready");
   if (error?.code === "PGRST202") return false;
@@ -106,7 +113,7 @@ const healthResponse = await fetch(`${base}/api/health`, {
 });
 const health = await healthResponse.json();
 const [guestFeedback, hostOutcomes, introductions, rounds, followUpInvitations,
-  invitationCrypto, publicationSequence, singleSeatGuard, capacityGuard,
+  invitationCrypto, publicationSequence, arrivalDetailsGuard, singleSeatGuard, capacityGuard,
   registrationNotifications, waitlistLifecycle, automaticCheckoutGuard,
   flagResult, automaticCheckoutFlagResult, eventResult] =
   await Promise.all([
@@ -117,6 +124,7 @@ const [guestFeedback, hostOutcomes, introductions, rounds, followUpInvitations,
     tableInstalled("event_follow_up_invitation_links"),
     invitationCryptoReady(),
     publicationSequenceReady(),
+    arrivalDetailsGuardReady(),
     singleSeatGuardReady(),
     capacityGuardReady(),
     registrationNotificationReady(),
@@ -303,6 +311,7 @@ if (!guestFeedback || !hostOutcomes || !introductions || !rounds || !followUpInv
   blockers.push("event_database_boundary_missing");
 if (!invitationCrypto) blockers.push("invitation_crypto_not_ready");
 if (!publicationSequence) blockers.push("admin_event_publication_guard_not_ready");
+if (!arrivalDetailsGuard) blockers.push("event_arrival_details_guard_not_ready");
 if (!singleSeatGuard) blockers.push("one_pass_per_attendee_guard_not_ready");
 if (!capacityGuard) blockers.push("shared_event_capacity_guard_not_ready");
 if (!registrationNotifications) blockers.push("event_registration_notifications_not_ready");
@@ -336,7 +345,7 @@ const result = {
   site: { base, healthStatus: healthResponse.status, release: health.release ?? null,
     databaseReachable: health.database === "reachable", serverReady: health.server_integration === "ready" },
   database: { guestFeedback, hostOutcomes, introductions, rounds,
-    followUpInvitations, invitationCrypto, publicationSequence, singleSeatGuard,
+    followUpInvitations, invitationCrypto, publicationSequence, arrivalDetailsGuard, singleSeatGuard,
     capacityGuard, registrationNotifications, waitlistLifecycle, automaticCheckoutGuard },
   guestRegistrationOpen: flagResult.data?.enabled === true,
   automaticEventPaymentsOpen: automaticCheckoutFlagResult.data?.enabled === true,

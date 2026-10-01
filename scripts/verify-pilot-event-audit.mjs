@@ -53,6 +53,8 @@ assert.equal(checks({ ...ready, safetyContact: null }).safetyContactReady, false
 assert.equal(checks({ ...ready, doorStaffActive: false }).doorStaffAssigned, false);
 const liveAudit = readFileSync(new URL("./audit-event-pilot-live.mjs", import.meta.url), "utf8");
 assert(liveAudit.includes('service.rpc("event_publication_sequence_ready")'));
+assert(liveAudit.includes('service.rpc("event_arrival_details_guard_ready")'));
+assert(liveAudit.includes('blockers.push("event_arrival_details_guard_not_ready")'));
 assert(liveAudit.includes('blockers.push("admin_event_publication_guard_not_ready")'));
 assert(liveAudit.includes('service.rpc("event_single_seat_guard_ready")'));
 assert(liveAudit.includes('blockers.push("one_pass_per_attendee_guard_not_ready")'));
@@ -83,6 +85,7 @@ assert(registrationForm.includes("automaticCheckoutOpen"));
 assert(guestAccessControl.includes('disabled={busy || (!enabled && !canOpen)}'));
 assert(guestAccessControl.includes('enabled ? "Pause guest requests"'));
 assert(adminEventsPage.includes('supabase.rpc("event_registration_notification_ready")'));
+assert(adminEventsPage.includes('supabase.rpc("event_arrival_details_guard_ready")'));
 assert(adminEventsPage.includes('supabase.rpc("event_single_seat_guard_ready")'));
 assert(adminEventsPage.includes('supabase.rpc("event_capacity_guard_ready")'));
 assert.equal(recommendPilotRelease({ blockers: ["missing_pilot"], guestRegistrationOpen: false }), "hold");
