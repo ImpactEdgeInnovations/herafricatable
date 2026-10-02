@@ -809,6 +809,14 @@ while a closed registration setting points to Event details and a missing or
 off-sale free ticket points to Registrations. This is an operational guidance
 improvement, not a publication or booking acceptance result.
 
+The live 3 October audit also exercised the guest-registration list as a
+permissioned operation, not merely an empty table read. The tagged ordinary
+member, scoped Event Host and Community moderator were all denied that list
+for the private rehearsal event; the primary Super Admin could open it. The
+Host still had her own draft workspace but no Admin guest-list authority.
+No real attendee data was changed or disclosed, and this does not replace a
+positive registration-decision rehearsal with separate accounts.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

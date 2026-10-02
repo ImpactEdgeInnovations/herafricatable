@@ -243,7 +243,8 @@ const privateDraftAnonymousHidden = privateDraftRoutes.length > 0 &&
     }
   }))).every(Boolean);
 let adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false,
-  rehearsalDraftVisible: false, rehearsalRosterAccessible: false, pilotSetupReadsPass: false,
+  rehearsalDraftVisible: false, rehearsalRosterAccessible: false,
+  rehearsalRegistrationsAccessible: false, pilotSetupReadsPass: false,
   releaseChecks: [], launchChecks: [] };
 const email = process.env.HAT_ADMIN_TEST_EMAIL;
 const password = process.env.HAT_ADMIN_TEST_PASSWORD;
@@ -251,7 +252,7 @@ if (email && password) {
   try {
     const { data: session, error: signInError } = await admin.auth.signInWithPassword({ email, password });
     if (signInError || !session.user) throw new Error("Tagged Admin sign-in failed");
-    const [profile, release, launch, draft, roster] = await Promise.all([
+    const [profile, release, launch, draft, roster, registrations] = await Promise.all([
       admin.from("profiles").select("is_test_account").eq("id", session.user.id).single(),
       admin.rpc("list_module_release_acceptance"),
       admin.rpc("list_launch_gate_checks"),
@@ -261,8 +262,11 @@ if (email && password) {
       rehearsalEvent
         ? admin.rpc("list_event_checkins", { p_event_id: rehearsalEvent.id })
         : Promise.resolve({ data: null, error: null }),
+      rehearsalEvent
+        ? admin.rpc("list_event_registrations", { p_event_id: rehearsalEvent.id })
+        : Promise.resolve({ data: null, error: null }),
     ]);
-    if (profile.error || release.error || launch.error || draft.error || roster.error)
+    if (profile.error || release.error || launch.error || draft.error || roster.error || registrations.error)
       throw new Error("Admin read-only boundary check failed");
     adminEvidence = {
       authenticated: true,
@@ -270,6 +274,7 @@ if (email && password) {
       usesPrimaryAccount: email.toLowerCase() === process.env.HAT_PRIMARY_ADMIN_EMAIL?.toLowerCase(),
       rehearsalDraftVisible: draft.data?.id === rehearsalEvent?.id,
       rehearsalRosterAccessible: Array.isArray(roster.data),
+      rehearsalRegistrationsAccessible: Array.isArray(registrations.data),
       pilotSetupReadsPass: selectedPilot
         ? await adminSetupReadsPass(admin, selectedPilot.id) : false,
       releaseChecks: (release.data ?? [])
@@ -282,6 +287,7 @@ if (email && password) {
   } catch {
     adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false,
       rehearsalDraftVisible: false, rehearsalRosterAccessible: false,
+      rehearsalRegistrationsAccessible: false,
       pilotSetupReadsPass: false, releaseChecks: [], launchChecks: [] };
   } finally {
     await admin.auth.signOut({ scope: "local" });
@@ -297,7 +303,7 @@ async function inspectTaggedRole(emailAddress) {
     });
     if (signed.error || !signed.data.user) return { authenticated: false };
     const [profile, adminScope, adminRelease, hostWorkspace, moderatorSeat,
-      draft, roster] = await Promise.all([
+      draft, roster, registrations] = await Promise.all([
       client.from("profiles").select("access_status,is_test_account")
         .eq("id", signed.data.user.id).single(),
       rehearsalEvent
@@ -315,6 +321,9 @@ async function inspectTaggedRole(emailAddress) {
       rehearsalEvent
         ? client.rpc("list_event_checkins", { p_event_id: rehearsalEvent.id })
         : Promise.resolve({ data: null, error: null }),
+      rehearsalEvent
+        ? client.rpc("list_event_registrations", { p_event_id: rehearsalEvent.id })
+        : Promise.resolve({ data: null, error: null }),
     ]);
     if (profile.error || adminScope.error || hostWorkspace.error || moderatorSeat.error || draft.error)
       return { authenticated: true, readError: true };
@@ -328,6 +337,7 @@ async function inspectTaggedRole(emailAddress) {
       communityModeratorSeat: (moderatorSeat.data ?? []).length > 0,
       rehearsalDraftHidden: draft.data === null,
       rehearsalRosterDenied: roster.error?.code === "P0001",
+      rehearsalRegistrationsDenied: registrations.error?.code === "P0001",
     };
   } finally {
     await client.auth.signOut({ scope: "local" });
@@ -372,13 +382,15 @@ for (const key of ["admin_email_otp", "member_email_otp", "notification_delivery
     blockers.push(`launch_${key}_not_accepted`);
 if (!adminEvidence.authenticated || !adminEvidence.tagged || adminEvidence.usesPrimaryAccount)
   blockers.push("dedicated_admin_rehearsal_account_missing");
-if (!adminEvidence.rehearsalDraftVisible || !adminEvidence.rehearsalRosterAccessible)
+if (!adminEvidence.rehearsalDraftVisible || !adminEvidence.rehearsalRosterAccessible
+  || !adminEvidence.rehearsalRegistrationsAccessible)
   blockers.push("admin_private_event_boundary_missing");
 if (selectedPilot && !adminEvidence.pilotSetupReadsPass)
   blockers.push("admin_pilot_setup_reads_failed");
 if (!taggedRoles || Object.values(taggedRoles).some((role) =>
   !role.authenticated || !role.active || !role.tagged || role.adminScope
-  || !role.adminReleaseDenied || !role.rehearsalDraftHidden || !role.rehearsalRosterDenied)
+  || !role.adminReleaseDenied || !role.rehearsalDraftHidden || !role.rehearsalRosterDenied
+  || !role.rehearsalRegistrationsDenied)
   || taggedRoles.member.rehearsalHostWorkspace || taggedRoles.member.communityModeratorSeat
   || !taggedRoles.eventHost.rehearsalHostWorkspace || taggedRoles.eventHost.communityModeratorSeat
   || taggedRoles.communityModerator.rehearsalHostWorkspace || !taggedRoles.communityModerator.communityModeratorSeat)

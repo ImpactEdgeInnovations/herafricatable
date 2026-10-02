@@ -74,6 +74,10 @@ assert(liveAudit.includes('automaticEventPaymentsOpen: automaticCheckoutFlagResu
 assert(liveAudit.includes('!adminEvidence.tagged || adminEvidence.usesPrimaryAccount'));
 assert(liveAudit.includes('blockers.push("dedicated_admin_rehearsal_account_missing")'));
 assert(liveAudit.includes('admin.rpc("list_launch_gate_checks")'));
+assert(liveAudit.includes('admin.rpc("list_event_registrations", { p_event_id: rehearsalEvent.id })'));
+assert(liveAudit.includes('client.rpc("list_event_registrations", { p_event_id: rehearsalEvent.id })'));
+assert(liveAudit.includes('!role.rehearsalRegistrationsDenied'));
+assert(liveAudit.includes('!adminEvidence.rehearsalRegistrationsAccessible'));
 assert(liveAudit.includes('blockers.push(`launch_${key}_not_accepted`)'));
 assert(liveAudit.includes('blockers.push("private_draft_public_route_not_verified_hidden")'));
 assert(liveAudit.includes("eventReservationOrders(id)"));
