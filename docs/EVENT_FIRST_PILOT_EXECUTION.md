@@ -758,6 +758,13 @@ instead of whichever record happened to be first in the Admin list. Local
 journey checks and a production build pass; a signed-in, multi-event browser
 rehearsal remains required before accepting the Admin journey.
 
+On 3 October, deployed release `de8ccb4` passed the read-only public-site
+smoke check on the canonical domain: landing, events and sign-in loaded;
+anonymous member and Admin routes redirected; required security headers were
+present; an unsigned notification-cron request returned 401; and health
+reported a reachable database and ready server integration. This is not an
+OTP, registration, payment, check-in or Admin-decision rehearsal.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
