@@ -667,8 +667,10 @@ the event's name or ticking timer. With no approved upcoming public event, it
 shows a quiet date-to-be-shared state; the private October pilot remains
 undisclosed. The Admin countdown control uses Nairobi time, rejects past
 publication and asks for a matching published public event. The new contract
-test and production build pass; verify the corrected state on the deployed
-homepage after the commit reaches Vercel.
+test and production build pass. Release `27a0103` is deployed: a live HTML
+check and browser inspection confirmed the September title/date are gone, the
+date-to-be-shared state is visible, and the private October pilot title is not
+in the signed-out homepage.
 
 ### Next owner actions, in order
 
