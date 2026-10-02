@@ -382,7 +382,11 @@ closed behind a flag; a green build alone is not an exit.
   separate tagged members. It created `hat-private-host-rehearsal-20260924`
   as a closed, unfeatured draft; verified scoped Host access, private drafting,
   request-changes/resubmission, pause/restore, private safety-contact visibility,
-  and replacement reset. The event remained private throughout.
+  and replacement reset. The event remained private throughout. That run used
+  the primary owner Admin, so it does **not** satisfy the separate tagged
+  Admin rehearsal gate. The script now requires `HAT_ADMIN_TEST_EMAIL` and
+  `HAT_ADMIN_TEST_PASSWORD`, rejects the primary owner address and checks the
+  test tag and Super Admin role before creating any new rehearsal event.
 - [x] The live health endpoint returned HTTP 200, database reachable, server
   integration ready, and deployed release `d32e760` on 24 September 2026.
 - [x] Run pgTAP tests 002–006 in the isolated CI Supabase stack, not the

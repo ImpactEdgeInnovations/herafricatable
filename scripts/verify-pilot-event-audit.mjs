@@ -73,6 +73,7 @@ assert(liveAudit.includes('blockers.push("private_draft_public_route_not_verifie
 assert(liveAudit.includes("eventReservationOrders(id)"));
 assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
 const registrationForm = readFileSync(new URL("../components/events/event-registration-form.tsx", import.meta.url), "utf8");
+const privateHostRehearsal = readFileSync(new URL("./accept-event-host-private.mjs", import.meta.url), "utf8");
 const guestAccessControl = readFileSync(new URL("../components/admin/event-guest-access-control.tsx", import.meta.url), "utf8");
 const adminEventsPage = readFileSync(new URL("../app/admin/events/page.tsx", import.meta.url), "utf8");
 const checkout = readFileSync(new URL("../app/api/payments/paystack/initialize/route.ts", import.meta.url), "utf8");
@@ -82,6 +83,9 @@ assert(checkout.includes("body.quantity!==1"));
 assert(checkout.includes('event.registration_mode!=="automatic"'));
 assert(checkout.includes('eventPaymentFlag?.enabled'));
 assert(registrationForm.includes("automaticCheckoutOpen"));
+assert(privateHostRehearsal.includes("HAT_ADMIN_TEST_EMAIL"));
+assert(privateHostRehearsal.includes("primaryAdminEmail.trim().toLowerCase()"));
+assert(privateHostRehearsal.includes('adminProfile.data.is_test_account, true'));
 assert(guestAccessControl.includes('disabled={busy || (!enabled && !canOpen)}'));
 assert(guestAccessControl.includes('enabled ? "Pause guest requests"'));
 assert(adminEventsPage.includes('supabase.rpc("event_registration_notification_ready")'));

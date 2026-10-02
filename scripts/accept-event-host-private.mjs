@@ -4,15 +4,19 @@ import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishable = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-const adminEmail = process.env.HAT_PRIMARY_ADMIN_EMAIL;
-const adminPassword = process.env.HAT_PRIMARY_ADMIN_PASSWORD;
+const adminEmail = process.env.HAT_ADMIN_TEST_EMAIL;
+const adminPassword = process.env.HAT_ADMIN_TEST_PASSWORD;
+const primaryAdminEmail = process.env.HAT_PRIMARY_ADMIN_EMAIL;
 const testPassword = process.env.HAT_COMMUNITY_TEST_PASSWORD;
 
 if (
-  !url || !publishable || !adminEmail || !adminPassword || !testPassword ||
+  !url || !publishable || !adminEmail || !adminPassword || !primaryAdminEmail || !testPassword ||
   process.env.HAT_CONFIRM_PRIVATE_EVENT_REHEARSAL !== "yes"
 ) {
-  throw new Error("Set Supabase and tagged test credentials, plus HAT_CONFIRM_PRIVATE_EVENT_REHEARSAL=yes. This creates one private, closed test event.");
+  throw new Error("Set Supabase, a separate tagged Admin rehearsal account and tagged member credentials, plus HAT_CONFIRM_PRIVATE_EVENT_REHEARSAL=yes. This creates one private, closed test event.");
+}
+if (adminEmail.trim().toLowerCase() === primaryAdminEmail.trim().toLowerCase()) {
+  throw new Error("The Admin rehearsal account must be distinct from the primary owner. No test event was created.");
 }
 
 function client() {
@@ -50,6 +54,20 @@ try {
     const signed = await target.auth.signInWithPassword({ email, password });
     assert.equal(signed.error, null, `Could not sign in a rehearsal account: ${signed.error?.code ?? "unknown"}`);
   }
+
+  const { data: { user: adminUser } } = await admin.auth.getUser();
+  assert(adminUser, "The separate Admin rehearsal account must be authenticated");
+  const adminProfile = await admin.from("profiles")
+    .select("access_status,is_test_account").eq("id", adminUser.id).single();
+  assert.equal(adminProfile.error, null);
+  assert.equal(adminProfile.data.access_status, "active");
+  assert.equal(adminProfile.data.is_test_account, true,
+    "The Admin rehearsal account must be tagged as a test account");
+  const adminRole = await admin.from("user_roles")
+    .select("role").eq("user_id", adminUser.id).eq("role", "super_admin").maybeSingle();
+  assert.equal(adminRole.error, null);
+  assert.equal(adminRole.data?.role, "super_admin",
+    "The separate Admin rehearsal account needs an explicit Super Admin role");
 
   for (const target of [firstHost, secondHost]) {
     const { data: { user } } = await target.auth.getUser();
