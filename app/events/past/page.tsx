@@ -124,20 +124,23 @@ export default async function PastEventsPage() {
         ) : events.length ? (
           events.map((event) => (
             <article className="past-event-card" id={event.event_id} key={event.event_id}>
-              <div className="past-event-date" aria-label={new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "long", year: "numeric" }).format(new Date(event.starts_at))}>
+              <div className="past-event-date" aria-label={new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "long", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}>
                 <span>
                   {new Intl.DateTimeFormat("en-KE", {
                     month: "short",
+                    timeZone: event.timezone,
                   }).format(new Date(event.starts_at))}
                 </span>
                 <strong>
                   {new Intl.DateTimeFormat("en-KE", {
                     day: "2-digit",
+                    timeZone: event.timezone,
                   }).format(new Date(event.starts_at))}
                 </strong>
                 <small>
                   {new Intl.DateTimeFormat("en-KE", {
                     year: "numeric",
+                    timeZone: event.timezone,
                   }).format(new Date(event.starts_at))}
                 </small>
               </div>

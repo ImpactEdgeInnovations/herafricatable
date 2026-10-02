@@ -28,7 +28,19 @@ assert.throws(() => parseEventTimeInput("2026-02-30T18:00", "Africa/Nairobi"),
 assert.throws(() => parseEventTimeInput("2026-10-06T18:00", "Not/A_Timezone"));
 
 const editor = readFileSync(new URL("../components/admin/event-manager.tsx", import.meta.url), "utf8");
+const contentEditor = readFileSync(new URL("../components/admin/event-content-manager.tsx", import.meta.url), "utf8");
+const hostEditor = readFileSync(new URL("../components/events/event-host-workspace.tsx", import.meta.url), "utf8");
+const eventList = readFileSync(new URL("../app/events/page.tsx", import.meta.url), "utf8");
+const eventDetail = readFileSync(new URL("../app/events/[slug]/page.tsx", import.meta.url), "utf8");
+const pastEvents = readFileSync(new URL("../app/events/past/page.tsx", import.meta.url), "utf8");
 assert(editor.includes("formatEventTimeInput(event.starts_at, event.timezone)"));
 assert(editor.includes("parseEventTimeInput(form.startsAt, form.timezone)"));
 assert(!editor.includes("new Date(form.startsAt).toISOString()"));
-console.log("Event editor keeps the Nairobi wall clock stable across device timezones.");
+assert(contentEditor.includes("parseEventTimeInput(sessionForm.startsAt, selectedEvent.timezone)"));
+assert(!contentEditor.includes("new Date(sessionForm.startsAt).toISOString()"));
+assert(hostEditor.includes("parseEventTimeInput(item.starts_at, initial.timezone)"));
+assert(!hostEditor.includes("device’s local timezone"));
+assert(eventList.includes("timeZone: event.timezone"));
+assert(eventDetail.includes('year: "numeric", timeZone: event.timezone'));
+assert(pastEvents.includes('timeZone: event.timezone'));
+console.log("Admin, Host and public event times stay in the event timezone across devices.");

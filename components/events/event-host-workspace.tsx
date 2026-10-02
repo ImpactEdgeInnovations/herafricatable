@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
+import { formatEventTimeInput, parseEventTimeInput } from "@/lib/events/zoned-datetime";
 
 export type HostProgrammeItem = {
   key: string;
@@ -49,18 +50,17 @@ export type EventHostOutcomes = {
   accepted_introductions: number | null;
 };
 
-function localDateTime(value: string) {
-  if (!value) return "";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-}
-
 export function EventHostWorkspace({ initial, cover, coverReady, outcomes }: { initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean; outcomes: EventHostOutcomes | null }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [summary, setSummary] = useState(initial.summary);
   const [arrivalInfo, setArrivalInfo] = useState(initial.arrival_info);
-  const [programme, setProgramme] = useState<HostProgrammeItem[]>(initial.programme ?? []);
+  const [programme, setProgramme] = useState<HostProgrammeItem[]>(() =>
+    (initial.programme ?? []).map((item) => ({
+      ...item,
+      starts_at: formatEventTimeInput(item.starts_at, initial.timezone),
+      ends_at: formatEventTimeInput(item.ends_at, initial.timezone),
+    })));
   const [partners, setPartners] = useState(initial.partners ?? []);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverAlt, setCoverAlt] = useState(cover?.draft_alt_text ?? "");
@@ -121,16 +121,26 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes }: { i
       setMessage("Please add a clear event introduction, arrival details and at least one programme item.");
       return;
     }
-    if (programme.some((item) => !item.title.trim() || !item.starts_at || !item.ends_at || Number.isNaN(new Date(item.starts_at).getTime()) || Number.isNaN(new Date(item.ends_at).getTime()))) {
+    if (programme.some((item) => !item.title.trim() || !item.starts_at || !item.ends_at)) {
       setMessage("Each programme item needs a title, start time and end time.");
       return;
     }
+    let payload: HostProgrammeItem[];
+    try {
+      payload = programme.map((item) => ({
+        ...item,
+        starts_at: parseEventTimeInput(item.starts_at, initial.timezone),
+        ends_at: parseEventTimeInput(item.ends_at, initial.timezone),
+      }));
+    } catch {
+      setMessage("Check each programme time. Use the event's timezone shown below.");
+      return;
+    }
+    if (payload.some((item) => new Date(item.ends_at).getTime() <= new Date(item.starts_at).getTime())) {
+      setMessage("Each programme moment must end after it starts.");
+      return;
+    }
     setBusy(true);
-    const payload = programme.map((item) => ({
-      ...item,
-      starts_at: new Date(item.starts_at).toISOString(),
-      ends_at: new Date(item.ends_at).toISOString(),
-    }));
     const saved = await supabase.rpc("save_event_host_workspace", {
       p_event_id: initial.event_id,
       p_summary: summary,
@@ -223,17 +233,17 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes }: { i
 
       <div className="admin-section">
         <h2>Programme</h2>
-        <p>Add the moments guests can look forward to. Times below follow your device’s local timezone; the event page displays them in {initial.timezone}.</p>
+        <p>Add the moments guests can look forward to. All times below use {initial.timezone}, even if your device is elsewhere.</p>
         {programme.map((item, index) => <fieldset key={item.key} className="admin-section">
           <legend>Moment {index + 1}</legend>
           <label>Title<input value={item.title} maxLength={160} disabled={locked || busy} onChange={(event) => updateProgramme(item.key, "title", event.target.value)} /></label>
-          <label>Starts<input type="datetime-local" value={localDateTime(item.starts_at)} disabled={locked || busy} onChange={(event) => updateProgramme(item.key, "starts_at", event.target.value)} /></label>
-          <label>Ends<input type="datetime-local" value={localDateTime(item.ends_at)} disabled={locked || busy} onChange={(event) => updateProgramme(item.key, "ends_at", event.target.value)} /></label>
+          <label>Starts<input type="datetime-local" value={item.starts_at} disabled={locked || busy} onChange={(event) => updateProgramme(item.key, "starts_at", event.target.value)} /></label>
+          <label>Ends<input type="datetime-local" value={item.ends_at} disabled={locked || busy} onChange={(event) => updateProgramme(item.key, "ends_at", event.target.value)} /></label>
           <label>Speaker, if confirmed<input value={item.speaker_name ?? ""} disabled={locked || busy} onChange={(event) => updateProgramme(item.key, "speaker_name", event.target.value)} /></label>
           <label>A few words about this moment<textarea rows={2} value={item.description ?? ""} disabled={locked || busy} onChange={(event) => updateProgramme(item.key, "description", event.target.value)} /></label>
           {!locked ? <button className="button button-outline" type="button" disabled={busy} onClick={() => setProgramme((items) => items.filter((entry) => entry.key !== item.key))}>Remove moment</button> : null}
         </fieldset>)}
-        {!locked ? <button className="button button-outline" type="button" disabled={busy || programme.length >= 30} onClick={() => setProgramme((items) => [...items, { key: crypto.randomUUID(), title: "", description: "", starts_at: initial.starts_at, ends_at: initial.ends_at, room: "", speaker_name: "" }])}>Add a programme moment</button> : null}
+        {!locked ? <button className="button button-outline" type="button" disabled={busy || programme.length >= 30} onClick={() => setProgramme((items) => [...items, { key: crypto.randomUUID(), title: "", description: "", starts_at: formatEventTimeInput(initial.starts_at, initial.timezone), ends_at: formatEventTimeInput(initial.ends_at, initial.timezone), room: "", speaker_name: "" }])}>Add a programme moment</button> : null}
       </div>
 
       <div className="admin-section">

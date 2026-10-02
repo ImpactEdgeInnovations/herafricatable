@@ -181,7 +181,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
         <h3>{item.event_title}</h3>
         <p>Host: {item.host_name || item.host_email} · {item.host_email} · {item.host_status === "paused" ? "Access paused" : "Access active"}</p>
         {lifecycleReady ? <button className="button button-outline" type="button" disabled={busy} onClick={() => void changeHostStatus(item)}>{item.host_status === "paused" ? "Restore Host access" : "Pause Host access"}</button> : null}
-        <p>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.starts_at))}</p>
+        <p>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event?.timezone ?? "Africa/Nairobi" }).format(new Date(item.starts_at))}</p>
         {item.workspace_status === "submitted" ? <div>
           <h4>Before you decide</h4>
           <dl>
@@ -204,7 +204,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
           {cover?.draft_url ? <figure className="event-host-cover-preview"><img src={cover.draft_url} alt={cover.draft_alt_text} /><figcaption>{cover.published ? "This is already the live image" : "Private image; approval will publish it"}</figcaption></figure> : <p>No new image. {coversReady ? "Any approved image stays as it is." : "Image review is not available yet."}</p>}
           <h4>Event introduction</h4><p>{item.summary}</p>
           <h4>Arrival details</h4><p>{item.arrival_info}</p>
-          <h4>Programme</h4><ul>{item.programme.map((entry, index) => <li key={index}><strong>{entry.title}</strong> · {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(entry.starts_at))}{entry.speaker_name ? ` · ${entry.speaker_name}` : ""}<p>{entry.description}</p></li>)}</ul>
+          <h4>Programme</h4><ul>{item.programme.map((entry, index) => <li key={index}><strong>{entry.title}</strong> · {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event?.timezone ?? "Africa/Nairobi" }).format(new Date(entry.starts_at))}{entry.speaker_name ? ` · ${entry.speaker_name}` : ""}<p>{entry.description}</p></li>)}</ul>
           <h4>Partners</h4>{item.partners.length ? <ul>{item.partners.map((entry, index) => <li key={index}>{entry.name}{entry.website_url ? ` · ${entry.website_url}` : ""}</li>)}</ul> : <p>None listed.</p>}
           <label>Note to Host<textarea rows={3} value={notes[item.event_id] ?? ""} onChange={(event) => setNotes((all) => ({ ...all, [item.event_id]: event.target.value }))} placeholder="Explain what needs to change, if anything." /></label>
           <div className="portal-actions"><button className="button button-primary" type="button" disabled={busy || item.host_status !== "active" || !safetyReady || !savedContact} onClick={() => void review(item, "approve")}>Approve and publish</button><button className="button button-outline" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "request_changes")}>Ask for changes</button></div>

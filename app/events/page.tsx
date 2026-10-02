@@ -21,6 +21,7 @@ type PublicEvent = {
   slug: string;
   starts_at: string;
   summary: string | null;
+  timezone: string;
   title: string;
   venues: { city: string; country: string; name: string } | null;
 };
@@ -42,7 +43,7 @@ export default async function EventsPage() {
   const supabase = await createClient();
   const { data, error: eventsError } = await supabase
     .from("events")
-    .select("id, slug, title, summary, format, audience, starts_at, ends_at, registration_mode, venues(name, city, country)")
+    .select("id, slug, title, summary, format, audience, starts_at, ends_at, timezone, registration_mode, venues(name, city, country)")
     .eq("status", "published")
     .gte("ends_at", new Date().toISOString())
     .order("starts_at", { ascending: true });
@@ -171,7 +172,7 @@ export default async function EventsPage() {
           return (
           <article key={event.id}>
             {poster?.url ? <img className="public-event-poster" alt={poster.alt} src={poster.url} /> : null}
-            <div className="public-event-date"><strong>{new Intl.DateTimeFormat("en-KE", { day: "2-digit" }).format(new Date(event.starts_at))}</strong><span>{new Intl.DateTimeFormat("en-KE", { month: "short", year: "numeric" }).format(new Date(event.starts_at))}</span></div>
+            <div className="public-event-date"><strong>{new Intl.DateTimeFormat("en-KE", { day: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))}</strong><span>{new Intl.DateTimeFormat("en-KE", { month: "short", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</span></div>
             <div className="public-event-copy"><span>{event.audience === "community" ? "Your Community · " : ""}{event.format.replace("_", " ")} · {event.venues ? `${event.venues.city}, ${event.venues.country}` : "Online"}</span><h2>{event.title}</h2><p>{event.summary || "Event details will be shared with approved members."}</p>{eventCommunity ? <Link className="event-list-community" href={`/communities/${eventCommunity.slug}/about`}>{eventCommunity.name} <i aria-hidden="true">→</i></Link> : <small className="event-list-standalone">Her Africa Table open event</small>}</div>
             <Link href={`/events/${event.slug}`}>See event <span aria-hidden="true">→</span></Link>
           </article>

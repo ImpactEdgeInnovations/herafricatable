@@ -383,6 +383,7 @@ export function EventManager({
                     day: "numeric",
                     month: "short",
                     year: "numeric",
+                    timeZone: event.timezone,
                   }).format(new Date(event.starts_at))}
                 </small>
               </button>

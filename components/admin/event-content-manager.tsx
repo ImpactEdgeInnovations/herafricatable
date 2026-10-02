@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { AdminEvent } from "@/components/admin/event-manager";
 import { adminErrorMessage } from "@/lib/admin-error";
+import { formatEventTimeInput, parseEventTimeInput } from "@/lib/events/zoned-datetime";
 
 export type AdminSession = {
   description: string | null;
@@ -54,13 +55,6 @@ type EventStaff = {
 };
 type Panel = "programme" | "announcements" | "sponsors" | "staff";
 
-function localDateTime(value: string) {
-  const date = new Date(value);
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16);
-}
-
 function defaultSession(event: AdminEvent) {
   const start = new Date(event.starts_at);
   const end = new Date(
@@ -73,8 +67,8 @@ function defaultSession(event: AdminEvent) {
     id: null as string | null,
     title: "",
     description: "",
-    startsAt: localDateTime(start.toISOString()),
-    endsAt: localDateTime(end.toISOString()),
+    startsAt: formatEventTimeInput(start.toISOString(), event.timezone),
+    endsAt: formatEventTimeInput(end.toISOString(), event.timezone),
     room: "",
     status: "draft" as AdminSession["status"],
     dayLabel: "",
@@ -175,7 +169,20 @@ export function EventContentManager({
 
   async function saveSession(event: FormEvent) {
     event.preventDefault();
-    if (!sessionForm || !eventId) return;
+    if (!sessionForm || !eventId || !selectedEvent) return;
+    let startsAt: string;
+    let endsAt: string;
+    try {
+      startsAt = parseEventTimeInput(sessionForm.startsAt, selectedEvent.timezone);
+      endsAt = parseEventTimeInput(sessionForm.endsAt, selectedEvent.timezone);
+    } catch {
+      setMessage("Check the programme times and event timezone before saving.");
+      return;
+    }
+    if (new Date(endsAt).getTime() <= new Date(startsAt).getTime()) {
+      setMessage("This programme moment must end after it starts.");
+      return;
+    }
     setBusy(true);
     setMessage("");
     const { error } = await supabase.rpc("save_programme_session", {
@@ -183,8 +190,8 @@ export function EventContentManager({
       p_event_id: eventId,
       p_title: sessionForm.title,
       p_description: sessionForm.description,
-      p_starts_at: new Date(sessionForm.startsAt).toISOString(),
-      p_ends_at: new Date(sessionForm.endsAt).toISOString(),
+      p_starts_at: startsAt,
+      p_ends_at: endsAt,
       p_room: sessionForm.room,
       p_status: sessionForm.status,
       p_day_label: sessionForm.dayLabel,
@@ -362,8 +369,8 @@ export function EventContentManager({
                       id: item.id,
                       title: item.title,
                       description: item.description ?? "",
-                      startsAt: localDateTime(item.starts_at),
-                      endsAt: localDateTime(item.ends_at),
+                      startsAt: formatEventTimeInput(item.starts_at, selectedEvent.timezone),
+                      endsAt: formatEventTimeInput(item.ends_at, selectedEvent.timezone),
                       room: item.room ?? "",
                       status: item.status,
                       dayLabel: "",
@@ -398,6 +405,7 @@ export function EventContentManager({
               Confirm the event timezone, speaker permission, and schedule
               before publishing.
             </p>
+            <p className="form-hint">Programme times use {selectedEvent.timezone}, even if your device is elsewhere.</p>
             <div className="form-grid">
               <label className="form-wide">
                 Session title
