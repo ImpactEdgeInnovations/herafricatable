@@ -698,6 +698,20 @@ also requires passed Admin OTP, member OTP and notification-delivery checks;
 at 20:17 UTC all three were still unaccepted. Delivery to one inbox is not
 proof of a completed sign-in or of application-notification delivery.
 
+At 20:28 UTC on 2 October, deployed release `98328d5` passed the live health
+and database-boundary audit. The pilot remained a private, closed draft with
+zero future published public events. The venue/address and basic timing passed;
+the on-sale free place, active Host, approved Host content, named safety
+contact, scoped arrival lead and separate tagged Admin remained open. The
+ticket is configured at KES 0 with 20 places but is still a **draft**;
+registration remains closed. No test result authorises opening it early.
+
+The Admin event setup card now checks an active Host profile, ticket sale
+window and unreserved stock, remaining event capacity, and unexpired arrival
+staff access. It fails closed if the order list is incomplete. These are setup
+signals only; the five Public event guests release checks and live journeys
+remain separate.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

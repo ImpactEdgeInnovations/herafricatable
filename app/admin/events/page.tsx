@@ -37,7 +37,7 @@ import { EventGuestAccessControl } from "@/components/admin/event-guest-access-c
 import { EventAutomaticCheckoutControl } from "@/components/admin/event-automatic-checkout-control";
 import { EventHostReviewManager, type AdminEventHostCover, type AdminEventHostWorkspace, type EventHostReviewContext } from "@/components/admin/event-host-review-manager";
 import { EventFollowUpInvitations, type EventFollowUpCandidate } from "@/components/admin/event-follow-up-invitations";
-import { eventPilotReadiness, type PilotReadinessStep } from "@/lib/event-pilot-readiness";
+import { eventPilotReadiness, type PilotOrder, type PilotReadinessStep } from "@/lib/event-pilot-readiness";
 
 type ManagedEventRow = Omit<AdminEvent, "id" | "venues"> & {
   address_line: string | null;
@@ -170,40 +170,53 @@ export default async function AdminEventsPage({
     && !arrivalGuardResult.error && arrivalGuardResult.data === true;
   const pilotSources = role === "super_admin" && view === "overview" && eventIds.length
     ? await Promise.all([
-        supabase.from("ticket_types").select("event_id,inventory_quantity,price_minor,status").in("event_id", eventIds),
-        supabase.from("event_hosts").select("event_id,status").in("event_id", eventIds),
+        supabase.from("ticket_types").select("id,event_id,inventory_quantity,price_minor,sales_start_at,sales_end_at,status").in("event_id", eventIds),
+        supabase.from("event_hosts").select("event_id,user_id,status").in("event_id", eventIds),
         supabase.from("event_host_workspaces").select("event_id,status").in("event_id", eventIds),
         supabase.from("event_safety_contacts").select("event_id").in("event_id", eventIds),
         supabase.from("event_staff_scopes").select("event_id,user_id").in("event_id", eventIds),
+        supabase.from("orders").select("event_id,status,order_items(ticket_type_id,quantity)", { count: "exact" })
+          .in("event_id", eventIds).eq("order_type", "event").range(0, 999),
       ])
     : null;
   const scopedStaffIds = [...new Set((pilotSources?.[4].data ?? []).map((row) => row.user_id))];
-  let activeStaffIds = new Set<string>();
+  const hostIds = (pilotSources?.[1].data ?? []).map((row) => row.user_id);
+  const pilotAccountIds = [...new Set([...scopedStaffIds, ...hostIds])];
+  let activeProfileIds = new Set<string>();
   let staffRoleIds = new Set<string>();
-  let pilotStaffError = false;
-  if (scopedStaffIds.length) {
+  let pilotAccountError = false;
+  if (pilotAccountIds.length) {
     const [profilesResult, rolesResult] = await Promise.all([
-      supabase.from("profiles").select("id,access_status").in("id", scopedStaffIds),
-      supabase.from("user_roles").select("user_id,role").in("user_id", scopedStaffIds).eq("role", "event_staff"),
+      supabase.from("profiles").select("id,access_status").in("id", pilotAccountIds),
+      scopedStaffIds.length
+        ? supabase.from("user_roles").select("user_id,role,expires_at")
+            .in("user_id", scopedStaffIds).eq("role", "event_staff")
+        : Promise.resolve({ data: [], error: null }),
     ]);
-    pilotStaffError = Boolean(profilesResult.error || rolesResult.error);
-    activeStaffIds = new Set((profilesResult.data ?? [])
+    pilotAccountError = Boolean(profilesResult.error || rolesResult.error);
+    activeProfileIds = new Set((profilesResult.data ?? [])
       .filter((row) => row.access_status === "active").map((row) => row.id));
-    staffRoleIds = new Set((rolesResult.data ?? []).map((row) => row.user_id));
+    staffRoleIds = new Set((rolesResult.data ?? [])
+      .filter((row) => !row.expires_at || Date.parse(row.expires_at) > Date.now())
+      .map((row) => row.user_id));
   }
   const pilotReadiness: Record<string, PilotReadinessStep[]> | null = pilotSources
-    && pilotSources.every((result) => !result.error) && !pilotStaffError
+    && pilotSources.every((result) => !result.error)
+    && pilotSources[5].count === (pilotSources[5].data?.length ?? 0)
+    && !pilotAccountError
     ? Object.fromEntries(events.map((event) => {
-        const [tickets, hosts, drafts, contacts, staffScopes] = pilotSources;
+        const [tickets, hosts, drafts, contacts, staffScopes, orders] = pilotSources;
         const privateEvent = managedRows.find((row) => row.event_id === event.id);
         return [event.id, eventPilotReadiness({
           doorStaffActive: (staffScopes.data ?? []).some((row) => row.event_id === event.id
-            && activeStaffIds.has(row.user_id) && staffRoleIds.has(row.user_id)),
+            && activeProfileIds.has(row.user_id) && staffRoleIds.has(row.user_id)),
           event,
           hasSafetyContact: (contacts.data ?? []).some((row) => row.event_id === event.id),
-          hostActive: (hosts.data ?? []).some((row) => row.event_id === event.id && row.status === "active"),
+          hostActive: (hosts.data ?? []).some((row) => row.event_id === event.id && row.status === "active"
+            && activeProfileIds.has(row.user_id)),
           hostDraftStatus: (drafts.data ?? []).find((row) => row.event_id === event.id)?.status ?? null,
           onlineLinkReady: Boolean(privateEvent?.online_url?.trim()),
+          orders: ((orders.data as PilotOrder[] | null) ?? []).filter((row) => row.event_id === event.id),
           tickets: (tickets.data ?? []).filter((row) => row.event_id === event.id),
         })];
       }))

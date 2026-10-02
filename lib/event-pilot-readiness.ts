@@ -10,9 +10,18 @@ export type PilotEvent = {
 };
 
 export type PilotTicket = {
+  id: string;
   inventory_quantity: number | null;
   price_minor: number;
+  sales_end_at: string | null;
+  sales_start_at: string | null;
   status: string;
+};
+
+export type PilotOrder = {
+  event_id: string;
+  status: string;
+  order_items: { ticket_type_id: string; quantity: number }[];
 };
 
 export type PilotReadinessInput = {
@@ -22,6 +31,7 @@ export type PilotReadinessInput = {
   hostActive: boolean;
   hostDraftStatus: string | null;
   onlineLinkReady: boolean;
+  orders: PilotOrder[];
   tickets: PilotTicket[];
 };
 
@@ -40,9 +50,18 @@ export function eventPilotReadiness(input: PilotReadinessInput, now = new Date()
   const requiresOnlineLink = event.format !== "in_person";
   const hasVenue = Boolean(event.venues?.name?.trim() && event.venues?.city?.trim() && event.venues?.country?.trim()
     && (event.venues?.address_line?.trim() || event.venues?.map_url?.trim()));
+  const reservations = input.orders.filter((order) =>
+    !["cancelled", "expired", "refunded"].includes(order.status));
+  const reservedSeats = reservations.reduce((total, order) =>
+    total + order.order_items.reduce((sum, item) => sum + item.quantity, 0), 0);
   const hasFreeTicket = input.tickets.some((ticket) =>
     ticket.price_minor === 0 && ticket.status === "on_sale" &&
-    (ticket.inventory_quantity === null || ticket.inventory_quantity > 0));
+    (ticket.inventory_quantity === null || ticket.inventory_quantity >
+      reservations.reduce((total, order) => total + order.order_items
+        .filter((item) => item.ticket_type_id === ticket.id)
+        .reduce((sum, item) => sum + item.quantity, 0), 0)) &&
+    (!ticket.sales_start_at || Date.parse(ticket.sales_start_at) <= now.getTime()) &&
+    (!ticket.sales_end_at || Date.parse(ticket.sales_end_at) > now.getTime()));
 
   return [
     {
@@ -64,7 +83,13 @@ export function eventPilotReadiness(input: PilotReadinessInput, now = new Date()
     {
       label: "Free place with private review",
       ready: event.registration_mode === "manual_review" && hasFreeTicket,
-      guidance: "Use Manual review and put a free ticket on sale for the first pilot. Keep automatic payments closed.",
+      guidance: "Use Manual review and an available free ticket within its sale dates. Keep automatic payments closed.",
+      href: "/admin/events?view=registrations",
+    },
+    {
+      label: "Places remaining",
+      ready: Boolean(event.capacity && event.capacity > reservedSeats),
+      guidance: "This event has reached its capacity. Review existing places before opening another request.",
       href: "/admin/events?view=registrations",
     },
     {
