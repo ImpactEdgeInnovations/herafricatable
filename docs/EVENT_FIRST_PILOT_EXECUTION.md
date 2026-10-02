@@ -783,8 +783,11 @@ review. These are rendered-route and access checks, not proof of OTP delivery,
 button decisions, registration, mobile use or the separate tagged Admin gate.
 The Admin cockpit now uses profile test tags so its real membership totals and
 waiting-request count agree with Member oversight; incomplete tag data shows an
-unavailable count rather than a false all-clear. Recheck that count on the
-deployed release before accepting the change.
+unavailable count rather than a false all-clear. On deployed release `5b608ca`,
+the read-only signed-in probe confirmed that the displayed real-request count
+matches the live non-test applications. GitHub's application and isolated
+database quality gates both passed. This still does not constitute a member
+approval or welcome-email delivery rehearsal.
 
 ### Next owner actions, in order
 
