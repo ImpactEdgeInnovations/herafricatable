@@ -13,6 +13,8 @@ assert(adminPage.includes("doorStaffActive:"));
 assert(adminPage.includes("eventIds.includes(requestedEventId)"));
 assert(adminPage.includes("selectedEventId={selectedEventId}"));
 assert(adminPage.includes("&event=${encodeURIComponent(selectedEventId)}"));
+assert(adminPage.includes('view === "host" && eventIds.length'));
+assert(adminPage.includes('hostTicketResult.count === (hostTicketResult.data?.length ?? 0)'));
 
 const linkSource = readFileSync(new URL("../lib/events/admin-event-link.ts", import.meta.url), "utf8");
 const linkCompiled = ts.transpileModule(linkSource, {
@@ -55,6 +57,21 @@ assert.equal(hostDraftPublicationWindowOpen("invalid date"), false);
 const hostReview = readFileSync(new URL("../components/admin/event-host-review-manager.tsx", import.meta.url), "utf8");
 assert(hostReview.includes("!hostDraftPublicationWindowOpen(item.starts_at)"));
 assert(hostReview.includes("Move the event date"));
+assert(hostReview.includes("!ticketEventIds.includes(item.event_id)"));
+assert(hostReview.includes("registration_mode === \"closed\""));
+assert(hostReview.includes("exactArrivalReady(event)"));
+
+const arrivalSource = readFileSync(new URL("../lib/events/host-publication-check.ts", import.meta.url), "utf8");
+const arrivalCompiled = ts.transpileModule(arrivalSource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+const { exactArrivalReady } = await import(`data:text/javascript;base64,${Buffer.from(arrivalCompiled).toString("base64")}`);
+const venue = { name: "Geco Cafe", city: "Nairobi", country: "Kenya", address_line: "Mbaazi Rd, Lavington", map_url: null };
+assert.equal(exactArrivalReady({ format: "in_person", venues: venue }), true);
+assert.equal(exactArrivalReady({ format: "in_person", venues: { ...venue, address_line: " " } }), false);
+assert.equal(exactArrivalReady({ format: "hybrid", venues: { ...venue, address_line: null, map_url: "https://example.com/map" } }), true);
+assert.equal(exactArrivalReady({ format: "virtual", venues: null }), true);
+assert.equal(exactArrivalReady(undefined), false);
 
 const now = new Date("2026-09-24T12:00:00.000Z");
 const ready = {

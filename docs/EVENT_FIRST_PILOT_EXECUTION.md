@@ -765,6 +765,14 @@ present; an unsigned notification-cron request returned 401; and health
 reported a reachable database and ready server integration. This is not an
 OTP, registration, payment, check-in or Admin-decision rehearsal.
 
+Host draft review now shows the database's exact-address, private-online-link,
+ticket and safety-contact prerequisites before Admin can approve publication.
+The confirmation no longer claims that publishing automatically opens guest
+requests: a closed registration setting remains closed, and guest eligibility
+has its own release gate. These interface checks are guidance and fail closed
+if ticket data is incomplete; the database triggers and review function remain
+authoritative. A signed-in Admin publication rehearsal is still outstanding.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

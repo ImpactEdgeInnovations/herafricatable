@@ -9,6 +9,7 @@ import type { AdminEvent } from "@/components/admin/event-manager";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { hostDraftPublicationCutoff, hostDraftPublicationWindowOpen } from "@/lib/events/host-publication-window";
 import { eventToolHref } from "@/lib/events/admin-event-link";
+import { exactArrivalReady } from "@/lib/events/host-publication-check";
 
 export type AdminEventHostWorkspace = {
   event_id: string;
@@ -42,7 +43,7 @@ export type AdminEventHostCover = {
   published: boolean;
 };
 
-export function EventHostReviewManager({ events, selectedEventId, workspaces, migrationReady, lifecycleReady, reviewContexts, safetyContacts, safetyReady, covers, coversReady }: {
+export function EventHostReviewManager({ events, selectedEventId, workspaces, migrationReady, lifecycleReady, reviewContexts, safetyContacts, safetyReady, ticketEventIds, ticketsReady, covers, coversReady }: {
   events: AdminEvent[];
   selectedEventId: string | null;
   workspaces: AdminEventHostWorkspace[];
@@ -51,6 +52,8 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
   reviewContexts: EventHostReviewContext[];
   safetyContacts: { event_id: string; contact_name: string; contact_phone: string }[];
   safetyReady: boolean;
+  ticketEventIds: string[];
+  ticketsReady: boolean;
   covers: AdminEventHostCover[];
   coversReady: boolean;
 }) {
@@ -85,9 +88,23 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
 
   async function review(item: AdminEventHostWorkspace, action: "approve" | "request_changes") {
     const note = notes[item.event_id] ?? "";
+    const event = events.find((candidate) => candidate.id === item.event_id);
+    const context = reviewContexts.find((candidate) => candidate.event_id === item.event_id);
     if (action === "approve" && item.event_status === "draft" &&
       !hostDraftPublicationWindowOpen(item.starts_at)) {
       setMessage("This new event is now less than 48 hours away. Change its start date in Event details, then review the Host draft again.");
+      return;
+    }
+    if (action === "approve" && !exactArrivalReady(event)) {
+      setMessage("Add the exact venue address or a map link in Event details before publishing.");
+      return;
+    }
+    if (action === "approve" && event?.format !== "in_person" && !context?.online_link_ready) {
+      setMessage("Add the private online joining link in Event details before publishing.");
+      return;
+    }
+    if (action === "approve" && (!ticketsReady || !ticketEventIds.includes(item.event_id))) {
+      setMessage(ticketsReady ? "Add an event ticket under Registrations before publishing." : "Tickets could not be checked. Refresh before publishing.");
       return;
     }
     if (action === "approve" && (!safetyReady || !safetyContacts.some((entry) => entry.event_id === item.event_id))) {
@@ -101,7 +118,7 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
     if (!await ask({
       title: action === "approve" ? `Publish ${item.event_title}?` : `Ask the Host to update ${item.event_title}?`,
       description: action === "approve"
-        ? "The reviewed content goes live. If this event is a draft, guests will be able to discover and request places. Check venue, capacity, safety contact and private joining link before continuing."
+        ? `The reviewed event page becomes public. ${event?.registration_mode === "closed" ? "Registration will stay closed until you change its setting." : "Who can request a place still depends on registration and member-access settings."} Confirm the venue, capacity, safety contact and joining details before continuing.`
         : "Your note will return the draft to the Host. The event stays as it is until you approve a revised draft.",
       confirmLabel: action === "approve" ? "Approve and publish" : "Send guidance",
     })) return;
@@ -187,6 +204,9 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
         const savedContact = safetyContacts.find((candidate) => candidate.event_id === item.event_id);
         const cover = covers.find((candidate) => candidate.event_id === item.event_id);
         const contact = contactDrafts[item.event_id] ?? { name: savedContact?.contact_name ?? context?.safety_contact_name ?? "", phone: savedContact?.contact_phone ?? context?.safety_contact_phone ?? "" };
+        const arrivalReady = exactArrivalReady(event);
+        const onlineReady = event?.format === "in_person" || context?.online_link_ready === true;
+        const ticketReady = ticketsReady && ticketEventIds.includes(item.event_id);
         const publicationCutoff = hostDraftPublicationCutoff(item.starts_at);
         const publicationWindowClosed = item.event_status === "draft" && !hostDraftPublicationWindowOpen(item.starts_at);
         return <article className="admin-section" key={item.event_id}>
@@ -204,11 +224,14 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
           <h4>Before you decide</h4>
           <dl>
             <div><dt>Format and capacity</dt><dd>{event?.format.replaceAll("_", " ") ?? "Not available"} · {event?.capacity ?? "No capacity set"} places</dd></div>
-            <div><dt>Venue</dt><dd>{event?.venues ? `${event.venues.name}, ${event.venues.city}` : event?.format === "virtual" ? "Online" : "Venue missing"}</dd></div>
+            <div><dt>Venue</dt><dd>{event?.format === "virtual" ? "Online" : arrivalReady && event?.venues ? `${event.venues.name}, ${event.venues.city} · exact arrival details saved` : "Exact address or map link missing"}</dd></div>
             {event?.format !== "in_person" ? <div><dt>Private online link</dt><dd>{context?.online_link_ready ? "Ready; shared privately with confirmed guests" : "Missing — add it before publishing"}</dd></div> : null}
-            <div><dt>Guest requests</dt><dd>{event?.registration_mode.replaceAll("_", " ") ?? "Not available"}</dd></div>
+            <div><dt>Event ticket</dt><dd>{!ticketsReady ? "Could not check tickets" : ticketReady ? "Ready for publication" : "Missing — add one under Registrations"}</dd></div>
+            <div><dt>Guest requests</dt><dd>{event?.registration_mode === "closed" ? "Closed — publishing will not open requests" : event?.registration_mode.replaceAll("_", " ") ?? "Not available"}</dd></div>
             <div><dt>Safety contact</dt><dd>{savedContact ? `${savedContact.contact_name} · ${savedContact.contact_phone}` : "Not saved for this event yet"}</dd></div>
           </dl>
+          {!arrivalReady || !onlineReady ? <p role="alert">Arrival details need attention. <Link href={eventToolHref("/admin/events?view=edit", item.event_id)}>Open Event details</Link>.</p> : null}
+          {!ticketReady ? <p role="alert">{ticketsReady ? "Add a ticket before publishing." : "Ticket status could not be checked."} <Link href={eventToolHref("/admin/events?view=registrations", item.event_id)}>Open Registrations</Link>.</p> : null}
           <p>Confirm the venue or online format in Event details before approval. The private joining link stays there; it must never appear in the public arrival notes.</p>
           {safetyReady ? <div className="admin-section">
             <h4>On-the-day safety contact</h4>
@@ -225,7 +248,7 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
           <h4>Programme</h4><ul>{item.programme.map((entry, index) => <li key={index}><strong>{entry.title}</strong> · {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event?.timezone ?? "Africa/Nairobi" }).format(new Date(entry.starts_at))}{entry.speaker_name ? ` · ${entry.speaker_name}` : ""}<p>{entry.description}</p></li>)}</ul>
           <h4>Partners</h4>{item.partners.length ? <ul>{item.partners.map((entry, index) => <li key={index}>{entry.name}{entry.website_url ? ` · ${entry.website_url}` : ""}</li>)}</ul> : <p>None listed.</p>}
           <label>Note to Host<textarea rows={3} value={notes[item.event_id] ?? ""} onChange={(event) => setNotes((all) => ({ ...all, [item.event_id]: event.target.value }))} placeholder="Explain what needs to change, if anything." /></label>
-          <div className="portal-actions"><button className="button button-primary" type="button" disabled={busy || item.host_status !== "active" || !safetyReady || !savedContact || publicationWindowClosed} onClick={() => void review(item, "approve")}>Approve and publish</button><button className="button button-outline" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "request_changes")}>Ask for changes</button></div>
+          <div className="portal-actions"><button className="button button-primary" type="button" disabled={busy || item.host_status !== "active" || !safetyReady || !savedContact || !arrivalReady || !onlineReady || !ticketReady || publicationWindowClosed} onClick={() => void review(item, "approve")}>Approve and publish</button><button className="button button-outline" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "request_changes")}>Ask for changes</button></div>
         </div> : item.review_note ? <p>Last review note: {item.review_note}</p> : null}
         {item.event_status === "published" ? <Link href={`/events/${item.event_slug}`}>View public page</Link> : null}
       </article>})}

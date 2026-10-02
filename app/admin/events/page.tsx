@@ -235,6 +235,16 @@ export default async function AdminEventsPage({
     ? await supabase.from("event_safety_contacts").select("event_id,contact_name,contact_phone")
     : { data: [], error: null };
   const hostWorkspaces = (hostResult.data as AdminEventHostWorkspace[] | null) ?? [];
+  const hostTicketResult = role === "super_admin" && view === "host" && eventIds.length
+    ? await supabase.from("ticket_types")
+        .select("event_id,status", { count: "exact" })
+        .in("event_id", eventIds)
+        .in("status", ["draft", "on_sale"])
+        .range(0, 999)
+    : { data: [], error: null, count: 0 };
+  const hostTicketsReady = !hostTicketResult.error &&
+    hostTicketResult.count === (hostTicketResult.data?.length ?? 0);
+  const hostTicketEventIds = [...new Set((hostTicketResult.data ?? []).map((ticket) => ticket.event_id))];
   const hostCoverResult = role === "super_admin" && view === "host"
     ? await supabase.from("event_host_covers")
         .select("event_id,draft_storage_path,draft_alt_text,published_storage_path")
@@ -399,7 +409,7 @@ export default async function AdminEventsPage({
       {view === "overview" && role === "super_admin" ? <EventGuestAccessControl enabled={Boolean(guestAccessResult.data?.enabled)} migrationReady={Boolean(guestAccessResult.data) && !guestAccessResult.error} safetyChecks={guestSafetyChecks} /> : null}
       {view === "overview" && role === "super_admin" ? <EventAutomaticCheckoutControl enabled={automaticCheckoutOpen} migrationReady={automaticCheckoutReady} /> : null}
       {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager media={proposalMedia} hostHandoffReady={hostHandoffReady} migrationReady={proposalReady} proposals={memberProposals} /><div className="legacy-gathering-note"><strong>Community gathering history</strong><p>Free member-only gatherings are now owner-led. Earlier submissions remain visible here so Admin can understand the complete decision history.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></section> : null}
-      {view === "host" && role === "super_admin" ? <EventHostReviewManager events={events} selectedEventId={selectedEventId} workspaces={hostWorkspaces} reviewContexts={hostReviewContexts} safetyContacts={(safetyContactResult.data as { event_id: string; contact_name: string; contact_phone: string }[] | null) ?? []} safetyReady={!safetyReadyResult.error && safetyReadyResult.data === true && !safetyContactResult.error} migrationReady={!hostResult.error} lifecycleReady={!hostLifecycleResult.error && hostLifecycleResult.data === true} covers={hostCovers} coversReady={!hostCoverResult.error} /> : null}
+      {view === "host" && role === "super_admin" ? <EventHostReviewManager events={events} selectedEventId={selectedEventId} workspaces={hostWorkspaces} reviewContexts={hostReviewContexts} safetyContacts={(safetyContactResult.data as { event_id: string; contact_name: string; contact_phone: string }[] | null) ?? []} safetyReady={!safetyReadyResult.error && safetyReadyResult.data === true && !safetyContactResult.error} ticketEventIds={hostTicketEventIds} ticketsReady={hostTicketsReady} migrationReady={!hostResult.error} lifecycleReady={!hostLifecycleResult.error && hostLifecycleResult.data === true} covers={hostCovers} coversReady={!hostCoverResult.error} /> : null}
       {view === "edit" ? <section className="focused-admin-tool"><EventManager automaticCheckoutOpen={automaticCheckoutOpen} automaticCheckoutReady={automaticCheckoutReady} canCreate={role === "super_admin"} hostedEventIds={hostedEventIds} initialSafetyContacts={publicationSafetyContacts} initialEvents={events} selectedEventId={selectedEventId} migrationReady={!eventResult.error} publicationGuardReady={publicationGuardReady} privateEvents={managedRows.map((event) => ({ event_id: event.event_id, online_url: event.online_url }))} /></section> : null}
       {view === "registrations" ? <section className="focused-admin-tool"><RegistrationManager events={events} selectedEventId={selectedEventId} initialPayments={payments} initialRefunds={refunds} initialRegistrations={registrations} initialTickets={tickets} initialWaitlist={waitlist} waitlistReady={waitlistReady} migrationReady={registrationReady} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY && process.env.SUPABASE_SECRET_KEY && process.env.NEXT_PUBLIC_SITE_URL)} /></section> : null}
       {view === "arrival" ? <section className="focused-admin-tool"><EventCheckinConsole events={events.map((event) => ({ id: event.id, title: event.title, starts_at: event.starts_at, ends_at: event.ends_at }))} selectedEventId={selectedEventId} initialAttendees={checkinAttendees} migrationReady={checkinReady} /></section> : null}
