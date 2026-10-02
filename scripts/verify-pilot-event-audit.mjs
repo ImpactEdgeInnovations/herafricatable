@@ -60,6 +60,8 @@ assert(liveAudit.includes('service.rpc("event_single_seat_guard_ready")'));
 assert(liveAudit.includes('blockers.push("one_pass_per_attendee_guard_not_ready")'));
 assert(liveAudit.includes('service.rpc("event_capacity_guard_ready")'));
 assert(liveAudit.includes('blockers.push("shared_event_capacity_guard_not_ready")'));
+assert(liveAudit.includes('service.rpc("event_registration_end_guard_ready")'));
+assert(liveAudit.includes('blockers.push("event_registration_end_guard_not_ready")'));
 assert(liveAudit.includes('service.rpc("event_registration_notification_ready")'));
 assert(liveAudit.includes('blockers.push("event_registration_notifications_not_ready")'));
 assert(liveAudit.includes('service.rpc("event_waitlist_ready")'));
@@ -92,6 +94,7 @@ assert(adminEventsPage.includes('supabase.rpc("event_registration_notification_r
 assert(adminEventsPage.includes('supabase.rpc("event_arrival_details_guard_ready")'));
 assert(adminEventsPage.includes('supabase.rpc("event_single_seat_guard_ready")'));
 assert(adminEventsPage.includes('supabase.rpc("event_capacity_guard_ready")'));
+assert(adminEventsPage.includes('supabase.rpc("event_registration_end_guard_ready")'));
 assert.equal(recommendPilotRelease({ blockers: ["missing_pilot"], guestRegistrationOpen: false }), "hold");
 assert.equal(recommendPilotRelease({ blockers: [], guestRegistrationOpen: false }), "ready_for_human_go_no_go");
 assert.equal(recommendPilotRelease({ blockers: ["missing_pilot"], guestRegistrationOpen: true }), "pause_and_review");

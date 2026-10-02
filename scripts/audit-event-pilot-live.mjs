@@ -73,6 +73,13 @@ async function capacityGuardReady() {
   return data === true;
 }
 
+async function registrationEndGuardReady() {
+  const { data, error } = await service.rpc("event_registration_end_guard_ready");
+  if (error?.code === "PGRST202") return false;
+  if (error) throw new Error(`Could not check registration end guard: ${error.code || "network error"}`);
+  return data === true;
+}
+
 async function registrationNotificationReady() {
   const { data, error } = await service.rpc("event_registration_notification_ready");
   if (error?.code === "PGRST202") return false;
@@ -113,7 +120,7 @@ const healthResponse = await fetch(`${base}/api/health`, {
 });
 const health = await healthResponse.json();
 const [guestFeedback, hostOutcomes, introductions, rounds, followUpInvitations,
-  invitationCrypto, publicationSequence, arrivalDetailsGuard, singleSeatGuard, capacityGuard,
+  invitationCrypto, publicationSequence, arrivalDetailsGuard, singleSeatGuard, capacityGuard, registrationEndGuard,
   registrationNotifications, waitlistLifecycle, automaticCheckoutGuard,
   flagResult, automaticCheckoutFlagResult, eventResult] =
   await Promise.all([
@@ -127,6 +134,7 @@ const [guestFeedback, hostOutcomes, introductions, rounds, followUpInvitations,
     arrivalDetailsGuardReady(),
     singleSeatGuardReady(),
     capacityGuardReady(),
+    registrationEndGuardReady(),
     registrationNotificationReady(),
     eventWaitlistReady(),
     automaticCheckoutGuardReady(),
@@ -314,6 +322,7 @@ if (!publicationSequence) blockers.push("admin_event_publication_guard_not_ready
 if (!arrivalDetailsGuard) blockers.push("event_arrival_details_guard_not_ready");
 if (!singleSeatGuard) blockers.push("one_pass_per_attendee_guard_not_ready");
 if (!capacityGuard) blockers.push("shared_event_capacity_guard_not_ready");
+if (!registrationEndGuard) blockers.push("event_registration_end_guard_not_ready");
 if (!registrationNotifications) blockers.push("event_registration_notifications_not_ready");
 if (!waitlistLifecycle) blockers.push("event_waitlist_lifecycle_not_ready");
 if (!automaticCheckoutGuard) blockers.push("event_automatic_checkout_guard_not_ready");
@@ -346,7 +355,7 @@ const result = {
     databaseReachable: health.database === "reachable", serverReady: health.server_integration === "ready" },
   database: { guestFeedback, hostOutcomes, introductions, rounds,
     followUpInvitations, invitationCrypto, publicationSequence, arrivalDetailsGuard, singleSeatGuard,
-    capacityGuard, registrationNotifications, waitlistLifecycle, automaticCheckoutGuard },
+    capacityGuard, registrationEndGuard, registrationNotifications, waitlistLifecycle, automaticCheckoutGuard },
   guestRegistrationOpen: flagResult.data?.enabled === true,
   automaticEventPaymentsOpen: automaticCheckoutFlagResult.data?.enabled === true,
   events: { futurePublicPublished: publicFuture.length, futurePrivateDrafts: privateDrafts.length,

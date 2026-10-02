@@ -103,12 +103,14 @@ export default async function AdminEventsPage({
         supabase.rpc("event_registration_notification_ready"),
         supabase.rpc("event_single_seat_guard_ready"),
         supabase.rpc("event_capacity_guard_ready"),
+        supabase.rpc("event_registration_end_guard_ready"),
       ])
     : null;
   const guestSafetyChecks = [
     { label: "registration emails", ready: guestSafetyResults?.[0].data === true && !guestSafetyResults[0].error },
     { label: "one place per guest", ready: guestSafetyResults?.[1].data === true && !guestSafetyResults[1].error },
     { label: "event capacity protection", ready: guestSafetyResults?.[2].data === true && !guestSafetyResults[2].error },
+    { label: "registration closes after the event", ready: guestSafetyResults?.[3].data === true && !guestSafetyResults[3].error },
   ];
   const automaticCheckoutResult = ["overview", "edit"].includes(view)
     ? await supabase.from("feature_flags").select("enabled")

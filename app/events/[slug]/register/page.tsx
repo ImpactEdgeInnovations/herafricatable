@@ -20,13 +20,16 @@ export default async function RegisterPage({
 
   const [{ data: event }, { data: profile }] = await Promise.all([
     supabase.from("events")
-      .select("id,title,audience,registration_mode,capacity")
+      .select("id,title,audience,registration_mode,capacity,ends_at")
       .eq("slug", slug).eq("status", "published").maybeSingle(),
     supabase.from("profiles")
       .select("access_status")
       .eq("id", user.id).maybeSingle(),
   ]);
   if (!event) notFound();
+  if (new Date(event.ends_at).getTime() <= Date.now()) {
+    redirect(`/events/${slug}`);
+  }
 
   if (profile?.access_status !== "active") {
     const { data: guestFlag } = await supabase.from("feature_flags")

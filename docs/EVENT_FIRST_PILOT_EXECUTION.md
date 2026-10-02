@@ -618,6 +618,12 @@ The Admin setup card also requires a free ticket actually on sale and an
 active, scoped guest-arrival lead. A merely drafted ticket or an unassigned
 staff account cannot count as a completed setup step. This card is still not
 the final public-guest release decision.
+`20261002160000_event_registration_end_guard.sql` closes another stale-link
+path: free/manual requests, waiting-list joins and automatic checkout must
+not create a new registration after the event ends. It is an isolated-CI
+tested migration, not live until the production audit reports
+`registrationEndGuard: true`. Admin cannot open public guest access while its
+readiness check is absent.
 
 ### Venue and migration checkpoint — 2 October 2026
 
