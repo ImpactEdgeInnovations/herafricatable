@@ -172,13 +172,31 @@ export default async function AdminEventsPage({
         supabase.from("event_hosts").select("event_id,status").in("event_id", eventIds),
         supabase.from("event_host_workspaces").select("event_id,status").in("event_id", eventIds),
         supabase.from("event_safety_contacts").select("event_id").in("event_id", eventIds),
+        supabase.from("event_staff_scopes").select("event_id,user_id").in("event_id", eventIds),
       ])
     : null;
-  const pilotReadiness: Record<string, PilotReadinessStep[]> | null = pilotSources && pilotSources.every((result) => !result.error)
+  const scopedStaffIds = [...new Set((pilotSources?.[4].data ?? []).map((row) => row.user_id))];
+  let activeStaffIds = new Set<string>();
+  let staffRoleIds = new Set<string>();
+  let pilotStaffError = false;
+  if (scopedStaffIds.length) {
+    const [profilesResult, rolesResult] = await Promise.all([
+      supabase.from("profiles").select("id,access_status").in("id", scopedStaffIds),
+      supabase.from("user_roles").select("user_id,role").in("user_id", scopedStaffIds).eq("role", "event_staff"),
+    ]);
+    pilotStaffError = Boolean(profilesResult.error || rolesResult.error);
+    activeStaffIds = new Set((profilesResult.data ?? [])
+      .filter((row) => row.access_status === "active").map((row) => row.id));
+    staffRoleIds = new Set((rolesResult.data ?? []).map((row) => row.user_id));
+  }
+  const pilotReadiness: Record<string, PilotReadinessStep[]> | null = pilotSources
+    && pilotSources.every((result) => !result.error) && !pilotStaffError
     ? Object.fromEntries(events.map((event) => {
-        const [tickets, hosts, drafts, contacts] = pilotSources;
+        const [tickets, hosts, drafts, contacts, staffScopes] = pilotSources;
         const privateEvent = managedRows.find((row) => row.event_id === event.id);
         return [event.id, eventPilotReadiness({
+          doorStaffActive: (staffScopes.data ?? []).some((row) => row.event_id === event.id
+            && activeStaffIds.has(row.user_id) && staffRoleIds.has(row.user_id)),
           event,
           hasSafetyContact: (contacts.data ?? []).some((row) => row.event_id === event.id),
           hostActive: (hosts.data ?? []).some((row) => row.event_id === event.id && row.status === "active"),

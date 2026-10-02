@@ -16,6 +16,7 @@ export type PilotTicket = {
 };
 
 export type PilotReadinessInput = {
+  doorStaffActive: boolean;
   event: PilotEvent;
   hasSafetyContact: boolean;
   hostActive: boolean;
@@ -40,7 +41,7 @@ export function eventPilotReadiness(input: PilotReadinessInput, now = new Date()
   const hasVenue = Boolean(event.venues?.name?.trim() && event.venues?.city?.trim() && event.venues?.country?.trim()
     && (event.venues?.address_line?.trim() || event.venues?.map_url?.trim()));
   const hasFreeTicket = input.tickets.some((ticket) =>
-    ticket.price_minor === 0 && ["draft", "on_sale"].includes(ticket.status) &&
+    ticket.price_minor === 0 && ticket.status === "on_sale" &&
     (ticket.inventory_quantity === null || ticket.inventory_quantity > 0));
 
   return [
@@ -63,7 +64,7 @@ export function eventPilotReadiness(input: PilotReadinessInput, now = new Date()
     {
       label: "Free place with private review",
       ready: event.registration_mode === "manual_review" && hasFreeTicket,
-      guidance: "Use Manual review and add a free ticket for the first pilot. Keep automatic payments closed.",
+      guidance: "Use Manual review and put a free ticket on sale for the first pilot. Keep automatic payments closed.",
       href: "/admin/events?view=registrations",
     },
     {
@@ -85,6 +86,12 @@ export function eventPilotReadiness(input: PilotReadinessInput, now = new Date()
       ready: input.hasSafetyContact,
       guidance: "Name a reachable safety contact before guests can see the event.",
       href: "/admin/events?view=host",
+    },
+    {
+      label: "Guest arrival lead",
+      ready: input.doorStaffActive,
+      guidance: "Assign an active team account under Operations → Event work → Staff access, then rehearse guest arrival.",
+      href: "/admin/operations?area=event-work#event-work",
     },
   ];
 }

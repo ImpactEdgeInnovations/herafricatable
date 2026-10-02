@@ -614,6 +614,10 @@ pilot can publish; the live audit reports `arrivalDetailsGuard` separately.
 The Admin event editor now displays and saves start/end times in the event's
 named timezone. The October pilot therefore remains 18:00–20:00 Nairobi time
 even when an Admin's laptop is set to another timezone.
+The Admin setup card also requires a free ticket actually on sale and an
+active, scoped guest-arrival lead. A merely drafted ticket or an unassigned
+staff account cannot count as a completed setup step. This card is still not
+the final public-guest release decision.
 
 ### Next owner actions, in order
 
