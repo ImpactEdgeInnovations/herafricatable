@@ -623,7 +623,7 @@ path: free/manual requests, waiting-list joins and automatic checkout must
 not create a new registration after the event ends. It is an isolated-CI
 tested migration, not live until the production audit reports
 `registrationEndGuard: true`. Admin cannot open public guest access while its
-readiness check is absent.
+readiness check is absent, including after a stale-page confirmation.
 
 ### Venue and migration checkpoint — 2 October 2026
 
@@ -643,10 +643,18 @@ content, safety contact and door staff remain incomplete. The five release
 checks and the separate tagged Admin rehearsal remain incomplete; guest
 access and automatic payments remain off. The recommendation is **hold**.
 
+At 15:17 UTC, the live audit still reported `registrationEndGuard: false`;
+apply `20261002160000_event_registration_end_guard.sql` to the connected
+Supabase project, then rerun the audit. The owner supplied Seina N's email,
+but the Admin member directory returned no member profile for it. Host access
+therefore remains unassigned. Seina needs to verify her email, request
+membership, receive Admin approval and complete profile setup before the
+scoped Host assignment can be made. The draft remains private and closed.
+
 ### Next owner actions, in order
 
-1. Confirm the Geco booking and capacity of 20, provide Seina N's member
-   account email, name the safety contact for the supplied telephone number,
+1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
+   journey, name the safety contact for the supplied telephone number,
    and assign a check-in lead. Six October is the chosen public pilot; keep this existing draft
    private and registration closed until the gates pass and the owner records
    a go/no-go decision. Do not create a duplicate event. Repeat the read-only

@@ -90,6 +90,7 @@ assert(privateHostRehearsal.includes("primaryAdminEmail.trim().toLowerCase()"));
 assert(privateHostRehearsal.includes('adminProfile.data.is_test_account, true'));
 assert(guestAccessControl.includes('disabled={busy || (!enabled && !canOpen)}'));
 assert(guestAccessControl.includes('enabled ? "Pause guest requests"'));
+assert(guestAccessControl.includes('supabase.rpc("event_registration_end_guard_ready")'));
 assert(adminEventsPage.includes('supabase.rpc("event_registration_notification_ready")'));
 assert(adminEventsPage.includes('supabase.rpc("event_arrival_details_guard_ready")'));
 assert(adminEventsPage.includes('supabase.rpc("event_single_seat_guard_ready")'));

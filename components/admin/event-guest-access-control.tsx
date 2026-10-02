@@ -47,6 +47,7 @@ export function EventGuestAccessControl({
         supabase.rpc("event_registration_notification_ready"),
         supabase.rpc("event_single_seat_guard_ready"),
         supabase.rpc("event_capacity_guard_ready"),
+        supabase.rpc("event_registration_end_guard_ready"),
       ]);
       if (checks.some((check) => check.error || check.data !== true)) {
         setBusy(false);
