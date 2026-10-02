@@ -383,7 +383,18 @@ export default async function AdminOperationsPage({
     role.role === "super_admin" && loadPeople
       ? await supabase.rpc("get_table_guide_feedback_admin")
       : { data: [], error: null };
-  const members = (memberResult.data as AdminMember[] | null) ?? [];
+  const memberRows = (memberResult.data as AdminMember[] | null) ?? [];
+  const memberIds = [...new Set(memberRows.map((member) => member.user_id))];
+  const testFlagsResult = role.role === "super_admin" && loadPeople && memberIds.length
+    ? await supabase.from("profiles").select("id,is_test_account").in("id", memberIds)
+    : { data: [], error: null };
+  const memberTagsReady = !testFlagsResult.error && testFlagsResult.data?.length === memberIds.length;
+  const testFlagById = new Map((testFlagsResult.data ?? [])
+    .map((profile) => [profile.id, profile.is_test_account === true] as const));
+  const members = memberRows.map((member) => ({
+    ...member,
+    is_test_account: testFlagById.get(member.user_id) === true,
+  }));
   const memberEventProposalContexts = (memberEventProposalContextResult.data as
     | {
         community_id: string | null;
@@ -1045,10 +1056,10 @@ export default async function AdminOperationsPage({
             migrationReady={!tableGuideAdminResult.error}
           />
           <MemberReview
-            initialMembers={members}
+            initialMembers={memberTagsReady ? members : []}
             currentUserId={user.id}
-            migrationReady={!memberResult.error}
-            applicationJourneyReady={!memberApplicationResult.error}
+            migrationReady={!memberResult.error && memberTagsReady}
+            applicationJourneyReady={!memberApplicationResult.error && memberTagsReady}
           />
           <CuratedIntroductionManager
             availability={
@@ -1061,10 +1072,11 @@ export default async function AdminOperationsPage({
                 | AdminCuratedIntroduction[]
                 | null) ?? []
             }
-            members={members}
+            members={memberTagsReady ? members : []}
             migrationReady={
               !curatedIntroductionResult.error &&
-              !connectionAvailabilityResult.error
+              !connectionAvailabilityResult.error &&
+              memberTagsReady
             }
           />
           <CommunityOutcomeSummary

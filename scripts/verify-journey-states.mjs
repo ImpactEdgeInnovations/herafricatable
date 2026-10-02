@@ -417,6 +417,8 @@ for (const contract of [
   "get_membership_intake_admin",
   "MemberCommandCentre",
   'active="members"',
+  '.select("id,is_test_account")',
+  "testFlagsReady",
 ]) {
   assert(
     adminMembersPage.includes(contract),
@@ -430,12 +432,20 @@ for (const contract of [
   "Approve and welcome",
   "Pause access",
   "Member-led by default",
+  "realRequests.length",
+  "Test applications",
+  "testRequests.map(renderRequestCard)",
 ]) {
   assert(
     memberCommandCentre.includes(contract),
     `Member oversight desk must include ${contract}`,
   );
 }
+assert(
+  read("app/admin/operations/page.tsx").includes('.select("id,is_test_account")') &&
+    read("components/admin/member-review.tsx").includes("realRequests.length"),
+  "Legacy Member Admin queue must distinguish test applications from real requests",
+);
 const adminEventsPage = read("app/admin/events/page.tsx");
 const eventCommandCentre = read(
   "components/admin/event-command-centre.tsx",

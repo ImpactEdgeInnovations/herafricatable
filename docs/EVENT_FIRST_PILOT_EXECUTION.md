@@ -727,6 +727,18 @@ inbox; it does **not** prove delivery of membership requests, event decisions,
 Host notices or guest reminders. Keep `notification_delivery` unaccepted until
 those real workflows are rehearsed with separate accounts.
 
+At 21:03 UTC on 2 October, a read-only live audit still found no Auth account
+for Seina's supplied email and the selected pilot remained a private, closed
+draft. Membership intake was `manual_review`. Two applications were pending:
+one real request submitted on 31 August and one tagged test request from 13
+August. The real request's Admin notification job was recorded as sent, and
+the matching message was found in the official Admin inbox. This is evidence
+for that request notification only, not for an approval, welcome, Host or event
+message. Neither pending application was approved or declined by engineering.
+The Member Admin screen now separates tagged test applications and excludes
+them from the real-request count. Seina still needs her own verified account
+and approved membership before she can be assigned as Host.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

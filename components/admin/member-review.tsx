@@ -29,6 +29,7 @@ export type AdminMember = {
   application_referred_by?: string | null;
   application_status?: string | null;
   application_submitted_at?: string | null;
+  is_test_account?: boolean;
 };
 
 export function MemberReview({
@@ -47,11 +48,18 @@ export function MemberReview({
   const [members, setMembers] = useState(initialMembers);
   const [workingId, setWorkingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const readyForReview = members.filter(
+  const realRequests = members.filter(
     (member) =>
       member.access_status === "pending" &&
-      ["submitted", "in_review"].includes(member.application_status ?? ""),
-  ).length;
+      ["submitted", "in_review"].includes(member.application_status ?? "") &&
+      !member.is_test_account,
+  );
+  const testRequests = members.filter(
+    (member) =>
+      member.access_status === "pending" &&
+      ["submitted", "in_review"].includes(member.application_status ?? "") &&
+      member.is_test_account,
+  );
 
   async function review(
     memberId: string,
@@ -166,7 +174,7 @@ export function MemberReview({
             access when required.
           </p>
         </div>
-        <span className="status-count">{readyForReview} ready for review</span>
+        <span className="status-count">{realRequests.length} real requests ready for review</span>
       </div>
 
       {!applicationJourneyReady ? (
@@ -178,17 +186,9 @@ export function MemberReview({
             applicant context.
           </p>
         </div>
-      ) : readyForReview ? (
+      ) : realRequests.length ? (
         <div className="membership-review-queue">
-          {members
-            .filter(
-              (member) =>
-                member.access_status === "pending" &&
-                ["submitted", "in_review"].includes(
-                  member.application_status ?? "",
-                ),
-            )
-            .map((member) => (
+          {realRequests.map((member) => (
               <article className="membership-review-card" key={member.user_id}>
                 <header>
                   <div>
@@ -237,6 +237,12 @@ export function MemberReview({
         </div>
       ) : null}
 
+      {applicationJourneyReady && testRequests.length ? (
+        <p className="manager-message">
+          {testRequests.length} test {testRequests.length === 1 ? "application is" : "applications are"} kept out of the real request count. You can find {testRequests.length === 1 ? "it" : "them"} in All members below.
+        </p>
+      ) : null}
+
       {!migrationReady ? (
         <div className="admin-empty">
           <strong>Member reviews are temporarily unavailable</strong>
@@ -270,6 +276,7 @@ export function MemberReview({
                   <td>
                     <strong>{member.display_name || member.email}</strong>
                     {member.display_name ? <small>{member.email}</small> : null}
+                    {member.is_test_account ? <small>Test account</small> : null}
                   </td>
                   <td>
                     {member.job_title || member.company || member.country ? (

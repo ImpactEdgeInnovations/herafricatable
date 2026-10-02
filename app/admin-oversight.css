@@ -131,6 +131,9 @@
 .oversight-heading input:focus { background: white; border-color: #735c7d; outline: 3px solid rgba(115,92,125,.12); }
 
 .member-request-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.member-test-requests { border-top: 1px solid var(--oversight-line); margin-top: 22px; padding-top: 16px; }
+.member-test-requests > summary { cursor: pointer; font-size: .88rem; font-weight: 650; min-height: 44px; }
+.member-test-requests > p { color: var(--oversight-muted); font-size: .8rem; margin: 4px 0 14px; }
 .member-request-grid > article { background: var(--oversight-wash); border: 1px solid transparent; border-radius: 16px; padding: 20px; }
 .member-request-grid article header { display: flex; gap: 14px; justify-content: space-between; }
 .member-request-grid article header span { color: #72567f; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }

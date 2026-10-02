@@ -32,6 +32,18 @@ export default async function AdminMembersPage() {
     ? await supabase.rpc("list_admin_members_v2")
     : null;
   const memberResult = fallbackResult ?? memberApplicationResult;
+  const memberRows = (memberResult.data as AdminMember[] | null) ?? [];
+  const memberIds = [...new Set(memberRows.map((member) => member.user_id))];
+  const testFlagsResult = memberIds.length
+    ? await supabase.from("profiles").select("id,is_test_account").in("id", memberIds)
+    : { data: [], error: null };
+  const testFlagsReady = !testFlagsResult.error && testFlagsResult.data?.length === memberIds.length;
+  const testFlagById = new Map((testFlagsResult.data ?? [])
+    .map((profile) => [profile.id, profile.is_test_account === true] as const));
+  const members = memberRows.map((member) => ({
+    ...member,
+    is_test_account: testFlagById.get(member.user_id) === true,
+  }));
 
   return (
     <main className="admin-command-center member-command-page">
@@ -43,8 +55,8 @@ export default async function AdminMembersPage() {
           ((intakeResult.data as MembershipIntakeAdmin[] | null) ?? [])[0] ?? null
         }
         intakeReady={!intakeResult.error}
-        members={(memberResult.data as AdminMember[] | null) ?? []}
-        migrationReady={!memberResult.error}
+        members={testFlagsReady ? members : []}
+        migrationReady={!memberResult.error && testFlagsReady}
       />
     </main>
   );
