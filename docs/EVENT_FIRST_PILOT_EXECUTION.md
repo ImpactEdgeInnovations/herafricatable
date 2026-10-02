@@ -609,8 +609,8 @@ In-person arrival readiness now requires an exact address or map link in
 addition to a venue name and city; a shared venue brand is not sufficient.
 The companion `20261001090000_public_event_arrival_details_guard.sql` makes
 that a database boundary for new public publication and preserves the address
-or map on already-published public events. Apply it to Supabase before the
-pilot can publish; the live audit reports `arrivalDetailsGuard` separately.
+or map on already-published public events. The live audit reports
+`arrivalDetailsGuard` separately.
 The Admin event editor now displays and saves start/end times in the event's
 named timezone. The October pilot therefore remains 18:00–20:00 Nairobi time
 even when an Admin's laptop is set to another timezone.
@@ -619,11 +619,29 @@ active, scoped guest-arrival lead. A merely drafted ticket or an unassigned
 staff account cannot count as a completed setup step. This card is still not
 the final public-guest release decision.
 
+### Venue and migration checkpoint — 2 October 2026
+
+The owner confirmed **Geco Cafe, Mbaazi Rd, Lavington, Nairobi** as the
+intended venue, **Seina N** as Event Host, and supplied a private safety
+contact telephone number. The existing pilot draft now contains the exact
+arrival address. It is still unpublished, unfeatured and closed to bookings;
+there are zero event orders. Venue booking confirmation and the safety
+contact's name are still needed. The Admin member directory returned no
+account matching Seina N by name or email, so Host access has not been
+assigned without her account email. No check-in lead is assigned.
+
+The 14:57 UTC read-only production audit showed the new arrival-details
+database guard is **installed** and the selected pilot now passes `basics`,
+`placeReady` and `placeAvailable`. Free/manual sale, Host, approved Host
+content, safety contact and door staff remain incomplete. The five release
+checks and the separate tagged Admin rehearsal remain incomplete; guest
+access and automatic payments remain off. The recommendation is **hold**.
+
 ### Next owner actions, in order
 
-1. Confirm the Geco branch and exact arrival address, venue booking and
-   capacity of 20, and name an Event Host, check-in lead and reachable safety
-   contact. Six October is the chosen public pilot; keep this existing draft
+1. Confirm the Geco booking and capacity of 20, provide Seina N's member
+   account email, name the safety contact for the supplied telephone number,
+   and assign a check-in lead. Six October is the chosen public pilot; keep this existing draft
    private and registration closed until the gates pass and the owner records
    a go/no-go decision. Do not create a duplicate event. Repeat the read-only
    audit with `npm run ops:events:audit-live -- --pilot-slug=the-founding-table-nairobi-2026-10-06`.
