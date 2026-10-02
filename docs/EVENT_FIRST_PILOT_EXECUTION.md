@@ -429,8 +429,10 @@ closed behind a flag; a green build alone is not an exit.
   would alter the access path for member-only events without improving the
   observed privacy boundary. This check is not a substitute for real-event
   review.
-- [ ] Create the real future launch event as a private draft with owner, city or
+- [x] Create the real future launch event as a private draft with owner, city or
   online format, time zone, capacity, registration mode and complete basic copy.
+  The selected 6 October Nairobi pilot is this draft. Its 20-place capacity and
+  venue booking still need human confirmation; registration remains closed.
 - [ ] Name the Event Host, check-in lead, support/safety lead, Admin reviewer and
   launch rollback owner.
 - [ ] Prepare at least two attendees, a Host, a Moderator and a Super Admin as
@@ -738,6 +740,16 @@ message. Neither pending application was approved or declined by engineering.
 The Member Admin screen now separates tagged test applications and excludes
 them from the real-request count. Seina still needs her own verified account
 and approved membership before she can be assigned as Host.
+
+The 3 October live signed-out check found eight Admin decision functions
+installed and inaccessible to an anonymous visitor, covering member and
+Community approvals, event proposals, manual registration and moderation.
+This is a negative permission check, not evidence that the positive Admin
+decisions or their emails work with real accounts. Host draft review now shows
+the 48-hour publication cutoff in the Admin interface and blocks a too-late
+first publication with a clear rescheduling path. The database guard remains
+authoritative. For the selected 6 October event, the cutoff is 4 October at
+18:00 Nairobi time; no gate was bypassed.
 
 ### Next owner actions, in order
 

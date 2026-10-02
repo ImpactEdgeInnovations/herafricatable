@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { adminErrorMessage } from "@/lib/admin-error";
 import type { AdminEvent } from "@/components/admin/event-manager";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { hostDraftPublicationCutoff, hostDraftPublicationWindowOpen } from "@/lib/events/host-publication-window";
 
 export type AdminEventHostWorkspace = {
   event_id: string;
@@ -79,6 +80,11 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
 
   async function review(item: AdminEventHostWorkspace, action: "approve" | "request_changes") {
     const note = notes[item.event_id] ?? "";
+    if (action === "approve" && item.event_status === "draft" &&
+      !hostDraftPublicationWindowOpen(item.starts_at)) {
+      setMessage("This new event is now less than 48 hours away. Change its start date in Event details, then review the Host draft again.");
+      return;
+    }
     if (action === "approve" && (!safetyReady || !safetyContacts.some((entry) => entry.event_id === item.event_id))) {
       setMessage("Save the event safety contact before publishing this event.");
       return;
@@ -176,12 +182,19 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
         const savedContact = safetyContacts.find((candidate) => candidate.event_id === item.event_id);
         const cover = covers.find((candidate) => candidate.event_id === item.event_id);
         const contact = contactDrafts[item.event_id] ?? { name: savedContact?.contact_name ?? context?.safety_contact_name ?? "", phone: savedContact?.contact_phone ?? context?.safety_contact_phone ?? "" };
+        const publicationCutoff = hostDraftPublicationCutoff(item.starts_at);
+        const publicationWindowClosed = item.event_status === "draft" && !hostDraftPublicationWindowOpen(item.starts_at);
         return <article className="admin-section" key={item.event_id}>
         <p className="eyebrow">{item.workspace_status.replaceAll("_", " ")} · {item.event_status}</p>
         <h3>{item.event_title}</h3>
         <p>Host: {item.host_name || item.host_email} · {item.host_email} · {item.host_status === "paused" ? "Access paused" : "Access active"}</p>
         {lifecycleReady ? <button className="button button-outline" type="button" disabled={busy} onClick={() => void changeHostStatus(item)}>{item.host_status === "paused" ? "Restore Host access" : "Pause Host access"}</button> : null}
         <p>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event?.timezone ?? "Africa/Nairobi" }).format(new Date(item.starts_at))}</p>
+        {item.event_status === "draft" ? <p className="manager-message" role={publicationWindowClosed ? "alert" : "status"}>
+          {publicationWindowClosed
+            ? <>The 48-hour publishing window has passed. <Link href="/admin/events?view=edit">Move the event date</Link>, then confirm the Host&apos;s content still matches before approval.</>
+            : <>Publish this new Host-led event before {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event?.timezone ?? "Africa/Nairobi" }).format(publicationCutoff)}. All safety and launch checks must still pass.</>}
+        </p> : null}
         {item.workspace_status === "submitted" ? <div>
           <h4>Before you decide</h4>
           <dl>
@@ -207,7 +220,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
           <h4>Programme</h4><ul>{item.programme.map((entry, index) => <li key={index}><strong>{entry.title}</strong> · {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event?.timezone ?? "Africa/Nairobi" }).format(new Date(entry.starts_at))}{entry.speaker_name ? ` · ${entry.speaker_name}` : ""}<p>{entry.description}</p></li>)}</ul>
           <h4>Partners</h4>{item.partners.length ? <ul>{item.partners.map((entry, index) => <li key={index}>{entry.name}{entry.website_url ? ` · ${entry.website_url}` : ""}</li>)}</ul> : <p>None listed.</p>}
           <label>Note to Host<textarea rows={3} value={notes[item.event_id] ?? ""} onChange={(event) => setNotes((all) => ({ ...all, [item.event_id]: event.target.value }))} placeholder="Explain what needs to change, if anything." /></label>
-          <div className="portal-actions"><button className="button button-primary" type="button" disabled={busy || item.host_status !== "active" || !safetyReady || !savedContact} onClick={() => void review(item, "approve")}>Approve and publish</button><button className="button button-outline" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "request_changes")}>Ask for changes</button></div>
+          <div className="portal-actions"><button className="button button-primary" type="button" disabled={busy || item.host_status !== "active" || !safetyReady || !savedContact || publicationWindowClosed} onClick={() => void review(item, "approve")}>Approve and publish</button><button className="button button-outline" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "request_changes")}>Ask for changes</button></div>
         </div> : item.review_note ? <p>Last review note: {item.review_note}</p> : null}
         {item.event_status === "published" ? <Link href={`/events/${item.event_slug}`}>View public page</Link> : null}
       </article>})}

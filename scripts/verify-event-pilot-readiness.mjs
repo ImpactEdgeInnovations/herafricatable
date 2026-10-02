@@ -17,6 +17,23 @@ const compiled = ts.transpileModule(source, {
 }).outputText;
 const { eventPilotReadiness } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString("base64")}`);
 
+const publicationSource = readFileSync(new URL("../lib/events/host-publication-window.ts", import.meta.url), "utf8");
+const publicationCompiled = ts.transpileModule(publicationSource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+const { hostDraftPublicationCutoff, hostDraftPublicationWindowOpen } = await import(
+  `data:text/javascript;base64,${Buffer.from(publicationCompiled).toString("base64")}`
+);
+const startsAt = "2026-10-06T15:00:00.000Z";
+assert.equal(hostDraftPublicationCutoff(startsAt).toISOString(), "2026-10-04T15:00:00.000Z");
+assert.equal(hostDraftPublicationWindowOpen(startsAt, Date.parse("2026-10-04T14:59:59.999Z")), true);
+assert.equal(hostDraftPublicationWindowOpen(startsAt, Date.parse("2026-10-04T15:00:00.000Z")), false);
+assert.equal(hostDraftPublicationWindowOpen(startsAt, Date.parse("2026-10-04T15:00:00.001Z")), false);
+assert.equal(hostDraftPublicationWindowOpen("invalid date"), false);
+const hostReview = readFileSync(new URL("../components/admin/event-host-review-manager.tsx", import.meta.url), "utf8");
+assert(hostReview.includes("!hostDraftPublicationWindowOpen(item.starts_at)"));
+assert(hostReview.includes("Move the event date"));
+
 const now = new Date("2026-09-24T12:00:00.000Z");
 const ready = {
   event: {
