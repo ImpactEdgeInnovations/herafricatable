@@ -1,8 +1,8 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import { adminErrorMessage } from "@/lib/admin-error";
-import { formatEventTimeInput, parseEventTimeInput } from "@/lib/events/zoned-datetime";
 import { createClient } from "@/lib/supabase/client";
 
 export type CountdownSettings = {
@@ -12,27 +12,37 @@ export type CountdownSettings = {
   starts_at: string;
 };
 
+export type CountdownCandidate = {
+  id: string;
+  title: string;
+  starts_at: string;
+  timezone: string;
+  venues: { city: string } | null;
+};
+
 type Props = {
   canManage: boolean;
+  candidates: CountdownCandidate[];
+  candidatesUnavailable: boolean;
   initialSettings: CountdownSettings | null;
   userId: string;
 };
 
 export function EventCountdownManager({
   canManage,
+  candidates,
+  candidatesUnavailable,
   initialSettings,
   userId,
 }: Props) {
   const supabase = useMemo(() => createClient(), []);
-  const [eventName, setEventName] = useState(
-    initialSettings?.event_name ?? "Her Africa Table — Nairobi",
+  const [selectedEventId, setSelectedEventId] = useState(
+    candidates.find((candidate) =>
+      candidate.title === initialSettings?.event_name &&
+      Date.parse(candidate.starts_at) === Date.parse(initialSettings?.starts_at ?? ""),
+    )?.id ?? "",
   );
-  const [city, setCity] = useState(initialSettings?.city ?? "Nairobi");
-  const [startsAt, setStartsAt] = useState(
-    initialSettings?.starts_at
-      ? formatEventTimeInput(initialSettings.starts_at, "Africa/Nairobi")
-      : "",
-  );
+  const [hasCountdown, setHasCountdown] = useState(Boolean(initialSettings));
   const [isPublished, setIsPublished] = useState(
     initialSettings?.is_published ?? false,
   );
@@ -42,58 +52,59 @@ export function EventCountdownManager({
   async function saveCountdown(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canManage) return;
-    if (!startsAt) {
-      setMessage("Choose the event date and time.");
+    if (!isPublished && !hasCountdown) {
+      setMessage("There is no homepage countdown to hide yet.");
       return;
     }
-
-    let publishedAt: string;
-    try {
-      publishedAt = parseEventTimeInput(startsAt, "Africa/Nairobi");
-    } catch {
-      setMessage("Choose a valid Nairobi date and time.");
-      return;
-    }
-    if (isPublished && Date.parse(publishedAt) <= Date.now()) {
-      setMessage("That date has passed. Choose a future date or keep the countdown hidden.");
+    if (isPublished && !selectedEventId) {
+      setMessage("Choose a published public event first.");
       return;
     }
 
     setSaving(true);
     setMessage("");
-    if (isPublished) {
-      const matchingEvent = await supabase.from("events")
-        .select("id")
+    if (!isPublished) {
+      const { error } = await supabase.from("site_event_countdown")
+        .update({ is_published: false, updated_by: userId, updated_at: new Date().toISOString() })
+        .eq("id", true);
+      setSaving(false);
+      if (!error) setIsPublished(false);
+      setMessage(error ? adminErrorMessage(error, "hide the public countdown") : "Countdown hidden from the homepage.");
+      return;
+    }
+
+    const matchingEvent = await supabase.from("events")
+        .select("id,title,starts_at,timezone,venues(city)")
+        .eq("id", selectedEventId)
         .eq("status", "published")
         .eq("audience", "public")
-        .eq("title", eventName.trim())
-        .eq("starts_at", publishedAt)
+        .gt("starts_at", new Date().toISOString())
         .maybeSingle();
-      if (matchingEvent.error || !matchingEvent.data) {
-        setSaving(false);
-        setMessage(matchingEvent.error
-          ? adminErrorMessage(matchingEvent.error, "check the public event")
-          : "Publish the matching public event in Event details first. Its name and start time must match this countdown.");
-        return;
-      }
+    if (matchingEvent.error || !matchingEvent.data) {
+      setSaving(false);
+      setMessage(matchingEvent.error
+        ? adminErrorMessage(matchingEvent.error, "check the public event")
+        : "This event is no longer available. Refresh the page and choose a future published public event.");
+      return;
     }
     const { error } = await supabase.from("site_event_countdown").upsert({
       id: true,
-      event_name: eventName.trim(),
-      city: city.trim(),
-      starts_at: publishedAt,
-      is_published: isPublished,
+      event_name: matchingEvent.data.title,
+      city: (Array.isArray(matchingEvent.data.venues)
+        ? matchingEvent.data.venues[0]?.city
+        : (matchingEvent.data.venues as { city: string } | null)?.city) ?? "Online",
+      starts_at: matchingEvent.data.starts_at,
+      is_published: true,
       updated_by: userId,
       updated_at: new Date().toISOString(),
     });
 
     setSaving(false);
+    if (!error) setHasCountdown(true);
     setMessage(
       error
         ? adminErrorMessage(error, "save the public countdown")
-        : isPublished
-          ? "Countdown saved. The public page should update within a minute."
-          : "Countdown saved as hidden.",
+        : "Countdown saved. The public page should update within a minute.",
     );
   }
 
@@ -114,34 +125,28 @@ export function EventCountdownManager({
       {canManage ? (
         <form onSubmit={saveCountdown} aria-describedby="event-countdown-guide">
           <p className="admin-form-guide" id="event-countdown-guide">
-            Use the exact event name and start time from Event details. The
-            time below is shown in Nairobi time, whatever your device settings.
+            Choose an event that is already public. Its name and date will be copied automatically.
           </p>
           <label>
-            Event name
-            <input
-              value={eventName}
-              onChange={(event) => setEventName(event.target.value)}
-              required
-            />
+            Event
+            <select value={selectedEventId} onChange={(event) => setSelectedEventId(event.target.value)}>
+              <option value="">Choose a published event</option>
+              {candidates.map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>
+                  {candidate.title} · {new Intl.DateTimeFormat("en-KE", {
+                    dateStyle: "medium", timeStyle: "short", timeZone: candidate.timezone || "Africa/Nairobi",
+                  }).format(new Date(candidate.starts_at))} · {Array.isArray(candidate.venues)
+                    ? (candidate.venues as { city: string }[])[0]?.city ?? "Online"
+                    : candidate.venues?.city ?? "Online"}
+                </option>
+              ))}
+            </select>
           </label>
-          <label>
-            City
-            <input
-              value={city}
-              onChange={(event) => setCity(event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Date and time
-            <input
-              type="datetime-local"
-              value={startsAt}
-              onChange={(event) => setStartsAt(event.target.value)}
-              required
-            />
-          </label>
+          {candidatesUnavailable ? (
+            <p className="manager-message" role="status">The event list could not load. Refresh this page before publishing a countdown.</p>
+          ) : candidates.length === 0 ? (
+            <p className="manager-message">No future public event is published yet. <Link href="/admin/events">Review events</Link> first.</p>
+          ) : null}
           <label className="publish-control">
             <input
               type="checkbox"
@@ -150,7 +155,7 @@ export function EventCountdownManager({
             />
             <span>Publish on the landing page</span>
           </label>
-          {isPublished && initialSettings?.is_published &&
+          {initialSettings?.is_published &&
           Date.parse(initialSettings.starts_at) <= Date.now() ? (
             <p className="manager-message" role="status">
               The previous date has passed, so the homepage hides this countdown.
@@ -159,7 +164,7 @@ export function EventCountdownManager({
           ) : null}
           <button
             className="button button-primary"
-            disabled={saving}
+            disabled={saving || (isPublished && (candidatesUnavailable || !selectedEventId))}
             type="submit"
           >
             {saving ? "Saving…" : "Save countdown"}

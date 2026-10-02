@@ -645,9 +645,9 @@ access and automatic payments remain off. The recommendation is **hold**.
 
 At 15:17 UTC, the live audit still reported `registrationEndGuard: false`;
 the 20:06 UTC recheck confirmed it had been applied to the connected project.
-The owner supplied Seina N's email,
-but the Admin member directory returned no member profile for it. Host access
-therefore remains unassigned. Seina needs to verify her email, request
+The owner supplied **seina@arvisia-global.com** for Seina N. A read-only
+production Auth lookup on 2 October found no account for that address, so Host
+access remains unassigned. Seina needs to verify her email, request
 membership, receive Admin approval and complete profile setup before the
 scoped Host assignment can be made. The draft remains private and closed.
 
@@ -665,8 +665,9 @@ countdown as the "next gathering." The application now ignores past countdown
 dates and requires a matching future, published **public** event before showing
 the event's name or ticking timer. With no approved upcoming public event, it
 shows a quiet date-to-be-shared state; the private October pilot remains
-undisclosed. The Admin countdown control uses Nairobi time, rejects past
-publication and asks for a matching published public event. The new contract
+undisclosed. The Admin countdown control now offers a choice of future,
+published public events and copies the chosen title, date and city; hiding an
+old countdown remains possible even if no new event is available. The new contract
 test and production build pass. Release `27a0103` is deployed: a live HTML
 check and browser inspection confirmed the September title/date are gone, the
 date-to-be-shared state is visible, and the private October pilot title is not

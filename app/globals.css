@@ -10308,7 +10308,8 @@ body {
   font-size: 0.72rem;
   font-weight: 700;
 }
-.countdown-manager input:not([type="checkbox"]) {
+.countdown-manager input:not([type="checkbox"]),
+.countdown-manager select {
   min-height: 46px;
   padding: 0 13px;
   border: 1px solid var(--line);
@@ -10316,7 +10317,8 @@ body {
   background: #fff;
   color: var(--ink);
 }
-.countdown-manager input:focus {
+.countdown-manager input:focus,
+.countdown-manager select:focus {
   border-color: var(--wine);
 }
 .countdown-manager .publish-control {

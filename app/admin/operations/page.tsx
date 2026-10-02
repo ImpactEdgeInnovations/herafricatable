@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
   EventCountdownManager,
+  type CountdownCandidate,
   type CountdownSettings,
 } from "@/components/admin/event-countdown-manager";
 import {
@@ -309,6 +310,7 @@ export default async function AdminOperationsPage({
   const loadEventList = loadEvents || loadPrograms;
   const [
     { data: countdown },
+    countdownCandidatesResult,
     memberApplicationResult,
     membershipIntakeResult,
     eventResult,
@@ -327,6 +329,15 @@ export default async function AdminOperationsPage({
           .eq("id", true)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    loadRelease && canManageEvents
+      ? supabase
+          .from("events")
+          .select("id,title,starts_at,timezone,venues(city)")
+          .eq("status", "published")
+          .eq("audience", "public")
+          .gt("starts_at", new Date().toISOString())
+          .order("starts_at", { ascending: true })
+      : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadPeople
       ? supabase.rpc("list_admin_members_v3")
       : Promise.resolve({ data: [], error: null }),
@@ -1464,6 +1475,8 @@ export default async function AdminOperationsPage({
           <section className="admin-section" id="event">
             <EventCountdownManager
               canManage={canManageCountdown}
+              candidates={(countdownCandidatesResult.data as CountdownCandidate[] | null) ?? []}
+              candidatesUnavailable={Boolean(countdownCandidatesResult.error)}
               initialSettings={(countdown as CountdownSettings | null) ?? null}
               userId={user.id}
             />
