@@ -218,7 +218,7 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
         {item.event_status === "draft" ? <p className="manager-message" role={publicationWindowClosed ? "alert" : "status"}>
           {publicationWindowClosed
             ? <>The 48-hour publishing window has passed. <Link href={eventToolHref("/admin/events?view=edit", item.event_id)}>Move the event date</Link>, then confirm the Host&apos;s content still matches before approval.</>
-            : <>Publish this new Host-led event before {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event?.timezone ?? "Africa/Nairobi" }).format(publicationCutoff)}. All safety and launch checks must still pass.</>}
+            : <>If the venue and safety plan are confirmed, publish this Host-led event by {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event?.timezone ?? "Africa/Nairobi" }).format(publicationCutoff)}. Opening guest requests has separate launch checks.</>}
         </p> : null}
         {item.workspace_status === "submitted" ? <div>
           <h4>Before you decide</h4>

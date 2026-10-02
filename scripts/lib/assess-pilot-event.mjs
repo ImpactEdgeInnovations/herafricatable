@@ -1,10 +1,4 @@
-export function assessPilotEvent({ event, tickets, host, hostProfile, workspace,
-  safetyContact, onlineLink, venue, doorStaffActive, orders = [] }, now = new Date()) {
-  const start = new Date(event.starts_at).getTime();
-  const end = new Date(event.ends_at).getTime();
-  const current = now.getTime();
-  const needsVenue = event.format !== "virtual";
-  const needsOnlineLink = event.format !== "in_person";
+function reservationCounts(orders) {
   const reservedByTicket = new Map();
   let reservedSeats = 0;
   for (const order of orders) {
@@ -16,6 +10,17 @@ export function assessPilotEvent({ event, tickets, host, hostProfile, workspace,
         (reservedByTicket.get(item.ticket_type_id) ?? 0) + quantity);
     }
   }
+  return { reservedByTicket, reservedSeats };
+}
+
+export function assessPilotEvent({ event, tickets, host, hostProfile, workspace,
+  safetyContact, onlineLink, venue, doorStaffActive, orders = [] }, now = new Date()) {
+  const start = new Date(event.starts_at).getTime();
+  const end = new Date(event.ends_at).getTime();
+  const current = now.getTime();
+  const needsVenue = event.format !== "virtual";
+  const needsOnlineLink = event.format !== "in_person";
+  const { reservedByTicket, reservedSeats } = reservationCounts(orders);
   const freeOnSale = tickets.some((ticket) =>
     ticket.status === "on_sale" && Number(ticket.price_minor) === 0
     && (ticket.inventory_quantity === null
@@ -39,5 +44,28 @@ export function assessPilotEvent({ event, tickets, host, hostProfile, workspace,
     hostContentApproved: workspace?.status === "approved",
     safetyContactReady: Boolean(safetyContact),
     doorStaffAssigned: doorStaffActive === true,
+  };
+}
+
+// Publication is a separate, earlier decision from opening guest requests.
+// A closed draft can have its page reviewed without silently accepting places.
+export function assessPilotPublication(input, now = new Date()) {
+  const checks = assessPilotEvent(input, now);
+  const { reservedByTicket } = reservationCounts(input.orders ?? []);
+  return {
+    privatePublicDraft: input.event.status === "draft" && input.event.audience === "public"
+      && input.event.registration_mode === "closed",
+    basics: checks.basics,
+    placeReady: checks.placeReady,
+    placeAvailable: checks.placeAvailable,
+    freeTicketPrepared: input.tickets.some((ticket) =>
+      Number(ticket.price_minor) === 0 && ["draft", "on_sale"].includes(ticket.status)
+      && (ticket.inventory_quantity === null
+        || ticket.inventory_quantity > (reservedByTicket.get(ticket.id) ?? 0))
+      && (!ticket.sales_end_at || new Date(ticket.sales_end_at).getTime() > now.getTime())),
+    hostReady: checks.hostReady,
+    hostDraftSubmitted: ["submitted", "approved"].includes(input.workspace?.status),
+    safetyContactReady: checks.safetyContactReady,
+    doorStaffAssigned: checks.doorStaffAssigned,
   };
 }

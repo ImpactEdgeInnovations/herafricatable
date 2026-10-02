@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { assessPilotEvent } from "./lib/assess-pilot-event.mjs";
+import { assessPilotEvent, assessPilotPublication } from "./lib/assess-pilot-event.mjs";
 import { privateDraftHidden } from "./lib/private-draft-hidden.mjs";
 import { recommendPilotRelease } from "./lib/recommend-pilot-release.mjs";
 
@@ -53,6 +53,20 @@ assert.equal(checks({ ...ready, hostProfile: { access_status: "suspended" } }).h
 assert.equal(checks({ ...ready, workspace: { status: "submitted" } }).hostContentApproved, false);
 assert.equal(checks({ ...ready, safetyContact: null }).safetyContactReady, false);
 assert.equal(checks({ ...ready, doorStaffActive: false }).doorStaffAssigned, false);
+const prepublication = {
+  ...ready,
+  event: { ...ready.event, status: "draft", registration_mode: "closed" },
+  tickets: [{ ...ready.tickets[0], status: "draft" }],
+  workspace: { status: "submitted" },
+};
+assert(Object.values(assessPilotPublication(prepublication, now)).every(Boolean));
+assert.equal(assessPilotPublication(ready, now).privatePublicDraft, false);
+assert.equal(assessPilotPublication({ ...prepublication, event: { ...prepublication.event, registration_mode: "manual_review" } }, now).privatePublicDraft, false);
+assert.equal(assessPilotPublication({ ...prepublication, tickets: [{ ...prepublication.tickets[0], status: "archived" }] }, now).freeTicketPrepared, false);
+assert.equal(assessPilotPublication({ ...prepublication, workspace: { status: "editing" } }, now).hostDraftSubmitted, false);
+assert.equal(assessPilotPublication({ ...prepublication, hostProfile: { access_status: "pending" } }, now).hostReady, false);
+assert.equal(assessPilotPublication({ ...prepublication, doorStaffActive: false }, now).doorStaffAssigned, false);
+assert.equal(assessPilotPublication({ ...prepublication, event: { ...prepublication.event, starts_at: "2026-09-28T10:00:00Z" } }, now).basics, false);
 const liveAudit = readFileSync(new URL("./audit-event-pilot-live.mjs", import.meta.url), "utf8");
 assert(liveAudit.includes('service.rpc("event_publication_sequence_ready")'));
 assert(liveAudit.includes('service.rpc("event_arrival_details_guard_ready")'));
@@ -84,6 +98,8 @@ assert(liveAudit.includes("eventReservationOrders(id)"));
 assert(liveAudit.includes("adminSetupReadsPass(admin, selectedPilot.id)"));
 assert(liveAudit.includes('blockers.push("admin_pilot_setup_reads_failed")'));
 assert(liveAudit.includes("selectedPilotPublicationCutoffAt"));
+assert(liveAudit.includes("publicationChecks = assessPilotPublication(pilotInput)"));
+assert(liveAudit.includes("technicalReadyForOwnerReview"));
 assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
 const registrationForm = readFileSync(new URL("../components/events/event-registration-form.tsx", import.meta.url), "utf8");
 const privateHostRehearsal = readFileSync(new URL("./accept-event-host-private.mjs", import.meta.url), "utf8");

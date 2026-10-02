@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createClient } from "@supabase/supabase-js";
-import { assessPilotEvent } from "./lib/assess-pilot-event.mjs";
+import { assessPilotEvent, assessPilotPublication } from "./lib/assess-pilot-event.mjs";
 import { privateDraftHidden } from "./lib/private-draft-hidden.mjs";
 import { recommendPilotRelease } from "./lib/recommend-pilot-release.mjs";
 
@@ -178,6 +178,7 @@ const publicFuture = realEvents.filter((event) => event.status === "published" &
 const selectedPilot = pilotSlug
   ? realEvents.find((event) => event.slug === pilotSlug) ?? null : null;
 let pilotChecks = null;
+let publicationChecks = null;
 if (selectedPilot) {
   const id = selectedPilot.id;
   const [tickets, host, workspace, safety, joining, venue, staff,
@@ -208,7 +209,7 @@ if (selectedPilot) {
   assert.ifError(roles.error);
   const active = (userId) => profiles.data?.some((profile) =>
     profile.id === userId && profile.access_status === "active");
-  pilotChecks = assessPilotEvent({
+  const pilotInput = {
     event: selectedPilot,
     tickets: tickets.data ?? [],
     orders: reservationOrders,
@@ -220,7 +221,9 @@ if (selectedPilot) {
     venue: venue.data,
     doorStaffActive: (staff.data ?? []).some((scope) => active(scope.user_id)
       && roles.data?.some((role) => role.user_id === scope.user_id)),
-  });
+  };
+  pilotChecks = assessPilotEvent(pilotInput);
+  publicationChecks = assessPilotPublication(pilotInput);
 }
 const privateDrafts = realEvents.filter((event) => event.status === "draft");
 const rehearsalEvent = events.find((event) => event.status === "draft" && rehearsal(event));
@@ -413,6 +416,13 @@ const result = {
       ? new Date(Date.parse(selectedPilot.starts_at) - 48 * 60 * 60 * 1000).toISOString()
       : null,
     selectedPilotChecks: pilotChecks },
+  publicationPreflight: {
+    technicalChecks: publicationChecks,
+    technicalReadyForOwnerReview: publicationChecks !== null
+      && Object.values(publicationChecks).every(Boolean),
+    ownerVenueConfirmation: "not recorded by this audit",
+    publicationDecision: "not decided by this audit",
+  },
   adminSession: adminEvidence,
   taggedRoles,
   engineeringRecommendation: recommendPilotRelease({

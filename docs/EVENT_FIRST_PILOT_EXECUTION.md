@@ -817,6 +817,22 @@ Host still had her own draft workspace but no Admin guest-list authority.
 No real attendee data was changed or disclosed, and this does not replace a
 positive registration-decision rehearsal with separate accounts.
 
+The live audit now separates two decisions that previously appeared as one
+all-or-nothing score. **Publication preflight** checks whether the public
+event draft can be taken to the owner for review while registration remains
+closed: a future date beyond the 48-hour cutoff, real arrival details, a
+prepared free ticket, active Host and submitted content, safety contact and
+arrival staff. It never confirms that the venue is actually booked or makes
+the publication decision. The later **guest-release audit** still requires a
+published public event, an on-sale free place under Manual review, live
+journey evidence and completed release checks before anyone opens guest
+requests. On 3 October, the prepared free ticket and basic venue fields pass
+preflight; Host, content, safety and arrival staffing fail, so the owner must
+still hold publication. The separate guest-release recommendation remains
+**hold**. The Host review wording now reflects this sequence rather than
+implying every guest-release check must pass before a closed public page can
+be considered.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
