@@ -35,6 +35,8 @@ assert.equal(checks({ ...ready, event: { ...ready.event, audience: "community" }
 assert.equal(checks({ ...ready, event: { ...ready.event, status: "draft" } }).publicAndPublished, false);
 assert.equal(checks({ ...ready, event: { ...ready.event, capacity: null } }).basics, false);
 assert.equal(checks({ ...ready, event: { ...ready.event, starts_at: "2026-09-26T17:00:00Z" } }).basics, false);
+assert.equal(checks({ ...ready, event: { ...ready.event, status: "draft", starts_at: "2026-09-29T11:00:00Z" } }).basics, false);
+assert.equal(checks({ ...ready, event: { ...ready.event, status: "draft", starts_at: "2026-09-30T17:00:00Z" } }).basics, true);
 assert.equal(checks({ ...ready, orders: [{ status: "pending_review", order_items: [{ ticket_type_id: "free", quantity: 20 }] }] }).placeAvailable, false);
 assert.equal(checks({ ...ready, orders: [{ status: "pending_review", order_items: [{ ticket_type_id: "free", quantity: 20 }] }] }).freeManualTicket, false);
 assert.equal(checks({ ...ready, event: { ...ready.event, capacity: 25 }, orders: [{ status: "pending_review", order_items: [{ ticket_type_id: "free", quantity: 20 }] }] }).placeAvailable, true);
@@ -73,6 +75,7 @@ assert(liveAudit.includes('!adminEvidence.tagged || adminEvidence.usesPrimaryAcc
 assert(liveAudit.includes('blockers.push("dedicated_admin_rehearsal_account_missing")'));
 assert(liveAudit.includes('blockers.push("private_draft_public_route_not_verified_hidden")'));
 assert(liveAudit.includes("eventReservationOrders(id)"));
+assert(liveAudit.includes("selectedPilotPublicationCutoffAt"));
 assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
 const registrationForm = readFileSync(new URL("../components/events/event-registration-form.tsx", import.meta.url), "utf8");
 const privateHostRehearsal = readFileSync(new URL("./accept-event-host-private.mjs", import.meta.url), "utf8");

@@ -620,8 +620,8 @@ staff account cannot count as a completed setup step. This card is still not
 the final public-guest release decision.
 `20261002160000_event_registration_end_guard.sql` closes another stale-link
 path: free/manual requests, waiting-list joins and automatic checkout must
-not create a new registration after the event ends. It is an isolated-CI
-tested migration, not live until the production audit reports
+not create a new registration after the event ends. The isolated CI test
+passed, and the 20:06 UTC production audit now reports
 `registrationEndGuard: true`. Admin cannot open public guest access while its
 readiness check is absent, including after a stale-page confirmation.
 
@@ -644,8 +644,8 @@ checks and the separate tagged Admin rehearsal remain incomplete; guest
 access and automatic payments remain off. The recommendation is **hold**.
 
 At 15:17 UTC, the live audit still reported `registrationEndGuard: false`;
-apply `20261002160000_event_registration_end_guard.sql` to the connected
-Supabase project, then rerun the audit. The owner supplied Seina N's email,
+the 20:06 UTC recheck confirmed it had been applied to the connected project.
+The owner supplied Seina N's email,
 but the Admin member directory returned no member profile for it. Host access
 therefore remains unassigned. Seina needs to verify her email, request
 membership, receive Admin approval and complete profile setup before the
@@ -671,6 +671,17 @@ test and production build pass. Release `27a0103` is deployed: a live HTML
 check and browser inspection confirmed the September title/date are gone, the
 date-to-be-shared state is visible, and the private October pilot title is not
 in the signed-out homepage.
+
+The pilot draft starts on 6 October at 18:00 Nairobi time. The Host review
+function will not publish a new draft less than 48 hours before it starts, so
+its publication cutoff is **4 October at 18:00 Nairobi time**
+(`2026-10-04T15:00:00Z`). The live audit now prints this cutoff and marks
+draft basics unready once it passes. At the 20:08 UTC recheck on 2 October,
+the cutoff had not passed, the registration-end guard was live, and the public
+guest and payment flags remained closed. Seina's supplied email still had no
+member profile. The engineering recommendation remains **hold**. If Host,
+venue, safety, staff and live-journey gates cannot pass before the cutoff,
+move the event date; do not bypass the database rule.
 
 ### Next owner actions, in order
 

@@ -362,6 +362,9 @@ const result = {
     futureRehearsalDrafts: events.filter((event) => event.status === "draft" && rehearsal(event)).length,
     privateDraftAnonymousHidden, privateDraftRoutesChecked: privateDraftRoutes.length,
     selectedPilotSlug: pilotSlug || null,
+    selectedPilotPublicationCutoffAt: selectedPilot?.status === "draft"
+      ? new Date(Date.parse(selectedPilot.starts_at) - 48 * 60 * 60 * 1000).toISOString()
+      : null,
     selectedPilotChecks: pilotChecks },
   adminSession: adminEvidence,
   taggedRoles,

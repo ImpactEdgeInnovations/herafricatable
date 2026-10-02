@@ -27,7 +27,8 @@ export function assessPilotEvent({ event, tickets, host, hostProfile, workspace,
     publicAndPublished: event.status === "published" && event.audience === "public",
     basics: Boolean(event.summary?.trim().length >= 40 && event.capacity > 0
       && event.timezone?.trim() && Number.isFinite(start) && Number.isFinite(end)
-      && start > current && end > start),
+      && start > current + (event.status === "draft" ? 48 * 60 * 60 * 1000 : 0)
+      && end > start),
     placeReady: (!needsVenue || Boolean(venue?.name?.trim() && venue?.city?.trim()
       && venue?.country?.trim() && (venue?.address_line?.trim() || venue?.map_url?.trim())))
       && (!needsOnlineLink || Boolean(onlineLink?.trim())),
