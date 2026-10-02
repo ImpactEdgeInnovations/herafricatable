@@ -651,6 +651,15 @@ therefore remains unassigned. Seina needs to verify her email, request
 membership, receive Admin approval and complete profile setup before the
 scoped Host assignment can be made. The draft remains private and closed.
 
+At 15:22 UTC, release `8823f97` passed the live public-site smoke check:
+home, events and sign-in loaded; anonymous private routes redirected;
+security headers were present; an unsigned notification cron request was
+rejected; health returned 200. The read-only email audit found no queued,
+processing, failed or sent notification jobs in the preceding seven days;
+its last provider-accepted message predates the pilot. This is not evidence
+that a new guest request, Admin decision or Host assignment email reaches an
+inbox. Those flows still require a separate-account delivery rehearsal.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
