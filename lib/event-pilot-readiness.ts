@@ -62,14 +62,22 @@ export function eventPilotReadiness(input: PilotReadinessInput, now = new Date()
         .reduce((sum, item) => sum + item.quantity, 0), 0)) &&
     (!ticket.sales_start_at || Date.parse(ticket.sales_start_at) <= now.getTime()) &&
     (!ticket.sales_end_at || Date.parse(ticket.sales_end_at) > now.getTime()));
+  const basicsReady = Boolean(event.summary && event.summary.trim().length >= 40 && event.capacity && event.capacity > 0 &&
+    Number.isFinite(startsAt) && Number.isFinite(endsAt) &&
+    startsAt > now.getTime() + (event.status === "draft" ? 48 * 60 * 60 * 1000 : 0) && endsAt > startsAt);
+  const basicsGuidance = !Number.isFinite(startsAt) || !Number.isFinite(endsAt) || endsAt <= startsAt
+    ? "Set a valid start and end time in Event details."
+    : event.status === "draft" && startsAt <= now.getTime() + 48 * 60 * 60 * 1000
+      ? "Move this private draft to a date more than 48 hours away. Host review cannot publish it after that cutoff."
+      : !event.summary || event.summary.trim().length < 40
+        ? "Add a clear introduction of at least 40 characters."
+        : "Set the number of places in Event details.";
 
   return [
     {
       label: "Event basics",
-      ready: Boolean(event.summary && event.summary.trim().length >= 40 && event.capacity && event.capacity > 0 &&
-        Number.isFinite(startsAt) && Number.isFinite(endsAt) &&
-        startsAt > now.getTime() + (event.status === "draft" ? 48 * 60 * 60 * 1000 : 0) && endsAt > startsAt),
-      guidance: "Add a clear introduction, a capacity and a future date at least two days away.",
+      ready: basicsReady,
+      guidance: basicsGuidance,
       href: "/admin/events?view=edit",
     },
     {
@@ -83,8 +91,12 @@ export function eventPilotReadiness(input: PilotReadinessInput, now = new Date()
     {
       label: "Free place with private review",
       ready: event.registration_mode === "manual_review" && hasFreeTicket,
-      guidance: "Use Manual review and an available free ticket within its sale dates. Keep automatic payments closed.",
-      href: "/admin/events?view=registrations",
+      guidance: event.registration_mode !== "manual_review"
+        ? "Choose Manual review in Event details. Publishing with registration closed will not accept requests."
+        : "Set a free ticket to On sale with available places and sale dates that include today. Keep automatic payments closed.",
+      href: event.registration_mode !== "manual_review"
+        ? "/admin/events?view=edit"
+        : "/admin/events?view=registrations",
     },
     {
       label: "Places remaining",

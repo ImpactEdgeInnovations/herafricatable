@@ -803,6 +803,12 @@ read for this draft, while the primary Super Admin read exactly the selected
 row. This strengthens the private-draft evidence beyond rendered pages; it
 does not establish the later public booking or email journeys.
 
+The Admin event overview now names the specific setup repair instead of a
+generic basics prompt: an expired 48-hour draft window points to rescheduling,
+while a closed registration setting points to Event details and a missing or
+off-sale free ticket points to Registrations. This is an operational guidance
+improvement, not a publication or booking acceptance result.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
