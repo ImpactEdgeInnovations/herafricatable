@@ -611,6 +611,9 @@ The companion `20261001090000_public_event_arrival_details_guard.sql` makes
 that a database boundary for new public publication and preserves the address
 or map on already-published public events. Apply it to Supabase before the
 pilot can publish; the live audit reports `arrivalDetailsGuard` separately.
+The Admin event editor now displays and saves start/end times in the event's
+named timezone. The October pilot therefore remains 18:00–20:00 Nairobi time
+even when an Admin's laptop is set to another timezone.
 
 ### Next owner actions, in order
 

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { adminErrorMessage } from "@/lib/admin-error";
+import { formatEventTimeInput, parseEventTimeInput } from "@/lib/events/zoned-datetime";
 
 export type AdminEvent = {
   capacity: number | null;
@@ -51,14 +52,6 @@ type EventForm = {
   venueName: string;
 };
 
-function toLocalInput(value?: string) {
-  if (!value) return "";
-  const date = new Date(value);
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16);
-}
-
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -68,16 +61,15 @@ function slugify(value: string) {
 }
 
 function blankForm(): EventForm {
-  const start = new Date();
-  start.setDate(start.getDate() + 60);
-  start.setHours(18, 0, 0, 0);
-  const end = new Date(start.getTime() + 4 * 60 * 60 * 1000);
+  const date = formatEventTimeInput(
+    new Date(Date.now() + 60 * 86_400_000).toISOString(), "Africa/Nairobi",
+  ).slice(0, 10);
   return {
     addressLine: "",
     capacity: "",
     city: "Nairobi",
     country: "Kenya",
-    endsAt: toLocalInput(end.toISOString()),
+    endsAt: `${date}T20:00`,
     format: "in_person",
     id: null,
     isFeatured: false,
@@ -85,7 +77,7 @@ function blankForm(): EventForm {
     onlineUrl: "",
     registrationMode: "manual_review",
     slug: "",
-    startsAt: toLocalInput(start.toISOString()),
+    startsAt: `${date}T18:00`,
     status: "draft",
     summary: "",
     timezone: "Africa/Nairobi",
@@ -104,7 +96,7 @@ function formFromEvent(
     capacity: event.capacity?.toString() ?? "",
     city: event.venues?.city ?? "",
     country: event.venues?.country ?? "Kenya",
-    endsAt: toLocalInput(event.ends_at),
+    endsAt: formatEventTimeInput(event.ends_at, event.timezone),
     format: event.format,
     id: event.id,
     isFeatured: event.is_featured,
@@ -112,7 +104,7 @@ function formFromEvent(
     onlineUrl: privateEvent?.online_url ?? "",
     registrationMode: event.registration_mode,
     slug: event.slug,
-    startsAt: toLocalInput(event.starts_at),
+    startsAt: formatEventTimeInput(event.starts_at, event.timezone),
     status: event.status,
     summary: event.summary ?? "",
     timezone: event.timezone,
@@ -241,6 +233,19 @@ export function EventManager({
       setMessage("Online event payment is paused. Choose manual review or complete the payment launch checks before publishing.");
       return;
     }
+    let startsAt: string;
+    let endsAt: string;
+    try {
+      startsAt = parseEventTimeInput(form.startsAt, form.timezone);
+      endsAt = parseEventTimeInput(form.endsAt, form.timezone);
+    } catch {
+      setMessage("Check the date, time and event timezone. Use a valid timezone such as Africa/Nairobi.");
+      return;
+    }
+    if (new Date(endsAt).getTime() <= new Date(startsAt).getTime()) {
+      setMessage("The event must end after it starts.");
+      return;
+    }
     setSaving(true);
     setMessage("");
 
@@ -251,8 +256,8 @@ export function EventManager({
       p_summary: form.summary,
       p_format: form.format,
       p_status: form.status,
-      p_starts_at: new Date(form.startsAt).toISOString(),
-      p_ends_at: new Date(form.endsAt).toISOString(),
+      p_starts_at: startsAt,
+      p_ends_at: endsAt,
       p_timezone: form.timezone,
       p_venue_name: form.venueName,
       p_city: form.city,
@@ -280,13 +285,13 @@ export function EventManager({
     }
     const savedEvent: AdminEvent = {
       capacity: form.capacity ? Number(form.capacity) : null,
-      ends_at: new Date(form.endsAt).toISOString(),
+      ends_at: endsAt,
       format: form.format,
       id: savedId,
       is_featured: form.isFeatured,
       registration_mode: form.registrationMode,
       slug: slugify(form.slug || form.title),
-      starts_at: new Date(form.startsAt).toISOString(),
+      starts_at: startsAt,
       status: form.status,
       summary: form.summary || null,
       timezone: form.timezone,
@@ -507,6 +512,7 @@ export function EventManager({
                 onChange={(event) => update("timezone", event.target.value)}
                 required
               />
+              <small>Start and end times use this event timezone, even if your device is elsewhere.</small>
             </label>
             <label>
               Capacity
