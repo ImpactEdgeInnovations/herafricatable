@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-
-export type CountdownEvent = {
-  city: string;
-  event_name: string;
-  starts_at: string;
-};
+import { upcomingCountdown, type CountdownEvent } from "@/lib/upcoming-countdown";
 
 type TimeLeft = {
   days: number;
@@ -34,49 +28,32 @@ const twoDigits = (value: number) => String(value).padStart(2, "0");
 export function EventCountdown({
   initialEvent,
 }: {
-  initialEvent?: CountdownEvent | null;
+  initialEvent: CountdownEvent | null;
 }) {
-  const [event, setEvent] = useState<CountdownEvent | null>(initialEvent ?? null);
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(() =>
     initialEvent ? calculateTimeLeft(initialEvent.starts_at) : null,
   );
 
   useEffect(() => {
-    if (initialEvent !== undefined) return;
-    const supabase = createClient();
-
-    void supabase
-      .from("site_event_countdown")
-      .select("event_name, city, starts_at")
-      .eq("id", true)
-      .eq("is_published", true)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data) return;
-        const configuredEvent = data as CountdownEvent;
-        setEvent(configuredEvent);
-        setTimeLeft(calculateTimeLeft(configuredEvent.starts_at));
-      });
-  }, [initialEvent]);
-
-  useEffect(() => {
-    if (!event) return;
+    if (!initialEvent) return;
     const timer = window.setInterval(() => {
-      setTimeLeft(calculateTimeLeft(event.starts_at));
+      setTimeLeft(calculateTimeLeft(initialEvent.starts_at));
     }, 1_000);
 
     return () => window.clearInterval(timer);
-  }, [event]);
+  }, [initialEvent]);
+
+  const activeEvent = timeLeft ? upcomingCountdown(initialEvent) : null;
 
   return (
     <section className="countdown-section" aria-label="Next Her Africa Table event">
       <div className="countdown-intro">
         <span>Next gathering</span>
-        <strong>{event?.event_name ?? "Launch of the Africa Table Platform"}</strong>
-        <small>{event?.city ?? "Details shared with approved members"}</small>
+        <strong>{activeEvent?.event_name ?? "A new gathering is being prepared"}</strong>
+        <small>{activeEvent?.city ?? "Nairobi · Date to be shared"}</small>
       </div>
 
-      {event && timeLeft ? (
+      {activeEvent && timeLeft ? (
         <div className="countdown-clock" role="timer" aria-live="off">
           <span><b suppressHydrationWarning>{twoDigits(timeLeft.days)}</b><small>Days</small></span>
           <span><b suppressHydrationWarning>{twoDigits(timeLeft.hours)}</b><small>Hours</small></span>
@@ -84,15 +61,10 @@ export function EventCountdown({
           <span><b suppressHydrationWarning>{twoDigits(timeLeft.seconds)}</b><small>Seconds</small></span>
         </div>
       ) : (
-        <div className="countdown-clock countdown-clock-pending" aria-label="Event date awaiting publication">
-          <span><b>—</b><small>Days</small></span>
-          <span><b>—</b><small>Hours</small></span>
-          <span><b>—</b><small>Minutes</small></span>
-          <span><b>—</b><small>Seconds</small></span>
-        </div>
+        <p className="countdown-pending">We’ll share the date when it is confirmed.</p>
       )}
 
-      <Link href="/events">View gathering <span aria-hidden="true">→</span></Link>
+      <Link href={activeEvent?.slug ? `/events/${activeEvent.slug}` : "/events"}>{activeEvent ? "View gathering" : "Explore gatherings"} <span aria-hidden="true">→</span></Link>
     </section>
   );
 }

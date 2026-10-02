@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { InstallAppButton } from "@/components/pwa/install-app";
-import {
-  EventCountdown,
-  type CountdownEvent,
-} from "@/components/event-countdown";
+import { EventCountdown } from "@/components/event-countdown";
 import { getSupabasePublicEnv } from "@/lib/env";
+import { upcomingCountdown, type CountdownEvent } from "@/lib/upcoming-countdown";
 import { absoluteUrl, publicPageMetadata, serializeJsonLd, siteDescription } from "@/lib/seo";
 
 export const revalidate = 60;
@@ -51,10 +49,10 @@ const membershipSteps = [
 ];
 
 function formatEventDate(value: string | undefined) {
-  if (!value) return { day: "Soon", month: "Date to be shared" };
+  if (!value) return { day: "—", month: "Date to be shared" };
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return { day: "Soon", month: "Date to be shared" };
+    return { day: "—", month: "Date to be shared" };
   }
   return {
     day: new Intl.DateTimeFormat("en-KE", { day: "2-digit" }).format(date),
@@ -68,19 +66,49 @@ function formatEventDate(value: string | undefined) {
 async function getPublishedCountdown(): Promise<CountdownEvent | null> {
   try {
     const { url, publishableKey } = getSupabasePublicEnv();
-    const response = await fetch(
-      `${url}/rest/v1/site_event_countdown?id=eq.true&is_published=eq.true&select=event_name,city,starts_at&limit=1`,
-      {
-        headers: {
-          apikey: publishableKey,
-          Authorization: `Bearer ${publishableKey}`,
-        },
-        next: { revalidate },
+    const endpoint = new URL(`${url}/rest/v1/site_event_countdown`);
+    endpoint.searchParams.set("id", "eq.true");
+    endpoint.searchParams.set("is_published", "eq.true");
+    endpoint.searchParams.set("starts_at", `gt.${new Date().toISOString()}`);
+    endpoint.searchParams.set("select", "event_name,city,starts_at");
+    endpoint.searchParams.set("limit", "1");
+    const response = await fetch(endpoint, {
+      headers: {
+        apikey: publishableKey,
+        Authorization: `Bearer ${publishableKey}`,
       },
-    );
+      next: { revalidate },
+    });
     if (!response.ok) return null;
     const rows = (await response.json()) as CountdownEvent[];
-    return rows[0] ?? null;
+    const configured = upcomingCountdown(rows[0]);
+    if (!configured) return null;
+
+    // A standalone countdown must not announce a draft or an event that has
+    // never been approved for the public Events page.
+    const publicEventUrl = new URL(`${url}/rest/v1/events`);
+    publicEventUrl.searchParams.set("select", "slug,title,starts_at");
+    publicEventUrl.searchParams.set("status", "eq.published");
+    publicEventUrl.searchParams.set("audience", "eq.public");
+    publicEventUrl.searchParams.set("title", `eq.${configured.event_name}`);
+    publicEventUrl.searchParams.set("starts_at", `eq.${configured.starts_at}`);
+    publicEventUrl.searchParams.set("limit", "1");
+    const publicEventResponse = await fetch(publicEventUrl, {
+      headers: {
+        apikey: publishableKey,
+        Authorization: `Bearer ${publishableKey}`,
+      },
+      next: { revalidate },
+    });
+    if (!publicEventResponse.ok) return null;
+    const publicEvents = (await publicEventResponse.json()) as {
+      slug: string; title: string; starts_at: string;
+    }[];
+    const published = publicEvents[0];
+    return published
+      ? upcomingCountdown({ ...configured, event_name: published.title,
+          slug: published.slug, starts_at: published.starts_at })
+      : null;
   } catch {
     return null;
   }
@@ -149,15 +177,15 @@ export default async function HomePage() {
             </div>
             <small>Founding pilot · Nairobi</small>
           </header>
-          <Link className="editorial-live-event" href="/events">
+          <Link className="editorial-live-event" href={countdown?.slug ? `/events/${countdown.slug}` : "/events"}>
             <span className="editorial-live-date">
               <strong>{eventDate.day}</strong>
               <small>{eventDate.month}</small>
             </span>
             <span>
               <small>Next gathering · {countdown?.city ?? "Nairobi"}</small>
-              <strong>{countdown?.event_name ?? "The next Table gathering"}</strong>
-              <em>View details <ArrowIcon /></em>
+              <strong>{countdown?.event_name ?? "A new gathering is being prepared"}</strong>
+              <em>{countdown ? "View details" : "Explore gatherings"} <ArrowIcon /></em>
             </span>
           </Link>
           <div className="editorial-live-capabilities">

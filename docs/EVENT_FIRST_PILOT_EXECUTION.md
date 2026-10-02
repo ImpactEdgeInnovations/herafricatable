@@ -660,6 +660,16 @@ its last provider-accepted message predates the pilot. This is not evidence
 that a new guest request, Admin decision or Host assignment email reaches an
 inbox. Those flows still require a separate-account delivery rehearsal.
 
+The live homepage also exposed an expired, manually configured September
+countdown as the "next gathering." The application now ignores past countdown
+dates and requires a matching future, published **public** event before showing
+the event's name or ticking timer. With no approved upcoming public event, it
+shows a quiet date-to-be-shared state; the private October pilot remains
+undisclosed. The Admin countdown control uses Nairobi time, rejects past
+publication and asks for a matching published public event. The new contract
+test and production build pass; verify the corrected state on the deployed
+homepage after the commit reaches Vercel.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

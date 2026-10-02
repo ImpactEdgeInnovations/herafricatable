@@ -10253,9 +10253,6 @@ body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-.countdown-clock-pending {
-  opacity: 0.48;
-}
 .countdown-pending {
   margin: 0;
   color: var(--muted);
