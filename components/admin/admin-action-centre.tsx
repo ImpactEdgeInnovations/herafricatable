@@ -12,6 +12,7 @@ export function AdminActionCentre({
   hasEvents,
   openReports,
   pendingMembers,
+  memberCountsReady,
   pendingCommunityApplications,
   pendingRefunds,
   pendingRegistrations,
@@ -21,6 +22,7 @@ export function AdminActionCentre({
   hasEvents: boolean;
   openReports: number;
   pendingMembers: number;
+  memberCountsReady: boolean;
   pendingCommunityApplications: number;
   pendingRefunds: number;
   pendingRegistrations: number;
@@ -96,6 +98,7 @@ export function AdminActionCentre({
 
   const total = actions.reduce((sum, action) => sum + action.count, 0);
   const openActions = actions.filter((action) => action.count > 0);
+  const memberQueueUnavailable = role === "super_admin" && !memberCountsReady;
 
   return (
     <section
@@ -112,12 +115,20 @@ export function AdminActionCentre({
             card to go directly to it.
           </p>
         </div>
-        <span className={total ? "has-work" : "all-clear"}>
-          {total ? `${total} open task${total === 1 ? "" : "s"}` : "All clear"}
+        <span className={total || memberQueueUnavailable ? "has-work" : "all-clear"}>
+          {memberQueueUnavailable ? "Check member queue" : total ? `${total} open task${total === 1 ? "" : "s"}` : "All clear"}
         </span>
       </header>
-      {openActions.length ? (
+      {openActions.length || memberQueueUnavailable ? (
         <div className="admin-action-grid">
+          {memberQueueUnavailable ? (
+            <a className="has-work" href="/admin/members">
+              <span aria-hidden="true">!</span>
+              <strong>Member queue unavailable</strong>
+              <p>We could not check which requests are real. Open Member oversight before deciding.</p>
+              <small>Check now <span aria-hidden="true">→</span></small>
+            </a>
+          ) : null}
           {openActions.map((action) => (
             <a className="has-work" href={action.href} key={action.label}>
               <span>{action.count}</span>

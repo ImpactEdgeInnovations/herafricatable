@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 type MemberRow = {
   access_status: string;
   application_status?: string | null;
+  user_id: string;
 };
 
 type EventRow = {
@@ -109,6 +110,17 @@ export default async function AdminHomePage() {
   const memberResult = memberFallbackResult ?? memberApplicationResult;
 
   const members = (memberResult.data as MemberRow[] | null) ?? [];
+  const memberIds = [...new Set(members.map((member) => member.user_id))];
+  const memberTagsResult = role === "super_admin" && memberIds.length
+    ? await supabase.from("profiles").select("id,is_test_account").in("id", memberIds)
+    : { data: [], error: null };
+  const memberCountsReady = !memberResult.error && !memberTagsResult.error &&
+    memberTagsResult.data?.length === memberIds.length;
+  const testFlagById = new Map((memberTagsResult.data ?? [])
+    .map((profile) => [profile.id, profile.is_test_account === true] as const));
+  const realMembers = memberCountsReady
+    ? members.filter((member) => testFlagById.get(member.user_id) === false)
+    : [];
   const events = (eventResult.data as EventRow[] | null) ?? [];
   const eventIds = events.map((event) => event.event_id);
 
@@ -142,12 +154,12 @@ export default async function AdminHomePage() {
     ...((marketplaceReports.data as ReportRow[] | null) ?? []),
     ...((effectiveCommunityReports?.data as ReportRow[] | null) ?? []),
   ];
-  const pendingMembers = members.filter(
+  const pendingMembers = realMembers.filter(
     (member) =>
       member.access_status === "pending" &&
       ["submitted", "in_review"].includes(member.application_status ?? ""),
   ).length;
-  const activeMembers = members.filter(
+  const activeMembers = realMembers.filter(
     (member) => member.access_status === "active",
   ).length;
   const draftEvents = events.filter((event) => event.status === "draft").length;
@@ -198,11 +210,11 @@ export default async function AdminHomePage() {
           {role === "super_admin" ? (
             <>
               <article>
-                <strong>{members.length}</strong>
-                <span>Member accounts</span>
+                <strong>{memberCountsReady ? realMembers.length : "—"}</strong>
+                <span>Real member accounts</span>
               </article>
               <article>
-                <strong>{activeMembers}</strong>
+                <strong>{memberCountsReady ? activeMembers : "—"}</strong>
                 <span>Active members</span>
               </article>
             </>
@@ -240,9 +252,9 @@ export default async function AdminHomePage() {
           </div>
           <div>
             <strong>
-              {membershipIntake?.pending_applications ?? pendingMembers}
+              {memberCountsReady ? pendingMembers : "—"}
             </strong>
-            <span>request{(membershipIntake?.pending_applications ?? pendingMembers) === 1 ? "" : "s"} waiting</span>
+            <span>{memberCountsReady ? `${pendingMembers} real request${pendingMembers === 1 ? "" : "s"} waiting` : "Request count unavailable"}</span>
           </div>
           <Link href="/admin/members">Review requests →</Link>
         </section>
@@ -254,6 +266,7 @@ export default async function AdminHomePage() {
         openReports={openReports}
         pendingCommunityApplications={pendingCommunityApplications}
         pendingMembers={pendingMembers}
+        memberCountsReady={memberCountsReady}
         pendingRefunds={refundResult.count ?? 0}
         pendingRegistrations={registrationResult.count ?? 0}
         role={role}

@@ -773,6 +773,19 @@ has its own release gate. These interface checks are guidance and fail closed
 if ticket data is incomplete; the database triggers and review function remain
 authoritative. A signed-in Admin publication rehearsal is still outstanding.
 
+A read-only signed-in page probe then used three existing tagged rehearsal
+accounts on the live site. All opened member home and were denied platform
+Admin decisions. Only the assigned Event Host could open the private rehearsal
+Host page; only the Community moderator could open her Community management
+page. The ordinary member could open neither. The untagged primary Super Admin
+could open the Admin cockpit, Member oversight, selected pilot editor and Host
+review. These are rendered-route and access checks, not proof of OTP delivery,
+button decisions, registration, mobile use or the separate tagged Admin gate.
+The Admin cockpit now uses profile test tags so its real membership totals and
+waiting-request count agree with Member oversight; incomplete tag data shows an
+unavailable count rather than a false all-clear. Recheck that count on the
+deployed release before accepting the change.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

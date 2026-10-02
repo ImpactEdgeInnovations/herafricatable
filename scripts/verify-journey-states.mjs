@@ -217,6 +217,14 @@ for (const contract of [
 
 const adminPage = read("app/admin/page.tsx");
 const adminHeader = read("components/admin/admin-header.tsx");
+const adminActionCentre = read("components/admin/admin-action-centre.tsx");
+assert(adminPage.includes('.select("id,is_test_account")') &&
+  adminPage.includes("const realMembers = memberCountsReady") &&
+  adminPage.includes("memberCountsReady ? pendingMembers : \"—\""),
+"Admin cockpit must exclude tagged test accounts from real member and request counts");
+assert(adminActionCentre.includes("memberQueueUnavailable") &&
+  adminActionCentre.includes("Member queue unavailable"),
+"Admin cockpit must not report all clear when member counts cannot load");
 for (const specialist of [
   "EventContentManager",
   "EventMenuManager",
