@@ -59,7 +59,7 @@ for (const account of accounts) {
     password: account.password,
   });
   assert.equal(signedIn.error, null, `${account.purpose} password verification failed`);
-  await verifier.auth.signOut();
+  await verifier.auth.signOut({ scope: "local" });
 }
 
 process.stdout.write(

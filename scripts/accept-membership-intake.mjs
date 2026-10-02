@@ -127,7 +127,7 @@ async function submit(email, displayName) {
     p_referral_source: "Production acceptance rehearsal",
     p_referred_by: null,
   });
-  await member.auth.signOut();
+  await member.auth.signOut({ scope: "local" });
   return result;
 }
 
@@ -228,7 +228,7 @@ try {
       assert.equal(notices.error, null, "Test Admin notices could not be cleaned up");
     }
   }
-  await operator.auth.signOut();
+  await operator.auth.signOut({ scope: "local" });
 }
 
 process.stdout.write(

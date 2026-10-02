@@ -385,7 +385,7 @@ try {
     });
     if (communityCleanup.error) cleanupErrors.push("Community cleanup");
   }
-  await Promise.all(Object.values(clients).map((client) => client.auth.signOut()));
+  await Promise.all(Object.values(clients).map((client) => client.auth.signOut({ scope: "local" })));
   if (cleanupErrors.length) {
     throw new Error(`${cleanupErrors.join(" and ")} failed`);
   }

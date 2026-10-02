@@ -185,9 +185,9 @@ try {
     }
   }
   await Promise.all([
-    reporter.auth.signOut(),
-    host.auth.signOut(),
-    communityModerator.auth.signOut(),
-    platformAdmin.auth.signOut(),
+    reporter.auth.signOut({ scope: "local" }),
+    host.auth.signOut({ scope: "local" }),
+    communityModerator.auth.signOut({ scope: "local" }),
+    platformAdmin.auth.signOut({ scope: "local" }),
   ]);
 }

@@ -196,5 +196,5 @@ try {
 
   process.stdout.write(`${JSON.stringify({ checks, eventSlug: slug, published: false, secretsPrinted: false }, null, 2)}\n`);
 } finally {
-  await Promise.all(clients.map((target) => target.auth.signOut()));
+  await Promise.all(clients.map((target) => target.auth.signOut({ scope: "local" })));
 }

@@ -206,5 +206,5 @@ try {
     });
     if (emergencyRestore.error) throw emergencyRestore.error;
   }
-  await Promise.all([admin.auth.signOut(), member.auth.signOut()]);
+  await Promise.all([admin.auth.signOut({ scope: "local" }), member.auth.signOut({ scope: "local" })]);
 }

@@ -277,10 +277,10 @@ try {
   assert.equal(Boolean(restoredFeature.data.enabled), originalFeatureEnabled);
 
   await Promise.all([
-    admin.client.auth.signOut(),
-    requester.client.auth.signOut(),
-    candidate.client.auth.signOut(),
-    optedOut.client.auth.signOut(),
+    admin.client.auth.signOut({ scope: "local" }),
+    requester.client.auth.signOut({ scope: "local" }),
+    candidate.client.auth.signOut({ scope: "local" }),
+    optedOut.client.auth.signOut({ scope: "local" }),
   ]);
   if (acceptanceResult) {
     console.log(

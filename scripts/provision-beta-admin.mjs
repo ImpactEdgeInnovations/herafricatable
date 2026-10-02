@@ -166,7 +166,7 @@ const { data: verifiedRole, error: verifiedRoleError } = await verifier
   .eq("user_id", signIn.user.id)
   .eq("role", "super_admin")
   .maybeSingle();
-await verifier.auth.signOut();
+await verifier.auth.signOut({ scope: "local" });
 if (verifiedRoleError || !verifiedRole) {
   throw verifiedRoleError ?? new Error("Super Admin role verification failed.");
 }

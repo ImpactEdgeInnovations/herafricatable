@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 const root = new URL("../", import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), "utf8");
+for (const filename of readdirSync(new URL("scripts/", root)).filter((name) => name.endsWith(".mjs"))) {
+  assert(!/\.auth\.signOut\(\)/.test(read(`scripts/${filename}`)),
+    `${filename} must sign out only its own test session`);
+}
 
 const health = read("lib/operational-health.ts");
 for (const contract of [
@@ -60,6 +64,16 @@ const adminNotificationPage = read("app/admin/notifications/page.tsx");
 const notificationOperations = read(
   "components/admin/notification-operations.tsx",
 );
+const liveDeliveryAcceptance = read("scripts/accept-admin-email-delivery-live.mjs");
+for (const contract of [
+  'process.env.HAT_CONFIRM_ADMIN_EMAIL_TEST === "yes"',
+  'supabase.auth.signInWithPassword({ email, password })',
+  '"/api/admin/notifications/test"',
+  'providerAccepted: true, inboxReceiptVerified: false',
+]) {
+  assert(liveDeliveryAcceptance.includes(contract),
+    `Live Admin email acceptance must include ${contract}`);
+}
 for (const contract of [
   "Email readiness",
   "Email provider connected",

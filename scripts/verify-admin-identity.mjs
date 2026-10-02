@@ -70,10 +70,10 @@ if (targetPassword) {
     password: targetPassword,
   });
   passwordAccepted = !targetSignIn.error;
-  await target.auth.signOut();
+  await target.auth.signOut({ scope: "local" });
 }
 
-await primary.auth.signOut();
+await primary.auth.signOut({ scope: "local" });
 
 process.stdout.write(
   `${JSON.stringify(

@@ -284,7 +284,7 @@ if (email && password) {
       rehearsalDraftVisible: false, rehearsalRosterAccessible: false,
       pilotSetupReadsPass: false, releaseChecks: [], launchChecks: [] };
   } finally {
-    await admin.auth.signOut();
+    await admin.auth.signOut({ scope: "local" });
   }
 }
 
@@ -330,7 +330,7 @@ async function inspectTaggedRole(emailAddress) {
       rehearsalRosterDenied: roster.error?.code === "P0001",
     };
   } finally {
-    await client.auth.signOut();
+    await client.auth.signOut({ scope: "local" });
   }
 }
 

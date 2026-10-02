@@ -273,5 +273,5 @@ try {
     )}\n`,
   );
 } finally {
-  await Promise.all(Object.values(clients).map((client) => client.auth.signOut()));
+  await Promise.all(Object.values(clients).map((client) => client.auth.signOut({ scope: "local" })));
 }

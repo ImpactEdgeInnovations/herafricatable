@@ -170,5 +170,5 @@ try {
     )}\n`,
   );
 } finally {
-  await Promise.all([host.auth.signOut(), member.auth.signOut()]);
+  await Promise.all([host.auth.signOut({ scope: "local" }), member.auth.signOut({ scope: "local" })]);
 }

@@ -246,7 +246,7 @@ try {
   );
 } finally {
   await Promise.all([
-    ...signedIn.map((identity) => identity.client.auth.signOut()),
-    adminIdentity.client.auth.signOut(),
+    ...signedIn.map((identity) => identity.client.auth.signOut({ scope: "local" })),
+    adminIdentity.client.auth.signOut({ scope: "local" }),
   ]);
 }

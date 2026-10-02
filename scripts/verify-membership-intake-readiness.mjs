@@ -28,7 +28,7 @@ assert(
 assert.equal(typeof setting.pending_applications, "number");
 assert.equal(typeof setting.trusted_pending_invites, "number");
 
-await supabase.auth.signOut();
+await supabase.auth.signOut({ scope: "local" });
 
 process.stdout.write(
   `${JSON.stringify(

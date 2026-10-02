@@ -95,5 +95,5 @@ try {
     ),
   );
 } finally {
-  await client.auth.signOut();
+  await client.auth.signOut({ scope: "local" });
 }

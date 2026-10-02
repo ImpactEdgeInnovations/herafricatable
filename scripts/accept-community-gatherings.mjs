@@ -54,7 +54,7 @@ for (const [label, email] of Object.entries(identities)) {
   }
 }
 if (signInFailures.length) {
-  await Promise.all(Object.values(signedIn).map((identity) => identity.client.auth.signOut()));
+  await Promise.all(Object.values(signedIn).map((identity) => identity.client.auth.signOut({ scope: "local" })));
   throw new Error(`Refresh these reserved test identities before rehearsal: ${signInFailures.join(", ")}. Add SUPABASE_SECRET_KEY locally, then run npm run ops:provision-community-test-cohort.`);
 }
 
@@ -175,7 +175,7 @@ try {
       p_type: "private",
     });
     if (communityCleanup.error) throw new Error("Isolated Gathering Community cleanup failed");
-    await cleanupAdmin.auth.signOut();
+    await cleanupAdmin.auth.signOut({ scope: "local" });
   }
-  await Promise.all(Object.values(signedIn).map((identity) => identity.client.auth.signOut()));
+  await Promise.all(Object.values(signedIn).map((identity) => identity.client.auth.signOut({ scope: "local" })));
 }

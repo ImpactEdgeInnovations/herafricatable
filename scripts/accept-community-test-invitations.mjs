@@ -57,7 +57,7 @@ for (const email of emails) {
     membershipRole: membership.membership_role,
     status: membership.membership_status,
   });
-  await client.auth.signOut();
+  await client.auth.signOut({ scope: "local" });
 }
 
 process.stdout.write(

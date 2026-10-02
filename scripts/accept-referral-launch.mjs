@@ -204,7 +204,7 @@ try {
   });
   assert.equal(submitted.error, null, "Referral submission failed");
   referralId = submitted.data;
-  await member.auth.signOut();
+  await member.auth.signOut({ scope: "local" });
 
   const approved = await operator.rpc("review_vouched_referral", {
     p_action: "approve",
@@ -262,7 +262,7 @@ try {
   });
   assert.equal(application.error, null, "Invitee application failed");
   assert.equal(application.data, "submitted");
-  await inviteeClient.auth.signOut();
+  await inviteeClient.auth.signOut({ scope: "local" });
 
   const membershipApproval = await operator.rpc("review_member", {
     p_decision: "approve",
@@ -321,7 +321,7 @@ try {
       "This request must be rejected while the Super Admin has paused member referrals.",
   });
   assert(pausedSubmission.error, "A member submitted a referral while the feature was paused");
-  await pausedMember.auth.signOut();
+  await pausedMember.auth.signOut({ scope: "local" });
   const preservedAfterPause = await service
     .from("referral_invitations")
     .select("id", { count: "exact", head: true });
@@ -422,6 +422,6 @@ try {
       p_mode: originalMode,
       p_reason: "Restore membership intake after referral acceptance",
     });
-    await operator.auth.signOut();
+    await operator.auth.signOut({ scope: "local" });
   }
 }
