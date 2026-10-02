@@ -77,6 +77,8 @@ assert(liveAudit.includes('admin.rpc("list_launch_gate_checks")'));
 assert(liveAudit.includes('blockers.push(`launch_${key}_not_accepted`)'));
 assert(liveAudit.includes('blockers.push("private_draft_public_route_not_verified_hidden")'));
 assert(liveAudit.includes("eventReservationOrders(id)"));
+assert(liveAudit.includes("adminSetupReadsPass(admin, selectedPilot.id)"));
+assert(liveAudit.includes('blockers.push("admin_pilot_setup_reads_failed")'));
 assert(liveAudit.includes("selectedPilotPublicationCutoffAt"));
 assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
 const registrationForm = readFileSync(new URL("../components/events/event-registration-form.tsx", import.meta.url), "utf8");

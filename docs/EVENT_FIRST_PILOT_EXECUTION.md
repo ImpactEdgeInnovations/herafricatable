@@ -711,6 +711,10 @@ window and unreserved stock, remaining event capacity, and unexpired arrival
 staff access. It fails closed if the order list is incomplete. These are setup
 signals only; the five Public event guests release checks and live journeys
 remain separate.
+At 20:40 UTC, a primary Super Admin session read every data source used by
+that setup card on the live Supabase project, including order items and the
+exact count check. The read probe passed and changed no production records;
+the separate tagged Admin journey is still not accepted.
 
 ### Next owner actions, in order
 

@@ -115,6 +115,28 @@ async function eventReservationOrders(eventId) {
   }
 }
 
+async function adminSetupReadsPass(client, eventId) {
+  const [tickets, hosts, drafts, contacts, staff, orders] = await Promise.all([
+    client.from("ticket_types").select("id,event_id,inventory_quantity,price_minor,sales_start_at,sales_end_at,status").eq("event_id", eventId),
+    client.from("event_hosts").select("event_id,user_id,status").eq("event_id", eventId),
+    client.from("event_host_workspaces").select("event_id,status").eq("event_id", eventId),
+    client.from("event_safety_contacts").select("event_id").eq("event_id", eventId),
+    client.from("event_staff_scopes").select("event_id,user_id").eq("event_id", eventId),
+    client.from("orders").select("event_id,status,order_items(ticket_type_id,quantity)", { count: "exact" })
+      .eq("event_id", eventId).eq("order_type", "event").range(0, 999),
+  ]);
+  if ([tickets, hosts, drafts, contacts, staff, orders].some((result) => result.error)
+    || orders.count !== (orders.data?.length ?? 0)) return false;
+  const accountIds = [...new Set([...(hosts.data ?? []).map((row) => row.user_id),
+    ...(staff.data ?? []).map((row) => row.user_id)])];
+  if (!accountIds.length) return true;
+  const [profiles, roles] = await Promise.all([
+    client.from("profiles").select("id,access_status").in("id", accountIds),
+    client.from("user_roles").select("user_id,role,expires_at").in("user_id", accountIds),
+  ]);
+  return !profiles.error && !roles.error;
+}
+
 const healthResponse = await fetch(`${base}/api/health`, {
   headers: { "user-agent": "HerAfricaTable-PilotAudit/1.0" },
 });
@@ -221,7 +243,8 @@ const privateDraftAnonymousHidden = privateDraftRoutes.length > 0 &&
     }
   }))).every(Boolean);
 let adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false,
-  rehearsalDraftVisible: false, rehearsalRosterAccessible: false, releaseChecks: [], launchChecks: [] };
+  rehearsalDraftVisible: false, rehearsalRosterAccessible: false, pilotSetupReadsPass: false,
+  releaseChecks: [], launchChecks: [] };
 const email = process.env.HAT_ADMIN_TEST_EMAIL;
 const password = process.env.HAT_ADMIN_TEST_PASSWORD;
 if (email && password) {
@@ -247,6 +270,8 @@ if (email && password) {
       usesPrimaryAccount: email.toLowerCase() === process.env.HAT_PRIMARY_ADMIN_EMAIL?.toLowerCase(),
       rehearsalDraftVisible: draft.data?.id === rehearsalEvent?.id,
       rehearsalRosterAccessible: Array.isArray(roster.data),
+      pilotSetupReadsPass: selectedPilot
+        ? await adminSetupReadsPass(admin, selectedPilot.id) : false,
       releaseChecks: (release.data ?? [])
         .filter((row) => row.feature_key === "event_guest_access")
         .map((row) => ({ key: row.check_key, status: row.status })),
@@ -256,7 +281,8 @@ if (email && password) {
     };
   } catch {
     adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false,
-      rehearsalDraftVisible: false, rehearsalRosterAccessible: false, releaseChecks: [], launchChecks: [] };
+      rehearsalDraftVisible: false, rehearsalRosterAccessible: false,
+      pilotSetupReadsPass: false, releaseChecks: [], launchChecks: [] };
   } finally {
     await admin.auth.signOut();
   }
@@ -348,6 +374,8 @@ if (!adminEvidence.authenticated || !adminEvidence.tagged || adminEvidence.usesP
   blockers.push("dedicated_admin_rehearsal_account_missing");
 if (!adminEvidence.rehearsalDraftVisible || !adminEvidence.rehearsalRosterAccessible)
   blockers.push("admin_private_event_boundary_missing");
+if (selectedPilot && !adminEvidence.pilotSetupReadsPass)
+  blockers.push("admin_pilot_setup_reads_failed");
 if (!taggedRoles || Object.values(taggedRoles).some((role) =>
   !role.authenticated || !role.active || !role.tagged || role.adminScope
   || !role.adminReleaseDenied || !role.rehearsalDraftHidden || !role.rehearsalRosterDenied)
