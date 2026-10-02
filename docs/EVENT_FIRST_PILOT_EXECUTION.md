@@ -798,6 +798,10 @@ pre-publication access boundary only; it does not test a published event or a
 successful booking. A fresh Auth lookup for **seina@arvisia-global.com** found
 no account, so Seina N cannot yet be assigned Event Host. The owner supplied
 the address again; no account or Host role was created on her behalf.
+The same three tagged roles were then denied a direct Supabase `events` row
+read for this draft, while the primary Super Admin read exactly the selected
+row. This strengthens the private-draft evidence beyond rendered pages; it
+does not establish the later public booking or email journeys.
 
 ### Next owner actions, in order
 

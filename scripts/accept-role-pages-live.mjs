@@ -91,6 +91,10 @@ async function inspectRole(role) {
       assert(hiddenNotFound(page.response, page.body),
         `${role.name} could see or index the private pilot at ${path}`);
     }
+    const pilotDirect = await client.from("events").select("id").eq("slug", pilotSlug);
+    assert.ifError(pilotDirect.error);
+    assert.equal(pilotDirect.data.length, 0,
+      `${role.name} could read the private pilot directly from the database`);
 
     const hostPage = await get(`/events/${rehearsalSlug}/host`);
     if (role.host) {
@@ -132,6 +136,7 @@ async function inspectRole(role) {
       memberHome: "loaded",
       adminDecisions: "denied",
       pilotDetailsAndRegistration: "hidden while draft",
+      pilotDatabaseRow: "denied",
       privateHostWorkspace: role.host ? "scoped access" : "hidden",
       communityModeratorWorkspace: role.name === "community_moderator" ? "scoped access" : "denied",
     };
@@ -162,6 +167,11 @@ async function inspectPrimaryAdmin() {
     assert.equal(adminRole.data?.role, "super_admin", "Primary Admin role is missing");
     const pilot = (managedEvents.data ?? []).find((event) => event.slug === pilotSlug);
     assert(pilot?.event_id, "Selected pilot is not visible to the primary Admin");
+    const pilotDirect = await client.from("events").select("id").eq("slug", pilotSlug);
+    assert.ifError(pilotDirect.error);
+    assert.equal(pilotDirect.data?.length, 1, "Primary Admin cannot read the selected private pilot");
+    assert.equal(pilotDirect.data[0].id, pilot.event_id,
+      "Primary Admin's private pilot row does not match the selected event");
     const memberIds = [...new Set((memberRows.data ?? []).map((member) => member.user_id))];
     const testFlags = memberIds.length
       ? await client.from("profiles").select("id,is_test_account").in("id", memberIds)
@@ -205,6 +215,7 @@ async function inspectPrimaryAdmin() {
       selectedPilotEditor: "loaded",
       hostReview: "loaded",
       pilotDetailsAndRegistration: "hidden while draft",
+      pilotDatabaseRow: "Admin only",
       realRequestCount: "matches live non-test applications",
     };
   } finally {
