@@ -683,6 +683,20 @@ member profile. The engineering recommendation remains **hold**. If Host,
 venue, safety, staff and live-journey gates cannot pass before the cutoff,
 move the event date; do not bypass the database rule.
 
+A fresh 2 October primary-Admin OTP request was accepted and the email reached
+the designated inbox, but the body carried **DukaPilot** wording despite a
+Her Africa Table subject. The code was not used or recorded. Supabase's shared
+Magic Link/OTP template must be corrected before Admin or member OTP can be
+accepted as launch evidence. [`AUTH_SETUP.md`](./AUTH_SETUP.md) includes the
+dashboard path and a ready-to-paste branded template. The current browser
+session does not have access to the Her Africa Table Supabase project, so this
+requires the project owner's dashboard session; it is not a Vercel setting.
+The live Admin launch checklist now records `admin_email_otp` as **blocked**
+with this observation, without storing the code. The read-only pilot audit
+also requires passed Admin OTP, member OTP and notification-delivery checks;
+at 20:17 UTC all three were still unaccepted. Delivery to one inbox is not
+proof of a completed sign-in or of application-notification delivery.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

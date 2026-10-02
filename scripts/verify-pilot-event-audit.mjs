@@ -73,6 +73,8 @@ assert(liveAudit.includes('blockers.push("event_automatic_checkout_guard_not_rea
 assert(liveAudit.includes('automaticEventPaymentsOpen: automaticCheckoutFlagResult.data?.enabled === true'));
 assert(liveAudit.includes('!adminEvidence.tagged || adminEvidence.usesPrimaryAccount'));
 assert(liveAudit.includes('blockers.push("dedicated_admin_rehearsal_account_missing")'));
+assert(liveAudit.includes('admin.rpc("list_launch_gate_checks")'));
+assert(liveAudit.includes('blockers.push(`launch_${key}_not_accepted`)'));
 assert(liveAudit.includes('blockers.push("private_draft_public_route_not_verified_hidden")'));
 assert(liveAudit.includes("eventReservationOrders(id)"));
 assert(liveAudit.includes("selectedPilotPublicationCutoffAt"));

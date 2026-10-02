@@ -16,18 +16,16 @@ displayed as a member or Admin sign-in option.
 
 ### Production application
 
-`https://herafricatable.vercel.app`
-
-Replace the Vercel alias with the final custom domain once attached.
+`https://www.herafricatable.com`
 
 ## Supabase URL configuration
 
 In Supabase Dashboard → Authentication → URL Configuration:
 
-- Site URL: `https://herafricatable.vercel.app`
+- Site URL: `https://www.herafricatable.com`
 - Additional redirect URLs:
   - `http://localhost:3000/**`
-  - `https://herafricatable.vercel.app/**`
+  - `https://www.herafricatable.com/**`
   - the approved Vercel preview wildcard for the project/team
 
 Use exact production paths where possible. Wildcards are intended for localhost and
@@ -36,8 +34,11 @@ preview deployments, not as a substitute for a precise production allow list.
 ## Email OTP setup
 
 1. Keep email authentication enabled in Supabase.
-2. Configure the email template to send a visible one-time token (`{{ .Token }}`), not
-   only a magic link.
+2. In **Authentication → Emails → Templates → Magic Link**, set the subject to
+   `Your Her Africa Table sign-in code` and replace the HTML with
+   [`SUPABASE_OTP_TEMPLATE.html`](./SUPABASE_OTP_TEMPLATE.html). The template
+   contains `{{ .Token }}` and no magic-link button. Supabase uses this
+   template for `signInWithOtp` email codes.
 3. Add clear expiry and “ignore this email” language.
 4. In Supabase Dashboard → Authentication → Email/SMTP, enable custom SMTP and use:
    - Host: `smtp.resend.com`
@@ -49,6 +50,15 @@ preview deployments, not as a substitute for a precise production allow list.
 5. Rate-limit OTP requests and display a neutral response so the UI does not reveal
    whether an email already exists.
 6. Do not log OTP values.
+
+On 2 October 2026, a fresh code reached the primary Admin inbox, but its
+subject named Her Africa Table while its body still told people to sign in to
+**DukaPilot**. Delivery alone is therefore not an acceptance pass. Correct the
+Magic Link/OTP template in the **Her Africa Table Supabase project**, request a
+new code, inspect the subject and body, verify the code, and then rehearse an
+ordinary member's inbox separately. Never copy the code into a launch note.
+The current browser's Supabase dashboard session did not show the Her Africa
+Table project, so the project owner must open it in an account with access.
 
 The Vercel `RESEND_API_KEY` does **not** configure Supabase Auth email. These are two
 separate delivery paths:

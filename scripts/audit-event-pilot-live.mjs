@@ -221,16 +221,17 @@ const privateDraftAnonymousHidden = privateDraftRoutes.length > 0 &&
     }
   }))).every(Boolean);
 let adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false,
-  rehearsalDraftVisible: false, rehearsalRosterAccessible: false, releaseChecks: [] };
+  rehearsalDraftVisible: false, rehearsalRosterAccessible: false, releaseChecks: [], launchChecks: [] };
 const email = process.env.HAT_ADMIN_TEST_EMAIL;
 const password = process.env.HAT_ADMIN_TEST_PASSWORD;
 if (email && password) {
   try {
     const { data: session, error: signInError } = await admin.auth.signInWithPassword({ email, password });
     if (signInError || !session.user) throw new Error("Tagged Admin sign-in failed");
-    const [profile, release, draft, roster] = await Promise.all([
+    const [profile, release, launch, draft, roster] = await Promise.all([
       admin.from("profiles").select("is_test_account").eq("id", session.user.id).single(),
       admin.rpc("list_module_release_acceptance"),
+      admin.rpc("list_launch_gate_checks"),
       rehearsalEvent
         ? admin.from("events").select("id").eq("id", rehearsalEvent.id).maybeSingle()
         : Promise.resolve({ data: null, error: null }),
@@ -238,7 +239,7 @@ if (email && password) {
         ? admin.rpc("list_event_checkins", { p_event_id: rehearsalEvent.id })
         : Promise.resolve({ data: null, error: null }),
     ]);
-    if (profile.error || release.error || draft.error || roster.error)
+    if (profile.error || release.error || launch.error || draft.error || roster.error)
       throw new Error("Admin read-only boundary check failed");
     adminEvidence = {
       authenticated: true,
@@ -249,10 +250,13 @@ if (email && password) {
       releaseChecks: (release.data ?? [])
         .filter((row) => row.feature_key === "event_guest_access")
         .map((row) => ({ key: row.check_key, status: row.status })),
+      launchChecks: (launch.data ?? [])
+        .filter((row) => ["admin_email_otp", "member_email_otp", "notification_delivery"].includes(row.check_key))
+        .map((row) => ({ key: row.check_key, status: row.status })),
     };
   } catch {
     adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false,
-      rehearsalDraftVisible: false, rehearsalRosterAccessible: false, releaseChecks: [] };
+      rehearsalDraftVisible: false, rehearsalRosterAccessible: false, releaseChecks: [], launchChecks: [] };
   } finally {
     await admin.auth.signOut();
   }
@@ -337,6 +341,9 @@ else for (const [check, ready] of Object.entries(pilotChecks))
 if (!adminEvidence.authenticated || adminEvidence.releaseChecks.length !== 5
   || adminEvidence.releaseChecks.some((check) => check.status !== "passed"))
   blockers.push("public_guest_release_checks_incomplete");
+for (const key of ["admin_email_otp", "member_email_otp", "notification_delivery"])
+  if (!adminEvidence.launchChecks.some((check) => check.key === key && check.status === "passed"))
+    blockers.push(`launch_${key}_not_accepted`);
 if (!adminEvidence.authenticated || !adminEvidence.tagged || adminEvidence.usesPrimaryAccount)
   blockers.push("dedicated_admin_rehearsal_account_missing");
 if (!adminEvidence.rehearsalDraftVisible || !adminEvidence.rehearsalRosterAccessible)
