@@ -751,6 +751,13 @@ first publication with a clear rescheduling path. The database guard remains
 authoritative. For the selected 6 October event, the cutoff is 4 October at
 18:00 Nairobi time; no gate was bypassed.
 
+Event Admin navigation now carries a validated event ID between the overview,
+details, Host drafts, registration and arrival tools. Selecting an event updates
+that context, and a Host-review rescheduling link opens the correct event
+instead of whichever record happened to be first in the Admin list. Local
+journey checks and a production build pass; a signed-in, multi-event browser
+rehearsal remains required before accepting the Admin journey.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

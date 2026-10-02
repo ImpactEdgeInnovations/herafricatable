@@ -8,6 +8,7 @@ import { adminErrorMessage } from "@/lib/admin-error";
 import type { AdminEvent } from "@/components/admin/event-manager";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { hostDraftPublicationCutoff, hostDraftPublicationWindowOpen } from "@/lib/events/host-publication-window";
+import { eventToolHref } from "@/lib/events/admin-event-link";
 
 export type AdminEventHostWorkspace = {
   event_id: string;
@@ -41,8 +42,9 @@ export type AdminEventHostCover = {
   published: boolean;
 };
 
-export function EventHostReviewManager({ events, workspaces, migrationReady, lifecycleReady, reviewContexts, safetyContacts, safetyReady, covers, coversReady }: {
+export function EventHostReviewManager({ events, selectedEventId, workspaces, migrationReady, lifecycleReady, reviewContexts, safetyContacts, safetyReady, covers, coversReady }: {
   events: AdminEvent[];
+  selectedEventId: string | null;
   workspaces: AdminEventHostWorkspace[];
   migrationReady: boolean;
   lifecycleReady: boolean;
@@ -55,7 +57,10 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
-  const [eventId, setEventId] = useState(events.find((event) => ["draft", "published"].includes(event.status))?.id ?? "");
+  const [eventId, setEventId] = useState(
+    (selectedEventId && events.some((event) => event.id === selectedEventId && ["draft", "published"].includes(event.status))
+      ? selectedEventId : events.find((event) => ["draft", "published"].includes(event.status))?.id) ?? "",
+  );
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [contactDrafts, setContactDrafts] = useState<Record<string, { name: string; phone: string }>>({});
@@ -170,7 +175,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
     {migrationReady ? <section className="admin-section">
       <h2>Give a member Host access</h2>
       <p>Choose an existing event and an active member’s email. Replacing a Host ends the former Host’s access.</p>
-      <label>Event<select value={eventId} onChange={(event) => setEventId(event.target.value)}>{events.filter((event) => ["draft", "published"].includes(event.status)).map((event) => <option key={event.id} value={event.id}>{event.title}</option>)}</select></label>
+      <label>Event<select value={eventId} onChange={(event) => { setEventId(event.target.value); router.replace(eventToolHref("/admin/events?view=host", event.target.value), { scroll: false }); }}>{events.filter((event) => ["draft", "published"].includes(event.status)).map((event) => <option key={event.id} value={event.id}>{event.title}</option>)}</select></label>
       <label>Member email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label>
       <button className="button button-outline" type="button" disabled={busy || !eventId || !email.trim()} onClick={() => void assign()}>Assign Event Host</button>
     </section> : null}
@@ -192,7 +197,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
         <p>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event?.timezone ?? "Africa/Nairobi" }).format(new Date(item.starts_at))}</p>
         {item.event_status === "draft" ? <p className="manager-message" role={publicationWindowClosed ? "alert" : "status"}>
           {publicationWindowClosed
-            ? <>The 48-hour publishing window has passed. <Link href="/admin/events?view=edit">Move the event date</Link>, then confirm the Host&apos;s content still matches before approval.</>
+            ? <>The 48-hour publishing window has passed. <Link href={eventToolHref("/admin/events?view=edit", item.event_id)}>Move the event date</Link>, then confirm the Host&apos;s content still matches before approval.</>
             : <>Publish this new Host-led event before {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event?.timezone ?? "Africa/Nairobi" }).format(publicationCutoff)}. All safety and launch checks must still pass.</>}
         </p> : null}
         {item.workspace_status === "submitted" ? <div>
@@ -212,7 +217,7 @@ export function EventHostReviewManager({ events, workspaces, migrationReady, lif
             <label>Phone<input maxLength={40} type="tel" value={contact.phone} onChange={(event) => setContactDrafts((all) => ({ ...all, [item.event_id]: { ...contact, phone: event.target.value } }))} /></label>
             <button className="button button-outline" disabled={busy} onClick={() => void saveSafetyContact(item)} type="button">Save safety contact</button>
           </div> : null}
-          <Link href="/admin/events?view=edit">Review event details</Link>
+          <Link href={eventToolHref("/admin/events?view=edit", item.event_id)}>Review event details</Link>
           <h4>Event image</h4>
           {cover?.draft_url ? <figure className="event-host-cover-preview"><img src={cover.draft_url} alt={cover.draft_alt_text} /><figcaption>{cover.published ? "This is already the live image" : "Private image; approval will publish it"}</figcaption></figure> : <p>No new image. {coversReady ? "Any approved image stays as it is." : "Image review is not available yet."}</p>}
           <h4>Event introduction</h4><p>{item.summary}</p>

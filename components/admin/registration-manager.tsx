@@ -90,6 +90,7 @@ const local = (value: string | null) =>
 
 export function RegistrationManager({
   events,
+  selectedEventId,
   initialTickets,
   initialRegistrations,
   initialWaitlist,
@@ -100,6 +101,7 @@ export function RegistrationManager({
   waitlistReady,
 }: {
   events: AdminEvent[];
+  selectedEventId?: string | null;
   initialTickets: AdminTicket[];
   initialRegistrations: AdminRegistration[];
   initialWaitlist: AdminWaitlistEntry[];
@@ -112,7 +114,7 @@ export function RegistrationManager({
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
-  const [eventId, setEventId] = useState(events[0]?.id ?? "");
+  const [eventId, setEventId] = useState(selectedEventId ?? events[0]?.id ?? "");
   const [form, setForm] = useState(blank);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -308,6 +310,7 @@ export function RegistrationManager({
               onChange={(e) => {
                 setEventId(e.target.value);
                 setForm(blank);
+                if (selectedEventId !== undefined) router.replace(`/admin/events?view=registrations&event=${encodeURIComponent(e.target.value)}`, { scroll: false });
               }}
             >
               {events.map((e) => (

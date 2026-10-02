@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { adminErrorMessage } from "@/lib/admin-error";
@@ -41,16 +42,19 @@ type BarcodeDetectorConstructor = new (options?: {
 
 export function EventCheckinConsole({
   events,
+  selectedEventId,
   initialAttendees,
   migrationReady,
 }: {
   events: CheckinEvent[];
+  selectedEventId?: string | null;
   initialAttendees: CheckinAttendee[];
   migrationReady: boolean;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
-  const [eventId, setEventId] = useState(events[0]?.id ?? "");
+  const [eventId, setEventId] = useState(selectedEventId ?? events[0]?.id ?? "");
   const [attendees, setAttendees] = useState(initialAttendees);
   const [credential, setCredential] = useState("");
   const [busy, setBusy] = useState(false);
@@ -254,6 +258,7 @@ export function EventCheckinConsole({
               stopCamera();
               setEventId(e.target.value);
               setResult(null);
+              if (selectedEventId !== undefined && e.target.value) router.replace(`/admin/events?view=arrival&event=${encodeURIComponent(e.target.value)}`, { scroll: false });
             }}
           >
             <option value="">Choose an event</option>

@@ -10,6 +10,28 @@ assert(adminPage.includes('supabase.from("orders").select("event_id,status,order
 assert(adminPage.includes('pilotSources[5].count === (pilotSources[5].data?.length ?? 0)'));
 assert(adminPage.includes('activeProfileIds.has(row.user_id)'));
 assert(adminPage.includes("doorStaffActive:"));
+assert(adminPage.includes("eventIds.includes(requestedEventId)"));
+assert(adminPage.includes("selectedEventId={selectedEventId}"));
+assert(adminPage.includes("&event=${encodeURIComponent(selectedEventId)}"));
+
+const linkSource = readFileSync(new URL("../lib/events/admin-event-link.ts", import.meta.url), "utf8");
+const linkCompiled = ts.transpileModule(linkSource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+const { eventToolHref } = await import(`data:text/javascript;base64,${Buffer.from(linkCompiled).toString("base64")}`);
+assert.equal(eventToolHref("/admin/events?view=edit", "pilot-123"), "/admin/events?view=edit&event=pilot-123");
+assert.equal(eventToolHref("/admin/events?view=host#review", "pilot-123"), "/admin/events?view=host&event=pilot-123#review");
+assert.equal(eventToolHref("/admin/operations?area=event-work#event-work", "pilot-123"), "/admin/operations?area=event-work#event-work");
+
+for (const path of ["event-manager.tsx", "registration-manager.tsx", "event-checkin-console.tsx", "event-host-review-manager.tsx", "event-command-centre.tsx"]) {
+  const view = readFileSync(new URL(`../components/admin/${path}`, import.meta.url), "utf8");
+  assert(view.includes("selectedEventId"), `${path} must select the event from an Admin deep link`);
+}
+const eventOverview = readFileSync(new URL("../components/admin/event-command-centre.tsx", import.meta.url), "utf8");
+assert(eventOverview.includes('router.replace(eventToolHref("/admin/events?view=overview", item.id)'));
+assert(eventOverview.includes('eventToolHref("/admin/events?view=edit", event.id)'));
+const eventManager = readFileSync(new URL("../components/admin/event-manager.tsx", import.meta.url), "utf8");
+assert(eventManager.includes("initialEvents.find((event) => event.id === selectedEventId)"));
 
 const source = readFileSync(new URL("../lib/event-pilot-readiness.ts", import.meta.url), "utf8");
 const compiled = ts.transpileModule(source, {

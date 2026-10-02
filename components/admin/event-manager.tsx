@@ -115,6 +115,7 @@ function formFromEvent(
 
 export function EventManager({
   initialEvents,
+  selectedEventId,
   privateEvents,
   hostedEventIds,
   initialSafetyContacts,
@@ -125,6 +126,7 @@ export function EventManager({
   automaticCheckoutReady,
 }: {
   initialEvents: AdminEvent[];
+  selectedEventId?: string | null;
   privateEvents: PrivateEvent[];
   hostedEventIds: string[];
   initialSafetyContacts: SafetyContact[];
@@ -140,9 +142,10 @@ export function EventManager({
   const [savedPrivateEvents, setSavedPrivateEvents] = useState(privateEvents);
   const [safetyContacts, setSafetyContacts] = useState(initialSafetyContacts);
   const [safetyDrafts, setSafetyDrafts] = useState<Record<string, { name: string; phone: string }>>({});
+  const initialSelectedEvent = initialEvents.find((event) => event.id === selectedEventId) ?? initialEvents[0];
   const [form, setForm] = useState<EventForm>(() =>
-    initialEvents[0]
-      ? formFromEvent(initialEvents[0], privateEvents)
+    initialSelectedEvent
+      ? formFromEvent(initialSelectedEvent, privateEvents)
       : blankForm(),
   );
   const [saving, setSaving] = useState(false);
@@ -174,6 +177,7 @@ export function EventManager({
     if (selected) {
       setForm(formFromEvent(selected, savedPrivateEvents));
       setMessage("");
+      if (selectedEventId !== undefined) router.replace(`/admin/events?view=edit&event=${encodeURIComponent(id)}`, { scroll: false });
     }
   }
 

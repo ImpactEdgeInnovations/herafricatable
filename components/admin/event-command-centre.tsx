@@ -11,6 +11,7 @@ import type { AdminRefund, AdminRegistration } from "@/components/admin/registra
 import type { PilotReadinessStep } from "@/lib/event-pilot-readiness";
 import { EventIntroSafety } from "@/components/admin/event-intro-safety";
 import { EventRoundReview } from "@/components/admin/event-round-review";
+import { eventToolHref } from "@/lib/events/admin-event-link";
 
 const eventStatus: Record<string, string> = {
   cancelled: "Cancelled",
@@ -40,6 +41,7 @@ export type EventLifecycleState = {
 
 export function EventCommandCentre({
   events,
+  selectedEventId,
   canControlLifecycle,
   lifecycleReady,
   lifecycleStates,
@@ -49,6 +51,7 @@ export function EventCommandCentre({
   pilotReadiness,
 }: {
   events: AdminEvent[];
+  selectedEventId: string | null;
   canControlLifecycle: boolean;
   lifecycleReady: boolean;
   lifecycleStates: EventLifecycleState[];
@@ -62,7 +65,7 @@ export function EventCommandCentre({
   const { ask, dialog } = useActionDialog();
   const ordered = [...events].sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
   const nextEvent = ordered.find((event) => event.status === "published" && new Date(event.ends_at) >= new Date());
-  const [selected, setSelected] = useState(nextEvent?.id ?? ordered[0]?.id ?? "");
+  const [selected, setSelected] = useState(selectedEventId ?? nextEvent?.id ?? ordered[0]?.id ?? "");
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const event = events.find((item) => item.id === selected) ?? ordered[0];
@@ -199,7 +202,7 @@ export function EventCommandCentre({
           <div className="event-oversight-layout">
             <nav aria-label="Choose an event">
               {ordered.map((item) => (
-                <button aria-pressed={event.id === item.id} key={item.id} onClick={() => { setSelected(item.id); setMessage(""); }} type="button">
+                <button aria-pressed={event.id === item.id} key={item.id} onClick={() => { setSelected(item.id); setMessage(""); router.replace(eventToolHref("/admin/events?view=overview", item.id), { scroll: false }); }} type="button">
                   <span className={`event-state-dot is-${item.status}`} aria-hidden="true"/>
                   <span><strong>{item.title}</strong><small>{new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", year: "numeric" }).format(new Date(item.starts_at))}</small></span>
                   <em>{eventStatus[item.status]}</em>
@@ -236,7 +239,7 @@ export function EventCommandCentre({
                     <span className="eyebrow">For the first pilot</span>
                     <h4>{preparation ? `${preparation.filter((step) => step.ready).length} of ${preparation.length} setup checks complete` : "Setup checks unavailable"}</h4>
                     <p>{preparation ? nextPreparationStep ? `${nextPreparationStep.label}: ${nextPreparationStep.guidance}` : "The event setup checks are complete. Separate live rehearsals and Admin Release checks are still required before opening guest access." : "We could not load the event setup checks. Refresh the page before making a release decision."}</p>
-                    {nextPreparationStep ? <Link className="button button-outline" href={nextPreparationStep.href}>Continue setup</Link> : null}
+                    {nextPreparationStep ? <Link className="button button-outline" href={eventToolHref(nextPreparationStep.href, event.id)}>Continue setup</Link> : null}
                   </div>
                   {preparation ? <details>
                     <summary>See every setup check</summary>
@@ -250,10 +253,10 @@ export function EventCommandCentre({
               <aside><strong>Clear responsibility</strong><p>Event Hosts shape the experience and answer attendee questions. Admin controls public publication, registration decisions, payments, refunds and safety intervention.</p></aside>
               <footer>
                 {event.status === "published" ? <Link className="button button-outline" href={`/events/${event.slug}`}>View event page</Link> : null}
-                <Link className="button button-outline" href="/admin/events?view=registrations">Registrations</Link>
-                <Link className="button button-outline" href="/admin/events?view=arrival">Guest arrival</Link>
+                <Link className="button button-outline" href={eventToolHref("/admin/events?view=registrations", event.id)}>Registrations</Link>
+                <Link className="button button-outline" href={eventToolHref("/admin/events?view=arrival", event.id)}>Guest arrival</Link>
                 <Link className="button button-outline" href="/admin/events?view=stories">Stories & media</Link>
-                <Link className="button button-outline" href="/admin/events?view=edit">Edit details</Link>
+                <Link className="button button-outline" href={eventToolHref("/admin/events?view=edit", event.id)}>Edit details</Link>
                 {event.status === "published" && lifecycle?.active_action === "registrations_paused" ? <button className="button button-outline" disabled={busy === event.id || !lifecycleReady} onClick={() => void manageLifecycle("resume_registrations")} type="button">Reopen registrations</button> : null}
                 {event.status === "published" && event.registration_mode !== "closed" ? <button className="button button-quiet" disabled={busy === event.id || !lifecycleReady} onClick={() => void manageLifecycle("pause_registrations")} type="button">Pause registrations</button> : null}
                 {canControlLifecycle && event.status === "published" ? <button className="button button-quiet" disabled={busy === event.id || !lifecycleReady} onClick={() => void manageLifecycle("suspend")} type="button">Suspend event</button> : null}
