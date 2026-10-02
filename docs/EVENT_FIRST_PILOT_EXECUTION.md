@@ -789,6 +789,16 @@ matches the live non-test applications. GitHub's application and isolated
 database quality gates both passed. This still does not constitute a member
 approval or welcome-email delivery rehearsal.
 
+A further 3 October read-only signed-in check confirmed that the selected
+public pilot's event page and registration page are hidden and marked noindex
+while it remains a draft, including for the ordinary member, tagged Community
+moderator, tagged Event Host and primary Super Admin. The primary Admin can
+still reach the event-specific editor and Host review. This confirms the
+pre-publication access boundary only; it does not test a published event or a
+successful booking. A fresh Auth lookup for **seina@arvisia-global.com** found
+no account, so Seina N cannot yet be assigned Event Host. The owner supplied
+the address again; no account or Host role was created on her behalf.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

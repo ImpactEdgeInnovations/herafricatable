@@ -86,6 +86,12 @@ async function inspectRole(role) {
     assert(redirectsTo(memberAdmin.response, memberAdmin.body, "/admin"),
       `${role.name} was not redirected from member decisions`);
 
+    for (const path of [`/events/${pilotSlug}`, `/events/${pilotSlug}/register`]) {
+      const page = await get(path);
+      assert(hiddenNotFound(page.response, page.body),
+        `${role.name} could see or index the private pilot at ${path}`);
+    }
+
     const hostPage = await get(`/events/${rehearsalSlug}/host`);
     if (role.host) {
       assert.equal(hostPage.response.status, 200, "Assigned Host workspace did not load");
@@ -125,6 +131,7 @@ async function inspectRole(role) {
       role: role.name,
       memberHome: "loaded",
       adminDecisions: "denied",
+      pilotDetailsAndRegistration: "hidden while draft",
       privateHostWorkspace: role.host ? "scoped access" : "hidden",
       communityModeratorWorkspace: role.name === "community_moderator" ? "scoped access" : "denied",
     };
@@ -186,12 +193,18 @@ async function inspectPrimaryAdmin() {
     assert.equal(hostReview.response.status, 200);
     assert(hostReview.body.includes("Prepare, review, then publish"),
       "Primary Admin Host-review page did not render");
+    for (const path of [`/events/${pilotSlug}`, `/events/${pilotSlug}/register`]) {
+      const page = await getPage(cookie, path);
+      assert(hiddenNotFound(page.response, page.body),
+        `Primary Admin could see or index the private pilot at ${path}`);
+    }
     return {
       account: "primary Admin, not tagged rehearsal Admin",
       cockpit: "loaded",
       memberOversight: "loaded",
       selectedPilotEditor: "loaded",
       hostReview: "loaded",
+      pilotDetailsAndRegistration: "hidden while draft",
       realRequestCount: "matches live non-test applications",
     };
   } finally {
