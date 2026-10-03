@@ -49,6 +49,20 @@ for (const privateDetail of [
 }
 
 const operations = read("app/admin/operations/page.tsx");
+const launchSignoffMigration = read("supabase/migrations/20261003010000_launch_signoff_guard.sql");
+const launchControl = read("components/admin/launch-gate-control.tsx");
+for (const contract of [
+  "for update",
+  "gate.required and gate.check_key <> 'launch_signoff'",
+  "gate.verified_at is null",
+  "'launch.signoff_reopened'",
+  "verified_at = null",
+]) {
+  assert(launchSignoffMigration.includes(contract),
+    `Final launch sign-off guard must include ${contract}`);
+}
+assert(launchControl.includes("finalSignoffReady"));
+assert(launchControl.includes("Final sign-off opens after every other required check"));
 for (const contract of [
   "OperationalHealthPanel",
   "assessOperationalHealth()",

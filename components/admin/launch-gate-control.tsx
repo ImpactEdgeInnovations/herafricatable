@@ -68,6 +68,10 @@ export function LaunchGateControl({
   const required = checks.filter((check) => check.required);
   const passed = required.filter((check) => check.status === "passed").length;
   const blocked = required.filter((check) => check.status === "blocked").length;
+  const finalSignoffReady = required
+    .filter((check) => check.check_key !== "launch_signoff")
+    .every((check) => check.status === "passed" && Boolean(check.verified_at)
+      && (check.evidence_note?.trim().length ?? 0) >= 20);
   const decision =
     blocked > 0
       ? "Launch blocked"
@@ -97,7 +101,8 @@ export function LaunchGateControl({
           options: [
             { label: "Not started", value: "not_started" },
             { label: "In progress", value: "in_progress" },
-            { label: "Passed", value: "passed" },
+            ...(check.check_key === "launch_signoff" && !finalSignoffReady
+              ? [] : [{ label: "Passed", value: "passed" }]),
             { label: "Blocked", value: "blocked" },
           ],
           help: "Use Passed only after completing the full check.",
@@ -222,6 +227,9 @@ export function LaunchGateControl({
                     </header>
                     <h4>{check.label}</h4>
                     <p>{check.guidance}</p>
+                    {check.check_key === "launch_signoff" && !finalSignoffReady ? (
+                      <p role="status">Final sign-off opens after every other required check has passed with recorded evidence.</p>
+                    ) : null}
                     {check.evidence_note ? (
                       <blockquote>{check.evidence_note}</blockquote>
                     ) : (

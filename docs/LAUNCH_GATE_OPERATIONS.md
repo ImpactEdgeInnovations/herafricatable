@@ -37,6 +37,14 @@ blocked checks require an accountable owner.
 7. Leave the final governance sign-off open until every other required check has
    passed and the approved rollback owner is available.
 
+`20261003010000_launch_signoff_guard.sql` enforces that order in the database:
+final sign-off cannot pass while any other required check lacks passed status,
+verification or useful evidence. If a required check later reopens, the prior
+sign-off automatically returns to **In progress**, clears its verification and
+records an audit event. The owner must sign off again after recovery. Apply
+the migration in Supabase; `supabase/tests/020_launch_signoff_guard.sql` is an
+isolated test and must never be run in the production SQL Editor.
+
 ## Release interpretation
 
 - Any required `Blocked` check means no-go.

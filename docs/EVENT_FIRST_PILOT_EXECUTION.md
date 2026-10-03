@@ -833,6 +833,16 @@ still hold publication. The separate guest-release recommendation remains
 implying every guest-release check must pass before a closed public page can
 be considered.
 
+The final platform launch sign-off previously relied on an operator following
+the documented sequence; the database accepted a passed `launch_signoff` even
+when another required check was open. The new forward-only
+`20261003010000_launch_signoff_guard.sql` makes final sign-off conditional on
+every other required check's recorded evidence and reopens an earlier sign-off
+if any required check regresses. The Admin control now explains why final
+sign-off is unavailable. This migration must be applied to the connected
+project before this control can be counted as production-protected; its
+`020_` pgTAP test belongs only in isolated CI, never the production SQL Editor.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
