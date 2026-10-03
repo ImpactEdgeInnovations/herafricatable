@@ -988,6 +988,17 @@ decisions still need rehearsal. Resend DNS for `caseready.africa` had DKIM,
 SPF and return-path MX records; the local sending-only key could not inspect
 the provider's dashboard verification status.
 
+At 19:58 UTC on 3 October, the live pilot audit still recommended **hold** on
+release `feab1c7`: all ten free/manual pilot launch checks remained unaccepted,
+Seina's account was absent, and the selected event remained a private draft.
+A separate read-only role-page run then confirmed that signed-out visitors,
+tagged ordinary members, scoped Event Hosts and Community moderators could
+not see the Admin taskboard or private pilot, while the primary Admin could
+see the selected pilot and its live evidence. This was appended to the
+`authorization_boundaries` gate as **in progress**, with `verified_at` still
+null. It does not prove positive guest registration or a distinct tagged
+Super Admin's decisions.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

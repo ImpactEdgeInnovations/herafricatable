@@ -51,6 +51,7 @@ for (const privateDetail of [
 const operations = read("app/admin/operations/page.tsx");
 const adminHome = read("app/admin/page.tsx");
 const taskboard = read("components/admin/roadmap-overview.tsx");
+const liveRolePages = read("scripts/accept-role-pages-live.mjs");
 assert(adminHome.includes("Ten-sprint launch taskboard"));
 assert(operations.includes("<RoadmapOverview"));
 assert(operations.includes('event.slug === "the-founding-table-nairobi-2026-10-06"'));
@@ -67,6 +68,15 @@ for (const contract of [
   assert(taskboard.includes(contract), `Pilot taskboard must include ${contract}`);
 }
 assert(!taskboard.includes("progress: 99"), "Pilot taskboard must not show invented completion percentages");
+for (const contract of [
+  'get("/admin/operations?area=release-tools")',
+  'getPage(cookie, "/admin/operations?area=release-tools")',
+  'getPage("", "/admin/operations?area=release-tools")',
+  'launchTaskboard: "denied"',
+  'launchTaskboard: "loaded with live evidence"',
+]) {
+  assert(liveRolePages.includes(contract), `Live taskboard role check must include ${contract}`);
+}
 const launchSignoffMigration = read("supabase/migrations/20261003010000_launch_signoff_guard.sql");
 const launchControl = read("components/admin/launch-gate-control.tsx");
 for (const contract of [

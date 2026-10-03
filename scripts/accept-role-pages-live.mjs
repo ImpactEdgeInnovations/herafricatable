@@ -85,6 +85,12 @@ async function inspectRole(role) {
     const memberAdmin = await get("/admin/members");
     assert(redirectsTo(memberAdmin.response, memberAdmin.body, "/admin"),
       `${role.name} was not redirected from member decisions`);
+    const launchBoard = await get("/admin/operations?area=release-tools");
+    assert.equal(launchBoard.response.status, 200);
+    assert(launchBoard.body.includes("Admin role required."),
+      `${role.name} was not denied the launch taskboard`);
+    assert(!launchBoard.body.includes("pilot launch checks accepted with evidence"),
+      `${role.name} received private pilot launch evidence`);
 
     for (const path of [`/events/${pilotSlug}`, `/events/${pilotSlug}/register`]) {
       const page = await get(path);
@@ -135,6 +141,7 @@ async function inspectRole(role) {
       role: role.name,
       memberHome: "loaded",
       adminDecisions: "denied",
+      launchTaskboard: "denied",
       pilotDetailsAndRegistration: "hidden while draft",
       pilotDatabaseRow: "denied",
       privateHostWorkspace: role.host ? "scoped access" : "hidden",
@@ -203,6 +210,14 @@ async function inspectPrimaryAdmin() {
     assert.equal(hostReview.response.status, 200);
     assert(hostReview.body.includes("Prepare, review, then publish"),
       "Primary Admin Host-review page did not render");
+    const launchBoard = await getPage(cookie, "/admin/operations?area=release-tools");
+    assert.equal(launchBoard.response.status, 200);
+    assert(launchBoard.body.includes("What is done. What is left."),
+      "Primary Admin taskboard did not render");
+    assert(launchBoard.body.includes("pilot launch checks accepted with evidence"),
+      "Primary Admin taskboard did not load the live launch-check summary");
+    assert(!launchBoard.body.includes("Pilot status unavailable"),
+      "Primary Admin taskboard could not read the selected pilot");
     for (const path of [`/events/${pilotSlug}`, `/events/${pilotSlug}/register`]) {
       const page = await getPage(cookie, path);
       assert(hiddenNotFound(page.response, page.body),
@@ -214,6 +229,7 @@ async function inspectPrimaryAdmin() {
       memberOversight: "loaded",
       selectedPilotEditor: "loaded",
       hostReview: "loaded",
+      launchTaskboard: "loaded with live evidence",
       pilotDetailsAndRegistration: "hidden while draft",
       pilotDatabaseRow: "Admin only",
       realRequestCount: "matches live non-test applications",
@@ -224,6 +240,11 @@ async function inspectPrimaryAdmin() {
 }
 
 const results = [];
+const anonymousBoard = await getPage("", "/admin/operations?area=release-tools");
+assert(redirectsTo(anonymousBoard.response, anonymousBoard.body, "/admin/sign-in"),
+  "Signed-out visitors must not open the launch taskboard");
+assert(!anonymousBoard.body.includes("pilot launch checks accepted with evidence"),
+  "Signed-out visitors received private pilot launch evidence");
 for (const role of roles) results.push(await inspectRole(role));
 const primaryAdmin = await inspectPrimaryAdmin();
-console.log(JSON.stringify({ releaseScope: "read-only signed-in pages", results, primaryAdmin }, null, 2));
+console.log(JSON.stringify({ releaseScope: "read-only signed-in pages", anonymousLaunchTaskboard: "denied", results, primaryAdmin }, null, 2));
