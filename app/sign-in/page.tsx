@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { AuthPage } from "@/components/auth/auth-page";
+import { safeInternalDestination } from "@/lib/auth/safe-internal-destination";
 
 export const metadata: Metadata = { title: "Member sign in or request membership" };
 
 function safeNext(value: string | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return "/continue";
-  }
-  return `/continue?next=${encodeURIComponent(value)}`;
+  const destination = safeInternalDestination(value);
+  return destination ? `/continue?next=${encodeURIComponent(destination)}` : "/continue";
 }
 
 export default async function MemberSignInPage({

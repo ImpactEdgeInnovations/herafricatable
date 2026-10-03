@@ -2,14 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
 import { createClient } from "@/lib/supabase/server";
+import { safeInternalDestination } from "@/lib/auth/safe-internal-destination";
 
 export const dynamic = "force-dynamic";
-
-function safeNext(value: string | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
-  if (value.startsWith("/admin")) return null;
-  return value;
-}
 
 export default async function OnboardingPage({
   searchParams,
@@ -17,10 +12,10 @@ export default async function OnboardingPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
-  const nextHref = safeNext(next);
+  const nextHref = safeInternalDestination(next);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/sign-in");
+  if (!user) redirect(`/sign-in?next=${encodeURIComponent(nextHref ?? "/onboarding")}`);
 
   const { data: accessProfile } = await supabase
     .from("profiles")

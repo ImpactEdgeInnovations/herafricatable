@@ -5,6 +5,7 @@ import {
   type MembershipApplication,
 } from "@/components/onboarding/membership-application-form";
 import { createClient } from "@/lib/supabase/server";
+import { safeInternalDestination } from "@/lib/auth/safe-internal-destination";
 
 type MembershipInvitationContext = {
   context_label: string | null;
@@ -15,24 +16,18 @@ type MembershipInvitationContext = {
 
 export const dynamic = "force-dynamic";
 
-function safeNext(value: string | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
-  if (value.startsWith("/admin")) return null;
-  return value;
-}
-
 export default async function MembershipApplicationPage({
   searchParams,
 }: {
   searchParams: Promise<{ edit?: string; next?: string }>;
 }) {
   const { edit, next } = await searchParams;
-  const nextHref = safeNext(next);
+  const nextHref = safeInternalDestination(next);
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/sign-in?next=/apply");
+  if (!user) redirect(`/sign-in?next=${encodeURIComponent(nextHref ?? "/apply")}`);
 
   const [profileResult, intakeResult, invitationContextResult] = await Promise.all([
     supabase

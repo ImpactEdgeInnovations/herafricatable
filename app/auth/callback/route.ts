@@ -1,28 +1,31 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-
-function safeNext(value: string | null) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/home";
-  return value;
-}
+import { safeInternalDestination } from "@/lib/auth/safe-internal-destination";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = safeNext(url.searchParams.get("next"));
+  const next = safeInternalDestination(url.searchParams.get("next"), { allowAdmin: true }) ?? "/home";
+  let configuredOrigin: string | null = null;
+  try {
+    const configured = process.env.NEXT_PUBLIC_SITE_URL
+      ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+      : null;
+    configuredOrigin = configured?.protocol === "https:" ? configured.origin : null;
+  } catch {
+    configuredOrigin = null;
+  }
+  const redirectOrigin = process.env.NODE_ENV === "development"
+    ? url.origin
+    : configuredOrigin ?? url.origin;
 
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      const forwardedHost = request.headers.get("x-forwarded-host");
-      const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
-      if (process.env.NODE_ENV !== "development" && forwardedHost) {
-        return NextResponse.redirect(`${forwardedProto}://${forwardedHost}${next}`);
-      }
-      return NextResponse.redirect(`${url.origin}${next}`);
+      return NextResponse.redirect(`${redirectOrigin}${next}`);
     }
   }
 
-  return NextResponse.redirect(`${url.origin}/sign-in?error=auth_callback`);
+  return NextResponse.redirect(`${redirectOrigin}/sign-in?error=auth_callback`);
 }

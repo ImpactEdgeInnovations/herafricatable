@@ -1,13 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { safeInternalDestination } from "@/lib/auth/safe-internal-destination";
 
 export const dynamic = "force-dynamic";
-
-function safeNext(value: string | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
-  if (value.startsWith("/admin")) return null;
-  return value;
-}
 
 export default async function ContinueAfterSignInPage({
   searchParams,
@@ -15,13 +10,15 @@ export default async function ContinueAfterSignInPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
-  const memberDestination = safeNext(next);
+  const memberDestination = safeInternalDestination(next);
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/sign-in");
+  if (!user) redirect(memberDestination
+    ? `/sign-in?next=${encodeURIComponent(memberDestination)}`
+    : "/sign-in");
 
   const [{ data: roles }, { data: profile }] = await Promise.all([
     supabase

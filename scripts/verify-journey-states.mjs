@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import ts from "typescript";
 
 const root = process.cwd();
 const read = (path) => readFileSync(join(root, path), "utf8");
@@ -934,9 +935,21 @@ for (const contract of [
   );
 }
 const memberSignIn = read("app/sign-in/page.tsx");
+const safeDestinationSource = read("lib/auth/safe-internal-destination.ts");
+const safeDestinationCompiled = ts.transpileModule(safeDestinationSource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+const { safeInternalDestination } = await import(`data:text/javascript;base64,${Buffer.from(safeDestinationCompiled).toString("base64")}`);
+assert.equal(safeInternalDestination("/events/founding-table#registration"), "/events/founding-table#registration");
+assert.equal(safeInternalDestination("/events/founding-table?from=invite"), "/events/founding-table?from=invite");
+for (const unsafe of ["https://example.com", "//example.com", "/\\example.com", "/%2fexample.com", "/%5cexample.com", "/admin", "/admin/events", "/events\n/other"]) {
+  assert.equal(safeInternalDestination(unsafe), null, `${unsafe} must not become a member redirect`);
+}
+assert.equal(safeInternalDestination("/admin", { allowAdmin: true }), "/admin");
 assert(
   memberSignIn.includes("safeNext") &&
-    memberSignIn.includes('value.startsWith("//")') &&
+    memberSignIn.includes("safeInternalDestination(value)") &&
+    read("app/continue/page.tsx").includes("/sign-in?next=${encodeURIComponent(memberDestination)}") &&
     authPanel.includes("requestedDestination"),
   "Member sign-in must preserve only a validated same-site destination",
 );

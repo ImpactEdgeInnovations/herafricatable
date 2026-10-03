@@ -852,6 +852,16 @@ instead of offering an unusable form. Local contracts and build pass; the
 positive paused-guest browser journey still requires a published pilot and
 separate accounts before it can be accepted as live evidence.
 
+The email-code journey now preserves a validated event destination when a
+visitor needs to sign in again, including the invitation's event page and
+registration section. Member redirects reject external, protocol-relative,
+encoded-separator and Admin destinations; the callback uses the configured
+production site origin rather than an untrusted forwarded host. Local journey
+contracts and a production build pass. This is not a delivered-code or
+real-inbox acceptance test. Seina N's supplied Host email remains
+**seina@arvisia-global.com**; the last live Auth lookup found no account, so
+the Host role is not yet assigned.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { safeInternalDestination } from "@/lib/auth/safe-internal-destination";
 
 type AuthIntent = "member" | "admin";
 type Step = "request" | "verify";
@@ -38,11 +39,9 @@ export function AuthPanel({
   const [resendIn, setResendIn] = useState(0);
   const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
 
-  const destination =
-    requestedDestination?.startsWith("/") &&
-    !requestedDestination.startsWith("//")
-      ? requestedDestination
-      : destinationFor(intent);
+  const destination = safeInternalDestination(requestedDestination, {
+    allowAdmin: intent === "admin",
+  }) ?? destinationFor(intent);
   const isAdmin = intent === "admin";
 
   function chooseMemberJourney(nextJourney: MemberJourney) {
