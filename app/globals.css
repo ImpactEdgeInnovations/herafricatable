@@ -12949,6 +12949,89 @@ body {
 .roadmap-progress small {
   font-weight: 700;
 }
+.pilot-taskboard-summary {
+  display: grid;
+  margin: 26px 0 8px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.pilot-taskboard-summary p {
+  display: grid;
+  align-content: center;
+  min-height: 92px;
+  margin: 0;
+  padding: 18px 24px;
+  gap: 5px;
+}
+.pilot-taskboard-summary p + p {
+  border-left: 1px solid var(--line);
+}
+.pilot-taskboard-summary strong {
+  color: var(--wine-deep);
+  font-size: 0.88rem;
+}
+.pilot-taskboard-summary span,
+.pilot-taskboard-footnote {
+  color: var(--muted);
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+.pilot-taskboard .roadmap-list article {
+  align-items: start;
+  min-height: 0;
+  grid-template-columns: 40px minmax(0, 1fr) 190px;
+}
+.pilot-taskboard .roadmap-copy {
+  align-items: start;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 22px;
+}
+.pilot-taskboard .roadmap-copy p + p {
+  margin-top: 7px;
+}
+.pilot-taskboard .roadmap-copy p strong {
+  color: var(--ink);
+}
+.pilot-taskboard .roadmap-progress {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+.pilot-taskboard .roadmap-progress strong {
+  color: var(--wine-deep);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+.pilot-taskboard .roadmap-progress a {
+  color: var(--wine);
+  font-size: 0.7rem;
+  text-underline-offset: 3px;
+}
+.pilot-taskboard-footnote {
+  margin: 20px 0 0;
+}
+@media (max-width: 1050px) {
+  .pilot-taskboard .roadmap-list article {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+  .pilot-taskboard .roadmap-progress {
+    grid-column: 2;
+  }
+}
+@media (max-width: 680px) {
+  .pilot-taskboard-summary {
+    grid-template-columns: 1fr;
+  }
+  .pilot-taskboard-summary p + p {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+  .pilot-taskboard .roadmap-copy {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
 .admin-section .countdown-manager {
   margin-top: 0;
   padding-top: 0;

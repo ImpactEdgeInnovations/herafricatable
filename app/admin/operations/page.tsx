@@ -307,7 +307,7 @@ export default async function AdminOperationsPage({
   const loadSafety = activeArea === "safety-work";
   const loadPrograms = activeArea === "member-programs";
   const loadRelease = activeArea === "release-tools";
-  const loadEventList = loadEvents || loadPrograms;
+  const loadEventList = loadEvents || loadPrograms || (loadRelease && role.role === "super_admin");
   const [
     { data: countdown },
     countdownCandidatesResult,
@@ -1483,7 +1483,13 @@ export default async function AdminOperationsPage({
               />
             </>
           ) : null}
-          <RoadmapOverview />
+          <RoadmapOverview
+            checks={(launchGateResult.data as LaunchGateCheck[] | null) ?? []}
+            checksReady={role.role === "super_admin" && !launchGateResult.error}
+            pilotEvent={((eventResult.data as ManagedEventRow[] | null) ?? [])
+              .find((event) => event.slug === "the-founding-table-nairobi-2026-10-06") ?? null}
+            pilotEventReady={role.role === "super_admin" && !eventResult.error}
+          />
           <section className="admin-section" id="event">
             <EventCountdownManager
               canManage={canManageCountdown}

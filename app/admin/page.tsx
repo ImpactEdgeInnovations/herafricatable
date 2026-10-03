@@ -326,8 +326,8 @@ export default async function AdminHomePage() {
           ) : null}
           <Link href="/admin/release">
               <small>Launch and public site</small>
-              <strong>Pilot checks and event countdown</strong>
-              <span>Review what is ready and update the public timer →</span>
+              <strong>Ten-sprint launch taskboard</strong>
+              <span>See what is built, what is left and which checks need proof →</span>
           </Link>
         </div>
       </section>

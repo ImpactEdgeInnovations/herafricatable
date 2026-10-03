@@ -59,6 +59,13 @@ Each sprint ends with the relevant migration, database permission check, UI
 states, operational note and acceptance record. An unfinished item remains
 closed behind a flag; a green build alone is not an exit.
 
+Super Admin can now open **Today → Ten-sprint launch taskboard** (or
+`/admin/release`) to see the ten sprint outcomes, what the application has
+already built, and what still needs human rehearsal. Its pilot launch-check
+count reads live evidence records; it does not infer completion from a green
+build or a fixed percentage. Related checks are not automatic sprint sign-off.
+The detailed event setup checklist remains under **Events → Overview**.
+
 ## Current implementation checkpoint — 30 September 2026
 
 - [x] The event-only guest model is specified above.

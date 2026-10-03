@@ -49,6 +49,24 @@ for (const privateDetail of [
 }
 
 const operations = read("app/admin/operations/page.tsx");
+const adminHome = read("app/admin/page.tsx");
+const taskboard = read("components/admin/roadmap-overview.tsx");
+assert(adminHome.includes("Ten-sprint launch taskboard"));
+assert(operations.includes("<RoadmapOverview"));
+assert(operations.includes('event.slug === "the-founding-table-nairobi-2026-10-06"'));
+for (const contract of [
+  "Event-first pilot · ten sprints",
+  "Built means the feature exists in the app",
+  "pilot launch checks accepted with evidence",
+  "Dedicated live rehearsal needed",
+  'check?.status === "passed"',
+  "Boolean(check.verified_at)",
+  "evidence_note?.trim().length",
+  "pilotGateKeys.every((key) => byKey.has(key))",
+]) {
+  assert(taskboard.includes(contract), `Pilot taskboard must include ${contract}`);
+}
+assert(!taskboard.includes("progress: 99"), "Pilot taskboard must not show invented completion percentages");
 const launchSignoffMigration = read("supabase/migrations/20261003010000_launch_signoff_guard.sql");
 const launchControl = read("components/admin/launch-gate-control.tsx");
 for (const contract of [
