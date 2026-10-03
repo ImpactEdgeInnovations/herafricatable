@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { assessPilotEvent, assessPilotPublication } from "./lib/assess-pilot-event.mjs";
 import { privateDraftHidden } from "./lib/private-draft-hidden.mjs";
 import { recommendPilotRelease } from "./lib/recommend-pilot-release.mjs";
+import { pilotLaunchGateBlockers, pilotLaunchKeys } from "./lib/pilot-launch-gates.mjs";
 
 const base = (process.env.BASE_URL ?? "https://www.herafricatable.com").replace(/\/$/, "");
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -292,8 +293,13 @@ if (email && password) {
         .filter((row) => row.feature_key === "event_guest_access")
         .map((row) => ({ key: row.check_key, status: row.status })),
       launchChecks: (launch.data ?? [])
-        .filter((row) => ["admin_email_otp", "member_email_otp", "notification_delivery"].includes(row.check_key))
-        .map((row) => ({ key: row.check_key, status: row.status })),
+        .filter((row) => pilotLaunchKeys.includes(row.check_key))
+        .map((row) => ({
+          key: row.check_key,
+          status: row.status,
+          verified: Boolean(row.verified_at),
+          evidenceRecorded: String(row.evidence_note ?? "").trim().length >= 20,
+        })),
     };
   } catch {
     adminEvidence = { authenticated: false, tagged: false, usesPrimaryAccount: false,
@@ -389,9 +395,7 @@ else for (const [check, ready] of Object.entries(pilotChecks))
 if (!adminEvidence.authenticated || adminEvidence.releaseChecks.length !== 5
   || adminEvidence.releaseChecks.some((check) => check.status !== "passed"))
   blockers.push("public_guest_release_checks_incomplete");
-for (const key of ["admin_email_otp", "member_email_otp", "notification_delivery"])
-  if (!adminEvidence.launchChecks.some((check) => check.key === key && check.status === "passed"))
-    blockers.push(`launch_${key}_not_accepted`);
+blockers.push(...pilotLaunchGateBlockers(adminEvidence.launchChecks));
 if (!adminEvidence.authenticated || !adminEvidence.tagged || adminEvidence.usesPrimaryAccount)
   blockers.push("dedicated_admin_rehearsal_account_missing");
 if (!adminEvidence.rehearsalDraftVisible || !adminEvidence.rehearsalRosterAccessible

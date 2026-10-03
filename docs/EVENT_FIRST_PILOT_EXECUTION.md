@@ -921,6 +921,19 @@ visual check of the membership-request entry confirmed the email field and
 primary button on the first screen and working links to all three legal
 pages. It was an anonymous, read-only browser check; no OTP was requested.
 
+The read-only pilot audit now evaluates all ten evidence-backed launch checks
+relevant to a **free event with Manual review**: member/Admin OTP, migration
+parity, authorization, backup/restore, manual registration, publication and
+check-in, notification delivery, safety/privacy and device accessibility.
+Each needs `passed` status, a verifier and a substantive evidence note before
+the audit can recommend an owner go/no-go review. Live Paystack reconciliation
+is intentionally excluded while automatic event checkout is off. This does
+not mark the platform-wide `launch_signoff` complete; that separate database
+gate still includes Paystack and requires its own owner decision. At 10:05
+UTC on 3 October, the live audit found none of the ten pilot checks fully
+accepted, so the engineering recommendation remains **hold** even though
+the deployed site and isolated CI are healthy.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

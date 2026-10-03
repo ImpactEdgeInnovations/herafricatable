@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { assessPilotEvent, assessPilotPublication } from "./lib/assess-pilot-event.mjs";
 import { privateDraftHidden } from "./lib/private-draft-hidden.mjs";
 import { recommendPilotRelease } from "./lib/recommend-pilot-release.mjs";
+import { pilotLaunchGateBlockers, pilotLaunchKeys } from "./lib/pilot-launch-gates.mjs";
 
 const hiddenTitle = "[TEST] Private Event Host Rehearsal";
 const noIndex = '<meta name="robots" content="noindex"/>';
@@ -94,7 +95,7 @@ assert(liveAudit.includes('admin.rpc("list_event_registrations", { p_event_id: r
 assert(liveAudit.includes('client.rpc("list_event_registrations", { p_event_id: rehearsalEvent.id })'));
 assert(liveAudit.includes('!role.rehearsalRegistrationsDenied'));
 assert(liveAudit.includes('!adminEvidence.rehearsalRegistrationsAccessible'));
-assert(liveAudit.includes('blockers.push(`launch_${key}_not_accepted`)'));
+assert(liveAudit.includes("pilotLaunchGateBlockers(adminEvidence.launchChecks)"));
 assert(liveAudit.includes('blockers.push("private_draft_public_route_not_verified_hidden")'));
 assert(liveAudit.includes("eventReservationOrders(id)"));
 assert(liveAudit.includes("adminSetupReadsPass(admin, selectedPilot.id)"));
@@ -129,4 +130,20 @@ assert.equal(recommendPilotRelease({ blockers: ["missing_pilot"], guestRegistrat
 assert.equal(recommendPilotRelease({ blockers: [], guestRegistrationOpen: false }), "ready_for_human_go_no_go");
 assert.equal(recommendPilotRelease({ blockers: ["missing_pilot"], guestRegistrationOpen: true }), "pause_and_review");
 assert.equal(recommendPilotRelease({ blockers: [], guestRegistrationOpen: true }), "open_monitor");
+const acceptedPilotLaunchChecks = pilotLaunchKeys.map((key) => ({
+  key, status: "passed", verified: true, evidenceRecorded: true,
+}));
+assert.equal(pilotLaunchGateBlockers(acceptedPilotLaunchChecks).length, 0);
+assert(!pilotLaunchKeys.includes("paystack_reconciliation"),
+  "A free manual pilot must not depend on automatic card-payment acceptance");
+assert(pilotLaunchKeys.includes("safety_support_privacy"));
+assert(pilotLaunchKeys.includes("device_accessibility"));
+assert.deepEqual(pilotLaunchGateBlockers(acceptedPilotLaunchChecks.slice(1)),
+  ["launch_member_email_otp_not_accepted"]);
+assert.deepEqual(pilotLaunchGateBlockers(acceptedPilotLaunchChecks.map((check) =>
+  check.key === "backup_restore_rehearsal" ? { ...check, verified: false } : check)),
+  ["launch_backup_restore_rehearsal_not_accepted"]);
+assert.deepEqual(pilotLaunchGateBlockers(acceptedPilotLaunchChecks.map((check) =>
+  check.key === "notification_delivery" ? { ...check, evidenceRecorded: false } : check)),
+  ["launch_notification_delivery_not_accepted"]);
 console.log("Pilot event audit rejects unrelated, incomplete, unsaleable and unstaffed events.");
