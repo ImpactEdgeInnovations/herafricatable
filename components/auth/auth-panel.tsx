@@ -218,8 +218,10 @@ export function AuthPanel({
       {message && <p className={`auth-message ${message.kind}`} role="status">{message.text}</p>}
 
       <p className="auth-help">
-        By continuing, you agree to our Terms, Privacy Notice, and Community
-        Guidelines. Need help? <a href="mailto:support@herafricatable.com">Contact us</a>.
+        By continuing, you agree to our <Link href="/terms">Terms</Link>,
+        read our <Link href="/privacy">Privacy Notice</Link>, and agree to the
+        <Link href="/community-guidelines">Community Guidelines</Link>.
+        Need help? <a href="mailto:support@herafricatable.com">Contact us</a>.
       </p>
       <p className="intent-switch">
         {isAdmin ? <>Not signing in for the team? <Link href="/sign-in">Use the member sign-in</Link></> : memberJourney === "sign-in" ? <>New to Her Africa Table? <button className="auth-inline-switch" onClick={() => chooseMemberJourney("apply")} type="button">Request membership</button>.</> : <>Already approved? <button className="auth-inline-switch" onClick={() => chooseMemberJourney("sign-in")} type="button">Return to member sign in</button>.</>}

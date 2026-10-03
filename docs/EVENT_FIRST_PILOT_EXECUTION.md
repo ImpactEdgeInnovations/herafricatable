@@ -899,6 +899,23 @@ cleared on retry; the audit now retries temporary server/network failures and
 reports its query and HTTP status if they persist. These checks do not prove
 the Supabase Auth OTP template or sign-in journey.
 
+A live phone-sized visual check found that the decorative sign-in introduction
+pushed the email field below the first screen. The small-screen entry now uses
+a compact brand strip and two side-by-side journey choices, keeping the email
+field and primary button visible at a 390×844 viewport. The same check covered
+member request, returning-member and Admin entry; it did not send or verify an
+OTP. Terms, Privacy Notice and Community Guidelines are now linked directly
+from the form. The database-backed member OTP launch guidance still said
+"six-digit" even though the UI accepts the configured six- or eight-digit
+code; apply `20261003020000_launch_otp_guidance.sql` to correct that release
+instruction. Its `021_` pgTAP test belongs only in isolated CI.
+
+The public Privacy Notice still explicitly says the controller identity,
+retention schedule and jurisdiction-specific rights await legal review.
+Product/legal owners must approve complete, accurate copy before recording
+the legal/privacy launch sign-off. Engineering cannot infer those facts or
+mark that gate passed from a working interface.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

@@ -21121,33 +21121,35 @@ body {
 }
 @media (max-width: 620px) {
   .auth-story {
-    min-height: 220px;
-    padding: 24px;
+    min-height: 0;
+    padding: 17px 24px;
   }
   .auth-story .story-copy {
-    margin: 30px 0 8px;
-  }
-  .auth-story .story-copy h1 {
-    font-size: 2.35rem;
-    line-height: 0.94;
-  }
-  .auth-story .story-copy > p:last-child {
     display: none;
   }
   .auth-quote {
     display: none;
   }
   .auth-panel-wrap {
-    padding: 32px 24px 48px;
+    align-items: start;
+    padding: 24px 24px 44px;
   }
   .auth-back {
-    margin-bottom: 28px;
+    margin-bottom: 24px;
   }
   .auth-member-choice {
-    grid-template-columns: 1fr;
+    margin-bottom: 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .auth-member-choice button {
+    min-height: 58px;
+  }
+  .auth-description {
+    margin-bottom: 24px;
   }
   .auth-journey {
-    padding: 14px 0;
+    margin-bottom: 18px;
+    padding: 10px 0;
     border-bottom: 1px solid var(--line);
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;

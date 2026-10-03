@@ -953,6 +953,10 @@ assert(
     authPanel.includes("requestedDestination"),
   "Member sign-in must preserve only a validated same-site destination",
 );
+for (const href of ["/terms", "/privacy", "/community-guidelines"]) {
+  assert(authPanel.includes(`href="${href}"`),
+    `Email-code entry must link to ${href} before someone continues`);
+}
 const membershipApplicationPage = read("app/apply/page.tsx");
 const membershipApplicationForm = read(
   "components/onboarding/membership-application-form.tsx",
