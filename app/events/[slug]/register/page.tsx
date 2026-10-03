@@ -76,6 +76,7 @@ export default async function RegisterPage({
         tickets={availability.tickets}
         availabilityReady={!availability.checkFailed}
         automaticCheckoutOpen={event.registration_mode !== "automatic" || automaticCheckoutOpen === true}
+        allowNewRequest={event.registration_mode !== "closed"}
         eventFull={availability.eventFull}
         existingStatus={registration?.status ?? membership?.status ?? null}
         passReady={["confirmed", "attended"].includes(membership?.status ?? "")}

@@ -52,6 +52,12 @@ assert(form.includes("We could not check places right now") && form.includes("Ch
 assert(form.includes("canClaimEventWaitlistPlace(existingStatus, mode, tickets, availabilityReady)"));
 assert(form.includes("No place is available to request right now"));
 assert(form.includes("We could not check whether bookings have reopened"));
+assert(form.includes('const canRequestAgain = allowNewRequest &&'));
+assert(form.includes("New requests are paused for this account"));
+assert(detail.includes("hasExistingGuestRequest"));
+assert(detail.includes("|| Boolean(registration) || isConfirmedGuest"));
+assert(detail.includes("allowNewRequest={canRequestNewPlace}"));
+assert(register.includes('allowNewRequest={event.registration_mode !== "closed"}'));
 assert(detail.includes("loadEventBookingAvailability(event.id, event.capacity"));
 assert(register.includes("loadEventBookingAvailability(event.id, event.capacity"));
 console.log("Event booking availability respects shared capacity, ticket stock and sale windows.");

@@ -26,6 +26,7 @@ export function EventRegistrationForm({
   availabilityReady = true,
   eventFull = false,
   automaticCheckoutOpen,
+  allowNewRequest = true,
 }: {
   eventId: string;
   eventTitle: string;
@@ -38,6 +39,7 @@ export function EventRegistrationForm({
   availabilityReady?: boolean;
   eventFull?: boolean;
   automaticCheckoutOpen: boolean;
+  allowNewRequest?: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -50,8 +52,8 @@ export function EventRegistrationForm({
   const ticket = tickets.find((item) => item.id === ticketId && item.bookingState === "available")
     ?? tickets.find((item) => item.bookingState === "available");
   const isFree = ticket?.price_minor === 0;
-  const canClaimWaitlist = canClaimEventWaitlistPlace(existingStatus, mode, tickets, availabilityReady);
-  const canRequestAgain = existingStatus === "cancelled" || canClaimWaitlist;
+  const canClaimWaitlist = allowNewRequest && canClaimEventWaitlistPlace(existingStatus, mode, tickets, availabilityReady);
+  const canRequestAgain = allowNewRequest && (existingStatus === "cancelled" || canClaimWaitlist);
   async function leaveWaitlist() {
     setBusy(true);
     setMessage("");
@@ -66,6 +68,10 @@ export function EventRegistrationForm({
   }
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (!allowNewRequest) {
+      setMessage("New requests are paused for this account. Your earlier event record is still available.");
+      return;
+    }
     if (mode === "automatic" && !automaticCheckoutOpen) {
       setMessage("Online payment is paused. No charge has been made.");
       return;
@@ -135,14 +141,24 @@ export function EventRegistrationForm({
     );
     if (!error) router.refresh();
   }
+  if (!allowNewRequest && !existingStatus)
+    return (
+      <div className={`registration-status-card${embedded ? " is-embedded" : ""}`}>
+        <p className="eyebrow">Your place at the table</p>
+        <h2>New requests are paused</h2>
+        <p>This event is not accepting a new request from this account right now. No place has been reserved.</p>
+      </div>
+    );
   if (existingStatus && !canRequestAgain)
     return (
       <div className={`registration-status-card${embedded ? " is-embedded" : ""}`}>
-        <p className="eyebrow">Registration received</p>
+        <p className="eyebrow">{existingStatus === "cancelled" ? "Request history" : "Registration received"}</p>
         <h2>{passReady ? "Your place is confirmed" : memberStatusLabel(existingStatus)}</h2>
         <p>
           {passReady
             ? "Your event pass is ready. Keep its private code with you for check-in."
+            : existingStatus === "cancelled"
+              ? "Your earlier request was cancelled. This account cannot make a new request while entry is paused."
             : existingStatus === "rejected"
               ? "This request was not approved. If you need help understanding the decision, contact the event team."
               : existingStatus === "waitlisted"

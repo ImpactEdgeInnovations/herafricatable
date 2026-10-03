@@ -245,6 +245,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     : null;
   const bookingClosed = paymentPaused || Boolean(availability &&
     !availability.tickets.some((ticket) => ticket.bookingState === "available"));
+  const hasExistingGuestRequest = Boolean(
+    user && memberProfile?.access_status === "pending" && registration,
+  );
+  const canRequestNewPlace = Boolean(
+    (activeMember || eventGuestEligible) && event.registration_mode !== "closed",
+  );
   const bookingClosedLabel = paymentPaused
     ? "Online payment paused"
     : availability?.checkFailed
@@ -318,7 +324,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         />
       ) : null}
 
-      {!hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || registration?.status === "waitlisted") ? (
+      {!hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? (
         <section className="event-inline-registration" id="registration">
           {bookingClosed && !registration && !isConfirmedGuest ? (
             <div className="event-registration-entry">
@@ -333,7 +339,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   : "No places can be requested right now. Please check back later."}</p>
               {availability?.checkFailed ? <a className="button button-outline" href={`/events/${slug}`}>Check again</a> : null}
             </div>
-          ) : activeMember || eventGuestEligible || isConfirmedGuest ? (
+          ) : activeMember || eventGuestEligible || isConfirmedGuest || hasExistingGuestRequest ? (
             <>
               <EventRegistrationForm
                 embedded
@@ -346,6 +352,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 tickets={availability?.tickets ?? []}
                 availabilityReady={!availability?.checkFailed}
                 automaticCheckoutOpen={!paymentPaused}
+                allowNewRequest={canRequestNewPlace}
                 eventFull={availability?.eventFull ?? false}
               />
               {eventGuestEligible ? (

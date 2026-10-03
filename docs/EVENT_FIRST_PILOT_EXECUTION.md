@@ -843,6 +843,15 @@ sign-off is unavailable. This migration must be applied to the connected
 project before this control can be counted as production-protected; its
 `020_` pgTAP test belongs only in isolated CI, never the production SQL Editor.
 
+The published event page now keeps an existing guest request visible after
+Admin pauses new guest access or closes event registration. A pending or
+waiting guest can see her status, a confirmed attendee keeps the pass route,
+and a cancelled guest does not see a misleading fresh-request form while
+entry is paused. The separate registration URL also shows a closed state
+instead of offering an unusable form. Local contracts and build pass; the
+positive paused-guest browser journey still requires a published pilot and
+separate accounts before it can be accepted as live evidence.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
