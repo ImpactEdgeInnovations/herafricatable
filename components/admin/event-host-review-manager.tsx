@@ -82,7 +82,9 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
     setMessage("");
     const { error } = await supabase.rpc("assign_event_host", { p_event_id: eventId, p_email: email.trim() });
     setBusy(false);
-    setMessage(error ? adminErrorMessage(error, "assign the Event Host") : "Host assigned. Their private workspace is ready.");
+    setMessage(error?.message?.includes("Choose an active member with a verified account")
+      ? "This person is not an active member yet. Ask her to verify her email and request membership. Once approved and set up, enter the same email here to assign Host access."
+      : error ? adminErrorMessage(error, "assign the Event Host") : "Host assigned. Their private workspace is ready.");
     if (!error) { setEmail(""); router.refresh(); }
   }
 
@@ -192,6 +194,7 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
     {migrationReady ? <section className="admin-section">
       <h2>Give a member Host access</h2>
       <p>Choose an existing event and an active member’s email. Replacing a Host ends the former Host’s access.</p>
+      <p>Is your Host new here? Share the <Link href="/sign-in?mode=apply">membership request page</Link>. She will verify her email and request to join. Approve her membership and let her finish setup before assigning Host access below.</p>
       <label>Event<select value={eventId} onChange={(event) => { setEventId(event.target.value); router.replace(eventToolHref("/admin/events?view=host", event.target.value), { scroll: false }); }}>{events.filter((event) => ["draft", "published"].includes(event.status)).map((event) => <option key={event.id} value={event.id}>{event.title}</option>)}</select></label>
       <label>Member email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label>
       <button className="button button-outline" type="button" disabled={busy || !eventId || !email.trim()} onClick={() => void assign()}>Assign Event Host</button>

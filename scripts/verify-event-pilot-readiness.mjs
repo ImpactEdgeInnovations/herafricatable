@@ -60,6 +60,8 @@ assert(hostReview.includes("Move the event date"));
 assert(hostReview.includes("!ticketEventIds.includes(item.event_id)"));
 assert(hostReview.includes("registration_mode === \"closed\""));
 assert(hostReview.includes("exactArrivalReady(event)"));
+assert(hostReview.includes('href="/sign-in?mode=apply"'));
+assert(hostReview.includes("Once approved and set up, enter the same email here"));
 
 const arrivalSource = readFileSync(new URL("../lib/events/host-publication-check.ts", import.meta.url), "utf8");
 const arrivalCompiled = ts.transpileModule(arrivalSource, {

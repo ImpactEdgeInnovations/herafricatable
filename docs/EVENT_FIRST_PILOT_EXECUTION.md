@@ -862,6 +862,15 @@ real-inbox acceptance test. Seina N's supplied Host email remains
 **seina@arvisia-global.com**; the last live Auth lookup found no account, so
 the Host role is not yet assigned.
 
+On deployed release `887ebeb`, both GitHub quality jobs passed. The live
+read-only role check loaded the tagged member, scoped Event Host and Community
+moderator workspaces while denying each the private pilot row and Admin
+decisions; the primary Admin could open the pilot editor and Host review.
+This verifies current draft isolation, not real OTP, Host assignment, guest
+registration or publication. Admin's Host assignment screen now explains the
+membership-first path and links to the request page when the proposed Host
+does not yet have an active account.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
