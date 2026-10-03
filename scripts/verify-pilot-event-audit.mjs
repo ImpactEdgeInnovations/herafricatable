@@ -4,6 +4,7 @@ import { assessPilotEvent, assessPilotPublication } from "./lib/assess-pilot-eve
 import { privateDraftHidden } from "./lib/private-draft-hidden.mjs";
 import { recommendPilotRelease } from "./lib/recommend-pilot-release.mjs";
 import { pilotLaunchGateBlockers, pilotLaunchKeys } from "./lib/pilot-launch-gates.mjs";
+import { assessDesignatedHost } from "./lib/assess-designated-host.mjs";
 
 const hiddenTitle = "[TEST] Private Event Host Rehearsal";
 const noIndex = '<meta name="robots" content="noindex"/>';
@@ -103,6 +104,20 @@ assert(liveAudit.includes('blockers.push("admin_pilot_setup_reads_failed")'));
 assert(liveAudit.includes("selectedPilotPublicationCutoffAt"));
 assert(liveAudit.includes("publicationChecks = assessPilotPublication(pilotInput)"));
 assert(liveAudit.includes("technicalReadyForOwnerReview"));
+assert(liveAudit.includes('service.auth.admin.listUsers({ page, perPage: 1000 })'));
+assert(liveAudit.includes('blockers.push("pilot_designated_host_not_ready")'));
+assert(liveAudit.includes("latestApplicationStatus"));
+const hostAccount = { id: "seina-id", email_confirmed_at: "2026-10-03T08:00:00Z" };
+const hostProfile = { access_status: "active", onboarding_completed_at: "2026-10-03T09:00:00Z" };
+const hostState = (overrides) => assessDesignatedHost({ account: hostAccount,
+  profile: hostProfile, assignedUserId: hostAccount.id,
+  latestApplicationStatus: "approved", ...overrides });
+assert.equal(hostState({}).readyForPilot, true);
+assert.equal(hostState({ account: null }).readyForPilot, false);
+assert.equal(hostState({ account: { ...hostAccount, email_confirmed_at: null } }).readyForPilot, false);
+assert.equal(hostState({ profile: { ...hostProfile, access_status: "pending" } }).readyForPilot, false);
+assert.equal(hostState({ profile: { ...hostProfile, onboarding_completed_at: null } }).readyForPilot, false);
+assert.equal(hostState({ assignedUserId: "someone-else" }).readyForPilot, false);
 assert(!liveAudit.includes('blockers.push("public_guest_registration_closed")'));
 const registrationForm = readFileSync(new URL("../components/events/event-registration-form.tsx", import.meta.url), "utf8");
 const privateHostRehearsal = readFileSync(new URL("./accept-event-host-private.mjs", import.meta.url), "utf8");

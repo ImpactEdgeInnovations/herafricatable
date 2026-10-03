@@ -4,6 +4,7 @@ import { assessPilotEvent, assessPilotPublication } from "./lib/assess-pilot-eve
 import { privateDraftHidden } from "./lib/private-draft-hidden.mjs";
 import { recommendPilotRelease } from "./lib/recommend-pilot-release.mjs";
 import { pilotLaunchGateBlockers, pilotLaunchKeys } from "./lib/pilot-launch-gates.mjs";
+import { assessDesignatedHost } from "./lib/assess-designated-host.mjs";
 
 const base = (process.env.BASE_URL ?? "https://www.herafricatable.com").replace(/\/$/, "");
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,6 +15,10 @@ const pilotSlug = (process.argv.find((arg) => arg.startsWith("--pilot-slug="))?.
   ?? process.env.HAT_PILOT_EVENT_SLUG ?? "").trim();
 assert(!pilotSlug || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pilotSlug),
   "Pilot event slug must be lowercase words separated by hyphens");
+const designatedHostEmail = (process.argv.find((arg) => arg.startsWith("--host-email="))?.slice(13)
+  ?? process.env.HAT_PILOT_HOST_EMAIL ?? "").trim().toLowerCase();
+assert(!designatedHostEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(designatedHostEmail),
+  "Designated Host email must be a valid email address");
 
 const options = { auth: { autoRefreshToken: false, persistSession: false } };
 const service = createClient(url, secretKey, options);
@@ -123,6 +128,29 @@ async function eventReservationOrders(eventId) {
   }
 }
 
+async function inspectDesignatedHost(email, assignedUserId) {
+  if (!email) return null;
+  let account = null;
+  for (let page = 1; ; page += 1) {
+    const { data, error } = await service.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) throw new Error(`Could not check designated Host account: ${error.code || "network error"}`);
+    account = data.users.find((user) => user.email?.toLowerCase() === email) ?? null;
+    if (account || data.users.length < 1000) break;
+  }
+  if (!account) return assessDesignatedHost({ account: null, profile: null,
+    latestApplicationStatus: null, assignedUserId });
+  const [profile, applications] = await Promise.all([
+    service.from("profiles").select("access_status,onboarding_completed_at")
+      .eq("id", account.id).maybeSingle(),
+    service.from("membership_applications").select("status")
+      .eq("user_id", account.id).order("created_at", { ascending: false }).limit(1),
+  ]);
+  if (profile.error || applications.error)
+    throw new Error(`Could not check designated Host membership: ${profile.error?.code || applications.error?.code || "network error"}`);
+  return assessDesignatedHost({ account, profile: profile.data,
+    latestApplicationStatus: applications.data?.[0]?.status, assignedUserId });
+}
+
 async function adminSetupReadsPass(client, eventId) {
   const [tickets, hosts, drafts, contacts, staff, orders] = await Promise.all([
     client.from("ticket_types").select("id,event_id,inventory_quantity,price_minor,sales_start_at,sales_end_at,status").eq("event_id", eventId),
@@ -188,6 +216,7 @@ const selectedPilot = pilotSlug
   ? realEvents.find((event) => event.slug === pilotSlug) ?? null : null;
 let pilotChecks = null;
 let publicationChecks = null;
+let designatedHost = null;
 if (selectedPilot) {
   const id = selectedPilot.id;
   const [tickets, host, workspace, safety, joining, venue, staff,
@@ -233,6 +262,7 @@ if (selectedPilot) {
   };
   pilotChecks = assessPilotEvent(pilotInput);
   publicationChecks = assessPilotPublication(pilotInput);
+  designatedHost = await inspectDesignatedHost(designatedHostEmail, host.data?.user_id);
 }
 const privateDrafts = realEvents.filter((event) => event.status === "draft");
 const rehearsalEvent = events.find((event) => event.status === "draft" && rehearsal(event));
@@ -392,6 +422,8 @@ if (!pilotSlug) blockers.push("pilot_event_not_selected");
 else if (!selectedPilot) blockers.push("selected_pilot_event_not_found_or_not_future");
 else for (const [check, ready] of Object.entries(pilotChecks))
   if (!ready) blockers.push(`pilot_${check}`);
+if (selectedPilot && designatedHost && !designatedHost.readyForPilot)
+  blockers.push("pilot_designated_host_not_ready");
 if (!adminEvidence.authenticated || adminEvidence.releaseChecks.length !== 5
   || adminEvidence.releaseChecks.some((check) => check.status !== "passed"))
   blockers.push("public_guest_release_checks_incomplete");
@@ -430,6 +462,8 @@ const result = {
       ? new Date(Date.parse(selectedPilot.starts_at) - 48 * 60 * 60 * 1000).toISOString()
       : null,
     selectedPilotChecks: pilotChecks },
+  designatedHost: designatedHostEmail && designatedHost
+    ? { email: designatedHostEmail, ...designatedHost } : null,
   publicationPreflight: {
     technicalChecks: publicationChecks,
     technicalReadyForOwnerReview: publicationChecks !== null

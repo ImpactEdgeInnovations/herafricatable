@@ -937,6 +937,15 @@ UTC on 3 October, the live audit found none of the ten pilot checks fully
 accepted, so the engineering recommendation remains **hold** even though
 the deployed site and isolated CI are healthy.
 
+At 10:22 UTC on 3 October, the live audit was repeated with
+**seina@arvisia-global.com** named as the intended Host. Supabase Auth still
+had no account for that address, and the selected pilot had no active Host
+assignment. The audit now reports the designated Host's email confirmation,
+membership/profile state and exact event assignment separately; an unrelated
+active Host cannot satisfy this pilot's named-Host check. The event remained a
+private draft with bookings closed, and the recommendation remained **hold**.
+No account, invitation or role was created by this check.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
@@ -944,10 +953,12 @@ the deployed site and isolated CI are healthy.
    and assign a check-in lead. Six October is the chosen public pilot; keep this existing draft
    private and registration closed until the gates pass and the owner records
    a go/no-go decision. Do not create a duplicate event. Repeat the read-only
-   audit with `npm run ops:events:audit-live -- --pilot-slug=the-founding-table-nairobi-2026-10-06`.
+   audit with `npm run ops:events:audit-live -- --pilot-slug=the-founding-table-nairobi-2026-10-06 --host-email=seina@arvisia-global.com`.
    The audit checks only this selected event's content, exact arrival details,
-   free on-sale place, active Host, approved Host draft, safety contact and
-   active scoped check-in staff.
+   free on-sale place, Seina's verified membership and scoped Host assignment,
+   approved Host draft, safety contact and active scoped check-in staff. It
+   reports her account and application state without creating an account or
+   bypassing membership approval.
 2. Designate a separate, tagged Super Admin rehearsal account, with the
    product owner's explicit approval of the email and access. Keep the primary
    owner account distinct from test evidence; do not silently promote an
