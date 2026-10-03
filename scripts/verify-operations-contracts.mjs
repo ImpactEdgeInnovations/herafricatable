@@ -79,6 +79,7 @@ const notificationOperations = read(
   "components/admin/notification-operations.tsx",
 );
 const liveDeliveryAcceptance = read("scripts/accept-admin-email-delivery-live.mjs");
+const liveDeliveryAudit = read("scripts/audit-notification-delivery-live.mjs");
 for (const contract of [
   'process.env.HAT_CONFIRM_ADMIN_EMAIL_TEST === "yes"',
   'supabase.auth.signInWithPassword({ email, password })',
@@ -88,6 +89,9 @@ for (const contract of [
   assert(liveDeliveryAcceptance.includes(contract),
     `Live Admin email acceptance must include ${contract}`);
 }
+assert(liveDeliveryAudit.includes("retryable = !result.status || result.status >= 500"));
+assert(liveDeliveryAudit.includes("No database error text was returned"));
+assert(liveDeliveryAudit.includes("recipientsOrPayloadsPrinted: false"));
 for (const contract of [
   "Email readiness",
   "Email provider connected",

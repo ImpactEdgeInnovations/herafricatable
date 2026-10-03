@@ -886,6 +886,19 @@ A fresh read-only Auth lookup for Seina's supplied email still found no
 account or member profile. No identity, invitation or Host role was created
 by this check.
 
+At 09:46 UTC on 3 October, the protected production Admin delivery-test route
+sent one labelled message to the primary Admin address and returned a Resend
+provider ID. Provider acceptance passed; inbox receipt and sender/content
+review remain unverified, so `notification_delivery` is still `not_started`.
+The `caseready.africa` DKIM, SPF and return-path DNS checks pass, but the
+sending-only API key cannot inspect Resend's dashboard domain status. The
+live application queue audit reported no queued, processing, failed or sent
+jobs in the last seven days; this test route sends directly and is audited
+separately. A transient empty database error on the first aggregate audit
+cleared on retry; the audit now retries temporary server/network failures and
+reports its query and HTTP status if they persist. These checks do not prove
+the Supabase Auth OTP template or sign-in journey.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
