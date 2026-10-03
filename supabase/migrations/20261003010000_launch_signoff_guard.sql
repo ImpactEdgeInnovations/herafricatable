@@ -127,6 +127,22 @@ begin
 end;
 $$;
 
+create or replace function public.launch_signoff_guard_ready()
+returns boolean language sql stable security definer set search_path = ''
+as $$
+  select exists (
+    select 1 from pg_catalog.pg_proc routine
+    join pg_catalog.pg_namespace namespace on namespace.oid = routine.pronamespace
+    where namespace.nspname = 'public'
+      and routine.proname = 'save_launch_gate_check'
+      and routine.prosrc like '%Complete every required launch check before final sign-off%'
+      and routine.prosrc like '%launch.signoff_reopened%'
+  );
+$$;
+revoke all on function public.launch_signoff_guard_ready() from public;
+grant execute on function public.launch_signoff_guard_ready()
+  to authenticated, service_role;
+
 -- Repair a sign-off recorded before this guard existed if its supporting
 -- evidence is no longer complete. Do not silently carry it forward as valid.
 do $$
@@ -158,5 +174,7 @@ begin
   end if;
 end;
 $$;
+
+notify pgrst, 'reload schema';
 
 commit;

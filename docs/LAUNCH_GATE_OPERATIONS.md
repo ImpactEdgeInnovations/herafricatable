@@ -44,6 +44,9 @@ sign-off automatically returns to **In progress**, clears its verification and
 records an audit event. The owner must sign off again after recovery. Apply
 the migration in Supabase; `supabase/tests/020_launch_signoff_guard.sql` is an
 isolated test and must never be run in the production SQL Editor.
+After applying the migration, the read-only pilot audit must report
+`database.launchSignoffGuard: true`. That confirms the guard function is
+installed; it does not mean any launch check has passed.
 
 ## Release interpretation
 

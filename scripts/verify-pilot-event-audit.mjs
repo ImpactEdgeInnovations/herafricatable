@@ -84,6 +84,8 @@ assert(liveAudit.includes('service.rpc("event_waitlist_ready")'));
 assert(liveAudit.includes('blockers.push("event_waitlist_lifecycle_not_ready")'));
 assert(liveAudit.includes('service.rpc("event_automatic_checkout_guard_ready")'));
 assert(liveAudit.includes('blockers.push("event_automatic_checkout_guard_not_ready")'));
+assert(liveAudit.includes('service.rpc("launch_signoff_guard_ready")'));
+assert(liveAudit.includes('blockers.push("final_launch_signoff_guard_not_ready")'));
 assert(liveAudit.includes('automaticEventPaymentsOpen: automaticCheckoutFlagResult.data?.enabled === true'));
 assert(liveAudit.includes('!adminEvidence.tagged || adminEvidence.usesPrimaryAccount'));
 assert(liveAudit.includes('blockers.push("dedicated_admin_rehearsal_account_missing")'));

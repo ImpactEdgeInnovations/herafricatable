@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(15);
 
 insert into auth.users (
   id, email, aud, role, raw_app_meta_data, raw_user_meta_data, email_confirmed_at
@@ -13,6 +13,7 @@ insert into public.user_roles (user_id, role, granted_by) values (
   '20000000-0000-4000-8000-000000000020'
 );
 select set_config('request.jwt.claim.sub', '20000000-0000-4000-8000-000000000020', true);
+select is(public.launch_signoff_guard_ready(), true, 'read-only launch guard probe recognises the installed function');
 
 select throws_ok(
   $$select public.save_launch_gate_check('launch_signoff', 'passed', 'Product owner', 'All release owners approve the controlled pilot.')$$,

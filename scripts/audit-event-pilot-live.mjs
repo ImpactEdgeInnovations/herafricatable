@@ -101,6 +101,13 @@ async function automaticCheckoutGuardReady() {
   return data === true;
 }
 
+async function launchSignoffGuardReady() {
+  const { data, error } = await service.rpc("launch_signoff_guard_ready");
+  if (error?.code === "PGRST202") return false;
+  if (error) throw new Error(`Could not check launch sign-off guard: ${error.code || "network error"}`);
+  return data === true;
+}
+
 async function eventReservationOrders(eventId) {
   const pageSize = 1000;
   const rows = [];
@@ -143,7 +150,7 @@ const healthResponse = await fetch(`${base}/api/health`, {
 const health = await healthResponse.json();
 const [guestFeedback, hostOutcomes, introductions, rounds, followUpInvitations,
   invitationCrypto, publicationSequence, arrivalDetailsGuard, singleSeatGuard, capacityGuard, registrationEndGuard,
-  registrationNotifications, waitlistLifecycle, automaticCheckoutGuard,
+  registrationNotifications, waitlistLifecycle, automaticCheckoutGuard, launchSignoffGuard,
   flagResult, automaticCheckoutFlagResult, eventResult] =
   await Promise.all([
     functionInstalled("can_leave_event_feedback"),
@@ -160,6 +167,7 @@ const [guestFeedback, hostOutcomes, introductions, rounds, followUpInvitations,
     registrationNotificationReady(),
     eventWaitlistReady(),
     automaticCheckoutGuardReady(),
+    launchSignoffGuardReady(),
     service.from("feature_flags").select("enabled").eq("key", "event_guest_access").maybeSingle(),
     service.from("feature_flags").select("enabled").eq("key", "event_automatic_checkout").maybeSingle(),
     service.from("events")
@@ -369,6 +377,7 @@ if (!registrationEndGuard) blockers.push("event_registration_end_guard_not_ready
 if (!registrationNotifications) blockers.push("event_registration_notifications_not_ready");
 if (!waitlistLifecycle) blockers.push("event_waitlist_lifecycle_not_ready");
 if (!automaticCheckoutGuard) blockers.push("event_automatic_checkout_guard_not_ready");
+if (!launchSignoffGuard) blockers.push("final_launch_signoff_guard_not_ready");
 if (automaticCheckoutFlagResult.data?.enabled === true)
   blockers.push("automatic_event_payments_open_before_pilot_acceptance");
 if (!privateDraftAnonymousHidden) blockers.push("private_draft_public_route_not_verified_hidden");
@@ -405,7 +414,8 @@ const result = {
     databaseReachable: health.database === "reachable", serverReady: health.server_integration === "ready" },
   database: { guestFeedback, hostOutcomes, introductions, rounds,
     followUpInvitations, invitationCrypto, publicationSequence, arrivalDetailsGuard, singleSeatGuard,
-    capacityGuard, registrationEndGuard, registrationNotifications, waitlistLifecycle, automaticCheckoutGuard },
+    capacityGuard, registrationEndGuard, registrationNotifications, waitlistLifecycle, automaticCheckoutGuard,
+    launchSignoffGuard },
   guestRegistrationOpen: flagResult.data?.enabled === true,
   automaticEventPaymentsOpen: automaticCheckoutFlagResult.data?.enabled === true,
   events: { futurePublicPublished: publicFuture.length, futurePrivateDrafts: privateDrafts.length,
