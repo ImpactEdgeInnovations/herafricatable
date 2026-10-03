@@ -107,7 +107,7 @@ export function eventPilotReadiness(input: PilotReadinessInput, now = new Date()
     {
       label: "Event Host",
       ready: input.hostActive,
-      guidance: "Assign an active member to prepare the event without giving them payment or guest-list access.",
+      guidance: "Ask your Host to sign in, request membership and finish her profile. Once approved, assign her here; this will not give her payment or guest-list access.",
       href: "/admin/events?view=host",
     },
     {

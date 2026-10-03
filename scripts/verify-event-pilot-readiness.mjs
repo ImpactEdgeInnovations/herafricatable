@@ -32,6 +32,9 @@ for (const path of ["event-manager.tsx", "registration-manager.tsx", "event-chec
 const eventOverview = readFileSync(new URL("../components/admin/event-command-centre.tsx", import.meta.url), "utf8");
 assert(eventOverview.includes('router.replace(eventToolHref("/admin/events?view=overview", item.id)'));
 assert(eventOverview.includes('eventToolHref("/admin/events?view=edit", event.id)'));
+assert(eventOverview.includes("hostDraftPublicationCutoff(event.starts_at)"));
+assert(eventOverview.includes("Publication cutoff:"));
+assert(eventOverview.includes('href="/admin/release"'));
 const eventManager = readFileSync(new URL("../components/admin/event-manager.tsx", import.meta.url), "utf8");
 assert(eventManager.includes("initialEvents.find((event) => event.id === selectedEventId)"));
 
@@ -116,6 +119,7 @@ assert.equal(status({ ...ready, orders: reserved }, "Free place with private rev
 assert.equal(status({ ...ready, orders: reserved }, "Places remaining"), false);
 assert.equal(status({ ...ready, orders: [{ ...reserved[0], status: "refunded" }] }, "Free place with private review"), true);
 assert.equal(status({ ...ready, hostActive: false }, "Event Host"), false);
+assert.match(step({ ...ready, hostActive: false }, "Event Host").guidance, /request membership and finish her profile/);
 assert.equal(status({ ...ready, hostDraftStatus: "submitted" }, "Host content reviewed"), false);
 assert.equal(status({ ...ready, hasSafetyContact: false }, "On-the-day safety contact"), false);
 assert.equal(status({ ...ready, doorStaffActive: false }, "Guest arrival lead"), false);

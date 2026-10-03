@@ -12,6 +12,7 @@ import type { PilotReadinessStep } from "@/lib/event-pilot-readiness";
 import { EventIntroSafety } from "@/components/admin/event-intro-safety";
 import { EventRoundReview } from "@/components/admin/event-round-review";
 import { eventToolHref } from "@/lib/events/admin-event-link";
+import { hostDraftPublicationCutoff } from "@/lib/events/host-publication-window";
 
 const eventStatus: Record<string, string> = {
   cancelled: "Cancelled",
@@ -79,6 +80,8 @@ export function EventCommandCentre({
     : undefined;
   const preparation = event ? pilotReadiness?.[event.id] ?? null : null;
   const nextPreparationStep = preparation?.find((step) => !step.ready);
+  const draftCutoff = event?.status === "draft" ? hostDraftPublicationCutoff(event.starts_at) : null;
+  const draftCutoffValid = draftCutoff && Number.isFinite(draftCutoff.getTime());
 
   async function manageLifecycle(
     action: "cancel" | "pause_registrations" | "reopen" | "resume_registrations" | "suspend",
@@ -239,7 +242,9 @@ export function EventCommandCentre({
                     <span className="eyebrow">For the first pilot</span>
                     <h4>{preparation ? `${preparation.filter((step) => step.ready).length} of ${preparation.length} setup checks complete` : "Setup checks unavailable"}</h4>
                     <p>{preparation ? nextPreparationStep ? `${nextPreparationStep.label}: ${nextPreparationStep.guidance}` : "The event setup checks are complete. Separate live rehearsals and Admin Release checks are still required before opening guest access." : "We could not load the event setup checks. Refresh the page before making a release decision."}</p>
+                    {draftCutoffValid ? <p><strong>Publication cutoff: {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event.timezone }).format(draftCutoff)}.</strong> {draftCutoff.getTime() > Date.now() ? "Finish the Host and safety review before then. The cutoff is not permission to publish; the launch checks must still pass." : "This cutoff has passed. Choose a later event date; do not bypass the launch checks."}</p> : null}
                     {nextPreparationStep ? <Link className="button button-outline" href={eventToolHref(nextPreparationStep.href, event.id)}>Continue setup</Link> : null}
+                    <Link className="button button-outline" href="/admin/release">See launch checks</Link>
                   </div>
                   {preparation ? <details>
                     <summary>See every setup check</summary>
