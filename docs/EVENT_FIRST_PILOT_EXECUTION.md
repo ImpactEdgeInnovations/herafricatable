@@ -962,6 +962,24 @@ still needs an authorised project owner to replace the old DukaPilot wording
 with Her Africa Table wording; changing a Vercel variable or the application
 repository cannot edit that hosted Auth template. This also leaves the Admin
 OTP launch check blocked until a real code is received and verified.
+Opening the exact project URL again at 10:44 UTC on 3 October redirected to
+the ImpactEdgeInnovations project list with the explicit message **You do not
+have access to this project**. That organization showed three other projects,
+not Her Africa Table. Project ownership or the signed-in Dashboard account
+must be corrected before any Auth template change; do not edit another project.
+
+At 10:39 UTC on 3 October, a fresh live check still found no Seina account and
+the engineering recommendation remained **hold**. The live membership intake
+setting was **Review every request**, with two applications awaiting review;
+neither can be treated as Seina's application without an account match. A
+signed-out caller was denied all eight checked Admin decision functions, and
+the separate-account page check had denied private pilot data and Admin pages
+to tagged member, Event Host and Community moderator accounts. Those results
+are now recorded under `authorization_boundaries` as **in progress**, not
+passed: positive guest registration and a distinct tagged Super Admin's live
+decisions still need rehearsal. Resend DNS for `caseready.africa` had DKIM,
+SPF and return-path MX records; the local sending-only key could not inspect
+the provider's dashboard verification status.
 
 ### Next owner actions, in order
 
