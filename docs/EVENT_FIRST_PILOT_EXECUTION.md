@@ -894,7 +894,10 @@ The `caseready.africa` DKIM, SPF and return-path DNS checks pass, but the
 sending-only API key cannot inspect Resend's dashboard domain status. The
 live application queue audit reported no queued, processing, failed or sent
 jobs in the last seven days; this test route sends directly and is audited
-separately. A transient empty database error on the first aggregate audit
+separately. The live audit now reports the direct Admin test's 09:46 UTC
+provider-acceptance time alongside, but distinct from, the older queue-send
+time; it explicitly keeps inbox receipt unverified. A transient empty database
+error on the first aggregate audit
 cleared on retry; the audit now retries temporary server/network failures and
 reports its query and HTTP status if they persist. These checks do not prove
 the Supabase Auth OTP template or sign-in journey.

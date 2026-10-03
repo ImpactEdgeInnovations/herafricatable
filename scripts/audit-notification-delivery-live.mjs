@@ -33,7 +33,7 @@ for (const status of statuses) {
       .gte("created_at", since)));
 }
 
-const [latestSent, oldestWaiting, latestFailure] = await Promise.all([
+const [latestSent, oldestWaiting, latestFailure, latestDirectTest, latestDirectFailure] = await Promise.all([
   readQuery("last provider-accepted notification", () => service.from("notification_jobs")
     .select("updated_at,provider_message_id")
     .eq("status", "sent")
@@ -51,6 +51,16 @@ const [latestSent, oldestWaiting, latestFailure] = await Promise.all([
     .eq("status", "failed")
     .order("updated_at", { ascending: false })
     .limit(1)),
+  readQuery("last accepted direct Admin delivery test", () => service.from("audit_events")
+    .select("created_at")
+    .eq("action", "notification.delivery_test")
+    .order("created_at", { ascending: false })
+    .limit(1)),
+  readQuery("last failed direct Admin delivery test", () => service.from("audit_events")
+    .select("created_at")
+    .eq("action", "notification.delivery_test_failed")
+    .order("created_at", { ascending: false })
+    .limit(1)),
 ]);
 
 const counts = Object.fromEntries(statuses.map((status, index) =>
@@ -64,5 +74,10 @@ console.log(JSON.stringify({
   oldestWaitingAt: oldestWaiting.data?.[0]?.created_at ?? null,
   latestFailureAt: latestFailure.data?.[0]?.updated_at ?? null,
   latestFailureCategory: latestFailure.data?.[0]?.template_key ?? null,
+  directAdminDeliveryTest: {
+    lastProviderAcceptedAt: latestDirectTest.data?.[0]?.created_at ?? null,
+    lastFailureAt: latestDirectFailure.data?.[0]?.created_at ?? null,
+    inboxReceiptVerified: false,
+  },
   recipientsOrPayloadsPrinted: false,
 }, null, 2));
