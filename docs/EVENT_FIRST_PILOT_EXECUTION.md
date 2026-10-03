@@ -871,6 +871,21 @@ registration or publication. Admin's Host assignment screen now explains the
 membership-first path and links to the request page when the proposed Host
 does not yet have an active account.
 
+At 03:47 UTC on 3 October, the read-only audit of the connected production
+project reported `launchSignoffGuard: true` and release `f19a511`; both the
+application and isolated database quality jobs passed for that release. The final
+sign-off migration is now detected, removing that installation blocker. The
+selected pilot still fails active Host, submitted Host content, named safety
+contact and scoped check-in lead preflight. Its free ticket remains prepared
+but not on sale, and guest requests and automatic event payments remain off.
+The five public-guest release checks are `not_started`; Admin OTP is `blocked`
+and member OTP and notification delivery are `not_started`. The audit's
+engineering recommendation remains **hold**. Do not treat the installed guard
+as proof that any launch check has passed.
+A fresh read-only Auth lookup for Seina's supplied email still found no
+account or member profile. No identity, invitation or Host role was created
+by this check.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
