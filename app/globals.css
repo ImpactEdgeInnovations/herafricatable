@@ -12993,6 +12993,13 @@ body {
 .pilot-taskboard .roadmap-copy p strong {
   color: var(--ink);
 }
+.pilot-taskboard .roadmap-copy h3 {
+  font-size: 0.94rem;
+}
+.pilot-taskboard .roadmap-copy p,
+.pilot-taskboard .roadmap-copy small {
+  font-size: 0.77rem;
+}
 .pilot-taskboard .roadmap-progress {
   display: grid;
   justify-items: start;
@@ -13000,12 +13007,12 @@ body {
 }
 .pilot-taskboard .roadmap-progress strong {
   color: var(--wine-deep);
-  font-size: 0.68rem;
+  font-size: 0.77rem;
   line-height: 1.4;
 }
 .pilot-taskboard .roadmap-progress a {
   color: var(--wine);
-  font-size: 0.7rem;
+  font-size: 0.77rem;
   text-underline-offset: 3px;
 }
 .pilot-taskboard-footnote {

@@ -136,7 +136,7 @@ export function RoadmapOverview({
         <a href="https://github.com/ImpactEdgeInnovations/herafricatable/blob/main/docs/EVENT_FIRST_PILOT_EXECUTION.md" target="_blank" rel="noreferrer">Full sprint plan ↗</a>
       </div>
       <div className="pilot-taskboard-summary">
-        <p><strong>{pilotEventReady ? pilotEvent?.status === "draft" ? "Private draft found" : pilotEvent ? "Pilot needs review" : "Pilot not found" : "Pilot status unavailable"}</strong><span>{pilotEvent ? pilotEvent.title : "Open the event desk to check the pilot setup."}</span></p>
+        <p><strong>{pilotEventReady ? pilotEvent?.status === "draft" ? "Private draft found" : pilotEvent?.status === "published" ? "Pilot is public — review gates" : pilotEvent ? "Pilot needs review" : "Pilot not found" : "Pilot status unavailable"}</strong><span>{pilotEvent ? pilotEvent.title : "Open the event desk to check the pilot setup."}</span></p>
         <p><strong>{evidenceAvailable ? `${acceptedCount} of ${pilotGateKeys.length}` : "Unavailable"}</strong><span>pilot launch checks accepted with evidence</span></p>
         <p><strong>Not a go decision</strong><span>Public guest access and automatic payments remain separate controls.</span></p>
       </div>
