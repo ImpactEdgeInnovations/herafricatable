@@ -946,6 +946,23 @@ active Host cannot satisfy this pilot's named-Host check. The event remained a
 private draft with bookings closed, and the recommendation remained **hold**.
 No account, invitation or role was created by this check.
 
+The direct Her Africa Table delivery-test email accepted by Resend at 09:46
+UTC on 3 October was visible in the primary Admin Gmail inbox at 12:46 EAT.
+This closes the *direct test's inbox-receipt question only*. The live
+`notification_delivery` launch check was recorded as **in progress**, with
+that evidence and an accountable operations owner; `verified_at` remains
+null. Queued membership/event messages, other inboxes and bounce handling are
+still unverified. The read-only email audit cannot inspect an inbox itself, so
+its output now says `inboxReceiptVerifiedByAudit: false` rather than implying
+the direct email failed to arrive.
+
+The current signed-in Supabase Dashboard account returned **no access** for
+the Supabase project reference used by the live app. The sign-in email template
+still needs an authorised project owner to replace the old DukaPilot wording
+with Her Africa Table wording; changing a Vercel variable or the application
+repository cannot edit that hosted Auth template. This also leaves the Admin
+OTP launch check blocked until a real code is received and verified.
+
 ### Next owner actions, in order
 
 1. Confirm the Geco booking and capacity of 20, complete Seina N's membership

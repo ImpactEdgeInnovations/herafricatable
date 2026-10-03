@@ -77,7 +77,7 @@ console.log(JSON.stringify({
   directAdminDeliveryTest: {
     lastProviderAcceptedAt: latestDirectTest.data?.[0]?.created_at ?? null,
     lastFailureAt: latestDirectFailure.data?.[0]?.created_at ?? null,
-    inboxReceiptVerified: false,
+    inboxReceiptVerifiedByAudit: false,
   },
   recipientsOrPayloadsPrinted: false,
 }, null, 2));

@@ -93,7 +93,7 @@ assert(liveDeliveryAudit.includes("retryable = !result.status || result.status >
 assert(liveDeliveryAudit.includes("No database error text was returned"));
 assert(liveDeliveryAudit.includes("recipientsOrPayloadsPrinted: false"));
 assert(liveDeliveryAudit.includes('"notification.delivery_test"'));
-assert(liveDeliveryAudit.includes("inboxReceiptVerified: false"));
+assert(liveDeliveryAudit.includes("inboxReceiptVerifiedByAudit: false"));
 for (const contract of [
   "Email readiness",
   "Email provider connected",
