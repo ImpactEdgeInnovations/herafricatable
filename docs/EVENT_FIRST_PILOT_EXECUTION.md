@@ -915,6 +915,11 @@ retention schedule and jurisdiction-specific rights await legal review.
 Product/legal owners must approve complete, accurate copy before recording
 the legal/privacy launch sign-off. Engineering cannot infer those facts or
 mark that gate passed from a working interface.
+On release `6d0ac52`, both GitHub application and isolated Supabase jobs
+passed, and the production domain reported that release. A live 390×844
+visual check of the membership-request entry confirmed the email field and
+primary button on the first screen and working links to all three legal
+pages. It was an anonymous, read-only browser check; no OTP was requested.
 
 ### Next owner actions, in order
 
