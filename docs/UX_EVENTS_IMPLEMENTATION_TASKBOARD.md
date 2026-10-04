@@ -2,7 +2,7 @@
 
 Updated: 4 October 2026. Baseline release: `b4be9ca`.
 
-This board turns the [UI/UX and Events audit](../../HAT_UI_UX_Events_Audit_2026-10-04.md) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
+This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
 ## Outcome and scope
 
@@ -23,6 +23,8 @@ An Event Host prepares a scoped draft. Admin reviews it, assigns the safety and 
 The read-only live audit at 08:40 EAT on 4 October found a healthy deployed app and reachable database, but **zero future public published events**. The named October 6 pilot is still a private draft. `event_guest_access` and automatic event payments are off. The pilot has basic place details and a prepared free ticket, while the on-sale ticket, designated Host account/assignment/content, safety-contact record and scoped door staff remain incomplete. All probed technical readiness functions returned true. **Zero of the ten pilot launch checks are accepted**; one is recorded blocked and two in progress. This is a release hold, not a percentage of code completed.
 
 The current publication policy requires the October 6 pilot to be ready 48 hours before its 18:00 EAT start, which is **4 October at 18:00 EAT**. If the requirements cannot be completed by then, the Product Owner must decide whether to reschedule the pilot. Do not override the safeguard to preserve the original date.
+
+A later read-only audit attempt on 4 October could not complete because the local machine could not resolve the live domain. Until a fresh audit succeeds, the 08:40 EAT observation above is the latest verified live state.
 
 ## Critical path
 
