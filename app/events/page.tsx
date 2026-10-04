@@ -8,12 +8,15 @@ import {
 } from "@/components/events/member-event-proposal";
 import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 import { publicPageMetadata } from "@/lib/seo";
+import { loadEventBookingAvailabilityBatch, type EventBookingAvailability } from "@/lib/events/server-booking-availability";
+import type { BookingTicket } from "@/lib/events/booking-availability";
 
 export const dynamic = "force-dynamic";
 export const metadata = publicPageMetadata("Upcoming Gatherings & Events", "Discover Her Africa Table gatherings for African women. Explore upcoming events, useful conversations and opportunities to connect in Nairobi and beyond.", "/events");
 
 type PublicEvent = {
   audience: "community" | "public";
+  capacity: number | null;
   ends_at: string;
   format: string;
   id: string;
@@ -26,24 +29,30 @@ type PublicEvent = {
   venues: { city: string; country: string; name: string } | null;
 };
 
-type PublicTicket = { event_id: string; price_minor: number; currency: string; sales_start_at: string | null; sales_end_at: string | null };
+type PublicTicket = BookingTicket & { event_id: string };
 type MyRegistration = { event_id: string; status: string };
 type MyMembership = { event_id: string; status: string };
 type MyEvent = Pick<PublicEvent, "id" | "slug" | "starts_at" | "ends_at" | "timezone" | "title" | "venues">;
 
-function eventPrice(tickets: PublicTicket[]) {
+function eventPrice(tickets: PublicTicket[], lookupFailed = false) {
+  if (lookupFailed) return "See event for price";
   if (!tickets.length) return "Price to be announced";
   const lowest = [...tickets].sort((a, b) => a.price_minor - b.price_minor)[0];
   if (lowest.price_minor === 0) return "Free";
   return `From ${lowest.currency} ${new Intl.NumberFormat("en-KE").format(lowest.price_minor / 100)}`;
 }
 
-function bookingLabel(event: PublicEvent, tickets: PublicTicket[]) {
+function bookingLabel(
+  event: PublicEvent,
+  availability: EventBookingAvailability | undefined,
+) {
   if (event.registration_mode === "closed") return "Bookings closed";
   if (event.registration_mode === "waitlist") return "Waiting list";
-  const now = Date.now();
-  if (tickets.some((ticket) => (!ticket.sales_start_at || Date.parse(ticket.sales_start_at) <= now) && (!ticket.sales_end_at || Date.parse(ticket.sales_end_at) >= now))) return "Check places";
-  return tickets.some((ticket) => ticket.sales_start_at && Date.parse(ticket.sales_start_at) > now) ? "Bookings open soon" : "Bookings unavailable";
+  if (!availability || availability.checkFailed) return "Check availability";
+  if (availability.eventFull || (availability.tickets.length > 0 && availability.tickets.every((ticket) => ticket.bookingState === "event_full" || ticket.bookingState === "ticket_full"))) return "Fully booked";
+  if (availability.tickets.some((ticket) => ticket.bookingState === "available")) return event.registration_mode === "manual_review" ? "Requests open" : "Check booking details";
+  if (availability.tickets.some((ticket) => ticket.bookingState === "not_open")) return "Bookings open soon";
+  return "Bookings unavailable";
 }
 
 type ProposalCommunityContext = {
@@ -63,18 +72,25 @@ export default async function EventsPage() {
   const supabase = await createClient();
   const { data, error: eventsError } = await supabase
     .from("events")
-    .select("id, slug, title, summary, format, audience, starts_at, ends_at, timezone, registration_mode, venues(name, city, country)")
+    .select("id, slug, title, summary, format, audience, capacity, starts_at, ends_at, timezone, registration_mode, venues(name, city, country)")
     .eq("status", "published")
     .gte("ends_at", new Date().toISOString())
     .order("starts_at", { ascending: true });
   const events = (data as unknown as PublicEvent[] | null) ?? [];
-  const { data: publicTicketRows } = events.length
+  const { data: publicTicketRows, error: publicTicketError } = events.length
     ? await supabase.from("ticket_types")
-        .select("event_id,price_minor,currency,sales_start_at,sales_end_at")
+      .select("event_id,id,name,description,inventory_quantity,price_minor,currency,sales_start_at,sales_end_at")
         .in("event_id", events.map((event) => event.id))
         .eq("status", "on_sale")
-    : { data: [] };
+    : { data: [], error: null };
   const publicTickets = (publicTicketRows as PublicTicket[] | null) ?? [];
+  const ticketsByEvent = new Map(events.map((event) => [
+    event.id,
+    publicTickets.filter((ticket) => ticket.event_id === event.id),
+  ]));
+  const bookingAvailability = publicTicketError
+    ? new Map<string, EventBookingAvailability>()
+    : await loadEventBookingAvailabilityBatch(events, ticketsByEvent);
   const { data: eventCommunityRows } = events.length
     ? await supabase
         .from("community_event_links")
@@ -228,12 +244,12 @@ export default async function EventsPage() {
         ) : events.length ? events.map((event) => {
           const eventCommunity = eventCommunities.find((item) => item.event_id === event.id)?.communities;
           const poster = hostCovers.get(event.id)?.url ? hostCovers.get(event.id) : eventPosters.get(event.id);
-          const tickets = publicTickets.filter((ticket) => ticket.event_id === event.id);
+          const tickets = ticketsByEvent.get(event.id) ?? [];
           return (
           <article key={event.id}>
             {poster?.url ? <img className="public-event-poster" alt={poster.alt} src={poster.url} /> : null}
             <div className="public-event-date"><strong>{new Intl.DateTimeFormat("en-KE", { day: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))}</strong><span>{new Intl.DateTimeFormat("en-KE", { month: "short", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</span></div>
-            <div className="public-event-copy"><span>{event.audience === "community" ? "Community gathering" : event.format.replace("_", " ")}</span><h2>{event.title}</h2><p className="public-event-facts">{new Intl.DateTimeFormat("en-KE", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} <span aria-hidden="true">·</span> {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"} <span aria-hidden="true">·</span> {eventPrice(tickets)} <span aria-hidden="true">·</span> {bookingLabel(event, tickets)}</p><p className="public-event-summary">{event.summary || "Event details will be shared with approved members."}</p>{eventCommunity ? <Link className="event-list-community" href={`/communities/${eventCommunity.slug}/about`}>{eventCommunity.name} <i aria-hidden="true">→</i></Link> : <small className="event-list-standalone">Her Africa Table open event</small>}</div>
+            <div className="public-event-copy"><span>{event.audience === "community" ? "Community gathering" : event.format.replace("_", " ")}</span><h2>{event.title}</h2><p className="public-event-facts">{new Intl.DateTimeFormat("en-KE", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} <span aria-hidden="true">·</span> {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"} <span aria-hidden="true">·</span> {eventPrice(tickets, Boolean(publicTicketError))} <span aria-hidden="true">·</span> {bookingLabel(event, bookingAvailability.get(event.id))}</p><p className="public-event-summary">{event.summary || "Event details will be shared with approved members."}</p>{eventCommunity ? <Link className="event-list-community" href={`/communities/${eventCommunity.slug}/about`}>{eventCommunity.name} <i aria-hidden="true">→</i></Link> : <small className="event-list-standalone">Her Africa Table open event</small>}</div>
             <Link href={`/events/${event.slug}`}>View event <span aria-hidden="true">→</span></Link>
           </article>
         );}) : <div className="events-empty"><span className="events-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><p className="eyebrow">No upcoming events</p><strong>We’re preparing the next gathering.</strong><p>{isActiveMember ? "We will let you know as soon as the date and place are ready." : "Published event details will appear here. Join the founding network to hear first."}</p><div className="events-empty-actions"><Link className="button button-primary" href={isActiveMember ? "/home" : "/sign-in?mode=apply"}>{isActiveMember ? "Back home" : "Request membership"}</Link>{isActiveMember ? <Link className="button button-outline" href="/network">Meet members</Link> : null}</div></div></div>}

@@ -1,6 +1,6 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 4 October 2026. Baseline release: `b4be9ca`.
+Updated: 4 October 2026, 09:20 EAT. Baseline release: `b4be9ca`.
 
 This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
@@ -48,7 +48,7 @@ Engineering can build EVT and COMMS work while the Product Owner resolves PILOT-
 | EVT-02 | P1 | **Review** | Engineering | Combine personal request state, pass, receipt/manage-place and calendar entry within the event journey | One event page explains pending vs confirmed and provides correct next action; existing cancel/refund RPCs still govern | Live booking-state acceptance still required |
 | EVT-03 | P1 | **Review** | Engineering | Explain event-only eligibility before OTP and preserve the event return path through `/continue` and onboarding | Guest-off state does not promise immediate booking; approved member/eligible guest returns to intended event | Guest-on and guest-off browser acceptance still required |
 | COMMS-01 | P1 | **Ready** | Engineering + Admin | Prove existing registration/decision/cancellation email queue and delivery; add a minimum standalone reminder and reviewed material-change message where existing contracts do not cover them | Outbox, provider result, controlled inbox, retry, preference and duplicate-send evidence; no mail on cosmetic edits | Controlled inboxes; notification worker/Resend |
-| DISC-01 | P2 | **In progress** | Engineering + Product | Replace full-summary cards with date and time, venue/online, free/price, booking availability, bounded summary and one action | Person can answer when/where/cost/state from a card at 320/390/768px; no N+1 roster reads | Exact capacity state and responsive acceptance still required |
+| DISC-01 | P2 | **Review** | Engineering + Product | Replace full-summary cards with date and time, venue/online, free/price, booking availability, bounded summary and one action | Person can answer when/where/cost/state from a card at 320/390/768px; no N+1 roster reads | Populated mobile and role acceptance still required |
 | DISC-02 | P2 | **Review** | Engineering | Add Events-local “My events” using existing personal records; keep public Upcoming/Past and handle ongoing/paused/cancelled honestly | Pending/confirmed/waitlisted entries and pass route found within Events; private records never leak | Multi-account and mobile acceptance still required |
 | DETAIL-01 | P2 | **Ready** | Engineering + Product | Reorder detail: title/key facts/action first; group optional Community, programme, Q&A, menu, gallery, networking and follow-up by lifecycle | Populated mobile page exposes decision/action before long optional content; empty/past/cancelled/error states are accurate | EVT-01, EVT-02; test content |
 | HOST-01 | P1 | **Ready** | Engineering + Event Host + Admin | Show selected-event stage, next requirement and accountable person in Admin; preserve two-stage Host review and all guards | Reviewer knows next action; Host cannot see roster/payment/other events; selection and Back persist | Existing proposal/Host RPCs |
@@ -61,7 +61,9 @@ Engineering can build EVT and COMMS work while the Product Owner resolves PILOT-
 
 **4 October engineering checkpoint:** EVT-01/02/03 are code-complete for review. The confirmed pass now shows authorized arrival details, directions or online joining, plus calendar and manage-place actions. Existing request states surface the order link; a new visitor sees the current guest-access rule before OTP. `npm run build` and the full `npm test` suite passed on the local checkout. These are implementation checks, **not** live role/device acceptance or a Launch-gate pass. The October 6 private draft has not been published or changed by this slice.
 
-**Events discovery checkpoint:** Upcoming cards now show local day/time, venue or online format, the lowest published ticket price, a safe booking cue and a two-line summary. Tickets are loaded in one public query rather than one request per card. “Check places” deliberately does not promise that capacity remains; exact availability and 320/390/768px visual acceptance are still open. TypeScript, the journey contracts and production build passed locally.
+**Events discovery checkpoint:** Upcoming cards show local day/time, venue or online format, the lowest published ticket price, a booking cue and a two-line summary. Tickets are loaded in one public query rather than one request per card. TypeScript, the journey contracts and production build passed locally.
+
+**Booking-state refinement:** Cards now assess shared event capacity and ticket inventory from one paginated server-side order read across the listed events. Full events can say “Fully booked”; free/manual-review events say “Requests open” only when a ticket is actually available. A failed ticket or reservation read falls back to “Check availability” or “See event for price” rather than a false promise. This is code-complete but still needs a populated 320/390/768px browser review and a live last-place test.
 
 **Personal Events checkpoint:** A signed-in visitor now sees an Events-local “My events” link and upcoming request/confirmed-place rows, each loaded through her own registration and attendance permissions. Confirmed rows lead to the protected pass; requests return to their event state. The public Upcoming/Past views remain unchanged. The local full test suite and production build passed; two-account visibility and mobile acceptance remain to be recorded.
 
@@ -85,16 +87,16 @@ Engineering can build EVT and COMMS work while the Product Owner resolves PILOT-
 
 **UX-01 / UX-02:** Use existing wine/cream identity, MemberHeader, Community tabs and the three-suggestion Home. Improve functional readability and error recovery where touched. Do not broaden this into an unrelated redesign.
 
-## Implementation sequence
+## Phase monitor
 
-| Wave | Focus | Tasks | Exit |
-| --- | --- | --- | --- |
-| 0 | Owner setup and acceptance baseline | PILOT-01, PILOT-02 | Named responsibilities, safe rehearsal accounts and a current blocker list |
-| 1 | A usable event place | EVT-01, EVT-02, EVT-03 | Discover → request → status → pass/arrival/manage works for allowed roles |
-| 2 | Reliable communication | COMMS-01 | Controlled inbox, retry/dedupe and material-update evidence |
-| 3 | Find and understand events | DISC-01, DISC-02, DETAIL-01 | Event cards and mobile details support a quick decision; personal records are findable |
-| 4 | Run the event confidently | HOST-01, HOST-02 | Scoped Host/Admin handoff and selected-event operations work without unnecessary full-data loads |
-| 5 | Platform polish and final rehearsal | UX-01, UX-02, PILOT-03 | Essential mobile/accessibility and role checks; human go/no-go with evidence |
+| Phase | Focus | Status | Tasks | Next proof or action |
+| --- | --- | --- | --- | --- |
+| 0 | Owner setup and acceptance baseline | **Blocked** | PILOT-01, PILOT-02 | Owner confirms venue/capacity and real Host, safety and door identities; then controlled rehearsal |
+| 1 | A usable event place | **Review** | EVT-01, EVT-02, EVT-03 | Confirmed, pending and unauthorized accounts on mobile and desktop |
+| 2 | Reliable communication | **Ready** | COMMS-01 | Controlled inbox/provider trace, retry/dedupe, reminder and reviewed change notice |
+| 3 | Find and understand events | **In progress** | DISC-01, DISC-02, DETAIL-01 | Populated responsive review of cards and personal rows; then simplify event detail |
+| 4 | Run the event confidently | **Ready** | HOST-01, HOST-02 | Scoped Host/Admin handoff, task-first view and selected-event reads |
+| 5 | Platform polish and final rehearsal | **Polish ready; sign-off blocked** | UX-01, UX-02, PILOT-03 | Finish plain-language/mobile checks, then record owner go/no-go after prior gates |
 
 Wave 0 owner actions and Wave 1 engineering work may proceed in parallel. No wave requires enabling automatic payments. Reassess priorities after a real populated event is available; visual estimates based only on empty states must be checked against real content.
 
