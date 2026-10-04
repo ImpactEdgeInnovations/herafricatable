@@ -1,0 +1,103 @@
+# Her Africa Table — implementation plan and taskboard
+
+Updated: 4 October 2026, 08:53 EAT. Baseline release: `bb1e808`.
+
+This board turns the [UI/UX and Events audit](../../HAT_UI_UX_Events_Audit_2026-10-04.md) into implementation work. It tracks delivery and acceptance for the audit recommendations. The existing Admin **Ten-sprint launch taskboard** and **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
+
+## Outcome and scope
+
+The first useful journey is: discover an event → understand its date, place, cost and entry rule → verify email → request one place → see whether it is pending or confirmed → retrieve the pass and arrival details → attend → find a relevant follow-up or Community.
+
+An Event Host prepares a scoped draft. Admin reviews it, assigns the safety and arrival team, manages registrations and makes the publication decision. The work below connects existing capabilities and removes friction. Paid creator settlement, native video, public attendee contacts and a new global navigation system are outside this plan.
+
+## Board rules
+
+- **Status:** `Ready` = scoped and actionable; `In progress` = implementation underway; `Review` = code complete, waiting for verification; `Blocked` = cannot meet its exit condition until the named dependency is resolved; `Done` = acceptance criteria met and recorded.
+- **Priority:** P0 blocks a safe journey or public opening; P1 is a major usability or reliability issue; P2 is a meaningful refinement.
+- **Evidence:** a source change, green build or installed database function alone is not an end-to-end pass. Record route, account role, device, result and date for the relevant acceptance test. Avoid secrets and private member content.
+- **Scope:** one work item per implementation slice. Preserve permission, consent, capacity, manual review, payment and audit boundaries. Prefer existing RPCs and components.
+- **Update cadence:** refresh this table after each completed implementation slice and after each controlled acceptance run. Use stable task IDs in commit/PR descriptions and conversation updates. If the live state differs, state the observation time.
+
+## Current checkpoint
+
+The read-only live audit at 08:40 EAT on 4 October found a healthy deployed app and reachable database, but **zero future public published events**. The named October 6 pilot is still a private draft. `event_guest_access` and automatic event payments are off. The pilot has basic place details and a prepared free ticket, while the on-sale ticket, designated Host account/assignment/content, safety-contact record and scoped door staff remain incomplete. All probed technical readiness functions returned true. **Zero of the ten pilot launch checks are accepted**; one is recorded blocked and two in progress. This is a release hold, not a percentage of code completed.
+
+The current publication policy requires the October 6 pilot to be ready 48 hours before its 18:00 EAT start, which is **4 October at 18:00 EAT**. If the requirements cannot be completed by then, the Product Owner must decide whether to reschedule the pilot. Do not override the safeguard to preserve the original date.
+
+## Critical path
+
+```text
+PILOT-01 owner/venue/Host/door assignments
+      + PILOT-02 controlled authentication, booking and permission rehearsal
+      + EVT-01 protected arrival and EVT-02 personal booking hub
+      + COMMS-01 delivery and change-message acceptance
+          → PILOT-03 full event rehearsal and recorded go/no-go
+```
+
+Engineering can build EVT and COMMS work while the Product Owner resolves PILOT-01. Public guest access stays off until the relevant checks pass.
+
+## Taskboard
+
+| ID | Priority | Status | Owner | Concrete task | Done when / evidence | Dependency |
+| --- | --- | --- | --- | --- | --- | --- |
+| PILOT-01 | P0 | **Blocked** | Product Owner + Event team | Confirm Geco Café booking and capacity; complete Seina's own approved account/Host assignment; name safety contact and check-in lead; prepare on-sale free manual ticket | Read-only pilot audit shows each prerequisite ready; owner confirms physical arrangements | Owner actions and real identities |
+| PILOT-02 | P0 | **Ready** | Engineering + Admin + test attendees | Rehearse member/Admin OTP, guest and member booking, approval/decline, last-place concurrency, cancellation, role denials, pass issue/revocation and check-in | Separate controlled accounts and inboxes; outcome recorded against the ten launch gates | PILOT-01 for Host/door tests; guest flag rehearsal in controlled environment |
+| EVT-01 | P0 online / P1 in-person | **Ready** | Engineering | Make confirmed guests' arrival instructions, directions/map or protected online joining action available from event and pass | Confirmed guest can get there/join; anonymous, pending and cancelled users cannot retrieve private link; mobile and keyboard pass | Existing venue/Host data; narrow authorized read if needed |
+| EVT-02 | P1 | **Ready** | Engineering | Combine personal request state, pass, receipt/manage-place and calendar entry within the event journey | One event page explains pending vs confirmed and provides correct next action; existing cancel/refund RPCs still govern | EVT-01 for final arrival block |
+| EVT-03 | P1 | **Ready** | Engineering | Explain event-only eligibility before OTP and preserve the event return path through `/continue` and onboarding | Guest-off state does not promise immediate booking; approved member/eligible guest returns to intended event | Existing flag and access rules |
+| COMMS-01 | P1 | **Ready** | Engineering + Admin | Prove existing registration/decision/cancellation email queue and delivery; add a minimum standalone reminder and reviewed material-change message where existing contracts do not cover them | Outbox, provider result, controlled inbox, retry, preference and duplicate-send evidence; no mail on cosmetic edits | Controlled inboxes; notification worker/Resend |
+| DISC-01 | P2 | **Ready** | Engineering + Product | Replace full-summary cards with date and time, venue/online, free/price, booking availability, bounded summary and one action | Person can answer when/where/cost/state from a card at 320/390/768px; no N+1 roster reads | Authorized availability query |
+| DISC-02 | P2 | **Ready** | Engineering | Add Events-local “My events” using existing personal records; keep public Upcoming/Past and handle ongoing/paused/cancelled honestly | Pending/confirmed/waitlisted entries and pass route found within Events; private records never leak | EVT-02 state model |
+| DETAIL-01 | P2 | **Ready** | Engineering + Product | Reorder detail: title/key facts/action first; group optional Community, programme, Q&A, menu, gallery, networking and follow-up by lifecycle | Populated mobile page exposes decision/action before long optional content; empty/past/cancelled/error states are accurate | EVT-01, EVT-02; test content |
+| HOST-01 | P1 | **Ready** | Engineering + Event Host + Admin | Show selected-event stage, next requirement and accountable person in Admin; preserve two-stage Host review and all guards | Reviewer knows next action; Host cannot see roster/payment/other events; selection and Back persist | Existing proposal/Host RPCs |
+| HOST-02 | P1 | **Ready** | Engineering | Load full registrations/refunds only for selected event/work area; consider earlier safe proposal draft save | Overview no longer fetches every event's full roster/refunds; partial draft survives exit; submission still validates safety | HOST-01 workflow design |
+| UX-01 | P2 | **Ready** | Engineering + Product | Plain-language pass for sign-in, receipt, search errors, footer, public loading and event labels | No raw order status or misleading “account loading” on public pages; one consistent destination vocabulary | Can run alongside EVT work |
+| UX-02 | P2 | **Ready** | Engineering | Keep three Home suggestions; surface urgent event status; isolate optional network-query failures; check Nia/mobile dock, focus and type sizes | Member finds next event; optional network failure does not blank directory; keyboard/zoom/mobile checks recorded | Representative member test accounts |
+| PILOT-03 | P0 | **Blocked** | Product Owner + Super Admin | Run complete event-to-Community rehearsal and record go/no-go | All required launch checks passed with evidence and owner decision recorded; public flags changed only under authorized release procedure | PILOT-01, PILOT-02, EVT-01/02/03, COMMS-01, essential mobile checks |
+
+### Task decomposition and acceptance notes
+
+**PILOT-01:** This is an owner and operations task. Engineering can verify records and explain next steps, but must not create Seina's account, promote another member, invent venue confirmation or assign safety responsibility. The audit found the designated Host email has no account. The existing draft must be reused, not duplicated.
+
+**PILOT-02:** Run changes only with explicitly designated test identities and safe data. The separate tagged Super Admin is not yet available; the primary real owner cannot substitute for an independent role test. Keep OTP values and private messages out of gate notes. Record negative and positive paths.
+
+**EVT-01:** Physical details and private online links already enter Admin/Host data, but the standalone attendee views do not offer a complete arrival action. Reuse approved Host arrival text. Keep the online link out of anonymous SSR output, JSON-LD, event cards and publicly downloadable calendar files. The existing migration publication guard is useful but does not itself provide a guest UI.
+
+**EVT-02:** The booking form is embedded, which is good. Preserve one seat per email, manual review, capacity and duplicate prevention. The order page already owns cancellation/refund RPC calls; expose it clearly from the personal event state rather than duplicating financial logic. A request is not a confirmed place.
+
+**EVT-03:** `event_guest_access` is off now. A new visitor should know this before asking for a code. Eligibility copy must match the actual flag and still allow an existing event guest to reach her record after new guest entry is paused.
+
+**COMMS-01:** Registration notifications and the Resend worker exist. A queue item and accepted API call are not proof of recipient delivery. Confirm via separate inboxes. Community reminders exist; a standalone public event needs a small equivalent only if the guest can consent to it. Have Admin preview and confirm substantial date/venue changes; avoid sending on every edit.
+
+**DISC-01 / DISC-02:** Keep the existing two public views. “My events” is an Events-local view, not another global navigation item. Search/filter controls and large pagination systems are deferred until event volume warrants them; the Past page's existing 30-row limit should receive Show more before the archive exceeds 30 records.
+
+**DETAIL-01:** Many sections are conditional but together can become dense. Use state-dependent grouping, not a new mega-menu. A cancelled registrant needs a useful state and support path; a private draft must remain undiscoverable to unauthorized people. An ended date and an Admin-completed event are separate facts.
+
+**HOST-01 / HOST-02:** Keep idea approval separate from publication. Current Admin Events has eight views and queries every event's detailed registrations/refunds on each view. A task-first selected-event view and targeted reads reduce cognitive load and unnecessary sensitive-data handling. The Host remains scoped.
+
+**UX-01 / UX-02:** Use existing wine/cream identity, MemberHeader, Community tabs and the three-suggestion Home. Improve functional readability and error recovery where touched. Do not broaden this into an unrelated redesign.
+
+## Implementation sequence
+
+| Wave | Focus | Tasks | Exit |
+| --- | --- | --- | --- |
+| 0 | Owner setup and acceptance baseline | PILOT-01, PILOT-02 | Named responsibilities, safe rehearsal accounts and a current blocker list |
+| 1 | A usable event place | EVT-01, EVT-02, EVT-03 | Discover → request → status → pass/arrival/manage works for allowed roles |
+| 2 | Reliable communication | COMMS-01 | Controlled inbox, retry/dedupe and material-update evidence |
+| 3 | Find and understand events | DISC-01, DISC-02, DETAIL-01 | Event cards and mobile details support a quick decision; personal records are findable |
+| 4 | Run the event confidently | HOST-01, HOST-02 | Scoped Host/Admin handoff and selected-event operations work without unnecessary full-data loads |
+| 5 | Platform polish and final rehearsal | UX-01, UX-02, PILOT-03 | Essential mobile/accessibility and role checks; human go/no-go with evidence |
+
+Wave 0 owner actions and Wave 1 engineering work may proceed in parallel. No wave requires enabling automatic payments. Reassess priorities after a real populated event is available; visual estimates based only on empty states must be checked against real content.
+
+## What to monitor here in Codex
+
+For each update, report:
+
+1. Task IDs moved and the new status.
+2. The actual change or owner decision, with commit or document link if one exists.
+3. What was tested, by role and device; what remains unproved.
+4. Launch-gate effect, if any, sourced from the Admin evidence records.
+5. The next actionable item and its owner.
+
+This file is the durable task index. In conversation, a compact board can use the same IDs; do not turn `Ready` into a numeric completion percentage. The [existing Admin board](../components/admin/roadmap-overview.tsx) summarizes the ten original pilot sprints, while **Admin → Release → Launch gates** is the authoritative acceptance register.
