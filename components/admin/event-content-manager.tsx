@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { AdminEvent } from "@/components/admin/event-manager";
 import { adminErrorMessage } from "@/lib/admin-error";
 import { formatEventTimeInput, parseEventTimeInput } from "@/lib/events/zoned-datetime";
+import { useActionDialog } from "@/components/ui/action-dialog";
 
 export type AdminSession = {
   description: string | null;
@@ -123,6 +124,7 @@ export function EventContentManager({
   const [staff, setStaff] = useState<EventStaff[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const { ask, dialog } = useActionDialog();
 
   const sessions = initialSessions.filter((item) => item.event_id === eventId);
   const announcements = initialAnnouncements.filter(
@@ -207,6 +209,16 @@ export function EventContentManager({
 
   async function saveAnnouncement(event: FormEvent) {
     event.preventDefault();
+    const previouslyPublished = announcements.some((item) =>
+      item.id === announcementForm.id && item.status === "published");
+    if (announcementForm.status === "published" && !previouslyPublished) {
+      const confirmed = await ask({
+        title: `Publish “${announcementForm.title.trim()}”?`,
+        description: "This update becomes visible on the event page and queues a notice for confirmed guests. Check the date, venue and wording first; a sent email cannot be recalled.",
+        confirmLabel: "Publish and notify guests",
+      });
+      if (!confirmed) return;
+    }
     setBusy(true);
     setMessage("");
     const { error } = await supabase.rpc("save_event_announcement", {
@@ -217,7 +229,9 @@ export function EventContentManager({
       p_status: announcementForm.status,
     });
     if (handleError(error)) return;
-    setMessage("Announcement saved and audit logged.");
+    setMessage(announcementForm.status === "published" && !previouslyPublished
+      ? "Update published. Guest notices are queued; check Notifications for delivery."
+      : "Announcement saved and audit logged.");
     setBusy(false);
     router.refresh();
   }
@@ -568,8 +582,10 @@ export function EventContentManager({
             aria-describedby="announcement-editor-guide"
           >
             <p className="admin-form-guide" id="announcement-editor-guide">
-              Drafts stay private. Published announcements become visible to
-              event members, so remove private contact details before saving.
+              Drafts stay private. Publishing a new update alerts confirmed guests
+              through their event notification choices. For a changed time or venue,
+              write a clear new update rather than quietly editing an old one.
+              Remove private contact details before publishing.
             </p>
             <div className="form-grid">
               <label className="form-wide">
@@ -812,6 +828,7 @@ export function EventContentManager({
           {message}
         </p>
       ) : null}
+      {dialog}
     </section>
   );
 }

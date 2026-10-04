@@ -45,8 +45,24 @@
 }
 .event-pass-arrival p { max-width: 60ch; line-height: 1.65; }
 .event-pass-arrival-actions { padding-top: 18px; }
+.standalone-event-reminder {
+  display: flex;
+  width: min(1040px, calc(100% - 48px));
+  margin: 48px auto 0;
+  padding: 24px 0;
+  border-top: 1px solid var(--hat-rule);
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.standalone-event-reminder h2 { margin: 4px 0 10px; font-family: var(--serif); font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 400; letter-spacing: -0.035em; }
+.standalone-event-reminder p { max-width: 63ch; color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
+.standalone-event-reminder > div:last-child { text-align: right; }
+.standalone-event-reminder .button { min-height: 44px; white-space: nowrap; }
 @media (max-width: 700px) {
   .event-pass-arrival { display: block; width: min(100% - 32px, 520px); }
+  .standalone-event-reminder { display: block; width: min(100% - 32px, 520px); }
+  .standalone-event-reminder > div:last-child { margin-top: 18px; text-align: left; }
   .event-pass-actions .button,
   .event-pass-arrival-actions .button { justify-content: center; }
   .event-pass-arrival-actions { padding-top: 8px; }

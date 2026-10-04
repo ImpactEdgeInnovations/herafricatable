@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AddToCalendarButton } from "@/components/events/add-to-calendar-button";
+import { StandaloneEventReminder } from "@/components/events/standalone-event-reminder";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -45,12 +46,22 @@ export default async function EventPassPage({ params }: { params: Promise<{ slug
 
   // The pass RPC establishes the current member's confirmed, non-revoked access.
   // Read private arrival details only after that check and render them only here.
-  const { data: arrivalData, error: arrivalError } = await createAdminClient()
+  const service = createAdminClient();
+  const { data: arrivalData, error: arrivalError } = await service
     .from("events")
     .select("format,status,venues(name,city,address_line,map_url),event_private_details(online_url,check_in_instructions)")
     .eq("id", pass.event_id)
     .maybeSingle();
   const arrival = arrivalError ? null : arrivalData as unknown as ArrivalDetails | null;
+  const [{ data: communityLink, error: communityLinkError }, { data: reminder, error: reminderError }, { data: notificationPreference }] = await Promise.all([
+    service.from("community_event_links").select("community_id").eq("event_id", pass.event_id).limit(1).maybeSingle(),
+    supabase.from("standalone_event_reminders").select("status").eq("event_id", pass.event_id).eq("user_id", user.id).maybeSingle(),
+    supabase.from("notification_preferences").select("email_events").eq("user_id", user.id).maybeSingle(),
+  ]);
+  const reminderActive = reminder?.status === "scheduled" || reminder?.status === "queued";
+  const canSetReminder = arrival?.status === "published" && new Date(pass.starts_at).getTime() - Date.now() > 86_400_000;
+  const showReminder = !communityLinkError && !communityLink && !reminderError
+    && new Date(pass.ends_at).getTime() > Date.now() && (canSetReminder || reminderActive);
   const { data: order } = await supabase.from("orders")
     .select("reference")
     .eq("event_id", pass.event_id)
@@ -107,6 +118,12 @@ export default async function EventPassPage({ params }: { params: Promise<{ slug
           <p>{pass.checked_in_at ? "You are checked in. Welcome to the table." : "Use this code if the camera is unavailable."}</p>
         </article>
       </section>
+      {showReminder ? <StandaloneEventReminder
+        canSet={canSetReminder}
+        emailAllowed={notificationPreference?.email_events !== false}
+        eventId={pass.event_id}
+        initialStatus={reminder?.status ?? null}
+      /> : null}
       <section className="event-pass-arrival" aria-labelledby="event-pass-arrival-heading" id="arrival">
         <div>
           <p className="eyebrow">Before you go</p>

@@ -43,8 +43,10 @@ export async function sendNotificationEmail(job: EmailJob) {
     job.dedupe_key.startsWith("member-approved:");
   const isEventReview = job.dedupe_key.startsWith("event-registration-review:");
   const isWaitlistOpening = job.dedupe_key.startsWith("event-waitlist-open:");
+  const isStandaloneReminder = job.dedupe_key.startsWith("standalone-event-reminder:");
   const isEventNotice = isEventReview ||
     isWaitlistOpening ||
+    isStandaloneReminder ||
     job.dedupe_key.startsWith("event-registration-declined:") ||
     [
       "We have your event request",
@@ -64,6 +66,8 @@ export async function sendNotificationEmail(job: EmailJob) {
         ? "Review event requests"
         : isWaitlistOpening
           ? "See available places"
+        : isStandaloneReminder
+          ? "Open my event pass"
         : isEventNotice
           ? "View event details"
           : "Open Her Africa Table";

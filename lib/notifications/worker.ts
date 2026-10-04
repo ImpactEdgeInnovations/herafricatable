@@ -78,6 +78,20 @@ export async function processNotificationQueue({
   }
   const eventRemindersQueued = Number(reminderData ?? 0);
 
+  const { data: standaloneReminderData, error: standaloneReminderError } = await admin.rpc(
+    "queue_due_standalone_event_reminders",
+  );
+  if (
+    standaloneReminderError &&
+    !migrationPending(standaloneReminderError as RpcError, "queue_due_standalone_event_reminders")
+  ) {
+    return NextResponse.json(
+      { error: "Standalone event reminders unavailable" },
+      { status: 503 },
+    );
+  }
+  const standaloneRemindersQueued = Number(standaloneReminderData ?? 0);
+
   if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
     return NextResponse.json(
       {
@@ -85,6 +99,7 @@ export async function processNotificationQueue({
         eventRemindersQueued,
         error: "Email provider not configured",
         hostLifecycle,
+        standaloneRemindersQueued,
       },
       { status: 503 },
     );
@@ -115,6 +130,26 @@ export async function processNotificationQueue({
   let suppressed = 0;
   await Promise.all(
     jobs.map(async (job) => {
+      if (job.dedupe_key.startsWith("standalone-event-reminder:")) {
+        const { data: allowed, error: reminderCheckError } = await admin.rpc(
+          "check_standalone_event_reminder_job",
+          { p_job_id: job.job_id },
+        );
+        if (reminderCheckError) {
+          await admin.rpc("finish_notification_job", {
+            p_error_code: "reminder_eligibility_unavailable",
+            p_job_id: job.job_id,
+            p_provider_message_id: null,
+            p_success: false,
+          });
+          failed += 1;
+          return;
+        }
+        if (allowed !== true) {
+          suppressed += 1;
+          return;
+        }
+      }
       if (/\.invalid$/i.test(job.to_email.trim())) {
         await admin.rpc("finish_notification_job", {
           p_error_code: null,
@@ -153,6 +188,7 @@ export async function processNotificationQueue({
     failed,
     hostLifecycle,
     eventRemindersQueued,
+    standaloneRemindersQueued,
     sent,
     suppressed,
     targeted: Boolean(dedupeKey),
