@@ -151,6 +151,13 @@ export default async function AdminEventsPage({
   }));
   const eventIds = events.map((event) => event.id);
   const selectedEventId = requestedEventId && eventIds.includes(requestedEventId) ? requestedEventId : null;
+  // Detailed guest records belong to the selected work area, never the entire
+  // Admin Events page. The overview still needs its cross-event counts.
+  const detailEventIds = view === "overview"
+    ? eventIds
+    : view === "registrations" || view === "arrival"
+      ? [selectedEventId ?? eventIds[0]].filter((id): id is string => Boolean(id))
+      : [];
   const publicationSources = view === "edit" && eventIds.length
     ? await Promise.all([
         supabase.from("event_hosts").select("event_id").in("event_id", eventIds),
@@ -259,16 +266,18 @@ export default async function AdminEventsPage({
       }),
   );
   const registrationResults = await Promise.all(
-    eventIds.map((eventId) => supabase.rpc("list_event_registrations", { p_event_id: eventId })),
+    (view === "overview" || view === "registrations" ? detailEventIds : [])
+      .map((eventId) => supabase.rpc("list_event_registrations", { p_event_id: eventId })),
   );
   const refundResults = await Promise.all(
-    eventIds.map((eventId) => supabase.rpc("list_event_refund_requests", { p_event_id: eventId })),
+    (view === "overview" || view === "registrations" ? detailEventIds : [])
+      .map((eventId) => supabase.rpc("list_event_refund_requests", { p_event_id: eventId })),
   );
   const registrations = registrationResults.flatMap((result) =>
     (result.data as AdminRegistration[] | null) ?? [],
   );
   const waitlistResults = view === "registrations"
-    ? await Promise.all(eventIds.map((eventId) =>
+    ? await Promise.all(detailEventIds.map((eventId) =>
         supabase.rpc("list_event_waitlist", { p_event_id: eventId })))
     : [];
   const waitlist = waitlistResults.flatMap((result) =>
@@ -284,7 +293,7 @@ export default async function AdminEventsPage({
   let communityProposals: CommunityEventProposalAdmin[] = [];
   let proposalReady = true;
   let hostHandoffReady = false;
-  if (role === "super_admin") {
+  if (role === "super_admin" && ["overview", "proposals", "host"].includes(view)) {
     const [memberResult, contextResult, communityResult, proposalMediaResult, handoffResult] = await Promise.all([
       supabase.rpc("list_admin_member_event_proposals"),
       view === "proposals"
@@ -323,11 +332,11 @@ export default async function AdminEventsPage({
   let tickets: AdminTicket[] = [];
   let payments: AdminPaymentAttempt[] = [];
   let registrationReady = registrationResults.every((result) => !result.error);
-  if (view === "registrations" && eventIds.length) {
+  if (view === "registrations" && detailEventIds.length) {
     const ticketResult = await supabase
       .from("ticket_types")
       .select("id,event_id,name,description,price_minor,currency,inventory_quantity,sales_start_at,sales_end_at,status,sort_order")
-      .in("event_id", eventIds)
+      .in("event_id", detailEventIds)
       .order("sort_order");
     tickets = (ticketResult.data as AdminTicket[] | null) ?? [];
     const orderIds = registrations.map((registration) => registration.order_id);
@@ -346,10 +355,10 @@ export default async function AdminEventsPage({
   let checkinReady = true;
   if (view === "arrival") {
     const checkinResults = await Promise.all(
-      eventIds.map((eventId) => supabase.rpc("list_event_checkins", { p_event_id: eventId })),
+      detailEventIds.map((eventId) => supabase.rpc("list_event_checkins", { p_event_id: eventId })),
     );
     checkinAttendees = checkinResults.flatMap((result, index) =>
-      ((result.data as Omit<CheckinAttendee, "event_id">[] | null) ?? []).map((attendee) => ({ ...attendee, event_id: eventIds[index] })),
+      ((result.data as Omit<CheckinAttendee, "event_id">[] | null) ?? []).map((attendee) => ({ ...attendee, event_id: detailEventIds[index] })),
     );
     checkinReady = checkinResults.every((result) => !result.error);
   }

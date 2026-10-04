@@ -15,6 +15,11 @@ assert(adminPage.includes("selectedEventId={selectedEventId}"));
 assert(adminPage.includes("&event=${encodeURIComponent(selectedEventId)}"));
 assert(adminPage.includes('view === "host" && eventIds.length'));
 assert(adminPage.includes('hostTicketResult.count === (hostTicketResult.data?.length ?? 0)'));
+assert(adminPage.includes('const detailEventIds = view === "overview"'));
+assert(adminPage.includes('[selectedEventId ?? eventIds[0]].filter'));
+assert(adminPage.includes('detailEventIds.map((eventId) => supabase.rpc("list_event_checkins"'));
+assert(adminPage.includes('.in("event_id", detailEventIds)'));
+assert(adminPage.includes('role === "super_admin" && ["overview", "proposals", "host"].includes(view)'));
 
 const linkSource = readFileSync(new URL("../lib/events/admin-event-link.ts", import.meta.url), "utf8");
 const linkCompiled = ts.transpileModule(linkSource, {
