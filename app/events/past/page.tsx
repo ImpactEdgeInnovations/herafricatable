@@ -104,6 +104,7 @@ export default async function PastEventsPage() {
       <nav className="event-view-switcher" aria-label="Event views">
         <Link href="/events">Upcoming</Link>
         <Link aria-current="page" href="/events/past">Past events</Link>
+        {user ? <Link href="/events#my-events">My events</Link> : null}
       </nav>
       <section className="past-events-hero">
         <div>
