@@ -165,6 +165,11 @@
 
 /* Events: a programme, not a collection of generic cards. */
 .events-intro { padding-top: 38px; }
+.event-detail-hero { min-height: 0; padding: 58px 0 48px; gap: clamp(28px, 5vw, 70px); }
+.event-detail-hero aside { padding: 26px; }
+.event-detail-hero dl { gap: 10px; }
+.event-detail-hero dl div { padding-bottom: 10px; }
+.event-pass-inline-link { display: inline-block; margin-top: 13px; color: var(--hat-wine); font-size: 0.75rem; font-weight: 700; text-underline-offset: 3px; }
 .my-events-section {
   width: min(1120px, calc(100% - 48px));
   margin: 0 auto 52px;
