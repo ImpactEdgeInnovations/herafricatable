@@ -4,6 +4,7 @@ import { ChangeEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
+import { eventCalendarFile } from "@/lib/events/calendar-file";
 
 export type CommunityEventPreference = {
   event_id: string;
@@ -25,18 +26,6 @@ type CalendarEvent = {
   city: string | null;
   country: string | null;
 };
-
-function icsDate(value: string) {
-  return new Date(value).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-}
-
-function icsText(value: string) {
-  return value
-    .replace(/\\/g, "\\\\")
-    .replace(/\r?\n/g, "\\n")
-    .replace(/,/g, "\\,")
-    .replace(/;/g, "\\;");
-}
 
 export function CommunityEventActions({
   communityId,
@@ -80,23 +69,15 @@ export function CommunityEventActions({
     const location = [event.venue_name, event.city, event.country]
       .filter(Boolean)
       .join(", ");
-    const ics = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//Her Africa Table//Community Calendar//EN",
-      "CALSCALE:GREGORIAN",
-      "BEGIN:VEVENT",
-      `UID:${event.event_id}@herafricatable.com`,
-      `DTSTAMP:${icsDate(new Date().toISOString())}`,
-      `DTSTART:${icsDate(event.starts_at)}`,
-      `DTEND:${icsDate(event.ends_at)}`,
-      `SUMMARY:${icsText(event.title)}`,
-      `DESCRIPTION:${icsText(event.summary ?? "Her Africa Table Community event")}`,
-      `LOCATION:${icsText(location || "See event details")}`,
-      `URL:${window.location.origin}/events/${event.slug}`,
-      "END:VEVENT",
-      "END:VCALENDAR",
-    ].join("\r\n");
+    const ics = eventCalendarFile({
+      endsAt: event.ends_at,
+      eventId: event.event_id,
+      location,
+      slug: event.slug,
+      startsAt: event.starts_at,
+      summary: event.summary,
+      title: event.title,
+    }, window.location.origin);
     const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
     const anchor = document.createElement("a");
     anchor.href = url;

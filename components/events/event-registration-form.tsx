@@ -22,6 +22,7 @@ export function EventRegistrationForm({
   existingStatus,
   embedded = false,
   eventSlug,
+  orderHref,
   passReady = false,
   availabilityReady = true,
   eventFull = false,
@@ -35,6 +36,7 @@ export function EventRegistrationForm({
   existingStatus: string | null;
   embedded?: boolean;
   eventSlug?: string;
+  orderHref?: string | null;
   passReady?: boolean;
   availabilityReady?: boolean;
   eventFull?: boolean;
@@ -174,6 +176,7 @@ export function EventRegistrationForm({
             Open my event pass
           </a>
         ) : null}
+        {orderHref ? <a className="button button-outline" href={orderHref}>View or manage my place</a> : null}
         {existingStatus === "waitlisted" ? (
           <div className="registration-status-actions">
             {!availabilityReady && mode === "manual_review" ? (
@@ -267,7 +270,7 @@ export function EventRegistrationForm({
       ) : null}
       <div className="form-grid registration-fields">
         <label className="form-wide">
-          Note for the event team
+          Note for the event team (optional)
           <textarea
             rows={3}
             maxLength={1000}

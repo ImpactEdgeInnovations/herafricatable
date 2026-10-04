@@ -1,8 +1,8 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 4 October 2026, 08:53 EAT. Baseline release: `bb1e808`.
+Updated: 4 October 2026. Baseline release: `b4be9ca`.
 
-This board turns the [UI/UX and Events audit](../../HAT_UI_UX_Events_Audit_2026-10-04.md) into implementation work. It tracks delivery and acceptance for the audit recommendations. The existing Admin **Ten-sprint launch taskboard** and **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
+This board turns the [UI/UX and Events audit](../../HAT_UI_UX_Events_Audit_2026-10-04.md) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
 ## Outcome and scope
 
@@ -42,9 +42,9 @@ Engineering can build EVT and COMMS work while the Product Owner resolves PILOT-
 | --- | --- | --- | --- | --- | --- | --- |
 | PILOT-01 | P0 | **Blocked** | Product Owner + Event team | Confirm Geco Café booking and capacity; complete Seina's own approved account/Host assignment; name safety contact and check-in lead; prepare on-sale free manual ticket | Read-only pilot audit shows each prerequisite ready; owner confirms physical arrangements | Owner actions and real identities |
 | PILOT-02 | P0 | **Ready** | Engineering + Admin + test attendees | Rehearse member/Admin OTP, guest and member booking, approval/decline, last-place concurrency, cancellation, role denials, pass issue/revocation and check-in | Separate controlled accounts and inboxes; outcome recorded against the ten launch gates | PILOT-01 for Host/door tests; guest flag rehearsal in controlled environment |
-| EVT-01 | P0 online / P1 in-person | **Ready** | Engineering | Make confirmed guests' arrival instructions, directions/map or protected online joining action available from event and pass | Confirmed guest can get there/join; anonymous, pending and cancelled users cannot retrieve private link; mobile and keyboard pass | Existing venue/Host data; narrow authorized read if needed |
-| EVT-02 | P1 | **Ready** | Engineering | Combine personal request state, pass, receipt/manage-place and calendar entry within the event journey | One event page explains pending vs confirmed and provides correct next action; existing cancel/refund RPCs still govern | EVT-01 for final arrival block |
-| EVT-03 | P1 | **Ready** | Engineering | Explain event-only eligibility before OTP and preserve the event return path through `/continue` and onboarding | Guest-off state does not promise immediate booking; approved member/eligible guest returns to intended event | Existing flag and access rules |
+| EVT-01 | P0 online / P1 in-person | **Review** | Engineering | Make confirmed guests' arrival instructions, directions/map or protected online joining action available from event and pass | Confirmed guest can get there/join; anonymous, pending and cancelled users cannot retrieve private link; mobile and keyboard pass | Live role and device acceptance still required |
+| EVT-02 | P1 | **Review** | Engineering | Combine personal request state, pass, receipt/manage-place and calendar entry within the event journey | One event page explains pending vs confirmed and provides correct next action; existing cancel/refund RPCs still govern | Live booking-state acceptance still required |
+| EVT-03 | P1 | **Review** | Engineering | Explain event-only eligibility before OTP and preserve the event return path through `/continue` and onboarding | Guest-off state does not promise immediate booking; approved member/eligible guest returns to intended event | Guest-on and guest-off browser acceptance still required |
 | COMMS-01 | P1 | **Ready** | Engineering + Admin | Prove existing registration/decision/cancellation email queue and delivery; add a minimum standalone reminder and reviewed material-change message where existing contracts do not cover them | Outbox, provider result, controlled inbox, retry, preference and duplicate-send evidence; no mail on cosmetic edits | Controlled inboxes; notification worker/Resend |
 | DISC-01 | P2 | **Ready** | Engineering + Product | Replace full-summary cards with date and time, venue/online, free/price, booking availability, bounded summary and one action | Person can answer when/where/cost/state from a card at 320/390/768px; no N+1 roster reads | Authorized availability query |
 | DISC-02 | P2 | **Ready** | Engineering | Add Events-local “My events” using existing personal records; keep public Upcoming/Past and handle ongoing/paused/cancelled honestly | Pending/confirmed/waitlisted entries and pass route found within Events; private records never leak | EVT-02 state model |
@@ -56,6 +56,8 @@ Engineering can build EVT and COMMS work while the Product Owner resolves PILOT-
 | PILOT-03 | P0 | **Blocked** | Product Owner + Super Admin | Run complete event-to-Community rehearsal and record go/no-go | All required launch checks passed with evidence and owner decision recorded; public flags changed only under authorized release procedure | PILOT-01, PILOT-02, EVT-01/02/03, COMMS-01, essential mobile checks |
 
 ### Task decomposition and acceptance notes
+
+**4 October engineering checkpoint:** EVT-01/02/03 are code-complete for review. The confirmed pass now shows authorized arrival details, directions or online joining, plus calendar and manage-place actions. Existing request states surface the order link; a new visitor sees the current guest-access rule before OTP. `npm run build` and the full `npm test` suite passed on the local checkout. These are implementation checks, **not** live role/device acceptance or a Launch-gate pass. The October 6 private draft has not been published or changed by this slice.
 
 **PILOT-01:** This is an owner and operations task. Engineering can verify records and explain next steps, but must not create Seina's account, promote another member, invent venue confirmation or assign safety responsibility. The audit found the designated Host email has no account. The existing draft must be reused, not duplicated.
 

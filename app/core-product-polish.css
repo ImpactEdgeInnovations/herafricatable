@@ -9,6 +9,49 @@
   --hat-rule: rgba(63, 42, 47, 0.15);
 }
 
+/* A confirmed attendee's pass is a quiet, practical arrival hub. */
+.event-pass-actions,
+.event-pass-arrival-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.event-pass-actions { margin-top: 26px; }
+.event-pass-actions .button,
+.event-pass-arrival-actions .button { min-height: 44px; }
+.event-calendar-message {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.event-pass-arrival {
+  display: flex;
+  width: min(1040px, calc(100% - 48px));
+  margin: 48px auto 0;
+  padding: 28px 0 0;
+  border-top: 1px solid var(--hat-rule);
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+}
+.event-pass-arrival h2 {
+  margin: 4px 0 14px;
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+.event-pass-arrival p { max-width: 60ch; line-height: 1.65; }
+.event-pass-arrival-actions { padding-top: 18px; }
+@media (max-width: 700px) {
+  .event-pass-arrival { display: block; width: min(100% - 32px, 520px); }
+  .event-pass-actions .button,
+  .event-pass-arrival-actions .button { justify-content: center; }
+  .event-pass-arrival-actions { padding-top: 8px; }
+}
+
 /* Nia is a discreet concierge mark, not a novelty chatbot. */
 .floating-guide-character {
   width: 58px;

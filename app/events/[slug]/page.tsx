@@ -4,6 +4,7 @@ import { absoluteUrl, publicPageMetadata, serializeJsonLd } from "@/lib/seo";
 import { getPublicEventSeo } from "@/lib/public-event-seo";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { MenuFeedbackControls } from "@/components/events/menu-feedback-controls";
 import {
   EventAttendeeDirectory,
@@ -123,8 +124,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     feature_enabled: boolean;
     remaining_today: number;
   }[] | null)?.[0] ?? null;
-  const { data: eventGuestFlag } = user && event.audience === "public" && !activeMember
-    ? await supabase.from("feature_flags").select("enabled").eq("key", "event_guest_access").maybeSingle()
+  const { data: eventGuestFlag } = event.audience === "public" && !activeMember
+    ? await (user ? supabase : createAdminClient()).from("feature_flags")
+        .select("enabled").eq("key", "event_guest_access").maybeSingle()
     : { data: null };
   const eventGuestEligible = Boolean(
     user && event.audience === "public" && eventGuestFlag?.enabled &&
@@ -172,6 +174,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const { data: ownMembership } = user
     ? await supabase.from("event_memberships").select("status").eq("event_id", event.id).eq("user_id", user.id).maybeSingle()
     : { data: null };
+  const { data: ownOrder } = user
+    ? await supabase.from("orders")
+        .select("reference,status")
+        .eq("event_id", event.id)
+        .eq("user_id", user.id)
+        .eq("order_type", "event")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
+  const orderHref = ownOrder?.reference ? `/orders/${encodeURIComponent(ownOrder.reference)}` : null;
   const [{ data: tickets }, { data: registration }] = !hasEnded
     ? await Promise.all([
         supabase.from("ticket_types").select("id,name,description,price_minor,currency,inventory_quantity,sales_start_at,sales_end_at").eq("event_id", event.id).eq("status", "on_sale").order("sort_order"),
@@ -263,6 +276,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const cta = gatheringRoomHref
     ? hasEnded ? "View gathering recap" : "Open gathering room"
     : hasEnded ? "Event completed" : isConfirmedGuest ? "Open my event pass"
+      : registration?.status === "pending_payment" || registration?.status === "pending_review"
+        ? "View my request"
       : registration?.status === "waitlisted" && event.registration_mode === "manual_review" && !bookingClosed
         ? "Request a place from the waiting list"
         : registration?.status === "waitlisted" ? "View my waiting-list status"
@@ -345,6 +360,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 embedded
                 eventId={event.id}
                 eventSlug={slug}
+                orderHref={orderHref}
                 eventTitle={event.title}
                 existingStatus={registration?.status ?? ownMembership?.status ?? null}
                 mode={event.registration_mode}
@@ -362,13 +378,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           ) : (
             <div className="event-registration-entry">
               <p className="eyebrow">Your place at the table</p>
-              <h2>{user ? "Your account cannot request a place yet." : "Confirm your email to join this event."}</h2>
-              <p>{user ? "Membership access and event places are reviewed separately. Contact our team if you need help." : "We’ll email you a one-time code and return you to this event."}</p>
+              <h2>{user ? "Your account cannot request a place yet." : event.audience === "public" && !eventGuestFlag?.enabled ? "Membership is needed for this event." : "Confirm your email to join this event."}</h2>
+              <p>{user ? "Membership access and event places are reviewed separately. Contact our team if you need help." : event.audience === "public" && !eventGuestFlag?.enabled ? "You can request membership after confirming your email. The team must approve your membership before you can ask for an event place." : "We’ll email you a one-time code and return you to this event."}</p>
               <Link
                 className="button button-primary"
-                href={user ? "/apply" : `/sign-in?next=${encodeURIComponent(`/events/${slug}#registration`)}`}
+                href={user ? "/apply" : `/sign-in?${event.audience === "public" && !eventGuestFlag?.enabled ? "mode=apply&" : ""}next=${encodeURIComponent(`/events/${slug}#registration`)}`}
               >
-                {user ? "View membership request" : "Email me a code"}
+                {user ? "View membership request" : event.audience === "public" && !eventGuestFlag?.enabled ? "Request membership" : "Email me a code"}
               </Link>
             </div>
           )}

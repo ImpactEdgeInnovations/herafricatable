@@ -40,7 +40,7 @@ export default async function RegisterPage({
     }
   }
 
-  const [{ data: tickets }, { data: registration }, { data: membership }] =
+  const [{ data: tickets }, { data: registration }, { data: membership }, { data: order }] =
     await Promise.all([
       supabase.from("ticket_types")
         .select("id,name,description,price_minor,currency,inventory_quantity,sales_start_at,sales_end_at")
@@ -51,6 +51,10 @@ export default async function RegisterPage({
       supabase.from("event_memberships")
         .select("status").eq("event_id", event.id)
         .eq("user_id", user.id).maybeSingle(),
+      supabase.from("orders")
+        .select("reference").eq("event_id", event.id).eq("user_id", user.id)
+        .eq("order_type", "event")
+        .order("created_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
   const availability = ["waitlist", "closed"].includes(event.registration_mode)
     ? { checkFailed: false, eventFull: false, tickets: [] }
@@ -71,6 +75,7 @@ export default async function RegisterPage({
       <EventRegistrationForm
         eventId={event.id}
         eventSlug={slug}
+        orderHref={order?.reference ? `/orders/${encodeURIComponent(order.reference)}` : null}
         eventTitle={event.title}
         mode={event.registration_mode}
         tickets={availability.tickets}

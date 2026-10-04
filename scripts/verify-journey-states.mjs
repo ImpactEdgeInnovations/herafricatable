@@ -831,13 +831,15 @@ for (const contract of [
   "A reminder does not reserve a seat",
   "set_my_community_event_reminder",
   "text/calendar",
-  "BEGIN:VCALENDAR",
+  "eventCalendarFile",
 ]) {
   assert(
     communityEventActions.includes(contract),
     `Community calendar member UX must include ${contract}`,
   );
 }
+const sharedEventCalendar = read("lib/events/calendar-file.ts");
+assert(sharedEventCalendar.includes("BEGIN:VCALENDAR"), "Shared event calendar must emit an iCalendar document");
 for (const contract of [
   "Your first seven days",
   "Your Table Journey",
