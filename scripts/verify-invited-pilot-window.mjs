@@ -4,12 +4,14 @@ import { readFileSync } from "node:fs";
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20261005120000_invited_membership_pilot_window.sql");
 const eventMigration = read("supabase/migrations/20261005130000_invited_pilot_private_event_drafts.sql");
+const publicEventMigration = read("supabase/migrations/20261005160000_pilot_free_event_publication.sql");
 const order = read("supabase/migrations/20261005110000_invited_member_application_order.sql");
 const membersPage = read("app/admin/members/page.tsx");
 const admin = read("components/admin/member-command-centre.tsx");
 const worker = read("lib/notifications/worker.ts");
 const delivery = read("app/api/admin/notifications/process/route.ts");
 const eventProposal = read("components/events/member-event-proposal.tsx");
+const eventsPage = read("app/events/page.tsx");
 
 for (const contract of [
   "trusted_auto_expires_at",
@@ -52,4 +54,24 @@ for (const contract of [
 assert(membersPage.includes('get_invited_pilot_event_setting'));
 assert(admin.includes('rpc("set_invited_pilot_event_setting"'));
 assert(eventProposal.includes('Your private event is ready. Open its Host page'));
-console.log("Timed invited-member and private-event pilot boundaries passed.");
+for (const contract of [
+  "auto_publish_free_events boolean not null default false",
+  "public.get_membership_intake_mode() = 'trusted_auto'",
+  "public.is_active_member(actor)",
+  "proposal.proposed_by <> actor",
+  "proposal.status <> 'submitted'",
+  "proposal.pricing_mode <> 'free'",
+  "proposal.map_url",
+  "proposal.address_line",
+  "public.event_safety_contacts",
+  "'manual_review', false, 'public'",
+  "set status = 'published'",
+  "set status = 'on_sale'",
+  "auto_publish_free_events = false",
+  "'event.pilot_free_published'",
+]) assert(publicEventMigration.includes(contract), `Free-event pilot migration must include ${contract}`);
+assert(admin.includes('rpc("set_pilot_free_event_setting"'));
+assert(eventProposal.includes('rpc("publish_pilot_free_event"'));
+assert(eventProposal.includes('Add either a street address or a map link'));
+assert(eventsPage.indexOf('<section className="public-event-list"') < eventsPage.indexOf('<section className="my-events-section"'));
+console.log("Timed invited-member and free-event pilot boundaries passed.");

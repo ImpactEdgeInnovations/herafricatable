@@ -110,6 +110,7 @@ export function MemberEventProposalPanel({
   media,
   mediaReady,
   migrationReady,
+  pilotAutoPublish,
   publishedEventIds,
   proposals,
 }: {
@@ -118,6 +119,7 @@ export function MemberEventProposalPanel({
   media: ApplicationProposalMedia[];
   mediaReady: boolean;
   migrationReady: boolean;
+  pilotAutoPublish: boolean;
   publishedEventIds: string[];
   proposals: MemberEventProposal[];
 }) {
@@ -199,7 +201,7 @@ export function MemberEventProposalPanel({
         return "Choose a start and end time for the event.";
       }
       if (start.getTime() < Date.now() + 7 * 86_400_000) {
-        return "Choose a date at least seven days away so there is time for review.";
+        return "Choose a date at least seven days away so guests have time to plan.";
       }
       const capacity = Number(values.capacity);
       if (!Number.isInteger(capacity) || capacity < 5 || capacity > 500) {
@@ -207,6 +209,12 @@ export function MemberEventProposalPanel({
       }
       if (values.format !== "virtual" && (!values.venueName.trim() || !values.city.trim())) {
         return "Add the venue and city for this event.";
+      }
+      if (values.format !== "virtual" && !values.addressLine.trim() && !values.mapUrl.trim()) {
+        return "Add either a street address or a map link so guests can find the venue.";
+      }
+      if (values.mapUrl.trim() && !values.mapUrl.trim().startsWith("https://")) {
+        return "The map link should begin with https://.";
       }
       if (values.format !== "in_person" && !values.onlineUrl.startsWith("https://")) {
         return "Add the full private online link, beginning with https://.";
@@ -268,7 +276,7 @@ export function MemberEventProposalPanel({
     );
     if (draftError || !savedProposalId) {
       setBusy(false);
-      setMessage(memberErrorMessage(draftError, submit ? "send this event for review" : "save this draft"));
+      setMessage(memberErrorMessage(draftError, submit ? "open this event" : "save this draft"));
       return;
     }
     setEditingId(String(savedProposalId));
@@ -309,7 +317,7 @@ export function MemberEventProposalPanel({
       : { error: null };
     setBusy(false);
     if (error) {
-      setMessage(memberErrorMessage(error, submit ? "send this event for review" : "save this draft"));
+      setMessage(memberErrorMessage(error, submit ? "open this event" : "save this draft"));
       return;
     }
     let submittedMessage = "Your event is with the review team.";
@@ -319,7 +327,9 @@ export function MemberEventProposalPanel({
         (proposal) => proposal.proposal_id === savedProposalId,
       );
       if (saved?.status === "approved" && saved.canonical_event_id) {
-        submittedMessage = "Your private event is ready. Open its Host page to prepare it; the team will review it before guests can book.";
+        submittedMessage = pilotAutoPublish
+          ? "Your free event is public. Open your Host page to prepare it. Guest places still need review."
+          : "Your private event is ready. Open its Host page to prepare it; the team will review it before guests can book.";
       }
     }
     setMessage(submit ? submittedMessage : "Draft saved. Only you and the review team can see it.");
@@ -352,6 +362,24 @@ export function MemberEventProposalPanel({
     setBusy(false);
   }
 
+  async function publishExisting(proposal: MemberEventProposal) {
+    const confirmed = await ask({
+      confirmLabel: "Open this event",
+      description: "This free event will become public now. Guests can request a place, but each place still needs review. Your poster, if any, is reviewed separately.",
+      title: `Open ${proposal.title} to guests?`,
+    });
+    if (!confirmed) return;
+    setBusy(true);
+    setMessage("");
+    const { error } = await supabase.rpc("publish_pilot_free_event", {
+      p_proposal_id: proposal.proposal_id,
+    });
+    setBusy(false);
+    setMessage(error ? memberErrorMessage(error, "open this event") :
+      "Your free event is public. Guest places still need review.");
+    if (!error) router.refresh();
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await save(true);
@@ -380,15 +408,15 @@ export function MemberEventProposalPanel({
         <div>
           <p className="eyebrow">Have an idea of your own?</p>
           <h2 id="member-event-proposal-title">Bring women together.</h2>
-          <p>You do not need a Community first. Propose a public event, let us review it with you, then decide together whether the relationships should continue as a Community.</p>
+          <p>You do not need a Community first. Start with a free event, then decide together whether the relationships should continue as a Community.</p>
         </div>
         {migrationReady ? <button className="button button-primary" onClick={startNew} type="button">Propose an event</button> : null}
       </header>
 
       <div className="member-event-promise" aria-label="How member events work">
         <span><b>1</b> Share your idea</span>
-        <span><b>2</b> Our team reviews it</span>
-        <span><b>3</b> Prepare the details together</span>
+        <span><b>2</b> {pilotAutoPublish ? "Open it to guests" : "Our team reviews it"}</span>
+        <span><b>3</b> Prepare for your guests</span>
         <span><b>4</b> Attendees choose whether to stay connected</span>
       </div>
 
@@ -415,7 +443,7 @@ export function MemberEventProposalPanel({
                   >
                     <span>Open event</span>
                     <strong>Everyone can discover it</strong>
-                    <small>It becomes public only after our team approves it.</small>
+                    <small>{pilotAutoPublish ? "Free events open to guests during the pilot." : "Our team reviews it before it opens."}</small>
                   </button>
                   <button
                     aria-pressed={eventPath === "community"}
@@ -459,6 +487,7 @@ export function MemberEventProposalPanel({
                 <>
               <label>Event name<input maxLength={140} onChange={(event) => update("title", event.target.value)} placeholder="For example: Women in trade breakfast" value={values.title}/></label>
               <label className={message && values.summary.trim().length < 40 ? "field-needs-attention" : ""}>What will people gain?<textarea aria-describedby="member-event-summary-help" maxLength={2000} minLength={40} onChange={(event) => update("summary", event.target.value)} placeholder="Tell us who the event is for, why it matters and what guests should leave with." rows={5} value={values.summary}/><small id="member-event-summary-help">{values.summary.trim().length < 40 ? `${40 - values.summary.trim().length} more character${40 - values.summary.trim().length === 1 ? "" : "s"} before you can continue` : "Ready to continue"} · {values.summary.length}/2000</small></label>
+              {mediaReady ? <ApplicationImageField altText={posterAltText} existing={editingMedia} file={posterFile} label="Event poster" onAltText={setPosterAltText} onFile={setPosterFile} onRemoveExisting={() => void removePoster()} removing={busy} /> : <p className="application-image-unavailable">Event posters need the image database update. You can still open your event now and add a poster after the update.</p>}
               {hostedCommunities.length ? (
                 <label>Is this event connected to one of your Communities?
                   <select onChange={(event) => update("communityId", event.target.value)} value={values.communityId}>
@@ -468,7 +497,7 @@ export function MemberEventProposalPanel({
                   <small>If you choose one, its name and join button will appear on the approved event.</small>
                 </label>
               ) : null}
-              <div className="community-event-fixed-terms"><span>Public after approval</span><span>Free to attend</span><span>Seats reviewed</span><p>Paid member events will open after payment, refund and settlement checks pass.</p></div>
+              <div className="community-event-fixed-terms"><span>{pilotAutoPublish ? "Public during the pilot" : "Public after review"}</span><span>Free to attend</span><span>Guest places reviewed</span><p>Paid member events will open after payment, refund and settlement checks pass.</p></div>
                 </>
               )}
             </div>
@@ -480,7 +509,7 @@ export function MemberEventProposalPanel({
               <label>Maximum guests<input min={5} max={500} onChange={(event) => update("capacity", event.target.value)} type="number" value={values.capacity}/></label>
               <label>Starts<input onChange={(event) => update("startsAt", event.target.value)} type="datetime-local" value={values.startsAt}/></label>
               <label>Ends<input onChange={(event) => update("endsAt", event.target.value)} type="datetime-local" value={values.endsAt}/></label>
-              {values.format !== "virtual" ? <><label>Venue name<input maxLength={160} onChange={(event) => update("venueName", event.target.value)} placeholder="Venue or host space" value={values.venueName}/></label><label>City<input maxLength={120} onChange={(event) => update("city", event.target.value)} value={values.city}/></label><label>Country<input maxLength={120} onChange={(event) => update("country", event.target.value)} value={values.country}/></label><label>Address <small>Shown only when appropriate</small><input maxLength={240} onChange={(event) => update("addressLine", event.target.value)} value={values.addressLine}/></label><label className="form-wide">Map link <small>Optional</small><input onChange={(event) => update("mapUrl", event.target.value)} placeholder="https://…" type="url" value={values.mapUrl}/></label></> : null}
+              {values.format !== "virtual" ? <><label>Venue name<input maxLength={160} onChange={(event) => update("venueName", event.target.value)} placeholder="For example: Geco Cafe" value={values.venueName}/></label><label>City<input maxLength={120} onChange={(event) => update("city", event.target.value)} value={values.city}/></label><label>Country<input maxLength={120} onChange={(event) => update("country", event.target.value)} value={values.country}/></label><p className="form-wide">Add a street address or a map link. Either one works.</p><label>Street address <small>Or use a map link</small><input maxLength={240} onChange={(event) => update("addressLine", event.target.value)} placeholder="For example: Mbaazi Road, Lavington" value={values.addressLine}/></label><label className="form-wide">Map link <small>Or use a street address</small><input onChange={(event) => update("mapUrl", event.target.value)} placeholder="https://maps…" type="url" value={values.mapUrl}/></label></> : null}
               {values.format !== "in_person" ? <label className="form-wide">Private online link<input onChange={(event) => update("onlineUrl", event.target.value)} placeholder="https://…" type="url" value={values.onlineUrl}/><small>Only confirmed guests receive this link.</small></label> : null}
             </div></div>
           ) : null}
@@ -499,15 +528,14 @@ export function MemberEventProposalPanel({
             <div className="community-event-wizard-step">
               <label className="member-event-community-choice"><input checked={values.communityAfterEvent} onChange={(event) => update("communityAfterEvent", event.target.checked)} type="checkbox"/><span><strong>This event may grow into a Community</strong><small>Guests will be asked separately whether they want to hear about it. Nobody is added automatically.</small></span></label>
               {values.communityAfterEvent ? <label>What might continue after the event?<textarea maxLength={800} minLength={20} onChange={(event) => update("communityIdea", event.target.value)} placeholder="Describe the shared purpose and what members could do together after meeting." rows={4} value={values.communityIdea}/></label> : null}
-              {mediaReady ? <ApplicationImageField altText={posterAltText} existing={editingMedia} file={posterFile} label="Event poster" onAltText={setPosterAltText} onFile={setPosterFile} onRemoveExisting={() => void removePoster()} removing={busy} /> : <p className="application-image-unavailable">Optional poster uploads will appear after the latest database update. You can still send the Event proposal now.</p>}
-              <div className="community-event-review-note"><strong>What happens next</strong><p>During the invited pilot, eligible testers can receive a private Host page immediately. Everyone else waits for the event team to review the idea first. In either case, the team must review safety and approve publication before guests can see or book the event. You can apply to start a related Community before or after it; guests are never added automatically.</p></div>
+              <div className="community-event-review-note"><strong>What happens next</strong><p>{pilotAutoPublish ? "Your free event will open to guests now. They can request a place, but places are confirmed only after review. The poster is reviewed separately and may appear later. You become the Event Host and can prepare updates from your Host page." : "Your event goes to the team for review. If you were directly invited to the pilot, a private Host page may open first. The team decides when guests can see or book it."} You can start a related Community before or after the event; guests are never added automatically.</p></div>
             </div>
           ) : null}
 
           {message ? <p className="manager-message member-event-inline-message" role="alert">{message}</p> : null}
           <footer>
             <button className="button button-outline" disabled={busy} onClick={() => step === 0 ? setExpanded(false) : setStep((current) => current - 1)} type="button">{step === 0 ? "Close" : "Back"}</button>
-            <div>{step === steps.length - 1 ? <button className="button button-outline" disabled={busy} onClick={() => void save(false)} type="button">Save draft</button> : null}{step < steps.length - 1 && (step !== 0 || eventPath === "public") ? <button className="button button-primary" onClick={continueForward} type="button">Continue</button> : step === steps.length - 1 ? <button className="button button-primary" disabled={busy} type="submit">{busy ? "Sending…" : "Send for review"}</button> : null}</div>
+            <div>{step === steps.length - 1 ? <button className="button button-outline" disabled={busy} onClick={() => void save(false)} type="button">Save draft</button> : null}{step < steps.length - 1 && (step !== 0 || eventPath === "public") ? <button className="button button-primary" onClick={continueForward} type="button">Continue</button> : step === steps.length - 1 ? <button className="button button-primary" disabled={busy} type="submit">{busy ? "Opening…" : pilotAutoPublish ? "Open free event" : "Send for review"}</button> : null}</div>
           </footer>
         </form>
       ) : null}
@@ -523,6 +551,7 @@ export function MemberEventProposalPanel({
           <footer>
             {proposal.status === "approved" && proposal.canonical_event_slug && hostEventIds.includes(proposal.canonical_event_id ?? "") ? <Link className="button button-primary" href={`/events/${proposal.canonical_event_slug}/host`}>Open Host workspace</Link> : null}
             {proposal.status === "approved" && proposal.canonical_event_slug && publishedEventIds.includes(proposal.canonical_event_id ?? "") ? <Link className="button button-outline" href={`/events/${proposal.canonical_event_slug}`}>View public event</Link> : null}
+            {pilotAutoPublish && proposal.status === "submitted" ? <button className="button button-primary" disabled={busy} onClick={() => void publishExisting(proposal)} type="button">Open this free event</button> : null}
             {proposal.status === "approved" && new Date(proposal.ends_at) < new Date() ? <Link className="button button-outline" href="/communities#create-community">Apply for a follow-up Community</Link> : null}
             {["draft", "changes_requested"].includes(proposal.status) ? <button className="button button-primary" onClick={() => edit(proposal)} type="button">{proposal.status === "changes_requested" ? "Update and resend" : "Continue draft"}</button> : null}
             {["draft", "submitted", "changes_requested"].includes(proposal.status) ? <button className="button button-outline" disabled={busy} onClick={() => void cancel(proposal)} type="button">Cancel</button> : null}

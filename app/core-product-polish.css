@@ -179,8 +179,60 @@
   border-bottom: 1px solid var(--hat-rule);
 }
 
-/* Events: a programme, not a collection of generic cards. */
-.events-intro { padding-top: 38px; }
+/* Events: show the actual programme before personal account panels. */
+.events-intro {
+  padding: 22px 0 20px;
+  gap: 24px;
+}
+.events-intro h1 { font-size: clamp(2.4rem, 4.3vw, 3.4rem); }
+.events-intro-guide > p { max-width: 36ch; }
+.public-event-list {
+  padding-top: 0;
+  padding-bottom: 30px;
+  scroll-margin-top: 90px;
+}
+.public-event-list > article {
+  min-height: 152px;
+  grid-template-columns: 90px minmax(0, 1fr) auto;
+  gap: clamp(18px, 3vw, 35px);
+}
+.public-event-list > article:has(> .public-event-poster) {
+  grid-template-columns: 116px 72px minmax(0, 1fr) auto;
+}
+.public-event-list .public-event-poster {
+  width: 116px;
+  height: 116px;
+  min-height: 0;
+  max-height: none;
+  border-radius: 5px;
+}
+.public-event-date strong { font-size: 2.7rem; }
+.public-event-copy h2 { font-size: clamp(1.4rem, 2.4vw, 1.85rem); }
+.events-empty {
+  min-height: 0;
+  padding: 22px 0;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 18px;
+}
+.events-empty-icon { width: 48px; height: 48px; }
+.events-empty .eyebrow { margin-bottom: 5px; }
+.events-empty p:not(.eyebrow) { margin-top: 6px; }
+.events-empty-actions { margin-top: 14px; }
+@media (max-width: 820px) {
+  .public-event-list > article,
+  .public-event-list > article:has(> .public-event-poster) {
+    grid-template-columns: 68px minmax(0, 1fr);
+    gap: 14px;
+  }
+  .public-event-list > article:has(> .public-event-poster) > .public-event-poster {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 185px;
+  }
+  .public-event-list > article > a { grid-column: 2; }
+  .events-intro { padding: 18px 0 14px; }
+  .events-empty { grid-template-columns: 1fr; }
+}
 .event-detail-hero { min-height: 0; padding: 58px 0 48px; gap: clamp(28px, 5vw, 70px); }
 .event-detail-hero aside { padding: 26px; }
 .event-detail-hero dl { gap: 10px; }
@@ -188,8 +240,8 @@
 .event-pass-inline-link { display: inline-block; margin-top: 13px; color: var(--hat-wine); font-size: 0.75rem; font-weight: 700; text-underline-offset: 3px; }
 .my-events-section {
   width: min(1120px, calc(100% - 48px));
-  margin: 0 auto 52px;
-  padding: 28px 0 0;
+  margin: 0 auto 32px;
+  padding: 24px 0 0;
   border-top: 1px solid var(--hat-rule);
   scroll-margin-top: 110px;
 }

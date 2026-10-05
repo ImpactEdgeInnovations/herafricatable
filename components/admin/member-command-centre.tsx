@@ -54,6 +54,7 @@ export function MemberCommandCentre({
   pilotInvitations,
   pilotReady,
   pilotEventAutoDrafts,
+  pilotFreeEventPublishing,
   members: initialMembers,
   migrationReady,
 }: {
@@ -65,6 +66,7 @@ export function MemberCommandCentre({
   pilotInvitations: PilotMemberInvite[];
   pilotReady: boolean;
   pilotEventAutoDrafts: boolean | null;
+  pilotFreeEventPublishing: boolean | null;
   members: AdminMember[];
   migrationReady: boolean;
 }) {
@@ -275,6 +277,29 @@ export function MemberCommandCentre({
     if (!error) router.refresh();
   }
 
+  async function changePilotFreeEvents() {
+    if (pilotFreeEventPublishing === null) return;
+    const enabled = !pilotFreeEventPublishing;
+    const confirmed = await ask({
+      confirmLabel: enabled ? "Allow free public events" : "Pause automatic publishing",
+      description: enabled
+        ? "Active members can publish free events immediately during the 60-day pilot. Guests can request places, but each place still needs review. Existing submitted events remain in review until their Host chooses to publish."
+        : "New events will wait for review, except directly invited testers may still get a private draft if that separate switch is on. Already published events stay public unless you pause them individually.",
+      title: enabled ? "Open free event publishing?" : "Pause free event publishing?",
+    });
+    if (!confirmed) return;
+    setBusy("pilot-public-events");
+    const { error } = await supabase.rpc("set_pilot_free_event_setting", {
+      p_enabled: enabled,
+      p_reason: `Pilot free public events ${enabled ? "enabled" : "paused"} from Member oversight`,
+    });
+    setBusy("");
+    setMessage(error ? adminErrorMessage(error, "change free event publishing") :
+      enabled ? "Active members can now publish free events. Guest places still need review." :
+        "Automatic public publishing is off. Existing public events are unchanged.");
+    if (!error) router.refresh();
+  }
+
   async function revokePilotInvitation(invitation: PilotMemberInvite) {
     const result = await ask({
       title: `Withdraw ${invitation.email}'s invitation?`,
@@ -333,9 +358,14 @@ export function MemberCommandCentre({
         })}</div></details> : null}
       </section>
 
-      <section className="member-intake-summary" aria-label="Pilot event creation">
-        <div><p className="eyebrow">Pilot events</p><strong>{pilotEventAutoDrafts ? "Private event creation is on" : "Private event creation is off"}</strong><span>When on, directly invited pilot members can submit a free event and immediately prepare its private Host page. Your team still reviews safety before the event becomes public. This stops accepting new drafts when the 60-day joining pilot ends.</span></div>
+      {!pilotFreeEventPublishing ? <section className="member-intake-summary" aria-label="Pilot event creation">
+        <div><p className="eyebrow">Invited private events</p><strong>{pilotEventAutoDrafts ? "Private event creation is on" : "Private event creation is off"}</strong><span>When public publishing is off, directly invited pilot members can still prepare a private Host page. Your team reviews the event before it becomes public. This ends with the 60-day pilot.</span></div>
         <button className="button button-outline" disabled={busy === "pilot-events" || pilotEventAutoDrafts === null || (intake?.mode !== "trusted_auto" && !pilotEventAutoDrafts)} onClick={() => void changePilotEventDrafts()} type="button">{pilotEventAutoDrafts ? "Turn off" : "Turn on"}</button>
+      </section> : null}
+
+      <section className="member-intake-summary" aria-label="Free public events">
+        <div><p className="eyebrow">Free public events</p><strong>{pilotFreeEventPublishing === null ? "Database update needed" : pilotFreeEventPublishing ? "Automatic publishing is on" : "Automatic publishing is off"}</strong><span>When on, any active member can open a free public event during the 60-day pilot. They become its Host. Guests can request a place, but places still need review. Turn this off at any time; already published events remain open until paused individually.</span></div>
+        <button className="button button-outline" disabled={busy === "pilot-public-events" || pilotFreeEventPublishing === null || (intake?.mode !== "trusted_auto" && !pilotFreeEventPublishing)} onClick={() => void changePilotFreeEvents()} type="button">{pilotFreeEventPublishing ? "Pause new events" : "Allow free events"}</button>
       </section>
 
       <section className="member-request-desk" id="membership-requests">

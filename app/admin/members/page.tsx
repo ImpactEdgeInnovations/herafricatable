@@ -25,7 +25,7 @@ export default async function AdminMembersPage() {
     .maybeSingle();
   if (!role) redirect("/admin");
 
-  const [memberApplicationResult, intakeResult, pilotWindowResult, pilotInvitesResult, pilotEventResult] = await Promise.all([
+  const [memberApplicationResult, intakeResult, pilotWindowResult, pilotInvitesResult, pilotEventResult, pilotFreeEventResult] = await Promise.all([
     supabase.rpc("list_admin_members_v3"),
     supabase.rpc("get_membership_intake_admin"),
     supabase.rpc("get_membership_pilot_window"),
@@ -35,6 +35,7 @@ export default async function AdminMembersPage() {
       .order("created_at", { ascending: false })
       .limit(50),
     supabase.rpc("get_invited_pilot_event_setting"),
+    supabase.rpc("get_pilot_free_event_setting"),
   ]);
   const fallbackResult = memberApplicationResult.error
     ? await supabase.rpc("list_admin_members_v2")
@@ -67,6 +68,7 @@ export default async function AdminMembersPage() {
         pilotInvitations={(pilotInvitesResult.data as PilotMemberInvite[] | null) ?? []}
         pilotReady={!pilotWindowResult.error && !pilotInvitesResult.error}
         pilotEventAutoDrafts={pilotEventResult.error ? null : pilotEventResult.data as boolean}
+        pilotFreeEventPublishing={pilotFreeEventResult.error ? null : pilotFreeEventResult.data as boolean}
         members={testFlagsReady ? members : []}
         migrationReady={!memberResult.error && testFlagsReady}
       />

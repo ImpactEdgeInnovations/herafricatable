@@ -154,18 +154,20 @@ export default async function EventsPage() {
   const hostAssignmentResult = isActiveMember && !hostHandoffResult.error
     ? await supabase.from("event_hosts").select("event_id").eq("user_id", user!.id).eq("status", "active")
     : { data: [], error: null };
-  const [proposalResult, proposalContextResult, communitiesResult, proposalMediaResult] = isActiveMember
+  const [proposalResult, proposalContextResult, communitiesResult, proposalMediaResult, pilotFreeEventResult] = isActiveMember
     ? await Promise.all([
         supabase.rpc("list_my_member_event_proposals"),
         supabase.rpc("list_member_event_proposal_communities"),
         supabase.rpc("list_communities"),
         supabase.rpc("list_my_application_proposal_media"),
+        supabase.rpc("get_pilot_free_event_setting"),
       ])
     : [
         { data: [], error: null },
         { data: [], error: null },
         { data: [], error: null },
         { data: [], error: null },
+        { data: false, error: null },
       ];
   const proposalContexts = (proposalContextResult.data as ProposalCommunityContext[] | null) ?? [];
   const proposals = (((proposalResult.data as MemberEventProposal[] | null) ?? []).map((proposal) => ({
@@ -203,7 +205,8 @@ export default async function EventsPage() {
       <nav className="event-view-switcher" aria-label="Event views">
         <Link aria-current="page" href="/events">Upcoming</Link>
         <Link href="/events/past">Past events</Link>
-        {user ? <Link href="/events#my-events">My events</Link> : null}
+        {user && myEvents.length ? <Link href="/events#my-events">My plans</Link> : null}
+        {isActiveMember ? <Link href="/events#propose-event">Host an event</Link> : null}
       </nav>
       <section className="events-intro">
         <div>
@@ -217,25 +220,12 @@ export default async function EventsPage() {
           </p>
           {isActiveMember ? (
             <div>
-              <Link href="/home">Back home</Link>
+              <Link href="#propose-event">Host your own event</Link>
             </div>
           ) : null}
         </div>
       </section>
-      {user ? <section className="my-events-section" id="my-events" aria-labelledby="my-events-title">
-        <div className="my-events-heading"><div><p className="eyebrow">Your plans</p><h2 id="my-events-title">My events</h2></div><p>Requests and confirmed places you can return to.</p></div>
-        {myEvents.length ? <div className="my-events-list">{myEvents.map((event) => {
-          const membership = myMemberships.find((item) => item.event_id === event.id);
-          const registration = myRegistrations.find((item) => item.event_id === event.id);
-          const confirmed = membership?.status === "confirmed" || membership?.status === "attended";
-          const state = confirmed ? "Place confirmed" : registration?.status === "waitlisted" ? "On the waiting list" : registration?.status === "rejected" ? "Request declined" : registration?.status === "cancelled" || membership?.status === "cancelled" ? "Place cancelled" : registration?.status === "pending_payment" ? "Payment not complete" : registration?.status === "approved" ? "Approved; pass being prepared" : "Request under review";
-          return <article key={event.id}>
-            <div><small>{state}</small><h3>{event.title}</h3><p>{new Intl.DateTimeFormat("en-KE", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} · {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"}</p></div>
-            <Link className="button button-outline" href={confirmed ? `/events/${event.slug}/pass` : `/events/${event.slug}#registration`}>{confirmed ? "Open my pass" : "View my request"}</Link>
-          </article>;
-        })}</div> : <p className="my-events-empty">No upcoming requests or confirmed places yet. Explore the published events below.</p>}
-      </section> : null}
-      <section className="public-event-list" aria-label="Published events">
+      <section className="public-event-list" id="upcoming-events" aria-label="Upcoming events">
         {eventsError ? (
           <div className="events-empty">
             <span className="events-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span>
@@ -252,8 +242,21 @@ export default async function EventsPage() {
             <div className="public-event-copy"><span>{event.audience === "community" ? "Community gathering" : event.format.replace("_", " ")}</span><h2>{event.title}</h2><p className="public-event-facts">{new Intl.DateTimeFormat("en-KE", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} <span aria-hidden="true">·</span> {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"} <span aria-hidden="true">·</span> {eventPrice(tickets, Boolean(publicTicketError))} <span aria-hidden="true">·</span> {bookingLabel(event, bookingAvailability.get(event.id))}</p><p className="public-event-summary">{event.summary || "Event details will be shared with approved members."}</p>{eventCommunity ? <Link className="event-list-community" href={`/communities/${eventCommunity.slug}/about`}>{eventCommunity.name} <i aria-hidden="true">→</i></Link> : <small className="event-list-standalone">Her Africa Table open event</small>}</div>
             <Link href={`/events/${event.slug}`}>View event <span aria-hidden="true">→</span></Link>
           </article>
-        );}) : <div className="events-empty"><span className="events-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><p className="eyebrow">No upcoming events</p><strong>We’re preparing the next gathering.</strong><p>{isActiveMember ? "We will let you know as soon as the date and place are ready." : "Published event details will appear here. Join the founding network to hear first."}</p><div className="events-empty-actions"><Link className="button button-primary" href={isActiveMember ? "/home" : "/sign-in?mode=apply"}>{isActiveMember ? "Back home" : "Request membership"}</Link>{isActiveMember ? <Link className="button button-outline" href="/network">Meet members</Link> : null}</div></div></div>}
+        );}) : <div className="events-empty"><span className="events-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><p className="eyebrow">No upcoming events</p><strong>We’re preparing the next gathering.</strong><p>{isActiveMember ? "There is no public event just yet. You can be the first to bring people together." : "Published event details will appear here. Join the founding network to hear first."}</p><div className="events-empty-actions"><Link className="button button-primary" href={isActiveMember ? "#propose-event" : "/sign-in?mode=apply"}>{isActiveMember ? "Host an event" : "Request membership"}</Link>{isActiveMember ? <Link className="button button-outline" href="/network">Meet members</Link> : null}</div></div></div>}
       </section>
+      {myEvents.length ? <section className="my-events-section" id="my-events" aria-labelledby="my-events-title">
+        <div className="my-events-heading"><div><p className="eyebrow">Your plans</p><h2 id="my-events-title">Your places</h2></div><p>Requests and confirmed places you can return to.</p></div>
+        <div className="my-events-list">{myEvents.map((event) => {
+          const membership = myMemberships.find((item) => item.event_id === event.id);
+          const registration = myRegistrations.find((item) => item.event_id === event.id);
+          const confirmed = membership?.status === "confirmed" || membership?.status === "attended";
+          const state = confirmed ? "Place confirmed" : registration?.status === "waitlisted" ? "On the waiting list" : registration?.status === "rejected" ? "Request declined" : registration?.status === "cancelled" || membership?.status === "cancelled" ? "Place cancelled" : registration?.status === "pending_payment" ? "Payment not complete" : registration?.status === "approved" ? "Approved; pass being prepared" : "Request under review";
+          return <article key={event.id}>
+            <div><small>{state}</small><h3>{event.title}</h3><p>{new Intl.DateTimeFormat("en-KE", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} · {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"}</p></div>
+            <Link className="button button-outline" href={confirmed ? `/events/${event.slug}/pass` : `/events/${event.slug}#registration`}>{confirmed ? "Open my pass" : "View my request"}</Link>
+          </article>;
+        })}</div>
+      </section> : null}
       {isActiveMember ? (
         <MemberEventProposalPanel
           hostEventIds={((hostAssignmentResult.data as { event_id: string }[] | null) ?? []).map((item) => item.event_id)}
@@ -261,6 +264,7 @@ export default async function EventsPage() {
           media={proposalMedia}
           mediaReady={!proposalMediaResult.error}
           migrationReady={!proposalResult.error && !proposalContextResult.error && !hostHandoffResult.error && hostHandoffResult.data === true}
+          pilotAutoPublish={!pilotFreeEventResult.error && pilotFreeEventResult.data === true}
           publishedEventIds={events.map((event) => event.id)}
           proposals={proposals}
         />
