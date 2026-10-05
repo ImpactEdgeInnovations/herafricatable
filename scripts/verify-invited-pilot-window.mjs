@@ -21,6 +21,7 @@ for (const contract of [
   "'pilot_invitation'",
   "'pilot-member-invite:' || saved",
   "source = 'admin_pilot'",
+  "invite.expires_at <= now()",
 ]) assert(migration.includes(contract), `Timed invited-pilot migration must include ${contract}`);
 assert(order.includes("matching_invite.intended_role is not null"));
 assert(!order.includes("intake_mode = 'trusted_auto'"));

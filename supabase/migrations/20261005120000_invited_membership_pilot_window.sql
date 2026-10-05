@@ -129,6 +129,9 @@ begin
     where lower(account.email) = address
       and application.status in ('submitted', 'in_review')) then
     raise exception 'This person has already applied. Review her request in Members'; end if;
+  update public.beta_invites invite set status = 'expired'
+  where invite.email = address and invite.source = 'admin_pilot'
+    and invite.status = 'pending' and invite.expires_at <= now();
   if exists (select 1 from public.beta_invites invite
     where invite.email = address and invite.status = 'pending') then
     raise exception 'This email already has an open invitation'; end if;
