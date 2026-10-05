@@ -152,19 +152,22 @@ async function inspectDesignatedHost(email, assignedUserId) {
 }
 
 async function adminSetupReadsPass(client, eventId) {
-  const [tickets, hosts, drafts, contacts, staff, orders] = await Promise.all([
+  const [tickets, hosts, drafts, contacts, staff, doorStaff, orders] = await Promise.all([
     client.from("ticket_types").select("id,event_id,inventory_quantity,price_minor,sales_start_at,sales_end_at,status").eq("event_id", eventId),
     client.from("event_hosts").select("event_id,user_id,status").eq("event_id", eventId),
     client.from("event_host_workspaces").select("event_id,status").eq("event_id", eventId),
     client.from("event_safety_contacts").select("event_id").eq("event_id", eventId),
     client.from("event_staff_scopes").select("event_id,user_id").eq("event_id", eventId),
+    client.from("event_door_staff").select("event_id,user_id").eq("event_id", eventId),
     client.from("orders").select("event_id,status,order_items(ticket_type_id,quantity)", { count: "exact" })
       .eq("event_id", eventId).eq("order_type", "event").range(0, 999),
   ]);
   if ([tickets, hosts, drafts, contacts, staff, orders].some((result) => result.error)
+    || (doorStaff.error && doorStaff.error.code !== "PGRST205")
     || orders.count !== (orders.data?.length ?? 0)) return false;
   const accountIds = [...new Set([...(hosts.data ?? []).map((row) => row.user_id),
-    ...(staff.data ?? []).map((row) => row.user_id)])];
+    ...(staff.data ?? []).map((row) => row.user_id),
+    ...(doorStaff.data ?? []).map((row) => row.user_id)])];
   if (!accountIds.length) return true;
   const [profiles, roles] = await Promise.all([
     client.from("profiles").select("id,access_status").in("id", accountIds),
@@ -219,7 +222,7 @@ let publicationChecks = null;
 let designatedHost = null;
 if (selectedPilot) {
   const id = selectedPilot.id;
-  const [tickets, host, workspace, safety, joining, venue, staff,
+  const [tickets, host, workspace, safety, joining, venue, staff, doorStaff,
     reservationOrders] = await Promise.all([
     service.from("ticket_types").select("id,price_minor,status,inventory_quantity,sales_start_at,sales_end_at").eq("event_id", id),
     service.from("event_hosts").select("user_id,status").eq("event_id", id).maybeSingle(),
@@ -230,11 +233,14 @@ if (selectedPilot) {
       ? service.from("venues").select("name,city,country,address_line,map_url").eq("id", selectedPilot.venue_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     service.from("event_staff_scopes").select("user_id").eq("event_id", id),
+    service.from("event_door_staff").select("user_id").eq("event_id", id),
     eventReservationOrders(id),
   ]);
   for (const result of [tickets, host, workspace, safety, joining, venue, staff])
     assert.ifError(result.error);
-  const accountIds = [...new Set([host.data?.user_id, ...(staff.data ?? []).map((row) => row.user_id)].filter(Boolean))];
+  if (doorStaff.error && doorStaff.error.code !== "PGRST205") assert.ifError(doorStaff.error);
+  const accountIds = [...new Set([host.data?.user_id, ...(staff.data ?? []).map((row) => row.user_id),
+    ...(doorStaff.data ?? []).map((row) => row.user_id)].filter(Boolean))];
   const [profiles, roles] = await Promise.all([
     accountIds.length
       ? service.from("profiles").select("id,access_status").in("id", accountIds)
@@ -258,7 +264,8 @@ if (selectedPilot) {
     onlineLink: joining.data?.online_url,
     venue: venue.data,
     doorStaffActive: (staff.data ?? []).some((scope) => active(scope.user_id)
-      && roles.data?.some((role) => role.user_id === scope.user_id)),
+      && roles.data?.some((role) => role.user_id === scope.user_id))
+      || (doorStaff.data ?? []).some((scope) => active(scope.user_id)),
   };
   pilotChecks = assessPilotEvent(pilotInput);
   publicationChecks = assessPilotPublication(pilotInput);

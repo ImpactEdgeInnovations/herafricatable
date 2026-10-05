@@ -127,8 +127,8 @@ export function eventPilotReadiness(input: PilotReadinessInput, now = new Date()
     {
       label: "Guest arrival lead",
       ready: input.doorStaffActive,
-      guidance: "Assign an active team account under Operations → Event work → Staff access, then rehearse guest arrival.",
-      href: "/admin/operations?area=event-work#event-work",
+      guidance: "Give a verified account door-only access in Guest arrival, then rehearse a private pass and the manual code.",
+      href: "/admin/events?view=arrival",
     },
   ];
 }

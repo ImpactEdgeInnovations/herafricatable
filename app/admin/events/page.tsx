@@ -27,6 +27,7 @@ import {
   EventCheckinConsole,
   type CheckinAttendee,
 } from "@/components/admin/event-checkin-console";
+import { EventDoorStaffControl, type DoorStaff } from "@/components/admin/event-door-staff-control";
 import {
   MemberEventArchiveManager,
   type EventMediaSubmissionAdmin,
@@ -185,9 +186,13 @@ export default async function AdminEventsPage({
           .in("event_id", eventIds).eq("order_type", "event").range(0, 999),
       ])
     : null;
+  const pilotDoorStaff = role === "super_admin" && view === "overview" && eventIds.length
+    ? await supabase.from("event_door_staff").select("event_id,user_id").in("event_id", eventIds)
+    : { data: [], error: null };
   const scopedStaffIds = [...new Set((pilotSources?.[4].data ?? []).map((row) => row.user_id))];
+  const doorStaffIds = [...new Set((pilotDoorStaff.data ?? []).map((row) => row.user_id))];
   const hostIds = (pilotSources?.[1].data ?? []).map((row) => row.user_id);
-  const pilotAccountIds = [...new Set([...scopedStaffIds, ...hostIds])];
+  const pilotAccountIds = [...new Set([...scopedStaffIds, ...doorStaffIds, ...hostIds])];
   let activeProfileIds = new Set<string>();
   let staffRoleIds = new Set<string>();
   let pilotAccountError = false;
@@ -215,7 +220,9 @@ export default async function AdminEventsPage({
         const privateEvent = managedRows.find((row) => row.event_id === event.id);
         return [event.id, eventPilotReadiness({
           doorStaffActive: (staffScopes.data ?? []).some((row) => row.event_id === event.id
-            && activeProfileIds.has(row.user_id) && staffRoleIds.has(row.user_id)),
+            && activeProfileIds.has(row.user_id) && staffRoleIds.has(row.user_id))
+            || (pilotDoorStaff.data ?? []).some((row) => row.event_id === event.id
+              && activeProfileIds.has(row.user_id)),
           event,
           hasSafetyContact: (contacts.data ?? []).some((row) => row.event_id === event.id),
           hostActive: (hosts.data ?? []).some((row) => row.event_id === event.id && row.status === "active"
@@ -355,6 +362,10 @@ export default async function AdminEventsPage({
 
   let checkinAttendees: CheckinAttendee[] = [];
   let checkinReady = true;
+  const arrivalEvent = view === "arrival" ? events.find((event) => event.id === (selectedEventId ?? eventIds[0])) : null;
+  const doorStaffResult = role === "super_admin" && arrivalEvent
+    ? await supabase.rpc("list_event_door_staff", { p_event_id: arrivalEvent.id })
+    : { data: [], error: null };
   if (view === "arrival") {
     const checkinResults = await Promise.all(
       detailEventIds.map((eventId) => supabase.rpc("list_event_checkins", { p_event_id: eventId })),
@@ -423,7 +434,10 @@ export default async function AdminEventsPage({
       {view === "host" && role === "super_admin" ? <EventHostReviewManager events={events} selectedEventId={selectedEventId} workspaces={hostWorkspaces} reviewContexts={hostReviewContexts} safetyContacts={(safetyContactResult.data as { event_id: string; contact_name: string; contact_phone: string }[] | null) ?? []} safetyReady={!safetyReadyResult.error && safetyReadyResult.data === true && !safetyContactResult.error} ticketEventIds={hostTicketEventIds} ticketsReady={hostTicketsReady} migrationReady={!hostResult.error} lifecycleReady={!hostLifecycleResult.error && hostLifecycleResult.data === true} covers={hostCovers} coversReady={!hostCoverResult.error} /> : null}
       {view === "edit" ? <section className="focused-admin-tool"><EventManager automaticCheckoutOpen={automaticCheckoutOpen} automaticCheckoutReady={automaticCheckoutReady} canCreate={role === "super_admin"} hostedEventIds={hostedEventIds} initialSafetyContacts={publicationSafetyContacts} initialEvents={events} selectedEventId={selectedEventId} migrationReady={!eventResult.error} publicationGuardReady={publicationGuardReady} privateEvents={managedRows.map((event) => ({ event_id: event.event_id, online_url: event.online_url }))} /></section> : null}
       {view === "registrations" ? <section className="focused-admin-tool"><RegistrationManager events={events} selectedEventId={selectedEventId} initialPayments={payments} initialRefunds={refunds} initialRegistrations={registrations} initialTickets={tickets} initialWaitlist={waitlist} waitlistReady={waitlistReady} migrationReady={registrationReady} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY && process.env.SUPABASE_SECRET_KEY && process.env.NEXT_PUBLIC_SITE_URL)} /></section> : null}
-      {view === "arrival" ? <section className="focused-admin-tool"><EventCheckinConsole events={events.map((event) => ({ id: event.id, title: event.title, starts_at: event.starts_at, ends_at: event.ends_at }))} selectedEventId={selectedEventId} initialAttendees={checkinAttendees} migrationReady={checkinReady} /></section> : null}
+      {view === "arrival" ? <section className="focused-admin-tool">
+        {role === "super_admin" && arrivalEvent ? <EventDoorStaffControl eventId={arrivalEvent.id} eventSlug={arrivalEvent.slug} staff={(doorStaffResult.data as DoorStaff[] | null) ?? []} ready={!doorStaffResult.error} /> : null}
+        <EventCheckinConsole events={events.map((event) => ({ id: event.id, title: event.title, starts_at: event.starts_at, ends_at: event.ends_at }))} selectedEventId={selectedEventId} initialAttendees={checkinAttendees} migrationReady={checkinReady} />
+      </section> : null}
       {view === "stories" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventArchiveManager archives={archives} media={media} migrationReady={storiesReady} /></section> : null}
       {view === "follow-up" && role === "super_admin" ? <EventFollowUpInvitations candidates={followUpCandidates} ready={!followUpResult.error} /> : null}
     </main>
