@@ -23,6 +23,13 @@ export type CommunityHealth = {
   upcoming_gatherings: number;
 };
 
+type CommunityPilot = {
+  enabled: boolean;
+  cohort_count: number;
+  capacity: number;
+  ends_at: string | null;
+};
+
 type AdminCommunityBranding = {
   community_id: string;
   cover_alt_text: string | null;
@@ -57,6 +64,7 @@ export function CommunityCommandCentre({
   health,
   members,
   migrationReady,
+  pilot,
 }: {
   applicationReady: boolean;
   applicationMedia: ApplicationProposalMedia[];
@@ -66,6 +74,7 @@ export function CommunityCommandCentre({
   health: CommunityHealth[];
   members: CommunityMember[];
   migrationReady: boolean;
+  pilot: CommunityPilot | null;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -87,6 +96,30 @@ export function CommunityCommandCentre({
     (total, community) => total + Number(community.open_reports),
     0,
   );
+
+  async function changeCommunityPilot() {
+    if (!pilot) return;
+    const enabled = !pilot.enabled;
+    const confirmed = await ask({
+      title: enabled ? "Allow pilot Community drafts?" : "Pause automatic Community drafts?",
+      confirmLabel: enabled ? "Enable pilot drafts" : "Pause pilot drafts",
+      description: enabled
+        ? "Up to 20 founding testers can get one private Community workspace immediately. It still cannot open to members until launch checks pass."
+        : "New Community proposals will wait for your review. Existing private drafts and their records are unchanged.",
+    });
+    if (!confirmed) return;
+    setBusy("community-pilot");
+    setMessage("");
+    const { error } = await supabase.rpc("set_community_pilot_setting", {
+      p_enabled: enabled,
+      p_reason: `Founding Community pilot ${enabled ? "enabled" : "paused"} from Community oversight`,
+    });
+    setBusy("");
+    setMessage(error ? adminErrorMessage(error, "change the Community pilot") : enabled
+      ? "Automatic private drafts are on for founding testers. Public opening still needs launch checks."
+      : "Automatic private drafts are paused. Existing Communities are unchanged.");
+    if (!error) router.refresh();
+  }
 
   async function reviewApplication(
     application: CommunityHostApplicationAdmin,
@@ -277,6 +310,16 @@ export function CommunityCommandCentre({
       </section>
 
       {message ? <p className="community-command-message" role="status">{message}</p> : null}
+
+      <section className="community-command-clear" aria-labelledby="community-pilot-heading">
+        <p className="eyebrow">Founding test period</p>
+        <h2 id="community-pilot-heading">Community pilot</h2>
+        {!pilot ? <p>Apply the latest Community database update to manage the pilot here.</p> : <>
+          <p><strong>{pilot.enabled ? "Automatic private drafts are on" : "Automatic private drafts are paused"}.</strong> {pilot.cohort_count} of {pilot.capacity} founding places assigned. {pilot.ends_at ? `The pilot ends ${new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeZone: "Africa/Nairobi" }).format(new Date(pilot.ends_at))}.` : "No active pilot window is set."}</p>
+          <p>Each tester can start one private Community without waiting for the first application review. You still control public opening, safety decisions and every existing Community.</p>
+          <button className={pilot.enabled ? "button button-outline" : "button button-primary"} type="button" disabled={busy === "community-pilot"} onClick={() => void changeCommunityPilot()}>{pilot.enabled ? "Pause automatic drafts" : "Allow automatic drafts"}</button>
+        </>}
+      </section>
 
       <section className="community-application-desk" id="community-applications">
         <header className="community-command-heading">

@@ -106,11 +106,13 @@ export function CommunityHostApplication({
   media,
   mediaReady,
   migrationReady,
+  pilotEligible,
 }: {
   applications: CommunityHostApplicationState[];
   media: ApplicationProposalMedia[];
   mediaReady: boolean;
   migrationReady: boolean;
+  pilotEligible: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -234,12 +236,19 @@ export function CommunityHostApplication({
         imageError = uploadError;
       }
     }
+    const savedState = !error && savedApplicationId
+      ? await supabase.rpc("list_my_community_host_applications")
+      : { data: null };
+    const privateDraftReady = ((savedState.data as CommunityHostApplicationState[] | null) ?? [])
+      .some((item) => item.application_id === savedApplicationId && item.status === "approved" && Boolean(item.created_community_id));
     setBusy("");
     setMessage(
       error
         ? memberErrorMessage(error, "send your community application")
         : imageError
           ? `Your application was sent, but the optional image did not upload. ${memberErrorMessage(imageError, "add the image")}`
+        : privateDraftReady
+          ? "Your private Community is ready. Open it below to start preparing; members cannot join until its launch checks pass."
         : editable
           ? "Application updated and returned to the review queue."
           : "Application sent. You can follow its progress here.",
@@ -331,11 +340,9 @@ export function CommunityHostApplication({
         <div>
           <p className="eyebrow">Bring people together</p>
           <h2>Start a community</h2>
-          <p>
-            Have a clear idea for a group? Apply to lead it. We review every
-            application, help you set up privately and open the community only
-            when it is ready for members.
-          </p>
+          <p>{pilotEligible
+            ? "As a founding tester, your first Community can be ready as a private workspace as soon as you send your idea. Prepare it there; members cannot join until launch checks pass."
+            : "Have a clear idea for a group? Apply to lead it. We review your idea, help you set up privately and open the Community only when it is ready for members."}</p>
         </div>
         {current ? (
           <span
@@ -382,7 +389,7 @@ export function CommunityHostApplication({
         </ol>
       ) : (
         <div className="community-host-principles" aria-label="Host safeguards">
-          <span>Every application is reviewed</span>
+          <span>{pilotEligible ? "Private workspace for founding testers" : "Every application is reviewed"}</span>
           <span>Set up privately first</span>
           <span>Open after safety checks</span>
         </div>

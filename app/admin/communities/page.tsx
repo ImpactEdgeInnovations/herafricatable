@@ -28,12 +28,13 @@ export default async function AdminCommunitiesPage() {
     .maybeSingle();
   if (!role) redirect("/admin");
 
-  const [communityResult, applicationResult, joiningResult, brandingResult, applicationMediaResult] = await Promise.all([
+  const [communityResult, applicationResult, joiningResult, brandingResult, applicationMediaResult, pilotResult] = await Promise.all([
     supabase.rpc("list_communities"),
     supabase.rpc("list_community_host_applications_admin"),
     supabase.rpc("list_community_joining_settings", { p_community_id: null }),
     supabase.rpc("list_community_brand_identities", { p_community_id: null }),
     supabase.rpc("list_admin_application_proposal_media"),
+    supabase.rpc("get_community_pilot_admin"),
   ]);
   const joiningByCommunity = new Map(
     ((joiningResult.data as {
@@ -136,6 +137,7 @@ export default async function AdminCommunitiesPage() {
           memberResults.every((result) => !result.error) &&
           healthResults.every((result) => !result.error)
         }
+        pilot={pilotResult.error ? null : ((pilotResult.data as { enabled: boolean; cohort_count: number; capacity: number; ends_at: string | null }[] | null) ?? [])[0] ?? null}
       />
     </main>
   );

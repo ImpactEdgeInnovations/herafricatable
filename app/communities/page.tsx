@@ -30,6 +30,7 @@ export default async function CommunitiesPage() {
     { data: acceptanceFlag },
     applicationResult,
     mediaResult,
+    pilotResult,
   ] =
     await Promise.all([
       supabase
@@ -49,6 +50,7 @@ export default async function CommunitiesPage() {
         .maybeSingle(),
       supabase.rpc("list_my_community_host_applications"),
       supabase.rpc("list_my_application_proposal_media"),
+      supabase.rpc("community_pilot_member_ready"),
     ]);
 
   if (profile?.access_status !== "active") redirect("/home");
@@ -140,6 +142,7 @@ export default async function CommunitiesPage() {
           media={applicationMedia}
           mediaReady={!mediaResult.error}
           migrationReady={!applicationResult.error}
+          pilotEligible={!pilotResult.error && pilotResult.data === true}
         />
       </main>
     );
@@ -242,6 +245,7 @@ export default async function CommunitiesPage() {
         media={applicationMedia}
         mediaReady={!mediaResult.error}
         migrationReady={!applicationResult.error}
+        pilotEligible={!pilotResult.error && pilotResult.data === true}
       />
     </main>
   );
