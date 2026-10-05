@@ -11,6 +11,9 @@ create table public.event_door_staff (
 );
 create index event_door_staff_user_idx on public.event_door_staff(user_id, event_id);
 alter table public.event_door_staff enable row level security;
+create policy "Super Admin reads door assignments" on public.event_door_staff
+  for select to authenticated
+  using (public.is_admin(array['super_admin']::public.app_role[]));
 
 create or replace function public.can_operate_event_door(p_event_id uuid)
 returns boolean language sql stable security definer set search_path = '' as $$
