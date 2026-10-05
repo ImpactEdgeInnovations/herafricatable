@@ -12,7 +12,7 @@ Updated: 5 October 2026. This is the evidence sheet for `JOIN-01` in the [implem
 ## Deployment and release order
 
 1. Apply [20261005120000_invited_membership_pilot_window.sql](../supabase/migrations/20261005120000_invited_membership_pilot_window.sql) to the production Supabase project. The earlier [application-order migration](../supabase/migrations/20261005110000_invited_member_application_order.sql) must already be applied.
-2. Deploy the matching code. No new Vercel secret is needed; the existing notification worker requires `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL` and its scheduler settings.
+2. For private event creation by directly invited pilot members, apply [20261005130000_invited_pilot_private_event_drafts.sql](../supabase/migrations/20261005130000_invited_pilot_private_event_drafts.sql) after the timed membership migration. It defaults **off**. Deploy the matching code. No new Vercel secret is needed; the existing notification worker requires `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL` and its scheduler settings.
 3. Confirm the functions exist, without changing settings:
 
    ```sql
@@ -22,7 +22,7 @@ Updated: 5 October 2026. This is the evidence sheet for `JOIN-01` in the [implem
      to_regprocedure('public.revoke_pilot_member_invitation(uuid,text)') as revoke_function;
    ```
 
-4. Only then should Super Admin deliberately enable the timed setting in Admin → Members. Do not enter test credentials or OTPs in this sheet.
+4. Only then should Super Admin deliberately enable the timed setting in Admin → Members. The separate **Pilot events** switch may be enabled after a private-draft rehearsal. Do not enter test credentials or OTPs in this sheet.
 
 ## Acceptance record
 
@@ -40,5 +40,9 @@ Use controlled inboxes and distinct test identities. Record date, role and resul
 | Expiry | A controlled time-bound database test proves the 60-day window falls back to manual review without a cron job | Not run |
 | Member pause | Admin can suspend one approved test member without pausing all intake | Not run |
 | Boundary | Invitation never grants Super Admin, Event Staff, Event Host or Community owner permissions | Not run |
+| Pilot private event | A directly invited active pilot member sends a free event idea at least seven days ahead and immediately receives only that event's private Host workspace | Not run |
+| Event limits | The same Host cannot automatically create more than two private pilot events; an uninvited member still waits for event-team review | Not run |
+| Event publication | The private event, draft ticket and Host page are not public or bookable; safety and public launch remain with Admin | Not run |
+| Event off switch | Admin disables automatic private drafts; new proposals wait for review while existing event records remain intact | Not run |
 
-`JOIN-01` remains In progress until the separate-account checks and Admin release evidence are recorded. Automatic event publication is **not** part of this setting.
+`JOIN-01` and `HOST-03` remain In progress until separate-account checks and Admin release evidence are recorded. Automatic event publication is **not** part of either setting.

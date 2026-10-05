@@ -53,6 +53,7 @@ export function MemberCommandCentre({
   pilotEndsAt,
   pilotInvitations,
   pilotReady,
+  pilotEventAutoDrafts,
   members: initialMembers,
   migrationReady,
 }: {
@@ -63,6 +64,7 @@ export function MemberCommandCentre({
   pilotEndsAt: string | null;
   pilotInvitations: PilotMemberInvite[];
   pilotReady: boolean;
+  pilotEventAutoDrafts: boolean | null;
   members: AdminMember[];
   migrationReady: boolean;
 }) {
@@ -250,6 +252,29 @@ export function MemberCommandCentre({
     router.refresh();
   }
 
+  async function changePilotEventDrafts() {
+    if (pilotEventAutoDrafts === null) return;
+    const enabled = !pilotEventAutoDrafts;
+    const confirmed = await ask({
+      confirmLabel: enabled ? "Allow private event drafts" : "Turn off automatic drafts",
+      description: enabled
+        ? "Only approved members admitted through a direct pilot invitation can become Host of their own free, private event. Public publication and bookings still need the event team's approval."
+        : "New ideas return to event-team review. Existing private events and Host access are unchanged.",
+      title: enabled ? "Let invited testers start their own events?" : "Stop automatic private event drafts?",
+    });
+    if (!confirmed) return;
+    setBusy("pilot-events");
+    const { error } = await supabase.rpc("set_invited_pilot_event_setting", {
+      p_enabled: enabled,
+      p_reason: `Invited pilot private event drafts ${enabled ? "enabled" : "disabled"} from Member oversight`,
+    });
+    setBusy("");
+    setMessage(error ? adminErrorMessage(error, "change the pilot event setting") :
+      enabled ? "Invited testers can now start private events. Public launch still needs review." :
+        "Automatic private event creation is off. Existing events are unchanged.");
+    if (!error) router.refresh();
+  }
+
   async function revokePilotInvitation(invitation: PilotMemberInvite) {
     const result = await ask({
       title: `Withdraw ${invitation.email}'s invitation?`,
@@ -306,6 +331,11 @@ export function MemberCommandCentre({
           const open = invitation.status === "pending" && !expired;
           return <div key={invitation.id}><span><strong>{invitation.email}</strong><small>{expired && invitation.status === "pending" ? "Expired" : open ? "Waiting to join" : invitation.status.replaceAll("_", " ")}{invitation.expires_at ? ` · Valid until ${new Intl.DateTimeFormat("en-KE", { dateStyle: "medium" }).format(new Date(invitation.expires_at))}` : ""}</small></span>{open ? <button className="button button-outline" disabled={busy === invitation.id} onClick={() => void revokePilotInvitation(invitation)} type="button">Withdraw</button> : null}</div>;
         })}</div></details> : null}
+      </section>
+
+      <section className="member-intake-summary" aria-label="Pilot event creation">
+        <div><p className="eyebrow">Pilot events</p><strong>{pilotEventAutoDrafts ? "Private event creation is on" : "Private event creation is off"}</strong><span>When on, directly invited pilot members can submit a free event and immediately prepare its private Host page. Your team still reviews safety before the event becomes public. This stops accepting new drafts when the 60-day joining pilot ends.</span></div>
+        <button className="button button-outline" disabled={busy === "pilot-events" || pilotEventAutoDrafts === null || (intake?.mode !== "trusted_auto" && !pilotEventAutoDrafts)} onClick={() => void changePilotEventDrafts()} type="button">{pilotEventAutoDrafts ? "Turn off" : "Turn on"}</button>
       </section>
 
       <section className="member-request-desk" id="membership-requests">

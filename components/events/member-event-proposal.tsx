@@ -312,7 +312,17 @@ export function MemberEventProposalPanel({
       setMessage(memberErrorMessage(error, submit ? "send this event for review" : "save this draft"));
       return;
     }
-    setMessage(submit ? "Your event is with the review team." : "Draft saved. Only you and the review team can see it.");
+    let submittedMessage = "Your event is with the review team.";
+    if (submit) {
+      const { data: latest } = await supabase.rpc("list_my_member_event_proposals");
+      const saved = (latest as MemberEventProposal[] | null)?.find(
+        (proposal) => proposal.proposal_id === savedProposalId,
+      );
+      if (saved?.status === "approved" && saved.canonical_event_id) {
+        submittedMessage = "Your private event is ready. Open its Host page to prepare it; the team will review it before guests can book.";
+      }
+    }
+    setMessage(submit ? submittedMessage : "Draft saved. Only you and the review team can see it.");
     setExpanded(false);
     setEditingId(null);
     setPosterFile(null);
@@ -490,7 +500,7 @@ export function MemberEventProposalPanel({
               <label className="member-event-community-choice"><input checked={values.communityAfterEvent} onChange={(event) => update("communityAfterEvent", event.target.checked)} type="checkbox"/><span><strong>This event may grow into a Community</strong><small>Guests will be asked separately whether they want to hear about it. Nobody is added automatically.</small></span></label>
               {values.communityAfterEvent ? <label>What might continue after the event?<textarea maxLength={800} minLength={20} onChange={(event) => update("communityIdea", event.target.value)} placeholder="Describe the shared purpose and what members could do together after meeting." rows={4} value={values.communityIdea}/></label> : null}
               {mediaReady ? <ApplicationImageField altText={posterAltText} existing={editingMedia} file={posterFile} label="Event poster" onAltText={setPosterAltText} onFile={setPosterFile} onRemoveExisting={() => void removePoster()} removing={busy} /> : <p className="application-image-unavailable">Optional poster uploads will appear after the latest database update. You can still send the Event proposal now.</p>}
-              <div className="community-event-review-note"><strong>What happens next</strong><p>Our team checks the purpose, time, venue and safety details. If your idea is approved, you become this event’s Host and prepare its private page. You do not become a platform Admin. A final safety and publication review opens the event to guests. You can apply to start a related Community before or after the event; guests are never added automatically.</p></div>
+              <div className="community-event-review-note"><strong>What happens next</strong><p>During the invited pilot, eligible testers can receive a private Host page immediately. Everyone else waits for the event team to review the idea first. In either case, the team must review safety and approve publication before guests can see or book the event. You can apply to start a related Community before or after it; guests are never added automatically.</p></div>
             </div>
           ) : null}
 
