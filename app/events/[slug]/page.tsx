@@ -78,16 +78,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     : posterSigned.data?.signedUrl && poster
       ? { url: posterSigned.data.signedUrl, alt: poster.alt_text }
       : null;
-  const { data: communityLink } = await supabase
-    .from("community_event_links")
-    .select("community_id, communities(name,slug,tagline,community_type)")
-    .eq("event_id", event.id)
-    .order("is_featured", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const eventCommunity = communityLink?.communities as unknown as
-    | { community_type: string; name: string; slug: string; tagline: string | null }
-    | null;
+  const { data: communityRows, error: communityLookupError } = await supabase.rpc("get_event_community_for_visitor", {
+    p_event_id: event.id,
+  });
+  const { data: previousCommunityLink } = communityLookupError
+    ? await supabase.from("community_event_links")
+        .select("community_id, communities(name,slug,tagline,community_type)")
+        .eq("event_id", event.id).order("is_featured", { ascending: false }).limit(1).maybeSingle()
+    : { data: null };
+  const eventCommunity = ((communityRows as { community_id: string; community_type: string; name: string; slug: string; tagline: string | null }[] | null) ?? [])[0]
+    ?? (previousCommunityLink?.communities ? {
+      community_id: previousCommunityLink.community_id,
+      ...(previousCommunityLink.communities as unknown as { community_type: string; name: string; slug: string; tagline: string | null }),
+    } : null);
 
   const [{ data: announcements }, { data: sessions }, { data: sponsors }] = await Promise.all([
     supabase.from("event_announcements").select("id, title, body, published_at").eq("event_id", event.id).eq("status", "published").order("published_at", { ascending: false }),
@@ -132,8 +135,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     user && event.audience === "public" && eventGuestFlag?.enabled &&
     memberProfile?.access_status === "pending",
   );
-  const { data: communityMembership } = activeMember && communityLink?.community_id
-    ? await supabase.from("community_memberships").select("status").eq("community_id", communityLink.community_id).eq("user_id", user!.id).maybeSingle()
+  const { data: communityMembership } = activeMember && eventCommunity?.community_id
+    ? await supabase.from("community_memberships").select("status").eq("community_id", eventCommunity.community_id).eq("user_id", user!.id).maybeSingle()
     : { data: null };
   const [eventManagerResult, eventProposerResult] = user
     ? await Promise.all([
@@ -318,6 +321,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         </aside>
       </section>
 
+      <nav className="event-detail-jump-links" aria-label="On this event page">
+        {!hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? <a href="#registration">Places</a> : null}
+        <a href="#questions">Questions</a>
+        {eventCommunity ? <a href="#event-community">Community</a> : null}
+      </nav>
+
       {!hasEnded && canInviteToEvent ? (
         <DestinationInvitationPanel
           destinationId={event.id}
@@ -386,7 +395,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       ) : null}
 
       {eventCommunity ? (
-        <section className="event-community-companion">
+        <section className="event-community-companion" id="event-community">
           <div>
             <p className="eyebrow">The people around this event</p>
             <h2>{eventCommunity.name}</h2>
@@ -396,7 +405,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             <span>{eventCommunity.community_type === "private" ? "Host approval required" : "Open Community"}</span>
             <p>{event.audience === "community" ? "This gathering is for active members of the Community." : "This is an open event connected to the Community. Joining either one is always your choice."}</p>
             <Link className="button button-outline" href={`/communities/${eventCommunity.slug}/about`}>
-              Meet the Community
+              View and join the Community
             </Link>
           </aside>
         </section>
