@@ -607,6 +607,19 @@ a **public pilot**, not a closed rehearsal. If the human and live-journey
 gates cannot pass in time, reschedule rather than quietly treating an
 unrehearsed public event as launch-ready.
 
+**5 October superseding update:** The Product Owner rescheduled this same
+private event to **Friday 9 October 2026, 18:00–20:00 EAT** at Geco Cafe,
+Mbaazi Rd, Lavington, Nairobi. Its new slug is
+`the-founding-table-nairobi-2026-10-09`; the event ID and capacity of 20 are
+unchanged. The verified, active member at `epayments.elbrim@gmail.com` is now
+the assigned Event Host with a private draft workspace. There are no orders.
+Registration stays closed and the event remains unpublished. The 48-hour
+publication cutoff is **7 October at 18:00 EAT**. A 5 October live audit
+confirmed Host readiness but still recommends hold: Host content, on-sale
+free ticket, safety contact, door staff and launch acceptance are incomplete.
+Earlier 6 October/Seina observations below are historical, not the current
+execution target.
+
 The read-only live audit at 04:01 UTC found both private draft routes hidden
 from signed-out visitors. The selected event passed only `basics` and
 `placeAvailable`; publication, exact arrival details, free/manual on-sale
@@ -1001,14 +1014,15 @@ Super Admin's decisions.
 
 ### Next owner actions, in order
 
-1. Confirm the Geco booking and capacity of 20, complete Seina N's membership
-   journey, name the safety contact for the supplied telephone number,
-   and assign a check-in lead. Six October is the chosen public pilot; keep this existing draft
+1. Confirm the Geco booking and capacity of 20, have the assigned Host at
+   `epayments.elbrim@gmail.com` submit her event content, name the safety contact
+   for the supplied telephone number, and assign a check-in lead. Nine October
+   is the chosen public pilot; keep this existing draft
    private and registration closed until the gates pass and the owner records
    a go/no-go decision. Do not create a duplicate event. Repeat the read-only
-   audit with `npm run ops:events:audit-live -- --pilot-slug=the-founding-table-nairobi-2026-10-06 --host-email=seina@arvisia-global.com`.
+   audit with `npm run ops:events:audit-live -- --pilot-slug=the-founding-table-nairobi-2026-10-09 --host-email=epayments.elbrim@gmail.com`.
    The audit checks only this selected event's content, exact arrival details,
-   free on-sale place, Seina's verified membership and scoped Host assignment,
+   free on-sale place, the designated Host's verified membership and scoped assignment,
    approved Host draft, safety contact and active scoped check-in staff. It
    reports her account and application state without creating an account or
    bypassing membership approval.

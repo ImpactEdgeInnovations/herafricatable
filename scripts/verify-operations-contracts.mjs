@@ -54,7 +54,7 @@ const taskboard = read("components/admin/roadmap-overview.tsx");
 const liveRolePages = read("scripts/accept-role-pages-live.mjs");
 assert(adminHome.includes("Ten-sprint launch taskboard"));
 assert(operations.includes("<RoadmapOverview"));
-assert(operations.includes('event.slug === "the-founding-table-nairobi-2026-10-06"'));
+assert(operations.includes('event.slug === "the-founding-table-nairobi-2026-10-09"'));
 for (const contract of [
   "Event-first pilot · ten sprints",
   "Built means the feature exists in the app",

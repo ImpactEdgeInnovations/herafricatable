@@ -7,7 +7,7 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const password = process.env.HAT_COMMUNITY_TEST_PASSWORD;
 const adminEmail = process.env.HAT_PRIMARY_ADMIN_EMAIL;
 const adminPassword = process.env.HAT_PRIMARY_ADMIN_PASSWORD;
-const pilotSlug = process.env.HAT_PILOT_EVENT_SLUG ?? "the-founding-table-nairobi-2026-10-06";
+const pilotSlug = process.env.HAT_PILOT_EVENT_SLUG ?? "the-founding-table-nairobi-2026-10-09";
 const rehearsalSlug = process.env.HAT_REHEARSAL_EVENT_SLUG ?? "hat-private-host-rehearsal-20260924";
 assert(url && key && password, "Tagged role credentials and Supabase public settings are required");
 assert(/^https:\/\//.test(base), "Use the HTTPS production site for live role acceptance");

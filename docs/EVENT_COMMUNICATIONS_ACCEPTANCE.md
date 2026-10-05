@@ -24,7 +24,7 @@ Updated: 4 October 2026. This is the evidence sheet for `COMMS-01` in the [Event
      to_regprocedure('public.check_standalone_event_reminder_job(uuid)') as delivery_guard;
    ```
 
-4. Keep the October 6 private pilot unpublished until its separate launch gates pass. Do not enable guest access or automatic payment for this communications test.
+4. Keep the rescheduled 9 October private pilot unpublished until its separate launch gates pass. Do not enable guest access or automatic payment for this communications test.
 
 ## Real-account acceptance record
 

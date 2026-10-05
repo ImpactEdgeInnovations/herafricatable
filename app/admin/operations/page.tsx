@@ -1487,7 +1487,7 @@ export default async function AdminOperationsPage({
             checks={(launchGateResult.data as LaunchGateCheck[] | null) ?? []}
             checksReady={role.role === "super_admin" && !launchGateResult.error}
             pilotEvent={((eventResult.data as ManagedEventRow[] | null) ?? [])
-              .find((event) => event.slug === "the-founding-table-nairobi-2026-10-06") ?? null}
+              .find((event) => event.slug === "the-founding-table-nairobi-2026-10-09") ?? null}
             pilotEventReady={role.role === "super_admin" && !eventResult.error}
           />
           <section className="admin-section" id="event">

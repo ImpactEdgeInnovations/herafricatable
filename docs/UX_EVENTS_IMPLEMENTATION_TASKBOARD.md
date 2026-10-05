@@ -24,9 +24,9 @@ The read-only live audit at 08:40 EAT on 4 October found a healthy deployed app 
 
 The current publication policy requires the October 6 pilot to be ready 48 hours before its 18:00 EAT start, which is **4 October at 18:00 EAT**. If the requirements cannot be completed by then, the Product Owner must decide whether to reschedule the pilot. Do not override the safeguard to preserve the original date.
 
-**5 October note:** That publication cutoff has passed. We have not reverified the live pilot state since the 4 October audit. Keep the event private; the owner should check the current launch gates and choose a later date if the required Host, safety, arrival and rehearsal evidence was not completed before the cutoff.
+**5 October reschedule:** The Product Owner moved the same founding event to **Friday 9 October 2026, 18:00–20:00 EAT** at Geco Cafe, Mbaazi Rd, Lavington. The URL slug now ends `2026-10-09`; the event ID remains `836f9030-a69e-4e2b-8599-29470d39ab17`. `epayments.elbrim@gmail.com` is the verified, active, event-scoped Host. The event remains a private draft with registration closed and zero orders. Its 48-hour publication cutoff is **7 October at 18:00 EAT**. A live read-only audit on 5 October confirmed Host readiness and private-route hiding; it still recommends **hold** because the free ticket is not on sale, Host content is unapproved, safety contact and door staff are missing, and the release checks remain unaccepted. The 4 October audit above is historical.
 
-A later read-only audit attempt on 4 October could not complete because the local machine could not resolve the live domain. Until a fresh audit succeeds, the 08:40 EAT observation above is the latest verified live state.
+A later read-only audit attempt on 4 October could not complete because the local machine could not resolve the live domain. The successful 5 October audit in the reschedule note above supersedes that temporary verification gap.
 
 ## Critical path
 
@@ -44,7 +44,7 @@ Engineering can build EVT and COMMS work while the Product Owner resolves PILOT-
 
 | ID | Priority | Status | Owner | Concrete task | Done when / evidence | Dependency |
 | --- | --- | --- | --- | --- | --- | --- |
-| PILOT-01 | P0 | **Blocked** | Product Owner + Event team | Confirm Geco Café booking and capacity; complete Seina's own approved account/Host assignment; name safety contact and check-in lead; prepare on-sale free manual ticket | Read-only pilot audit shows each prerequisite ready; owner confirms physical arrangements | Owner actions and real identities |
+| PILOT-01 | P0 | **Blocked** | Product Owner + Event team | Confirm Geco Café booking and capacity; have the assigned Host submit content; name safety contact and check-in lead; prepare on-sale free manual ticket | Read-only pilot audit shows each prerequisite ready; owner confirms physical arrangements | Owner actions and real identities |
 | PILOT-02 | P0 | **Ready** | Engineering + Admin + test attendees | Rehearse member/Admin OTP, guest and member booking, approval/decline, last-place concurrency, cancellation, role denials, pass issue/revocation and check-in | Separate controlled accounts and inboxes; outcome recorded against the ten launch gates | PILOT-01 for Host/door tests; guest flag rehearsal in controlled environment |
 | EVT-01 | P0 online / P1 in-person | **Review** | Engineering | Make confirmed guests' arrival instructions, directions/map or protected online joining action available from event and pass | Confirmed guest can get there/join; anonymous, pending and cancelled users cannot retrieve private link; mobile and keyboard pass | Live role and device acceptance still required |
 | EVT-02 | P1 | **Review** | Engineering | Combine personal request state, pass, receipt/manage-place and calendar entry within the event journey | One event page explains pending vs confirmed and provides correct next action; existing cancel/refund RPCs still govern | Live booking-state acceptance still required |
@@ -87,7 +87,7 @@ Engineering can build EVT and COMMS work while the Product Owner resolves PILOT-
 
 **5 October live activation:** Both pilot migrations were present, and production reported deployed release `cc5ebdc` with a reachable database. Super Admin enabled invited-only membership approval until **4 December 2026, 11:16 EAT** and separately enabled automatic *private* event drafts for directly invited pilot members. Read-back confirmed both settings. Two previously pending applications remained pending. `JOIN-01` and `HOST-03` remain In progress until invitation delivery, invited/uninvited accounts, event-scoped Host access, publication boundaries and off-switch behavior are rehearsed with separate accounts. See the [acceptance sheet](./INVITED_PILOT_ACCEPTANCE.md).
 
-**PILOT-01:** This is an owner and operations task. Engineering can verify records and explain next steps, but must not create Seina's account, promote another member, invent venue confirmation or assign safety responsibility. The audit found the designated Host email has no account. The existing draft must be reused, not duplicated.
+**PILOT-01:** This is an owner and operations task. The Product Owner has reassigned the existing pilot to the active member at `epayments.elbrim@gmail.com`; do not create a duplicate event or treat the previous Seina account audit as current. Engineering can verify records and explain next steps, but must not invent venue confirmation or assign safety responsibility. Host content, safety, door staff and ticket readiness remain open.
 
 **PILOT-02:** Run changes only with explicitly designated test identities and safe data. The separate tagged Super Admin is not yet available; the primary real owner cannot substitute for an independent role test. Keep OTP values and private messages out of gate notes. Record negative and positive paths.
 
