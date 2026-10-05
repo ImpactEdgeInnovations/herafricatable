@@ -40,6 +40,11 @@ assert(
   read("supabase/migrations/20260727110000_founding_cohort_activation.sql").includes("notify_member_approval_trigger"),
   "Member approval must notify the approved member",
 );
+const invitedMemberOrder = read("supabase/migrations/20261005110000_invited_member_application_order.sql");
+assert(invitedMemberOrder.includes("create or replace function public.handle_new_auth_user()"));
+assert(invitedMemberOrder.includes("matching_invite.intended_role is not null"));
+assert(invitedMemberOrder.includes("initial_status public.member_access_status := 'pending'"));
+assert(!invitedMemberOrder.includes("intake_mode = 'trusted_auto'"), "Member invitation must not skip the application after OTP");
 
 const referralLaunch = read("supabase/migrations/20260813120000_referral_launch_readiness.sql");
 for (const contract of [
