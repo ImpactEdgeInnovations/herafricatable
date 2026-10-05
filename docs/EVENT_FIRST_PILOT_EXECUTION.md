@@ -620,6 +620,19 @@ free ticket, safety contact, door staff and launch acceptance are incomplete.
 Earlier 6 October/Seina observations below are historical, not the current
 execution target.
 
+**5 October owner/role update:** The Product Owner reports the Geco Cafe
+booking confirmed for 20 and names Lex Sam as safety contact and intended
+check-in lead. The safety contact is saved in production. Production role-page
+checks passed for anonymous, member, moderator, tagged Event Host and primary
+Admin access boundaries, but Lex's own Host session has not been rehearsed.
+Check-in assignment remains pending: the current `event_staff` scope includes
+guest records and broader event management, not only door check-in. The owner
+must choose that access or a narrower check-in role before it is granted.
+The follow-up live audit reports Host, place and safety-contact checks ready,
+while ticket sale, approved Host content, door access and publication remain
+open. The private event summary now reflects the owner-confirmed venue;
+registration remains closed.
+
 The read-only live audit at 04:01 UTC found both private draft routes hidden
 from signed-out visitors. The selected event passed only `basics` and
 `placeAvailable`; publication, exact arrival details, free/manual on-sale
@@ -1014,9 +1027,10 @@ Super Admin's decisions.
 
 ### Next owner actions, in order
 
-1. Confirm the Geco booking and capacity of 20, have the assigned Host at
-   `epayments.elbrim@gmail.com` submit her event content, name the safety contact
-   for the supplied telephone number, and assign a check-in lead. Nine October
+1. Retain the owner's Geco booking confirmation and capacity of 20; have the
+   assigned Host at `epayments.elbrim@gmail.com` submit her event content.
+   Lex Sam is the saved safety contact. Resolve the check-in permission choice
+   before assigning door access. Nine October
    is the chosen public pilot; keep this existing draft
    private and registration closed until the gates pass and the owner records
    a go/no-go decision. Do not create a duplicate event. Repeat the read-only
