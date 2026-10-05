@@ -4,6 +4,7 @@ import { AdminHeader, type AdminRole } from "@/components/admin/admin-header";
 import {
   EventCommandCentre,
   type EventLifecycleState,
+  type EventWorkCounts,
 } from "@/components/admin/event-command-centre";
 import { EventManager, type AdminEvent } from "@/components/admin/event-manager";
 import {
@@ -151,13 +152,10 @@ export default async function AdminEventsPage({
   }));
   const eventIds = events.map((event) => event.id);
   const selectedEventId = requestedEventId && eventIds.includes(requestedEventId) ? requestedEventId : null;
-  // Detailed guest records belong to the selected work area, never the entire
-  // Admin Events page. The overview still needs its cross-event counts.
-  const detailEventIds = view === "overview"
-    ? eventIds
-    : view === "registrations" || view === "arrival"
-      ? [selectedEventId ?? eventIds[0]].filter((id): id is string => Boolean(id))
-      : [];
+  // Only selected work areas load guest records. Overview uses an aggregate RPC.
+  const detailEventIds = view === "registrations" || view === "arrival"
+    ? [selectedEventId ?? eventIds[0]].filter((id): id is string => Boolean(id))
+    : [];
   const publicationSources = view === "edit" && eventIds.length
     ? await Promise.all([
         supabase.from("event_hosts").select("event_id").in("event_id", eventIds),
@@ -265,12 +263,16 @@ export default async function AdminEventsPage({
           published: cover.draft_storage_path === cover.published_storage_path };
       }),
   );
+  const workCountsResult = view === "overview"
+    ? await supabase.rpc("list_event_work_counts")
+    : { data: [], error: null };
+  const workCounts = (workCountsResult.data as EventWorkCounts[] | null) ?? [];
   const registrationResults = await Promise.all(
-    (view === "overview" || view === "registrations" ? detailEventIds : [])
+    (view === "registrations" ? detailEventIds : [])
       .map((eventId) => supabase.rpc("list_event_registrations", { p_event_id: eventId })),
   );
   const refundResults = await Promise.all(
-    (view === "overview" || view === "registrations" ? detailEventIds : [])
+    (view === "registrations" ? detailEventIds : [])
       .map((eventId) => supabase.rpc("list_event_refund_requests", { p_event_id: eventId })),
   );
   const registrations = registrationResults.flatMap((result) =>
@@ -414,7 +416,7 @@ export default async function AdminEventsPage({
         </nav>
       </section>
 
-      {view === "overview" ? <EventCommandCentre canControlLifecycle={role === "super_admin"} events={events} selectedEventId={selectedEventId} lifecycleReady={!lifecycleResult.error} lifecycleStates={(lifecycleResult.data as EventLifecycleState[] | null) ?? []} proposalCount={proposalCount} refunds={refunds} registrations={registrations} pilotReadiness={pilotReadiness} /> : null}
+      {view === "overview" ? <EventCommandCentre canControlLifecycle={role === "super_admin"} events={events} selectedEventId={selectedEventId} lifecycleReady={!lifecycleResult.error} lifecycleStates={(lifecycleResult.data as EventLifecycleState[] | null) ?? []} proposalCount={proposalCount} workCounts={workCounts} countsReady={!workCountsResult.error} pilotReadiness={pilotReadiness} /> : null}
       {view === "overview" && role === "super_admin" ? <EventGuestAccessControl enabled={Boolean(guestAccessResult.data?.enabled)} migrationReady={Boolean(guestAccessResult.data) && !guestAccessResult.error} safetyChecks={guestSafetyChecks} /> : null}
       {view === "overview" && role === "super_admin" ? <EventAutomaticCheckoutControl enabled={automaticCheckoutOpen} migrationReady={automaticCheckoutReady} /> : null}
       {view === "proposals" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventProposalManager media={proposalMedia} hostHandoffReady={hostHandoffReady} migrationReady={proposalReady} proposals={memberProposals} /><div className="legacy-gathering-note"><strong>Community gathering history</strong><p>Free member-only gatherings are now owner-led. Earlier submissions remain visible here so Admin can understand the complete decision history.</p></div><CommunityEventProposalManager migrationReady={proposalReady} proposals={communityProposals} /></section> : null}

@@ -7,7 +7,6 @@ import { adminErrorMessage } from "@/lib/admin-error";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import type { AdminEvent } from "@/components/admin/event-manager";
-import type { AdminRefund, AdminRegistration } from "@/components/admin/registration-manager";
 import type { PilotReadinessStep } from "@/lib/event-pilot-readiness";
 import { EventIntroSafety } from "@/components/admin/event-intro-safety";
 import { EventRoundReview } from "@/components/admin/event-round-review";
@@ -40,6 +39,14 @@ export type EventLifecycleState = {
   reason: string;
 };
 
+export type EventWorkCounts = {
+  event_id: string;
+  registration_records: number;
+  pending_registrations: number;
+  confirmed_places: number;
+  pending_refunds: number;
+};
+
 export function EventCommandCentre({
   events,
   selectedEventId,
@@ -47,8 +54,8 @@ export function EventCommandCentre({
   lifecycleReady,
   lifecycleStates,
   proposalCount,
-  refunds,
-  registrations,
+  workCounts,
+  countsReady,
   pilotReadiness,
 }: {
   events: AdminEvent[];
@@ -57,8 +64,8 @@ export function EventCommandCentre({
   lifecycleReady: boolean;
   lifecycleStates: EventLifecycleState[];
   proposalCount: number;
-  refunds: AdminRefund[];
-  registrations: AdminRegistration[];
+  workCounts: EventWorkCounts[];
+  countsReady: boolean;
   pilotReadiness: Record<string, PilotReadinessStep[]> | null;
 }) {
   const router = useRouter();
@@ -70,11 +77,12 @@ export function EventCommandCentre({
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const event = events.find((item) => item.id === selected) ?? ordered[0];
-  const pendingRegistrations = registrations.filter((registration) => registration.status === "pending_review").length;
-  const pendingRefunds = refunds.filter((refund) => refund.status === "requested").length;
+  const pendingRegistrations = workCounts.reduce((sum, item) => sum + Number(item.pending_registrations), 0);
+  const pendingRefunds = workCounts.reduce((sum, item) => sum + Number(item.pending_refunds), 0);
+  const firstRegistrationEvent = workCounts.find((item) => Number(item.pending_registrations) > 0)?.event_id;
+  const firstRefundEvent = workCounts.find((item) => Number(item.pending_refunds) > 0)?.event_id;
   const published = events.filter((item) => item.status === "published").length;
-  const eventRegistrations = event ? registrations.filter((item) => item.event_id === event.id) : [];
-  const confirmed = eventRegistrations.filter((item) => ["confirmed", "completed", "attended"].includes(item.status)).reduce((total, item) => total + item.quantity, 0);
+  const selectedCounts = workCounts.find((item) => item.event_id === event?.id);
   const lifecycle = event
     ? lifecycleStates.find((item) => item.event_id === event.id)
     : undefined;
@@ -182,8 +190,8 @@ export function EventCommandCentre({
         <div className="oversight-metrics">
           <article className={proposalCount ? "has-work" : ""}><strong>{proposalCount}</strong><span>proposals waiting</span></article>
           <article><strong>{published}</strong><span>published events</span></article>
-          <article className={pendingRegistrations ? "has-work" : ""}><strong>{pendingRegistrations}</strong><span>registrations waiting</span></article>
-          <article className={pendingRefunds ? "has-concern" : ""}><strong>{pendingRefunds}</strong><span>refunds waiting</span></article>
+          <article className={pendingRegistrations ? "has-work" : ""}><strong>{countsReady ? pendingRegistrations : "—"}</strong><span>registrations waiting</span></article>
+          <article className={pendingRefunds ? "has-concern" : ""}><strong>{countsReady ? pendingRefunds : "—"}</strong><span>refunds waiting</span></article>
         </div>
       </section>
 
@@ -191,9 +199,10 @@ export function EventCommandCentre({
 
       <section className="event-action-row" aria-label="Event actions">
         {proposalCount ? <Link className="has-work" href="/admin/events?view=proposals"><strong>{proposalCount} event proposal{proposalCount === 1 ? "" : "s"}</strong><span>Review the member, purpose, venue and safety plan →</span></Link> : null}
-        {pendingRegistrations ? <Link className="has-work" href="/admin/events?view=registrations"><strong>{pendingRegistrations} registration{pendingRegistrations === 1 ? "" : "s"} waiting</strong><span>Verify and decide →</span></Link> : null}
-        {pendingRefunds ? <Link className="has-work" href="/admin/events?view=registrations"><strong>{pendingRefunds} refund{pendingRefunds === 1 ? "" : "s"} waiting</strong><span>Review the request and payment route →</span></Link> : null}
-        {!proposalCount && !pendingRegistrations && !pendingRefunds ? <div className="all-clear"><strong>No event decision is waiting.</strong><span>Your operational queues are clear.</span></div> : null}
+        {pendingRegistrations && firstRegistrationEvent ? <Link className="has-work" href={eventToolHref("/admin/events?view=registrations", firstRegistrationEvent)}><strong>{pendingRegistrations} registration{pendingRegistrations === 1 ? "" : "s"} waiting</strong><span>Verify and decide →</span></Link> : null}
+        {pendingRefunds && firstRefundEvent ? <Link className="has-work" href={eventToolHref("/admin/events?view=registrations", firstRefundEvent)}><strong>{pendingRefunds} refund{pendingRefunds === 1 ? "" : "s"} waiting</strong><span>Review the request and payment route →</span></Link> : null}
+        {!countsReady ? <div className="all-clear"><strong>Guest counts are unavailable.</strong><span>Apply the latest database update, then refresh. Review requests in Registrations meanwhile.</span></div> : null}
+        {countsReady && !proposalCount && !pendingRegistrations && !pendingRefunds ? <div className="all-clear"><strong>No event decision is waiting.</strong><span>Your operational queues are clear.</span></div> : null}
       </section>
 
       <section className="event-oversight-desk">
@@ -231,10 +240,10 @@ export function EventCommandCentre({
                 <div><dt>Capacity</dt><dd>{event.capacity ?? "Not limited"}</dd></div>
               </dl>
               <div className="event-health-strip">
-                <article><strong>{eventRegistrations.length}</strong><span>registration records</span></article>
-                <article><strong>{confirmed}</strong><span>confirmed places</span></article>
-                <article><strong>{eventRegistrations.filter((item) => item.status === "pending_review").length}</strong><span>waiting for review</span></article>
-                <article><strong>{refunds.filter((item) => eventRegistrations.some((registration) => registration.order_id === item.order_id) && item.status === "requested").length}</strong><span>refunds waiting</span></article>
+                <article><strong>{countsReady ? Number(selectedCounts?.registration_records ?? 0) : "—"}</strong><span>registration records</span></article>
+                <article><strong>{countsReady ? Number(selectedCounts?.confirmed_places ?? 0) : "—"}</strong><span>confirmed places</span></article>
+                <article><strong>{countsReady ? Number(selectedCounts?.pending_registrations ?? 0) : "—"}</strong><span>waiting for review</span></article>
+                <article><strong>{countsReady ? Number(selectedCounts?.pending_refunds ?? 0) : "—"}</strong><span>refunds waiting</span></article>
               </div>
               {canControlLifecycle && ["draft", "published"].includes(event.status) && new Date(event.ends_at) > new Date() ? (
                 <section className="event-pilot-preparation" aria-label="Event pilot preparation">

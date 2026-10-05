@@ -1,6 +1,6 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 4 October 2026, 09:20 EAT. Baseline release: `b4be9ca`.
+Updated: 5 October 2026. Baseline release: `b4be9ca`.
 
 This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
@@ -23,6 +23,8 @@ An Event Host prepares a scoped draft. Admin reviews it, assigns the safety and 
 The read-only live audit at 08:40 EAT on 4 October found a healthy deployed app and reachable database, but **zero future public published events**. The named October 6 pilot is still a private draft. `event_guest_access` and automatic event payments are off. The pilot has basic place details and a prepared free ticket, while the on-sale ticket, designated Host account/assignment/content, safety-contact record and scoped door staff remain incomplete. All probed technical readiness functions returned true. **Zero of the ten pilot launch checks are accepted**; one is recorded blocked and two in progress. This is a release hold, not a percentage of code completed.
 
 The current publication policy requires the October 6 pilot to be ready 48 hours before its 18:00 EAT start, which is **4 October at 18:00 EAT**. If the requirements cannot be completed by then, the Product Owner must decide whether to reschedule the pilot. Do not override the safeguard to preserve the original date.
+
+**5 October note:** That publication cutoff has passed. We have not reverified the live pilot state since the 4 October audit. Keep the event private; the owner should check the current launch gates and choose a later date if the required Host, safety, arrival and rehearsal evidence was not completed before the cutoff.
 
 A later read-only audit attempt on 4 October could not complete because the local machine could not resolve the live domain. Until a fresh audit succeeds, the 08:40 EAT observation above is the latest verified live state.
 
@@ -52,7 +54,7 @@ Engineering can build EVT and COMMS work while the Product Owner resolves PILOT-
 | DISC-02 | P2 | **Review** | Engineering | Add Events-local “My events” using existing personal records; keep public Upcoming/Past and handle ongoing/paused/cancelled honestly | Pending/confirmed/waitlisted entries and pass route found within Events; private records never leak | Multi-account and mobile acceptance still required |
 | DETAIL-01 | P2 | **In progress** | Engineering + Product | Reorder detail: title/key facts/action first; group optional Community, programme, Q&A, menu, gallery, networking and follow-up by lifecycle | Populated mobile page exposes decision/action before long optional content; empty/past/cancelled/error states are accurate | Populated responsive and lifecycle acceptance still required |
 | HOST-01 | P1 | **Ready** | Engineering + Event Host + Admin | Show selected-event stage, next requirement and accountable person in Admin; preserve two-stage Host review and all guards | Reviewer knows next action; Host cannot see roster/payment/other events; selection and Back persist | Existing proposal/Host RPCs |
-| HOST-02 | P1 | **In progress** | Engineering | Load full registrations/refunds only for selected event/work area; consider earlier safe proposal draft save | Overview no longer fetches every event's full roster/refunds; partial draft survives exit; submission still validates safety | Selected-event detail reads done; overview counts-only and draft persistence remain |
+| HOST-02 | P1 | **In progress** | Engineering | Load full registrations/refunds only for selected event/work area; consider earlier safe proposal draft save | Overview no longer fetches every event's full roster/refunds; partial draft survives exit; submission still validates safety | Apply aggregate-count migration; draft persistence and live role review remain |
 | UX-01 | P2 | **Ready** | Engineering + Product | Plain-language pass for sign-in, receipt, search errors, footer, public loading and event labels | No raw order status or misleading “account loading” on public pages; one consistent destination vocabulary | Can run alongside EVT work |
 | UX-02 | P2 | **Ready** | Engineering | Keep three Home suggestions; surface urgent event status; isolate optional network-query failures; check Nia/mobile dock, focus and type sizes | Member finds next event; optional network failure does not blank directory; keyboard/zoom/mobile checks recorded | Representative member test accounts |
 | PILOT-03 | P0 | **Blocked** | Product Owner + Super Admin | Run complete event-to-Community rehearsal and record go/no-go | All required launch checks passed with evidence and owner decision recorded; public flags changed only under authorized release procedure | PILOT-01, PILOT-02, EVT-01/02/03, COMMS-01, essential mobile checks |
@@ -72,6 +74,8 @@ Engineering can build EVT and COMMS work while the Product Owner resolves PILOT-
 **Communications checkpoint:** The standalone event pass now offers an explicit reminder choice for a confirmed attendee more than one day before the event. A private migration defines the choice, due queue, reschedule/cancellation suppression and pre-delivery eligibility check; the existing worker and Resend template are connected. Publishing a new Admin update now asks for confirmation and explains that guest notices are queued. Full local tests and production build passed. This is not live until the migration is applied, deployed and the [inbox acceptance sheet](./EVENT_COMMUNICATIONS_ACCEPTANCE.md) is completed. No pilot launch gate changed.
 
 **Admin event data checkpoint:** Registrations and Guest Arrival now request detailed records only for the selected event. Event Details, Stories and other unrelated views no longer fetch registration/refund rosters, and proposals are loaded only where needed. Overview still loads all rosters to calculate counts; replace that with aggregate counts before calling `HOST-02` Done. TypeScript and the relevant journey, pilot and admin contracts passed; live role review remains open.
+
+**5 October counts checkpoint:** Admin Event overview now requests only scoped aggregate counts through `list_event_work_counts()`. The confirmed figure comes from actual event memberships, not application states. Waiting-work links open the relevant event. Until the new migration is applied, the overview shows counts as unavailable rather than a misleading zero; the selected-event Registrations work area remains available. Draft persistence and live role/device acceptance still keep `HOST-02` In progress.
 
 **PILOT-01:** This is an owner and operations task. Engineering can verify records and explain next steps, but must not create Seina's account, promote another member, invent venue confirmation or assign safety responsibility. The audit found the designated Host email has no account. The existing draft must be reused, not duplicated.
 
@@ -101,7 +105,7 @@ Engineering can build EVT and COMMS work while the Product Owner resolves PILOT-
 | 1 | A usable event place | **Review** | EVT-01, EVT-02, EVT-03 | Confirmed, pending and unauthorized accounts on mobile and desktop |
 | 2 | Reliable communication | **In progress** | COMMS-01 | Apply migration, deploy, then controlled inbox/provider trace, retry/dedupe and material-update evidence |
 | 3 | Find and understand events | **In progress** | DISC-01, DISC-02, DETAIL-01 | Populated responsive review of cards and personal rows; then simplify event detail |
-| 4 | Run the event confidently | **In progress** | HOST-01, HOST-02 | Counts-only overview, draft persistence, then scoped Host/Admin live handoff |
+| 4 | Run the event confidently | **In progress** | HOST-01, HOST-02 | Apply counts migration; add draft persistence, then scoped Host/Admin live handoff |
 | 5 | Platform polish and final rehearsal | **Polish ready; sign-off blocked** | UX-01, UX-02, PILOT-03 | Finish plain-language/mobile checks, then record owner go/no-go after prior gates |
 
 Wave 0 owner actions and Wave 1 engineering work may proceed in parallel. No wave requires enabling automatic payments. Reassess priorities after a real populated event is available; visual estimates based only on empty states must be checked against real content.
