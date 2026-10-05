@@ -130,6 +130,44 @@ export async function processNotificationQueue({
   let suppressed = 0;
   await Promise.all(
     jobs.map(async (job) => {
+      if (job.dedupe_key.startsWith("pilot-member-invite:")) {
+        const inviteId = job.dedupe_key.slice("pilot-member-invite:".length);
+        const [inviteResult, intakeResult] = await Promise.all([
+          admin.from("beta_invites").select("status,expires_at").eq("id", inviteId).eq("source", "admin_pilot").maybeSingle(),
+          admin.from("membership_intake_settings").select("mode,trusted_auto_expires_at").eq("id", true).maybeSingle(),
+        ]);
+        if (inviteResult.error || intakeResult.error) {
+          await admin.rpc("finish_notification_job", {
+            p_error_code: "pilot_invitation_eligibility_unavailable",
+            p_job_id: job.job_id,
+            p_provider_message_id: null,
+            p_success: false,
+          });
+          failed += 1;
+          return;
+        }
+        const eligible = inviteResult.data?.status === "pending"
+          && Date.parse(inviteResult.data.expires_at ?? "") > Date.now()
+          && intakeResult.data?.mode === "trusted_auto"
+          && Date.parse(intakeResult.data.trusted_auto_expires_at ?? "") > Date.now();
+        if (!eligible) {
+          const { error: suppressionError } = await admin.from("notification_jobs")
+            .update({ status: "suppressed", locked_at: null, updated_at: new Date().toISOString() })
+            .eq("id", job.job_id).eq("status", "processing");
+          if (suppressionError) {
+            await admin.rpc("finish_notification_job", {
+              p_error_code: "pilot_invitation_suppression_unavailable",
+              p_job_id: job.job_id,
+              p_provider_message_id: null,
+              p_success: false,
+            });
+            failed += 1;
+          } else {
+            suppressed += 1;
+          }
+          return;
+        }
+      }
       if (job.dedupe_key.startsWith("standalone-event-reminder:")) {
         const { data: allowed, error: reminderCheckError } = await admin.rpc(
           "check_standalone_event_reminder_job",

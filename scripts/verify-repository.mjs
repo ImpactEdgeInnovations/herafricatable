@@ -1941,7 +1941,7 @@ const membershipIntakeControl = read(
 );
 for (const contract of [
   "Review every request",
-  "Welcome verified invitations automatically",
+  "Auto-welcome invited people for 60 days",
   "Pause new requests",
   "set_membership_intake_mode",
   "Email verification alone never grants member access",

@@ -11,6 +11,7 @@
 
 .oversight-hero,
 .member-intake-summary,
+.member-pilot-invite-desk,
 .member-request-desk,
 .member-directory-desk,
 .event-oversight-desk,
@@ -104,6 +105,7 @@
 .member-intake-summary .button { border-color: rgba(255,255,255,.38); color: white; }
 
 .member-request-desk,
+.member-pilot-invite-desk,
 .member-directory-desk,
 .event-oversight-desk {
   background: white;
@@ -112,6 +114,20 @@
   margin-bottom: 24px;
   padding: 28px;
 }
+
+.member-pilot-invite-desk > p { color: var(--oversight-muted); font-size: .88rem; line-height: 1.6; }
+.member-pilot-invite-desk > p strong { color: var(--oversight-ink); }
+.member-pilot-invite-form { align-items: end; display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.member-pilot-invite-form label { color: var(--oversight-muted); display: grid; flex: 1 1 280px; font-size: .78rem; font-weight: 600; gap: 7px; }
+.member-pilot-invite-form input { border: 1px solid var(--oversight-line); border-radius: 10px; min-height: 44px; padding: 10px 12px; }
+.member-pilot-invite-form .button { min-height: 44px; }
+.member-pilot-invite-desk details { border-top: 1px solid var(--oversight-line); margin-top: 20px; padding-top: 16px; }
+.member-pilot-invite-desk summary { color: var(--oversight-ink); cursor: pointer; font-size: .84rem; font-weight: 700; }
+.member-pilot-invite-list { display: grid; gap: 0; margin-top: 14px; }
+.member-pilot-invite-list > div { align-items: center; border-top: 1px solid var(--oversight-line); display: flex; gap: 15px; justify-content: space-between; padding: 12px 0; }
+.member-pilot-invite-list strong,
+.member-pilot-invite-list small { display: block; overflow-wrap: anywhere; }
+.member-pilot-invite-list small { color: var(--oversight-muted); font-size: .73rem; margin-top: 3px; }
 
 .oversight-heading {
   align-items: end;
@@ -276,6 +292,7 @@
 @media (max-width: 620px) {
   .oversight-hero,
   .member-intake-summary,
+  .member-pilot-invite-desk,
   .member-request-desk,
   .member-directory-desk,
   .event-oversight-desk,
@@ -288,6 +305,7 @@
   .member-intake-summary { align-items: start; grid-template-columns: 1fr; }
   .member-intake-summary > div:nth-child(2) { border-left: 0; border-top: 1px solid rgba(255,255,255,.16); padding-left: 0; padding-top: 14px; text-align: left; }
   .member-request-desk,
+  .member-pilot-invite-desk,
   .member-directory-desk,
   .event-oversight-desk { border-radius: 17px; padding: 18px; }
   .oversight-heading { align-items: stretch; flex-direction: column; }
@@ -298,6 +316,7 @@
   .member-oversight-card dl,
   .event-oversight-card dl { grid-template-columns: 1fr; }
   .event-health-strip { grid-template-columns: repeat(2, 1fr); }
+  .member-pilot-invite-form .button { width: 100%; }
   .event-health-strip article:nth-child(2) { border-right: 0; }
   .event-health-strip article:nth-child(-n + 2) { border-bottom: 1px solid var(--oversight-line); }
 }

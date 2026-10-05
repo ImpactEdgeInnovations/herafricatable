@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AdminHeader } from "@/components/admin/admin-header";
 import {
   MemberCommandCentre,
+  type PilotMemberInvite,
 } from "@/components/admin/member-command-centre";
 import type { AdminMember } from "@/components/admin/member-review";
 import type { MembershipIntakeAdmin } from "@/components/admin/membership-intake-control";
@@ -24,9 +25,15 @@ export default async function AdminMembersPage() {
     .maybeSingle();
   if (!role) redirect("/admin");
 
-  const [memberApplicationResult, intakeResult] = await Promise.all([
+  const [memberApplicationResult, intakeResult, pilotWindowResult, pilotInvitesResult] = await Promise.all([
     supabase.rpc("list_admin_members_v3"),
     supabase.rpc("get_membership_intake_admin"),
+    supabase.rpc("get_membership_pilot_window"),
+    supabase.from("beta_invites")
+      .select("id,email,status,expires_at,created_at")
+      .eq("source", "admin_pilot")
+      .order("created_at", { ascending: false })
+      .limit(50),
   ]);
   const fallbackResult = memberApplicationResult.error
     ? await supabase.rpc("list_admin_members_v2")
@@ -55,6 +62,9 @@ export default async function AdminMembersPage() {
           ((intakeResult.data as MembershipIntakeAdmin[] | null) ?? [])[0] ?? null
         }
         intakeReady={!intakeResult.error}
+        pilotEndsAt={pilotWindowResult.error ? null : pilotWindowResult.data as string | null}
+        pilotInvitations={(pilotInvitesResult.data as PilotMemberInvite[] | null) ?? []}
+        pilotReady={!pilotWindowResult.error && !pilotInvitesResult.error}
         members={testFlagsReady ? members : []}
         migrationReady={!memberResult.error && testFlagsReady}
       />

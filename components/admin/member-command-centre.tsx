@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { adminErrorMessage } from "@/lib/admin-error";
@@ -15,14 +15,22 @@ const intakeChoices = {
     summary: "Every completed application waits for your decision.",
   },
   trusted_auto: {
-    label: "Welcome verified invitations automatically",
-    summary: "Only a valid, unexpired invitation can skip manual review.",
+    label: "Auto-welcome invited people for 60 days",
+    summary: "Only an invited email can be approved after its one-time code and short application. New automatic approvals stop after 60 days.",
   },
   closed: {
     label: "Pause new requests",
     summary: "Existing members can sign in, but new applications cannot be sent.",
   },
 } as const;
+
+export type PilotMemberInvite = {
+  id: string;
+  email: string;
+  status: string;
+  expires_at: string | null;
+  created_at: string;
+};
 
 const accessLabels: Record<string, string> = {
   active: "Active member",
@@ -42,6 +50,9 @@ export function MemberCommandCentre({
   currentUserId,
   intake,
   intakeReady,
+  pilotEndsAt,
+  pilotInvitations,
+  pilotReady,
   members: initialMembers,
   migrationReady,
 }: {
@@ -49,6 +60,9 @@ export function MemberCommandCentre({
   currentUserId: string;
   intake: MembershipIntakeAdmin | null;
   intakeReady: boolean;
+  pilotEndsAt: string | null;
+  pilotInvitations: PilotMemberInvite[];
+  pilotReady: boolean;
   members: AdminMember[];
   migrationReady: boolean;
 }) {
@@ -181,6 +195,10 @@ export function MemberCommandCentre({
     });
     if (!result) return;
     const mode = String(result.mode) as keyof typeof intakeChoices;
+    if (mode === "trusted_auto" && !pilotReady) {
+      setMessage("Apply the timed invitation database update before opening automatic approval.");
+      return;
+    }
     setBusy("intake");
     const { error } = await supabase.rpc("set_membership_intake_mode", {
       p_mode: mode,
@@ -188,6 +206,66 @@ export function MemberCommandCentre({
     });
     setBusy("");
     setMessage(error ? adminErrorMessage(error, "change how members join") : "Joining setting saved and recorded.");
+    if (!error) router.refresh();
+  }
+
+  async function invitePilotMember(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!pilotReady || intake?.mode !== "trusted_auto") return;
+    const form = event.currentTarget;
+    const email = String(new FormData(form).get("email") ?? "").trim().toLowerCase();
+    if (!email) return;
+    const confirmed = await ask({
+      title: `Invite ${email}?`,
+      description: "An invitation email will be sent. She must verify this address and complete the short application. The invitation does not grant a platform Admin role.",
+      confirmLabel: "Send invitation",
+    });
+    if (!confirmed) return;
+    setBusy("pilot-invite");
+    setMessage("");
+    const { data, error } = await supabase.rpc("invite_pilot_member", {
+      p_email: email,
+      p_note: null,
+    });
+    if (error) {
+      setBusy("");
+      setMessage(adminErrorMessage(error, "invite this person"));
+      return;
+    }
+    form.reset();
+    try {
+      const response = await fetch("/api/admin/notifications/process", {
+        body: JSON.stringify({ dedupeKey: `pilot-member-invite:${data}` }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      });
+      const delivery = (await response.json().catch(() => ({}))) as { sent?: number };
+      setMessage(response.ok && Number(delivery.sent) > 0
+        ? "Invitation sent. She can verify her email and complete the short application."
+        : "Invitation saved. Check Message delivery to confirm the email reaches her.");
+    } catch {
+      setMessage("Invitation saved. Check Message delivery to send or retry the email.");
+    }
+    setBusy("");
+    router.refresh();
+  }
+
+  async function revokePilotInvitation(invitation: PilotMemberInvite) {
+    const result = await ask({
+      title: `Withdraw ${invitation.email}'s invitation?`,
+      description: "The invitation will no longer allow automatic approval. A delivered email cannot be recalled.",
+      confirmLabel: "Withdraw invitation",
+      tone: "danger",
+      fields: [{ label: "Reason", name: "reason", type: "textarea", required: true, minLength: 8, maxLength: 500 }],
+    });
+    if (!result) return;
+    setBusy(invitation.id);
+    const { error } = await supabase.rpc("revoke_pilot_member_invitation", {
+      p_invite_id: invitation.id,
+      p_reason: String(result.reason ?? ""),
+    });
+    setBusy("");
+    setMessage(error ? adminErrorMessage(error, "withdraw this invitation") : "Invitation withdrawn and recorded.");
     if (!error) router.refresh();
   }
 
@@ -215,6 +293,19 @@ export function MemberCommandCentre({
         <div><p className="eyebrow">Joining setting</p><strong>{intake ? intakeChoices[intake.mode].label : "Review every request"}</strong><span>{intake ? intakeChoices[intake.mode].summary : "New requests remain under private review."}</span></div>
         <div><strong>{realRequests.length}</strong><span>real requests waiting</span></div>
         <button className="button button-outline" disabled={busy === "intake" || !intakeReady} onClick={() => void changeIntake()} type="button">Change setting</button>
+      </section>
+
+      <section className="member-pilot-invite-desk" aria-labelledby="member-pilot-invite-title">
+        <header className="oversight-heading"><div><p className="eyebrow">60-day invited pilot</p><h2 id="member-pilot-invite-title">Invite your first members</h2><p>You invite a person by email. She verifies it with a code, completes the short application, then sets up her profile. You can withdraw an unused invitation or pause a member later.</p></div></header>
+        {!pilotReady ? <p role="status">The timed invitation controls need the latest database update. Automatic approval remains unavailable here.</p> : intake?.mode !== "trusted_auto" ? <p>Automatic welcome is off. Use “Change setting” above to turn on invited-only approval for 60 days. New applicants without an invitation still wait for your review.</p> : <>
+          <p><strong>Automatic welcome ends {pilotEndsAt ? new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Nairobi" }).format(new Date(pilotEndsAt)) : "when the pilot window closes"}.</strong> You can turn it off earlier from the joining setting. Existing approved members keep their access unless you pause it individually.</p>
+          <form className="member-pilot-invite-form" onSubmit={(event) => void invitePilotMember(event)}><label>Email address<input autoComplete="email" maxLength={320} name="email" placeholder="name@example.com" required type="email"/></label><button className="button button-primary" disabled={busy === "pilot-invite"} type="submit">{busy === "pilot-invite" ? "Sending…" : "Invite by email"}</button></form>
+        </>}
+        {pilotReady && pilotInvitations.length ? <details><summary>Recent pilot invitations ({pilotInvitations.length})</summary><div className="member-pilot-invite-list">{pilotInvitations.map((invitation) => {
+          const expired = invitation.expires_at ? new Date(invitation.expires_at).getTime() <= Date.now() : false;
+          const open = invitation.status === "pending" && !expired;
+          return <div key={invitation.id}><span><strong>{invitation.email}</strong><small>{expired && invitation.status === "pending" ? "Expired" : open ? "Waiting to join" : invitation.status.replaceAll("_", " ")}{invitation.expires_at ? ` · Valid until ${new Intl.DateTimeFormat("en-KE", { dateStyle: "medium" }).format(new Date(invitation.expires_at))}` : ""}</small></span>{open ? <button className="button button-outline" disabled={busy === invitation.id} onClick={() => void revokePilotInvitation(invitation)} type="button">Withdraw</button> : null}</div>;
+        })}</div></details> : null}
       </section>
 
       <section className="member-request-desk" id="membership-requests">

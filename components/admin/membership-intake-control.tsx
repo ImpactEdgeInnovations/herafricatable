@@ -20,8 +20,8 @@ const choices = {
     summary: "Every completed application waits for your decision.",
   },
   trusted_auto: {
-    label: "Welcome verified invitations automatically",
-    summary: "Only a valid, unexpired invitation can skip manual review.",
+    label: "Auto-welcome invited people for 60 days",
+    summary: "An invited person verifies her email and completes the short application before automatic approval. The setting expires after 60 days.",
   },
   closed: {
     label: "Pause new requests",
@@ -68,6 +68,14 @@ export function MembershipIntakeControl({
     });
     if (!confirmed) return;
 
+    if (mode === "trusted_auto") {
+      const { error: pilotError } = await supabase.rpc("get_membership_pilot_window");
+      if (pilotError) {
+        setMessage("Apply the timed invitation database update before opening automatic approval.");
+        return;
+      }
+    }
+
     setBusy(true);
     setMessage("");
     const { error } = await supabase.rpc("set_membership_intake_mode", {
@@ -104,7 +112,7 @@ export function MembershipIntakeControl({
               value={selectedMode}
             >
               <option value="manual_review">Review every request</option>
-              <option value="trusted_auto">Auto-welcome verified invitations</option>
+              <option value="trusted_auto">Auto-welcome invited people for 60 days</option>
               <option value="closed">Pause new requests</option>
             </select>
           </label>
@@ -121,6 +129,7 @@ export function MembershipIntakeControl({
             Last changed {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(configuration.updated_at))}
             {configuration.updated_by_email ? ` by ${configuration.updated_by_email}` : ""}.
           </small>
+          {configuration.mode === "trusted_auto" ? <small>Automatic welcomes stop 60 days after this setting was last saved. Existing members are not removed.</small> : null}
         </aside>
       </div>
       {message ? <p className="admin-form-message" role="status">{message}</p> : null}
