@@ -15,8 +15,8 @@ const intakeChoices = {
     summary: "Every completed application waits for your decision.",
   },
   trusted_auto: {
-    label: "Auto-welcome invited people for 60 days",
-    summary: "Only an invited email can be approved after its one-time code and short application. New automatic approvals stop after 60 days.",
+    label: "Open pilot: welcome new members automatically",
+    summary: "Anyone can verify her email and finish the short application. The first 20 active non-staff members receive automatic Community and event Host privileges. Automatic membership approval stops after 60 days.",
   },
   closed: {
     label: "Pause new requests",
@@ -346,8 +346,8 @@ export function MemberCommandCentre({
       </section>
 
       <section className="member-pilot-invite-desk" aria-labelledby="member-pilot-invite-title">
-        <header className="oversight-heading"><div><p className="eyebrow">60-day invited pilot</p><h2 id="member-pilot-invite-title">Invite your first members</h2><p>You invite a person by email. She verifies it with a code, completes the short application, then sets up her profile. You can withdraw an unused invitation or pause a member later.</p></div></header>
-        {!pilotReady ? <p role="status">The timed invitation controls need the latest database update. Automatic approval remains unavailable here.</p> : intake?.mode !== "trusted_auto" ? <p>Automatic welcome is off. Use “Change setting” above to turn on invited-only approval for 60 days. New applicants without an invitation still wait for your review.</p> : <>
+        <header className="oversight-heading"><div><p className="eyebrow">60-day open pilot</p><h2 id="member-pilot-invite-title">Welcome new members</h2><p>Anyone can sign up with a verified email and finish the short application. You may also send a personal invitation. The first 20 active non-staff members get automatic Host privileges; everyone after that can still become a member.</p></div></header>
+        {!pilotReady ? <p role="status">The timed pilot controls need the latest database update. Automatic approval remains unavailable here.</p> : intake?.mode !== "trusted_auto" ? <p>Automatic welcome is off. Use “Change setting” above to open the 60-day pilot. New applications currently wait for your review.</p> : <>
           <p><strong>Automatic welcome ends {pilotEndsAt ? new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Nairobi" }).format(new Date(pilotEndsAt)) : "when the pilot window closes"}.</strong> You can turn it off earlier from the joining setting. Existing approved members keep their access unless you pause it individually.</p>
           <form className="member-pilot-invite-form" onSubmit={(event) => void invitePilotMember(event)}><label>Email address<input autoComplete="email" maxLength={320} name="email" placeholder="name@example.com" required type="email"/></label><button className="button button-primary" disabled={busy === "pilot-invite"} type="submit">{busy === "pilot-invite" ? "Sending…" : "Invite by email"}</button></form>
         </>}
@@ -359,12 +359,12 @@ export function MemberCommandCentre({
       </section>
 
       {!pilotFreeEventPublishing ? <section className="member-intake-summary" aria-label="Pilot event creation">
-        <div><p className="eyebrow">Invited private events</p><strong>{pilotEventAutoDrafts ? "Private event creation is on" : "Private event creation is off"}</strong><span>When public publishing is off, directly invited pilot members can still prepare a private Host page. Your team reviews the event before it becomes public. This ends with the 60-day pilot.</span></div>
+        <div><p className="eyebrow">Private pilot events</p><strong>{pilotEventAutoDrafts ? "Private event creation is on" : "Private event creation is off"}</strong><span>When public publishing is off, members in the first-20 cohort can still prepare a private Host page. Your team reviews the event before it becomes public. This ends with the 60-day pilot.</span></div>
         <button className="button button-outline" disabled={busy === "pilot-events" || pilotEventAutoDrafts === null || (intake?.mode !== "trusted_auto" && !pilotEventAutoDrafts)} onClick={() => void changePilotEventDrafts()} type="button">{pilotEventAutoDrafts ? "Turn off" : "Turn on"}</button>
       </section> : null}
 
       <section className="member-intake-summary" aria-label="Free public events">
-        <div><p className="eyebrow">Free public events</p><strong>{pilotFreeEventPublishing === null ? "Database update needed" : pilotFreeEventPublishing ? "Automatic publishing is on" : "Automatic publishing is off"}</strong><span>When on, any active member can open a free public event during the 60-day pilot. They become its Host. Guests can request a place, but places still need review. Turn this off at any time; already published events remain open until paused individually.</span></div>
+        <div><p className="eyebrow">Free public events</p><strong>{pilotFreeEventPublishing === null ? "Database update needed" : pilotFreeEventPublishing ? "Automatic publishing is on" : "Automatic publishing is off"}</strong><span>When on, a member in the first-20 cohort can open a free public event during the 60-day pilot. She becomes its Host. Guests can request a place, but places still need review. Turn this off at any time; already published events remain open until paused individually.</span></div>
         <button className="button button-outline" disabled={busy === "pilot-public-events" || pilotFreeEventPublishing === null || (intake?.mode !== "trusted_auto" && !pilotFreeEventPublishing)} onClick={() => void changePilotFreeEvents()} type="button">{pilotFreeEventPublishing ? "Pause new events" : "Allow free events"}</button>
       </section>
 

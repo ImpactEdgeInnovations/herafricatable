@@ -72,7 +72,7 @@ export async function sendNotificationEmail(job: EmailJob) {
           ? "View event details"
           : "Open Her Africa Table";
   const preferenceNote = isInvitation
-    ? "This private invitation was reviewed before delivery. You decide whether to accept it."
+    ? "A member invited you personally. You decide whether to accept it."
     : isMemberWelcome
       ? "This membership message is private and was sent to the email address you verified."
       : isEventNotice

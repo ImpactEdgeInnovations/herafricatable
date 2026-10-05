@@ -166,12 +166,12 @@ export function MembershipApplicationForm({
           <p className="eyebrow">Request membership</p>
           <h1>A little about you.</h1>
           <p>
-            This helps us welcome people with care. Your answers are reviewed
-            privately by the Her Africa Table team.
+            This helps us welcome you with care. Your answers stay private with
+            the Her Africa Table team.
           </p>
           {intakeMode === "trusted_auto" ? (
             <small className="application-invitation-note">
-              Have a verified invitation? You can continue to your welcome steps as soon as this is complete.
+              During the open pilot, you can continue to your welcome steps as soon as you finish. An invitation is welcome, but not required.
             </small>
           ) : null}
         </div>

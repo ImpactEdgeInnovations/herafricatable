@@ -20,8 +20,8 @@ const choices = {
     summary: "Every completed application waits for your decision.",
   },
   trusted_auto: {
-    label: "Auto-welcome invited people for 60 days",
-    summary: "An invited person verifies her email and completes the short application before automatic approval. The setting expires after 60 days.",
+    label: "Open pilot: welcome new members automatically",
+    summary: "Anyone can verify her email and complete the short application before automatic approval. This ends after 60 days. Only the first 20 active non-staff members receive automatic Host privileges.",
   },
   closed: {
     label: "Pause new requests",
@@ -71,7 +71,7 @@ export function MembershipIntakeControl({
     if (mode === "trusted_auto") {
       const { error: pilotError } = await supabase.rpc("get_membership_pilot_window");
       if (pilotError) {
-        setMessage("Apply the timed invitation database update before opening automatic approval.");
+        setMessage("Apply the timed pilot database update before opening automatic approval.");
         return;
       }
     }
@@ -112,7 +112,7 @@ export function MembershipIntakeControl({
               value={selectedMode}
             >
               <option value="manual_review">Review every request</option>
-              <option value="trusted_auto">Auto-welcome invited people for 60 days</option>
+              <option value="trusted_auto">Open pilot: welcome new members automatically</option>
               <option value="closed">Pause new requests</option>
             </select>
           </label>

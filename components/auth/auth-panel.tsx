@@ -135,7 +135,7 @@ export function AuthPanel({
           : step === "verify"
             ? <>We sent a sign-in code to <strong>{email}</strong>. Enter it below to continue.</>
             : memberJourney === "apply"
-              ? <>First, confirm your email. You will then answer a few short questions, and we will email you after your membership request has been reviewed.</>
+              ? <>First, confirm your email. Then tell us a little about yourself. If the open pilot is active, you can continue to your profile right away; otherwise our team will review your request.</>
               : <>Enter the email you use for Her Africa Table. We’ll email you a one-time code. No password is needed.</>}
       </p>
 

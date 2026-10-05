@@ -43,6 +43,17 @@ export function DestinationInvitationPanel({
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [note, setNote] = useState("");
+  const [preset, setPreset] = useState("");
+  const noteIdeas = destinationType === "event"
+    ? [
+        { label: "A warm invitation", text: `I thought you would enjoy ${destinationName}. It would be lovely to see you there.` },
+        { label: "Meet people together", text: `Would you join me at ${destinationName}? I would love for us to meet new people together.` },
+      ]
+    : [
+        { label: "A warm invitation", text: `I thought you would feel at home in ${destinationName}. I would love to welcome you.` },
+        { label: "Shared interest", text: `This Community brings together women with a shared interest. I thought of you and hope you will join us.` },
+      ];
 
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,10 +75,12 @@ export function DestinationInvitationPanel({
     const result = (data as { invitation_status: string }[] | null)?.[0];
     setMessage(
       result?.invitation_status === "sent"
-        ? "Invitation saved. She will see it in Activity and receive the email when her Community email preference is on."
+        ? "Invitation saved for email delivery. She can choose whether to accept it."
         : "Invitation received. Her Africa Table will review it before emailing someone who is not yet a member.",
     );
     formElement.reset();
+    setNote("");
+    setPreset("");
     router.refresh();
   }
 
@@ -79,8 +92,9 @@ export function DestinationInvitationPanel({
           <h2>Bring the right person into this {destinationType}.</h2>
         </div>
         <p>
-          Her invitation will lead back to {destinationName}. New members still follow
-          the private membership review, and event tickets remain separate.
+          Her invitation will lead back to {destinationName}. New people still
+          verify their email and join the platform. An event invitation does not
+          reserve a place.
         </p>
       </header>
       {!ready ? (
@@ -103,13 +117,32 @@ export function DestinationInvitationPanel({
               />
             </label>
             <label>
-              A personal note <small>Optional</small>
+              Start with a note <small>Optional</small>
+              <select
+                value={preset}
+                onChange={(event) => {
+                  const selected = event.target.value;
+                  setPreset(selected);
+                  setNote(noteIdeas.find((idea) => idea.label === selected)?.text ?? "");
+                }}
+              >
+                <option value="">Write my own</option>
+                {noteIdeas.map((idea) => <option key={idea.label} value={idea.label}>{idea.label}</option>)}
+              </select>
+            </label>
+            <label>
+              Your message <small>You can edit it</small>
               <textarea
                 maxLength={600}
                 minLength={10}
                 name="note"
                 placeholder={`For example: I thought of you because this ${destinationType} connects women working on similar goals.`}
                 rows={4}
+                value={note}
+                onChange={(event) => {
+                  setNote(event.target.value);
+                  setPreset("");
+                }}
               />
             </label>
             <button className="button button-primary" disabled={busy}>

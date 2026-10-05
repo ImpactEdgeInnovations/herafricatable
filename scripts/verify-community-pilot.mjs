@@ -3,10 +3,14 @@ import { readFileSync } from "node:fs";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20261005190000_founding_community_pilot.sql");
+const openCohort = read("supabase/migrations/20261005210000_open_founding_member_cohort.sql");
 const admin = read("components/admin/community-command-centre.tsx");
+const memberAdmin = read("components/admin/member-command-centre.tsx");
 const member = read("components/member/community-host-application.tsx");
 const adminPage = read("app/admin/communities/page.tsx");
 const memberPage = read("app/communities/page.tsx");
+const eventHostPage = read("app/events/[slug]/host/page.tsx");
+const invitePanel = read("components/member/destination-invitation-panel.tsx");
 
 for (const contract of [
   "public.community_pilot_settings",
@@ -26,9 +30,25 @@ for (const contract of [
   "after insert or update of status on public.community_host_applications",
 ]) assert(migration.includes(contract), `Community pilot is missing ${contract}`);
 
+for (const contract of [
+  "profile.access_status = 'active'",
+  "role.role in ('super_admin', 'event_staff', 'moderator')",
+  "20 - (select count(*) from public.community_pilot_access)",
+  "public.founding_pilot_member_ready(actor)",
+  "auto_approved := true",
+  "public.get_pilot_free_event_setting()",
+  "public.get_invited_pilot_event_setting()",
+  "from public, anon, authenticated",
+  "public.create_table_invitation(text,uuid,text,text) from public, anon",
+]) assert(openCohort.includes(contract), `Open founding cohort is missing ${contract}`);
+
 assert(adminPage.includes('rpc("get_community_pilot_admin")'));
 assert(admin.includes('rpc("set_community_pilot_setting"'));
 assert(memberPage.includes('rpc("community_pilot_member_ready")'));
 assert(member.includes('privateDraftReady'));
 assert(member.includes('members cannot join until'));
+assert(memberAdmin.includes("first 20 active non-staff members"));
+assert(eventHostPage.includes("<DestinationInvitationPanel"));
+assert(invitePanel.includes("Start with a note"));
+assert(invitePanel.includes('rpc("create_table_invitation"'));
 console.log("Founding Community pilot gates and member/Admin controls verified.");

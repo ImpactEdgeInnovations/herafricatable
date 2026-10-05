@@ -33007,6 +33007,7 @@ textarea {
 }
 
 .destination-invitation-layout input,
+.destination-invitation-layout select,
 .destination-invitation-layout textarea {
   width: 100%;
   border: 1px solid rgba(60, 43, 37, 0.17);
