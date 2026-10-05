@@ -1,6 +1,10 @@
 # 60-day invited-member pilot — controlled acceptance
 
-Updated: 5 October 2026. This is the evidence sheet for `JOIN-01` in the [implementation taskboard](./UX_EVENTS_IMPLEMENTATION_TASKBOARD.md). The migration adds controls; it does **not** turn automatic approval on.
+Updated: 5 October 2026. This is the evidence sheet for `JOIN-01` and `HOST-03` in the [implementation taskboard](./UX_EVENTS_IMPLEMENTATION_TASKBOARD.md). The migrations add controls; activation is a separate Super Admin action.
+
+## Live activation checkpoint
+
+On 5 October 2026 at 11:16 EAT, the Super Admin authenticated to the production Supabase project and enabled `trusted_auto` plus the separate private-event-draft setting. Read-back returned `trusted_auto`, `privateEventDrafts=true` and a database expiry of **4 December 2026 at 11:16 EAT**. The deployed health endpoint reported release `cc5ebdc`, database reachable and server integration ready. Two applications already pending review remained pending. This confirms setting state, not invitation delivery or a real member/event journey.
 
 ## Intended journey
 
@@ -31,7 +35,7 @@ Use controlled inboxes and distinct test identities. Record date, role and resul
 | Check | Expected result | Result/date/role |
 | --- | --- | --- |
 | Default off | Migration and deploy alone do not change manual review, unless the existing trusted-invitation mode was already on; that mode receives a 60-day sunset | Not run |
-| Timed on | Super Admin enables invited-only approval; the end date is visible and is no more than 60 days away | Not run |
+| Timed on | Super Admin enables invited-only approval; the end date is visible and is no more than 60 days away | Passed, 5 Oct 2026, Super Admin RPC read-back; ends 4 Dec 2026 at 11:16 EAT |
 | Invite delivery | Super Admin sends a controlled invitation; queue record, provider ID and recipient inbox agree; repeated processing sends no second email | Not run |
 | Invited application | OTP on the invited email leads to the short application, then automatic approval and profile setup | Not run |
 | Uninvited application | Another verified email completes the application but remains under manual review | Not run |
@@ -44,5 +48,6 @@ Use controlled inboxes and distinct test identities. Record date, role and resul
 | Event limits | The same Host cannot automatically create more than two private pilot events; an uninvited member still waits for event-team review | Not run |
 | Event publication | The private event, draft ticket and Host page are not public or bookable; safety and public launch remain with Admin | Not run |
 | Event off switch | Admin disables automatic private drafts; new proposals wait for review while existing event records remain intact | Not run |
+| Event on switch | Super Admin enables private drafts separately after the timed membership setting | Passed, 5 Oct 2026, Super Admin RPC read-back |
 
 `JOIN-01` and `HOST-03` remain In progress until separate-account checks and Admin release evidence are recorded. Automatic event publication is **not** part of either setting.
