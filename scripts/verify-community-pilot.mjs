@@ -10,6 +10,7 @@ const member = read("components/member/community-host-application.tsx");
 const adminPage = read("app/admin/communities/page.tsx");
 const memberPage = read("app/communities/page.tsx");
 const eventHostPage = read("app/events/[slug]/host/page.tsx");
+const communityHost = read("components/member/community-host-workspace.tsx");
 const invitePanel = read("components/member/destination-invitation-panel.tsx");
 
 for (const contract of [
@@ -49,6 +50,7 @@ assert(member.includes('privateDraftReady'));
 assert(member.includes('members cannot join until'));
 assert(memberAdmin.includes("first 20 active non-staff members"));
 assert(eventHostPage.includes("<DestinationInvitationPanel"));
+assert(communityHost.includes('communityStatus === "published"'));
 assert(invitePanel.includes("Start with a note"));
 assert(invitePanel.includes('rpc("create_table_invitation"'));
 console.log("Founding Community pilot gates and member/Admin controls verified.");

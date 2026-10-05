@@ -144,6 +144,7 @@ export function CommunityHostWorkspace({
   capabilitiesReady,
   communityId,
   communityName,
+  communityStatus,
   continuity,
   continuityReady,
   health,
@@ -160,6 +161,7 @@ export function CommunityHostWorkspace({
   capabilitiesReady: boolean;
   communityId: string;
   communityName: string;
+  communityStatus: string;
   continuity: CommunityContinuitySummary | null;
   continuityReady: boolean;
   health: CommunityHostHealth | null;
@@ -342,13 +344,21 @@ export function CommunityHostWorkspace({
 
       <CommunityHostAssistant communityId={communityId} />
 
-      <DestinationInvitationPanel
-        destinationId={communityId}
-        destinationName={communityName}
-        destinationType="community"
-        invitations={invitations}
-        ready={invitationsReady}
-      />
+      {communityStatus === "published" ? (
+        <DestinationInvitationPanel
+          destinationId={communityId}
+          destinationName={communityName}
+          destinationType="community"
+          invitations={invitations}
+          ready={invitationsReady}
+        />
+      ) : (
+        <section className="destination-invitation-panel" id="invite-people">
+          <p className="eyebrow">Invitations</p>
+          <h2>Prepare your Community first.</h2>
+          <p>Once your Community is approved and open, you can enter email addresses here and send a personal invitation. People cannot join this private draft yet.</p>
+        </section>
+      )}
 
       <section
         className="community-host-panel community-host-continuity"

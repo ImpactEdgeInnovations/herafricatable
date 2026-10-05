@@ -392,6 +392,7 @@ export default async function CommunityHostPage({
       <CommunityHostWorkspace
         communityId={community.community_id}
         communityName={community.name}
+        communityStatus={community.status}
         advancedAnalytics={Boolean(capabilities?.advanced_analytics)}
         automations={Boolean(capabilities?.automations)}
         capabilitiesReady={!capabilityResult.error}
