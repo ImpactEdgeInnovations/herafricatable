@@ -311,7 +311,7 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
         {!locked ? <button className="button button-outline" type="button" disabled={busy || partners.length >= 20} onClick={() => setPartners((items) => [...items, { key: crypto.randomUUID(), name: "", tier: "", website_url: "", logo_url: "" }])}>Add a partner</button> : null}
       </div>
 
-      {!locked ? <div className="host-workspace-actions"><button className="button button-outline" disabled={busy} onClick={() => void save(false)} type="button">Save draft</button><button className="button button-primary" disabled={busy} onClick={() => void save(true)} type="button">{selfPublish ? "Publish changes" : "Send changes for review"}</button></div> : null}
+      {!locked && ["introduction", "programme", "partners"].includes(section) ? <div className="host-workspace-actions"><button className="button button-outline" disabled={busy} onClick={() => void save(false)} type="button">Save draft</button><button className="button button-primary" disabled={busy} onClick={() => void save(true)} type="button">{selfPublish ? "Publish changes" : "Send changes for review"}</button></div> : null}
       {message ? <p className="manager-message" role="status">{message}</p> : null}
     </section>
   );

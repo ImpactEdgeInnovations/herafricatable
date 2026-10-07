@@ -50,6 +50,17 @@ The open membership pilot is timed; the real first-20 cohort receives creator pr
 
 ## Remaining acceptance
 
+### Follow-up interface refinements
+
+- [x] Add “Join straight away” and “Ask to join” discovery filters without changing joining permissions.
+- [x] Keep membership feedback above the Community cards, rather than below the whole page.
+- [x] Explain paused personal access without claiming the entire Community is paused.
+- [x] Give empty Community screens an obvious route to start a group.
+- [x] Limit automatic event publishing promises to the signed-in founding member’s eligibility.
+- [x] Show instant free booking on event listings only while membership intake permits it.
+- [x] Keep image/Community actions separate from the event-content publishing controls.
+- [x] Explain invitation steps differently for events and Communities; prevent editing a recipient while sending.
+
 - [ ] Verify deployed member and Host screens on desktop and mobile.
 - [ ] Confirm a real invitation reaches an inbox and returns to its destination after OTP/onboarding.
 - [ ] Rehearse full capacity, last-place competition, cancellation and rejoining with separate accounts.

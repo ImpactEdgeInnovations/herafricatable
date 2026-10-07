@@ -1476,7 +1476,9 @@ for (const contract of [
   'id="discover-communities"',
   "Choose a purpose you share",
   "Search communities",
-  "Clear search",
+  "Show all communities",
+  "Join straight away",
+  "Your access is temporarily paused",
   "community-directory-icon",
   "item.tagline || item.description",
 ]) {

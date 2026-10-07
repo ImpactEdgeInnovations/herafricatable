@@ -376,7 +376,7 @@ export function MemberEventProposalPanel({
     });
     setBusy(false);
     setMessage(error ? memberErrorMessage(error, "open this event") :
-      "Your free event is public. Guest places still need review.");
+      "Your free event is public. Active members can book an available place immediately.");
     if (!error) router.refresh();
   }
 
@@ -543,7 +543,7 @@ export function MemberEventProposalPanel({
       {proposals.length ? <div className="community-event-proposal-list member-event-proposal-list">{proposals.map((proposal) => (
         <article key={proposal.proposal_id}>
           <header><div><span className={`proposal-state state-${proposal.status}`}>{proposal.status === "approved" ? publishedEventIds.includes(proposal.canonical_event_id ?? "") ? "Event is public" : "Prepare your event" : statusLabels[proposal.status]}</span><h3>{proposal.title}</h3><p>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: proposal.timezone }).format(new Date(proposal.starts_at))} · {proposal.format.replaceAll("_", " ")}</p></div><strong>{proposal.capacity} places</strong></header>
-          {proposal.review_note ? <div className="proposal-review-guidance"><strong>Review guidance</strong><p>{proposal.review_note}</p></div> : null}
+          {proposal.review_note && !(pilotAutoPublish && publishedEventIds.includes(proposal.canonical_event_id ?? "") && proposal.review_note === "Your free event is open. Guest places are reviewed before confirmation.") ? <div className="proposal-review-guidance"><strong>A note from the team</strong><p>{proposal.review_note}</p></div> : null}
           {proposal.community_name ? <p className="member-event-community-note">Connected to <Link href={`/communities/${proposal.community_slug}/about`}>{proposal.community_name}</Link>. Its name and join route appear on the approved event.</p> : null}
           {proposal.community_after_event ? <p className="member-event-community-note">A possible follow-up Community is included. Guests must opt in before receiving any invitation.</p> : null}
           {media.filter((item) => item.context_type === "member_event_proposal" && item.context_id === proposal.proposal_id).map((item) => <div className="application-image-member-summary" key={item.media_id}>{item.image_url ? <img alt={item.alt_text} src={item.image_url}/> : null}<div><strong>{applicationMediaStatus(item.status)}</strong><p>{item.alt_text}</p>{item.review_note ? <small>{item.review_note}</small> : null}</div></div>)}

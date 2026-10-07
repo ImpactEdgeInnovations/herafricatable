@@ -34019,6 +34019,10 @@ textarea {
 .event-free-booking-control .manager-message { flex-basis: 100%; }
 
 /* Member journeys: useful content before oversized introductory space. */
+.community-discovery-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+.community-discovery-filters button { min-height: 44px; padding: 9px 15px; border: 1px solid var(--line); border-radius: 24px; background: transparent; color: var(--ink); font: inherit; font-size: .85rem; cursor: pointer; }
+.community-discovery-filters button[aria-pressed="true"] { background: var(--wine); border-color: var(--wine); color: #fff; }
+.community-directory-feedback { margin-top: 18px; }
 .member-welcome { padding: 34px 0 30px; }
 .member-welcome-copy h1 { font-size: clamp(2.25rem, 4vw, 3.65rem); line-height: 1.08; }
 .member-welcome-copy > p:nth-of-type(2) { margin-top: 14px; }

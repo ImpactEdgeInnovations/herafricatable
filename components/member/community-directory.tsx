@@ -73,6 +73,7 @@ export function CommunityDirectory({
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
+  const [joiningFilter, setJoiningFilter] = useState("all");
 
   async function join(item: CommunitySummary) {
     setBusy(item.community_id);
@@ -225,13 +226,15 @@ export function CommunityDirectory({
     (item) => !memberStates.includes(item.membership_status ?? ""),
   );
   const cleanQuery = query.trim().toLowerCase();
-  const visibleDiscover = discoverCommunities.filter((item) =>
-    cleanQuery
-      ? [item.name, item.description, item.community_type].some((value) =>
-          value.toLowerCase().includes(cleanQuery),
-        )
-      : true,
-  );
+  const visibleDiscover = discoverCommunities.filter((item) => {
+    const matchesJoining = joiningFilter === "all" ||
+      (joiningFilter === "open" && item.effective_mode === "open") ||
+      (joiningFilter === "approval" && item.effective_mode === "approval");
+    const matchesSearch = !cleanQuery || [item.name, item.description, item.tagline ?? ""].some(
+      (value) => value.toLowerCase().includes(cleanQuery),
+    );
+    return matchesJoining && matchesSearch;
+  });
 
   function renderCommunityCard(
     item: CommunitySummary,
@@ -429,10 +432,10 @@ export function CommunityDirectory({
             </div>
           ) : ["paused", "suspended"].includes(item.membership_status ?? "") ? (
             <span className="community-membership-state">
-              <strong>This community is temporarily paused</strong>
+              <strong>Your access is temporarily paused</strong>
               <small>
-                Your membership and earlier contributions are preserved. We
-                will notify you when access resumes.
+                Your earlier contributions remain. Contact the community leader
+                if you would like to understand what happens next.
               </small>
             </span>
           ) : item.membership_status === "invited" ? (
@@ -480,6 +483,7 @@ export function CommunityDirectory({
 
   return (
     <>
+      {message ? <p className="network-message community-directory-feedback" role="status">{message}</p> : null}
       <section className="community-directory" id="your-communities">
         <header className="community-directory-heading">
           <div>
@@ -487,8 +491,7 @@ export function CommunityDirectory({
             <h2>Pick up where you left off.</h2>
           </div>
           <span>
-            {memberCommunities.length} communit
-            {memberCommunities.length === 1 ? "y" : "ies"}
+            {`${memberCommunities.length} ${memberCommunities.length === 1 ? "community" : "communities"}`}
           </span>
         </header>
         {memberCommunities.length ? (
@@ -503,8 +506,8 @@ export function CommunityDirectory({
             <div>
               <strong>Find your first community.</strong>
               <p>
-                Browse the groups below. A private community will ask its
-                leader to approve your request.
+                Find people who share your interests, or start your own group.
+                Each community explains how to join.
               </p>
             </div>
             <a className="button button-outline" href="#discover-communities">
@@ -536,6 +539,11 @@ export function CommunityDirectory({
             </span>
           )}
         </header>
+        {discoverCommunities.length > 1 ? <div className="community-discovery-filters" role="group" aria-label="How you would like to join">
+          {[["all", "All communities"], ["open", "Join straight away"], ["approval", "Ask to join"]].map(([value, label]) =>
+            <button key={value} type="button" aria-pressed={joiningFilter === value} onClick={() => setJoiningFilter(value)}>{label}</button>,
+          )}
+        </div> : null}
         {visibleDiscover.length ? (
           <div className="community-discovery-grid">
             {visibleDiscover.map((item) =>
@@ -546,32 +554,27 @@ export function CommunityDirectory({
           <div className="community-directory-empty is-search">
             <div>
               <strong>
-                {cleanQuery
+                {cleanQuery || joiningFilter !== "all"
                   ? "No communities match that search."
                   : "No new communities are open yet."}
               </strong>
               <p>
-                {cleanQuery
-                  ? "Try a broader word or clear the search."
-                  : "New communities appear after their leader and safety setup are approved."}
+                {cleanQuery || joiningFilter !== "all"
+                  ? "Try another word or show all communities."
+                  : "You can start a community around an interest, a shared goal or your next event."}
               </p>
             </div>
-            {cleanQuery ? (
+            {cleanQuery || joiningFilter !== "all" ? (
               <button
                 className="button button-outline"
-                onClick={() => setQuery("")}
+                onClick={() => { setQuery(""); setJoiningFilter("all"); }}
               >
-                Clear search
+                Show all communities
               </button>
-            ) : null}
+            ) : <a className="button button-outline" href="#create-community">Start a community</a>}
           </div>
         )}
       </section>
-      {message ? (
-        <p className="network-message" role="status">
-          {message}
-        </p>
-      ) : null}
       {dialog}
     </>
   );

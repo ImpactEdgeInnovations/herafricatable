@@ -23,7 +23,7 @@ const statusCopy: Record<string, string> = {
   pending_review: "Waiting for Her Africa Table review",
   rejected: "Not approved",
   revoked: "Revoked",
-  sent: "Sent",
+  sent: "Invitation ready",
 };
 
 export function DestinationInvitationPanel({
@@ -57,6 +57,7 @@ export function DestinationInvitationPanel({
 
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy) return;
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     setBusy(true);
@@ -98,12 +99,12 @@ export function DestinationInvitationPanel({
       <header>
         <div>
           <p className="eyebrow">Invite someone</p>
-          <h2>Bring the right person into this {destinationType}.</h2>
+          <h2>Invite someone to join you.</h2>
         </div>
         <p>
-          Her invitation will lead back to {destinationName}. New people still
-          verify their email and join the platform. An event invitation does not
-          reserve a place.
+          The email leads back to {destinationName}. New visitors confirm their
+          email and finish joining Her Africa Table first.
+          {destinationType === "event" ? " She will still need to book her place." : " Your community’s joining rules still apply."}
         </p>
       </header>
       {!ready ? (
@@ -118,6 +119,7 @@ export function DestinationInvitationPanel({
               Her email address
               <input
                 autoComplete="email"
+                disabled={busy}
                 maxLength={320}
                 name="email"
                 placeholder="name@example.com"
@@ -128,6 +130,7 @@ export function DestinationInvitationPanel({
             <label>
               Start with a note <small>Optional</small>
               <select
+                disabled={busy}
                 value={preset}
                 onChange={(event) => {
                   const selected = event.target.value;
@@ -142,6 +145,7 @@ export function DestinationInvitationPanel({
             <label>
               Your message <small>You can edit it</small>
               <textarea
+                disabled={busy}
                 maxLength={600}
                 minLength={10}
                 name="note"
@@ -185,7 +189,7 @@ export function DestinationInvitationPanel({
                 </article>
               ))
             ) : (
-              <p>No invitations have been sent from this page yet.</p>
+              <p>Your invitations will appear here. Start with one person you would love to welcome.</p>
             )}
           </div>
         </div>
