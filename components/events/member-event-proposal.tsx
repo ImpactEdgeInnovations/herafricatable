@@ -382,6 +382,10 @@ export function MemberEventProposalPanel({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy || eventPath !== "public") return;
+    if (step < steps.length - 1) { continueForward(); return; }
+    const issue = currentStepIssue();
+    if (issue) { setMessage(issue); return; }
     await save(true);
   }
 
