@@ -4,6 +4,23 @@ Updated: 5 October 2026. Baseline release: `b4be9ca`.
 
 This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
+## 7 October execution alignment
+
+The 4–5 October observations below are historical checkpoints, not a fresh live-readiness audit. Later pilot decisions allow founding-cohort automatic free-event publication and Community creation with Admin pause/expiry controls. Old invited-only/private-draft descriptions are superseded, but real onboarding/event-to-Community acceptance is still required.
+
+The [Community completion board](./FOUNDING_PILOT_JOURNEY_UPGRADE.md#remaining-work--phased-taskboard) is a sub-workstream. Its phases 4–7 do not replace this board's phases 0–5 or complete the paused ten-sprint roadmap.
+
+| Main task IDs | Carried forward into | Open proof/work |
+|---|---|---|
+| UX-01, UX-02, DISC-01, DISC-02, DETAIL-01 | Community phase 4 and event/member UI work | Populated mobile/desktop review, plain wording, lifecycle/error states and server-side topic/search paging |
+| COMMS-01 | Community phase 5 and event communication acceptance | Faster targeted safety delivery, real inbox/provider/retry evidence and event change-message acceptance |
+| HOST-01, HOST-02 | Community phases 4–5 and event Host/Admin work | Scoped Host usability, draft/attachment guards, selected-event reads, queue paging and role checks |
+| JOIN-01, HOST-03 | Community phase 6 and current pilot onboarding rehearsal | Open membership/founding-cohort journey, expiry/pause, free-event publication, invitations and return destinations |
+| PILOT-01, PILOT-02 | Community phase 6 and specific-event preparation | Fresh named-event readiness audit and booking/capacity/check-in rehearsal with separate accounts |
+| PILOT-03 | Community phase 7 and main launch gates | Recorded end-to-end evidence and owner go/no-go |
+
+Always distinguish **implemented**, **tested automatically**, and **accepted with real users/devices/inboxes**. A green build is not launch acceptance. Advanced paid creator settlement and other paused roadmap modules remain outside this limited Community/event pilot.
+
 ## Outcome and scope
 
 The first useful journey is: discover an event → understand its date, place, cost and entry rule → verify email → request one place → see whether it is pending or confirmed → retrieve the pass and arrival details → attend → find a relevant follow-up or Community.

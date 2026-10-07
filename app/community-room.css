@@ -333,3 +333,20 @@
     padding: 18px;
   }
 }
+.community-topic-picker {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  max-width: 100%;
+}
+.community-topic-picker select {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border, #ddd8cf);
+  border-radius: 8px;
+  background: var(--surface, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+}

@@ -746,10 +746,15 @@ export function CommunityFeed({
         <div>
           <h2 id="community-conversations-title">Conversations</h2>
         </div>
-        <p>
-          Ask a question, offer help or share an update.
-        </p>
+        {enhanced ? <label className="community-topic-picker">
+          Browse topics
+          <select value={category} onChange={event => setCategory(event.target.value)}>
+            <option value="all">All topics</option>
+            {availableTypes.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+        </label> : <p>Ask a question, offer help or share an update.</p>}
       </header>
+      {enhanced && category !== "all" ? <p className="community-composer-hint" role="status">{categoryLabels.get(category)} · {posts.length} conversation{posts.length === 1 ? "" : "s"} shown{hasMore ? ". Load older conversations below to see more." : "."} <button type="button" onClick={() => setCategory("all")}>Show all topics</button></p> : null}
 
       {enhanced && readStateReady && initialNewActivityCount > 0 ? (
         <div className="community-catchup-note">
@@ -940,20 +945,6 @@ export function CommunityFeed({
                 type="search"
                 value={query}
               />
-            </label>
-            <label>
-              Topic
-              <select
-                onChange={(event) => setCategory(event.target.value)}
-                value={category}
-              >
-                <option value="all">All post types</option>
-                {availableTypes.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
             </label>
             <label>
               Order

@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+const feed = read("components/member/community-feed.tsx");
+assert(feed.includes("Browse topics") && feed.includes("All topics"));
+assert(feed.indexOf("Browse topics") < feed.indexOf('id="create-conversation"'));
+assert(feed.includes("Load older conversations below to see more."));
+assert(feed.includes('post.category === category'));
+const sql = read("supabase/migrations/20261007200000_community_photo_report_notifications.sql");
+for (const token of ["after insert on public.community_photo_reports", "select distinct r.user_id", "r.expires_at>now()", "p.access_status='active'", "public.enqueue_notification", "community-photo-report:", "from public,anon,authenticated", "area=safety-work#community-moderation"]) assert(sql.includes(token), token);
+assert(!sql.includes("new.details") && !sql.includes("new.evidence_snapshot") && !sql.includes("new.reporter_id"));
+assert(read("lib/notifications/email.ts").includes('"Review photo report"'));
+console.log("Visible topics and private safety notification source contracts passed; real inbox receipt remains separate.");

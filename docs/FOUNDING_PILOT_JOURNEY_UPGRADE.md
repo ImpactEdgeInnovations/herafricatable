@@ -1,5 +1,56 @@
 # Founding pilot journey upgrade — 7 October 2026
 
+## Remaining work — phased taskboard
+
+This is the current sequence. Earlier implementation notes below are historical; the pilot photo participation update supersedes blanket upload closures. Phase 3 remains open until its deferred populated-room rehearsal is completed.
+
+**Scope:** These are Community workstream phases, not a replacement for the [main audit taskboard](./UX_EVENTS_IMPLEMENTATION_TASKBOARD.md) and its phases 0–5. The former ten-sprint roadmap remains paused. Main event/onboarding task IDs and their release evidence are preserved separately.
+
+| Phase | Focus | Current state | Completion evidence |
+|---|---|---|---|
+| 4 | Finish everyday Community use | In progress | Plain wording, visible topic browsing, tidy room tabs, named albums, mobile Host/member walkthrough |
+| 5 | Media safety and reliable operations | In progress | Report alerts, hard-delete cleanup manifests, scalable Admin queues and simultaneous-session tests |
+| 6 | Full production rehearsal, including open Phase 3 checks | Pending; populated playback/inbox work deferred to 8 October | Separate Host/member/Admin accounts, real files/video, invitation/OTP return journeys, inbox receipts, permission loss and recovery |
+| 7 | Limited-pilot release review | Pending | Record real acceptance evidence, verify deployed UI, rehearse pause/expiry controls, confirm support ownership and monitor actual failures |
+
+### Phase 4 — conversations and topics
+
+- [x] Keep Community tabs **Home · Conversations · Gatherings · Media · People**; no second Topics feed or duplicate event tab.
+- [x] Make **Browse topics** visible beside Conversations. Existing categories group introductions, questions/help, opportunities, useful resources and updates without changing permissions.
+- [x] Keep replies inside the conversation that started them; gatherings and album discussions keep their own context.
+- [x] Explain that filters apply to loaded conversations and let members load older ones. Do not claim an exhaustive server-side search.
+- [ ] Add server-side topic/search pagination for larger Communities; preserve blocks, read-only rules and removed-content filtering.
+- [ ] Review whether Hosts need a small set of custom subject labels (for example Business, Wellbeing or Local connections). This is a separate enhancement, not shipped today. Members should not create unlimited category names.
+- [ ] Finish remaining Host settings/attachment draft guards and populated mobile/desktop polish.
+
+### Phase 5 — reliable media operations
+
+- [x] Queue a private safety notification when a new photo report is filed, through the existing in-app/Resend engine. Limit recipients to active, unexpired Super Admin/moderator roles; do not email images, captions, complaint text or reporter identity.
+- [x] Deduplicate report retries and give the email a **Review photo report** action leading to Admin Safety.
+- [x] Apply `20261007200000_community_photo_report_notifications.sql` live. Rollback test `040` passed recipient scope, in-app/email job counts, duplicate suppression, private payloads and trigger grants. Full repository suite, topic/alert contracts, TypeScript and production build passed. Rehearsal left zero photos/reports/report-email jobs and the test Community archived. No manual migration run is needed.
+- [ ] Preserve a durable deletion manifest before photo records are physically deleted, then clear it only after private Storage deletion succeeds.
+- [ ] Add server paging to photo reports and Community photo operations (currently bounded to 100 records).
+- [ ] Rehearse simultaneous upload reservations, cleanup failures and recovery with real files.
+- [ ] Verify real safety email receipt and actual delivery timing. A queued job is not proof of inbox delivery.
+- [ ] Add targeted immediate safety-report delivery or an approved more-frequent worker schedule. Current Vercel cron runs daily at 08:00 EAT; Admin can also run the notification processor. New report alerts are immediately in the private review queue, but email is not yet an instant-delivery promise.
+
+### Phase 6 — rehearsal checklist
+
+- [ ] Host creates an open Community; a regular member joins and contributes only where allowed.
+- [ ] Host creates/links gatherings, a video discussion and event/photo albums; member navigates without losing their place.
+- [ ] Real photo upload, approval, private view, reporting, safety hold, restoration and eventual cleanup.
+- [ ] Invitations reach real inboxes; a new user verifies OTP, joins and returns to the intended Community/event.
+- [ ] Private video playback, live text and lasting replies work with separate accounts.
+- [ ] Removed/suspended members lose access; global pilot pause/expiry and Admin overrides remain authoritative.
+- [ ] Desktop, phone, keyboard, empty/error/loading states and long titles pass populated-screen review.
+
+### Phase 7 — release decision
+
+- [ ] Record production acceptance only after the above real tests pass; do not replace evidence with source-contract checks.
+- [ ] Confirm the deployed commit, current environment/email configuration and pilot end date.
+- [ ] Assign support/safety ownership, check failed jobs and cleanup health, and practise pausing a troubled Community or event.
+- [ ] Keep automatic creator payouts disabled until their separate financial and approval requirements pass.
+
 ## Completed
 
 - [x] Repair event invitation RPCs using `canonical_event_id`.
@@ -113,7 +164,7 @@ Required before Phase 3 can close:
 - [ ] Verify draft restoration and cleared submissions with populated member/Host accounts on desktop/mobile across local tabs, browser Back and closing/reopening a gathering. Finish remaining uncontrolled Host settings and attachment-selection guards; uploaded files are not retained by text-draft memory.
 - [ ] Rehearse Watch together / Watch anytime in populated desktop/mobile rooms with separate Host/member accounts, including real playback, reporting and reply delivery.
 - [ ] Complete populated Host/member desktop/mobile rehearsal of prerecorded creation and its in-place viewing experience. Feature code and database acceptance are implemented; real video playback and inbox delivery are not certified by rollback tests.
-- [ ] Complete Media integration. Videos discovery and persistent gathering discussion are shipped; photo albums arrive in Phase 4 and no nonfunctional Photos action is shown.
+- [x] Implement Media integration: Videos, Photos and their lasting discussions are shipped. Populated browser/file/playback acceptance remains open below.
 
 - [ ] Verify empty, upcoming, live, past and cancelled states and that public event discovery never exposes private Community media.
 
@@ -222,24 +273,24 @@ No manual SQL rerun is required. Phase 3's populated-room/playback/inbox rehears
 - [x] Include short YouTube Studio setup instructions and explain that an unlisted link can be shared outside the platform. Platform viewing is restricted to authorised Community members, not a guarantee of YouTube exclusivity.
 - [x] Build a compact “Watch & discuss” gathering view: video beside its conversation on desktop and above it on mobile; no autoplay by default.
 - [x] Add a Community “Media” area with “Videos” and “Photos” filters, rather than extra top-level platform tabs.
-- [ ] Tie each gathering livestream, replay and photo album to its gathering and one persistent gathering conversation; show the gathering name/date and an “Open conversation” action.
-- [ ] Allow standalone Community media to have its own named post and replies. Do not silently mix it into an unrelated gathering conversation.
+- [x] Implement gathering-linked media and persistent gathering conversation; real navigation/playback acceptance remains open.
+- [x] Implement standalone named Community albums with their own post and replies, not unrelated gathering conversations.
 - [x] Implement Host album creation and multi-image upload controls, optionally attached to a gathering. Binary uploads remain paused for acceptance.
 - [x] Implement compact photo grids and a native modal viewer with swipe, captions, keyboard navigation and mobile controls. Populated browser acceptance remains open.
 - [ ] Show the album creator alongside existing per-photo uploader/date attribution; verify attribution with real member contributions.
-- [ ] Add a Host-controlled “Allow members to add photos” setting per album, with “Publish immediately” and “Review first” choices. Use immediate publication for pilot member contributions when enabled, retaining Host moderation.
-- [ ] Let members remove their own uploads, let Hosts moderate album photos, and provide reporting and a reminder to obtain permission from people pictured.
-- [ ] Keep album discussion attached to its album or existing gathering conversation; avoid creating duplicate threads for the same gathering.
+- [x] Implement Host-controlled member contributions per album, immediate or review-first; Admin pause remains authoritative. Real acceptance remains open.
+- [x] Implement own-upload removal, Host moderation, private reporting and consent confirmation. Real multi-account UI acceptance remains open.
+- [x] Implement lasting album discussions, reusing a gathering conversation when linked; retry-safe rollback tests passed.
 - [ ] Test multi-image upload failures, contribution permissions, review visibility, attribution, own-upload removal, moderation and private-album access.
-- [ ] Introduce pilot photo limits: 10 images per upload, 20 member photos per day per Community, 100 photos per album and a 500 MB Community allowance adjustable by Admin. Show remaining allowance and friendly limit messages.
-- [ ] Resize/compress uploaded photos to a maximum stored size of 1 MB, remove location metadata and generate lightweight thumbnails; enforce file type, size and image validation on the backend as well as in the interface.
-- [ ] Enforce member, album and Community quotas server-side, including concurrent uploads and pending photos; reserve upload allowance and release unused reservations so retries cannot bypass limits.
+- [x] Implement 10-photo batches, 20 ordinary-member photos per Nairobi day per Community, 100 per album and default 500 MiB Community allowance adjustable by Admin. Usage is shown; real limit/concurrency acceptance remains open.
+- [x] Implement image processing, 1 MiB originals, lightweight thumbnails, metadata removal and backend validation; binary fixture tests passed.
+- [x] Implement locked quota reservations including pending photos and retry IDs. Simultaneous-session acceptance and hard-delete cleanup manifests remain open.
 - [x] Provide plain Host upload choices: “Only Hosts can add photos”, “Members can add photos immediately” and “Member photos need approval”; let Hosts close individual albums to new contributions.
-- [ ] Provide functional approve, reject, hide and remove controls with uploader attribution. Pending/rejected photos must not be visible to ordinary members; retain member own-upload removal and moderation records.
-- [ ] Clean up abandoned uploads and rejected media; give removed photos a short, documented recovery period before clearing their files. Apply the same access restrictions to thumbnails and originals.
+- [x] Implement database-wired photo moderation/removal and attribution. Pending photos are visible only to Hosts and their uploader; populated UI acceptance remains open.
+- [x] Implement bounded abandoned/removed-photo cleanup and protected originals/thumbnails. Hard-delete manifests and actual recovery rehearsal remain open.
 - [ ] Test quota boundaries, simultaneous uploads, compression failures, metadata removal, approval visibility, storage cleanup and recovery; monitor actual storage and delivery usage before changing pilot allowances.
-- [ ] Let Hosts keep or hide a replay; finished gatherings move to past gatherings. Removing a video link must not delete the discussion.
-- [ ] Enforce Community access server-side for media records and conversations, preserve moderation/reporting and Admin suspension, and use permission-aware storage for uploaded photos.
+- [x] Implement replay visibility controls and persistent discussion after video removal. Actual lifecycle/playback acceptance remains open.
+- [x] Implement server-side access, moderation/suspension checks and private photo storage. Rollback permission tests passed; browser acceptance remains open.
 - [ ] Verify mobile layout, removed-member access, link replacement, unavailable videos, replay visibility and photo-album conversation continuity.
 
 Media remains discoverable through both its gathering and the Community Media area. The general feed may show a short linked announcement, but is not the only place to find a recording or album. Retain replays until the Host hides/removes them or the source becomes unavailable; do not promise permanent availability of externally hosted videos. Obtain permission to publish identifiable attendee photographs, and retain existing reporting/removal processes.
