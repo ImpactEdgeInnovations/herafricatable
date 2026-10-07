@@ -82,6 +82,17 @@ The SQL file under `supabase/tests/032_community_gathering_video.sql` is a rollb
 
 #### Phase 3 additions — event browsing inside the Community
 
+First implementation pass:
+
+- [x] Open upcoming/past gatherings in the existing Community page, with shareable selection, browser Back support, a visible Back to gatherings action, protected on-demand loading and honest retry errors.
+- [x] Add visible Upcoming/Past choices and Create a gathering / Link an event shortcuts to existing Host tools. Existing event-link permissions remain unchanged.
+- [x] Add a still, compact next-gathering strip with the event's date/timezone and a quiet minute-updated countdown that stops at the start.
+- [x] Existing suite, new `npm run test:community-inline`, room UI/video checks and production build passed for the first pass. No new SQL migration required.
+- [ ] Verify the new in-place view with populated member/Host accounts on desktop/mobile; preserve unfinished forms on every navigation path.
+- [ ] Add “Watch together” for scheduled participation and “Watch anytime” for a lasting gathering-linked discussion. Do not simply extend live-chat windows or bypass moderation/RSVP checks.
+- [ ] Support Community-only prerecorded-video gatherings separately from public events, with the existing pilot eligibility and Admin suspension controls.
+- [ ] Complete the Videos discovery area and event-specific media grouping. Photo albums arrive in Phase 4; no placeholder photo actions are presented as functional.
+
 - [ ] Keep Community navigation visible while members open upcoming or past event details in place; support shareable event selection, Back/Close and accessible focus handling without losing filters or drafts.
 - [ ] Show that event's videos, photos and conversation together, with the event title and date on each recording/album; do not mix unrelated event discussions.
 - [ ] Add “Link an existing event” to Community Host tools, as well as creating a new gathering. Reuse existing ownership/linking permissions; a Community can exist first and link later events over time. Membership does not automatically grant authority to link someone else's event.

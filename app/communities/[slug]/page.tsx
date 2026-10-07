@@ -46,6 +46,7 @@ import {
   type CommunityCheckIn,
 } from "@/components/member/community-check-ins";
 import { CommunityLocalNavigation } from "@/components/member/community-local-navigation";
+import { CommunityNextGathering } from "@/components/member/community-next-gathering";
 import {
   CommunityGatherings,
   type CommunityGatheringCard,
@@ -56,7 +57,7 @@ export default async function CommunityPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ moment?: string; view?: string }>;
+  searchParams: Promise<{ moment?: string; view?: string; gathering?: string }>;
 }) {
   const { slug } = await params;
   const requestedSearch = await searchParams;
@@ -370,11 +371,12 @@ export default async function CommunityPage({
         </div>
       </section>
       <CommunityLocalNavigation active={view} canManage={canManage} slug={slug} />
+      {!liveGathering && !gatheringCardResult.error ? <CommunityNextGathering cards={gatheringCards} slug={slug} /> : null}
       {liveGathering ? (
         <aside className="community-live-notice" aria-label="Gathering live now">
           <span aria-hidden="true" />
           <div><small>Live now</small><strong>{liveGathering.title}</strong></div>
-          <Link href={`/communities/${slug}/gatherings/${liveGathering.event_slug}`}>Join the room →</Link>
+          <Link href={`/communities/${slug}?view=gatherings&gathering=${encodeURIComponent(liveGathering.event_slug)}`}>Join the room →</Link>
         </aside>
       ) : null}
       {showToday ? (
@@ -509,6 +511,10 @@ export default async function CommunityPage({
             cards={gatheringCards}
             migrationReady={!gatheringCardResult.error}
             slug={slug}
+            communityId={community.community_id}
+            currentUserId={user.id}
+            initialSelection={requestedSearch.gathering}
+            canManage={canManage}
           />
           {programmingReady || !circleProgramResult.error ? (
             <details className="community-room-more community-gathering-extras">

@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
+import { CommunityGatheringInline } from "./community-gathering-inline";
 
 export type CommunityGatheringCard = {
   room_id: string;
@@ -50,15 +51,36 @@ export function CommunityGatherings({
   cards,
   migrationReady,
   slug,
+  communityId,
+  currentUserId,
+  initialSelection,
+  canManage = false,
 }: {
   cards: CommunityGatheringCard[];
   migrationReady: boolean;
   slug: string;
+  communityId: string;
+  currentUserId: string;
+  initialSelection?: string;
+  canManage?: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [items, setItems] = useState(cards);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [area,setArea] = useState<"upcoming" | "past">(() => {
+    const initial = cards.find(card => card.event_slug === initialSelection);
+    return initial && new Date(initial.ends_at).getTime() < Date.now() ? "past" : "upcoming";
+  });
+  const [selected,setSelected] = useState(initialSelection ?? "");
+  useEffect(()=>setItems(cards),[cards]);
+  useEffect(()=>{const update=()=>setSelected(new URL(window.location.href).searchParams.get("gathering") ?? ""); window.addEventListener("popstate",update);return()=>window.removeEventListener("popstate",update);},[]);
+  function select(slug: string) {
+    setSelected(slug);
+    const url = new URL(window.location.href); url.searchParams.set("view","gatherings");
+    if(slug) url.searchParams.set("gathering",slug); else url.searchParams.delete("gathering");
+    window.history.pushState(null,"",url.toString());
+  }
   const upcoming = items.filter((item) => new Date(item.ends_at).getTime() >= Date.now());
   const past = items.filter((item) => new Date(item.ends_at).getTime() < Date.now());
 
@@ -98,7 +120,7 @@ export function CommunityGatherings({
             <span>{timingLabel(card)}</span>
             <span>{gatheringLabel(card.gathering_kind)}</span>
           </div>
-          <h3><Link href={roomHref}>{card.title}</Link></h3>
+          <h3><Link href={`/communities/${slug}?view=gatherings&gathering=${encodeURIComponent(card.event_slug)}`} onClick={(event)=>{event.preventDefault();select(card.event_slug);}}>{card.title}</Link></h3>
           <p>{card.summary || "The Host will share more details soon."}</p>
           <small>
             {new Intl.DateTimeFormat("en-KE", {
@@ -114,7 +136,7 @@ export function CommunityGatherings({
           </div>
         </div>
         <div className="gathering-card-actions">
-          <Link className="button button-primary" href={roomHref}>
+          <Link className="button button-primary" href={roomHref} onClick={(event)=>{event.preventDefault();select(card.event_slug);}}>
             {card.chat_phase === "open" ? "Open gathering" : card.chat_phase === "archived" ? "View recap" : "View details"}
           </Link>
           {new Date(card.ends_at).getTime() >= Date.now() ? (
@@ -129,37 +151,38 @@ export function CommunityGatherings({
 
   return (
     <section className="community-gatherings" aria-labelledby="community-gatherings-title">
-      <header className="community-section-heading">
+      <header className="community-section-heading" hidden={Boolean(selected)}>
         <div>
           <p className="eyebrow">Gatherings</p>
-          <h2 id="community-gatherings-title">Upcoming gatherings</h2>
+          <h2 id="community-gatherings-title">{area === "upcoming" ? "Upcoming gatherings" : "Past gatherings"}</h2>
         </div>
         <p>Choose a gathering to see details, save your place or join the conversation.</p>
       </header>
+      {selected && items.find(item=>item.event_slug===selected) ? <CommunityGatheringInline card={items.find(item=>item.event_slug===selected)!} communityId={communityId} currentUserId={currentUserId} onClose={()=>select("")} /> : selected ? <div role="status"><p>This gathering is no longer available in your Community.</p><button type="button" onClick={()=>select("")}>Back to gatherings</button></div> : null}
+      <div hidden={Boolean(selected)}>
+      <div className="community-gathering-toolbar"><div role="group" aria-label="Gathering dates">
+        <button type="button" aria-pressed={area==="upcoming"} onClick={()=>setArea("upcoming")}>Upcoming <span>{upcoming.length}</span></button>
+        <button type="button" aria-pressed={area==="past"} onClick={()=>setArea("past")}>Past <span>{past.length}</span></button>
+      </div>{canManage ? <div className="community-gathering-host-actions"><Link href={`/communities/${slug}/host#gathering-proposals`}>Create a gathering</Link><Link href={`/communities/${slug}/host#gatherings`}>Link an event</Link></div> : null}</div>
       {message ? <p className="form-message" role="status">{message}</p> : null}
       {!migrationReady ? (
         <div className="community-program-empty">
           <strong>The new gathering rooms are being prepared.</strong>
           <p>Your existing Community events are safe. Please try again later.</p>
         </div>
-      ) : upcoming.length ? (
-        <div className="gathering-list">{upcoming.map(renderCard)}</div>
+      ) : (area === "upcoming" ? upcoming : past).length ? (
+        <div className="gathering-list">{(area === "upcoming" ? upcoming : past).map(renderCard)}</div>
       ) : (
         <div className="community-program-empty">
-          <strong>No gathering is scheduled yet.</strong>
+          <strong>{area === "past" ? "No past gatherings yet." : "No gathering is scheduled yet."}</strong>
           <p>When your Host schedules one, it will appear here. You can browse the main event calendar in the meantime.</p>
           <Link href="/events">Explore events</Link>
         </div>
       )}
-      {past.length ? (
-        <details className="gathering-archive">
-          <summary>Past gatherings <span>{past.length}</span></summary>
-          <div className="gathering-list">{past.map(renderCard)}</div>
-        </details>
-      ) : null}
       <footer className="gathering-boundary-note">
         <p>Each gathering has its own conversation. Look in Past gatherings for earlier discussions and recaps.</p>
       </footer>
+      </div>
     </section>
   );
 }

@@ -644,7 +644,7 @@ export function CommunityHostWorkspace({
         empty="No published event is available to add yet."
         options={eventOptions}
         sectionId="gatherings"
-        title="Choose events for this community."
+        title="Link an existing event"
         onUpdate={updateProgramming}
       />
       <ProgrammingPanel
@@ -693,8 +693,7 @@ function ProgrammingPanel({
           <h2>{title}</h2>
         </div>
         <p>
-          Items you add appear in the community. A featured item appears first,
-          but members always choose whether to take part.
+          {eyebrow === "Events" ? "Link an available event to show it in this Community. Members still choose whether to attend." : "Choose learning to share with members."}
         </p>
       </header>
       {options.length ? (

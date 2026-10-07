@@ -1,4 +1,28 @@
 /* Member Community rooms only; directory and Admin styling stay unchanged. */
+.community-room-page [hidden] { display: none !important; }
+.community-next-gathering { display: flex; align-items: center; gap: 20px; width: var(--community-shell); margin: 0 auto 20px; padding: 14px 18px; border-left: 3px solid var(--wine); background: #fffdf9; }
+.community-next-gathering > div { display: grid; gap: 4px; flex: 1; min-width: 0; }
+.community-next-gathering strong { font-size: 1rem; overflow-wrap: anywhere; }
+.community-next-gathering small, .community-next-gathering span { font-size: 0.85rem; color: var(--muted); }
+.community-next-gathering a { min-height: 44px; display: flex; align-items: center; font-size: 0.875rem; white-space: nowrap; }
+.community-gathering-toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; align-items: center; margin: 18px 0; }
+.community-gathering-toolbar [role="group"] { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--line); border-radius: 6px; }
+.community-gathering-toolbar button { min-height: 44px; padding: 0 16px; border: 0; background: transparent; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
+.community-gathering-toolbar button[aria-pressed="true"] { background: var(--wine); color: #fff; }
+.community-gathering-host-actions { display: flex; flex-wrap: wrap; gap: 18px; font-size: 0.9rem; }
+.community-gathering-host-actions a { min-height: 44px; display: flex; align-items: center; }
+.community-inline-back { min-height: 44px; padding: 10px 0; border: 0; background: transparent; color: var(--wine); cursor: pointer; font-size: 0.95rem; }
+.community-inline-gathering .gathering-room { width: 100%; margin: 0; }
+.community-inline-gathering .gathering-room-hero { padding-top: 18px; }
+.community-inline-gathering .gathering-room-hero h1 { font-size: clamp(1.6rem, 3vw, 2.4rem); }
+.community-inline-gathering .gathering-room-layout { gap: 24px; padding-top: 24px; }
+.community-inline-gathering .gathering-room-jump { overflow-x: auto; }
+.community-inline-gathering .gathering-room-jump a { white-space: nowrap; }
+@media (max-width: 620px) {
+  .community-next-gathering { flex-wrap: wrap; gap: 8px 16px; padding: 12px; }
+  .community-next-gathering > div { flex-basis: 100%; }
+  .community-next-countdown { flex: 1; }
+}
 .gathering-watch-layout:has(.gathering-video) {
   grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr);
 }

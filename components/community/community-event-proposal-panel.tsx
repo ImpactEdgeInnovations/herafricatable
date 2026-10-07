@@ -250,7 +250,7 @@ export function CommunityEventProposalPanel({
       <header>
         <div>
           <p className="eyebrow">Community gatherings</p>
-          <h2 id="community-event-proposal-title">Bring members together.</h2>
+          <h2 id="community-event-proposal-title">Create a Community gathering</h2>
           <p>Plan and open a free gathering for your members. You lead the room; Her Africa Table steps in only for public reach, payment or a safety concern.</p>
         </div>
         {migrationReady ? <button className="button button-primary" onClick={startNew} type="button">Plan a gathering</button> : null}

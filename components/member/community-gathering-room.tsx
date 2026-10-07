@@ -82,6 +82,7 @@ export function CommunityGatheringRoom({
   room: initialRoom,
   video,
   videoReady,
+  embedded = false,
 }: {
   attendees: CommunityGatheringAttendee[];
   communityId: string;
@@ -93,6 +94,7 @@ export function CommunityGatheringRoom({
   room: CommunityGatheringRoomState;
   video: GatheringVideo | null;
   videoReady: boolean;
+  embedded?: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -269,7 +271,7 @@ export function CommunityGatheringRoom({
     <div className="gathering-room">
       {dialog}
       <header className="gathering-room-hero">
-        <Link href={`/communities/${room.community_slug}?view=gatherings`}>← All gatherings</Link>
+        {!embedded ? <Link href={`/communities/${room.community_slug}?view=gatherings`}>← All gatherings</Link> : null}
         <div className="gathering-room-status"><span className={`is-${room.chat_phase}`}>{room.chat_phase === "open" ? "Conversation open" : room.chat_phase === "archived" ? "Gathering archive" : "Upcoming gathering"}</span><span>{plainLabel(room.gathering_kind)}</span></div>
         <h1>{room.title}</h1>
         <p>{room.summary || "A thoughtful place to meet and spend time together."}</p>

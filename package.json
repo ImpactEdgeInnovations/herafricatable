@@ -14,6 +14,7 @@
     "test:community-gatherings": "node scripts/verify-community-gathering-contracts.mjs",
     "test:community-room-ui": "node scripts/verify-community-room-ui.mjs",
     "test:community-video": "node scripts/verify-community-video.mjs",
+    "test:community-inline": "node scripts/verify-community-inline.mjs",
     "test:event-questions": "node scripts/verify-event-question-contracts.mjs",
     "test:admin-decisions": "node scripts/verify-admin-decision-contracts.mjs",
     "test:table-guide": "node scripts/verify-table-guide-experience.mjs",
