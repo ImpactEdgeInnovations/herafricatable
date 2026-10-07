@@ -63,6 +63,13 @@ These are planned tasks, not shipped features. Keep existing permissions and pil
 - [ ] Add a Community “Media” area with “Videos” and “Photos” filters, rather than extra top-level platform tabs.
 - [ ] Tie each gathering livestream, replay and photo album to its gathering and one persistent gathering conversation; show the gathering name/date and an “Open conversation” action.
 - [ ] Allow standalone Community media to have its own named post and replies. Do not silently mix it into an unrelated gathering conversation.
+- [ ] Let Hosts create named photo albums and upload multiple images, optionally attached to a gathering.
+- [ ] Show compact photo grids with an accessible swipeable carousel, captions, keyboard navigation and comfortable mobile controls.
+- [ ] Show the album creator and each photograph's uploader name and upload date; preserve attribution for member contributions.
+- [ ] Add a Host-controlled “Allow members to add photos” setting per album, with “Publish immediately” and “Review first” choices. Use immediate publication for pilot member contributions when enabled, retaining Host moderation.
+- [ ] Let members remove their own uploads, let Hosts moderate album photos, and provide reporting and a reminder to obtain permission from people pictured.
+- [ ] Keep album discussion attached to its album or existing gathering conversation; avoid creating duplicate threads for the same gathering.
+- [ ] Test multi-image upload failures, contribution permissions, review visibility, attribution, own-upload removal, moderation and private-album access.
 - [ ] Let Hosts keep or hide a replay; finished gatherings move to past gatherings. Removing a video link must not delete the discussion.
 - [ ] Enforce Community access server-side for media records and conversations, preserve moderation/reporting and Admin suspension, and use permission-aware storage for uploaded photos.
 - [ ] Verify mobile layout, removed-member access, link replacement, unavailable videos, replay visibility and photo-album conversation continuity.
