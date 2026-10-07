@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const read = path => readFileSync(new URL(`../${path}`,import.meta.url),"utf8");
+const sql=read("supabase/migrations/20261007180000_community_photo_operations.sql");
+for(const token of ["Super admin required","enable row level security","from public,anon,authenticated","48 hours","where passed)<>4","p_allowance_mb::bigint*1048576<used","if p_failed>0","if not p_passed","pg_advisory_xact_lock"])assert(sql.includes(token),token);
+const worker=read("lib/community-photo-cleanup.ts");
+assert(worker.includes("if (!uploaderId)")&&worker.includes("record_community_photo_cleanup_health"));
+assert(worker.indexOf(".remove(")<worker.indexOf('rpc("finish_community_photo_cleanup"'));
+const ui=read("components/admin/community-photo-operations.tsx");
+for(const token of ["get_admin_community_photo_operations","save_admin_community_photo_settings","save_community_photo_release_check","Code checks alone are not enough","Record completed test","Storage allowance (MB)","Refresh"])assert(ui.includes(token),token);
+assert(read("app/admin/operations/page.tsx").includes('<CommunityPhotoOperations />'));
+const route=read("app/api/admin/community/photos/cleanup/route.ts");
+for(const token of ['request.headers.get("origin")','auth.getUser()',"get_admin_community_photo_operations","cleanCommunityPhotos()","status: 403","status: result.failed ? 503 : 200"])assert(route.includes(token),token);
+console.log("Photo Admin operations source contracts passed; real release checks remain unpassed until recorded evidence exists.");

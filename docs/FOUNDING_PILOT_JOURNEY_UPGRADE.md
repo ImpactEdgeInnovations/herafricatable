@@ -161,7 +161,8 @@ Photo upload pipeline and Host tools, 7 October — implemented; uploads remain 
 - [x] Apply `20261007160000_community_photo_upload_pipeline.sql` live. Rollback test `036` passed on the applied schema, including review visibility, removal, hidden-uploader denial, cleanup, uploader loss of membership and service-only finalisation. Post-test inspection: zero albums/photos, zero enabled upload settings, private bucket and archived rehearsal Community. No manual SQL rerun is needed.
 - [x] Pass the repository suite, TypeScript, production build, photo-processing binary tests, streamed-body cancellation/bounds tests and Community UI/draft contracts. Source contracts do not replace browser or real Storage acceptance.
 - [x] Add member-facing Media/Photos discovery and a protected photo viewer in the follow-up pass below. Photo reporting and in-place album conversation integration remain open.
-- [ ] Add Admin allowance/upload controls and visible cleanup health/backlog. Verify deletion/archive workflows preserve a cleanup manifest before any physical cascade deletion; hard-deleted records must not strand private binaries.
+- [x] Add Admin allowance/upload controls and visible cleanup health/backlog in the operations pass below.
+- [ ] Verify deletion/archive workflows preserve a cleanup manifest before any physical cascade deletion; hard-deleted records must not strand private binaries.
 - [ ] Rehearse real binary uploads/delivery, partial failures, simultaneous sessions, removed-member access, restore/cleanup, desktop/mobile Host controls and member contribution permissions. Uploads stay paused until these checks pass.
 
 Phase 3 remains **open, not complete**. The populated Host/member/video/inbox rehearsal is deferred to 8 October, and the remaining attachment/settings guards are still listed above; this photo pass does not close that gate.
@@ -192,6 +193,19 @@ Photo safety and album conversations, 7 October — implemented, browser/binary 
 - [ ] Rehearse reporting, actual binary preview, Admin decisions and album/gathering conversation continuity with populated Host/member/Admin screens on desktop/mobile. Add photo report notification delivery and scalable queue paging before opening wider media use; this pass adds the functional Admin queue, not an inbox-delivery guarantee.
 
 Phase 3 remains open, and photo uploads remain paused. Security advisors still flag intentional RPC-only tables/authenticated security-definer entry points; the new role/scope guards passed rollback acceptance. Historical findings are not certified by this pass.
+
+Photo Admin controls and cleanup monitoring, 7 October — implemented, real release checks open:
+
+- [x] Add **Super Admin → Work areas → Safety → Community photos**. Find a Community, view recorded/pending storage usage, edit its allowance, allow/pause uploads with a recorded reason and see the last cleanup result. Archived/unpublished Communities are described as not open, not as accepting uploads.
+- [x] Keep settings and acceptance records RPC-only with RLS and Super Admin checks. Members, Hosts and anonymous callers cannot change allowances, certify launch checks or forge cleanup health. The service-only worker records actual full-run results; per-account cleanup does not certify global health.
+- [x] Opening uploads requires four explicitly recorded real tests (binary delivery, access, recovery/cleanup and mobile/member/Host/Admin usability) plus a successful cleanup result within 48 hours. Allowances cannot drop below stored files and outstanding reservations. Reopening a failed launch check pauses uploads everywhere.
+- [x] Record cleanup failures without releasing uncertain storage allowance. A recorded failed cleanup pauses all upload settings; later success does not silently reopen them. Stale health blocks new openings, but does not automatically pause Communities already open; overdue monitoring remains an operational responsibility.
+- [x] Add a Super Admin-only **Run cleanup** action: same-origin POST, verified identity and database role check, bounded 10-record run, actual Storage removal before allowance release and failure-aware feedback. Refresh reads status; it never pretends to run cleanup.
+- [x] Apply `20261007180000_community_photo_operations.sql` live after rollback dry-run acceptance. Test `038` passed opening gates, member denial, stale health, check revocation, failure pausing, committed-quota protection and service-only health. These tests use temporary synthetic evidence and roll back—it is not real launch certification.
+- [ ] Rehearse the actual Run cleanup endpoint and failure/recovery with binaries, verify Admin/mobile controls and the full upload path, and record real evidence only after success. All four live photo release checks remain unpassed; uploads remain closed.
+- [ ] Finish hard-delete cleanup manifests, actual simultaneous-session acceptance, photo report notifications and queue paging. The operations view currently shows at most 100 Communities, prioritising published ones; add server paging before larger-scale use.
+
+No manual SQL rerun is required. Phase 3's populated-room/playback/inbox rehearsal remains open for 8 October, independently of this implementation pass.
 
 - [ ] Audit member typography: one readable interface font, restrained editorial headings only where useful, smaller headings and tighter spacing.
 - [ ] Remove unnecessary decorative cards, slogans and repeated introductory paragraphs from signed-in screens.

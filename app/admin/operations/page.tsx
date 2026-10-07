@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CommunityPhotoOperations } from "@/components/admin/community-photo-operations";
 import { createClient } from "@/lib/supabase/server";
 import {
   EventCountdownManager,
@@ -1258,6 +1259,7 @@ export default async function AdminOperationsPage({
             migrationReady={!communityReportSource?.error && !gatheringReportResult.error && !eventQuestionReportResult.error}
           />
           {photoReportResult.error ? <p role="alert">Photo reports could not be loaded. Refresh this page to try again.</p> : null}
+          {role.role === "super_admin" ? <CommunityPhotoOperations /> : null}
         </AdminWorkGroup>
       ) : null}
       {role.role === "super_admin" && loadPrograms ? (

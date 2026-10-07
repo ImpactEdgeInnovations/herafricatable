@@ -1,4 +1,9 @@
 /* Member Community rooms only; directory and Admin styling stay unchanged. */
+.community-photo-admin-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+#community-photo-controls > label { display: grid; gap: 8px; margin: 20px 0; max-width: 480px; }
+#community-photo-controls input[type="search"] { width: 100%; min-height: 44px; padding: 12px; font: inherit; font-size: 1rem; border: 1px solid var(--line); border-radius: 5px; }
+#community-photo-controls summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
+#community-photo-controls details article { padding: 16px 0; border-bottom: 1px solid var(--line); }
 .community-report-photo { display: block; width: min(100%, 480px); max-height: 360px; object-fit: contain; margin: 12px 0; }
 .community-media { width: min(1120px, calc(100% - 32px)); margin: 24px auto; }
 .community-media-tabs { display: flex; gap: 8px; margin: 16px 0; }
