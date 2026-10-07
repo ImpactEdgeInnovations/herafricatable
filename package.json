@@ -25,6 +25,7 @@
     "test:community-media": "node scripts/verify-community-media.mjs",
     "test:community-photo-safety": "node scripts/verify-community-photo-safety.mjs",
     "test:community-photo-operations": "node scripts/verify-community-photo-operations.mjs",
+    "test:community-photo-deletions": "node scripts/verify-community-photo-deletions.mjs",
     "test:event-questions": "node scripts/verify-event-question-contracts.mjs",
     "test:admin-decisions": "node scripts/verify-admin-decision-contracts.mjs",
     "test:table-guide": "node scripts/verify-table-guide-experience.mjs",
