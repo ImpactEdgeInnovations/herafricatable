@@ -8,6 +8,9 @@ import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { ApplicationImageField } from "@/components/applications/application-image-field";
 import { ApplicationImageQuickEdit } from "@/components/applications/application-image-quick-edit";
+import { communityDraftKey } from "@/lib/community-drafts";
+import { useCommunityDraft } from "@/lib/use-community-draft";
+import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 import {
   applicationMediaStatus,
   removeApplicationProposalMedia,
@@ -104,12 +107,14 @@ const applicationSteps = [
 
 export function CommunityHostApplication({
   applications,
+  currentUserId,
   media,
   mediaReady,
   migrationReady,
   pilotEligible,
 }: {
   applications: CommunityHostApplicationState[];
+  currentUserId: string;
   media: ApplicationProposalMedia[];
   mediaReady: boolean;
   migrationReady: boolean;
@@ -133,7 +138,31 @@ export function CommunityHostApplication({
   const [reviewValues, setReviewValues] = useState<Record<string, string>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageAltText, setImageAltText] = useState("");
+  const [acceptGuidelines, setAcceptGuidelines] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const applicationDefaults: Record<string, string> = {
+    community_name: editable ? current.community_name : "",
+    category: editable ? current.category : "",
+    purpose: editable ? current.purpose : "",
+    intended_members: editable ? current.intended_members : "",
+    expected_members: String(editable ? current.expected_members : 20),
+    admission_model: editable && current.admission_model !== "open_request" ? current.admission_model : "application_review",
+    host_experience: editable ? current.host_experience : "",
+    safety_plan: editable ? current.safety_plan : "",
+    applicant_message: editable ? current.applicant_message ?? "" : "",
+  };
+  const [draft, setDraft, clearDraft, restored] = useCommunityDraft(
+    communityDraftKey(currentUserId, "host-application", editable ? current.application_id : "new"), applicationDefaults,
+  );
+  const draftDirty = JSON.stringify(draft) !== JSON.stringify(applicationDefaults);
+  function field(name: string) {
+    return { value: draft[name] ?? "", onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const value = event.target.value;
+      setDraft(previous => ({ ...previous, [name]: value }));
+      setAcceptGuidelines(false);
+    } };
+  }
+  useCommunityFileGuard(Boolean(imageFile), { ask, busy: Boolean(busy), discard: () => setImageFile(null), blocked: () => setMessage("Please wait for your application to finish saving.") });
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const currentMedia = current
     ? media.find((item) => item.context_type === "community_application" && item.context_id === current.application_id) ?? null
@@ -160,15 +189,18 @@ export function CommunityHostApplication({
   }
 
   function openApplication() {
+    if (busy) return;
     setStep(0);
     setFurthestStep(0);
-    setImageFile(null);
-    setImageAltText(currentMedia?.alt_text ?? "");
+    setAcceptGuidelines(false);
+    if (!imageFile) setImageAltText(currentMedia?.alt_text ?? "");
     setOpen(true);
   }
 
   function closeApplication() {
+    if (busy) return;
     setOpen(false);
+    setAcceptGuidelines(false);
   }
 
   function nextStep() {
@@ -206,8 +238,11 @@ export function CommunityHostApplication({
       return;
     }
     const form = new FormData(event.currentTarget);
+    if (busy) return;
     setBusy("save");
     setMessage("");
+    let detailsSaved = false;
+    try {
     const { data: savedApplicationId, error } = await supabase.rpc(
       "save_community_host_application",
       {
@@ -224,6 +259,7 @@ export function CommunityHostApplication({
         p_safety_plan: String(form.get("safety_plan") ?? ""),
       },
     );
+    detailsSaved = !error && Boolean(savedApplicationId);
     let imageError: unknown = null;
     if (!error && savedApplicationId && imageFile) {
       try {
@@ -255,14 +291,22 @@ export function CommunityHostApplication({
           : "Application sent. You can follow its progress here.",
     );
     if (!error) {
+      clearDraft(applicationDefaults);
       setImageFile(null);
-      closeApplication();
+      setOpen(false); setAcceptGuidelines(false);
       router.refresh();
     }
+    } catch (error) {
+      if (detailsSaved) {
+        clearDraft(applicationDefaults); setImageFile(null); setOpen(false); setAcceptGuidelines(false); router.refresh();
+        setMessage("Your Community details were saved, but the latest status could not be loaded. Reopen this page to check progress before sending again.");
+      } else setMessage(memberErrorMessage(error, "send your Community details"));
+    }
+    finally { setBusy(""); }
   }
 
   async function removeImage() {
-    if (!currentMedia) return;
+    if (!currentMedia || busy) return;
     const confirmed = await ask({
       confirmLabel: "Remove image",
       description: "This removes the optional image from the application. Your written proposal remains unchanged.",
@@ -284,7 +328,7 @@ export function CommunityHostApplication({
   }
 
   async function withdraw() {
-    if (!current || !editable) return;
+    if (!current || !editable || busy) return;
     const confirmed = await ask({
       confirmLabel: "Withdraw application",
       description:
@@ -295,6 +339,7 @@ export function CommunityHostApplication({
     if (!confirmed) return;
     setBusy("withdraw");
     setMessage("");
+    try {
     const { error } = await supabase.rpc(
       "withdraw_community_host_application",
       { p_application_id: current.application_id },
@@ -306,9 +351,12 @@ export function CommunityHostApplication({
         : "Application withdrawn. You can create a new proposal at any time.",
     );
     if (!error) {
+      clearDraft(applicationDefaults); setImageFile(null);
       closeApplication();
       router.refresh();
     }
+    } catch (error) { setMessage(memberErrorMessage(error, "withdraw your Community application")); }
+    finally { setBusy(""); }
   }
 
   if (!migrationReady) {
@@ -333,7 +381,6 @@ export function CommunityHostApplication({
   const showForm = open && (canBegin || editable);
   const showJourney =
     !showForm && Boolean(current && current.status !== "approved");
-  const defaults = editable ? current : null;
 
   return (
     <section className="community-host-application" id="create-community">
@@ -354,6 +401,7 @@ export function CommunityHostApplication({
         ) : (
           <button
             className="button button-primary"
+            disabled={Boolean(busy)}
             onClick={() => (open ? closeApplication() : openApplication())}
           >
             {open ? "Close" : pilotEligible ? "Create a Community" : "Share your Community idea"}
@@ -441,6 +489,7 @@ export function CommunityHostApplication({
               <>
                 <button
                   className="button button-primary"
+                  disabled={Boolean(busy)}
                   onClick={() =>
                     open ? closeApplication() : openApplication()
                   }
@@ -453,7 +502,7 @@ export function CommunityHostApplication({
                 </button>
                 <button
                   className="button button-quiet"
-                  disabled={busy === "withdraw"}
+                  disabled={Boolean(busy)}
                   onClick={() => void withdraw()}
                 >
                   {busy === "withdraw" ? "Withdrawing…" : "Withdraw"}
@@ -474,12 +523,13 @@ export function CommunityHostApplication({
             <p className="eyebrow">
               {editable ? "Update your application" : "Start a Community"}
             </p>
-            <h3>Let’s shape your Community together.</h3>
+            <h3>Your Community details</h3>
             <p>
-              Four short steps. Your answers stay here as you move back and
-              forward, and nothing is sent until you confirm at the end.
+              Four short steps. Unfinished answers stay in this tab until you sign out or close it. Nothing is sent until you confirm.
             </p>
           </header>
+          {restored || draftDirty ? <p role="status">{restored ? "Your unfinished answers are here." : "Your answers have not been sent yet."} <button type="button" disabled={Boolean(busy)} onClick={() => { clearDraft(applicationDefaults); setStep(0); setFurthestStep(0); setReviewValues({}); setAcceptGuidelines(false); }}>Discard answers</button></p> : null}
+          <fieldset disabled={Boolean(busy)} style={{ display: "contents" }}>
           <nav
             aria-label="Application progress"
             className="community-host-form-progress"
@@ -534,7 +584,7 @@ export function CommunityHostApplication({
                 <label>
                   Community name
                   <input
-                    defaultValue={defaults?.community_name ?? ""}
+                    {...field("community_name")}
                     maxLength={80}
                     minLength={3}
                     name="community_name"
@@ -545,7 +595,7 @@ export function CommunityHostApplication({
                 </label>
                 <label>
                   Main focus
-                  <select defaultValue={defaults?.category ?? ""} name="category" required>
+                  <select {...field("category")} name="category" required>
                     <option disabled value="">Choose one</option>
                     {Object.entries(categoryLabels).map(([value, label]) => (
                       <option key={value} value={value}>{label}</option>
@@ -555,7 +605,7 @@ export function CommunityHostApplication({
                 <label className="span-two">
                   Why should this Community exist?
                   <textarea
-                    defaultValue={defaults?.purpose ?? ""}
+                    {...field("purpose")}
                     maxLength={1200}
                     minLength={40}
                     name="purpose"
@@ -586,7 +636,7 @@ export function CommunityHostApplication({
                 <label className="span-two">
                   Who is it for?
                   <textarea
-                    defaultValue={defaults?.intended_members ?? ""}
+                    {...field("intended_members")}
                     maxLength={600}
                     minLength={20}
                     name="intended_members"
@@ -598,7 +648,7 @@ export function CommunityHostApplication({
                 <label>
                   About how many members in the first year?
                   <input
-                    defaultValue={defaults?.expected_members ?? 20}
+                    {...field("expected_members")}
                     max={100000}
                     min={5}
                     name="expected_members"
@@ -608,12 +658,12 @@ export function CommunityHostApplication({
                 </label>
                 <label>
                   How should people join?
-                  <select defaultValue={defaults?.admission_model === "open_request" ? "application_review" : defaults?.admission_model ?? "application_review"} name="admission_model" required>
+                  <select {...field("admission_model")} name="admission_model" required>
                     <option value="open_join">Open to all Her Africa Table members</option>
                     <option value="application_review">Members ask me before joining</option>
                     <option value="invitation_only">Only people I invite</option>
                   </select>
-                  <small>Your Community starts as a private draft. This choice takes effect when its page opens to members.</small>
+                  <small>{pilotEligible ? "This joining choice applies when your first free Community opens." : "This joining choice applies after approval, when your Community opens."}</small>
                 </label>
               </div>
             </section>
@@ -636,7 +686,7 @@ export function CommunityHostApplication({
                 <label className="span-two">
                   What experience will help you lead?
                   <textarea
-                    defaultValue={defaults?.host_experience ?? ""}
+                    {...field("host_experience")}
                     maxLength={1000}
                     minLength={20}
                     name="host_experience"
@@ -648,7 +698,7 @@ export function CommunityHostApplication({
                 <label className="span-two">
                   How will you keep it useful and safe?
                   <textarea
-                    defaultValue={defaults?.safety_plan ?? ""}
+                    {...field("safety_plan")}
                     maxLength={1200}
                     minLength={40}
                     name="safety_plan"
@@ -660,7 +710,7 @@ export function CommunityHostApplication({
                 <label className="span-two">
                   Anything else we should know? <small>Optional</small>
                   <textarea
-                    defaultValue={defaults?.applicant_message ?? ""}
+                    {...field("applicant_message")}
                     maxLength={1000}
                     name="applicant_message"
                     placeholder="Add useful timing, context or links."
@@ -722,12 +772,11 @@ export function CommunityHostApplication({
                 <p className="application-image-unavailable">Optional image uploads will appear after the latest database update. You can still send the written application now.</p>
               )}
               <label className="community-host-consent">
-                <input name="accept_guidelines" required type="checkbox" />
+                <input name="accept_guidelines" required type="checkbox" checked={acceptGuidelines} onChange={event => setAcceptGuidelines(event.target.checked)} />
                 <span>
                   I will follow the{" "}
                   <Link href="/community-guidelines">Community Guidelines</Link>.
-                  I understand that an approved Community is prepared privately
-                  before members can join.
+                  {pilotEligible ? " My first free Community opens when these details are accepted. Admin can pause unsafe activity." : " My Community needs approval before members can join."}
                 </span>
               </label>
             </section>
@@ -754,10 +803,11 @@ export function CommunityHostApplication({
                   ? "Sending…"
                   : editable
                     ? "Send updated application"
-                    : "Send my application"}
+                    : pilotEligible ? "Create my Community" : "Send my application"}
               </button>
             )}
           </footer>
+          </fieldset>
         </form>
       ) : null}
 

@@ -138,6 +138,7 @@ export default async function CommunitiesPage() {
           </ol>
         </section>
         <CommunityHostApplication
+          currentUserId={user.id}
           applications={applications}
           media={applicationMedia}
           mediaReady={!mediaResult.error}
@@ -240,6 +241,7 @@ export default async function CommunitiesPage() {
       )}
 
       <CommunityHostApplication
+        currentUserId={user.id}
         applications={applications}
         media={applicationMedia}
         mediaReady={!mediaResult.error}

@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
+import { communityDraftKey } from "@/lib/community-drafts";
+import { useCommunityDraft } from "@/lib/use-community-draft";
 
 export type CommunityBrandIdentity = {
   community_id: string;
@@ -58,11 +60,13 @@ function inspectImage(file: File) {
 
 export function CommunityBrandingPanel({
   communityId,
+  currentUserId,
   identity,
   migrationReady,
   owner,
 }: {
   communityId: string;
+  currentUserId: string;
   identity: CommunityBrandIdentity | null;
   migrationReady: boolean;
   owner: boolean;
@@ -74,6 +78,10 @@ export function CommunityBrandingPanel({
   const [icon, setIcon] = useState<File | null>(null);
   const [message, setMessage] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
+  const initialDraft = { tagline: identity?.tagline ?? "", accent: identity?.accent_key ?? "wine", iconAlt: "", coverAlt: "", removeIcon: false, removeCover: false };
+  const [draft, setDraft, clearDraft] = useCommunityDraft(communityDraftKey(currentUserId, "branding", communityId), initialDraft);
+  const [savedDraft, setSavedDraft] = useState(initialDraft);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(savedDraft);
   const { ask, dialog } = useActionDialog();
   useCommunityFileGuard(owner && migrationReady && Boolean(icon || cover), {
     ask,
@@ -103,8 +111,10 @@ export function CommunityBrandingPanel({
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!owner || busy || (!dirty && !icon && !cover)) return;
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
+    const submitted = { ...draft };
     setBusy(true);
     setMessage("");
 
@@ -214,6 +224,8 @@ export function CommunityBrandingPanel({
 
       setCover(null);
       setIcon(null);
+      const saved = { ...submitted, iconAlt: "", coverAlt: "", removeIcon: false, removeCover: false };
+      setSavedDraft(saved); clearDraft(saved);
       clearFileInputs();
       setMessage(
         "Community images and colour saved.",
@@ -269,7 +281,7 @@ export function CommunityBrandingPanel({
             </span>
           )}
           <div>
-            <span>Private preview</span>
+            <span>Saved look</span>
             <strong>{identity?.tagline ?? "A purposeful community for members."}</strong>
           </div>
         </div>
@@ -280,7 +292,8 @@ export function CommunityBrandingPanel({
         <label className="span-two">
           Community tagline
           <input
-            defaultValue={identity?.tagline ?? ""}
+            value={draft.tagline}
+            onChange={event => setDraft(current => ({ ...current, tagline: event.target.value }))}
             maxLength={140}
             minLength={3}
             name="tagline"
@@ -295,9 +308,8 @@ export function CommunityBrandingPanel({
             {accents.map((accent) => (
               <label key={accent.value}>
                 <input
-                  defaultChecked={
-                    (identity?.accent_key ?? "wine") === accent.value
-                  }
+                  checked={draft.accent === accent.value}
+                  onChange={() => setDraft(current => ({ ...current, accent: accent.value }))}
                   name="accent_key"
                   type="radio"
                   value={accent.value}
@@ -328,6 +340,8 @@ export function CommunityBrandingPanel({
             Icon description
             <input
               disabled={!icon}
+              value={draft.iconAlt}
+              onChange={event => setDraft(current => ({ ...current, iconAlt: event.target.value }))}
               maxLength={240}
               minLength={3}
               name="icon_alt_text"
@@ -337,7 +351,7 @@ export function CommunityBrandingPanel({
           </label>
           {identity?.icon_asset_id ? (
             <label className="community-brand-remove">
-              <input name="remove_icon" type="checkbox" />
+              <input name="remove_icon" type="checkbox" checked={draft.removeIcon} onChange={event => setDraft(current => ({ ...current, removeIcon: event.target.checked }))} />
               Remove the current icon
             </label>
           ) : null}
@@ -358,6 +372,8 @@ export function CommunityBrandingPanel({
             Cover description
             <input
               disabled={!cover}
+              value={draft.coverAlt}
+              onChange={event => setDraft(current => ({ ...current, coverAlt: event.target.value }))}
               maxLength={240}
               minLength={3}
               name="cover_alt_text"
@@ -367,7 +383,7 @@ export function CommunityBrandingPanel({
           </label>
           {identity?.cover_asset_id ? (
             <label className="community-brand-remove">
-              <input name="remove_cover" type="checkbox" />
+              <input name="remove_cover" type="checkbox" checked={draft.removeCover} onChange={event => setDraft(current => ({ ...current, removeCover: event.target.checked }))} />
               Remove the current cover
             </label>
           ) : null}
@@ -375,17 +391,18 @@ export function CommunityBrandingPanel({
 
         <footer className="span-two">
           <div>
-            <strong>Private until your Community is ready</strong>
+            <strong>Save your changes</strong>
             <small>
-              Changing the look does not make the Community visible to members.
+              This does not change who can see or join your Community.
             </small>
           </div>
-          <button className="button button-primary" disabled={busy}>
+          <button className="button button-primary" disabled={busy || (!dirty && !icon && !cover)}>
             {busy ? "Saving…" : "Save look and feel"}
           </button>
         </footer>
         </fieldset>
       </form>
+      {dirty ? <p role="status">Changes are not saved yet. <button type="button" disabled={busy} onClick={() => clearDraft(savedDraft)}>Discard changes</button></p> : null}
 
       {message ? (
         <p className="community-host-message" role="status">

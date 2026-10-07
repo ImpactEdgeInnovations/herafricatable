@@ -29,7 +29,9 @@ This is the current sequence. Earlier implementation notes below are historical;
 - [x] Preserve unfinished joining choices, gathering settings and album permissions in bounded account-scoped tab memory; show unsaved feedback and explicit **Discard changes**. Clear a draft only after successful saving. Refresh authoritative album upload access after permission changes.
 - [x] Share one leave-page warning for selected post, album and branding files; keep files on cancellation, block departure during saving and ignore stale decisions after unmount/sign-out. Selected files are never stored in draft memory. Browser reload/close uses the browser warning; SPA Back behaviour still needs device acceptance.
 - [x] Pass behavioural file-guard tests (mocked browser/router), draft-store tests, photo pipeline and Community UI contracts, TypeScript and production build. These are automated checks, not real-device acceptance.
-- [ ] Finish remaining Host application/branding text and invitation form drafts, then populated mobile/desktop polish. The new file guard does not claim to preserve all uncontrolled text forms.
+- [x] Keep Community application and branding text drafts account-scoped and bounded in tab memory. Application fields are controlled across carousel close/reopen; consent is never persisted and resets before a new review. Branding removal choices, colour and descriptions have explicit unsaved/Discard states. Image files remain memory-only and use the shared leave guard.
+- [x] Protect Community submission from stuck saving states and avoid calling a confirmed save a failure when the later status refresh fails. Keep answers on submission failure; clear them after confirmed save or withdrawal. Simplify pilot creation/consent copy without changing server approval controls.
+- [ ] Finish invitation/public-profile form draft review, then populated mobile/desktop polish. Not every Host form is covered yet.
 
 ### Phase 5 — reliable media operations
 

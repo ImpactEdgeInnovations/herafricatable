@@ -1360,13 +1360,13 @@ for (const contract of [
 for (const contract of [
   "Look &amp; feel",
   "Make the community recognisable",
-  "Private preview",
+  "Saved look",
   "save_community_brand_identity",
   'from("community-media")',
   "Community logo",
   "Cover image",
   "Accent colour",
-  "Private until your Community is ready",
+  "This does not change who can see or join your Community.",
   "p_remove_icon",
   "p_remove_cover",
 ]) {
@@ -1517,7 +1517,7 @@ for (const contract of [
   "checkValidity",
   "Does this feel right?",
   "Send my application",
-  "prepared privately",
+  "My Community needs approval before members can join.",
   "memberErrorMessage",
 ]) {
   assert(

@@ -331,6 +331,7 @@ export default async function CommunityHostPage({
         migrationReady={!welcomeQueueResult.error}
       />
       <CommunityBrandingPanel
+        currentUserId={user.id}
         communityId={community.community_id}
         identity={signedBrandIdentity}
         migrationReady={!brandingResult.error}
