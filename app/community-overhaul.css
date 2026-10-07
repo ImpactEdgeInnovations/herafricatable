@@ -145,6 +145,10 @@
 .safe-brand-preview { padding: 20px; border: 1px solid #e4dfdc; border-top: 3px solid var(--room-accent); border-radius: 8px; background: #fff; color: #241e20; }
 .safe-brand-preview-action { display: inline-block; padding: 10px 16px; border-radius: 6px; background: var(--room-accent); color: #fff; font-size: .9rem; }
 .safe-brand-actions { display: flex; align-items: center; gap: 16px; margin: 16px 0 0; }
+.community-application-image-handoff { display: flex; align-items: center; gap: 16px; margin: 16px 0; padding: 16px; border: 1px solid #e4dfdc; border-radius: 8px; background: #fff; }
+.community-application-image-handoff > img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.community-application-image-handoff p { margin: 6px 0 12px; font: 400 .9rem/1.5 var(--sans, Arial, sans-serif); }
+@media (max-width: 600px) { .community-application-image-handoff { align-items: flex-start; } .community-application-image-handoff > img { width: 48px; height: 48px; } .community-application-image-handoff .button { white-space: normal; } }
 .community-room-page .community-host-identity { font-size: .85rem; color: #655e60; }
 .community-room-page .community-host-identity a { color: #241e20; font-weight: 600; }
 .community-room-page:has(.community-inline-gathering) > :is(.community-next-gathering, .community-live-notice) { display: none; }

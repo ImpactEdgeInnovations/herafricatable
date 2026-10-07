@@ -227,10 +227,16 @@ export function CommunityGatheringRoom({
       if (!confirmed) return;
     }
     setBusy(item.message_id);
-    const { error } = await supabase.rpc("manage_community_gathering_message", { p_action: action, p_message_id: item.message_id });
-    setBusy("");
-    if (error) return setNotice(memberErrorMessage(error, `${action} this message`));
-    await refreshRoom();
+    try {
+      const result = action === "remove" && item.author_id === currentUserId && !room.can_manage
+        ? await supabase.rpc("remove_my_community_gathering_message", { p_message_id:item.message_id })
+        : await supabase.rpc("manage_community_gathering_message", { p_action: action, p_message_id: item.message_id });
+      if (result.error) throw result.error;
+      if (action === "remove" && replyTo?.message_id === item.message_id) setReplyTo(null);
+      await refreshRoom();
+      setNotice(action === "remove" ? "Message removed." : action === "pin" ? "Message pinned." : "Message unpinned.");
+    } catch (cause) { setNotice(memberErrorMessage(cause, `${action} this message`)); }
+    finally { setBusy(""); }
   }
 
   async function reportMessage(item: CommunityGatheringMessage) {
@@ -333,7 +339,25 @@ export function CommunityGatheringRoom({
 
         <section hidden={isRecording} className="gathering-live" id="live-conversation">
           <header><div><p className="eyebrow">Around the gathering</p><h2>Live conversation</h2></div><p>{room.chat_phase === "before" ? `Opens ${new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: timezone }).format(new Date(room.chat_opens_at))}.` : room.chat_phase === "open" ? "Open now. Keep messages useful, kind and connected to this gathering." : "This room is now read-only. Messages stay here with the gathering."}</p></header>
-          {messages.length ? <div className="gathering-message-list" role="region" aria-label="Live messages" tabIndex={0}>{messages.map((item) => { const authorName = item.author_name || "Community member"; return <article className={item.is_pinned ? "is-pinned" : ""} key={item.message_id}><div className="gathering-message-avatar">{item.author_avatar_url ? <img alt="" src={item.author_avatar_url}/> : authorName.slice(0, 1)}</div><div><header><strong>{authorName}</strong>{item.is_pinned ? <span>Pinned</span> : null}<time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: timezone }).format(new Date(item.created_at))}</time></header>{item.reply_to ? <blockquote><strong>Reply to {item.reply_to.author_name || "a member"}</strong><p>{item.reply_to.body}</p></blockquote> : null}<p>{item.body}</p><footer>{canWrite ? <button type="button" onClick={() => { setReplyTo(item); chatComposer.current?.focus(); }}>Reply</button> : null}<details><summary>More</summary>{room.can_manage ? <><button disabled={busy === item.message_id} onClick={() => void moderateMessage(item, item.is_pinned ? "unpin" : "pin")} type="button">{item.is_pinned ? "Unpin" : "Pin"}</button><button onClick={() => void moderateMessage(item, "remove")} type="button">Remove</button></> : item.author_id !== currentUserId ? <button onClick={() => void reportMessage(item)} type="button">Report privately</button> : null}</details></footer></div></article>; })}</div> : <div className="gathering-soft-note"><strong>No messages yet.</strong><p>The Host can welcome everyone when the room opens.</p></div>}
+          {messages.length ? <div className="gathering-message-list" role="region" aria-label="Live messages" tabIndex={0}>{messages.map((item) => {
+            const authorName = item.author_name || "Community member";
+            return <article className={item.is_pinned ? "is-pinned" : ""} key={item.message_id}>
+              <div className="gathering-message-avatar">{item.author_avatar_url ? <img alt="" src={item.author_avatar_url}/> : authorName.slice(0, 1)}</div>
+              <div><header><strong>{authorName}</strong>{item.is_pinned ? <span>Pinned</span> : null}<time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: timezone }).format(new Date(item.created_at))}</time></header>
+                {item.reply_to ? <blockquote><strong>Reply to {item.reply_to.author_name || "a member"}</strong><p>{item.reply_to.body}</p></blockquote> : null}<p>{item.body}</p>
+                <footer>{canWrite ? <button type="button" onClick={() => { setReplyTo(item); chatComposer.current?.focus(); }}>Reply</button> : null}
+                  <details><summary>More</summary>
+                    {room.can_manage ? <>
+                      <button disabled={busy === item.message_id} onClick={() => void moderateMessage(item, item.is_pinned ? "unpin" : "pin")} type="button">{item.is_pinned ? "Unpin" : "Pin"}</button>
+                      <button disabled={busy === item.message_id} onClick={() => void moderateMessage(item, "remove")} type="button">Remove</button>
+                    </> : item.author_id === currentUserId
+                      ? <button disabled={busy === item.message_id} onClick={() => void moderateMessage(item, "remove")} type="button">Remove my message</button>
+                      : <button onClick={() => void reportMessage(item)} type="button">Report privately</button>}
+                  </details>
+                </footer>
+              </div>
+            </article>;
+          })}</div> : <div className="gathering-soft-note"><strong>No messages yet.</strong><p>The Host can welcome everyone when the room opens.</p></div>}
           {canWrite ? <form className="gathering-message-composer" onSubmit={sendMessage}>{replyTo ? <div className="gathering-reply-context"><span>Replying to {replyTo.author_name || "a member"}</span><button type="button" onClick={() => setReplyTo(null)}>Cancel reply</button></div> : null}<label htmlFor="gathering-message">Add a message</label><div><textarea ref={chatComposer} id="gathering-message" maxLength={600} onChange={(event) => setBody(event.target.value)} placeholder="Share a thought or useful link…" rows={2} value={body}/><button className="button button-primary" disabled={busy === "message" || body.trim().length < 2} type="submit">Send</button></div><small>{room.chat_mode === "slow" ? "Slow mode is on: one message every 30 seconds." : "This conversation becomes read-only 24 hours after the gathering."}</small></form> : room.chat_phase === "open" && room.chat_mode === "hosts_only" && !room.can_manage ? <p className="gathering-soft-note">The Host has paused member messages. You can still read the conversation.</p> : room.chat_phase === "open" && room.my_rsvp !== "going" && !room.can_manage ? <p className="gathering-soft-note">Choose “I’m going” above to take part in the live conversation.</p> : null}
         </section>
 

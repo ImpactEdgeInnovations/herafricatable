@@ -24,6 +24,6 @@ Deployed owner walkthrough confirmed the two-step wizard, online default, option
 
 - Populated mobile/desktop, keyboard and ordinary-member/Host/Admin walkthroughs.
 - Actual YouTube playback, photo files, safe removal, permission changes and email delivery.
-- Application-image → branding handoff and Community avatar source verification.
+- Application-image → branding: explicit owner reuse is implemented in Look & feel. It downloads only her own current, non-rejected private image, prepares a bounded square preview locally and saves through the existing branding permission checks only after Save. Real saved-image delivery/directory acceptance remains open.
 - Broader SECURITY DEFINER anonymous-grant allowlist audit: this pass restricts gathering save/publish only, not every function discovered by advisors.
 - Existing CINT-01/02 access/joining corrections and own-message removal remain on the main Community taskboard; this UI pass does not mark them done.

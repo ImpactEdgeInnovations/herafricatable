@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -9,6 +9,14 @@ import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
 import { brandAccent } from "@/lib/brand-themes";
+import { prepareCommunityImage } from "@/lib/community-image-preview";
+
+export type CommunityApplicationImage = {
+  storage_path: string;
+  mime_type: string;
+  alt_text: string;
+  image_url: string | null;
+};
 
 export type CommunityBrandIdentity = {
   community_id: string;
@@ -65,12 +73,14 @@ export function CommunityBrandingPanel({
   identity,
   migrationReady,
   owner,
+  applicationImage = null,
 }: {
   communityId: string;
   currentUserId: string;
   identity: CommunityBrandIdentity | null;
   migrationReady: boolean;
   owner: boolean;
+  applicationImage?: CommunityApplicationImage | null;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -78,6 +88,13 @@ export function CommunityBrandingPanel({
   const [cover, setCover] = useState<File | null>(null);
   const [icon, setIcon] = useState<File | null>(null);
   const [message, setMessage] = useState("");
+  const [iconPreview, setIconPreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!icon) { setIconPreview(null); return; }
+    const url = URL.createObjectURL(icon);
+    setIconPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [icon]);
   const formRef = useRef<HTMLFormElement>(null);
   const initialDraft = { tagline: identity?.tagline ?? "", accent: identity?.accent_key ?? "wine", iconAlt: "", coverAlt: "", removeIcon: false, removeCover: false };
   const [draft, setDraft, clearDraft] = useCommunityDraft(communityDraftKey(currentUserId, "branding", communityId), initialDraft);
@@ -92,6 +109,20 @@ export function CommunityBrandingPanel({
   });
   function clearFileInputs() {
     formRef.current?.querySelectorAll<HTMLInputElement>('input[type="file"]').forEach(input => { input.value = ""; });
+  }
+
+  async function useApplicationImage() {
+    if (!applicationImage || busy) return;
+    setBusy(true); setMessage("");
+    try {
+      const result = await supabase.storage.from("proposal-media").download(applicationImage.storage_path);
+      if (result.error) throw result.error;
+      const prepared = await prepareCommunityImage(result.data.type ? result.data : new Blob([result.data], {type:applicationImage.mime_type}));
+      setIcon(prepared);
+      setDraft(value => ({...value, iconAlt:applicationImage.alt_text, removeIcon:false}));
+      setMessage("Check the square preview, then Save look and feel to use it. Nothing has been changed yet.");
+    } catch (cause) { setMessage(memberErrorMessage(cause, "prepare your Community image")); }
+    finally { setBusy(false); }
   }
 
   if (!owner) return null;
@@ -269,13 +300,13 @@ export function CommunityBrandingPanel({
           <div className="community-brand-cover is-placeholder" aria-hidden="true" />
         )}
         <div>
-          {identity?.icon_url ? (
+          {iconPreview || identity?.icon_url ? (
             <img
-              alt={identity.icon_alt_text ?? ""}
+              alt={iconPreview ? draft.iconAlt : identity?.icon_alt_text ?? ""}
               className="community-brand-icon"
-              height={identity.icon_height ?? undefined}
-              src={identity.icon_url}
-              width={identity.icon_width ?? undefined}
+              height={identity?.icon_height ?? undefined}
+              src={iconPreview ?? identity?.icon_url ?? ""}
+              width={identity?.icon_width ?? undefined}
             />
           ) : (
             <span className="community-brand-icon is-placeholder" aria-hidden="true">
@@ -288,6 +319,12 @@ export function CommunityBrandingPanel({
           </div>
         </div>
       </div>
+
+      {applicationImage?.image_url ? <div className="community-application-image-handoff">
+        <img src={applicationImage.image_url} alt={applicationImage.alt_text} />
+        <div><strong>Your uploaded image</strong><p>Use it as the small image beside your Community name. We crop the centre into a square; check the preview before saving.</p>
+        <button className="button button-outline" type="button" disabled={busy} onClick={() => void useApplicationImage()}>Use this as Community image</button></div>
+      </div> : null}
 
       <form ref={formRef} className="community-branding-form" onSubmit={(event) => void save(event)}>
         <fieldset disabled={busy} className="span-two" style={{ display: "contents" }}>
@@ -403,7 +440,7 @@ export function CommunityBrandingPanel({
         </footer>
         </fieldset>
       </form>
-      {dirty ? <p role="status">Changes are not saved yet. <button type="button" disabled={busy} onClick={() => clearDraft(savedDraft)}>Discard changes</button></p> : null}
+      {dirty || icon || cover ? <p role="status">Changes are not saved yet. <button type="button" disabled={busy} onClick={() => { clearDraft(savedDraft); setIcon(null); setCover(null); clearFileInputs(); setMessage(""); }}>Discard changes</button></p> : null}
 
       {message ? (
         <p className="community-host-message" role="status">

@@ -33,6 +33,7 @@ import {
 import {
   CommunityBrandingPanel,
   type CommunityBrandIdentity,
+  type CommunityApplicationImage,
 } from "@/components/member/community-branding-panel";
 import {
   CommunityCircleHostPanel,
@@ -108,6 +109,20 @@ export default async function CommunityHostPage({
     null;
   const brandIdentity =
     ((brandingResult.data as CommunityBrandIdentity[] | null) ?? [])[0] ?? null;
+  // Only the owner may reuse her own current, non-rejected application image.
+  // Download and saving continue through the existing private Storage policies.
+  const applicationResult = community.membership_role === "owner"
+    ? await supabase.from("community_host_applications").select("id").eq("created_community_id", community.community_id).eq("applicant_id", user.id).maybeSingle()
+    : {data:null};
+  const applicationMediaResult = applicationResult.data
+    ? await supabase.from("application_proposal_media").select("storage_path,mime_type,alt_text")
+      .eq("context_type", "community_application").eq("context_id", applicationResult.data.id)
+      .eq("owner_id", user.id).eq("is_current", true).in("status", ["submitted", "approved"]).maybeSingle()
+    : {data:null};
+  const applicationSigned = applicationMediaResult.data
+    ? await supabase.storage.from("proposal-media").createSignedUrl(applicationMediaResult.data.storage_path, 3600)
+    : {data:null};
+  const applicationImage: CommunityApplicationImage | null = applicationMediaResult.data ? {...applicationMediaResult.data, image_url:applicationSigned.data?.signedUrl ?? null} : null;
   const publicProfile =
     ((publicProfileResult.data as CommunityPublicProfile[] | null) ?? [])[0] ??
     null;
@@ -340,6 +355,7 @@ export default async function CommunityHostPage({
       </CommunityHostSection>
       <CommunityHostSection id="identity-area" title="Community image and appearance">
       <CommunityBrandingPanel
+        applicationImage={applicationImage}
         currentUserId={user.id}
         communityId={community.community_id}
         identity={signedBrandIdentity}
