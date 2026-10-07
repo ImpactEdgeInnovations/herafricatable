@@ -23,17 +23,13 @@ export function YourTableToday({
     <section className="table-today" aria-labelledby="table-today-title">
       <header>
         <div>
-          <p className="eyebrow">Your Table Today</p>
-          <h2 id="table-today-title">A simple place to start.</h2>
+          <h2 id="table-today-title">Your Table today</h2>
         </div>
-        <p>Based on what you told us. You are always in control.</p>
+        <p>A few suggestions for your next visit.</p>
       </header>
       <div className="table-today-grid">
-        {suggestions.map((suggestion, index) => (
+        {suggestions.map((suggestion) => (
           <article key={suggestion.kicker}>
-            <span className="table-today-number" aria-hidden="true">
-              0{index + 1}
-            </span>
             <div>
               <p>{suggestion.kicker}</p>
               <h3>{suggestion.title}</h3>

@@ -620,10 +620,10 @@ for (const contract of [
   "nextBestAction",
   "YourTableToday",
   "Who to meet",
-  "Where to participate",
+  "Your Community",
   "What to follow up on",
   "member-home-secondary",
-  "Your progress, invitations and account details.",
+  "Getting started, invitations and account details.",
   "Show more",
 ]) {
   assert(

@@ -660,7 +660,7 @@ export default async function MemberHomePage() {
           "Browse only the profiles members have chosen to make visible.",
         href: "/network",
         kicker: "Who to meet",
-        title: "Find one relevant person",
+        title: "Meet someone new",
       };
   const communityToday: TableTodaySuggestion = activeHomeCommunity
     ? {
@@ -672,7 +672,7 @@ export default async function MemberHomePage() {
           : activeHomeCommunity.tagline ||
             "Return when you want to ask, offer or continue a conversation.",
         href: `/communities/${activeHomeCommunity.slug}`,
-        kicker: "Where to participate",
+        kicker: "Your Community",
         title: activeHomeCommunity.name,
       }
     : {
@@ -680,8 +680,8 @@ export default async function MemberHomePage() {
         description:
           "Choose one group built around a purpose, interest or place you share.",
         href: "/communities",
-        kicker: "Where to participate",
-        title: "Find your room",
+        kicker: "Your Community",
+        title: "Find a Community",
       };
   const actionToday: TableTodaySuggestion = {
     action: nextBestAction?.action ?? "See your next step",
@@ -728,12 +728,8 @@ export default async function MemberHomePage() {
         <details className="member-home-secondary">
           <summary>
             <div>
-              <p className="eyebrow">More from your membership</p>
-              <h2>Your progress, invitations and account details.</h2>
-              <p>
-                Open these only when you need them. Your main Home page stays
-                focused on what matters today.
-              </p>
+              <h2>Your membership</h2>
+              <p>Getting started, invitations and account details.</p>
             </div>
             <span>
               <span className="when-closed">Show more</span>

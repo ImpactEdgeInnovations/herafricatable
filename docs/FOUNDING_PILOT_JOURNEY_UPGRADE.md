@@ -121,6 +121,19 @@ The earlier duplicate navigation, linking and countdown tasks are consolidated i
 
 #### Later phases — cross-platform polish, photos and production acceptance
 
+**7 October update:** At the member's request, the Phase 3 populated-room/playback/inbox rehearsal is deferred to 8 October. Phase 3 stays open. Independent presentation work continues today; this is not a claim that the remaining acceptance gates have passed.
+
+Cross-platform readability, first implementation pass:
+
+- [x] Shorten member Home to a compact welcome and three useful suggestions; remove decorative numbering and the repeated introductory slogan. Preserve recommendation destinations and permission logic.
+- [x] Replace the oversized secondary Home panel heading with “Your membership” and a short description.
+- [x] Use the existing interface font for suggestion, Community-directory and event-card headings; retain restrained editorial page titles and leave public landing/Admin typography unchanged.
+- [x] Increase Community post/reply metadata and form text, keep text fields at 16px, retain focus indicators and 44px action targets, and wrap long titles/actions rather than hiding controls.
+- [x] Pass the repository suite, readability/Community UI/navigation/draft contracts, TypeScript and production build. Inspect the local production event listing at desktop and 390px phone widths: listing and action appear near the top without horizontal clipping.
+- [ ] Verify the new Home/directory/populated Community styling with signed-in member and Host accounts tomorrow. The local event preview does not certify those authenticated screens.
+
+Next implementation sequence: photo data/access/quota design → Host album creation and uploads → member contributions/moderation → Media browsing and accessible carousel → production acceptance. Do not expose a Photos button until it has a working destination. Photo features below remain unimplemented.
+
 - [ ] Audit member typography: one readable interface font, restrained editorial headings only where useful, smaller headings and tighter spacing.
 - [ ] Remove unnecessary decorative cards, slogans and repeated introductory paragraphs from signed-in screens.
 - [ ] Use plain labels: “Your Communities”, “Start a conversation”, “Upcoming gatherings”, “Invite people” and “Add a livestream link”.

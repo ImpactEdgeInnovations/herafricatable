@@ -11,6 +11,7 @@ import "./core-product-polish.css";
 import "./event-introductions.css";
 import "./event-host-workspace.css";
 import "./community-room.css";
+import "./member-readability.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
