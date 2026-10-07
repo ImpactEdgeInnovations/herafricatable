@@ -132,9 +132,9 @@ export function CommunityGatherings({
       <header className="community-section-heading">
         <div>
           <p className="eyebrow">Gatherings</p>
-          <h2 id="community-gatherings-title">Spend time together, with purpose.</h2>
+          <h2 id="community-gatherings-title">Upcoming gatherings</h2>
         </div>
-        <p>Save your place, share a question and join the live conversation here. Meeting links remain private until it is time to join.</p>
+        <p>Choose a gathering to see details, save your place or join the conversation.</p>
       </header>
       {message ? <p className="form-message" role="status">{message}</p> : null}
       {!migrationReady ? (
@@ -158,8 +158,7 @@ export function CommunityGatherings({
         </details>
       ) : null}
       <footer className="gathering-boundary-note">
-        <strong>One Community, two useful spaces.</strong>
-        <p>Gathering chat is for the moment. Lasting ideas return to Conversations through a Host-reviewed recap.</p>
+        <p>Each gathering has its own conversation. Look in Past gatherings for earlier discussions and recaps.</p>
       </footer>
     </section>
   );

@@ -10,6 +10,7 @@ import "./admin-oversight.css";
 import "./core-product-polish.css";
 import "./event-introductions.css";
 import "./event-host-workspace.css";
+import "./community-room.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),

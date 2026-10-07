@@ -1,0 +1,178 @@
+/* Member Community rooms only; directory and Admin styling stay unchanged. */
+.community-room-page {
+  font-family: var(--sans, Arial, sans-serif);
+  font-size: 1rem;
+}
+
+.community-room-page > .community-room-hero {
+  padding: 20px 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.community-room-page .community-room-hero h1 {
+  font-size: clamp(1.65rem, 3vw, 2.15rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.community-room-page .community-room-hero-copy > p:last-of-type {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  -webkit-line-clamp: 2;
+}
+
+.community-room-page .community-room-meta,
+.community-room-page .community-room-tagline {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.community-room-page > .community-local-navigation {
+  min-height: 52px;
+  margin-bottom: 24px;
+  gap: 20px;
+  overflow: visible;
+}
+
+.community-room-page .community-local-tabs {
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  gap: 22px;
+}
+
+.community-room-page .community-local-navigation a {
+  min-height: 52px;
+  padding: 0 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.community-room-page .community-local-more {
+  flex-shrink: 0;
+}
+
+.community-room-page a:focus-visible,
+.community-room-page button:focus-visible,
+.community-room-page summary:focus-visible {
+  outline: 2px solid var(--wine);
+  outline-offset: 3px;
+}
+
+.community-room-page .community-start-path {
+  background: #fffdf9;
+  border: 1px solid var(--line);
+  box-shadow: none;
+  padding: 22px;
+}
+
+.community-room-page .community-start-path > header > p:last-of-type {
+  display: block;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.community-room-page .community-start-primary,
+.community-room-page .community-progress > summary {
+  min-height: 44px;
+  font-size: 0.875rem;
+}
+
+.community-room-page .community-overview-links small {
+  font-size: 0.825rem;
+  line-height: 1.5;
+}
+
+.community-room-page .community-room-more > summary,
+.community-room-page .community-room-more > summary > span {
+  font-size: 0.875rem;
+}
+
+.community-room-page .community-conversation-heading h2,
+.community-room-page .community-section-heading h2,
+.community-room-page .community-people-intro h2,
+.community-room-page .community-composer-panel > summary > span {
+  font-family: var(--sans, Arial, sans-serif);
+  font-size: 1.35rem;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.community-room-page .community-conversation-heading > p,
+.community-room-page .community-section-heading > p,
+.community-room-page .community-people-intro > p:last-child {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  max-width: 540px;
+}
+
+.community-room-page > .community-conversation-shell {
+  padding-top: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.community-room-page .community-composer-panel > summary {
+  min-height: 60px;
+}
+
+.community-room-page .community-composer-panel > summary > span {
+  font-size: 1rem;
+}
+
+.community-room-page .community-feed article > p {
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.community-room-page .community-feed > article {
+  box-shadow: none;
+}
+
+.community-room-page .community-gatherings,
+.community-room-page .community-people-intro {
+  width: var(--community-shell);
+  margin: 0 auto 24px;
+}
+
+.community-room-page .gathering-card {
+  box-shadow: none;
+}
+
+@media (max-width: 620px) {
+  .community-room-page > .community-room-hero {
+    padding: 16px 4px;
+  }
+
+  .community-room-page > .community-local-navigation {
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .community-room-page .community-local-tabs {
+    gap: 16px;
+  }
+
+  .community-room-page .community-local-navigation a {
+    font-size: 0.875rem;
+  }
+
+  .community-room-page .community-conversation-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .community-room-page .community-conversation-heading > p {
+    margin: 0;
+  }
+
+  .community-room-page .community-start-path {
+    padding: 18px;
+  }
+}

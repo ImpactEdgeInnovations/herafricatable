@@ -54,6 +54,19 @@ The open membership pilot is timed; the real first-20 cohort receives creator pr
 
 These are planned tasks, not shipped features. Keep existing permissions and pilot controls intact.
 
+#### Phase 1 progress — Community room foundation
+
+- [x] Add room-scoped styling: compact identity header, readable conversation text, restrained headings, less decorative weight and clearer keyboard focus.
+- [x] Align existing local tab wording to Home, Conversations, Gatherings and People; keep Host tools role-gated and separate.
+- [x] Contain mobile tab scrolling and keep the selected tab visible without scrolling the page.
+- [x] Simplify post-category guidance, gathering headings and member introduction wording; keep backend category values unchanged.
+- [x] Preserve the conversation view when retrying a failed load.
+- [x] Run existing automated contracts, production build and the new `npm run test:community-room-ui` checks.
+- [ ] Complete populated-room desktop/mobile visual acceptance and separate member/Host navigation rehearsal. The browser's signed-in account currently has no Community; source checks are not a substitute for this acceptance.
+- [ ] Complete draft-preserving navigation and any remaining inner-room layout refinements before closing Phase 1.
+
+No database migration is required for this first UI pass. Media tabs, livestreams and albums remain later phases and are not shown as working controls yet.
+
 - [ ] Audit member typography: one readable interface font, restrained editorial headings only where useful, smaller headings and tighter spacing.
 - [ ] Remove unnecessary decorative cards, slogans and repeated introductory paragraphs from signed-in screens.
 - [ ] Use plain labels: “Your Communities”, “Start a conversation”, “Upcoming gatherings”, “Invite people” and “Add a livestream link”.

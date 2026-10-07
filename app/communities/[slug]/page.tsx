@@ -318,7 +318,7 @@ export default async function CommunityPage({
     ...readStateByPost.get(post.post_id),
   }));
   return (
-    <main className="community-page">
+    <main className="community-page community-room-page">
       <MemberHeader active="community" label={community.name} />
       <section
         className={`community-room-hero accent-${brandIdentity?.accent_key ?? "wine"}${coverSigned.data?.signedUrl ? " has-cover" : ""}`}
@@ -351,7 +351,7 @@ export default async function CommunityPage({
             )}
             <div>
               <p className="eyebrow">
-                Member community
+                Your Community
               </p>
               <h1>{community.name}</h1>
             </div>
@@ -403,7 +403,7 @@ export default async function CommunityPage({
             </Link>
             <Link href={`/communities/${slug}?view=people`}>
               <span aria-hidden="true">03</span>
-              <div><strong>People</strong><small>Meet {community.member_count} members thoughtfully</small></div>
+              <div><strong>People</strong><small>Get to know {community.member_count} members</small></div>
               <i aria-hidden="true">→</i>
             </Link>
           </nav>
@@ -429,7 +429,7 @@ export default async function CommunityPage({
           <div className="journey-state-actions">
             <Link
               className="button button-primary"
-              href={`/communities/${slug}`}
+              href={`/communities/${slug}?view=conversations`}
             >
               Try again
             </Link>
@@ -480,10 +480,9 @@ export default async function CommunityPage({
         <>
           <section className="community-people-intro" id="people">
             <p className="eyebrow">People</p>
-            <h2>Find the right person to meet.</h2>
+            <h2>People in this Community</h2>
             <p>
-              Learn who is here and what they care about. Private messages open
-              only after both people agree to connect.
+              Get to know members. You can message once you both agree to connect.
             </p>
           </section>
           {cohort ? (

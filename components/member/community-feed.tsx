@@ -9,12 +9,12 @@ import { memberErrorMessage } from "@/lib/member-error";
 const conversationTypes = [
   { label: "Discussion", value: "discussion" },
   { label: "Introduction", value: "introduction" },
-  { label: "Ask", value: "ask" },
-  { label: "Offer", value: "offer" },
+  { label: "Ask for help", value: "ask" },
+  { label: "Offer help", value: "offer" },
   { label: "Opportunity", value: "opportunity" },
   { label: "Resource", value: "resource" },
   { label: "Event follow-up", value: "event_follow_up" },
-  { label: "Win or outcome", value: "win" },
+  { label: "Good news", value: "win" },
 ] as const;
 
 const hostConversationTypes = [
@@ -29,14 +29,14 @@ const categoryLabels = new Map<string, string>([
 ]);
 
 const conversationTypeHints = new Map<string, string>([
-  ["discussion", "Start a focused exchange that invites useful perspectives."],
-  ["introduction", "Share enough context for the right members to find you."],
-  ["ask", "Name the help, introduction or insight you need."],
+  ["discussion", "Ask a question or share something you would like to discuss."],
+  ["introduction", "Tell members a little about yourself."],
+  ["ask", "Tell members what you need help with."],
   ["offer", "Offer a skill, introduction or resource another member can use."],
-  ["opportunity", "Share a credible opportunity with a clear next step."],
-  ["resource", "Add why this resource matters, not only the link."],
-  ["event_follow_up", "Continue a useful thread from a gathering."],
-  ["win", "Share the outcome and acknowledge the people who helped."],
+  ["opportunity", "Explain the opportunity and how someone can take part."],
+  ["resource", "Share a useful link or file and explain why you recommend it."],
+  ["event_follow_up", "Share a memory, question or update after a gathering."],
+  ["win", "Share your good news and thank anyone who helped."],
   ["start_here", "Explain the community purpose, rules and best first step."],
   ["announcement", "Share an important update with every member."],
 ]);
@@ -738,8 +738,7 @@ export function CommunityFeed({
       {dialog}
       <header className="community-conversation-heading">
         <div>
-          <p className="eyebrow">Conversations</p>
-          <h2 id="community-conversations-title">What members are sharing</h2>
+          <h2 id="community-conversations-title">Conversations</h2>
         </div>
         <p>
           Ask a question, offer help or share an update.

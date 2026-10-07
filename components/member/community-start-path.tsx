@@ -133,12 +133,12 @@ export function CommunityStartPath({
         </p>
         <h2 id="community-start-title">
           {allComplete
-            ? "What would you like to do?"
+            ? "Welcome back"
             : recommended?.label ?? "Choose where to begin."}
         </h2>
         <p>
           {allComplete
-            ? "See what members are discussing, meet someone relevant or check the next event. You never have to post just to stay active."
+            ? "Catch up on conversations or see what is coming up. You never have to post just to stay active."
             : recommended?.description ??
               "Use this community to ask questions, share useful ideas and meet members. Private messages open only after both people agree to connect."}
         </p>
@@ -151,13 +151,13 @@ export function CommunityStartPath({
             className="community-start-primary"
             href={`/communities/${communitySlug}?view=conversations#conversations`}
           >
-            View community posts <span aria-hidden="true">→</span>
+            View conversations <span aria-hidden="true">→</span>
           </Link>
         )}
       </header>
       {supportingSteps.length ? (
         <details className="community-progress">
-          <summary>Your progress <span>{steps.filter((step) => step.complete).length} of {steps.length}</span></summary>
+          <summary>More ways to take part <span>{steps.filter((step) => step.complete).length} of {steps.length}</span></summary>
           <div aria-label="Other ways to participate in this community">
             {supportingSteps.map((step) => (
               <Link className={step.complete ? "is-complete" : undefined} href={step.href} key={step.label}>
