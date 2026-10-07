@@ -37,6 +37,8 @@ Applied live `20261007185632_community_gathering_reply_context.sql`; **no manual
 
 Applied live `20261007191844_gathering_current_access_guard.sql`: the shared room-access helper now checks current platform membership, published Community, enabled module and current Community access; missing rooms return false rather than null. Rollback `045` passed suspended Host denial through legacy/new message APIs, archived Community send denial and restored access. No account or Community suspension was committed. Realtime/two-account acceptance remains open.
 
+Live owner visual check confirmed the recording under Gatherings → Past, its existing “hello my people” reply retained, Reply/Cancel context and side-by-side discussion at desktop width. Phone-width check (390px) had no page overflow; media and discussion stack. The Past card now says Past gathering, not Conversation closed (a video's lasting discussion remains open). Old virtual/internal format wording and zero-going counts on past cards were removed. No live reply or invitation was sent. Screenshots remain local evidence under `tmp/`, not Git assets.
+
 | ID | Priority / phase | Task | Status | Exit condition |
 |---|---|---|---|---|
 | CINT-01 | P0 / 4–6 | Strengthen scheduled-chat access checks for current platform membership and Community publication/suspension | Shared guard implemented; rollback negative tests passed; separate-account/realtime acceptance open | Removed/suspended/dormant accounts and closed Communities cannot read/send through UI, RPC or realtime; Host/member negative tests recorded |

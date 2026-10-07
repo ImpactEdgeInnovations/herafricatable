@@ -42,6 +42,7 @@ function gatheringLabel(value: string) {
 }
 
 function timingLabel(card: CommunityGatheringCard) {
+  if (new Date(card.ends_at).getTime() < Date.now()) return card.recap_published ? "Recap ready" : "Past gathering";
   if (card.chat_phase === "open") return "Conversation open";
   if (card.chat_phase === "archived") return card.recap_published ? "Recap ready" : "Past gathering";
   if (card.chat_phase === "closed") return "Conversation closed";
@@ -146,12 +147,12 @@ export function CommunityGatherings({
               timeZone: timezone, timeZoneName: "short", weekday: "short",
             }).format(new Date(card.starts_at))}
             {" · "}
-            {card.city ? `${card.city}, ${card.country}` : card.format.replaceAll("_", " ")}
+            {card.city ? `${card.city}, ${card.country}` : card.format === "virtual" ? "Online" : card.format === "hybrid" ? "In person and online" : "In person"}
           </small>
-          <div className="gathering-card-signals">
+          {new Date(card.ends_at).getTime() >= Date.now() ? <div className="gathering-card-signals">
             <span>{Number(card.going_count)} going</span>
             {Number(card.question_count) ? <span>{Number(card.question_count)} questions</span> : null}
-          </div>
+          </div> : null}
         </div>
         <div className="gathering-card-actions">
           <Link className="button button-primary" href={roomHref} onClick={(event)=>{event.preventDefault();select(card.event_slug);}}>

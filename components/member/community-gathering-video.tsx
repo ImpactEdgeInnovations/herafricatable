@@ -80,7 +80,7 @@ export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, init
   return (
     <section className="gathering-video" id="gathering-video" aria-labelledby="gathering-video-title">
       <header><h2 id="gathering-video-title">{video?.viewing_mode === "watch_anytime" ? "Watch anytime" : finished ? "Watch the replay" : "Watch & discuss"}</h2>
-        <p>{video?.viewing_mode === "watch_anytime" ? <>Watch at your own pace, then <a href="#gathering-discussion">join the conversation below</a>.</> : "Watch here and use this gathering’s conversation to share your thoughts."}</p></header>
+        <p>{video?.viewing_mode === "watch_anytime" ? <>Watch at your own pace, then <a href="#gathering-discussion">join the discussion</a>.</> : "Watch here and use this gathering’s conversation to share your thoughts."}</p></header>
       {!allowed ? <p role="status">Video access has changed. Return to your Community to check your membership.</p> : null}
       {watchable ? <>
         <div className="gathering-video-player">
