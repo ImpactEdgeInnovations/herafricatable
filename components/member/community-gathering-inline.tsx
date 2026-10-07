@@ -8,8 +8,8 @@ import type { CommunityGatheringCard } from "./community-gatherings";
 
 type Loaded = { room: CommunityGatheringRoomState; messages: CommunityGatheringMessage[]; questions: CommunityGatheringQuestion[]; attendees: CommunityGatheringAttendee[]; video: GatheringVideo | null; videoReady: boolean; reminder: "day_before" | "hour_before" | null };
 
-export function CommunityGatheringInline({ card, communityId, currentUserId, onClose }: {
-  card: CommunityGatheringCard; communityId: string; currentUserId: string; onClose(): void;
+export function CommunityGatheringInline({ card, communityId, currentUserId, onClose, backLabel = "Back to gatherings" }: {
+  card: CommunityGatheringCard; communityId: string; currentUserId: string; onClose(): void; backLabel?: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [data, setData] = useState<Loaded | null>(null);
@@ -43,7 +43,7 @@ export function CommunityGatheringInline({ card, communityId, currentUserId, onC
     void load(); return () => {active=false;};
   },[card.event_id,communityId,currentUserId,retry,supabase]);
   return <section className="community-inline-gathering" aria-labelledby="inline-gathering-title">
-    <button type="button" className="community-inline-back" onClick={onClose}>← Back to gatherings</button>
+    <button type="button" className="community-inline-back" onClick={onClose}>← {backLabel}</button>
     <h2 ref={heading} id="inline-gathering-title" tabIndex={-1} className="sr-only">{card.title}</h2>
     {error ? <div role="alert"><p>{error}</p><button type="button" onClick={()=>setRetry(value=>value+1)}>Try again</button></div> : !data ? <p role="status">Opening gathering…</p> :
       <CommunityGatheringRoom key={data.room.room_id} room={data.room} communityId={communityId} currentUserId={currentUserId} eventId={card.event_id}

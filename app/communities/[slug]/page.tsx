@@ -57,7 +57,7 @@ export default async function CommunityPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ moment?: string; view?: string; gathering?: string }>;
+  searchParams: Promise<{ moment?: string; view?: string; gathering?: string; gatheringArea?: string }>;
 }) {
   const { slug } = await params;
   const requestedSearch = await searchParams;
@@ -514,6 +514,7 @@ export default async function CommunityPage({
             communityId={community.community_id}
             currentUserId={user.id}
             initialSelection={requestedSearch.gathering}
+            initialArea={requestedSearch.gatheringArea}
             canManage={canManage}
           />
           {programmingReady || !circleProgramResult.error ? (

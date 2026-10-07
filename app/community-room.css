@@ -18,7 +18,17 @@
 .community-inline-gathering .gathering-room-layout { gap: 24px; padding-top: 24px; }
 .community-inline-gathering .gathering-room-jump { overflow-x: auto; }
 .community-inline-gathering .gathering-room-jump a { white-space: nowrap; }
+.community-video-library { display: grid; gap: 0; }
+.community-video-library-card { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--line, #e5dfd5); }
+.community-video-library-symbol { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px; background: #eeeae2; color: #554b36; }
+.community-room-page .community-video-library-card h3 { margin: 5px 0; font-family: var(--sans, Arial, sans-serif); font-size: 1.05rem; letter-spacing: 0; }
+.community-video-library-card p { margin: 4px 0 0; color: var(--muted, #625e56); font-size: .9rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.community-video-library-card small { color: var(--muted, #625e56); }
+
 @media (max-width: 620px) {
+  .community-video-library-card { grid-template-columns: 40px minmax(0, 1fr); gap: 12px; }
+  .community-video-library-symbol { width: 36px; height: 36px; }
+  .community-video-library-card > .button { grid-column: 2; justify-self: start; }
   .community-next-gathering { flex-wrap: wrap; gap: 8px 16px; padding: 12px; }
   .community-next-gathering > div { flex-basis: 100%; }
   .community-next-countdown { flex: 1; }
