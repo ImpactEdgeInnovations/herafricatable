@@ -4,7 +4,8 @@ const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8"
 const feed = read("components/member/community-feed.tsx");
 assert(feed.includes("Browse topics") && feed.includes("All topics"));
 assert(feed.indexOf("Browse topics") < feed.indexOf('id="create-conversation"'));
-assert(feed.includes("Load older conversations below to see more."));
+assert(feed.includes("More matching conversations are available below."));
+assert(feed.includes('"search_community_conversation_page"'));
 assert(feed.includes('post.category === category'));
 const sql = read("supabase/migrations/20261007200000_community_photo_report_notifications.sql");
 for (const token of ["after insert on public.community_photo_reports", "select distinct r.user_id", "r.expires_at>now()", "p.access_status='active'", "public.enqueue_notification", "community-photo-report:", "from public,anon,authenticated", "area=safety-work#community-moderation"]) assert(sql.includes(token), token);

@@ -1,0 +1,11 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+const sql = read("supabase/migrations/20261007210000_community_conversation_search.sql");
+for (const token of ["search_community_conversation_page", "Active community membership required", "c.status='published'", "post.status = 'published'", "author.access_status = 'active'", "public.is_blocked_pair(actor, post.author_id)", "post.category=p_category", "strpos(lower(concat_ws", "char_length(coalesce(p_search,''))>120", "p_view='saved'", "p_view='following'", "p_view='mine'", "p_view='new'", "A complete conversation cursor is required", "community_posts_topic_cursor_idx", "from public,anon"]) assert(sql.includes(token), token);
+assert(!/\boffset\s+\d/i.test(sql) && !/^\s*execute\s+/im.test(sql));
+const ui = read("components/member/community-feed.tsx");
+for (const token of ["searchVersion.current", "version !== searchVersion.current", '"search_community_conversation_page"', "setSearchPosts", "setSearchComments", "setSearchCursor", "More matching conversations", "Finding conversations…", "Try search again", "maxLength={120}", "readCommunityDraft", "writeCommunityDraft", "browseRestored === browseKey", "serverFiltering ? searchPosts : [...olderPosts, ...initialPosts]"]) assert(ui.includes(token), token);
+assert(ui.includes("serverFiltering ? searchComments : [...olderComments, ...initialComments]"));
+assert(ui.includes('disabled={busy === "load-older"}'));
+console.log("Server search and UI source contracts passed: bounded literal queries, scoped cursor pages, separate feed/results, stale-response guards and account-scoped memory. Real browser acceptance remains open.");

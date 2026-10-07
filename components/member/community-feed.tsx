@@ -1,22 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
-import { communityDraftKey } from "@/lib/community-drafts";
+import { communityDraftKey, readCommunityDraft, writeCommunityDraft } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
 import { CommunityReplyForm } from "./community-reply-form";
 
 const conversationTypes = [
-  { label: "Discussion", value: "discussion" },
+  { label: "Questions & ideas", value: "discussion" },
   { label: "Introduction", value: "introduction" },
   { label: "Ask for help", value: "ask" },
   { label: "Offer help", value: "offer" },
   { label: "Opportunity", value: "opportunity" },
-  { label: "Resource", value: "resource" },
-  { label: "Event follow-up", value: "event_follow_up" },
+  { label: "Useful links", value: "resource" },
+  { label: "After a gathering", value: "event_follow_up" },
   { label: "Good news", value: "win" },
 ] as const;
 
@@ -222,21 +222,50 @@ export function CommunityFeed({
     useState<CommunityFeedCursor | null>(initialCursor);
   const [query, setQuery] = useState("");
   const [view, setView] = useState<ConversationView>("all");
+  const [browseRestored, setBrowseRestored] = useState<string | null>(null);
+  const browseKey = communityDraftKey(currentUserId, "community-browse", communityId);
+  useEffect(() => {
+    const saved = readCommunityDraft<{ category: string; query: string; view: ConversationView; order: ConversationOrder }>(browseKey);
+    if (enhanced && saved) {
+      if (saved.category === "all" || categoryLabels.has(saved.category)) setCategory(saved.category);
+      if (typeof saved.query === "string") setQuery(saved.query.slice(0, 120));
+      if (["all", "following", "mine", "new", "saved"].includes(saved.view)) setView(saved.view);
+      if (["active", "newest"].includes(saved.order)) setOrder(saved.order);
+    } else if (!enhanced) { setCategory("all"); setQuery(""); setView("all"); setOrder("newest"); }
+    setBrowseRestored(browseKey);
+  }, [browseKey, enhanced]);
+  useEffect(() => {
+    if (enhanced && browseRestored === browseKey) writeCommunityDraft(browseKey, { category, query, view, order });
+  }, [browseKey, browseRestored, category, query, view, order, enhanced]);
+  const [searchPosts, setSearchPosts] = useState<CommunityPost[]>([]);
+  const [searchComments, setSearchComments] = useState<CommunityComment[]>([]);
+  const [searchCursor, setSearchCursor] = useState<CommunityFeedCursor | null>(null);
+  const [searchHasMore, setSearchHasMore] = useState(false);
+  const searchVersion = useRef(0);
+  const serverFiltering = enhanced && paginationReady && (category !== "all" || Boolean(query.trim()) || view !== "all");
+  const visibleHasMore = serverFiltering ? searchHasMore : hasMore;
+  useEffect(() => {
+    const version = ++searchVersion.current;
+    if (!serverFiltering) { setSearchPosts([]); setSearchComments([]); setSearchCursor(null); setSearchHasMore(false); setBusy(previous => previous === "search" || previous === "load-older" ? "" : previous); return; }
+    setSearchPosts([]); setSearchComments([]); setSearchHasMore(false); setBusy("search");
+    const timer = window.setTimeout(() => void loadPage(true, version), 350);
+    return () => { window.clearTimeout(timer); searchVersion.current++; };
+  }, [category, query, view, communityId, serverFiltering, initialPosts]);
   const { ask, dialog } = useActionDialog();
   const allPosts = useMemo(() => {
     const unique = new Map<string, CommunityPost>();
-    [...olderPosts, ...initialPosts].forEach((post) =>
+    (serverFiltering ? searchPosts : [...olderPosts, ...initialPosts]).forEach((post) =>
       unique.set(post.post_id, post),
     );
     return [...unique.values()];
-  }, [initialPosts, olderPosts]);
+  }, [initialPosts, olderPosts, searchPosts, serverFiltering]);
   const allComments = useMemo(() => {
     const unique = new Map<string, CommunityComment>();
-    [...olderComments, ...initialComments].forEach((comment) =>
+    (serverFiltering ? searchComments : [...olderComments, ...initialComments]).forEach((comment) =>
       unique.set(comment.comment_id, comment),
     );
     return [...unique.values()];
-  }, [initialComments, olderComments]);
+  }, [initialComments, olderComments, searchComments, serverFiltering]);
   const roomSnapshot = useMemo(
     () => ({
       asksAndOpportunities: allPosts.filter((post) =>
@@ -272,7 +301,7 @@ export function CommunityFeed({
       return (
         matchesView &&
         matchesCategory &&
-        (!search || searchable.includes(search))
+        (serverFiltering || !search || searchable.includes(search))
       );
     });
     return [...filtered].sort((left, right) => {
@@ -293,7 +322,7 @@ export function CommunityFeed({
         new Date(left.created_at).getTime()
       );
     });
-  }, [allPosts, category, currentUserId, order, query, view]);
+  }, [allPosts, category, currentUserId, order, query, view, serverFiltering]);
   const commentsByPost = useMemo(() => {
     const grouped = new Map<string, CommunityComment[]>();
     allComments.forEach((comment) => {
@@ -632,26 +661,32 @@ export function CommunityFeed({
   }
 
   async function loadOlder() {
-    if (!pageCursor || !hasMore || !paginationReady) return;
-    setBusy("load-older");
+    await loadPage();
+  }
+  async function loadPage(reset = false, version = searchVersion.current) {
+    const cursor = serverFiltering ? searchCursor : pageCursor;
+    if (!reset && (!cursor || !visibleHasMore || !paginationReady)) return;
+    setBusy(reset ? "search" : "load-older");
     setMessage("");
     try {
       const pageResult = await supabase.rpc(
-        "list_community_conversation_page",
+        serverFiltering ? "search_community_conversation_page" : "list_community_conversation_page",
         {
-          p_before_activity_at: pageCursor.activityAt,
-          p_before_pinned: pageCursor.pinned,
-          p_before_post_id: pageCursor.postId,
+          p_before_activity_at: reset ? null : cursor?.activityAt,
+          p_before_pinned: reset ? null : cursor?.pinned,
+          p_before_post_id: reset ? null : cursor?.postId,
           p_community_id: communityId,
           p_limit: 21,
+          ...(serverFiltering ? { p_category: category === "all" ? null : category, p_search: query.trim() || null, p_view: view } : {}),
         },
       );
+      if (version !== searchVersion.current) return;
       if (pageResult.error) throw pageResult.error;
       const page = (pageResult.data as CommunityPost[] | null) ?? [];
       const nextPosts = page.slice(0, 20);
       if (!nextPosts.length) {
-        setHasMore(false);
-        setMessage("You have reached the beginning of this community.");
+        if (serverFiltering) setSearchHasMore(false); else setHasMore(false);
+        setMessage(serverFiltering ? "No more conversations match your search." : "You have reached the beginning of this community.");
         return;
       }
 
@@ -696,28 +731,35 @@ export function CommunityFeed({
         attachment: attachmentByPost.get(post.post_id) ?? null,
       }));
       const lastPost = nextPosts[nextPosts.length - 1];
-      setOlderPosts((current) => [...current, ...enrichedPosts]);
-      setOlderComments((current) => [
-        ...current,
-        ...((commentResult.data as CommunityComment[] | null) ?? []),
-      ]);
-      setHasMore(page.length > 20);
-      setPageCursor({
+      if (version !== searchVersion.current) return;
+      const comments = (commentResult.data as CommunityComment[] | null) ?? [];
+      if (serverFiltering) {
+        setSearchPosts(current => reset ? enrichedPosts : [...current, ...enrichedPosts]);
+        setSearchComments(current => reset ? comments : [...current, ...comments]);
+        setSearchHasMore(page.length > 20);
+      } else {
+        setOlderPosts(current => [...current, ...enrichedPosts]);
+        setOlderComments(current => [...current, ...comments]);
+        setHasMore(page.length > 20);
+      }
+      const nextCursor = {
         activityAt: lastPost.cursor_activity_at ?? lastPost.created_at,
         pinned: Boolean(lastPost.is_pinned),
         postId: lastPost.post_id,
-      });
+      };
+      if (serverFiltering) setSearchCursor(nextCursor); else setPageCursor(nextCursor);
       setMessage(
         page.length > 20
           ? "Older conversations added."
-          : "You have reached the beginning of this community.",
+          : serverFiltering ? "All matching conversations loaded." : "You have reached the beginning of this community.",
       );
     } catch (error) {
+      if (version !== searchVersion.current) return;
       setMessage(
         memberErrorMessage(error, "load older community conversations"),
       );
     } finally {
-      setBusy("");
+      if (version === searchVersion.current) setBusy("");
     }
   }
 
@@ -750,11 +792,11 @@ export function CommunityFeed({
           Browse topics
           <select value={category} onChange={event => setCategory(event.target.value)}>
             <option value="all">All topics</option>
-            {availableTypes.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+            {[...hostConversationTypes, ...conversationTypes].map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label> : <p>Ask a question, offer help or share an update.</p>}
       </header>
-      {enhanced && category !== "all" ? <p className="community-composer-hint" role="status">{categoryLabels.get(category)} · {posts.length} conversation{posts.length === 1 ? "" : "s"} shown{hasMore ? ". Load older conversations below to see more." : "."} <button type="button" onClick={() => setCategory("all")}>Show all topics</button></p> : null}
+      {enhanced && category !== "all" ? <p className="community-composer-hint" role="status">{categoryLabels.get(category)} · {posts.length} conversation{posts.length === 1 ? "" : "s"} shown{visibleHasMore ? ". More matching conversations are available below." : "."} <button type="button" onClick={() => setCategory("all")}>Show all topics</button></p> : null}
 
       {enhanced && readStateReady && initialNewActivityCount > 0 ? (
         <div className="community-catchup-note">
@@ -941,7 +983,8 @@ export function CommunityFeed({
               Search posts
               <input
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by person, topic or word"
+                placeholder="Search by person or words"
+                maxLength={120}
                 type="search"
                 value={query}
               />
@@ -955,7 +998,7 @@ export function CommunityFeed({
                 value={order}
               >
                 <option value="newest">Newest first</option>
-                <option value="active">Most active</option>
+                <option value="active">Most active in this view</option>
               </select>
             </label>
           </div>
@@ -1004,7 +1047,7 @@ export function CommunityFeed({
       ) : null}
 
       <section className="community-feed" aria-label="Community conversations">
-        {posts.length ? (
+        {busy === "search" ? <p role="status">Finding conversations…</p> : posts.length ? (
           posts.map((post) => {
             const comments = commentsByPost.get(post.post_id) ?? [];
             return (
@@ -1277,16 +1320,16 @@ export function CommunityFeed({
         ) : (
           <div className="admin-empty community-feed-empty">
             <strong>
-              {allPosts.length
+              {serverFiltering || allPosts.length
                 ? "No conversations match this view"
                 : "Begin the conversation"}
             </strong>
             <p>
-              {allPosts.length
+              {serverFiltering || allPosts.length
                 ? "Try a broader search or return to the latest conversations."
                 : "Share one focused thought, request, opportunity or resource that another member can act on."}
             </p>
-            {allPosts.length ? (
+            {serverFiltering || allPosts.length ? (
               <button
                 className="button button-outline"
                 onClick={clearDiscovery}
@@ -1295,12 +1338,13 @@ export function CommunityFeed({
                 Clear filters
               </button>
             ) : null}
+            {serverFiltering && message ? <button type="button" className="button button-outline" onClick={() => void loadPage(true)}>Try search again</button> : null}
           </div>
         )}
       </section>
-      {enhanced && paginationReady && (hasMore || olderPosts.length) ? (
+      {enhanced && paginationReady && (visibleHasMore || (serverFiltering ? searchPosts.length : olderPosts.length)) ? (
         <div className="community-feed-pagination">
-          {hasMore ? (
+          {visibleHasMore ? (
             <button
               className="button button-outline"
               disabled={busy === "load-older"}
@@ -1309,10 +1353,10 @@ export function CommunityFeed({
             >
               {busy === "load-older"
                 ? "Loading conversations…"
-                : "Load older conversations"}
+                : serverFiltering ? "More matching conversations" : "Load older conversations"}
             </button>
           ) : (
-            <strong>You are at the beginning of this community.</strong>
+            <strong>{serverFiltering ? "All matching conversations loaded." : "You are at the beginning of this community."}</strong>
           )}
           <span>Conversations load in calm, manageable groups of 20.</span>
         </div>

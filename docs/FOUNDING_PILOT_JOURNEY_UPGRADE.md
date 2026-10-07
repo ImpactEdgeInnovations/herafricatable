@@ -18,8 +18,13 @@ This is the current sequence. Earlier implementation notes below are historical;
 - [x] Keep Community tabs **Home · Conversations · Gatherings · Media · People**; no second Topics feed or duplicate event tab.
 - [x] Make **Browse topics** visible beside Conversations. Existing categories group introductions, questions/help, opportunities, useful resources and updates without changing permissions.
 - [x] Keep replies inside the conversation that started them; gatherings and album discussions keep their own context.
-- [x] Explain that filters apply to loaded conversations and let members load older ones. Do not claim an exhaustive server-side search.
-- [ ] Add server-side topic/search pagination for larger Communities; preserve blocks, read-only rules and removed-content filtering.
+- [x] Replace loaded-only topic/search filtering with server-side matching and 20-row cursor pages. Search published, authorised conversations by literal words or person; preserve blocks and removed/inactive-author filtering. Following, Saved, Mine and New views are filtered before pagination too.
+- [x] Preserve previously loaded main-feed pages separately from matching results. Ignore stale responses, show loading/retry/no-match feedback and retain browsing preferences in bounded account/Community-scoped memory, cleared at sign-out; no search text is stored persistently.
+- [x] Keep the “Most active in this view” ordering explicitly limited to loaded results, rather than claiming a global ranking. Members can browse Host announcements without receiving announcement-creation permissions.
+- [x] Use plain topic labels such as **Questions & ideas**, **Useful links** and **After a gathering**, retaining existing stored category IDs and posting permissions.
+- [x] Apply `20261007210000_community_conversation_search.sql` live. Rollback test `041` passed 45 matching conversations, cursor pages, literal search, hidden/blocked filtering, Mine/Saved scope, archived/outsider denial, input limits and anonymous grants. No manual SQL run is needed.
+- [x] Pass the full repository suite, search/topic source contracts, draft-store behaviour tests, Community UI contracts, TypeScript and production build. These checks do not close the populated desktop/mobile acceptance below.
+- [ ] Rehearse typing/changing topics during slow requests, cleared filters, Back/navigation restoration, attachment/reply loading and pagination with populated desktop/mobile accounts.
 - [ ] Review whether Hosts need a small set of custom subject labels (for example Business, Wellbeing or Local connections). This is a separate enhancement, not shipped today. Members should not create unlimited category names.
 - [ ] Finish remaining Host settings/attachment draft guards and populated mobile/desktop polish.
 
