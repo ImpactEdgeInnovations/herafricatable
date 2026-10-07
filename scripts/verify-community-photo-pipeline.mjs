@@ -24,5 +24,6 @@ assert(cleanup.includes("if (storageError) { failed++; continue; }"));
 const sql = source("supabase/migrations/20261007160000_community_photo_upload_pipeline.sql");
 for (const guard of ["as restrictive", "skip locked", "upload_attempts", "get_community_photo_file", "review_community_album_photo"]) assert(sql.toLowerCase().includes(guard), guard);
 const ui = source("components/community/community-photo-albums.tsx");
-for (const guard of ["Only Hosts can add photos", "Member photos need approval", "I have permission", "Retry unsaved photos", "clearDraft(emptyDraft)", "beforeunload"]) assert(ui.includes(guard), guard);
+for (const guard of ["Only Hosts can add photos", "Member photos need approval", "I have permission", "Retry unsaved photos", "clearDraft(emptyDraft)", "useCommunityFileGuard(unsavedFiles"]) assert(ui.includes(guard), guard);
+assert(source("lib/use-community-file-guard.ts").includes("beforeunload"));
 console.log("Photo pipeline checks passed: real bounded stream reads/cancellation and source contracts for upload, delivery, cleanup and Host controls. Live binary/browser acceptance remains separate.");

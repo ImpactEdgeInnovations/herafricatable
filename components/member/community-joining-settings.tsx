@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
+import { communityDraftKey } from "@/lib/community-drafts";
+import { useCommunityDraft } from "@/lib/use-community-draft";
 
 export type CommunityJoiningSettings = {
   admission_mode: "open" | "approval";
@@ -14,29 +16,36 @@ export type CommunityJoiningSettings = {
 
 export function CommunityJoiningSettingsPanel({
   communityId,
+  currentUserId,
   owner,
   settings,
 }: {
   communityId: string;
+  currentUserId: string;
   owner: boolean;
   settings: CommunityJoiningSettings | null;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const [selected, setSelected] = useState<"open" | "approval" | "invite_only">(
+  const [selected, setSelected, clearSelected] = useCommunityDraft<"open" | "approval" | "invite_only">(
+    communityDraftKey(currentUserId, "joining-settings", communityId),
     settings?.effective_mode ?? "approval",
   );
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [savedMode, setSavedMode] = useState(settings?.effective_mode ?? "approval");
+  const dirty = selected !== savedMode;
 
   async function save() {
+    if (!owner || !settings || busy || !dirty) return;
     setBusy(true);
     setMessage("");
+    const submitted = selected;
+    try {
     const { error } = await supabase.rpc("save_community_joining_mode", {
       p_community_id: communityId,
-      p_mode: selected,
+      p_mode: submitted,
     });
-    setBusy(false);
     setMessage(
       error
         ? memberErrorMessage(error, "update who can join")
@@ -46,7 +55,9 @@ export function CommunityJoiningSettingsPanel({
             ? "Only people you invite can now join this Community."
             : "New members will now wait for a Host or moderator to approve them.",
     );
-    if (!error) router.refresh();
+    if (!error) { setSavedMode(submitted); clearSelected(submitted); router.refresh(); }
+    } catch (error) { setMessage(memberErrorMessage(error, "update who can join")); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -72,7 +83,7 @@ export function CommunityJoiningSettingsPanel({
           <label className={selected === "open" ? "selected" : ""}>
             <input
               checked={selected === "open"}
-              disabled={!owner}
+              disabled={!owner || busy}
               name="joining-mode"
               onChange={() => setSelected("open")}
               type="radio"
@@ -87,7 +98,7 @@ export function CommunityJoiningSettingsPanel({
           <label className={selected === "approval" ? "selected" : ""}>
             <input
               checked={selected === "approval"}
-              disabled={!owner}
+              disabled={!owner || busy}
               name="joining-mode"
               onChange={() => setSelected("approval")}
               type="radio"
@@ -103,7 +114,7 @@ export function CommunityJoiningSettingsPanel({
           <label className={selected === "invite_only" ? "selected" : ""}>
             <input
               checked={selected === "invite_only"}
-              disabled={!owner}
+              disabled={!owner || busy}
               name="joining-mode"
               onChange={() => setSelected("invite_only")}
               type="radio"
@@ -130,13 +141,14 @@ export function CommunityJoiningSettingsPanel({
       {owner && settings ? (
         <button
           className="button button-primary"
-          disabled={busy || selected === settings.effective_mode}
+          disabled={busy || !dirty}
           onClick={() => void save()}
           type="button"
         >
           {busy ? "Saving…" : "Save joining choice"}
         </button>
       ) : null}
+      {owner && settings && dirty ? <p role="status">This joining choice is not saved yet. <button type="button" disabled={busy} onClick={() => clearSelected(savedMode)}>Discard changes</button></p> : null}
       {message ? <p className="manager-message" role="status">{message}</p> : null}
     </section>
   );

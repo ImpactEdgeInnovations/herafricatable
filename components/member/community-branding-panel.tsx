@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
+import { useActionDialog } from "@/components/ui/action-dialog";
+import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 
 export type CommunityBrandIdentity = {
   community_id: string;
@@ -71,6 +73,17 @@ export function CommunityBrandingPanel({
   const [cover, setCover] = useState<File | null>(null);
   const [icon, setIcon] = useState<File | null>(null);
   const [message, setMessage] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+  const { ask, dialog } = useActionDialog();
+  useCommunityFileGuard(owner && migrationReady && Boolean(icon || cover), {
+    ask,
+    busy,
+    discard: () => { setIcon(null); setCover(null); clearFileInputs(); },
+    blocked: () => setMessage("Please wait for your images to finish saving."),
+  });
+  function clearFileInputs() {
+    formRef.current?.querySelectorAll<HTMLInputElement>('input[type="file"]').forEach(input => { input.value = ""; });
+  }
 
   if (!owner) return null;
 
@@ -90,7 +103,8 @@ export function CommunityBrandingPanel({
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     setBusy(true);
     setMessage("");
 
@@ -200,8 +214,9 @@ export function CommunityBrandingPanel({
 
       setCover(null);
       setIcon(null);
+      clearFileInputs();
       setMessage(
-        "Community look and feel saved. Changes stay private until the community opens.",
+        "Community images and colour saved.",
       );
       router.refresh();
     } catch (error) {
@@ -213,6 +228,7 @@ export function CommunityBrandingPanel({
 
   return (
     <section className="community-branding-panel" id="identity">
+      {dialog}
       <header>
         <div>
           <p className="eyebrow">Look &amp; feel</p>
@@ -259,7 +275,8 @@ export function CommunityBrandingPanel({
         </div>
       </div>
 
-      <form className="community-branding-form" onSubmit={(event) => void save(event)}>
+      <form ref={formRef} className="community-branding-form" onSubmit={(event) => void save(event)}>
+        <fieldset disabled={busy} className="span-two" style={{ display: "contents" }}>
         <label className="span-two">
           Community tagline
           <input
@@ -367,6 +384,7 @@ export function CommunityBrandingPanel({
             {busy ? "Saving…" : "Save look and feel"}
           </button>
         </footer>
+        </fieldset>
       </form>
 
       {message ? (

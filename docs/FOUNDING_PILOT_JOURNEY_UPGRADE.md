@@ -26,7 +26,10 @@ This is the current sequence. Earlier implementation notes below are historical;
 - [x] Pass the full repository suite, search/topic source contracts, draft-store behaviour tests, Community UI contracts, TypeScript and production build. These checks do not close the populated desktop/mobile acceptance below.
 - [ ] Rehearse typing/changing topics during slow requests, cleared filters, Back/navigation restoration, attachment/reply loading and pagination with populated desktop/mobile accounts.
 - [ ] Review whether Hosts need a small set of custom subject labels (for example Business, Wellbeing or Local connections). This is a separate enhancement, not shipped today. Members should not create unlimited category names.
-- [ ] Finish remaining Host settings/attachment draft guards and populated mobile/desktop polish.
+- [x] Preserve unfinished joining choices, gathering settings and album permissions in bounded account-scoped tab memory; show unsaved feedback and explicit **Discard changes**. Clear a draft only after successful saving. Refresh authoritative album upload access after permission changes.
+- [x] Share one leave-page warning for selected post, album and branding files; keep files on cancellation, block departure during saving and ignore stale decisions after unmount/sign-out. Selected files are never stored in draft memory. Browser reload/close uses the browser warning; SPA Back behaviour still needs device acceptance.
+- [x] Pass behavioural file-guard tests (mocked browser/router), draft-store tests, photo pipeline and Community UI contracts, TypeScript and production build. These are automated checks, not real-device acceptance.
+- [ ] Finish remaining Host application/branding text and invitation form drafts, then populated mobile/desktop polish. The new file guard does not claim to preserve all uncontrolled text forms.
 
 ### Phase 5 — reliable media operations
 

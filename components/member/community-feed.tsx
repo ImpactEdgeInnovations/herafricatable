@@ -7,6 +7,7 @@ import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
 import { communityDraftKey, readCommunityDraft, writeCommunityDraft } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
+import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 import { CommunityReplyForm } from "./community-reply-form";
 
 const conversationTypes = [
@@ -252,6 +253,7 @@ export function CommunityFeed({
     return () => { window.clearTimeout(timer); searchVersion.current++; };
   }, [category, query, view, communityId, serverFiltering, initialPosts]);
   const { ask, dialog } = useActionDialog();
+  useCommunityFileGuard(Boolean(attachmentFile), { ask, busy: busy === "publish", discard: () => setAttachmentFile(null), blocked: () => setMessage("Please wait until your post finishes saving before leaving.") });
   const allPosts = useMemo(() => {
     const unique = new Map<string, CommunityPost>();
     (serverFiltering ? searchPosts : [...olderPosts, ...initialPosts]).forEach((post) =>

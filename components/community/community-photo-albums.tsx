@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
-import { communityDraftEpoch, communityDraftKey } from "@/lib/community-drafts";
+import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
+import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 import { CommunityPhotoViewer } from "./community-photo-viewer";
 import { CommunityGatheringDiscussion } from "@/components/member/community-gathering-discussion";
 
@@ -24,7 +24,6 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
   onUnsavedChange?(unsaved: boolean): void; onBusyChange?(busy: boolean): void;
 }) {
   const supabase = useMemo(() => createClient(), []);
-  const router = useRouter();
   const { ask, dialog } = useActionDialog();
   const [list, setList] = useState<AlbumList | null>(null);
   const [details, setDetails] = useState<AlbumDetails | null>(null);
@@ -43,32 +42,15 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
   const requestVersion = useRef(0);
   const [draft, setDraft, clearDraft] = useCommunityDraft(communityDraftKey(currentUserId, "photo-album", communityId), emptyDraft);
   const unsavedFiles = files.some(item => !item.saved);
+  const photoSettingsInitial = { mode: details?.album.contribution_mode ?? "hosts_only", closed: details?.album.is_closed ?? false };
+  const [photoSettings, setPhotoSettings, clearPhotoSettings] = useCommunityDraft(communityDraftKey(currentUserId, "album-settings", details?.album.id ?? "none"), photoSettingsInitial);
+  const settingsDirty = Boolean(details?.can_manage) && JSON.stringify(photoSettings) !== JSON.stringify(photoSettingsInitial);
+  useCommunityFileGuard(unsavedFiles, { ask, busy: Boolean(busy), discard: () => { setFiles([]); setBatchId(""); }, blocked: () => setMessage("Please wait until the current save finishes before leaving.") });
   useEffect(() => { onUnsavedChange?.(unsavedFiles); }, [unsavedFiles, onUnsavedChange]);
   useEffect(() => { onBusyChange?.(Boolean(busy)); }, [busy, onBusyChange]);
   useEffect(() => {
     if (presentation === "member") { setOpened(true); void load(); }
   }, [communityId, presentation]);
-  useEffect(() => {
-    if (!unsavedFiles) return;
-    const epoch = communityDraftEpoch();
-    function warn(event: BeforeUnloadEvent) { if (epoch !== communityDraftEpoch()) return; event.preventDefault(); event.returnValue = ""; }
-    async function navigation(event: MouseEvent) {
-      const anchor = (event.target as Element)?.closest?.("a");
-      if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download") || event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return;
-      const href = anchor.getAttribute("href");
-      if (!href || href.startsWith("#")) return;
-      event.preventDefault(); event.stopPropagation();
-      if (await ask({ title: "Leave without saving these photos?", description: "Your album text stays in this tab, but you will need to choose the unsaved photo files again.", confirmLabel: "Leave page", tone: "danger" })) {
-        setFiles([]);
-        const url = new URL(href, window.location.href);
-        if (url.origin === window.location.origin) router.push(url.pathname + url.search + url.hash);
-        else window.location.assign(url.href);
-      }
-    }
-    window.addEventListener("beforeunload", warn);
-    document.addEventListener("click", navigation, true);
-    return () => { window.removeEventListener("beforeunload", warn); document.removeEventListener("click", navigation, true); };
-  }, [unsavedFiles, ask, router]);
   useEffect(() => () => { requestVersion.current++; }, []);
   useEffect(() => {
     if (!opened) return;
@@ -141,9 +123,21 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
     finally { setBusy(""); }
   }
   async function settings(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); if (!details) return; setBusy("settings"); setMessage("");
-    const { error } = await supabase.rpc("save_community_photo_album_settings", { p_album_id: details.album.id, p_contribution_mode: details.album.contribution_mode, p_is_closed: details.album.is_closed });
-    setMessage(error ? memberErrorMessage(error, "save photo settings") : "Photo settings saved."); setBusy("");
+    event.preventDefault(); if (!details || unsavedFiles || !settingsDirty) return; setBusy("settings"); setMessage("");
+    const submitted = { ...photoSettings };
+    try {
+      const { error } = await supabase.rpc("save_community_photo_album_settings", { p_album_id: details.album.id, p_contribution_mode: submitted.mode, p_is_closed: submitted.closed });
+      if (error) throw error;
+      clearPhotoSettings(submitted);
+      setDetails(current => current ? { ...current, can_upload: false, album: { ...current.album, contribution_mode: submitted.mode, is_closed: submitted.closed } } : current);
+      try {
+        const refreshed = await supabase.rpc("get_community_photo_album", { p_album_id: details.album.id });
+        if (refreshed.error || !refreshed.data) throw new Error("Refresh unavailable");
+        setDetails(refreshed.data as AlbumDetails);
+      } catch { setMessage("Photo settings saved. Reopen this album to refresh who can upload."); return; }
+      setMessage("Photo settings saved.");
+    } catch (error) { setMessage(memberErrorMessage(error, "save photo settings")); }
+    finally { setBusy(""); }
   }
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (!details || !files.length || !permission) return;
@@ -248,9 +242,11 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
         <button type="button" className="button button-outline" aria-expanded={showDiscussion} onClick={() => setShowDiscussion(value => !value)}>{showDiscussion ? "Close conversation" : "Open conversation"}</button>
         {showDiscussion ? <CommunityGatheringDiscussion key={details.album.id} albumId={details.album.id} currentUserId={currentUserId} revision={0} /> : null}
         {details.can_manage ? <form onSubmit={settings} className="community-photo-settings">
-          <label>Who can add photos?<select value={details.album.contribution_mode} disabled={Boolean(busy)} onChange={event => setDetails(previous => previous ? { ...previous, album: { ...previous.album, contribution_mode: event.target.value } } : previous)}>{choices.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-          <label className="community-photo-check"><input type="checkbox" checked={details.album.is_closed} disabled={Boolean(busy)} onChange={event => setDetails(previous => previous ? { ...previous, album: { ...previous.album, is_closed: event.target.checked } } : previous)} />Close this album to new photos</label>
-          <button className="button button-outline" disabled={Boolean(busy)}>Save photo settings</button>
+          <label>Who can add photos?<select value={photoSettings.mode} disabled={Boolean(busy)} onChange={event => setPhotoSettings(current => ({ ...current, mode: event.target.value }))}>{choices.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label className="community-photo-check"><input type="checkbox" checked={photoSettings.closed} disabled={Boolean(busy)} onChange={event => setPhotoSettings(current => ({ ...current, closed: event.target.checked }))} />Close this album to new photos</label>
+          <button className="button button-outline" disabled={Boolean(busy) || unsavedFiles || !settingsDirty}>Save photo settings</button>
+          {settingsDirty ? <p role="status">Photo settings are not saved yet. <button type="button" disabled={Boolean(busy)} onClick={() => clearPhotoSettings(photoSettingsInitial)}>Discard changes</button></p> : null}
+          {unsavedFiles ? <p>Save or clear your selected photos before saving new album permissions.</p> : null}
         </form> : null}
         {details.can_upload ? <form onSubmit={upload} className="community-photo-upload">
           <p>Your photos will be saved in <strong>{details.album.title}</strong>{details.album.contribution_mode === "review" && !details.can_manage ? " after the Host approves them" : ""}.</p>

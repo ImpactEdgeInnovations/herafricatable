@@ -310,6 +310,7 @@ export default async function CommunityHostPage({
       </div>
       <CommunityJoiningSettingsPanel
         communityId={community.community_id}
+        currentUserId={user.id}
         owner={community.membership_role === "owner"}
         settings={joiningSettings}
       />

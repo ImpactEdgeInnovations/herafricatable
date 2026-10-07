@@ -111,6 +111,10 @@ export function CommunityGatheringRoom({
   const [body, setBody] = useCommunityDraft(communityDraftKey(currentUserId, "gathering-message", initialRoom.room_id), "");
   const [question, setQuestion] = useCommunityDraft(communityDraftKey(currentUserId, "gathering-question", initialRoom.room_id), "");
   const [recap, setRecap, clearRecap] = useCommunityDraft(communityDraftKey(currentUserId, "gathering-recap", initialRoom.room_id), initialRoom.recap_body ?? "");
+  const initialSettings = { gatheringKind: initialRoom.gathering_kind, meetingProvider: initialRoom.meeting_provider ?? "", meetingUrl: initialRoom.meeting_url ?? "", chatMode: initialRoom.chat_mode };
+  const [settingsDraft, setSettingsDraft, clearSettingsDraft] = useCommunityDraft(communityDraftKey(currentUserId, "gathering-settings", initialRoom.room_id), initialSettings);
+  const [savedSettings, setSavedSettings] = useState(initialSettings);
+  const settingsDirty = JSON.stringify(settingsDraft) !== JSON.stringify(savedSettings);
   const [discoverable, setDiscoverable] = useState(initialRoom.my_discoverable);
   const [reminderWindow, setReminderWindow] = useState(initialReminderWindow ?? "");
   const [busy, setBusy] = useState("");
@@ -251,16 +255,23 @@ export function CommunityGatheringRoom({
   }
 
   async function saveSettings(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy("settings"); setNotice("");
-    const data = new FormData(event.currentTarget);
+    event.preventDefault();
+    if (!room.can_manage || busy === "settings" || !settingsDirty) return;
+    setBusy("settings"); setNotice("");
+    const submitted = { ...settingsDraft };
+    try {
     const { error } = await supabase.rpc("save_community_gathering_settings", {
-      p_chat_mode: String(data.get("chat_mode")), p_gathering_kind: String(data.get("gathering_kind")),
-      p_meeting_provider: String(data.get("meeting_provider")) || null,
-      p_meeting_url: String(data.get("meeting_url")) || null, p_room_id: room.room_id,
+      p_chat_mode: submitted.chatMode, p_gathering_kind: submitted.gatheringKind,
+      p_meeting_provider: submitted.meetingProvider || null,
+      p_meeting_url: submitted.meetingUrl || null, p_room_id: room.room_id,
     });
     setBusy("");
     if (error) return setNotice(memberErrorMessage(error, "save gathering settings"));
+    setSavedSettings(submitted); clearSettingsDraft(submitted);
+    setRoom(current => ({ ...current, gathering_kind: submitted.gatheringKind, meeting_provider: submitted.meetingProvider || null, meeting_url: submitted.meetingUrl || null, chat_mode: submitted.chatMode }));
     setNotice("Gathering settings saved."); router.refresh();
+    } catch (error) { setNotice(memberErrorMessage(error, "save gathering settings")); }
+    finally { setBusy(""); }
   }
 
   async function publishRecap(event: FormEvent) {
@@ -323,7 +334,7 @@ export function CommunityGatheringRoom({
         <aside className="gathering-attendees" id="attendees"><p className="eyebrow">People going</p><h2>Meet before you arrive.</h2><p>Only members who chose to be visible appear here.</p>{attendees.length ? <div>{attendees.map((person) => { const name = person.display_name || "Community member"; return <Link href={`/members/${person.user_id}`} key={person.user_id}><span>{person.avatar_url ? <img alt="" src={person.avatar_url}/> : name.slice(0, 1)}</span><span><strong>{name}</strong><small>{[person.job_title, person.company].filter(Boolean).join(" · ") || "Community member"}</small></span></Link>; })}</div> : <p className="gathering-soft-note">No one has chosen to appear here yet.</p>}</aside>
       </div>
 
-      {room.can_manage ? <section className="gathering-host-settings" id="host-settings"><header><p className="eyebrow">Private Host tools</p><h2>Prepare this gathering</h2><p>Use an external video service for calls. The private link is only shown to members who are going, from 30 minutes before until one hour after.</p></header><form onSubmit={saveSettings}><label>Gathering style<select defaultValue={room.gathering_kind} name="gathering_kind"><option value="community_catch_up">Community catch-up</option><option value="networking_circle">Networking circle</option><option value="workshop">Workshop</option><option value="guest_conversation">Guest conversation</option><option value="webinar">Online gathering</option><option value="accountability_session">Accountability session</option><option value="social_wellbeing">Social & wellbeing</option></select></label><label>Video service<select defaultValue={room.meeting_provider ?? ""} name="meeting_provider"><option value="">No online link</option><option value="google_meet">Google Meet</option><option value="zoom">Zoom</option><option value="microsoft_teams">Microsoft Teams</option><option value="other">Other secure link</option></select></label><label>Private joining link<input defaultValue={room.meeting_url ?? ""} name="meeting_url" placeholder="https://meet.google.com/…" type="url"/></label><label>Live conversation<select defaultValue={room.chat_mode} name="chat_mode"><option value="open">Open to people going</option><option value="slow">Slow mode</option><option value="hosts_only">Pause members; Hosts only</option><option value="closed">Closed</option></select></label><button className="button button-primary" disabled={busy === "settings"} type="submit">Save gathering settings</button></form></section> : null}
+      {room.can_manage ? <section className="gathering-host-settings" id="host-settings"><header><p className="eyebrow">Private Host tools</p><h2>Prepare this gathering</h2><p>Use an external video service for calls. The private link is only shown to members who are going, from 30 minutes before until one hour after.</p></header><form onSubmit={saveSettings}><label>Gathering style<select value={settingsDraft.gatheringKind} disabled={busy === "settings"} onChange={event => setSettingsDraft(current => ({ ...current, gatheringKind: event.target.value }))} name="gathering_kind"><option value="community_catch_up">Community catch-up</option><option value="networking_circle">Networking circle</option><option value="workshop">Workshop</option><option value="guest_conversation">Guest conversation</option><option value="webinar">Online gathering</option><option value="accountability_session">Accountability session</option><option value="social_wellbeing">Social & wellbeing</option></select></label><label>Video service<select value={settingsDraft.meetingProvider} disabled={busy === "settings"} onChange={event => setSettingsDraft(current => ({ ...current, meetingProvider: event.target.value }))} name="meeting_provider"><option value="">No online link</option><option value="google_meet">Google Meet</option><option value="zoom">Zoom</option><option value="microsoft_teams">Microsoft Teams</option><option value="other">Other secure link</option></select></label><label>Private joining link<input value={settingsDraft.meetingUrl} disabled={busy === "settings"} onChange={event => setSettingsDraft(current => ({ ...current, meetingUrl: event.target.value }))} name="meeting_url" placeholder="https://meet.google.com/…" type="url"/></label><label>Live conversation<select value={settingsDraft.chatMode} disabled={busy === "settings"} onChange={event => setSettingsDraft(current => ({ ...current, chatMode: event.target.value as CommunityGatheringRoomState["chat_mode"] }))} name="chat_mode"><option value="open">Open to people going</option><option value="slow">Slow mode</option><option value="hosts_only">Pause members; Hosts only</option><option value="closed">Closed</option></select></label><button className="button button-primary" disabled={busy === "settings" || !settingsDirty} type="submit">Save gathering settings</button></form>{settingsDirty ? <p role="status">Changes are not saved yet. <button type="button" disabled={busy === "settings"} onClick={() => clearSettingsDraft(savedSettings)}>Discard changes</button></p> : null}</section> : null}
 
       {(room.can_manage || room.recap_body) ? <section className="gathering-recap"><header><p className="eyebrow">After the gathering</p><h2>{room.recap_published_at ? "The Community recap" : "Bring the useful parts back"}</h2><p>A short Host-reviewed recap keeps the permanent Community feed calm and useful.</p></header>{room.can_manage ? <form onSubmit={publishRecap}><label htmlFor="gathering-recap">What should members remember or do next?</label><textarea id="gathering-recap" maxLength={2800} minLength={20} onChange={(event) => setRecap(event.target.value)} placeholder="We discussed… The most useful next steps are…" rows={7} value={recap}/><button className="button button-primary" disabled={busy === "recap" || recap.trim().length < 20} type="submit">{room.recap_published_at ? "Update recap" : "Publish to Conversations"}</button></form> : <div className="gathering-recap-body"><p>{room.recap_body}</p><Link href={`/communities/${room.community_slug}?view=conversations`}>Continue in Conversations →</Link></div>}</section> : null}
     </div>
