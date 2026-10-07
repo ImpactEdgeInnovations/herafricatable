@@ -120,6 +120,32 @@
 .community-event-link-picker article details summary { cursor: pointer; min-height: 44px; padding: 12px 0; }
 .community-host-page .community-host-health { padding: 16px; gap: 16px; box-shadow: none; }
 .community-host-page .community-host-health strong { font: 600 1.5rem var(--sans, Arial, sans-serif); }
+.community-room-page .community-host-identity { font-size: .85rem; color: #655e60; }
+.community-room-page .community-host-identity a { color: #241e20; font-weight: 600; }
+.gathering-room [hidden] { display: none !important; }
+.gathering-discussion-replies, .gathering-room .gathering-message-list { max-height: 420px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scroll-padding: 12px; border: 1px solid #e4dfdc; border-radius: 8px; padding: 0 14px; }
+.gathering-discussion-replies article, .gathering-room .gathering-message-list article { margin: 0; padding: 12px 0; border: 0; border-bottom: 1px solid #e4dfdc; border-radius: 0; background: transparent; box-shadow: none; }
+.gathering-discussion-replies article:last-child, .gathering-room .gathering-message-list article:last-child { border-bottom: 0; }
+.gathering-discussion-replies article > header, .gathering-room .gathering-message-list article header { gap: 8px; margin: 0; }
+.gathering-discussion-replies article > p, .gathering-room .gathering-message-list article > div > p { margin: 6px 0; font-size: .9rem; line-height: 1.5; }
+.gathering-discussion-replies article footer, .gathering-room .gathering-message-list article footer { display: flex; align-items: center; gap: 16px; margin: 0; }
+.gathering-discussion-replies footer :is(button, summary), .gathering-room .gathering-message-list footer :is(button, summary) { min-height: 44px; padding: 8px 0; font-size: .8rem; cursor: pointer; color: #64172a; }
+.gathering-discussion-replies footer details, .gathering-room .gathering-message-list footer details { position: relative; }
+.gathering-discussion-replies footer details[open], .gathering-room .gathering-message-list footer details[open] { padding: 0 8px; border: 1px solid #e4dfdc; border-radius: 6px; }
+.gathering-discussion-replies blockquote, .gathering-room .gathering-message-list blockquote { margin: 8px 0; padding: 8px 12px; border-left: 2px solid #b9919a; background: #f5f1ef; font-size: .8rem; }
+.gathering-discussion-replies blockquote p, .gathering-room .gathering-message-list blockquote p { margin: 4px 0 0; line-height: 1.4; }
+.gathering-reply-context { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; border-left: 2px solid #64172a; background: #f5f1ef; font-size: .85rem; }
+.gathering-room .gathering-message-avatar { width: 32px; height: 32px; font-size: .85rem; }
+.gathering-room .gathering-message-list article { grid-template-columns: 32px minmax(0, 1fr); gap: 10px; }
+.gathering-discussion textarea { min-height: 76px; font-size: .9rem; }
+.gathering-discussion .button { min-height: 44px; padding: 10px 16px; }
+.gathering-room.is-recording .gathering-room-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, .8fr); gap: 24px; }
+.gathering-room.is-recording .gathering-discussion { grid-column: 2; grid-row: 1; border-top: 0; padding-top: 0; }
+@media (max-width: 800px) {
+  .gathering-room.is-recording .gathering-room-layout { grid-template-columns: minmax(0, 1fr); }
+  .gathering-room.is-recording .gathering-discussion { grid-column: 1; grid-row: 2; }
+  .gathering-discussion-replies, .gathering-room .gathering-message-list { max-height: 360px; }
+}
 @media (max-width: 700px) {
   .community-room-page > .community-room-hero { margin-top: 16px; }
   .community-room-page .community-room-cover { height: 120px; }

@@ -6,7 +6,7 @@ const inline = read("components/member/community-gathering-inline.tsx");
 const strip = read("components/member/community-next-gathering.tsx");
 const videos = read("components/member/community-video-library.tsx");
 for(const token of ["window.history.pushState",'"popstate"',"initialSelection","CommunityGatheringInline",'aria-pressed={area===',"Create a gathering","Link an event"]) assert(list.includes(token), `Missing in-place contract: ${token}`);
-for(const token of ["get_community_gathering_room","list_community_gathering_messages","get_community_gathering_video",'access_status !== "active"',"if (active) setData","Back to gatherings","Try again"]) assert(inline.includes(token), `Missing protected loader: ${token}`);
+for(const token of ["get_community_gathering_room","list_community_gathering_chat","get_community_gathering_video",'access_status !== "active"',"if (active) setData","Back to gatherings","Try again"]) assert(inline.includes(token), `Missing protected loader: ${token}`);
 assert(strip.includes("timeZone:next.timezone") && strip.includes("Math.max(0,"));
 assert(strip.includes('if (now === null) return null'),"Avoid countdown hydration mismatches");
 assert(!strip.includes("marquee"),"Keep the event strip still and readable");

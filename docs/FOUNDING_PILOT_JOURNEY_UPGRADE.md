@@ -31,6 +31,10 @@ Applied live: `20261007161515_short_notice_online_community_gatherings.sql`, `20
 
 Security follow-up: live advisors exposed broad pre-existing anonymous SECURITY DEFINER grants. The gathering save/publish grants are now restricted to authenticated accounts and verified. The broader functions require a deliberate allowlist/security review; do not indiscriminately revoke public discovery/auth helpers or declare all advisories resolved. Existing leaked-password protection warning also remains open.
 
+**Gathering discussion pass — 7 October:** the existing watch-anytime video “Getting to Know Each Other” remains in Gatherings → Past and Videos. Its mapped discussion is now excluded from ordinary topic feeds, including search/pagination; no recording or replies were deleted. Added stored reply-to context for lasting gathering comments and live messages, with same-room checks and hidden/deleted/blocked quote filtering. Compact discussion rows, scrollable message regions and More menus reduce vertical weight. A Community Host identity appears in the room header. Topic choices remain a dropdown: five everyday choices first, existing specialist/Host choices under More topics, preserving old categories. Host-only live mode no longer offers ordinary members a writable composer.
+
+Applied live `20261007185632_community_gathering_reply_context.sql`; **no manual SQL run needed**. Rollback test `044` passed duplicate-feed exclusion across four queries, Host identity, directed replies, removed quote privacy, same-room message enforcement and anonymous denial. Real two-account conversation UX remains in Phase 6; current scoped build/source tests are not that acceptance.
+
 | ID | Priority / phase | Task | Status | Exit condition |
 |---|---|---|---|---|
 | CINT-01 | P0 / 4–6 | Strengthen scheduled-chat access checks for current platform membership and Community publication/suspension | Ready — live helper reviewed | Removed/suspended/dormant accounts and closed Communities cannot read/send through UI, RPC or realtime; Host/member negative tests recorded |

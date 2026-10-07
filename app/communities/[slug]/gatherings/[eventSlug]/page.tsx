@@ -58,7 +58,7 @@ export default async function CommunityGatheringPage({
   if (!room) notFound();
 
   const [messageResult, questionResult, attendeeResult, preferenceResult, videoResult, kindResult] = await Promise.all([
-    supabase.rpc("list_community_gathering_messages", { p_limit: 200, p_room_id: room.room_id }),
+    supabase.rpc("list_community_gathering_chat", { p_room_id: room.room_id }),
     supabase.rpc("list_community_gathering_questions", { p_room_id: room.room_id }),
     supabase.rpc("list_community_gathering_attendees", { p_room_id: room.room_id }),
     supabase.rpc("list_my_community_event_preferences", { p_community_id: community.community_id }),

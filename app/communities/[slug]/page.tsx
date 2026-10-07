@@ -107,7 +107,11 @@ export default async function CommunityPage({
   ).find((item) => item.slug === slug);
   if (!community) notFound();
   if (community.membership_status !== "active") redirect("/communities");
-  const joiningResult = await supabase.rpc("list_community_joining_settings", { p_community_id: community.community_id });
+  const [joiningResult, hostResult] = await Promise.all([
+    supabase.rpc("list_community_joining_settings", { p_community_id: community.community_id }),
+    supabase.rpc("get_community_host_identity", { p_community_id: community.community_id }),
+  ]);
+  const communityHost = hostResult.data as { user_id: string; display_name: string | null } | null;
   const joiningMode = ((joiningResult.data as { effective_mode: string }[] | null) ?? [])[0]?.effective_mode ?? "unknown";
   const [
     postsResult,
@@ -368,6 +372,7 @@ export default async function CommunityPage({
           ) : null}
           <p>{community.description}</p>
           <div className="community-room-meta">
+            {communityHost ? <span className="community-host-identity">Community Host · <Link href={`/members/${communityHost.user_id}`}>{communityHost.display_name || "View Host"}</Link></span> : null}
             <span>{community.member_count} {community.member_count === 1 ? "member" : "members"}</span>
             <CommunityAboutPanel name={community.name} description={community.description} joiningMode={joiningMode} memberCount={community.member_count} />
             <Link href="/communities">All Communities</Link>

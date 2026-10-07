@@ -23,6 +23,16 @@ assert(proposal.includes("save_community_gathering_video_experience") && proposa
 assert(proposal.includes("list_community_gathering_cards") && proposal.includes("Open the gathering first"));
 assert(!room.includes('className="community-overview-links"'), "Do not duplicate the Community tabs with three Home cards");
 assert(read("components/member/community-host-workspace.tsx").includes("Choose an event"));
+const discussion = read("components/member/community-gathering-discussion.tsx");
+const gathering = read("components/member/community-gathering-room.tsx");
+const replies = read("supabase/migrations/20261007185632_community_gathering_reply_context.sql");
+assert(discussion.includes("reply_to_community_gathering_reply") && discussion.includes("Cancel reply"));
+assert(gathering.includes("reply_to_community_gathering_message") && gathering.includes("list_community_gathering_chat"));
+assert(gathering.includes('room.chat_mode !== "hosts_only" || room.can_manage'), "Paused member chat must not offer a writable composer");
+assert(replies.includes("gathering_thread.post_id=post.id") && replies.includes("q.status=''published''") && replies.includes("quoted.status='published'"));
+assert(css.includes("max-height: 420px; overflow-y: auto") && css.includes("scrollbar-gutter: stable"));
+assert(room.includes("get_community_host_identity") && room.includes("Community Host ·"));
+assert(read("components/member/community-feed.tsx").includes('optgroup label="Everyday conversations"'));
 function luminance(hex) { const parts = hex.match(/[a-f0-9]{2}/gi).map(v => parseInt(v, 16) / 255).map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4); return parts[0] * .2126 + parts[1] * .7152 + parts[2] * .0722; }
 function contrast(a, b) { const x = luminance(a), y = luminance(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
 for (const [foreground, background] of [["64172a", "ffffff"], ["655e60", "ffffff"], ["ffffff", "64172a"], ["655e60", "e8e3e1"]]) assert(contrast(foreground, background) >= 4.5, `Insufficient text contrast: ${foreground}/${background}`);

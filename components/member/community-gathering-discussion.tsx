@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
 
-type Reply = { comment_id: string; author_id: string; author_name: string | null; body: string; created_at: string };
+type Reply = { comment_id: string; author_id: string; author_name: string | null; body: string; created_at: string; reply_to?: { author_name: string | null; body: string } | null };
 type Discussion = { post_id: string; comments: Reply[]; has_more: boolean; read_only: boolean; unavailable?: boolean };
 
 export function CommunityGatheringDiscussion({ roomId, albumId, currentUserId, revision }: { roomId?: string; albumId?: string; currentUserId: string; revision: number }) {
@@ -20,6 +20,8 @@ export function CommunityGatheringDiscussion({ roomId, albumId, currentUserId, r
   const [notice, setNotice] = useState("");
   const [retry, setRetry] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [replyTo, setReplyTo] = useState<Reply | null>(null);
+  const composer = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     let active = true; let running = false;
     async function load() {
@@ -40,19 +42,21 @@ export function CommunityGatheringDiscussion({ roomId, albumId, currentUserId, r
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setNotice("");
     try {
-      const result = albumId ? await supabase.rpc("reply_to_community_album", { p_album_id: albumId, p_body: draft }) : await supabase.rpc("reply_to_community_gathering", { p_room_id: roomId, p_body: draft });
+      const result = albumId ? await supabase.rpc("reply_to_community_album", { p_album_id: albumId, p_body: draft }) : replyTo ? await supabase.rpc("reply_to_community_gathering_reply", { p_room_id: roomId, p_body: draft, p_reply_to_comment_id: replyTo.comment_id }) : await supabase.rpc("reply_to_community_gathering", { p_room_id: roomId, p_body: draft });
       if (result.error) throw result.error;
-      setDraft(""); setCursor(null); setRetry(value => value + 1); setNotice("Your reply was added.");
+      setDraft(""); setReplyTo(null); setCursor(null); setRetry(value => value + 1); setNotice("Your reply was added.");
     } catch (cause) { setNotice(memberErrorMessage(cause, "add your reply")); }
     finally { setBusy(false); }
   }
   async function remove(reply: Reply) {
     if (!await ask({ title: "Remove your reply?", description: "It will no longer appear in the conversation.", confirmLabel: "Remove reply", tone: "danger" })) return;
     setBusy(true);
-    const result = await supabase.rpc("delete_community_comment", { p_comment_id: reply.comment_id });
-    setBusy(false);
-    if (result.error) setNotice(memberErrorMessage(result.error, "remove your reply"));
-    else { setItem(current => current ? { ...current, comments: current.comments.filter(row => row.comment_id !== reply.comment_id) } : null); setNotice("Reply removed."); }
+    try {
+      const result = await supabase.rpc("delete_community_comment", { p_comment_id: reply.comment_id });
+      if (result.error) throw result.error;
+      setItem(current => current ? { ...current, comments: current.comments.filter(row => row.comment_id !== reply.comment_id) } : null); setRetry(value => value + 1); setNotice("Reply removed.");
+    } catch (cause) { setNotice(memberErrorMessage(cause, "remove your reply")); }
+    finally { setBusy(false); }
   }
   async function report(reply: Reply) {
     const answer = await ask({ title: "Report this reply privately", description: "Tell the Her Africa Table safety team what worries you.", confirmLabel: "Send report", fields: [
@@ -61,23 +65,29 @@ export function CommunityGatheringDiscussion({ roomId, albumId, currentUserId, r
     ] });
     if (!answer) return;
     setBusy(true);
-    const result = await supabase.rpc("report_community_post", { p_post_id: reply.comment_id, p_category: String(answer.category), p_details: String(answer.details) });
-    setBusy(false); setNotice(result.error ? memberErrorMessage(result.error, "send your report") : "Your report was sent privately to the safety team.");
+    try {
+      const result = await supabase.rpc("report_community_post", { p_post_id: reply.comment_id, p_category: String(answer.category), p_details: String(answer.details) });
+      if (result.error) throw result.error;
+      setNotice("Your report was sent privately to the safety team.");
+    } catch (cause) { setNotice(memberErrorMessage(cause, "send your report")); }
+    finally { setBusy(false); }
   }
   if (!item && !error) return loading ? <p role="status">Opening conversation…</p> : null;
   return <section className="gathering-discussion" id="gathering-discussion" aria-labelledby="gathering-discussion-title">
-    {dialog}<header><h2 id="gathering-discussion-title">{albumId ? "Album conversation" : "Keep the conversation going"}</h2><p>{albumId ? "Questions and replies stay with this album or its related gathering." : "Watch at your own pace. Questions and replies stay with this gathering."}</p></header>
+    {dialog}<header><h2 id="gathering-discussion-title">{albumId ? "Album conversation" : "Discussion"}</h2><p>{albumId ? "Questions and replies stay with this album or its related gathering." : "Questions and replies stay here with this gathering."}</p></header>
     {restored && draft ? <small>Your unsent reply is still here.</small> : null}
     {error ? <div role="alert"><p>{error}</p><button type="button" onClick={() => setRetry(value => value + 1)}>Try again</button></div>
       : item?.unavailable ? <p>This conversation is no longer available.</p> : item ? <>
         <div className="gathering-discussion-pages">{cursor ? <button type="button" onClick={() => setCursor(null)}>Latest replies</button> : null}
           {item.has_more && item.comments.length ? <button type="button" onClick={() => setCursor(item.comments[0].comment_id)}>Earlier replies</button> : null}</div>
-        {item.comments.length ? <div className="gathering-discussion-replies">{item.comments.map(reply => <article key={reply.comment_id}>
+        {item.comments.length ? <div className="gathering-discussion-replies" role="region" aria-label="Gathering replies" tabIndex={0}>{item.comments.map(reply => <article key={reply.comment_id}>
           <header><strong>{reply.author_name || "Community member"}</strong><time dateTime={reply.created_at}>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium" }).format(new Date(reply.created_at))}</time></header>
-          <p>{reply.body}</p><button type="button" disabled={busy} onClick={() => void (reply.author_id === currentUserId ? remove(reply) : report(reply))}>{reply.author_id === currentUserId ? "Remove" : "Report privately"}</button>
+          {reply.reply_to ? <blockquote><strong>Reply to {reply.reply_to.author_name || "a member"}</strong><p>{reply.reply_to.body}</p></blockquote> : null}
+          <p>{reply.body}</p><footer>{!albumId && !item.read_only ? <button type="button" disabled={busy} onClick={() => { setReplyTo(reply); composer.current?.focus(); }}>Reply</button> : null}<details><summary>More</summary><button type="button" disabled={busy} onClick={() => void (reply.author_id === currentUserId ? remove(reply) : report(reply))}>{reply.author_id === currentUserId ? "Remove" : "Report privately"}</button></details></footer>
         </article>)}</div> : <p>No replies yet. Share the first question or thought.</p>}
         {item.read_only ? <p>This Community is read-only. You can still read earlier replies.</p> : <form onSubmit={send}>
-          <label htmlFor="gathering-discussion-reply">Your reply</label><textarea id="gathering-discussion-reply" rows={3} minLength={2} maxLength={1500} value={draft} onChange={event => setDraft(event.target.value)} placeholder="Ask a question or share your thoughts…" required disabled={busy} />
+          {replyTo ? <div className="gathering-reply-context"><span>Replying to {replyTo.author_name || "a member"}</span><button type="button" onClick={() => setReplyTo(null)}>Cancel reply</button></div> : null}
+          <label htmlFor="gathering-discussion-reply">{replyTo ? "Your reply" : "Add a comment"}</label><textarea ref={composer} id="gathering-discussion-reply" rows={2} minLength={2} maxLength={1500} value={draft} onChange={event => setDraft(event.target.value)} placeholder="Ask a question or share your thoughts…" required disabled={busy} />
           <button className="button button-primary" type="submit" disabled={busy || draft.trim().length < 2}>{busy ? "Please wait…" : "Add reply"}</button>
         </form>}
       </> : null}

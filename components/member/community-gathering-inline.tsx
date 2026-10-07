@@ -29,7 +29,7 @@ export function CommunityGatheringInline({ card, communityId, currentUserId, onC
         const room = (result.data as CommunityGatheringRoomState[] | null)?.[0];
         if (!room) throw new Error("This gathering is no longer available.");
         const [messages,questions,attendees,video,preferences,kind] = await Promise.all([
-          supabase.rpc("list_community_gathering_messages",{p_room_id:room.room_id,p_limit:200}),
+          supabase.rpc("list_community_gathering_chat",{p_room_id:room.room_id}),
           supabase.rpc("list_community_gathering_questions",{p_room_id:room.room_id}),
           supabase.rpc("list_community_gathering_attendees",{p_room_id:room.room_id}),
           supabase.rpc("get_community_gathering_video",{p_room_id:room.room_id}),

@@ -26,6 +26,8 @@ const hostConversationTypes = [
   { label: "Announcement", value: "announcement" },
 ] as const;
 
+const everydayTopics = new Set(["discussion", "introduction", "ask", "offer", "win"]);
+
 const categoryLabels = new Map<string, string>([
   ...conversationTypes.map((item) => [item.value, item.label] as const),
   ["start_here", "Start here"],
@@ -802,7 +804,8 @@ export function CommunityFeed({
           Browse topics
           <select value={category} onChange={event => setCategory(event.target.value)}>
             <option value="all">All topics</option>
-            {[...hostConversationTypes, ...conversationTypes].map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+            <optgroup label="Everyday conversations">{conversationTypes.filter(item => everydayTopics.has(item.value)).map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</optgroup>
+            <optgroup label="More topics">{[...hostConversationTypes, ...conversationTypes.filter(item => !everydayTopics.has(item.value))].map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</optgroup>
           </select>
         </label> : <p>Ask a question, offer help or share an update.</p>}
       </header>
@@ -855,11 +858,12 @@ export function CommunityFeed({
                     onChange={(event) => setComposerType(event.target.value)}
                     value={composerType}
                   >
-                    {availableTypes.map((item) => (
+                    <optgroup label="Everyday conversations">{availableTypes.filter(item => everydayTopics.has(item.value)).map((item) => (
                       <option key={item.value} value={item.value}>
                         {item.label}
                       </option>
-                    ))}
+                    ))}</optgroup>
+                    <optgroup label="More topics">{availableTypes.filter(item => !everydayTopics.has(item.value)).map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</optgroup>
                   </select>
                 </label>
               ) : null}
