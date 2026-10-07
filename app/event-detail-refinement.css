@@ -99,6 +99,7 @@
 .event-host-page .host-workspace-hero h1 { font-size: clamp(2rem, 4vw, 3rem); line-height: 1.12; letter-spacing: -.035em; }
 .event-host-extra-tools { width: min(1040px, calc(100% - 48px)); margin: 0 auto 48px; }
 .event-host-extra-tools > details { border-bottom: 1px solid var(--line); padding: 0; }
+.event-host-extra-tools > .event-appearance { width: 100%; margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
 .event-host-extra-tools > details > summary { display: list-item; min-height: 48px; padding: 14px 0; box-sizing: border-box; cursor: pointer; font-size: .9rem; font-weight: 600; }
 .event-host-extra-tools > details > summary:focus-visible { outline: 2px solid var(--wine); outline-offset: 3px; }
 .event-host-extra-tools > details > :not(summary) { width: 100%; max-width: 100%; margin: 0 0 20px; box-sizing: border-box; }

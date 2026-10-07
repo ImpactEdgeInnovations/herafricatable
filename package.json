@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "verify": "node scripts/verify-repository.mjs && node scripts/verify-safe-brand-themes.mjs",
+    "verify": "node scripts/verify-repository.mjs && node scripts/verify-safe-brand-themes.mjs && node scripts/verify-event-host-resilience.mjs",
     "test:brand-themes": "node scripts/verify-safe-brand-themes.mjs",
     "test:community-image-handoff": "node scripts/verify-community-image-handoff.mjs",
     "test:community-entry": "node scripts/verify-community-entry-actions.mjs",

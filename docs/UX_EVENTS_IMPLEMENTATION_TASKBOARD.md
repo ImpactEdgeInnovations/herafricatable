@@ -1,10 +1,12 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 7 October 2026. Historical baseline release: `b4be9ca`.
+Updated: 8 October 2026. Historical baseline release: `b4be9ca`.
 
 This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
 ## 7 October execution alignment
+
+**Phase 4 Host follow-through, verified 8 October:** `fe05c02` is pushed and deployed. Host editing now retains account/event-scoped text drafts and gives an explicit discard action; selected posters have a local preview and leave-page protection. Poster-save reconciliation keeps existing live images safe on uncertain responses. Optional booking, invitation, colour and cancellation tools share a compact reading edge. Live 390 px inspection measured 358 px for both editor and tools, with a 390 px document and no horizontal overflow. A benign unsaved text rehearsal survived tab changes and was discarded back to the original; no save, publication, invitation or upload was performed. Mocked failure tests and the full suite/build passed. Real-file uploads, populated Community search/replies and multi-account acceptance are still open; Phase 4 is not marked complete.
 
 ### Current continuation sequence
 
