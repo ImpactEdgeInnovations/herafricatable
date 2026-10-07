@@ -10,6 +10,8 @@ This board turns the 4 October UI/UX and Events audit (saved separately on the P
 
 ### Current continuation sequence
 
+**Live follow-through (`3f54156`, 8 October):** The Event Host details form restored a benign unsaved name after switching to Poster and back. Selecting the unsaved visibility checkbox still reported the saved details as hidden. Discard restored the blank saved name, unchecked visibility and disabled Save button. No save or sharing action was submitted. Screenshot: `tmp/phase4-host-details-recovery.png` (local evidence, not committed). This closes this tab-switch/discard check only, not real contact publication or two-account acceptance.
+
 **8 October specialised Host control pass:** Optional Event Host details now retain unfinished account/event-scoped edits when the tab is closed, offer a load retry, show the last saved visibility and clear drafts only after confirmed save/discard. Public sharing confirmation remains required. Community Host management actions use a synchronous guard, so rapid clicks cannot overlap a pending decision. Invitations/promotions to moderator explain Community-only management access and require confirmation; cancelled dialogs never call the database. Mocked action tests, full repository suite and production build passed. The live Lavington Women conversation view currently has one member and no conversation cards: it verifies the empty state, not populated pagination, reply or two-member acceptance. No real membership roles, invitations or event visibility were changed in this pass. No SQL migration is required.
 
 | Phase | Current delivery | Still required |
