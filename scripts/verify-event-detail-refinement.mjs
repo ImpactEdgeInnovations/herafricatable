@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=path=>readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
+const page=read('app/events/[slug]/page.tsx');
+const css=read('app/event-detail-refinement.css');
+const host=read('components/events/event-host-workspace.tsx');
+assert(page.includes('!useCommunityGathering ? <EventQuestions'), 'Do not repeat the gathering entry as a second Questions card');
+assert(page.includes('gatheringRoomHref}#questions'), 'The Conversation navigation must retain the actual gathering destination');
+assert(page.includes('canHostEvent === true') && page.includes('/host#host-image'), 'Only authorised Hosts get the poster shortcut');
+assert(page.includes('<details className="event-inline-invitations">'), 'Keep optional invitations collapsed rather than a second hero');
+assert(page.includes('eventCommunity.tagline.trim().toLowerCase() !== eventCommunity.name.trim().toLowerCase()'), 'Do not repeat the Community name as its description');
+assert(css.includes('object-fit: contain') && css.includes('height: auto'), 'Keep text and edges visible in portrait or landscape posters');
+assert(css.includes('--event-reading-width: 1120px') && css.includes('.event-detail-jump-links'), 'Use one reading edge for hero, sections and tabs');
+assert(css.includes('min-height: 48px') && css.includes('@media (max-width: 820px)'), 'Retain touch targets and responsive stacking');
+assert(host.includes('window.addEventListener("hashchange", openLinkedSection)') && host.includes('setSection(linked)'), 'Poster deep-link must open the otherwise-hidden Host panel');
+assert(host.includes('window.removeEventListener("hashchange", openLinkedSection)'), 'Clean up the Host navigation listener');
+console.log('Event detail refinement contracts passed: shared edges, uncropped posters, Host poster destination, compact invitations and non-duplicate gathering conversation.');

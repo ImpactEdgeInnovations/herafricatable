@@ -1,10 +1,21 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 5 October 2026. Baseline release: `b4be9ca`.
+Updated: 7 October 2026. Historical baseline release: `b4be9ca`.
 
 This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
 ## 7 October execution alignment
+
+### Current continuation sequence
+
+| Phase | Current delivery | Still required |
+|---|---|---|
+| 4 — Community and event interface | Community entry/consent actions implemented; event detail alignment and poster navigation refined | Populated room/mobile review, specialised Host tools and complete photo-save/browser journeys |
+| 5 — media and delivery reliability | Safety queue and durable photo cleanup implemented | Report/operation paging, real-file concurrency/recovery, faster safety email and actual inbox evidence |
+| 6 — separate-account rehearsal | Rollback tests cover joining, invitations, chat removal and connection consent | Host + member browser journeys, OTP return, capacity/booking, private media and pause/expiry |
+| 7 — release decision | Acceptance checklist retained | Record real results and owner go/no-go; keep creator payouts disabled |
+
+**7 October event detail pass (DETAIL-01 / UX-01):** Shared 1120 px reading edge across hero, tabs and sections; smaller heading and gaps; two-column poster layout with uncropped text; mobile stacking and 48 px navigation targets. Optional invitation form is collapsed. Community members have a Conversation navigation route rather than a repeated gathering card; duplicate Community-name taglines are suppressed. Hosts get a scoped poster shortcut that opens the Poster panel directly. Anonymous viewers no longer receive a guessed approval-policy label when that private setting is unavailable. Full suite, typecheck and production build passed; local 390 px hero/tabs/Community widths all measured 358 px, with no horizontal overflow. The published Lavington Women-linked event had no proposal media record and no published Host cover at inspection: a missing upload, not an approved poster hidden by CSS. Upload/save and actual image delivery remain acceptance work; no poster is fabricated or automatically published by this pass. No SQL update required.
 
 **Priority correction: full Community UI/UX overhaul.** The Product Owner's populated-room feedback overrides any implication that earlier green source/build checks established a good visual experience. Missing Community creation images, unreadable burgundy interaction states, inconsistent tab widths/boxing, missing People avatars and the dense redirected About journey are now explicit `CUI-01`–`CUI-06` work. The preceding live permissions/invitation/chat audit is tracked as `CINT-01`–`CINT-06`. See the [priority Community overhaul board](./FOUNDING_PILOT_JOURNEY_UPGRADE.md#priority-community-overhaul--7-october-member-feedback) for priorities and acceptance criteria. All are open, not cosmetic fixes marked Done. Safety/join-policy corrections lead; the room redesign is next; populated desktop/mobile acceptance closes the pass. Existing implementation history below remains historical evidence, not acceptance of the reported UI.
 

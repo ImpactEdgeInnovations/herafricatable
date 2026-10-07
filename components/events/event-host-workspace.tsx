@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -78,6 +78,15 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
   const [message, setMessage] = useState("");
   const [chosenCommunity, setChosenCommunity] = useState("");
   const [section, setSection] = useState("introduction");
+  useEffect(() => {
+    const openLinkedSection = () => {
+      const linked = window.location.hash.replace("#host-", "");
+      if (["introduction", "image", "programme", "community", "partners"].includes(linked)) setSection(linked);
+    };
+    openLinkedSection();
+    window.addEventListener("hashchange", openLinkedSection);
+    return () => window.removeEventListener("hashchange", openLinkedSection);
+  }, []);
   const hasEnded = new Date(initial.ends_at).getTime() < Date.now();
   const locked = initial.workspace_status === "submitted" || hasEnded;
   const linkedCommunity = communities.find((community) => community.linked_to_event);

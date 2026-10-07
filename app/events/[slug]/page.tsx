@@ -162,6 +162,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const canInviteToEvent = Boolean(
     eventManagerResult.data || eventProposerResult.data,
   );
+  const { data: canHostEvent } = user
+    ? await supabase.rpc("can_host_event", { p_event_id: event.id })
+    : { data: false };
   const eventInvitationResult = canInviteToEvent
     ? await supabase.rpc("list_my_table_invitations", {
         p_destination_id: event.id,
@@ -320,9 +323,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <Link className="brand" href={user ? "/home" : "/"} prefetch={false}><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></Link>
         <Link href={eventCommunity ? `/communities/${eventCommunity.slug}?view=people` : "/events"}>{eventCommunity ? `Back to ${eventCommunity.name}` : "All events"}</Link>
       </header>
-      <section className="event-detail-hero">
+      <section className="event-detail-hero" aria-label="Event details">
         <div><p className="eyebrow">{event.audience === "community" ? "Private Community gathering" : event.format.replace("_", " ")} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "A carefully curated Her Africa Table gathering."}</p>{eventCommunity ? <span className="event-community-badge">{event.audience === "community" ? `For active members of ${eventCommunity.name}` : `Hosted with ${eventCommunity.name}`}</span> : null}</div>
-        {eventImage ? <figure className="event-detail-poster"><img alt={eventImage.alt} src={eventImage.url} /></figure> : null}
+        {eventImage ? <figure className="event-detail-poster"><img alt={eventImage.alt} src={eventImage.url} fetchPriority="high" /></figure> : null}
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div><div><dt>Cost</dt><dd>{costLabel}</dd></div><div><dt>Entry</dt><dd>{entryLabel}</dd></div></dl>
           {gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : hasEnded && recap ? <a className="button button-primary" href="#event-recap">{cta}</a> : !hasEnded && isConfirmedGuest ? <Link className="button button-primary" href={`/events/${slug}/pass`}>{cta}</Link> : !hasEnded && registration?.status === "waitlisted" ? <a className="button button-primary" href="#registration">{cta}</a> : hasEnded || event.registration_mode === "closed" || bookingClosed ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}
@@ -332,11 +335,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       <nav className="event-detail-jump-links" aria-label="On this event page">
         {!hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? <a href="#registration">Places</a> : null}
-        <a href="#questions">Questions</a>
+        {gatheringRoomHref ? <Link href={`${gatheringRoomHref}#questions`}>Conversation</Link> : <a href="#questions">Questions</a>}
         {eventCommunity ? <a href="#event-community">Community</a> : null}
+        {sessions?.length ? <a href="#event-programme">Programme</a> : null}
+        {hasEnded && recap ? <a href="#event-recap">Recap</a> : null}
       </nav>
 
+      {!hasEnded && canHostEvent === true ? <div className="event-host-shortcut"><span>{eventImage ? "Your event is live." : poster || cover ? "Your poster could not load. Check it in your Host tools." : "No poster added yet."}</span><Link href={`/events/${slug}/host#host-image`}>{eventImage ? "Manage poster" : "Add or check poster"}</Link></div> : null}
+
       {!hasEnded && canInviteToEvent ? (
+        <details className="event-inline-invitations"><summary>Invite people</summary>
         <DestinationInvitationPanel
           currentUserId={user!.id}
           destinationId={event.id}
@@ -347,6 +355,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           }
           ready={!eventInvitationResult.error}
         />
+        </details>
       ) : null}
 
       {!hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? (
@@ -410,10 +419,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <div>
             <p className="eyebrow">The people around this event</p>
             <h2>{eventCommunity.name}</h2>
-            <p>{eventCommunity.tagline || "Meet members, see event updates and continue the conversation together."}</p>
+            {eventCommunity.tagline && eventCommunity.tagline.trim().toLowerCase() !== eventCommunity.name.trim().toLowerCase() ? <p>{eventCommunity.tagline}</p> : <p>Meet the members and keep in touch here.</p>}
           </div>
           <aside>
-            <span>{linkedJoining?.join_policy === "open" ? "Members can join immediately" : linkedJoining?.join_policy === "invite_only" ? "Invitation only" : "The Host approves joining requests"}</span>
+            <span>{linkedJoining?.join_policy === "open" ? "Members can join immediately" : linkedJoining?.join_policy === "invite_only" ? "Invitation only" : linkedJoining?.join_policy === "approval" ? "The Host approves joining requests" : "Community membership"}</span>
             <p>{event.audience === "community" ? "This gathering is for active members of the Community." : "This is an open event connected to the Community. Joining either one is always your choice."}</p>
             <EventCommunityJoin communityId={eventCommunity.community_id} slug={eventCommunity.slug} activeMember={activeMember} signedIn={Boolean(user)} initialStatus={communityMembership?.status ?? null} joinPolicy={linkedJoining?.join_policy ?? null} />
           </aside>
@@ -422,7 +431,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       {announcements?.length ? <section className="event-content-section"><div><p className="eyebrow">Latest information</p><h2>Announcements</h2></div><div className="announcement-list">{announcements.map((item) => <article key={item.id}><span>{item.published_at ? new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", timeZone: event.timezone }).format(new Date(item.published_at)) : "Update"}</span><div><h3>{item.title}</h3><p>{item.body}</p></div></article>)}</div></section> : null}
 
-      <EventQuestions
+      {!useCommunityGathering ? <EventQuestions
         canAsk={activeMember && !hasEnded}
         currentUserId={user?.id ?? null}
         eventId={event.id}
@@ -430,9 +439,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         gatheringHref={useCommunityGathering && eventCommunity ? `/communities/${eventCommunity.slug}/gatherings/${slug}#questions` : null}
         initialQuestions={(eventQuestionResult.data as EventQuestion[] | null) ?? []}
         migrationReady={useCommunityGathering || !eventQuestionResult.error}
-      />
+      /> : null}
 
-      {sessions?.length ? <section className="event-content-section"><div><p className="eyebrow">The gathering</p><h2>Programme</h2></div><div className="programme-list">{sessions.map((session) => { const speakers = speakersFor(session.id); return <article key={session.id}><time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(session.starts_at))}</time><div><h3>{session.title}</h3>{speakers.map((speaker) => <p className="programme-speaker" key={`${session.id}-${speaker.name}`}><strong>{speaker.name}</strong>{[speaker.job_title, speaker.company].filter(Boolean).join(" · ") ? ` · ${[speaker.job_title, speaker.company].filter(Boolean).join(" · ")}` : ""}</p>)}<p>{session.description}</p>{session.room ? <span>{session.room}</span> : null}</div></article>; })}</div></section> : null}
+      {sessions?.length ? <section className="event-content-section" id="event-programme"><div><p className="eyebrow">The gathering</p><h2>Programme</h2></div><div className="programme-list">{sessions.map((session) => { const speakers = speakersFor(session.id); return <article key={session.id}><time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(session.starts_at))}</time><div><h3>{session.title}</h3>{speakers.map((speaker) => <p className="programme-speaker" key={`${session.id}-${speaker.name}`}><strong>{speaker.name}</strong>{[speaker.job_title, speaker.company].filter(Boolean).join(" · ") ? ` · ${[speaker.job_title, speaker.company].filter(Boolean).join(" · ")}` : ""}</p>)}<p>{session.description}</p>{session.room ? <span>{session.room}</span> : null}</div></article>; })}</div></section> : null}
 
       {hasEnded && recap ? <section className="event-public-recap" id="event-recap"><div><p className="eyebrow">From the Host</p><h2>{recap.title}</h2><p>{recap.summary}</p>{recap.highlights?.length ? <ul>{recap.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}</ul> : null}</div>{continuation ? <aside><span>The conversation continues</span><strong>{continuation.name}</strong><p>Join the approved Community for future gatherings and ongoing conversation.</p><Link className="button button-primary" href={`/communities/${continuation.slug}`}>View Community</Link></aside> : null}</section> : null}
       {hasEnded && isConfirmedGuest && (activeMember || guestFollowUpAccess) ? <section className="event-intro-entry"><div><p className="eyebrow">For guests who attended</p><h2>Continue after the table</h2><p>Read the approved recap, share private feedback and choose whether to hear about the next gathering. An event place does not approve network membership.</p></div><Link className="button button-outline" href={`/events/${slug}/follow-up`}>Open my follow-up</Link></section> : null}
