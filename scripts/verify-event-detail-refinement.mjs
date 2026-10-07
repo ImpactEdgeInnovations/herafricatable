@@ -23,4 +23,6 @@ assert(!migration.includes('profile_private') || migration.includes('-- Separate
 const creation=read('components/events/member-event-proposal.tsx');
 assert(creation.includes('["Your event", "When & where", "On the day", "Check & open"]') && creation.includes('member-event-check'), 'Plain creation steps and a final factual review');
 assert(!creation.includes('className="member-event-promise"'), 'Do not repeat the step navigation in a separate slogan strip');
+assert(creation.includes('key={`continue-${step}`}') && creation.includes('event.preventDefault(); continueForward();') && creation.includes('key="submit-event"'), 'Continue must cancel the native click action and never reuse the publication button node');
+assert(creation.includes('<ApplicationImageField automatic={pilotAutoPublish}'), 'Pilot poster instructions must reflect the actual no-review workflow');
 console.log('Event detail refinement contracts passed: shared edges, uncropped posters, Host poster destination, compact invitations and non-duplicate gathering conversation.');
