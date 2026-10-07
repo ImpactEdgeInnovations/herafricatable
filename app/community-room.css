@@ -1,4 +1,37 @@
 /* Member Community rooms only; directory and Admin styling stay unchanged. */
+.gathering-watch-layout:has(.gathering-video) {
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr);
+}
+.gathering-watch-layout .gathering-video { grid-column: 1; grid-row: 1; min-width: 0; }
+.gathering-watch-layout:has(.gathering-video) .gathering-live { grid-column: 2; grid-row: 1; min-width: 0; padding: 0; border: 0; }
+.gathering-watch-layout:has(.gathering-video) .gathering-questions { grid-column: 1; grid-row: 2; }
+.gathering-watch-layout:has(.gathering-video) .gathering-attendees { grid-column: 2; grid-row: 2; }
+.gathering-video h2 { margin: 0 0 8px; font-family: var(--sans); font-size: 1.3rem; }
+.gathering-video header > p, .gathering-video-note { color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
+.gathering-video-player { aspect-ratio: 16 / 9; width: 100%; margin: 18px 0 10px; background: #292321; border-radius: 6px; overflow: hidden; }
+.gathering-video-player iframe { width: 100%; height: 100%; border: 0; }
+.gathering-video-load { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; background: transparent; color: #fff; border: 0; cursor: pointer; }
+.gathering-video-load > span { font-size: 1.8rem; }
+.gathering-video-load small { max-width: 280px; font-size: 0.85rem; line-height: 1.5; }
+.gathering-video details { margin-top: 16px; }
+.gathering-video summary { min-height: 44px; padding: 12px 0; cursor: pointer; font-weight: 600; }
+.gathering-video form { display: grid; gap: 14px; padding: 12px 0; }
+.gathering-video input[type="url"] { width: 100%; min-height: 46px; padding: 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); font-size: 1rem; }
+.gathering-video form label { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; line-height: 1.5; }
+.gathering-video-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.gathering-video li { margin-bottom: 12px; font-size: 0.9rem; line-height: 1.6; }
+.community-admin-videos { width: min(1120px, calc(100% - 40px)); margin: 24px auto; padding: 18px; border: 1px solid var(--line); }
+.community-admin-videos summary { min-height: 44px; cursor: pointer; font-weight: 600; }
+.community-admin-videos article { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 0; border-top: 1px solid var(--line); }
+.community-admin-videos p { font-size: 0.9rem; line-height: 1.5; }
+.community-admin-videos button { min-height: 44px; }
+@media (max-width: 820px) {
+  .gathering-watch-layout:has(.gathering-video) { grid-template-columns: minmax(0, 1fr); }
+  .gathering-watch-layout:has(.gathering-video) .gathering-live { grid-column: 1; grid-row: 2; }
+  .gathering-watch-layout:has(.gathering-video) .gathering-questions { grid-column: 1; grid-row: 3; }
+  .gathering-watch-layout:has(.gathering-video) .gathering-attendees { grid-column: 1; grid-row: 4; }
+}
+
 .community-room-page {
   font-family: var(--sans, Arial, sans-serif);
   font-size: 1rem;

@@ -10,6 +10,7 @@ import type { CommunitySummary } from "@/components/member/community-directory";
 import type { CommunityBrandIdentity } from "@/components/member/community-branding-panel";
 import { createClient } from "@/lib/supabase/server";
 import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
+import { CommunityVideoControls, type CommunityVideoControl } from "@/components/admin/community-video-controls";
 
 export const dynamic = "force-dynamic";
 
@@ -28,13 +29,14 @@ export default async function AdminCommunitiesPage() {
     .maybeSingle();
   if (!role) redirect("/admin");
 
-  const [communityResult, applicationResult, joiningResult, brandingResult, applicationMediaResult, pilotResult] = await Promise.all([
+  const [communityResult, applicationResult, joiningResult, brandingResult, applicationMediaResult, pilotResult, videoResult] = await Promise.all([
     supabase.rpc("list_communities"),
     supabase.rpc("list_community_host_applications_admin"),
     supabase.rpc("list_community_joining_settings", { p_community_id: null }),
     supabase.rpc("list_community_brand_identities", { p_community_id: null }),
     supabase.rpc("list_admin_application_proposal_media"),
     supabase.rpc("get_community_pilot_admin"),
+    supabase.rpc("list_community_gathering_video_controls"),
   ]);
   const joiningByCommunity = new Map(
     ((joiningResult.data as {
@@ -121,6 +123,7 @@ export default async function AdminCommunitiesPage() {
         label="Community oversight"
         role="super_admin"
       />
+      {!videoResult.error ? <CommunityVideoControls initialItems={(videoResult.data as CommunityVideoControl[] | null) ?? []} /> : null}
       <CommunityCommandCentre
         applicationReady={!applicationResult.error}
         applications={

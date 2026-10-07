@@ -11,6 +11,7 @@ import {
 } from "@/components/member/community-gathering-room";
 import type { CommunitySummary } from "@/components/member/community-directory";
 import { createClient } from "@/lib/supabase/server";
+import type { GatheringVideo } from "@/components/member/community-gathering-video";
 
 export const dynamic = "force-dynamic";
 
@@ -56,15 +57,16 @@ export default async function CommunityGatheringPage({
   }
   if (!room) notFound();
 
-  const [messageResult, questionResult, attendeeResult, preferenceResult] = await Promise.all([
+  const [messageResult, questionResult, attendeeResult, preferenceResult, videoResult] = await Promise.all([
     supabase.rpc("list_community_gathering_messages", { p_limit: 200, p_room_id: room.room_id }),
     supabase.rpc("list_community_gathering_questions", { p_room_id: room.room_id }),
     supabase.rpc("list_community_gathering_attendees", { p_room_id: room.room_id }),
     supabase.rpc("list_my_community_event_preferences", { p_community_id: community.community_id }),
+    supabase.rpc("get_community_gathering_video", { p_room_id: room.room_id }),
   ]);
 
   return (
-    <main className="community-page gathering-room-page">
+    <main className="community-page community-room-page gathering-room-page">
       <MemberHeader active="community" label={community.name} />
       <CommunityLocalNavigation active="gatherings" canManage={canManage} slug={slug} />
       <CommunityGatheringRoom
@@ -76,6 +78,8 @@ export default async function CommunityGatheringPage({
         questions={(questionResult.data as CommunityGatheringQuestion[] | null) ?? []}
         reminderWindow={((preferenceResult.data as { event_id: string; reminder_window: "day_before" | "hour_before" | null }[] | null) ?? []).find((item) => item.event_id === eventId)?.reminder_window ?? null}
         room={room}
+        video={(videoResult.data as GatheringVideo | null) ?? null}
+        videoReady={!videoResult.error}
       />
     </main>
   );

@@ -12,7 +12,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "media-src 'self' data: blob:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-  "frame-src 'self' https://checkout.paystack.com",
+  "frame-src 'self' https://checkout.paystack.com https://www.youtube-nocookie.com",
   "upgrade-insecure-requests",
 ].join("; ");
 

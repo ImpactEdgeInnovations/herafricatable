@@ -65,7 +65,29 @@ These are planned tasks, not shipped features. Keep existing permissions and pil
 - [ ] Complete populated-room desktop/mobile visual acceptance and separate member/Host navigation rehearsal. The browser's signed-in account currently has no Community; source checks are not a substitute for this acceptance.
 - [ ] Complete draft-preserving navigation and any remaining inner-room layout refinements before closing Phase 1.
 
-No database migration is required for this first UI pass. Media tabs, livestreams and albums remain later phases and are not shown as working controls yet.
+No database migration was required for the Phase 1 UI pass. Media tabs and albums remain later phases; the optional gathering video controls are tracked in Phase 2 below.
+
+#### Phase 2 progress — optional gathering livestreams
+
+- [x] Host controls to add, replace, hide or remove an individual YouTube video and choose whether to keep its replay.
+- [x] A click-to-load privacy-enhanced player alongside the same gathering conversation on desktop, stacked on mobile; no autoplay or separate YouTube chat.
+- [x] Plain YouTube Studio guidance and an explicit warning that unlisted links can be shared outside this platform.
+- [x] Database access requires an active platform account, a published Community and existing gathering access; direct table and anonymous RPC reads are denied.
+- [x] Admin → Communities video pause/resume controls; Host saves cannot undo Admin pause. Watching clients re-check permissions/settings every 30 seconds and on focus. This removes the in-platform player, not copies of the YouTube link.
+- [x] Migration `20261007120000_community_gathering_youtube.sql` applied to the live project. Do not rerun it. No YouTube credentials or Vercel variables required.
+- [x] Source/URL-parser checks, existing automated suite and production build passed. Live transaction-only tests passed Host save, member read, member-edit denial, outsider denial, replay opt-out, Admin pause, Host inability to unpause, removed-member denial and direct/anonymous denial.
+- [ ] Real Host save/replacement/removal and YouTube playback on desktop/mobile; confirm the channel allows embedding and is livestream-enabled. Database tests did not broadcast or upload video.
+
+The SQL file under `supabase/tests/032_community_gathering_video.sql` is a rollback test, **not a migration**. It simulates readiness only inside its transaction and leaves no rehearsal publication or real event change behind. Security advisors report intentional RLS-without-policies for the RPC-only table and authenticated security-definer RPCs; their explicit role/membership checks were tested. Historical advisor findings are separate.
+
+#### Phase 3 additions — event browsing inside the Community
+
+- [ ] Keep Community navigation visible while members open upcoming or past event details in place; support shareable event selection, Back/Close and accessible focus handling without losing filters or drafts.
+- [ ] Show that event's videos, photos and conversation together, with the event title and date on each recording/album; do not mix unrelated event discussions.
+- [ ] Add “Link an existing event” to Community Host tools, as well as creating a new gathering. Reuse existing ownership/linking permissions; a Community can exist first and link later events over time. Membership does not automatically grant authority to link someone else's event.
+- [ ] Add a compact “Next gathering” strip inside the Community with title, date, booking/attendance action and a quiet countdown; hide it when no eligible event exists and stop the countdown after it starts.
+- [ ] Keep the strip still by default, avoiding scrolling text; honour reduced-motion preferences for any optional animation. Admin suspension, event cancellation and visibility remain authoritative.
+- [ ] Verify empty, upcoming, live, past and cancelled states and that public event discovery never exposes private Community media.
 
 - [ ] Audit member typography: one readable interface font, restrained editorial headings only where useful, smaller headings and tighter spacing.
 - [ ] Remove unnecessary decorative cards, slogans and repeated introductory paragraphs from signed-in screens.
@@ -78,9 +100,9 @@ No database migration is required for this first UI pass. Media tabs, livestream
 - [ ] Keep member-facing actions simple; show Host management controls only to authorised Hosts without crowding everyday browsing.
 - [ ] Add consistent loading, empty, error and permission states across Community tabs; load only the selected area where practical and preserve unsent drafts when navigating.
 - [ ] Verify the full Community room on desktop and mobile, including keyboard/focus navigation, contrast, long titles, populated feeds, Host controls and member usability with plain wording.
-- [ ] Add optional YouTube livestreams to new or existing Community gatherings; Hosts can add, replace or remove a video link without sharing channel credentials.
-- [ ] Include short YouTube Studio setup instructions and explain that an unlisted link can be shared outside the platform. Platform viewing is restricted to authorised Community members, not a guarantee of YouTube exclusivity.
-- [ ] Build a compact “Watch & discuss” gathering view: video beside its conversation on desktop and above it on mobile; no autoplay by default.
+- [x] Add optional YouTube livestreams to new or existing Community gatherings; Hosts can add, replace or remove a video link without sharing channel credentials.
+- [x] Include short YouTube Studio setup instructions and explain that an unlisted link can be shared outside the platform. Platform viewing is restricted to authorised Community members, not a guarantee of YouTube exclusivity.
+- [x] Build a compact “Watch & discuss” gathering view: video beside its conversation on desktop and above it on mobile; no autoplay by default.
 - [ ] Add a Community “Media” area with “Videos” and “Photos” filters, rather than extra top-level platform tabs.
 - [ ] Tie each gathering livestream, replay and photo album to its gathering and one persistent gathering conversation; show the gathering name/date and an “Open conversation” action.
 - [ ] Allow standalone Community media to have its own named post and replies. Do not silently mix it into an unrelated gathering conversation.
