@@ -85,6 +85,7 @@ export function CommunityBrandingPanel({
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   const [cover, setCover] = useState<File | null>(null);
   const [icon, setIcon] = useState<File | null>(null);
   const [message, setMessage] = useState("");
@@ -113,7 +114,7 @@ export function CommunityBrandingPanel({
 
   async function useApplicationImage() {
     if (!applicationImage || busy) return;
-    setBusy(true); setMessage("");
+    setBusy(true); setPreparing(true); setMessage("");
     try {
       const result = await supabase.storage.from("proposal-media").download(applicationImage.storage_path);
       if (result.error) throw result.error;
@@ -122,7 +123,7 @@ export function CommunityBrandingPanel({
       setDraft(value => ({...value, iconAlt:applicationImage.alt_text, removeIcon:false}));
       setMessage("Check the square preview, then Save look and feel to use it. Nothing has been changed yet.");
     } catch (cause) { setMessage(memberErrorMessage(cause, "prepare your Community image")); }
-    finally { setBusy(false); }
+    finally { setBusy(false); setPreparing(false); }
   }
 
   if (!owner) return null;
@@ -296,9 +297,7 @@ export function CommunityBrandingPanel({
             src={identity.cover_url}
             width={identity.cover_width ?? undefined}
           />
-        ) : (
-          <div className="community-brand-cover is-placeholder" aria-hidden="true" />
-        )}
+        ) : null}
         <div>
           {iconPreview || identity?.icon_url ? (
             <img
@@ -323,7 +322,7 @@ export function CommunityBrandingPanel({
       {applicationImage?.image_url ? <div className="community-application-image-handoff">
         <img src={applicationImage.image_url} alt={applicationImage.alt_text} />
         <div><strong>Your uploaded image</strong><p>Use it as the small image beside your Community name. We crop the centre into a square; check the preview before saving.</p>
-        <button className="button button-outline" type="button" disabled={busy} onClick={() => void useApplicationImage()}>Use this as Community image</button></div>
+        <button className="button button-outline" type="button" disabled={busy} onClick={() => void useApplicationImage()}>{preparing ? "Preparing image…" : "Use this as Community image"}</button></div>
       </div> : null}
 
       <form ref={formRef} className="community-branding-form" onSubmit={(event) => void save(event)}>
@@ -374,6 +373,7 @@ export function CommunityBrandingPanel({
             />
             <small>JPG, PNG or WebP · 256 × 256 px minimum · 3 MB maximum.</small>
           </label>
+          {icon ? <p className="community-image-ready" role="status">Your Community image is ready to save. Check the preview above.</p> : null}
           <label>
             Icon description
             <input
@@ -435,7 +435,7 @@ export function CommunityBrandingPanel({
             </small>
           </div>
           <button className="button button-primary" disabled={busy || (!dirty && !icon && !cover)}>
-            {busy ? "Saving…" : "Save look and feel"}
+            {preparing ? "Preparing image…" : busy ? "Saving…" : "Save look and feel"}
           </button>
         </footer>
         </fieldset>

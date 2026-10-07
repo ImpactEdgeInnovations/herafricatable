@@ -148,6 +148,10 @@
 .community-application-image-handoff { display: flex; align-items: center; gap: 16px; margin: 16px 0; padding: 16px; border: 1px solid #e4dfdc; border-radius: 8px; background: #fff; }
 .community-application-image-handoff > img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
 .community-application-image-handoff p { margin: 6px 0 12px; font: 400 .9rem/1.5 var(--sans, Arial, sans-serif); }
+.community-host-page .community-brand-preview.safe-brand-preview { padding: 16px; }
+.community-host-page .community-brand-preview.safe-brand-preview .community-brand-cover { max-height: 160px; object-fit: cover; }
+.community-host-page .community-brand-preview.safe-brand-preview > div:last-child { padding: 0; }
+.community-image-ready { font: 400 .9rem/1.5 var(--sans, Arial, sans-serif); color: #365e4c; }
 @media (max-width: 600px) { .community-application-image-handoff { align-items: flex-start; } .community-application-image-handoff > img { width: 48px; height: 48px; } .community-application-image-handoff .button { white-space: normal; } }
 .community-room-page .community-host-identity { font-size: .85rem; color: #655e60; }
 .community-room-page .community-host-identity a { color: #241e20; font-weight: 600; }
