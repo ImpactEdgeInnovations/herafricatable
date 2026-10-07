@@ -134,6 +134,20 @@ Cross-platform readability, first implementation pass:
 
 Next implementation sequence: photo data/access/quota design → Host album creation and uploads → member contributions/moderation → Media browsing and accessible carousel → production acceptance. Do not expose a Photos button until it has a working destination. Photo features below remain unimplemented.
 
+Photo foundation, 7 October — backend implemented; member upload feature not yet open:
+
+- [x] Add RPC-only album, upload-batch, photo-reservation and Community allowance records, with RLS and no direct member/anonymous table access. Defaults keep binary uploads closed.
+- [x] Add authorised Host album creation with retry-safe IDs, Host-only/member/review contribution settings and closed-album controls. These are backend actions; the Host screens follow next.
+- [x] Attach gathering albums to the same lasting gathering conversation; multiple albums never create multiple gathering threads. Standalone albums have their own named Community post.
+- [x] Reserve a full original/thumbnail budget under a Community row lock: maximum 10 photos per batch, 20 member photos per Nairobi calendar day, 100 per album and default 500 MiB per Community. Retry IDs reuse existing reservations. Pending, expired and removed records continue consuming allowance until trusted cleanup proves their files are gone.
+- [x] Add Node image processing: decode real JPG/PNG/WebP, reject unsupported/animated input, bound source bytes/pixels, apply camera orientation, resize to 1920px, strip EXIF/location metadata and produce a 480px thumbnail. Stored original ≤1 MiB; thumbnail ≤64 KiB. Behavioural tests process actual binary fixtures, not only source strings.
+- [x] Apply `20261007150000_community_photo_album_foundation.sql` live after transactional dry-run acceptance. Repeat rollback tests passed on the applied schema and left zero albums/reservations, zero enabled upload settings and the rehearsal Community archived. Do not rerun this migration manually.
+- [ ] Add private Storage, validated upload/finalisation and cleanup routes; do not enable the upload setting until these work together. Reservation expiry alone does not currently release allowance.
+- [ ] Add Host album forms, member photo contribution/review screens, attribution, reports, moderation, Media discovery and accessible carousel. None of these photo screens is shipped in this foundation pass.
+- [ ] Rehearse simultaneous reservations/uploads with separate database sessions, real private binary delivery, removed-member access, cleanup/recovery, mobile carousel and inbox delivery. Sequential rollback tests and lock inspection are not a concurrency/load certification.
+
+Security advisors flag the intentional RPC-only tables and authenticated security-definer entry points. Explicit active-account, published-Community, membership/Host and read-only checks passed the rollback tests; anonymous/direct grants remain denied. This is not a blanket clearance of historical advisor findings. [Supabase advisor guidance](https://supabase.com/docs/guides/database/database-linter).
+
 - [ ] Audit member typography: one readable interface font, restrained editorial headings only where useful, smaller headings and tighter spacing.
 - [ ] Remove unnecessary decorative cards, slogans and repeated introductory paragraphs from signed-in screens.
 - [ ] Use plain labels: “Your Communities”, “Start a conversation”, “Upcoming gatherings”, “Invite people” and “Add a livestream link”.
