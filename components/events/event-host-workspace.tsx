@@ -252,7 +252,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
 
       {dirty && !locked ? <div className="host-workspace-draft-note" role="status"><span>{restoredDraft ? "Your unfinished changes are back." : "You have unsaved changes."} Text stays in this tab until you save, discard or sign out.</span><button type="button" disabled={busy} onClick={()=>clearDraft(savedDraft)}>Discard text changes</button></div> : null}
 
-      {section === "host" ? <div className="host-workspace-panel" id="host-host"><EventHostPublicDetails eventId={initial.event_id}/></div> : null}
+      {section === "host" ? <div className="host-workspace-panel" id="host-host"><EventHostPublicDetails eventId={initial.event_id} currentUserId={currentUserId}/></div> : null}
 
       <div className="host-workspace-panel" id="host-introduction" hidden={section !== "introduction"}>
         <div className="host-workspace-panel-heading"><span>01</span><div><h2>Event details</h2><p>Help guests know why to come and how to arrive.</p></div></div>

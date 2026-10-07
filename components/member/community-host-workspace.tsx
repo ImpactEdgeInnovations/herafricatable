@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -180,15 +180,19 @@ export function CommunityHostWorkspace({
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState("");
+  const actionBusy = useRef(false);
   const [message, setMessage] = useState("");
 
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if(actionBusy.current)return;
+    actionBusy.current=true;
     const formElement = event.currentTarget;
-    const form = new FormData(formElement);
     setBusy("invite");
     setMessage("");
     try {
+    const form = new FormData(formElement);
+    if(form.get("role")==="moderator" && !await ask({title:"Invite a moderator?",description:"If she accepts, she can manage this Community’s members and conversations. She will not receive platform Admin access.",confirmLabel:"Send moderator invitation"}))return;
     const { error } = await supabase.rpc("invite_community_member", {
       p_community_id: communityId,
       p_email: form.get("email"),
@@ -205,23 +209,25 @@ export function CommunityHostWorkspace({
       router.refresh();
     }
     } catch (error) { setMessage(memberErrorMessage(error, "invite this member")); }
-    finally { setBusy(""); }
+    finally { actionBusy.current=false;setBusy(""); }
   }
 
   async function review(member: CommunityHostMember, action: string) {
-    if (action === "remove") {
-      const confirmed = await ask({
-        title: `Remove ${member.display_name}?`,
-        description:
-          "She will lose access to this room. Her platform membership is not affected.",
-        confirmLabel: "Remove from room",
-        tone: "danger",
-      });
-      if (!confirmed) return;
-    }
+    if(actionBusy.current)return;
+    actionBusy.current=true;
     setBusy(member.membership_id);
     setMessage("");
     try {
+    if (action === "remove" || action === "promote") {
+      const confirmed = await ask({
+        title: action === "promote" ? `Make ${member.display_name} a moderator?` : `Remove ${member.display_name}?`,
+        description:
+          action === "promote" ? "She will be able to manage this Community’s members and conversations. This does not give her platform Admin access." : "She will lose access to this room. Her platform membership is not affected.",
+        confirmLabel: action === "promote" ? "Make moderator" : "Remove from room",
+        tone: action === "promote" ? "default" : "danger",
+      });
+      if (!confirmed) return;
+    }
     const { error } = await supabase.rpc("review_community_membership", {
       p_action: action,
       p_membership_id: member.membership_id,
@@ -234,7 +240,7 @@ export function CommunityHostWorkspace({
     );
     if (!error) router.refresh();
     } catch (error) { setMessage(memberErrorMessage(error, "update this Community member")); }
-    finally { setBusy(""); }
+    finally { actionBusy.current=false;setBusy(""); }
   }
 
   async function updateProgramming(
@@ -242,6 +248,8 @@ export function CommunityHostWorkspace({
     active: boolean,
     featured: boolean,
   ) {
+    if(actionBusy.current)return;
+    actionBusy.current=true;
     setBusy(option.item_id);
     setMessage("");
     try {
@@ -259,17 +267,18 @@ export function CommunityHostWorkspace({
     setBusy("");
     setMessage(
       error
-        ? memberErrorMessage(error, "update this community programming")
+        ? memberErrorMessage(error, "update what members can see")
         : active
         ? option.item_type === "event" ? "Event linked. Members can find it in Gatherings." : "Learning updated."
         : "Item removed from this community.",
     );
     if (!error) router.refresh();
     } catch (error) { setMessage(memberErrorMessage(error, "link this item")); }
-    finally { setBusy(""); }
+    finally { actionBusy.current=false;setBusy(""); }
   }
 
   async function nudgeIntroduction(member: CommunityIntroductionFollowup) {
+    if(actionBusy.current)return;
     if (!automations) {
       setMessage(
         "Introduction reminders are not included in your current plan.",
@@ -277,6 +286,7 @@ export function CommunityHostWorkspace({
       return;
     }
     const action = `nudge-${member.user_id}`;
+    actionBusy.current=true;
     setBusy(action);
     setMessage("");
     try {
@@ -290,12 +300,12 @@ export function CommunityHostWorkspace({
     setBusy("");
     setMessage(
       error
-        ? memberErrorMessage(error, "record this gentle reminder")
+        ? memberErrorMessage(error, "send this reminder")
         : "Reminder scheduled. The member’s notification choices will be respected.",
     );
     if (!error) router.refresh();
     } catch (error) { setMessage(memberErrorMessage(error, "send this reminder")); }
-    finally { setBusy(""); }
+    finally { actionBusy.current=false;setBusy(""); }
   }
 
   if (!migrationReady || !health) {
@@ -458,7 +468,7 @@ export function CommunityHostWorkspace({
                         {automations && member.can_nudge ? (
                           <button
                             type="button"
-                            disabled={busy === `nudge-${member.user_id}`}
+                            disabled={Boolean(busy)}
                             onClick={() => void nudgeIntroduction(member)}
                           >
                             {busy === `nudge-${member.user_id}`
@@ -569,7 +579,7 @@ export function CommunityHostWorkspace({
               <option value="moderator">Moderator</option>
             </select>
           </label>
-          <button className="button button-primary" disabled={busy === "invite"}>
+          <button className="button button-primary" disabled={Boolean(busy)}>
             {busy === "invite" ? "Sending…" : "Send invitation"}
           </button>
         </form>
@@ -589,13 +599,13 @@ export function CommunityHostWorkspace({
               {member.status === "requested" ? (
                 <div>
                   <button
-                    disabled={busy === member.membership_id}
+                    disabled={Boolean(busy)}
                     onClick={() => void review(member, "approve")}
                   >
                     Approve
                   </button>
                   <button
-                    disabled={busy === member.membership_id}
+                    disabled={Boolean(busy)}
                     onClick={() => void review(member, "decline")}
                   >
                     Decline
@@ -632,7 +642,7 @@ export function CommunityHostWorkspace({
               {member.role !== "owner" ? (
                 <div>
                   <button
-                    disabled={busy === member.membership_id}
+                    disabled={Boolean(busy)}
                     onClick={() =>
                       void review(
                         member,
@@ -644,7 +654,7 @@ export function CommunityHostWorkspace({
                   </button>
                   <button
                     className="danger-action"
-                    disabled={busy === member.membership_id}
+                    disabled={Boolean(busy)}
                     onClick={() => void review(member, "remove")}
                   >
                     Remove
@@ -736,7 +746,7 @@ function ProgrammingPanel({
                 {option.is_linked ? (
                   <>
                     <button
-                      disabled={busy === option.item_id}
+                      disabled={Boolean(busy)}
                       onClick={() =>
                         void onUpdate(option, true, !option.is_featured)
                       }
@@ -745,7 +755,7 @@ function ProgrammingPanel({
                     </button>
                     <button
                       className="danger-action"
-                      disabled={busy === option.item_id}
+                      disabled={Boolean(busy)}
                       onClick={() => void onUpdate(option, false, false)}
                     >
                       Remove from community
@@ -753,7 +763,7 @@ function ProgrammingPanel({
                   </>
                 ) : (
                   <button
-                    disabled={busy === option.item_id}
+                    disabled={Boolean(busy)}
                     onClick={() => void onUpdate(option, true, false)}
                   >
                     Add to community
