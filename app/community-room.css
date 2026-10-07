@@ -1,4 +1,5 @@
 /* Member Community rooms only; directory and Admin styling stay unchanged. */
+.community-report-photo { display: block; width: min(100%, 480px); max-height: 360px; object-fit: contain; margin: 12px 0; }
 .community-media { width: min(1120px, calc(100% - 32px)); margin: 24px auto; }
 .community-media-tabs { display: flex; gap: 8px; margin: 16px 0; }
 .community-media-tabs button { min-height: 44px; padding: 10px 20px; border: 1px solid var(--line); border-radius: 5px; background: transparent; color: var(--ink); font: inherit; cursor: pointer; }

@@ -966,10 +966,13 @@ export default async function AdminOperationsPage({
   const eventQuestionReportResult = canModerate && loadSafety
     ? await supabase.rpc("list_event_question_reports")
     : { data: [], error: null };
+  const photoReportResult = canModerate && loadSafety
+    ? await supabase.rpc("list_community_photo_reports") : { data: [], error: null };
   const communityReports = [
     ...((communityReportSource?.data as CommunityReport[] | null) ?? []),
     ...((gatheringReportResult.data as CommunityReport[] | null) ?? []),
     ...((eventQuestionReportResult.data as CommunityReport[] | null) ?? []),
+    ...((photoReportResult.data as CommunityReport[] | null) ?? []),
   ];
   const environmentSignals: EnvironmentSignal[] = [
     {
@@ -1254,6 +1257,7 @@ export default async function AdminOperationsPage({
             reports={communityReports}
             migrationReady={!communityReportSource?.error && !gatheringReportResult.error && !eventQuestionReportResult.error}
           />
+          {photoReportResult.error ? <p role="alert">Photo reports could not be loaded. Refresh this page to try again.</p> : null}
         </AdminWorkGroup>
       ) : null}
       {role.role === "super_admin" && loadPrograms ? (

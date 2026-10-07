@@ -8,6 +8,7 @@ import { useActionDialog } from "@/components/ui/action-dialog";
 import { communityDraftEpoch, communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
 import { CommunityPhotoViewer } from "./community-photo-viewer";
+import { CommunityGatheringDiscussion } from "@/components/member/community-gathering-discussion";
 
 type Album = { id: string; title: string; description: string; contribution_mode: string; is_closed: boolean; photo_count: number; gathering_title: string | null; post_id: string | null };
 type Photo = { id: string; caption: string; status: string; uploader_id: string | null; uploader_name: string; created_at: string };
@@ -36,6 +37,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
   const [caption, setCaption] = useState("");
   const [permission, setPermission] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState("");
+  const [showDiscussion, setShowDiscussion] = useState(false);
   const closePhoto = useCallback(() => setSelectedPhoto(""), []);
   const input = useRef<HTMLInputElement>(null);
   const requestVersion = useRef(0);
@@ -115,7 +117,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
   async function select(id: string) {
     if (unsavedFiles && !(await ask({ title: "Choose a different album?", description: "The photos you have not saved will need to be selected again.", confirmLabel: "Change album", tone: "danger" }))) return;
     const version = ++requestVersion.current;
-    setFiles([]); setBatchId(""); setCaption(""); setPermission(false); setSelectedPhoto(""); setDetails(null); setBusy("album"); setMessage("");
+    setFiles([]); setBatchId(""); setCaption(""); setPermission(false); setSelectedPhoto(""); setShowDiscussion(false); setDetails(null); setBusy("album"); setMessage("");
     const { data, error } = await supabase.rpc("get_community_photo_album", { p_album_id: id });
     if (version !== requestVersion.current) return;
     if (error) setMessage(memberErrorMessage(error, "open this album")); else setDetails(data as AlbumDetails);
@@ -191,6 +193,20 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
     } catch (error) { setMessage(memberErrorMessage(error, "update this photo")); }
     finally { setBusy(""); }
   }
+  async function report(photo: Photo) {
+    const answer = await ask({ title: "Report this photo privately", description: "Tell the Her Africa Table safety team what worries you. Your report is not shown in the Community.", confirmLabel: "Send report", fields: [
+      { name: "category", label: "Reason", type: "select", initialValue: "privacy", options: [{ value: "privacy", label: "Shared without permission" }, { value: "harassment", label: "Harassment" }, { value: "safety", label: "Safety" }, { value: "spam", label: "Spam" }, { value: "other", label: "Other" }] },
+      { name: "details", label: "What happened?", type: "textarea", required: true, minLength: 10, maxLength: 2000 },
+    ] });
+    if (!answer) return;
+    setBusy(photo.id); setMessage("");
+    try {
+      const { error } = await supabase.rpc("report_community_photo", { p_photo_id: photo.id, p_category: String(answer.category), p_details: String(answer.details) });
+      if (error) throw error;
+      setMessage("Your report was sent privately to the safety team.");
+    } catch (error) { setMessage(memberErrorMessage(error, "send your report")); }
+    finally { setBusy(""); }
+  }
   const content = <div className="community-photo-body">
       {dialog}
       {selectedPhoto && details ? <CommunityPhotoViewer photos={details.photos.filter(photo => ["published", "pending", "hidden"].includes(photo.status))} selectedId={selectedPhoto} onSelect={setSelectedPhoto} onClose={closePhoto} /> : null}
@@ -212,6 +228,8 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
       </> : null}
       {details ? <section className="community-photo-selected" aria-label={details.album.title}>
         <header><h3>{details.album.title}</h3><p>{details.album.description}</p></header>
+        <button type="button" className="button button-outline" aria-expanded={showDiscussion} onClick={() => setShowDiscussion(value => !value)}>{showDiscussion ? "Close conversation" : "Open conversation"}</button>
+        {showDiscussion ? <CommunityGatheringDiscussion key={details.album.id} albumId={details.album.id} currentUserId={currentUserId} revision={0} /> : null}
         {details.can_manage ? <form onSubmit={settings} className="community-photo-settings">
           <label>Who can add photos?<select value={details.album.contribution_mode} disabled={Boolean(busy)} onChange={event => setDetails(previous => previous ? { ...previous, album: { ...previous.album, contribution_mode: event.target.value } } : previous)}>{choices.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label className="community-photo-check"><input type="checkbox" checked={details.album.is_closed} disabled={Boolean(busy)} onChange={event => setDetails(previous => previous ? { ...previous, album: { ...previous.album, is_closed: event.target.checked } } : previous)} />Close this album to new photos</label>
@@ -234,6 +252,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
           <p>{photo.caption}</p><small>{photo.uploader_name} · {new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", timeZone: "Africa/Nairobi" }).format(new Date(photo.created_at))}</small>
           <span>{statusLabels[photo.status]}</span>
           <footer>
+            {["published", "pending", "hidden"].includes(photo.status) ? <button disabled={Boolean(busy)} onClick={() => void report(photo)}>Report privately</button> : null}
             {details.can_manage && photo.status === "pending" ? <><button disabled={Boolean(busy)} onClick={() => void review(photo, "approve")}>Approve</button><button disabled={Boolean(busy)} onClick={() => void review(photo, "reject")}>Decline</button></> : null}
             {details.can_manage && photo.status === "published" ? <button disabled={Boolean(busy)} onClick={() => void review(photo, "hide")}>Hide</button> : null}
             {details.can_manage && ["hidden", "removed"].includes(photo.status) ? <button disabled={Boolean(busy)} onClick={() => void review(photo, "restore")}>Restore</button> : null}

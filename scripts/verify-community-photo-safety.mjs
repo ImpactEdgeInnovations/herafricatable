@@ -1,0 +1,16 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+const sql = read("supabase/migrations/20261007170000_community_photo_safety_and_discussion.sql");
+for (const guard of ["enable row level security", "from public,anon,authenticated", "Moderator role required", "get_community_photo_file(p_photo_id)", "pg_advisory_xact_lock", "pre_admin_status", "The safety team must release", "interval '30 days'", "reporter_id=auth.uid()", "where r.id=p_report_id and r.photo_id=p_photo_id", "public.create_community_comment", "parent_post_id=parent.id"]) assert(sql.includes(guard), guard);
+const route = read("app/api/community/photos/[id]/route.ts");
+assert(route.includes("get_community_reported_photo_file"));
+assert.equal(route.match(/await permission\(\)/g).length, 2);
+const admin = read("components/admin/community-moderation.tsx");
+for (const token of ['content_type === "photo"', "review_community_photo_report", "?report=${reportId}", "Release photo hold"]) assert(admin.includes(token), token);
+assert(read("app/admin/operations/page.tsx").includes("list_community_photo_reports"));
+const albums = read("components/community/community-photo-albums.tsx");
+assert(albums.includes("report_community_photo") && albums.includes("Report privately") && albums.includes("albumId={details.album.id}"));
+const replies = read("components/member/community-gathering-discussion.tsx");
+assert(replies.includes("get_community_album_discussion") && replies.includes("reply_to_community_album") && replies.includes('"album-reply"'));
+console.log("Photo report/Admin scope, hold/retention and album discussion source contracts passed. SQL rollback and real binary/browser acceptance remain separate.");

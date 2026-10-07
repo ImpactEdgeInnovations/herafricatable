@@ -9,12 +9,12 @@ import { useCommunityDraft } from "@/lib/use-community-draft";
 type Reply = { comment_id: string; author_id: string; author_name: string | null; body: string; created_at: string };
 type Discussion = { post_id: string; comments: Reply[]; has_more: boolean; read_only: boolean; unavailable?: boolean };
 
-export function CommunityGatheringDiscussion({ roomId, currentUserId, revision }: { roomId: string; currentUserId: string; revision: number }) {
+export function CommunityGatheringDiscussion({ roomId, albumId, currentUserId, revision }: { roomId?: string; albumId?: string; currentUserId: string; revision: number }) {
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [item, setItem] = useState<Discussion | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
-  const [draft, setDraft, , restored] = useCommunityDraft(communityDraftKey(currentUserId, "gathering-reply", roomId), "");
+  const [draft, setDraft, , restored] = useCommunityDraft(communityDraftKey(currentUserId, albumId ? "album-reply" : "gathering-reply", albumId ?? roomId ?? ""), "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -26,7 +26,7 @@ export function CommunityGatheringDiscussion({ roomId, currentUserId, revision }
       if (running) return;
       running = true;
       try {
-        const result = await supabase.rpc("get_community_gathering_discussion", { p_room_id: roomId, p_before: cursor });
+        const result = albumId ? await supabase.rpc("get_community_album_discussion", { p_album_id: albumId, p_before: cursor }) : await supabase.rpc("get_community_gathering_discussion", { p_room_id: roomId, p_before: cursor });
         if (result.error) throw result.error;
         if (active) { setItem(result.data as Discussion | null); setError(""); }
       } catch (cause) { if (active) { setItem(null); setError(memberErrorMessage(cause, "open this conversation")); } }
@@ -36,11 +36,11 @@ export function CommunityGatheringDiscussion({ roomId, currentUserId, revision }
     const timer = window.setInterval(() => void load(), 30000);
     const focus = () => void load(); window.addEventListener("focus", focus);
     return () => { active = false; window.clearInterval(timer); window.removeEventListener("focus", focus); };
-  }, [cursor, retry, revision, roomId, supabase]);
+  }, [cursor, retry, revision, roomId, albumId, supabase]);
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setNotice("");
     try {
-      const result = await supabase.rpc("reply_to_community_gathering", { p_room_id: roomId, p_body: draft });
+      const result = albumId ? await supabase.rpc("reply_to_community_album", { p_album_id: albumId, p_body: draft }) : await supabase.rpc("reply_to_community_gathering", { p_room_id: roomId, p_body: draft });
       if (result.error) throw result.error;
       setDraft(""); setCursor(null); setRetry(value => value + 1); setNotice("Your reply was added.");
     } catch (cause) { setNotice(memberErrorMessage(cause, "add your reply")); }
@@ -66,7 +66,7 @@ export function CommunityGatheringDiscussion({ roomId, currentUserId, revision }
   }
   if (!item && !error) return loading ? <p role="status">Opening conversation…</p> : null;
   return <section className="gathering-discussion" id="gathering-discussion" aria-labelledby="gathering-discussion-title">
-    {dialog}<header><h2 id="gathering-discussion-title">Keep the conversation going</h2><p>Watch at your own pace. Questions and replies stay with this gathering.</p></header>
+    {dialog}<header><h2 id="gathering-discussion-title">{albumId ? "Album conversation" : "Keep the conversation going"}</h2><p>{albumId ? "Questions and replies stay with this album or its related gathering." : "Watch at your own pace. Questions and replies stay with this gathering."}</p></header>
     {restored && draft ? <small>Your unsent reply is still here.</small> : null}
     {error ? <div role="alert"><p>{error}</p><button type="button" onClick={() => setRetry(value => value + 1)}>Try again</button></div>
       : item?.unavailable ? <p>This conversation is no longer available.</p> : item ? <>

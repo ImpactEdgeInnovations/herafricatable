@@ -132,7 +132,7 @@ Cross-platform readability, first implementation pass:
 - [x] Pass the repository suite, readability/Community UI/navigation/draft contracts, TypeScript and production build. Inspect the local production event listing at desktop and 390px phone widths: listing and action appear near the top without horizontal clipping.
 - [ ] Verify the new Home/directory/populated Community styling with signed-in member and Host accounts tomorrow. The local event preview does not certify those authenticated screens.
 
-Next implementation sequence: photo data/access/quota design → Host album creation and uploads → member contributions/moderation → Media browsing and accessible carousel → production acceptance. The Host Photos section now has working album tools; member Media discovery and open uploads remain pending.
+Next implementation sequence: photo data/access/quota design → Host album creation and uploads → member contributions/moderation → Media browsing and accessible carousel → production acceptance. Host album tools, member Media discovery, photo reports and album conversations are now implemented; open uploads and real browser/binary acceptance remain pending.
 
 Photo foundation, 7 October — backend implemented; member upload feature not yet open:
 
@@ -145,7 +145,8 @@ Photo foundation, 7 October — backend implemented; member upload feature not y
 - [x] Implement private Storage, authenticated binary upload/finalisation and trusted cleanup routes in the follow-up pipeline pass below. Upload settings remain closed pending real binary acceptance.
 - [x] Implement Host album forms, attribution and photo review/removal controls in the follow-up pipeline pass below.
 - [x] Add member Media discovery, contribution screens and a photo viewer in the follow-up pass below; uploads remain paused and browser acceptance remains open.
-- [ ] Add photo-specific reports and complete populated contribution/viewer acceptance.
+- [x] Add photo-specific reports in the safety/discussion pass below.
+- [ ] Complete populated contribution/viewer acceptance.
 - [ ] Rehearse simultaneous reservations/uploads with separate database sessions, real private binary delivery, removed-member access, cleanup/recovery, mobile carousel and inbox delivery. Sequential rollback tests and lock inspection are not a concurrency/load certification.
 
 Security advisors flag the intentional RPC-only tables and authenticated security-definer entry points. Explicit active-account, published-Community, membership/Host and read-only checks passed the rollback tests; anonymous/direct grants remain denied. This is not a blanket clearance of historical advisor findings. [Supabase advisor guidance](https://supabase.com/docs/guides/database/database-linter).
@@ -172,11 +173,25 @@ Member Media and photo viewing, 7 October — implemented, visual acceptance ope
 - [x] Open authorised original photos in a native modal viewer with caption, uploader, date, count, Previous/Next, arrow keys, Escape/Close and horizontal touch swipe. Native modal focus containment and close controls keep the page behind it inactive; original delivery uses the same private permission-checked route as thumbnails.
 - [x] Reuse contribution/removal controls and Host settings from the same album component. Ordinary members do not see Host album creation/settings or storage usage. Warn before switching Media type with unsaved selected photo files and disable switching during an active photo operation.
 - [x] Recheck album-list access on focus and every 30 seconds, including when no album is selected. Failed checks clear albums/photos and close the viewer; changed photo visibility removes that photo from the viewer.
-- [ ] Add photo-specific reports with preserved photo evidence and a functional Admin review destination. Do not substitute a conversation report: it rejects reports by the conversation author and would miss member-photo complaints from that Host.
-- [ ] Open the album's existing conversation in place, with correct gathering/album context and no duplicate threads. Album conversation records already exist, but this viewing pass does not expose a nonfunctional discussion shortcut.
+- [x] Add photo-specific reports with captured metadata and a functional Admin review destination in the follow-up safety pass below. No conversation-report substitution.
+- [x] Open the album's existing conversation in place in the follow-up safety pass below; reuse existing gathering threads without duplicates.
 - [ ] Rehearse populated desktop/mobile layouts, modal focus return, keyboard/swipe, stale/deleted file handling, Media Back navigation with pending file selection, real uploads and removed-member access. Source contracts and build success do not certify these interactions.
 
-Uploads remain **paused**. No new migration or Vercel configuration is required for this viewing pass. Next implementation: photo reports/Admin safety handling → album conversation integration → upload/recovery acceptance and Admin opening controls.
+Uploads remain **paused**. No new migration or Vercel configuration was required for the viewing pass. Next implementation: Admin allowance/opening controls and cleanup health → upload/recovery acceptance.
+
+Photo safety and album conversations, 7 October — implemented, browser/binary acceptance open:
+
+- [x] Add private photo reports with category, explanation, captured caption/album/uploader/creation metadata, retry-safe open-report reuse and a five-per-day report limit. Hosts can report member photos even when they authored the album conversation. Reports work in read-only Communities while content viewing is still permitted.
+- [x] Show photo reports in **Admin → Work areas → Safety → Community safety** alongside existing reports. Add Start review, Hide content, Dismiss and Release photo hold, with recorded reasons/audit events. The existing queues remain available if the photo-report lookup fails.
+- [x] Deliver previews through report-specific Admin permission checks before and after binary retrieval. Admins cannot substitute an unrelated photo ID; members/Hosts cannot use the Admin report preview route. Preview errors show a clear fallback rather than a broken image.
+- [x] Preserve Admin safety holds against Host restoration. Releasing a hold preserves pending Host approval, earlier Host hiding and member removal; other reports' active holds remain authoritative.
+- [x] Retain removed/rejected photo files for an open review for at most 30 days; deleted-account privacy cleanup still takes precedence. Captured report metadata survives file cleanup. Preview access is bounded to 30 days and is not a promise that a removed file always remains available.
+- [x] Add “Open conversation” within the album. Reuse its existing post and, when linked, the same gathering conversation. Existing reply creation handles limits/notifications/moderation; replies are paginated, block-aware and denied in read-only rooms. Unsent text uses account/album-scoped draft memory.
+- [x] Apply `20261007170000_community_photo_safety_and_discussion.sql` live after a transactional dry run. Rollback `037` passed report retry/evidence, Admin preview scope, holds/release, pending-approval preservation, Host/member/outsider/direct/anonymous denial, bounded cleanup and album reply continuity. Existing pipeline rollback `036` also passed on the new schema.
+- [x] Confirm post-test state: zero reports/albums/photos, zero enabled uploads, private bucket and archived rehearsal Community. No manual SQL rerun is required; `supabase/tests/037` is a test, not a migration.
+- [ ] Rehearse reporting, actual binary preview, Admin decisions and album/gathering conversation continuity with populated Host/member/Admin screens on desktop/mobile. Add photo report notification delivery and scalable queue paging before opening wider media use; this pass adds the functional Admin queue, not an inbox-delivery guarantee.
+
+Phase 3 remains open, and photo uploads remain paused. Security advisors still flag intentional RPC-only tables/authenticated security-definer entry points; the new role/scope guards passed rollback acceptance. Historical findings are not certified by this pass.
 
 - [ ] Audit member typography: one readable interface font, restrained editorial headings only where useful, smaller headings and tighter spacing.
 - [ ] Remove unnecessary decorative cards, slogans and repeated introductory paragraphs from signed-in screens.
