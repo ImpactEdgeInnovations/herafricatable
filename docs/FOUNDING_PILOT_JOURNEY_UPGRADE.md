@@ -383,6 +383,17 @@ Migration `20261007110000_pilot_host_event_cancellation.sql` is already applied 
 
 ### Follow-up interface refinements
 
+### Safe Host colours — 7 October
+
+- [x] Community Hosts can choose Wine, Gold, Forest, Ocean or Terracotta in Host tools → Look & feel. The selected colour now applies consistently to the room, not just its hero.
+- [x] Event Hosts can choose the same presets in their event workspace → Event colour, with a preview and explicit Save action.
+- [x] Keep reading backgrounds light, text dark and the shared typography/layout unchanged. No arbitrary CSS, dark themes or custom button colours.
+- [x] Verify all five button, hover and soft-badge combinations meet 4.5:1 contrast; darker Gold replaces the low-contrast decorative gold for controls.
+- [x] Apply `20261007193510_event_safe_appearance.sql` live and pass rollback-only test `046`: Host persistence, all presets, invalid values, unrelated-member denial and anonymous denial. No real event colour was changed by the tests.
+- [ ] Verify deployed colour previews on desktop/mobile. The remaining photo delivery and multi-account Community acceptance tasks above remain open.
+
+### Remaining interface refinements
+
 - [x] Add “Join straight away” and “Ask to join” discovery filters without changing joining permissions.
 - [x] Keep membership feedback above the Community cards, rather than below the whole page.
 - [x] Explain paused personal access without claiming the entire Community is paused.

@@ -47,6 +47,7 @@ import {
 } from "@/components/member/community-check-ins";
 import { CommunityLocalNavigation } from "@/components/member/community-local-navigation";
 import { CommunityAboutPanel } from "@/components/member/community-about-panel";
+import { brandAccent } from "@/lib/brand-themes";
 import { CommunityMedia } from "@/components/member/community-media";
 import { CommunityNextGathering } from "@/components/member/community-next-gathering";
 import {
@@ -327,7 +328,7 @@ export default async function CommunityPage({
     ...readStateByPost.get(post.post_id),
   }));
   return (
-    <main className="community-page community-room-page">
+    <main className="community-page community-room-page" data-brand-accent={brandAccent(brandIdentity?.accent_key)}>
       <MemberHeader active="community" label={community.name} />
       <section
         className={`community-room-hero accent-${brandIdentity?.accent_key ?? "wine"}${coverSigned.data?.signedUrl ? " has-cover" : ""}`}

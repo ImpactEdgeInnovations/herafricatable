@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { absoluteUrl, publicPageMetadata, serializeJsonLd } from "@/lib/seo";
 import { getPublicEventSeo } from "@/lib/public-event-seo";
+import { brandAccent } from "@/lib/brand-themes";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -38,6 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 type EventDetail = {
+  appearance_accent_key?: string;
   audience: "community" | "public";
   capacity: number | null;
   ends_at: string;
@@ -57,7 +59,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const supabase = await createClient();
   const { data, error: eventLoadError } = await supabase
     .from("events")
-    .select("id, title, summary, format, audience, capacity, starts_at, ends_at, timezone, registration_mode, free_instant_booking, venues(name, city, country, address_line, map_url)")
+    .select("id, title, summary, format, audience, capacity, starts_at, ends_at, timezone, registration_mode, free_instant_booking, appearance_accent_key, venues(name, city, country, address_line, map_url)")
     .eq("slug", slug)
     .in("status", ["published", "completed"])
     .maybeSingle();
@@ -303,7 +305,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       : eventGuestFlag?.enabled ? "Guest booking available" : "Membership required";
 
   return (
-    <main className="event-detail-page">
+    <main className="event-detail-page" data-brand-accent={brandAccent(event.appearance_accent_key)}>
       {publiclyIndexable ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd({
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",

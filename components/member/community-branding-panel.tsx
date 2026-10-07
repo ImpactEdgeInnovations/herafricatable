@@ -8,6 +8,7 @@ import { useActionDialog } from "@/components/ui/action-dialog";
 import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
+import { brandAccent } from "@/lib/brand-themes";
 
 export type CommunityBrandIdentity = {
   community_id: string;
@@ -253,7 +254,8 @@ export function CommunityBrandingPanel({
       </header>
 
       <div
-        className={`community-brand-preview accent-${identity?.accent_key ?? "wine"}`}
+        className={`community-brand-preview accent-${draft.accent} safe-brand-preview`}
+        data-brand-accent={brandAccent(draft.accent)}
       >
         {identity?.cover_url ? (
           <img
@@ -281,7 +283,7 @@ export function CommunityBrandingPanel({
             </span>
           )}
           <div>
-            <span>Saved look</span>
+            <span>Colour preview</span>
             <strong>{identity?.tagline ?? "A purposeful community for members."}</strong>
           </div>
         </div>
@@ -303,7 +305,7 @@ export function CommunityBrandingPanel({
         </label>
 
         <fieldset className="span-two community-accent-picker">
-          <legend>Accent colour</legend>
+          <legend>Community colour</legend>
           <div>
             {accents.map((accent) => (
               <label key={accent.value}>
@@ -320,8 +322,7 @@ export function CommunityBrandingPanel({
             ))}
           </div>
           <small>
-            The accent appears in small details only; typography and layout stay
-            consistent across the platform.
+            Colour changes small details and buttons. Text stays dark, reading backgrounds stay light, and the layout stays the same.
           </small>
         </fieldset>
 

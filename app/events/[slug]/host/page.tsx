@@ -4,6 +4,7 @@ import { EventHostWorkspace, type EventHostCommunity, type EventHostCover, type 
 import { DestinationInvitationPanel, type DestinationInvitation } from "@/components/member/destination-invitation-panel";
 import { createClient } from "@/lib/supabase/server";
 import { EventFreeBookingControl } from "@/components/events/event-free-booking-control";
+import { EventAppearance } from "@/components/events/event-appearance";
 import type { Metadata } from "next";
 import { PilotEventCancellation, type PilotCancellation } from "@/components/events/pilot-event-cancellation";
 
@@ -25,6 +26,7 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
   const { data: selfPublish } = await supabase.rpc("can_self_publish_pilot_event", { p_event_id: workspace.event_id });
   const { data: canCancel } = await supabase.rpc("can_cancel_pilot_event", { p_event_id: workspace.event_id });
   const hasEnded = new Date(workspace.ends_at).getTime() < Date.now();
+  const appearanceResult = await supabase.from("events").select("appearance_accent_key").eq("id", workspace.event_id).maybeSingle();
   const freeBookingResult = workspace.event_status === "published" && !hasEnded
     ? await supabase.from("events").select("free_instant_booking,registration_mode")
         .eq("id", workspace.event_id).maybeSingle()
@@ -59,5 +61,5 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
     published_url: publishedSigned.data?.signedUrl ?? null,
   } : null;
   const outcomes = ((outcomesResult.data as EventHostOutcomes[] | null) ?? [])[0] ?? null;
-  return <main className="event-host-page"><MemberHeader active="events" label="Your event" /><EventHostWorkspace initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} communities={(communitiesResult.data as EventHostCommunity[] | null) ?? []} communityLinksReady={!communitiesResult.error} selfPublish={selfPublish === true} />{workspace.event_status === "published" && !hasEnded && freeBookingResult.data?.registration_mode === "manual_review" ? <EventFreeBookingControl eventId={workspace.event_id} eventTitle={workspace.event_title} enabled={Boolean(freeBookingResult.data.free_instant_booking)} ready={!freeBookingResult.error} /> : null}{workspace.event_status === "published" && !hasEnded ? <DestinationInvitationPanel currentUserId={user.id} destinationId={workspace.event_id} destinationName={workspace.event_title} destinationType="event" invitations={(invitationsResult.data as DestinationInvitation[] | null) ?? []} ready={!invitationsResult.error} /> : null}{canCancel === true ? <PilotEventCancellation eventId={workspace.event_id} title={workspace.event_title} /> : null}</main>;
+  return <main className="event-host-page"><MemberHeader active="events" label="Your event" /><EventHostWorkspace initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} communities={(communitiesResult.data as EventHostCommunity[] | null) ?? []} communityLinksReady={!communitiesResult.error} selfPublish={selfPublish === true} />{!hasEnded ? <EventAppearance eventId={workspace.event_id} initialAccent={appearanceResult.data?.appearance_accent_key} ready={!appearanceResult.error} /> : null}{workspace.event_status === "published" && !hasEnded && freeBookingResult.data?.registration_mode === "manual_review" ? <EventFreeBookingControl eventId={workspace.event_id} eventTitle={workspace.event_title} enabled={Boolean(freeBookingResult.data.free_instant_booking)} ready={!freeBookingResult.error} /> : null}{workspace.event_status === "published" && !hasEnded ? <DestinationInvitationPanel currentUserId={user.id} destinationId={workspace.event_id} destinationName={workspace.event_title} destinationType="event" invitations={(invitationsResult.data as DestinationInvitation[] | null) ?? []} ready={!invitationsResult.error} /> : null}{canCancel === true ? <PilotEventCancellation eventId={workspace.event_id} title={workspace.event_title} /> : null}</main>;
 }
