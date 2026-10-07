@@ -282,6 +282,7 @@ export function CommunityEventProposalPanel({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (step < steps.length - 1) { continueForward(); return; }
     await save(true);
   }
 
@@ -333,7 +334,7 @@ export function CommunityEventProposalPanel({
             <div className="community-event-wizard-step">
               <label>Gathering name<input maxLength={140} onChange={(event) => update("title", event.target.value)} placeholder="For example: Founder finance breakfast" value={values.title}/></label>
               <label>What will you discuss?<textarea maxLength={2000} minLength={40} onChange={(event) => update("summary", event.target.value)} placeholder="A short description and a question to get everyone talking." rows={3} value={values.summary}/><small>At least 40 characters</small></label>
-              <div className="community-event-fixed-terms"><span>Members only</span><span>Free</span><p>Public and paid Community events will open only after their stronger financial and safety checks pass.</p></div>
+              <div className="community-event-fixed-terms"><span>Members only</span><span>Free</span><p>Only members of your Community can take part.</p></div>
             </div>
           ) : null}
 
