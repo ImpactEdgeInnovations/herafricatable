@@ -57,12 +57,13 @@ export default async function CommunityGatheringPage({
   }
   if (!room) notFound();
 
-  const [messageResult, questionResult, attendeeResult, preferenceResult, videoResult] = await Promise.all([
+  const [messageResult, questionResult, attendeeResult, preferenceResult, videoResult, kindResult] = await Promise.all([
     supabase.rpc("list_community_gathering_messages", { p_limit: 200, p_room_id: room.room_id }),
     supabase.rpc("list_community_gathering_questions", { p_room_id: room.room_id }),
     supabase.rpc("list_community_gathering_attendees", { p_room_id: room.room_id }),
     supabase.rpc("list_my_community_event_preferences", { p_community_id: community.community_id }),
     supabase.rpc("get_community_gathering_video", { p_room_id: room.room_id }),
+    supabase.rpc("get_community_gathering_content_kind", { p_room_id: room.room_id }),
   ]);
 
   return (
@@ -80,6 +81,7 @@ export default async function CommunityGatheringPage({
         room={room}
         video={(videoResult.data as GatheringVideo | null) ?? null}
         videoReady={!videoResult.error}
+        contentKind={kindResult.data === "prerecorded" ? "prerecorded" : "scheduled"}
       />
     </main>
   );

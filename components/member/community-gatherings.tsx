@@ -182,7 +182,7 @@ export function CommunityGatherings({
         <button type="button" aria-pressed={area==="upcoming"} onClick={()=>changeArea("upcoming")}>Upcoming <span>{upcoming.length}</span></button>
         <button type="button" aria-pressed={area==="past"} onClick={()=>changeArea("past")}>Past <span>{past.length}</span></button>
         <button type="button" aria-pressed={area==="videos"} onClick={()=>changeArea("videos")}>Videos</button>
-      </div>{canManage ? <div className="community-gathering-host-actions"><Link href={`/communities/${slug}/host#gathering-proposals`}>Create a gathering</Link><Link href={`/communities/${slug}/host#gatherings`}>Link an event</Link></div> : null}</div>
+      </div>{canManage ? <div className="community-gathering-host-actions"><Link href={`/communities/${slug}/host#gathering-proposals`}>Create a gathering</Link><Link href={`/communities/${slug}/host#community-video`}>Add a video</Link><Link href={`/communities/${slug}/host#gatherings`}>Link an event</Link></div> : null}</div>
       {message ? <p className="form-message" role="status">{message}</p> : null}
       {!migrationReady ? (
         <div className="community-program-empty">

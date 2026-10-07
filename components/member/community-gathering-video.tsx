@@ -11,6 +11,7 @@ export type GatheringVideo = {
   keep_replay: boolean;
   admin_paused: boolean;
   viewing_mode?: "watch_together" | "watch_anytime";
+  content_kind?: "scheduled" | "prerecorded";
 };
 
 export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, initialVideo, ready, onSaved }: {
@@ -90,15 +91,15 @@ export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, init
       {canManage ? <details className="gathering-video-settings"><summary>{video?.video_id ? "Manage video" : "Add a livestream link"}</summary>
         {!ready ? <p role="status">Video settings are not available yet. Ask Admin to complete the livestream setup.</p> : <>
           <form onSubmit={(event) => void save(event)}>
-            <label htmlFor="gathering-viewing-mode">How will members watch?</label>
+            {video?.content_kind === "prerecorded" ? <p>Members can watch and reply at their own pace.</p> : <><label htmlFor="gathering-viewing-mode">How will members watch?</label>
             <select id="gathering-viewing-mode" value={viewingMode} onChange={event => setViewingMode(event.target.value as "watch_together" | "watch_anytime")} disabled={busy}>
               <option value="watch_together">Watch together — scheduled live chat</option>
               <option value="watch_anytime">Watch anytime — lasting conversation</option>
-            </select>
+            </select></>}
             <label htmlFor="gathering-youtube-link">YouTube video or livestream link</label>
             <input id="gathering-youtube-link" type="url" value={link} onChange={(event) => setLink(event.target.value)} placeholder="https://www.youtube.com/watch?v=…" maxLength={500} disabled={busy} />
             <label><input type="checkbox" checked={visible} onChange={(event) => setVisible(event.target.checked)} disabled={busy} /> Show video to Community members</label>
-            <label><input type="checkbox" checked={keepReplay} onChange={(event) => setKeepReplay(event.target.checked)} disabled={busy} /> Keep the replay after the gathering</label>
+            {video?.content_kind !== "prerecorded" ? <label><input type="checkbox" checked={keepReplay} onChange={(event) => setKeepReplay(event.target.checked)} disabled={busy} /> Keep the replay after the gathering</label> : null}
             <div className="gathering-video-actions"><button className="button button-primary" disabled={busy} type="submit">{busy ? "Saving…" : "Save video"}</button>
               {video?.video_id ? <button disabled={busy} type="button" onClick={(event) => void save(event, true)}>Remove video</button> : null}</div>
           </form>

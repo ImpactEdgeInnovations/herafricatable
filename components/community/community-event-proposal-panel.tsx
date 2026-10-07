@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
+import { CommunityRecordingForm } from "./community-recording-form";
 
 export type CommunityEventProposal = {
   accessibility_notes: string | null;
@@ -247,6 +248,7 @@ export function CommunityEventProposalPanel({
 
   return (
     <section className="community-event-proposals" id="gathering-proposals" aria-labelledby="community-event-proposal-title">
+      {migrationReady ? <CommunityRecordingForm communityId={communityId} /> : null}
       <header>
         <div>
           <p className="eyebrow">Community gatherings</p>

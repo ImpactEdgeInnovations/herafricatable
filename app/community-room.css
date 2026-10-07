@@ -1,4 +1,23 @@
 /* Member Community rooms only; directory and Admin styling stay unchanged. */
+.community-recording-form { margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.community-recording-form > header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.community-recording-form h3 { font-family: var(--sans); font-size: 1.15rem; letter-spacing: 0; margin: 0 0 8px; }
+.community-recording-form p { max-width: 620px; color: var(--muted); line-height: 1.5; font-size: .9rem; }
+.community-recording-form form { display: grid; gap: 16px; max-width: 680px; margin-top: 20px; }
+.community-recording-form label { display: grid; gap: 8px; }
+.community-recording-form input:not([type="checkbox"]), .community-recording-form textarea { width: 100%; font: inherit; padding: 12px; border: 1px solid var(--line); border-radius: 6px; }
+.community-recording-form .community-recording-consent { display: flex; align-items: start; }
+.community-recording-form form > div { display: flex; flex-wrap: wrap; gap: 12px; }
+.gathering-room.is-recording .gathering-rsvp,
+.gathering-room.is-recording .gathering-room-jump,
+.gathering-room.is-recording .gathering-questions,
+.gathering-room.is-recording .gathering-live,
+.gathering-room.is-recording .gathering-attendees,
+.gathering-room.is-recording .gathering-host-settings,
+.gathering-room.is-recording .gathering-recap,
+.gathering-room.is-recording .gathering-room-hero dl > div:nth-child(n+2) { display: none; }
+.gathering-room.is-recording .gathering-room-layout { grid-template-columns: minmax(0, 1fr); }
+.gathering-room.is-recording .gathering-discussion { grid-row: 2; }
 .community-room-page [hidden] { display: none !important; }
 .gathering-discussion { grid-column: 1 / -1; grid-row: 3; border-top: 1px solid var(--line); padding-top: 24px; min-width: 0; }
 .gathering-discussion h2 { font-family: var(--sans); font-size: 1.2rem; letter-spacing: 0; }

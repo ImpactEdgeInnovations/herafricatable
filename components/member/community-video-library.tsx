@@ -63,12 +63,12 @@ export function CommunityVideoLibrary({ cards, slug, onOpen }: {
     <p>Videos added to this Community’s gatherings will appear here.</p></div>;
 
   return <div className="community-video-library">
-    {recordings.map(({ card }) => {
+    {recordings.map(({ card, video }) => {
       const past = new Date(card.ends_at).getTime() < Date.now();
       const href = `/communities/${slug}?view=gatherings&gatheringArea=videos&gathering=${encodeURIComponent(card.event_slug)}`;
       return <article className="community-video-library-card" key={card.room_id}>
         <div className="community-video-library-symbol" aria-hidden="true">▶</div>
-        <div><small>{past ? "Replay" : "Gathering video"} · {new Intl.DateTimeFormat("en-KE", {
+        <div><small>{video.content_kind === "prerecorded" ? "Video discussion · Added" : past ? "Replay" : "Gathering video"} · {new Intl.DateTimeFormat("en-KE", {
           day: "numeric", month: "short", year: "numeric", timeZone: card.timezone || "Africa/Nairobi",
         }).format(new Date(card.starts_at))}</small>
           <h3><Link href={href} onClick={event => { event.preventDefault(); onOpen(card.event_slug); }}>{card.title}</Link></h3>

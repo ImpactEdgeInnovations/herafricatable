@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const read = file => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
+const sql = read("supabase/migrations/20261007140000_community_prerecorded_gatherings.sql");
+for (const token of ["public.is_active_member", "public.can_manage_community", "community.status<>'published'", "public.community_pilot_member_ready", "public.get_pilot_free_event_setting", "p_permission_confirmed is distinct from true", "event.id=p_request_id", "video.content_kind='prerecorded'", "'closed','community'", "chat_enabled=false", "save_community_gathering_video_experience", "from public,anon", "enqueue_notification"]) assert(sql.includes(token), `Missing recording guard: ${token}`);
+assert(!sql.includes("insert into public.ticket_types"));
+const form = read("components/community/community-recording-form.tsx");
+for (const token of ["crypto.randomUUID()", "p_request_id: requestId", "youtubeVideoId", "p_permission_confirmed", "Open for members", "gatheringArea=videos"]) assert(form.includes(token));
+assert(!form.includes('type="datetime-local"'), "Recordings should not require a fake future date");
+assert(read("components/member/community-gathering-inline.tsx").includes("get_community_gathering_content_kind"));
+assert(read("components/member/community-gathering-room.tsx").includes('contentKind === "prerecorded"'));
+assert(read("app/community-room.css").includes(".gathering-room.is-recording .gathering-rsvp"));
+console.log("Prerecorded Community creation, privacy, retry and plain-interface contracts passed. Real playback remains separate acceptance.");

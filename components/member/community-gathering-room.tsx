@@ -84,6 +84,7 @@ export function CommunityGatheringRoom({
   video,
   videoReady,
   embedded = false,
+  contentKind = "scheduled",
 }: {
   attendees: CommunityGatheringAttendee[];
   communityId: string;
@@ -96,6 +97,7 @@ export function CommunityGatheringRoom({
   video: GatheringVideo | null;
   videoReady: boolean;
   embedded?: boolean;
+  contentKind?: "scheduled" | "prerecorded";
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -269,16 +271,17 @@ export function CommunityGatheringRoom({
   }
 
   const timezone = room.timezone || "Africa/Nairobi";
+  const isRecording = contentKind === "prerecorded";
   return (
-    <div className="gathering-room">
+    <div className={`gathering-room${isRecording ? " is-recording" : ""}`}>
       {dialog}
       <header className="gathering-room-hero">
         {!embedded ? <Link href={`/communities/${room.community_slug}?view=gatherings`}>← All gatherings</Link> : null}
-        <div className="gathering-room-status"><span className={`is-${room.chat_phase}`}>{room.chat_phase === "open" ? "Conversation open" : room.chat_phase === "archived" ? "Gathering archive" : "Upcoming gathering"}</span><span>{plainLabel(room.gathering_kind)}</span></div>
+        <div className="gathering-room-status"><span className={`is-${room.chat_phase}`}>{isRecording ? "Video discussion" : room.chat_phase === "open" ? "Conversation open" : room.chat_phase === "archived" ? "Gathering archive" : "Upcoming gathering"}</span>{!isRecording ? <span>{plainLabel(room.gathering_kind)}</span> : null}</div>
         <h1>{room.title}</h1>
         <p>{room.summary || "A thoughtful place to meet and spend time together."}</p>
         <dl>
-          <div><dt>When</dt><dd>{new Intl.DateTimeFormat("en-KE", { dateStyle: "full", timeStyle: "short", timeZone: timezone }).format(new Date(room.starts_at))}</dd></div>
+          <div><dt>{isRecording ? "Added" : "When"}</dt><dd>{new Intl.DateTimeFormat("en-KE", { dateStyle: "full", timeStyle: isRecording ? undefined : "short", timeZone: timezone }).format(new Date(room.starts_at))}</dd></div>
           <div><dt>Where</dt><dd>{room.city ? [room.venue_name, room.city, room.country].filter(Boolean).join(", ") : plainLabel(room.format)}</dd></div>
           <div><dt>Going</dt><dd>{Number(room.going_count)} members</dd></div>
         </dl>
