@@ -129,6 +129,10 @@
 .community-inline-gathering .gathering-room-hero > p { margin: 8px 0; font-size: .9rem; line-height: 1.5; }
 .community-inline-gathering .gathering-room-hero dl { margin: 12px 0 0; gap: 16px; }
 .community-inline-gathering .gathering-room-hero dd { font-size: .85rem; }
+.community-inline-gathering .gathering-room-hero dl { display: flex; flex-wrap: wrap; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.community-inline-gathering .gathering-room-hero dl > div { padding: 0; min-height: 0; border: 0; background: transparent; }
+.community-room-page:has(.community-inline-gathering) > .community-room-hero { margin: 16px auto 8px; }
+.community-room-page:has(.community-inline-gathering) .community-room-hero-copy > p:last-of-type { display: none; }
 .gathering-room [hidden] { display: none !important; }
 .gathering-discussion-replies, .gathering-room .gathering-message-list { max-height: 420px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scroll-padding: 12px; border: 1px solid #e4dfdc; border-radius: 8px; padding: 0 14px; }
 .gathering-discussion-replies article, .gathering-room .gathering-message-list article { margin: 0; padding: 12px 0; border: 0; border-bottom: 1px solid #e4dfdc; border-radius: 0; background: transparent; box-shadow: none; }
