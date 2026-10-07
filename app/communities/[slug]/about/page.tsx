@@ -161,7 +161,7 @@ export default async function CommunityAboutPage({
       })
     : { data: [], error: null };
   const joiningMode =
-    ((joiningResult.data as { effective_mode: "open" | "approval" }[] | null) ??
+    ((joiningResult.data as { effective_mode: "open" | "approval" | "invite_only" }[] | null) ??
       [])[0]?.effective_mode ??
     (about.community_type === "private" ? "approval" : "open");
   const location = [about.next_event_city, about.next_event_country]
@@ -212,9 +212,11 @@ export default async function CommunityAboutPage({
             )}
             <div>
               <p className="eyebrow">
-                {about.community_type === "private"
-                  ? "Private, host-approved Community"
-                  : "Her Africa Table Community"}
+                {joiningMode === "invite_only"
+                  ? "Invitation-only Community"
+                  : joiningMode === "approval"
+                    ? "Host-approved Community"
+                    : "Open to members"}
               </p>
               <h1>{about.name}</h1>
             </div>

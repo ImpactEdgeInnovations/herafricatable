@@ -93,9 +93,7 @@ export function CommunityManager({
       p_status: form.get("status"),
       p_type: form.get("type"),
     });
-    const joiningMode = form.get("type") === "private"
-      ? "approval"
-      : form.get("admissionMode");
+    const joiningMode = form.get("admissionMode") ?? "approval";
     const joiningError = !error && joiningReady && savedCommunityId
       ? (
           await supabase.rpc("save_community_joining_mode", {
@@ -329,8 +327,8 @@ export function CommunityManager({
                 defaultValue={community?.community_type ?? "official"}
                 key={`type-${selected}`}
               >
-                <option value="official">Public Community</option>
-                <option value="private">Private — host approval</option>
+                <option value="official">Public Community page</option>
+                <option value="private">Member-only Community page</option>
               </select>
             </label>
             {joiningReady ? (
@@ -338,12 +336,12 @@ export function CommunityManager({
                 Who can join?
                 <select
                   name="admissionMode"
-                  defaultValue={community?.effective_mode ?? "open"}
+                  defaultValue={community?.effective_mode ?? (community?.community_type === "private" ? "approval" : "open")}
                   key={`admission-${selected}`}
-                  disabled={community?.community_type === "private"}
                 >
-                  <option value="open">Approved members join immediately</option>
-                  <option value="approval">Host reviews every request</option>
+                  <option value="open">Any active member joins immediately</option>
+                  <option value="approval">Host reviews requests</option>
+                  <option value="invite_only">Invitation only</option>
                 </select>
               </label>
             ) : null}

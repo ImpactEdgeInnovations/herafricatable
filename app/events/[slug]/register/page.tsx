@@ -20,7 +20,7 @@ export default async function RegisterPage({
 
   const [{ data: event }, { data: profile }] = await Promise.all([
     supabase.from("events")
-      .select("id,title,audience,registration_mode,capacity,ends_at")
+      .select("id,title,audience,registration_mode,free_instant_booking,capacity,ends_at")
       .eq("slug", slug).eq("status", "published").maybeSingle(),
     supabase.from("profiles")
       .select("access_status")
@@ -78,6 +78,7 @@ export default async function RegisterPage({
         orderHref={order?.reference ? `/orders/${encodeURIComponent(order.reference)}` : null}
         eventTitle={event.title}
         mode={event.registration_mode}
+        freeInstantBooking={Boolean(event.free_instant_booking) && profile?.access_status === "active"}
         tickets={availability.tickets}
         availabilityReady={!availability.checkFailed}
         automaticCheckoutOpen={event.registration_mode !== "automatic" || automaticCheckoutOpen === true}

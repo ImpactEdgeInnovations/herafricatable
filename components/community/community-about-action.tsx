@@ -21,7 +21,7 @@ export function CommunityAboutAction({
   activeMember: boolean;
   commerceEnabled: boolean;
   communityId: string;
-  joiningMode: "open" | "approval";
+  joiningMode: "open" | "approval" | "invite_only";
   membershipStatus: string | null;
   paymentMode: string | null;
   slug: string;
@@ -113,6 +113,14 @@ export function CommunityAboutAction({
 
   const paidClosed =
     accessType === "paid" && (!commerceEnabled || paymentMode === "closed");
+  if (joiningMode === "invite_only") {
+    return (
+      <div className="community-about-action">
+        <span className="community-about-closed">Invitation only</span>
+        <small>Ask the Community Host for a personal invitation.</small>
+      </div>
+    );
+  }
   if (paidClosed) {
     return (
       <div className="community-about-action">

@@ -92,6 +92,7 @@ const admissionLabels: Record<string, string> = {
   application_review: "You approve each request",
   invitation_only: "Only invited members can join",
   open_request: "Anyone can request to join",
+  open_join: "Any Her Africa Table member can join",
 };
 
 const applicationSteps = [
@@ -607,11 +608,12 @@ export function CommunityHostApplication({
                 </label>
                 <label>
                   How should people join?
-                  <select defaultValue={defaults?.admission_model ?? "application_review"} name="admission_model" required>
-                    <option value="application_review">I approve each request</option>
-                    <option value="invitation_only">Only invited members can join</option>
-                    <option value="open_request">Anyone can request to join</option>
+                  <select defaultValue={defaults?.admission_model === "open_request" ? "application_review" : defaults?.admission_model ?? "application_review"} name="admission_model" required>
+                    <option value="open_join">Open to all Her Africa Table members</option>
+                    <option value="application_review">Members ask me before joining</option>
+                    <option value="invitation_only">Only people I invite</option>
                   </select>
+                  <small>Your Community starts as a private draft. This choice takes effect when its page opens to members.</small>
                 </label>
               </div>
             </section>

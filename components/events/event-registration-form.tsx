@@ -27,6 +27,7 @@ export function EventRegistrationForm({
   availabilityReady = true,
   eventFull = false,
   automaticCheckoutOpen,
+  freeInstantBooking = false,
   allowNewRequest = true,
 }: {
   eventId: string;
@@ -41,6 +42,7 @@ export function EventRegistrationForm({
   availabilityReady?: boolean;
   eventFull?: boolean;
   automaticCheckoutOpen: boolean;
+  freeInstantBooking?: boolean;
   allowNewRequest?: boolean;
 }) {
   const router = useRouter();
@@ -115,7 +117,13 @@ export function EventRegistrationForm({
         return;
       }
     }
-    const { error } = canClaimWaitlist
+    const { error } = freeInstantBooking && isFree && mode === "manual_review"
+      ? await supabase.rpc("reserve_free_event_place", {
+          p_attendee_note: note,
+          p_event_id: eventId,
+          p_ticket_type_id: ticket?.id,
+        })
+      : canClaimWaitlist
       ? await supabase.rpc("request_event_place_from_waitlist", {
           p_attendee_note: note,
           p_event_id: eventId,
@@ -137,6 +145,8 @@ export function EventRegistrationForm({
         ? memberErrorMessage(error, "submit your event registration")
         : mode === "waitlist"
           ? "You are on the waiting list. No seat is held; the event team may email you if bookings reopen."
+          : freeInstantBooking && isFree
+            ? "Your free place is confirmed. Your event pass is ready."
           : isFree
             ? "Your free place request is with the event team. No payment is required."
           : "Your registration is with the event team. No automatic charge has been made.",
@@ -195,7 +205,7 @@ export function EventRegistrationForm({
   return (
     <form className={`event-registration-form${embedded ? " is-embedded" : ""}`} onSubmit={submit}>
       <header>
-        <p className="eyebrow">Request your seat</p>
+        <p className="eyebrow">{freeInstantBooking && isFree ? "Reserve your place" : "Request your seat"}</p>
         {embedded ? <h2>Choose your place</h2> : <h1>{eventTitle}</h1>}
         {canClaimWaitlist
           ? <p>Bookings have reopened. You can request a place now, but your waiting-list entry did not hold a seat.</p>
@@ -212,7 +222,9 @@ export function EventRegistrationForm({
             ? !ticket
               ? "Booking options are not available right now."
               : isFree
-              ? "Request a complimentary place. The event team will confirm attendance before the guest list closes."
+              ? freeInstantBooking
+                ? "Reserve a free place now. You will be confirmed immediately while places remain."
+                : "Request a complimentary place. The event team will confirm attendance before the guest list closes."
               : "Send your ticket request and any payment reference. The event team will check it before confirming your place."
             : mode === "waitlist"
               ? "Join the waiting list. No seat is reserved; the event team may email you if bookings reopen."
@@ -324,7 +336,7 @@ export function EventRegistrationForm({
             : mode === "automatic"
               ? "Continue to secure payment"
               : isFree
-                ? "Request my free place"
+                ? freeInstantBooking ? "Reserve my free place" : "Request my free place"
                 : "Send to the event team"}
       </button>
       {message ? (

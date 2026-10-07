@@ -44,6 +44,7 @@ type EventDetail = {
   format: string;
   id: string;
   registration_mode: string;
+  free_instant_booking: boolean;
   starts_at: string;
   summary: string | null;
   timezone: string;
@@ -56,7 +57,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const supabase = await createClient();
   const { data } = await supabase
     .from("events")
-    .select("id, title, summary, format, audience, capacity, starts_at, ends_at, timezone, registration_mode, venues(name, city, country, address_line, map_url)")
+    .select("id, title, summary, format, audience, capacity, starts_at, ends_at, timezone, registration_mode, free_instant_booking, venues(name, city, country, address_line, map_url)")
     .eq("slug", slug)
     .in("status", ["published", "completed"])
     .maybeSingle();
@@ -364,6 +365,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 eventTitle={event.title}
                 existingStatus={registration?.status ?? ownMembership?.status ?? null}
                 mode={event.registration_mode}
+                freeInstantBooking={event.free_instant_booking && activeMember}
                 passReady={["confirmed", "attended"].includes(ownMembership?.status ?? "")}
                 tickets={availability?.tickets ?? []}
                 availabilityReady={!availability?.checkFailed}

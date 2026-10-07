@@ -40,7 +40,7 @@ export default async function AdminCommunitiesPage() {
     ((joiningResult.data as {
       admission_mode: "open" | "approval";
       community_id: string;
-      effective_mode: "open" | "approval";
+      effective_mode: "open" | "approval" | "invite_only";
     }[] | null) ?? []).map((item) => [item.community_id, item]),
   );
   const communities = (

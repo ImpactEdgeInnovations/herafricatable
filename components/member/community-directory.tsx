@@ -14,7 +14,7 @@ export type CommunitySummary = {
   description: string;
   community_type: "official" | "private";
   admission_mode?: "open" | "approval";
-  effective_mode?: "open" | "approval";
+  effective_mode?: "open" | "approval" | "invite_only";
   status: string;
   membership_status: string | null;
   membership_role: string | null;
@@ -95,7 +95,7 @@ export function CommunityDirectory({
             item.membership_role === "member"
             ? "Invitation accepted. Pay to finish joining this community."
             : "Invitation accepted. You can now open the community."
-          : item.effective_mode === "approval" || item.community_type === "private"
+          : item.effective_mode === "approval"
           ? "Your request has been sent to the community leader."
           : item.offer_access_type === "paid"
             ? "Your request was approved. Pay to finish joining."
@@ -252,7 +252,9 @@ export function CommunityDirectory({
               ? "Ready for payment"
               : ["paused", "suspended"].includes(item.membership_status ?? "")
                 ? "Temporarily paused"
-              : item.effective_mode === "approval" || item.community_type === "private"
+              : item.effective_mode === "invite_only"
+                ? "Invitation only"
+                : item.effective_mode === "approval"
                 ? "Request to join"
                 : "Join now";
 
@@ -291,11 +293,11 @@ export function CommunityDirectory({
             )}
             <div>
               <small>
-                {item.community_type === "private"
-                  ? "Private · Invitation or approval"
+                {item.effective_mode === "invite_only"
+                  ? "Invitation only"
                   : item.effective_mode === "approval"
-                    ? "Visible to members · Leader approves requests"
-                    : "Visible to members · Join now"}
+                    ? "Ask the Host to join"
+                    : "Open to members · Join now"}
               </small>
               <h3>{item.name}</h3>
             </div>
@@ -455,14 +457,16 @@ export function CommunityDirectory({
               </button>
             </div>
           ) : (
-            <button
+            item.effective_mode === "invite_only" ? (
+              <span className="community-membership-state"><strong>By invitation</strong><small>Ask the Host to invite you.</small></span>
+            ) : <button
               className="button button-outline"
               disabled={busy === item.community_id}
               onClick={() => void join(item)}
             >
               {item.membership_status === "invited"
                 ? "Accept invitation"
-                : item.effective_mode === "approval" || item.community_type === "private"
+                : item.effective_mode === "approval"
                   ? "Ask to join"
                   : paid
                     ? "Join community"

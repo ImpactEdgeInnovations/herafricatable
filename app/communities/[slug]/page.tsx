@@ -351,9 +351,7 @@ export default async function CommunityPage({
             )}
             <div>
               <p className="eyebrow">
-                {community.community_type === "private"
-                  ? "Private community"
-                  : "Her Africa Table community"}
+                Member community
               </p>
               <h1>{community.name}</h1>
             </div>

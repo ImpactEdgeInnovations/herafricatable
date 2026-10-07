@@ -33998,3 +33998,22 @@ textarea {
 .event-host-cover-controls .button {
   justify-self: start;
 }
+
+.event-free-booking-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem auto;
+  padding: 1.2rem 1.4rem;
+  max-width: 1120px;
+  border: 1px solid rgba(76, 66, 53, .16);
+  border-radius: 16px;
+  background: #fbfaf7;
+}
+
+.event-free-booking-control > div { max-width: 590px; }
+.event-free-booking-control h2 { margin: .2rem 0 .4rem; font-size: clamp(1.2rem, 2vw, 1.55rem); }
+.event-free-booking-control p { margin: .2rem 0; }
+.event-free-booking-control .manager-message { flex-basis: 100%; }
