@@ -161,7 +161,7 @@ export async function MemberHeader({
   return (
     <>
       <header className="member-home-header member-shell-header">
-        <Link className="brand" href="/home">
+        <Link className="brand" href="/home" prefetch={false} aria-label="Her Africa Table — your home">
           <span className="brand-mark" aria-hidden="true">
             H
           </span>

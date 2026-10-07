@@ -19,4 +19,10 @@ assert(route.includes("strictTarget: true"));
 assert(read("lib/notifications/worker.ts").includes("dedupeKey && !strictTarget"));
 assert(read("components/events/event-host-workspace.tsx").includes('hidden={section !== "programme"}'));
 assert(read("app/events/[slug]/page.tsx").includes("if (eventLoadError)"));
+assert(read("app/events/[slug]/page.tsx").includes('href={user ? "/home" : "/"}'));
+assert(read("app/sign-in/page.tsx").includes("if (user) redirect(safeNext(next))"));
+assert(read("components/events/event-host-workspace.tsx").includes('["image", "Poster"]'));
+for (const path of ["app/events/page.tsx", "app/events/past/page.tsx"]) {
+  assert(read(path).includes("Back to home"), `${path} needs an obvious return route`);
+}
 console.log("Founding self-service, owned invitation delivery and pause boundaries verified.");

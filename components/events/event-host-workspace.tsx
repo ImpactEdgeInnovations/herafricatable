@@ -255,7 +255,7 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
       </header>
 
       <nav className="host-workspace-nav" aria-label="Event preparation sections">
-        {[["introduction", "Event details"], ["image", "Image"], ["programme", "Programme"], ["community", "Community"], ["partners", "Partners"]].map(([key, label]) => <button key={key} type="button" aria-pressed={section === key} aria-controls={`host-${key}`} onClick={() => setSection(key)}>{label}</button>)}
+        {[["introduction", "Event details"], ["image", "Poster"], ["programme", "Programme"], ["community", "Community"], ["partners", "Partners"]].map(([key, label]) => <button key={key} type="button" aria-pressed={section === key} aria-controls={`host-${key}`} onClick={() => setSection(key)}>{label}</button>)}
       </nav>
 
       <div className="host-workspace-panel" id="host-introduction" hidden={section !== "introduction"}>
@@ -268,7 +268,7 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
       </div>
 
       <div className="host-workspace-panel" id="host-image" hidden={section !== "image"}>
-        <div className="host-workspace-panel-heading"><span>02</span><div><h2>Event image</h2><p>A recognisable image makes your event easier to find.</p></div></div>
+        <div className="host-workspace-panel-heading"><span>02</span><div><h2>Event poster</h2><p>Upload a poster or photo. It appears on the event page and in the events list once published.</p></div></div>
         <p>{selfPublish ? "Choose an image you have permission to share. It will appear on your event page when saved." : "One clear image helps guests recognise your gathering. A previous image stays live while the team reviews its replacement."}</p>
         {!coverReady ? <p role="status">Event image uploads will be available after the latest database update.</p> : <>
           {cover?.draft_url ? <figure className="event-host-cover-preview"><img src={cover.draft_url} alt={cover.draft_alt_text} /><figcaption>{cover.draft_storage_path === cover.published_storage_path ? "Live image" : "Private image awaiting review"}</figcaption></figure> : <p>No image added yet. You can still send your draft without one.</p>}

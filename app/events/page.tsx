@@ -208,6 +208,7 @@ export default async function EventsPage() {
         </header>
       )}
       <nav className="event-view-switcher" aria-label="Event views">
+        <Link href={user ? "/home" : "/"} prefetch={false}>← {user ? "Back to home" : "Back to Her Africa Table"}</Link>
         <Link aria-current="page" href="/events">Upcoming</Link>
         <Link href="/events/past">Past events</Link>
         {user && myEvents.length ? <Link href="/events#my-events">My plans</Link> : null}
