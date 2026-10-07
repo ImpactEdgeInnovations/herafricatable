@@ -61,5 +61,14 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
     published_url: publishedSigned.data?.signedUrl ?? null,
   } : null;
   const outcomes = ((outcomesResult.data as EventHostOutcomes[] | null) ?? [])[0] ?? null;
-  return <main className="event-host-page"><MemberHeader active="events" label="Your event" /><EventHostWorkspace initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} communities={(communitiesResult.data as EventHostCommunity[] | null) ?? []} communityLinksReady={!communitiesResult.error} selfPublish={selfPublish === true} />{!hasEnded ? <EventAppearance eventId={workspace.event_id} initialAccent={appearanceResult.data?.appearance_accent_key} ready={!appearanceResult.error} /> : null}{workspace.event_status === "published" && !hasEnded && freeBookingResult.data?.registration_mode === "manual_review" ? <EventFreeBookingControl eventId={workspace.event_id} eventTitle={workspace.event_title} enabled={Boolean(freeBookingResult.data.free_instant_booking)} ready={!freeBookingResult.error} /> : null}{workspace.event_status === "published" && !hasEnded ? <DestinationInvitationPanel currentUserId={user.id} destinationId={workspace.event_id} destinationName={workspace.event_title} destinationType="event" invitations={(invitationsResult.data as DestinationInvitation[] | null) ?? []} ready={!invitationsResult.error} /> : null}{canCancel === true ? <PilotEventCancellation eventId={workspace.event_id} title={workspace.event_title} /> : null}</main>;
+  return <main className="event-host-page">
+    <MemberHeader active="events" label="Your event" />
+    <EventHostWorkspace currentUserId={user.id} initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} communities={(communitiesResult.data as EventHostCommunity[] | null) ?? []} communityLinksReady={!communitiesResult.error} selfPublish={selfPublish === true} />
+    <div className="event-host-extra-tools" aria-label="Other event tools">
+      {!hasEnded ? <EventAppearance eventId={workspace.event_id} initialAccent={appearanceResult.data?.appearance_accent_key} ready={!appearanceResult.error} /> : null}
+      {workspace.event_status === "published" && !hasEnded && freeBookingResult.data?.registration_mode === "manual_review" ? <details><summary>Booking settings</summary><EventFreeBookingControl eventId={workspace.event_id} eventTitle={workspace.event_title} enabled={Boolean(freeBookingResult.data.free_instant_booking)} ready={!freeBookingResult.error}/></details> : null}
+      {workspace.event_status === "published" && !hasEnded ? <details><summary>Invite people</summary><DestinationInvitationPanel currentUserId={user.id} destinationId={workspace.event_id} destinationName={workspace.event_title} destinationType="event" invitations={(invitationsResult.data as DestinationInvitation[] | null) ?? []} ready={!invitationsResult.error}/></details> : null}
+      {canCancel === true ? <details><summary>Cancel this event</summary><PilotEventCancellation eventId={workspace.event_id} title={workspace.event_title}/></details> : null}
+    </div>
+  </main>;
 }

@@ -10,7 +10,7 @@ This board turns the 4 October UI/UX and Events audit (saved separately on the P
 
 | Phase | Current delivery | Still required |
 |---|---|---|
-| 4 — Community and event interface | Community entry/consent actions implemented; event detail alignment and poster navigation refined | Populated room/mobile review, specialised Host tools and complete photo-save/browser journeys |
+| 4 — Community and event interface | Community entry/consent, event alignment, compact Host tools, text drafts and resilient poster saves implemented | Populated room/mobile review, remaining specialised tools and complete real-file/browser journeys |
 | 5 — media and delivery reliability | Safety queue and durable photo cleanup implemented | Report/operation paging, real-file concurrency/recovery, faster safety email and actual inbox evidence |
 | 6 — separate-account rehearsal | Rollback tests cover joining, invitations, chat removal and connection consent | Host + member browser journeys, OTP return, capacity/booking, private media and pause/expiry |
 | 7 — release decision | Acceptance checklist retained | Record real results and owner go/no-go; keep creator payouts disabled |

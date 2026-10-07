@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { formatEventTimeInput, parseEventTimeInput } from "@/lib/events/zoned-datetime";
 import { EventHostPublicDetails } from "@/components/events/event-host-public-details";
+import { useCommunityDraft } from "@/lib/use-community-draft";
+import { communityDraftKey } from "@/lib/community-drafts";
+import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
+import { useActionDialog } from "@/components/ui/action-dialog";
+import { saveHostPoster } from "@/lib/events/save-host-poster";
 
 export type HostProgrammeItem = {
   key: string;
@@ -61,24 +66,38 @@ export type EventHostCommunity = {
   can_select: boolean;
 };
 
-export function EventHostWorkspace({ initial, cover, coverReady, outcomes, communities, communityLinksReady, selfPublish = false }: { initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean; outcomes: EventHostOutcomes | null; communities: EventHostCommunity[]; communityLinksReady: boolean; selfPublish?: boolean }) {
+export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, outcomes, communities, communityLinksReady, selfPublish = false }: { currentUserId: string; initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean; outcomes: EventHostOutcomes | null; communities: EventHostCommunity[]; communityLinksReady: boolean; selfPublish?: boolean }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const [summary, setSummary] = useState(initial.summary);
-  const [arrivalInfo, setArrivalInfo] = useState(initial.arrival_info);
-  const [programme, setProgramme] = useState<HostProgrammeItem[]>(() =>
+  const initialDraft = { summary: initial.summary, arrivalInfo: initial.arrival_info, programme:
     (initial.programme ?? []).map((item) => ({
       ...item,
       starts_at: formatEventTimeInput(item.starts_at, initial.timezone),
       ends_at: formatEventTimeInput(item.ends_at, initial.timezone),
-    })));
-  const [partners, setPartners] = useState(initial.partners ?? []);
+    })), partners: initial.partners ?? [] };
+  const [draft,setDraft,clearDraft,restoredDraft] = useCommunityDraft(communityDraftKey(currentUserId,"event-host",initial.event_id),initialDraft);
+  const [savedDraft,setSavedDraft] = useState(initialDraft);
+  const {summary,arrivalInfo,programme,partners} = draft;
+  const dirty = JSON.stringify(draft)!==JSON.stringify(savedDraft);
+  const setSummary=(value:string)=>setDraft(current=>({...current,summary:value}));
+  const setArrivalInfo=(value:string)=>setDraft(current=>({...current,arrivalInfo:value}));
+  const setProgramme=(next:HostProgrammeItem[]|((items:HostProgrammeItem[])=>HostProgrammeItem[]))=>setDraft(current=>({...current,programme:typeof next==="function"?next(current.programme):next}));
+  const setPartners=(next:typeof initial.partners|((items:typeof initial.partners)=>typeof initial.partners))=>setDraft(current=>({...current,partners:typeof next==="function"?next(current.partners):next}));
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverAlt, setCoverAlt] = useState(cover?.draft_alt_text ?? "");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [chosenCommunity, setChosenCommunity] = useState("");
   const [section, setSection] = useState("introduction");
+  const [coverPreview,setCoverPreview] = useState<string|null>(null);
+  const coverInput = useRef<HTMLInputElement>(null);
+  const {ask,dialog} = useActionDialog();
+  useEffect(()=>{
+    if(!coverFile){setCoverPreview(null);return;}
+    const url=URL.createObjectURL(coverFile);setCoverPreview(url);
+    return()=>URL.revokeObjectURL(url);
+  },[coverFile]);
+  useCommunityFileGuard(Boolean(coverFile),{ask,busy,discard:()=>{setCoverFile(null);if(coverInput.current)coverInput.current.value="";},blocked:()=>setMessage("Please wait for your poster to finish saving.")});
   useEffect(() => {
     const openLinkedSection = () => {
       const linked = window.location.hash.replace("#host-", "");
@@ -93,20 +112,15 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
   const linkedCommunity = communities.find((community) => community.linked_to_event);
 
   async function linkCommunity() {
-    if (!chosenCommunity) return;
+    if (!chosenCommunity || busy) return;
     setBusy(true);
     setMessage("");
-    const { error } = await supabase.rpc("link_my_host_event_community", {
-      p_event_id: initial.event_id,
-      p_community_id: chosenCommunity,
-    });
-    setBusy(false);
-    if (error) {
-      setMessage(memberErrorMessage(error, "connect your Community"));
-      return;
-    }
-    setMessage("Community connected. Guests will see it when its public page is ready.");
-    router.refresh();
+    try {
+      const {error}=await supabase.rpc("link_my_host_event_community",{p_event_id:initial.event_id,p_community_id:chosenCommunity});
+      if(error)throw error;
+      setMessage("Community connected. Guests will see it when its public page is ready.");router.refresh();
+    } catch(error){setMessage(memberErrorMessage(error,"connect your Community"));}
+    finally{setBusy(false);}
   }
 
   function updateProgramme(key: string, field: keyof HostProgrammeItem, value: string) {
@@ -114,7 +128,7 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
   }
 
   async function uploadCover() {
-    if (!coverFile) return;
+    if (!coverFile || busy) return;
     if (!["image/jpeg", "image/png", "image/webp"].includes(coverFile.type) || coverFile.size > 6 * 1024 * 1024) {
       setMessage("Choose a JPG, PNG or WebP image smaller than 6 MB.");
       return;
@@ -125,38 +139,21 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
     }
     setBusy(true);
     setMessage("");
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) { setBusy(false); setMessage("Please sign in again before uploading."); return; }
-    const extension = coverFile.type === "image/png" ? "png" : coverFile.type === "image/webp" ? "webp" : "jpg";
-    const path = `${initial.event_id}/${auth.user.id}/${crypto.randomUUID()}.${extension}`;
-    const uploaded = await supabase.storage.from("event-host-covers").upload(path, coverFile, {
-      cacheControl: "3600", contentType: coverFile.type, upsert: false,
-    });
-    if (uploaded.error) {
-      setBusy(false);
-      setMessage(memberErrorMessage(uploaded.error, "upload the event image"));
-      return;
-    }
-    const saved = await supabase.rpc("save_event_host_cover", {
-      p_event_id: initial.event_id, p_storage_path: path, p_alt_text: coverAlt.trim(),
-    });
-    if (saved.error) {
-      await supabase.storage.from("event-host-covers").remove([path]);
-      setBusy(false);
-      setMessage(memberErrorMessage(saved.error, "save the event image"));
-      return;
-    }
-    if (cover?.draft_storage_path && cover.draft_storage_path !== cover.published_storage_path) {
-      await supabase.storage.from("event-host-covers").remove([cover.draft_storage_path]);
-    }
-    setCoverFile(null);
-    setBusy(false);
-    const { data: savedCover } = await supabase.from("event_host_covers").select("published_storage_path").eq("event_id", initial.event_id).maybeSingle();
-    setMessage(savedCover?.published_storage_path === path ? "Your event image is live." : "Image saved privately. Send your event to the team for review before it appears to guests.");
-    router.refresh();
+    try {
+      const {data:auth}=await supabase.auth.getUser();
+      if(!auth.user)throw new Error("Please sign in again before uploading.");
+      const extension=coverFile.type==="image/png"?"png":coverFile.type==="image/webp"?"webp":"jpg";
+      const path=`${initial.event_id}/${auth.user.id}/${crypto.randomUUID()}.${extension}`;
+      const result=await saveHostPoster(supabase,{eventId:initial.event_id,path,file:coverFile,alt:coverAlt.trim(),previousDraft:cover?.draft_storage_path??null,previousPublished:cover?.published_storage_path??null});
+      setCoverFile(null);if(coverInput.current)coverInput.current.value="";
+      setMessage(result.status==="live"?"Your event image is live.":result.status==="private"?"Image saved privately. Send your event to the team for review before it appears to guests.":"Your poster was saved. Reopen this tab to check its latest display status.");
+      router.refresh();
+    }catch(error){setMessage(memberErrorMessage(error,"save the event image"));}
+    finally{setBusy(false);}
   }
 
   async function save(sendForReview: boolean) {
+    if(busy)return;
     setMessage("");
     if (sendForReview && (summary.trim().length < 40 || arrivalInfo.trim().length < 20 || programme.length === 0)) {
       setMessage("Please add a clear event introduction, arrival details and at least one programme item.");
@@ -182,30 +179,15 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
       return;
     }
     setBusy(true);
-    const saved = await supabase.rpc("save_event_host_workspace", {
-      p_event_id: initial.event_id,
-      p_summary: summary,
-      p_arrival_info: arrivalInfo,
-      p_programme: payload,
-      p_partners: partners,
-    });
-    if (saved.error) {
-      setBusy(false);
-      setMessage(memberErrorMessage(saved.error, "save your event draft"));
-      return;
-    }
-    if (sendForReview) {
-      const sent = await supabase.rpc(selfPublish ? "publish_my_pilot_event_updates" : "submit_event_host_workspace", { p_event_id: initial.event_id });
-      if (sent.error) {
-        setBusy(false);
-        setMessage(memberErrorMessage(sent.error, "send your event for review"));
-        router.refresh();
-        return;
-      }
-    }
-    setBusy(false);
-    setMessage(sendForReview ? selfPublish ? "Your changes are live. Open the guest view to see them." : "Sent to the event team for review. Your changes are not public yet." : "Draft saved privately.");
-    router.refresh();
+    let savedPrivately=false;
+    try {
+      const saved=await supabase.rpc("save_event_host_workspace",{p_event_id:initial.event_id,p_summary:summary,p_arrival_info:arrivalInfo,p_programme:payload,p_partners:partners});
+      if(saved.error)throw saved.error;
+      savedPrivately=true;setSavedDraft(draft);clearDraft(draft);
+      if(sendForReview){const sent=await supabase.rpc(selfPublish?"publish_my_pilot_event_updates":"submit_event_host_workspace",{p_event_id:initial.event_id});if(sent.error)throw sent.error;}
+      setMessage(sendForReview?selfPublish?"Your changes are live. Open the guest view to see them.":"Sent to the event team for review. Your changes are not public yet.":"Draft saved privately.");router.refresh();
+    }catch(error){setMessage(`${savedPrivately?"Your draft was saved. ":""}${memberErrorMessage(error,savedPrivately?"publish these changes":"save your event draft")}`);}
+    finally{setBusy(false);}
   }
 
   function communityPanel() {
@@ -268,6 +250,8 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
         {[["introduction", "Event details"], ["image", "Poster"], ["host", "Host details"], ["programme", "Programme"], ["community", "Community"], ["partners", "Partners"]].map(([key, label]) => <button key={key} type="button" aria-pressed={section === key} aria-controls={`host-${key}`} onClick={() => setSection(key)}>{label}</button>)}
       </nav>
 
+      {dirty && !locked ? <div className="host-workspace-draft-note" role="status"><span>{restoredDraft ? "Your unfinished changes are back." : "You have unsaved changes."} Text stays in this tab until you save, discard or sign out.</span><button type="button" disabled={busy} onClick={()=>clearDraft(savedDraft)}>Discard text changes</button></div> : null}
+
       {section === "host" ? <div className="host-workspace-panel" id="host-host"><EventHostPublicDetails eventId={initial.event_id}/></div> : null}
 
       <div className="host-workspace-panel" id="host-introduction" hidden={section !== "introduction"}>
@@ -283,14 +267,15 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
         <div className="host-workspace-panel-heading"><span>02</span><div><h2>Event poster</h2><p>Upload a poster or photo. It appears on the event page and in the events list once published.</p></div></div>
         <p>{selfPublish ? "Choose an image you have permission to share. It will appear on your event page when saved." : "One clear image helps guests recognise your gathering. A previous image stays live while the team reviews its replacement."}</p>
         {!coverReady ? <p role="status">Event image uploads will be available after the latest database update.</p> : <>
-          {cover?.draft_url ? <figure className="event-host-cover-preview"><img src={cover.draft_url} alt={cover.draft_alt_text} /><figcaption>{cover.draft_storage_path === cover.published_storage_path ? "Live image" : "Private image awaiting review"}</figcaption></figure> : <p>No image added yet. You can still send your draft without one.</p>}
+          {coverPreview ? <figure className="event-host-cover-preview"><img src={coverPreview} alt={coverAlt||"Selected event poster"}/><figcaption>Selected image — not saved yet</figcaption></figure> : cover?.draft_url ? <figure className="event-host-cover-preview"><img src={cover.draft_url} alt={cover.draft_alt_text} /><figcaption>{cover.draft_storage_path === cover.published_storage_path ? "Live image" : "Private image awaiting review"}</figcaption></figure> : <p>No image added yet. You can still send your draft without one.</p>}
           {cover?.published_url && cover.draft_storage_path !== cover.published_storage_path ? <p>The last approved image remains on the public event page until this one is approved.</p> : null}
           {!locked ? <div className="event-host-cover-controls">
             <label htmlFor="host-cover-file">Choose an image (JPG, PNG or WebP, under 6 MB)</label>
-            <input id="host-cover-file" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)} />
+            <input ref={coverInput} id="host-cover-file" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)} />
             <label htmlFor="host-cover-alt">Describe what the image shows</label>
             <input id="host-cover-alt" value={coverAlt} maxLength={240} disabled={busy} onChange={(event) => setCoverAlt(event.target.value)} placeholder="Women gathered around a table in Nairobi" />
             <button className="button button-outline" type="button" disabled={busy || !coverFile} onClick={() => void uploadCover()}>{selfPublish ? "Publish image" : "Save image privately"}</button>
+            {coverFile ? <button className="button button-outline" type="button" disabled={busy} onClick={()=>{setCoverFile(null);if(coverInput.current)coverInput.current.value="";}}>Discard selected image</button> : null}
           </div> : null}
         </>}
       </div>
@@ -325,6 +310,7 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
 
       {!locked && ["introduction", "programme", "partners"].includes(section) ? <div className="host-workspace-actions"><button className="button button-outline" disabled={busy} onClick={() => void save(false)} type="button">Save draft</button><button className="button button-primary" disabled={busy} onClick={() => void save(true)} type="button">{selfPublish ? "Publish changes" : "Send changes for review"}</button></div> : null}
       {message ? <p className="manager-message" role="status">{message}</p> : null}
+      {dialog}
     </section>
   );
 }

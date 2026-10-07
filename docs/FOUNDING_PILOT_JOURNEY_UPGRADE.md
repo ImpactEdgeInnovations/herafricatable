@@ -85,6 +85,7 @@ Live owner visual check confirmed the recording under Gatherings → Past, its e
 - [x] Retain unfinished invitation email/message/preset by account and destination, with **Discard invitation**. Clear only after confirmed invitation creation; keep queued versus emailed feedback distinct and recover from network errors without a stuck button.
 - [x] Retain shareable Community page fields and visibility choices, with unsaved feedback and Discard. Snapshot edits before confirmation, prevent editing during saves, preserve failed edits and show the last successfully saved visibility rather than an unsaved checkbox. Clarify that the chosen public Host name/introduction can be shared while private Host details stay private.
 - [ ] Complete populated mobile/desktop polish and audit remaining specialised Host tools. The common creation/settings/invitation/profile draft pass is implemented; real-device acceptance is not complete.
+- [x] Extend bounded account/event text drafts and the selected-file leave warning to Event Host editing. Preview posters before saving, retain failed edits and always release busy states. Reconcile uncertain poster-save responses without deleting a possibly committed image; older private-file cleanup failures do not undo a confirmed save. Booking, invitations and cancellation are expandable tools on one shared reading edge. Mocked poster failure/reconciliation tests, full repository suite and production build passed. Real Storage uploads and separate-account/device acceptance remain open.
 
 ### Phase 5 — reliable media operations
 
