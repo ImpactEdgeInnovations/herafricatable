@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MemberHeader } from "@/components/member/member-header";
+import { CommunityHostSection } from "@/components/member/community-host-section";
 import { PilotCommunityOpenControl } from "@/components/member/pilot-community-open-control";
 import type { CommunitySummary } from "@/components/member/community-directory";
 import {
@@ -261,10 +262,9 @@ export default async function CommunityHostPage({
       <section className="community-host-hero">
         <div>
           <p className="eyebrow">Manage community</p>
-          <h1>Lead with clarity<br />and care.</h1>
+          <h1>{community.name}</h1>
           <p>
-            Review join requests, support members, add events and learning, and
-            keep this community safe—all from one private place.
+            Invite people, manage members and plan your next gathering.
           </p>
           <Link href={`/communities/${slug}`}>← Return to community</Link>
         </div>
@@ -277,9 +277,12 @@ export default async function CommunityHostPage({
         </aside>
       </section>
       <nav className="community-room-navigation" aria-label="Host workspace areas">
-        <a href="#host-tools">Plan &amp; tools</a>
+        <a href="#invite-people">Invite people</a>
+        <a href="#admissions">Join requests</a>
+        <a href="#people">Members</a>
+        <a href="#gathering-proposals">Plan a gathering</a>
+        <a href="#gatherings">Link an event</a>
         <a href="#joining-settings">Who can join?</a>
-        <a href="#gathering-proposals">Plan an event</a>
         <a href="#community-photos">Photos</a>
         <a href="#welcome">Welcome</a>
         {community.membership_role === "owner" ? (
@@ -289,11 +292,9 @@ export default async function CommunityHostPage({
           </>
         ) : null}
         <a href="#continuity">Member health</a>
-        <a href="#admissions">Join requests</a>
-        <a href="#people">Members</a>
-        <a href="#gatherings">Events</a>
         <a href="#resources">Learning</a>
         <a href="#circle-programming">Circles</a>
+        <a href="#host-tools">Plans &amp; tools</a>
         {community.membership_role === "owner" ? (
           <>
             <a href="#commerce">Payments</a>
@@ -301,13 +302,13 @@ export default async function CommunityHostPage({
           </>
         ) : null}
       </nav>
-      <div id="host-tools">
+      <CommunityHostSection id="host-tools" title="Plans and tools">
         <CommunityHostCapabilitiesPanel
           capabilities={capabilities}
           migrationReady={!capabilityResult.error}
           owner={community.membership_role === "owner"}
         />
-      </div>
+      </CommunityHostSection>
       <CommunityJoiningSettingsPanel
         communityId={community.community_id}
         currentUserId={user.id}
@@ -323,6 +324,7 @@ export default async function CommunityHostPage({
         }
       />
       <CommunityPhotoAlbums communityId={community.community_id} currentUserId={user.id} />
+      <CommunityHostSection id="welcome-area" title="Welcome new members">
       <CommunityWelcomeQueue
         communityId={community.community_id}
         members={
@@ -330,6 +332,8 @@ export default async function CommunityHostPage({
         }
         migrationReady={!welcomeQueueResult.error}
       />
+      </CommunityHostSection>
+      <CommunityHostSection id="identity-area" title="Community image and appearance">
       <CommunityBrandingPanel
         currentUserId={user.id}
         communityId={community.community_id}
@@ -337,6 +341,8 @@ export default async function CommunityHostPage({
         migrationReady={!brandingResult.error}
         owner={community.membership_role === "owner"}
       />
+      </CommunityHostSection>
+      <CommunityHostSection id="public-page-area" title="Shareable Community page">
       <CommunityPublicProfilePanel
         currentUserId={user.id}
         communityId={community.community_id}
@@ -347,6 +353,8 @@ export default async function CommunityHostPage({
         slug={community.slug}
         taglineReady={Boolean(brandIdentity?.tagline)}
       />
+      </CommunityHostSection>
+      <CommunityHostSection id="circle-area" title="Small groups">
       <CommunityCircleHostPanel
         communityId={community.community_id}
         migrationReady={!circleOptionResult.error}
@@ -354,7 +362,9 @@ export default async function CommunityHostPage({
           (circleOptionResult.data as CommunityCircleOption[] | null) ?? []
         }
       />
+      </CommunityHostSection>
       {community.membership_role === "owner" ? (
+        <CommunityHostSection id="payments-area" title="Plans and payments">
         <CommunityCommercePanel
           billing={hostBilling}
           billingReady={
@@ -381,8 +391,10 @@ export default async function CommunityHostPage({
             (hostPlanResult.data as CommunityHostPlanOption[] | null) ?? []
           }
         />
+        </CommunityHostSection>
       ) : null}
       {community.membership_role === "owner" ? (
+        <CommunityHostSection id="earnings-area" title="Earnings and statements">
         <CommunityFinancialStatement
           entries={
             (financialStatementResult.data as
@@ -399,6 +411,7 @@ export default async function CommunityHostPage({
           }
           summaries={financialSummaries}
         />
+        </CommunityHostSection>
       ) : null}
       <CommunityHostWorkspace
         currentUserId={user.id}

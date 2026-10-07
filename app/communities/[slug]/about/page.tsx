@@ -234,7 +234,7 @@ export default async function CommunityAboutPage({
               {Number(about.member_count) === 1 ? "" : "s"} at the table
             </p>
           ) : (
-            <p>A deliberately reviewed Community.</p>
+            <p>{joiningMode === "invite_only" ? "Join with a personal invitation." : joiningMode === "approval" ? "The Host reviews requests to join." : "Open to active Her Africa Table members."}</p>
           )}
           <CommunityAboutAction
             accessType={about.offer_access_type}

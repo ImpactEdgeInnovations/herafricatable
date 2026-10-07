@@ -1,0 +1,103 @@
+/* Final scoped room layer: identity, navigation and content share one rhythm. */
+.community-room-page, .community-host-page { --room-ink: #241e20; --room-muted: #655e60; --room-accent: #64172a; color: var(--room-ink); }
+.community-room-page > .community-room-hero,
+.community-room-page > .community-room-hero:not(.has-cover),
+.community-room-page > .community-room-hero.has-cover { width: min(1120px, calc(100% - 40px)); margin: 24px auto 16px; padding: 0; display: block; background: transparent; border: 0; box-shadow: none; }
+.community-room-page .community-room-cover { width: 100%; height: 160px; margin: 0 0 16px; border-radius: 10px; overflow: hidden; }
+.community-room-page .community-room-cover img { width: 100%; height: 100%; object-fit: cover; }
+.community-room-page .community-room-title { display: flex; align-items: center; gap: 14px; }
+.community-room-page .community-room-icon { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 12px; object-fit: cover; }
+.community-room-page .community-room-icon.is-placeholder { display: grid; place-items: center; background: #f0e5e7; color: var(--room-accent); font: 1.5rem var(--serif, Georgia, serif); }
+.community-room-page .community-room-title .eyebrow { margin: 0 0 4px; font-size: .7rem; letter-spacing: .09em; }
+.community-room-page .community-room-hero h1 { font-size: clamp(1.7rem, 3vw, 2.2rem); line-height: 1.15; letter-spacing: -.035em; margin: 0; }
+.community-room-page .community-room-tagline { display: block; margin: 10px 0 0; font: 500 .95rem var(--sans, Arial, sans-serif); }
+.community-room-page .community-room-hero-copy > p:last-of-type { max-width: 760px; margin: 10px 0; font-size: .95rem; line-height: 1.5; color: var(--room-muted); }
+.community-room-page .community-room-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: 8px 0 0; font-size: .85rem; }
+.community-room-page .community-room-meta a, .community-about-trigger { color: var(--room-ink); font: inherit; text-decoration: none; background: transparent; border: 0; padding: 8px 0; cursor: pointer; }
+.community-room-page > .community-local-navigation { width: min(1120px, calc(100% - 40px)); margin: 0 auto 24px; padding: 0; border: 0; border-bottom: 1px solid #ded8d5; border-radius: 0; background: transparent; box-shadow: none; gap: 12px; }
+.community-room-page .community-local-tabs { display: flex; gap: 4px; overflow-x: auto; min-width: 0; }
+.community-room-page .community-local-navigation a { min-height: 48px; display: flex; align-items: center; padding: 10px 14px; border: 0; border-radius: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--room-muted); font: 500 .9rem var(--sans, Arial, sans-serif); white-space: nowrap; text-decoration: none; }
+.community-room-page .community-local-navigation a:hover { color: var(--room-ink); background: #f2edeb; }
+.community-room-page .community-local-navigation a[aria-current="page"] { color: var(--room-accent); background: transparent; border-bottom-color: var(--room-accent); font-weight: 700; }
+.community-room-page .community-local-navigation a::after { display: none; }
+.community-room-page .community-local-more { border: 0; }
+.community-room-page > :is(.community-conversation-shell, .community-gatherings, .community-media, .community-member-roster, .community-room-more, .community-notification-preferences, .community-live-notice, .community-next-gathering, .community-overview-links),
+.community-room-page > .community-room-overview.community-start-path { width: min(1120px, calc(100% - 40px)); max-width: 1120px; margin: 20px auto; }
+.community-room-page :is(h2, h3) { font-family: var(--sans, Arial, sans-serif); letter-spacing: -.02em; }
+.community-room-page h2 { font-size: 1.25rem; line-height: 1.35; }
+.community-room-page .community-start-path { border-radius: 10px; padding: 24px; background: #fff; border: 1px solid #e4dfdc; box-shadow: none; }
+.community-room-page .community-start-path h2 { margin: 6px 0 8px; font-size: 1.45rem; }
+.community-room-page .community-start-path > header > p:last-of-type { margin: 8px 0 16px; font-size: .95rem; max-width: 660px; }
+.community-room-page .community-start-primary,
+.community-room-page .button-primary { color: #fff; background: var(--room-accent); border-color: var(--room-accent); font: 600 .9rem var(--sans, Arial, sans-serif); min-height: 44px; padding: 12px 18px; border-radius: 6px; }
+.community-room-page .community-start-primary:hover, .community-room-page .button-primary:hover { color: #fff; background: #461020; }
+.community-room-page .community-overview-links { border: 0; background: transparent; }
+.community-room-page .community-overview-links > a { padding: 14px 18px; border: 1px solid #e4dfdc; border-radius: 8px; background: #fff; }
+.community-room-page .community-overview-links > a > span { display: none; }
+.community-room-page .community-room-more > summary { min-height: 48px; padding: 14px 0; }
+.community-room-page .community-conversation-shell { padding: 0; }
+.community-room-page .community-conversation-shell > :is(.community-conversation-heading, .community-room-snapshot, .community-composer-panel, .community-discovery, .community-feed, .community-feed-pagination, .network-message) { width: 100%; max-width: none; }
+.community-room-page .community-composer-panel > .community-composer { width: 100%; max-width: none; }
+.community-room-page .community-conversation-heading { margin-bottom: 16px; }
+.community-room-page .community-composer-panel { border-radius: 10px; box-shadow: none; margin: 16px 0; }
+.community-room-page .community-composer-panel > summary { min-height: 52px; padding: 14px 18px; }
+.community-room-page .community-composer { padding: 18px; }
+.community-room-page .community-composer textarea { min-height: 100px; }
+.community-room-page .community-member-roster { padding: 0; border: 0; background: transparent; }
+.community-room-page .community-member-roster > header { display: block; margin: 0 0 20px; padding: 0; }
+.community-room-page .community-member-roster > header h2 { margin: 0 0 6px; font-size: 1.25rem; }
+.community-room-page .community-member-roster > header p { margin: 0; max-width: none; font-size: .9rem; color: var(--room-muted); }
+.community-room-page .community-member-roster > div { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.community-room-page .community-member-roster > div > a { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 14px; row-gap: 4px; align-content: center; min-height: 112px; padding: 18px; border: 1px solid #e4dfdc; border-radius: 8px; background: #fff; }
+.community-room-page .community-member-roster .community-person-avatar { grid-column: 1; grid-row: 1 / 4; width: 48px; height: 48px; margin: 0; border-radius: 50%; object-fit: cover; align-self: center; }
+.community-room-page .community-person-avatar.is-placeholder { display: grid; place-items: center; background: #f0e5e7; color: var(--room-accent); font: 600 .95rem var(--sans, Arial, sans-serif); }
+.community-room-page .community-member-roster > div > a > :is(strong, small) { grid-column: 2; margin: 0; overflow-wrap: anywhere; }
+.community-room-page .community-member-roster strong { font: 600 1rem var(--sans, Arial, sans-serif); }
+.community-room-page .community-member-roster small { font-size: .825rem; color: var(--room-muted); }
+.community-room-page .community-member-roster footer { margin-top: 20px; }
+.community-room-page .community-gathering-empty, .community-room-page .community-media-empty { width: 100%; max-width: none; padding: 24px; border-radius: 8px; background: #fff; }
+.community-room-page .community-section-heading { gap: 12px; align-items: center; }
+.community-room-page .community-section-heading p { font-size: .9rem; }
+.community-about-panel { width: min(520px, calc(100% - 32px)); max-height: calc(100dvh - 40px); padding: 24px; border: 1px solid #ded8d5; border-radius: 12px; color: #241e20; background: #fff; box-shadow: 0 24px 80px #241e2033; }
+.community-about-panel::backdrop { background: #241e2055; }
+.community-about-panel header { display: flex; gap: 16px; align-items: start; justify-content: space-between; }
+.community-about-panel h2 { margin: 4px 0 12px; font: 600 1.25rem var(--sans, Arial, sans-serif); }
+.community-about-panel header button { min-width: 44px; min-height: 44px; border: 1px solid #e4dfdc; border-radius: 6px; background: #fff; color: #241e20; font-size: 1.5rem; cursor: pointer; }
+.community-about-panel p { line-height: 1.6; margin: 12px 0; }
+.community-about-panel dl > div { display: grid; grid-template-columns: 80px 1fr; gap: 14px; padding: 12px 0; border-top: 1px solid #e4dfdc; }
+.community-about-panel dt { color: #655e60; }
+.community-about-panel dd { margin: 0; }
+.community-about-panel .community-about-note { font-size: .875rem; color: #655e60; }
+.community-room-page :is(a, button, summary, input, select, textarea):focus-visible,
+.community-host-page :is(a, button, summary, input, select, textarea):focus-visible { outline: 3px solid #64172a; outline-offset: 3px; }
+.community-room-page button:disabled { opacity: 1; background: #e8e3e1; color: #655e60; border-color: #d5ceca; cursor: not-allowed; }
+.community-host-page > .community-host-hero { width: min(1120px, calc(100% - 40px)); margin: 24px auto; padding: 0; display: flex; align-items: center; justify-content: space-between; gap: 24px; background: transparent; border: 0; }
+.community-host-page .community-host-hero h1 { margin: 6px 0; font-size: clamp(1.7rem, 3vw, 2.2rem); line-height: 1.2; }
+.community-host-page .community-host-hero p { margin: 8px 0; font-size: .95rem; }
+.community-host-page .community-host-hero aside { width: auto; padding: 12px 16px; border-radius: 8px; }
+.community-host-page .community-host-hero aside small { display: none; }
+.community-host-page > .community-room-navigation { width: min(1120px, calc(100% - 40px)); display: flex; flex-wrap: wrap; overflow: visible; gap: 6px; margin: 20px auto; padding: 12px 0; background: transparent; }
+.community-host-page .community-room-navigation a { min-height: 40px; padding: 10px 12px; border: 1px solid #e4dfdc; border-radius: 6px; font-size: .85rem; background: #fff; color: #241e20; }
+.community-host-page :is(.community-host-panel, .community-branding-panel, .community-public-profile-panel) h2 { font: 600 1.25rem var(--sans, Arial, sans-serif); letter-spacing: -.02em; }
+.community-host-page .button-primary { background: #64172a; color: #fff; border-color: #64172a; }
+.community-host-page .button-primary:hover { background: #461020; color: #fff; }
+.community-host-page button:disabled { opacity: 1; background: #e8e3e1; color: #655e60; border-color: #d5ceca; cursor: not-allowed; }
+.community-host-page .community-host-section { width: min(1120px, calc(100% - 40px)); margin: 12px auto; border: 1px solid #e4dfdc; border-radius: 8px; background: #fff; }
+.community-host-section > summary { min-height: 52px; padding: 16px 20px; display: flex; justify-content: space-between; gap: 16px; font: 600 .95rem var(--sans, Arial, sans-serif); cursor: pointer; list-style: none; }
+.community-host-section > summary::-webkit-details-marker { display: none; }
+.community-host-section[open] > summary > span { transform: rotate(45deg); }
+.community-host-section > div { padding: 0 20px 20px; }
+.community-host-section > div > :is(section, div) { width: 100%; margin: 0; border: 0; padding: 16px 0; box-shadow: none; }
+.community-host-section h2 { font: 600 1.25rem var(--sans, Arial, sans-serif); letter-spacing: -.02em; }
+@media (max-width: 700px) {
+  .community-room-page > .community-room-hero { margin-top: 16px; }
+  .community-room-page .community-room-cover { height: 120px; }
+  .community-room-page .community-room-hero-copy > p:last-of-type { display: block; }
+  .community-room-page > .community-local-navigation { gap: 4px; margin-bottom: 16px; }
+  .community-room-page .community-local-navigation a { padding: 10px; font-size: .825rem; }
+  .community-room-page .community-local-more a { max-width: 66px; white-space: normal; line-height: 1.2; }
+  .community-room-page .community-start-path { padding: 18px; }
+  .community-room-page .community-member-roster > div { grid-template-columns: 1fr; }
+  .community-host-page > .community-host-hero { align-items: start; }
+  .community-host-page .community-host-hero aside { padding: 8px; font-size: .8rem; }
+}

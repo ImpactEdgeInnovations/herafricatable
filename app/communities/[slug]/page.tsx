@@ -46,6 +46,7 @@ import {
   type CommunityCheckIn,
 } from "@/components/member/community-check-ins";
 import { CommunityLocalNavigation } from "@/components/member/community-local-navigation";
+import { CommunityAboutPanel } from "@/components/member/community-about-panel";
 import { CommunityMedia } from "@/components/member/community-media";
 import { CommunityNextGathering } from "@/components/member/community-next-gathering";
 import {
@@ -358,15 +359,15 @@ export default async function CommunityPage({
               <h1>{community.name}</h1>
             </div>
           </div>
-          {brandIdentity?.tagline ? (
+          {brandIdentity?.tagline && brandIdentity.tagline.trim().toLowerCase() !== community.name.trim().toLowerCase() ? (
             <strong className="community-room-tagline">
               {brandIdentity.tagline}
             </strong>
           ) : null}
           <p>{community.description}</p>
           <div className="community-room-meta">
-            <span>{community.member_count} members</span>
-            <Link href={`/communities/${slug}/about`}>About</Link>
+            <span>{community.member_count} {community.member_count === 1 ? "member" : "members"}</span>
+            <CommunityAboutPanel name={community.name} description={community.description} joiningMode={community.effective_mode ?? community.admission_mode ?? "approval"} memberCount={community.member_count} />
             <Link href="/communities">All Communities</Link>
           </div>
         </div>
@@ -393,7 +394,7 @@ export default async function CommunityPage({
                   )[0] ?? null
             }
           />
-          <nav className="community-overview-links" aria-label="Inside this Community">
+          {Number(readSummary?.new_activity_count ?? 0) > 0 || nextGathering ? <nav className="community-overview-links" aria-label="Community updates">
             <Link href={`/communities/${slug}?view=conversations`}>
               <span aria-hidden="true">01</span>
               <div><strong>Conversations</strong><small>{Number(readSummary?.new_activity_count ?? 0) > 0 ? `${readSummary?.new_activity_count} new updates` : "Questions, ideas and useful updates"}</small></div>
@@ -409,7 +410,7 @@ export default async function CommunityPage({
               <div><strong>People</strong><small>Get to know {community.member_count} members</small></div>
               <i aria-hidden="true">→</i>
             </Link>
-          </nav>
+          </nav> : null}
           {!checkInResult.error ? (
             <details className="community-room-more">
               <summary>
@@ -481,13 +482,6 @@ export default async function CommunityPage({
       ) : null}
       {showPeople ? (
         <>
-          <section className="community-people-intro" id="people">
-            <p className="eyebrow">People</p>
-            <h2>People in this Community</h2>
-            <p>
-              Get to know members. You can message once you both agree to connect.
-            </p>
-          </section>
           {cohort ? (
             <CohortActivation
               currentUserId={user.id}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CommunityAvatar } from "./community-avatar";
 
 export type CommunityRosterMember = {
   avatar_url: string | null;
@@ -26,24 +27,16 @@ export function CommunityMemberRoster({
     >
       <header>
         <div>
-          <p className="eyebrow">Members</p>
-          <h2 id="community-members-title">Meet the people here.</h2>
+          <h2 id="community-members-title">People</h2>
         </div>
         <p>
-          Read a member’s profile before asking to connect. Contact details
-          stay private until you both agree.
+          Messages open once you both agree to connect. Contact details stay private.
         </p>
       </header>
       <div>
         {members.map((member) => (
           <Link href={`/members/${member.user_id}`} key={member.user_id}>
-            {member.avatar_url ? (
-              <img alt="" src={member.avatar_url} />
-            ) : (
-              <span aria-hidden="true">
-                {member.display_name.charAt(0).toUpperCase()}
-              </span>
-            )}
+            <CommunityAvatar name={member.display_name} src={member.avatar_url} />
             <strong>{member.display_name}</strong>
             <small>
               {[member.job_title, member.company].filter(Boolean).join(" · ") ||
@@ -52,7 +45,7 @@ export function CommunityMemberRoster({
             <small>
               {[member.city, member.country].filter(Boolean).join(", ")}
               {member.membership_role !== "member"
-                ? `${member.city || member.country ? " · " : ""}${member.membership_role}`
+                ? `${member.city || member.country ? " · " : ""}${member.membership_role === "owner" ? "Host" : "Moderator"}`
                 : ""}
             </small>
           </Link>

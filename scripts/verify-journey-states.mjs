@@ -683,7 +683,7 @@ for (const contract of [
   "community-composer-panel",
   "Start a conversation",
   "Ask, offer or share something useful",
-  "composerInitiallyOpen || !initialPosts.length",
+  "composerInitiallyOpen || Boolean(composerBody)",
 ]) {
   assert(
     communityFeed.includes(contract),
@@ -1597,7 +1597,7 @@ for (const contract of [
   );
 }
 for (const contract of [
-  "Meet the people here.",
+  'id="community-members-title">People',
   "Contact details",
   'href={`/members/${member.user_id}`}',
 ]) {

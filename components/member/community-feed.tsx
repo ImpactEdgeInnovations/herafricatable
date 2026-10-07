@@ -212,8 +212,16 @@ export function CommunityFeed({
       : "discussion",
   );
   const [composerExpanded, setComposerExpanded] = useState(
-    composerInitiallyOpen || !initialPosts.length,
+    composerInitiallyOpen || Boolean(composerBody),
   );
+  useEffect(() => {
+    function revealComposer() {
+      if (window.location.hash === "#create-conversation") setComposerExpanded(true);
+    }
+    revealComposer();
+    window.addEventListener("hashchange", revealComposer);
+    return () => window.removeEventListener("hashchange", revealComposer);
+  }, []);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [message, setMessage] = useState("");
   const [olderComments, setOlderComments] = useState<CommunityComment[]>([]);

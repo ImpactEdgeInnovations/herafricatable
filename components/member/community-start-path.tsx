@@ -75,7 +75,7 @@ export function CommunityStartPath({
           complete: state.has_contribution,
           description:
             "Ask a clear question, share an update or offer useful support.",
-          href: `/communities/${communitySlug}?view=conversations#conversations`,
+          href: `/communities/${communitySlug}?view=conversations#create-conversation`,
           label: "Join a conversation",
         },
         {

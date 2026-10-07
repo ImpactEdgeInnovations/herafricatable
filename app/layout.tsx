@@ -12,6 +12,7 @@ import "./event-introductions.css";
 import "./event-host-workspace.css";
 import "./community-room.css";
 import "./member-readability.css";
+import "./community-overhaul.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
