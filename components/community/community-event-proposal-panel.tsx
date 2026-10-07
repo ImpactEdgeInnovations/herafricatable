@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
 import { CommunityRecordingForm } from "./community-recording-form";
+import { communityDraftKey } from "@/lib/community-drafts";
+import { useCommunityDraft } from "@/lib/use-community-draft";
 
 export type CommunityEventProposal = {
   accessibility_notes: string | null;
@@ -80,25 +82,32 @@ function initialValues() {
     timezone: "Africa/Nairobi",
     title: "",
     venueName: "",
+    draftProposalId: null as string | null,
+    draftStep: 0,
   };
 }
 
 export function CommunityEventProposalPanel({
   communityId,
+  currentUserId,
   migrationReady,
   proposals,
 }: {
   communityId: string;
+  currentUserId: string;
   migrationReady: boolean;
   proposals: CommunityEventProposal[];
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [step, setStep] = useState(0);
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues, clearDraft, restored] = useCommunityDraft(communityDraftKey(currentUserId, "community-gathering-plan", communityId), initialValues);
+  const editingId = values.draftProposalId;
+  const step = values.draftStep;
+  const setEditingId = (value: string | null) => setValues(current => ({ ...current, draftProposalId: value }));
+  const setStep = (next: SetStateAction<number>) => setValues(current => ({ ...current, draftStep: typeof next === "function" ? next(current.draftStep) : next }));
+  useEffect(() => { if (restored) setExpanded(true); }, [restored]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -108,14 +117,15 @@ export function CommunityEventProposalPanel({
   }
 
   function startNew() {
-    setEditingId(null);
-    setValues(initialValues());
-    setStep(0);
+    if (!values.title && !values.summary) clearDraft(initialValues());
     setMessage("");
     setExpanded(true);
   }
 
-  function edit(proposal: CommunityEventProposal) {
+  async function edit(proposal: CommunityEventProposal) {
+    if ((values.title || values.summary) && editingId !== proposal.proposal_id) {
+      if (!await ask({ title: "Open a different draft?", description: "Your unfinished plan on this screen will be replaced. Choose Cancel to keep working on it.", confirmLabel: "Open draft" })) return;
+    }
     setEditingId(proposal.proposal_id);
     setValues({
       accessibilityNotes: proposal.accessibility_notes ?? "",
@@ -135,6 +145,8 @@ export function CommunityEventProposalPanel({
       timezone: proposal.timezone,
       title: proposal.title,
       venueName: proposal.venue_name ?? "",
+      draftProposalId: proposal.proposal_id,
+      draftStep: 0,
     });
     setStep(0);
     setMessage("");
@@ -203,24 +215,30 @@ export function CommunityEventProposalPanel({
       p_title: values.title.trim(),
       p_venue_name: values.venueName.trim() || null,
     });
-    setBusy(false);
     if (error) {
+      setBusy(false);
       setMessage(memberErrorMessage(error, submit ? "open this gathering" : "save this private draft"));
       return;
     }
+    if (typeof savedProposal !== "string") {
+      setBusy(false); setMessage("We couldn’t confirm the saved draft. Please try again."); return;
+    }
+    setEditingId(savedProposal);
     if (submit) {
       const { error: publishError } = await supabase.rpc(
         "publish_community_gathering",
         { p_proposal_id: savedProposal },
       );
       if (publishError) {
+        setBusy(false);
         setMessage(memberErrorMessage(publishError, "open this gathering"));
         return;
       }
     }
     setMessage(submit ? "Your gathering is open to Community members." : "Private draft saved.");
+    setBusy(false);
     setExpanded(false);
-    setEditingId(null);
+    clearDraft(initialValues());
     router.refresh();
   }
 
@@ -248,7 +266,7 @@ export function CommunityEventProposalPanel({
 
   return (
     <section className="community-event-proposals" id="gathering-proposals" aria-labelledby="community-event-proposal-title">
-      {migrationReady ? <CommunityRecordingForm communityId={communityId} /> : null}
+      {migrationReady ? <CommunityRecordingForm communityId={communityId} currentUserId={currentUserId} /> : null}
       <header>
         <div>
           <p className="eyebrow">Community gatherings</p>

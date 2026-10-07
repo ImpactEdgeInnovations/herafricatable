@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { clearCommunityDrafts } from "@/lib/community-drafts";
 
 export function SignOutButton({ className = "" }: { className?: string }) {
   const [busy, setBusy] = useState(false);
@@ -17,6 +18,7 @@ export function SignOutButton({ className = "" }: { className?: string }) {
       setBusy(false);
       return;
     }
+    clearCommunityDrafts();
     window.location.replace("/");
   }
 

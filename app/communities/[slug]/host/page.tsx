@@ -313,6 +313,7 @@ export default async function CommunityHostPage({
       />
       <CommunityEventProposalPanel
         communityId={community.community_id}
+        currentUserId={user.id}
         migrationReady={!eventProposalResult.error}
         proposals={
           (eventProposalResult.data as CommunityEventProposal[] | null) ?? []

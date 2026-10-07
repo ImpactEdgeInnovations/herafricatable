@@ -104,16 +104,20 @@ Implemented:
 - [x] Retain existing pilot eligibility/global pause checks for pilot-opened Communities and ordinary approved Host permissions for non-pilot Communities. Repeated network saves use one request ID and return the existing discussion.
 - [x] Apply `20261007140000_community_prerecorded_gatherings.sql` live. Rollback tests passed consent, creation, duplicate retry, private/closed/no-ticket state, persistent replies without RSVP, ordinary-member creation denial, video-removal continuity, pilot pause and anonymous event/creation plus outsider-metadata denial. Do not run `supabase/tests/034_community_prerecorded_gatherings.sql` as a migration.
 - [x] Run `npm run test:community-recordings`, existing Community contracts, the full repository suite, TypeScript and production build. Advisors flag intentional authenticated security-definer entry points; their role/membership checks were rehearsed. Rollback left zero recording events/applications and kept the rehearsal Community archived.
+- [x] Preserve core unfinished text during same-tab navigation: Community posts/replies, lasting gathering replies, live messages/questions, Host recaps/video settings, recording creation and gathering planning (including its step and draft ID). Failed submissions retain text; successful ones clear it. Reopening a recording retains its retry ID.
+- [x] Keep drafts account/room-scoped in bounded browser memory only, with eight-hour expiry, sign-out cleanup and refresh/close warnings. No member text is written to local/session storage or automatically published. Switching to a different planning draft asks before replacing unfinished work.
+- [x] Retain a newly saved proposal ID while opening it, so a failed publication does not make the next save create another private draft. Keep its controls busy through publication.
+- [x] Run `npm run test:community-drafts` behavioural store tests, Community source contracts, the full repository suite, TypeScript and production build for this pass. Browser interaction acceptance is still open; no database migration required.
 
 Required before Phase 3 can close:
-- [ ] Verify the new in-place view with populated member/Host accounts on desktop/mobile; preserve unfinished forms on every navigation path.
+- [ ] Verify draft restoration and cleared submissions with populated member/Host accounts on desktop/mobile across local tabs, browser Back and closing/reopening a gathering. Finish remaining uncontrolled Host settings and attachment-selection guards; uploaded files are not retained by text-draft memory.
 - [ ] Rehearse Watch together / Watch anytime in populated desktop/mobile rooms with separate Host/member accounts, including real playback, reporting and reply delivery.
 - [ ] Complete populated Host/member desktop/mobile rehearsal of prerecorded creation and its in-place viewing experience. Feature code and database acceptance are implemented; real video playback and inbox delivery are not certified by rollback tests.
 - [ ] Complete Media integration. Videos discovery and persistent gathering discussion are shipped; photo albums arrive in Phase 4 and no nonfunctional Photos action is shown.
 
 - [ ] Verify empty, upcoming, live, past and cancelled states and that public event discovery never exposes private Community media.
 
-The earlier duplicate navigation, linking and countdown tasks are consolidated into the implemented items above. Draft preservation across navigation and visual acceptance remain open. Watch-anytime replies persist independently of scheduled chat. The SQL under `supabase/tests/033_community_watch_anytime.sql` is a rollback test, not a migration; do not stage it as schema setup.
+The earlier duplicate navigation, linking and countdown tasks are consolidated into the implemented items above. Core text draft preservation is implemented, but full navigation/browser acceptance and remaining settings/attachment guards are open. Draft memory is not a server-saved draft or a guarantee against browser/process crashes. Watch-anytime replies persist independently of scheduled chat. The SQL under `supabase/tests/033_community_watch_anytime.sql` is a rollback test, not a migration; do not stage it as schema setup.
 
 #### Later phases — cross-platform polish, photos and production acceptance
 

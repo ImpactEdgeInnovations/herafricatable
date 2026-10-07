@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { youtubeVideoId } from "@/lib/youtube";
+import { communityDraftKey } from "@/lib/community-drafts";
+import { useCommunityDraft } from "@/lib/use-community-draft";
 
 export type GatheringVideo = {
   video_id: string | null;
@@ -14,17 +16,24 @@ export type GatheringVideo = {
   content_kind?: "scheduled" | "prerecorded";
 };
 
-export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, initialVideo, ready, onSaved }: {
+export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, initialVideo, ready, onSaved, currentUserId }: {
   roomId: string; canManage: boolean; endsAt: string; title: string;
   initialVideo: GatheringVideo | null; ready: boolean;
   onSaved?(): void;
+  currentUserId: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [video, setVideo] = useState(initialVideo);
-  const [link, setLink] = useState(initialVideo?.video_id ? `https://www.youtube.com/watch?v=${initialVideo.video_id}` : "");
-  const [visible, setVisible] = useState(initialVideo?.is_visible ?? true);
-  const [keepReplay, setKeepReplay] = useState(initialVideo?.keep_replay ?? true);
-  const [viewingMode, setViewingMode] = useState(initialVideo?.viewing_mode ?? "watch_together");
+  const [settings, setSettings, clearSettings] = useCommunityDraft(communityDraftKey(currentUserId, "gathering-video", roomId), {
+    link: initialVideo?.video_id ? `https://www.youtube.com/watch?v=${initialVideo.video_id}` : "",
+    visible: initialVideo?.is_visible ?? true, keepReplay: initialVideo?.keep_replay ?? true,
+    viewingMode: initialVideo?.viewing_mode ?? "watch_together",
+  });
+  const { link, visible, keepReplay, viewingMode } = settings;
+  const setLink = (value: string) => setSettings(current => ({ ...current, link: value }));
+  const setVisible = (value: boolean) => setSettings(current => ({ ...current, visible: value }));
+  const setKeepReplay = (value: boolean) => setSettings(current => ({ ...current, keepReplay: value }));
+  const setViewingMode = (value: "watch_together" | "watch_anytime") => setSettings(current => ({ ...current, viewingMode: value }));
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [playing, setPlaying] = useState(false);
@@ -60,7 +69,7 @@ export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, init
       if (error) throw error;
       setVideo(data as GatheringVideo | null); setPlaying(false);
       onSaved?.();
-      if (!id) setLink("");
+      clearSettings({ link: id ? `https://www.youtube.com/watch?v=${id}` : "", visible, keepReplay, viewingMode });
       setNotice(id ? "Video saved. Your gathering conversation stays in the same place." : "Video removed. The conversation is still here.");
     } catch (error) { setNotice(memberErrorMessage(error, "save this video")); }
     finally { setBusy(false); }

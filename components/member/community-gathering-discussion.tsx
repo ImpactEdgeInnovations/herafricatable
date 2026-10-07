@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { communityDraftKey } from "@/lib/community-drafts";
+import { useCommunityDraft } from "@/lib/use-community-draft";
 
 type Reply = { comment_id: string; author_id: string; author_name: string | null; body: string; created_at: string };
 type Discussion = { post_id: string; comments: Reply[]; has_more: boolean; read_only: boolean; unavailable?: boolean };
@@ -12,7 +14,7 @@ export function CommunityGatheringDiscussion({ roomId, currentUserId, revision }
   const { ask, dialog } = useActionDialog();
   const [item, setItem] = useState<Discussion | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft, , restored] = useCommunityDraft(communityDraftKey(currentUserId, "gathering-reply", roomId), "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -65,6 +67,7 @@ export function CommunityGatheringDiscussion({ roomId, currentUserId, revision }
   if (!item && !error) return loading ? <p role="status">Opening conversation…</p> : null;
   return <section className="gathering-discussion" id="gathering-discussion" aria-labelledby="gathering-discussion-title">
     {dialog}<header><h2 id="gathering-discussion-title">Keep the conversation going</h2><p>Watch at your own pace. Questions and replies stay with this gathering.</p></header>
+    {restored && draft ? <small>Your unsent reply is still here.</small> : null}
     {error ? <div role="alert"><p>{error}</p><button type="button" onClick={() => setRetry(value => value + 1)}>Try again</button></div>
       : item?.unavailable ? <p>This conversation is no longer available.</p> : item ? <>
         <div className="gathering-discussion-pages">{cursor ? <button type="button" onClick={() => setCursor(null)}>Latest replies</button> : null}

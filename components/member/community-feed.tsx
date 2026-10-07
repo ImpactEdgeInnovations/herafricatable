@@ -5,6 +5,9 @@ import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
+import { communityDraftKey } from "@/lib/community-drafts";
+import { useCommunityDraft } from "@/lib/use-community-draft";
+import { CommunityReplyForm } from "./community-reply-form";
 
 const conversationTypes = [
   { label: "Discussion", value: "discussion" },
@@ -192,6 +195,7 @@ export function CommunityFeed({
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState("");
+  const [composerBody, setComposerBody] = useCommunityDraft(communityDraftKey(currentUserId, "community-post", communityId), "");
   const [attachmentAlt, setAttachmentAlt] = useState("");
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [attachmentMode, setAttachmentMode] =
@@ -201,7 +205,7 @@ export function CommunityFeed({
   const availableTypes = canManage
     ? [...hostConversationTypes, ...conversationTypes]
     : [...conversationTypes];
-  const [composerType, setComposerType] = useState(
+  const [composerType, setComposerType, clearComposerType] = useCommunityDraft(communityDraftKey(currentUserId, "community-post-category", communityId),
     availableTypes.some((item) => item.value === initialComposerType)
       ? initialComposerType
       : "discussion",
@@ -425,12 +429,13 @@ export function CommunityFeed({
 
     setBusy("");
     setMessage("Your conversation is live in this community.");
+    setComposerBody("");
     formElement.reset();
     setAttachmentAlt("");
     setAttachmentFile(null);
     setAttachmentMode("none");
     setAttachmentUrl("");
-    setComposerType("discussion");
+    clearComposerType("discussion");
     router.refresh();
   }
 
@@ -452,6 +457,7 @@ export function CommunityFeed({
       formElement.reset();
       router.refresh();
     }
+    return !error;
   }
 
   async function setPostState(
@@ -773,7 +779,7 @@ export function CommunityFeed({
           open={composerExpanded}
         >
           <summary>
-            <span>Start a conversation</span>
+            <span>{composerBody ? "Continue your post" : "Start a conversation"}</span>
             <small>Ask, offer or share something useful</small>
           </summary>
           <form
@@ -809,6 +815,8 @@ export function CommunityFeed({
             <textarea
               id="community-post"
               name="body"
+              value={composerBody}
+              onChange={event => setComposerBody(event.target.value)}
               minLength={2}
               maxLength={3000}
               required
@@ -1227,31 +1235,8 @@ export function CommunityFeed({
                       </div>
                     ) : null}
                     {readOnly ? null : (
-                      <form
-                        className="community-comment-form"
-                        onSubmit={(event) =>
-                          void comment(event, post.post_id)
-                        }
-                      >
-                        <label htmlFor={`comment-${post.post_id}`}>
-                          Add useful context
-                        </label>
-                        <textarea
-                          id={`comment-${post.post_id}`}
-                          maxLength={1500}
-                          minLength={2}
-                          name="body"
-                          placeholder="Respond thoughtfully…"
-                          required
-                        />
-                        <button
-                          disabled={busy === `comment-${post.post_id}`}
-                        >
-                          {busy === `comment-${post.post_id}`
-                            ? "Adding…"
-                            : "Add comment"}
-                        </button>
-                      </form>
+                      <CommunityReplyForm accountId={currentUserId} postId={post.post_id}
+                        busy={busy === `comment-${post.post_id}`} onSubmit={event => comment(event, post.post_id)} />
                     )}
                   </details>
                 ) : null}

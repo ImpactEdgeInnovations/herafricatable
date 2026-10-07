@@ -8,6 +8,8 @@ import { memberErrorMessage } from "@/lib/member-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { CommunityGatheringVideo, type GatheringVideo } from "@/components/member/community-gathering-video";
 import { CommunityGatheringDiscussion } from "@/components/member/community-gathering-discussion";
+import { communityDraftKey } from "@/lib/community-drafts";
+import { useCommunityDraft } from "@/lib/use-community-draft";
 
 export type CommunityGatheringRoomState = {
   room_id: string;
@@ -106,9 +108,9 @@ export function CommunityGatheringRoom({
   const [messages, setMessages] = useState(initialMessages);
   const [questions, setQuestions] = useState(initialQuestions);
   const [attendees, setAttendees] = useState(initialAttendees);
-  const [body, setBody] = useState("");
-  const [question, setQuestion] = useState("");
-  const [recap, setRecap] = useState(initialRoom.recap_body ?? "");
+  const [body, setBody] = useCommunityDraft(communityDraftKey(currentUserId, "gathering-message", initialRoom.room_id), "");
+  const [question, setQuestion] = useCommunityDraft(communityDraftKey(currentUserId, "gathering-question", initialRoom.room_id), "");
+  const [recap, setRecap, clearRecap] = useCommunityDraft(communityDraftKey(currentUserId, "gathering-recap", initialRoom.room_id), initialRoom.recap_body ?? "");
   const [discoverable, setDiscoverable] = useState(initialRoom.my_discoverable);
   const [reminderWindow, setReminderWindow] = useState(initialReminderWindow ?? "");
   const [busy, setBusy] = useState("");
@@ -267,6 +269,7 @@ export function CommunityGatheringRoom({
     setBusy("");
     if (error) return setNotice(memberErrorMessage(error, "publish the recap"));
     setRoom((current) => ({ ...current, recap_body: recap, recap_published_at: current.recap_published_at ?? new Date().toISOString() }));
+    clearRecap(recap);
     setNotice("Recap published to Community Conversations.");
   }
 
@@ -303,7 +306,7 @@ export function CommunityGatheringRoom({
 
       <div className="gathering-room-layout gathering-watch-layout">
         <CommunityGatheringVideo roomId={room.room_id} canManage={room.can_manage}
-          endsAt={room.ends_at} title={room.title} initialVideo={video} ready={videoReady} onSaved={() => setVideoRevision(value => value + 1)} />
+          endsAt={room.ends_at} title={room.title} initialVideo={video} ready={videoReady} currentUserId={currentUserId} onSaved={() => setVideoRevision(value => value + 1)} />
         <CommunityGatheringDiscussion roomId={room.room_id} currentUserId={currentUserId} revision={videoRevision} />
         <section className="gathering-questions" id="questions">
           <header><div><p className="eyebrow">Before we meet</p><h2>Questions for the room</h2></div><p>Share what you hope the Host or guest will cover. Support a question instead of repeating it.</p></header>
