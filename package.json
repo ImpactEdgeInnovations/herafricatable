@@ -21,6 +21,7 @@
     "test:member-readability": "node scripts/verify-member-readability.mjs",
     "test:community-photo-processing": "node scripts/verify-community-photo-processing.mjs",
     "test:community-photo-pipeline": "node scripts/verify-community-photo-pipeline.mjs",
+    "test:community-media": "node scripts/verify-community-media.mjs",
     "test:event-questions": "node scripts/verify-event-question-contracts.mjs",
     "test:admin-decisions": "node scripts/verify-admin-decision-contracts.mjs",
     "test:table-guide": "node scripts/verify-table-guide-experience.mjs",

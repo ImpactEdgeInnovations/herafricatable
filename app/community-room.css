@@ -1,4 +1,25 @@
 /* Member Community rooms only; directory and Admin styling stay unchanged. */
+.community-media { width: min(1120px, calc(100% - 32px)); margin: 24px auto; }
+.community-media-tabs { display: flex; gap: 8px; margin: 16px 0; }
+.community-media-tabs button { min-height: 44px; padding: 10px 20px; border: 1px solid var(--line); border-radius: 5px; background: transparent; color: var(--ink); font: inherit; cursor: pointer; }
+.community-media-tabs button[aria-pressed="true"] { background: var(--wine); border-color: var(--wine); color: #fff; }
+.community-media-tabs button:focus-visible { outline: 3px solid var(--wine); outline-offset: 3px; }
+.community-media-tabs button:disabled { opacity: .5; cursor: default; }
+.community-photo-tools.community-photo-member { width: 100%; margin: 16px 0; border: 0; }
+.community-photo-open { width: 100%; border: 0; padding: 0; background: transparent; cursor: zoom-in; border-radius: 5px; }
+.community-photo-open:focus-visible { outline: 3px solid var(--wine); outline-offset: 4px; }
+.community-photo-viewer { width: min(960px, calc(100% - 24px)); max-height: calc(100dvh - 24px); padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: #fffdf9; color: var(--ink); overflow-y: auto; font-family: var(--sans); }
+.community-photo-viewer::backdrop { background: rgba(20, 15, 18, .8); }
+.community-photo-viewer header, .community-photo-viewer footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.community-photo-viewer h2 { font-family: var(--sans); font-size: 1.05rem; }
+.community-photo-viewer button { min-height: 44px; padding: 10px 14px; font: inherit; color: var(--wine); background: transparent; border: 1px solid var(--line); border-radius: 5px; cursor: pointer; }
+.community-photo-viewer button:disabled { opacity: .4; cursor: default; }
+.community-photo-viewer button:focus-visible { outline: 3px solid var(--wine); outline-offset: 3px; }
+.community-photo-viewer-image { display: grid; place-items: center; min-height: 200px; margin: 16px 0; touch-action: pan-y pinch-zoom; }
+.community-photo-viewer-image img { max-width: 100%; max-height: 64dvh; width: auto; height: auto; object-fit: contain; }
+.community-photo-viewer p { line-height: 1.6; overflow-wrap: anywhere; }
+.community-photo-viewer small { display: block; margin: 12px 0 20px; color: var(--muted); }
+@media (max-width: 600px) { .community-photo-viewer { padding: 14px; } .community-photo-viewer footer { gap: 6px; font-size: .875rem; } }
 .community-photo-tools { width: min(1120px, calc(100% - 32px)); margin: 24px auto; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .community-photo-tools > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; min-height: 64px; padding: 16px 0; cursor: pointer; }
 .community-photo-tools > summary strong { font-size: 1.1rem; }

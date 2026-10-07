@@ -46,6 +46,7 @@ import {
   type CommunityCheckIn,
 } from "@/components/member/community-check-ins";
 import { CommunityLocalNavigation } from "@/components/member/community-local-navigation";
+import { CommunityMedia } from "@/components/member/community-media";
 import { CommunityNextGathering } from "@/components/member/community-next-gathering";
 import {
   CommunityGatherings,
@@ -57,16 +58,16 @@ export default async function CommunityPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ moment?: string; view?: string; gathering?: string; gatheringArea?: string }>;
+  searchParams: Promise<{ moment?: string; view?: string; gathering?: string; gatheringArea?: string; mediaArea?: string }>;
 }) {
   const { slug } = await params;
   const requestedSearch = await searchParams;
   const requestedView = requestedSearch.view;
   const isEventFollowUp = requestedSearch.moment === "event-follow-up";
-  const selectedView = ["overview", "today", "conversations", "gatherings", "people"].includes(
+  const selectedView = ["overview", "today", "conversations", "gatherings", "media", "people"].includes(
     requestedView ?? "",
   )
-    ? (requestedView === "today" ? "overview" : requestedView as "overview" | "conversations" | "gatherings" | "people")
+    ? (requestedView === "today" ? "overview" : requestedView as "overview" | "conversations" | "gatherings" | "media" | "people")
     : "overview";
   const view = isEventFollowUp ? "conversations" : selectedView;
   const showToday = view === "overview";
@@ -537,6 +538,7 @@ export default async function CommunityPage({
           ) : null}
         </>
       ) : null}
+      {view === "media" ? <CommunityMedia key={community.community_id} communityId={community.community_id} currentUserId={user.id} slug={slug} cards={gatheringCards} cardsReady={!gatheringCardResult.error} initialArea={requestedSearch.mediaArea} initialGathering={requestedSearch.gathering} /> : null}
       {showToday && !notificationPreferenceResult.error ? (
         <CommunityNotificationPreferences
           communityId={community.community_id}

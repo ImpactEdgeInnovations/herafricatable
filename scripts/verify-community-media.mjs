@@ -1,0 +1,17 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+const room = read("app/communities/[slug]/page.tsx");
+const media = read("components/member/community-media.tsx");
+const photos = read("components/community/community-photo-albums.tsx");
+const viewer = read("components/community/community-photo-viewer.tsx");
+const css = read("app/community-room.css");
+assert(room.includes('view === "media"') && room.includes("<CommunityMedia"));
+assert(room.includes('membership_status !== "active"'));
+for (const token of ["mediaArea", "popstate", "window.history.pushState", "CommunityGatheringInline", "Back to videos", "presentation=\"member\"", "Leave without saving", "disabled={photoBusy}"]) assert(media.includes(token), token);
+for (const token of ["get_community_photo_album", "list_community_photo_albums", "setSelectedPhoto(\"\")", "onUnsavedChange", "recheckList", "CommunityPhotoViewer"]) assert(photos.includes(token), token);
+for (const token of ["showModal()", "onCancel=", "ArrowLeft", "ArrowRight", "onTouchEnd=", "autoFocus", "?size=original", "onError=", "aria-live=\"polite\"", "if (!photo) onClose()"]) assert(viewer.includes(token), token);
+assert(!viewer.includes("getPublicUrl") && !viewer.includes("createSignedUrl"));
+assert(css.includes("max-height: calc(100dvh") && css.includes("pan-y pinch-zoom"));
+assert(css.includes('.community-media-tabs button[aria-pressed="true"]') && css.includes("community-photo-open:focus-visible"));
+console.log("Community Media navigation, protected album discovery and accessible viewer source contracts passed. Real populated desktop/mobile and binary delivery acceptance remains open.");

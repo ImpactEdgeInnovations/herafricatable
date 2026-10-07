@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { communityDraftEpoch, communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
+import { CommunityPhotoViewer } from "./community-photo-viewer";
 
 type Album = { id: string; title: string; description: string; contribution_mode: string; is_closed: boolean; photo_count: number; gathering_title: string | null; post_id: string | null };
 type Photo = { id: string; caption: string; status: string; uploader_id: string | null; uploader_name: string; created_at: string };
@@ -17,7 +18,10 @@ const emptyDraft = { title: "", description: "", roomId: "", requestId: "" };
 const choices = [ ["hosts_only", "Only Hosts can add photos"], ["members", "Members can add photos immediately"], ["review", "Member photos need approval"] ];
 const statusLabels: Record<string, string> = { pending: "Waiting for approval", published: "Visible to members", hidden: "Hidden", rejected: "Not approved", removed: "Removed" };
 
-export function CommunityPhotoAlbums({ communityId, currentUserId }: { communityId: string; currentUserId: string }) {
+export function CommunityPhotoAlbums({ communityId, currentUserId, presentation = "host", onUnsavedChange, onBusyChange }: {
+  communityId: string; currentUserId: string; presentation?: "host" | "member";
+  onUnsavedChange?(unsaved: boolean): void; onBusyChange?(busy: boolean): void;
+}) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const { ask, dialog } = useActionDialog();
@@ -31,10 +35,17 @@ export function CommunityPhotoAlbums({ communityId, currentUserId }: { community
   const [batchId, setBatchId] = useState("");
   const [caption, setCaption] = useState("");
   const [permission, setPermission] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState("");
+  const closePhoto = useCallback(() => setSelectedPhoto(""), []);
   const input = useRef<HTMLInputElement>(null);
   const requestVersion = useRef(0);
   const [draft, setDraft, clearDraft] = useCommunityDraft(communityDraftKey(currentUserId, "photo-album", communityId), emptyDraft);
   const unsavedFiles = files.some(item => !item.saved);
+  useEffect(() => { onUnsavedChange?.(unsavedFiles); }, [unsavedFiles, onUnsavedChange]);
+  useEffect(() => { onBusyChange?.(Boolean(busy)); }, [busy, onBusyChange]);
+  useEffect(() => {
+    if (presentation === "member") { setOpened(true); void load(); }
+  }, [communityId, presentation]);
   useEffect(() => {
     if (!unsavedFiles) return;
     const epoch = communityDraftEpoch();
@@ -57,6 +68,21 @@ export function CommunityPhotoAlbums({ communityId, currentUserId }: { community
     return () => { window.removeEventListener("beforeunload", warn); document.removeEventListener("click", navigation, true); };
   }, [unsavedFiles, ask, router]);
   useEffect(() => () => { requestVersion.current++; }, []);
+  useEffect(() => {
+    if (!opened) return;
+    let stopped = false;
+    async function recheckList() {
+      const { data, error } = await supabase.rpc("list_community_photo_albums", { p_community_id: communityId });
+      if (stopped) return;
+      if (error || !data) {
+        setList(null); setDetails(null); setSelectedPhoto(""); setFiles([]);
+        setMessage("Photos could not be opened. Please try again when your connection or membership access is restored.");
+      } else setList(data as AlbumList);
+    }
+    const timer = window.setInterval(() => void recheckList(), 30000);
+    window.addEventListener("focus", recheckList);
+    return () => { stopped = true; window.clearInterval(timer); window.removeEventListener("focus", recheckList); };
+  }, [opened, communityId, supabase]);
   const selectedAlbumId = details?.album.id;
   useEffect(() => {
     if (!selectedAlbumId) return;
@@ -64,7 +90,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId }: { community
     async function recheck() {
       const { data, error } = await supabase.rpc("get_community_photo_album", { p_album_id: selectedAlbumId });
       if (stopped) return;
-      if (error || !data) { setDetails(null); setList(null); setFiles([]); setMessage("This album could not be opened. Try again when your connection or access is restored."); }
+      if (error || !data) { setDetails(null); setList(null); setFiles([]); setSelectedPhoto(""); setMessage("This album could not be opened. Try again when your connection or access is restored."); }
       else setDetails(previous => previous && previous.album.id === selectedAlbumId ? { ...previous, photos: (data as AlbumDetails).photos, can_upload: (data as AlbumDetails).can_upload } : previous);
     }
     const timer = window.setInterval(() => void recheck(), 30000);
@@ -89,7 +115,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId }: { community
   async function select(id: string) {
     if (unsavedFiles && !(await ask({ title: "Choose a different album?", description: "The photos you have not saved will need to be selected again.", confirmLabel: "Change album", tone: "danger" }))) return;
     const version = ++requestVersion.current;
-    setFiles([]); setBatchId(""); setCaption(""); setPermission(false); setDetails(null); setBusy("album"); setMessage("");
+    setFiles([]); setBatchId(""); setCaption(""); setPermission(false); setSelectedPhoto(""); setDetails(null); setBusy("album"); setMessage("");
     const { data, error } = await supabase.rpc("get_community_photo_album", { p_album_id: id });
     if (version !== requestVersion.current) return;
     if (error) setMessage(memberErrorMessage(error, "open this album")); else setDetails(data as AlbumDetails);
@@ -165,18 +191,17 @@ export function CommunityPhotoAlbums({ communityId, currentUserId }: { community
     } catch (error) { setMessage(memberErrorMessage(error, "update this photo")); }
     finally { setBusy(""); }
   }
-  return <details className="community-photo-tools" id="community-photos" onToggle={event => { if (event.currentTarget.open && !opened) { setOpened(true); void load(); } }}>
-    <summary><strong>Photos</strong><span>Albums, uploads and photo permissions</span></summary>
-    <div className="community-photo-body">
+  const content = <div className="community-photo-body">
       {dialog}
+      {selectedPhoto && details ? <CommunityPhotoViewer photos={details.photos.filter(photo => ["published", "pending", "hidden"].includes(photo.status))} selectedId={selectedPhoto} onSelect={setSelectedPhoto} onClose={closePhoto} /> : null}
       {message ? <p role="status" className="network-message">{message}</p> : null}
       {busy === "load" ? <p>Opening albums…</p> : null}
       {!list && !busy ? <button className="button button-outline" onClick={() => void load()}>Try again</button> : null}
       {list ? <>
-        <p className="community-photo-allowance">{Math.ceil(list.used_bytes / 1048576)} of {Math.round(list.allowance_bytes / 1048576)} MB used{!list.uploads_enabled ? " · Photo uploads are paused" : ""}</p>
+        {list.can_manage ? <p className="community-photo-allowance">{Math.ceil(list.used_bytes / 1048576)} of {Math.round(list.allowance_bytes / 1048576)} MB used{!list.uploads_enabled ? " · Photo uploads are paused" : ""}</p> : null}
         <div className="community-photo-album-list" role="group" aria-label="Choose an album">
           {list.albums.map(album => <button key={album.id} disabled={Boolean(busy)} aria-pressed={details?.album.id === album.id} onClick={() => void select(album.id)}><strong>{album.title}</strong><small>{album.gathering_title || "Community album"} · {album.photo_count} photos</small></button>)}
-          {!list.albums.length ? <p>No albums yet. Start with a name and a short description.</p> : null}
+          {!list.albums.length ? <p>{list.can_manage ? "No albums yet. Start with a name and a short description." : "No photos yet. Albums shared by your Community will appear here."}</p> : null}
         </div>
         {list.can_manage ? <details className="community-photo-create"><summary>New album</summary><form onSubmit={create}>
           <label>Album name<input required minLength={3} maxLength={140} value={draft.title} disabled={Boolean(busy)} onChange={event => setDraft(previous => ({ ...previous, title: event.target.value }))} /></label>
@@ -203,9 +228,9 @@ export function CommunityPhotoAlbums({ communityId, currentUserId }: { community
           <label>Caption (optional)<input maxLength={500} value={caption} onChange={event => setCaption(event.target.value)} disabled={Boolean(busy)} /></label>
           <label className="community-photo-check"><input type="checkbox" checked={permission} onChange={event => setPermission(event.target.checked)} disabled={Boolean(busy)} />I have permission to share these photos from the people pictured.</label>
           <button className="button button-primary" disabled={Boolean(busy) || !unsavedFiles || !permission}>{busy === "upload" ? "Saving photos…" : files.some(item => item.error) ? "Retry unsaved photos" : "Save photos"}</button>
-        </form> : <p>{details.album.is_closed ? "This album is closed to new photos." : !list?.uploads_enabled ? "Photo uploads are paused while final checks are completed." : "Only Community Hosts can add photos here."}</p>}
+        </form> : <p>{details.album.is_closed ? "This album is closed to new photos." : !list?.uploads_enabled ? "Photo uploads are paused while final checks are completed." : details.album.contribution_mode === "hosts_only" && !details.can_manage ? "Only Community Hosts can add photos here." : "This album is not accepting new photos right now."}</p>}
         <div className="community-photo-grid">{details.photos.map(photo => <article key={photo.id}>
-          {["published", "pending", "hidden"].includes(photo.status) ? <img src={`/api/community/photos/${photo.id}`} loading="lazy" alt={photo.caption || `Photo shared by ${photo.uploader_name}`} /> : <div className="community-photo-placeholder">{statusLabels[photo.status]}</div>}
+          {["published", "pending", "hidden"].includes(photo.status) ? <button type="button" className="community-photo-open" aria-label={photo.caption ? `Open photo: ${photo.caption}` : `Open photo shared by ${photo.uploader_name}`} onClick={() => setSelectedPhoto(photo.id)}><img src={`/api/community/photos/${photo.id}`} loading="lazy" alt={photo.caption || `Photo shared by ${photo.uploader_name}`} /></button> : <div className="community-photo-placeholder">{statusLabels[photo.status]}</div>}
           <p>{photo.caption}</p><small>{photo.uploader_name} · {new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", timeZone: "Africa/Nairobi" }).format(new Date(photo.created_at))}</small>
           <span>{statusLabels[photo.status]}</span>
           <footer>
@@ -217,6 +242,9 @@ export function CommunityPhotoAlbums({ communityId, currentUserId }: { community
         </article>)}</div>
         {!details.photos.length ? <p>No photos in this album yet.</p> : null}
       </section> : null}
-    </div>
-  </details>;
+    </div>;
+  return presentation === "member" ? <section className="community-photo-tools community-photo-member" id="community-photos" aria-label="Community photos">{content}</section> :
+    <details className="community-photo-tools" id="community-photos" onToggle={event => { if (event.currentTarget.open && !opened) { setOpened(true); void load(); } }}>
+      <summary><strong>Photos</strong><span>Albums, uploads and photo permissions</span></summary>{content}
+    </details>;
 }

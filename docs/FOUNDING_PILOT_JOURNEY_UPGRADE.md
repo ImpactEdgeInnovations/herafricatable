@@ -144,7 +144,8 @@ Photo foundation, 7 October — backend implemented; member upload feature not y
 - [x] Apply `20261007150000_community_photo_album_foundation.sql` live after transactional dry-run acceptance. Repeat rollback tests passed on the applied schema and left zero albums/reservations, zero enabled upload settings and the rehearsal Community archived. Do not rerun this migration manually.
 - [x] Implement private Storage, authenticated binary upload/finalisation and trusted cleanup routes in the follow-up pipeline pass below. Upload settings remain closed pending real binary acceptance.
 - [x] Implement Host album forms, attribution and photo review/removal controls in the follow-up pipeline pass below.
-- [ ] Add member Media discovery, contribution screens, photo reports and an accessible carousel.
+- [x] Add member Media discovery, contribution screens and a photo viewer in the follow-up pass below; uploads remain paused and browser acceptance remains open.
+- [ ] Add photo-specific reports and complete populated contribution/viewer acceptance.
 - [ ] Rehearse simultaneous reservations/uploads with separate database sessions, real private binary delivery, removed-member access, cleanup/recovery, mobile carousel and inbox delivery. Sequential rollback tests and lock inspection are not a concurrency/load certification.
 
 Security advisors flag the intentional RPC-only tables and authenticated security-definer entry points. Explicit active-account, published-Community, membership/Host and read-only checks passed the rollback tests; anonymous/direct grants remain denied. This is not a blanket clearance of historical advisor findings. [Supabase advisor guidance](https://supabase.com/docs/guides/database/database-linter).
@@ -158,11 +159,24 @@ Photo upload pipeline and Host tools, 7 October — implemented; uploads remain 
 - [x] Add cleanup to the authorised daily housekeeping schedule. Expired reservations, stalled uploads, deleted-account photos and removed/rejected photos after seven days are cleared in bounded batches; allowance is released only after successful binary deletion.
 - [x] Apply `20261007160000_community_photo_upload_pipeline.sql` live. Rollback test `036` passed on the applied schema, including review visibility, removal, hidden-uploader denial, cleanup, uploader loss of membership and service-only finalisation. Post-test inspection: zero albums/photos, zero enabled upload settings, private bucket and archived rehearsal Community. No manual SQL rerun is needed.
 - [x] Pass the repository suite, TypeScript, production build, photo-processing binary tests, streamed-body cancellation/bounds tests and Community UI/draft contracts. Source contracts do not replace browser or real Storage acceptance.
-- [ ] Add member-facing Media/Photos discovery, gallery/carousel and photo reporting; retain each album's existing conversation rather than creating duplicate gathering threads.
+- [x] Add member-facing Media/Photos discovery and a protected photo viewer in the follow-up pass below. Photo reporting and in-place album conversation integration remain open.
 - [ ] Add Admin allowance/upload controls and visible cleanup health/backlog. Verify deletion/archive workflows preserve a cleanup manifest before any physical cascade deletion; hard-deleted records must not strand private binaries.
 - [ ] Rehearse real binary uploads/delivery, partial failures, simultaneous sessions, removed-member access, restore/cleanup, desktop/mobile Host controls and member contribution permissions. Uploads stay paused until these checks pass.
 
 Phase 3 remains **open, not complete**. The populated Host/member/video/inbox rehearsal is deferred to 8 October, and the remaining attachment/settings guards are still listed above; this photo pass does not close that gate.
+
+Member Media and photo viewing, 7 October — implemented, visual acceptance open:
+
+- [x] Add Community-local **Media**, with **Videos** and **Photos** choices separate from the platform header. Load album data only when Photos is selected; videos reuse the existing protected library and in-place watch/discuss screen.
+- [x] Preserve Media/video selection in the address and browser history. Keep old gathering video links working. Explain load failures instead of presenting them as empty video libraries.
+- [x] Open authorised original photos in a native modal viewer with caption, uploader, date, count, Previous/Next, arrow keys, Escape/Close and horizontal touch swipe. Native modal focus containment and close controls keep the page behind it inactive; original delivery uses the same private permission-checked route as thumbnails.
+- [x] Reuse contribution/removal controls and Host settings from the same album component. Ordinary members do not see Host album creation/settings or storage usage. Warn before switching Media type with unsaved selected photo files and disable switching during an active photo operation.
+- [x] Recheck album-list access on focus and every 30 seconds, including when no album is selected. Failed checks clear albums/photos and close the viewer; changed photo visibility removes that photo from the viewer.
+- [ ] Add photo-specific reports with preserved photo evidence and a functional Admin review destination. Do not substitute a conversation report: it rejects reports by the conversation author and would miss member-photo complaints from that Host.
+- [ ] Open the album's existing conversation in place, with correct gathering/album context and no duplicate threads. Album conversation records already exist, but this viewing pass does not expose a nonfunctional discussion shortcut.
+- [ ] Rehearse populated desktop/mobile layouts, modal focus return, keyboard/swipe, stale/deleted file handling, Media Back navigation with pending file selection, real uploads and removed-member access. Source contracts and build success do not certify these interactions.
+
+Uploads remain **paused**. No new migration or Vercel configuration is required for this viewing pass. Next implementation: photo reports/Admin safety handling → album conversation integration → upload/recovery acceptance and Admin opening controls.
 
 - [ ] Audit member typography: one readable interface font, restrained editorial headings only where useful, smaller headings and tighter spacing.
 - [ ] Remove unnecessary decorative cards, slogans and repeated introductory paragraphs from signed-in screens.
@@ -178,12 +192,12 @@ Phase 3 remains **open, not complete**. The populated Host/member/video/inbox re
 - [x] Add optional YouTube livestreams to new or existing Community gatherings; Hosts can add, replace or remove a video link without sharing channel credentials.
 - [x] Include short YouTube Studio setup instructions and explain that an unlisted link can be shared outside the platform. Platform viewing is restricted to authorised Community members, not a guarantee of YouTube exclusivity.
 - [x] Build a compact “Watch & discuss” gathering view: video beside its conversation on desktop and above it on mobile; no autoplay by default.
-- [ ] Add a Community “Media” area with “Videos” and “Photos” filters, rather than extra top-level platform tabs.
+- [x] Add a Community “Media” area with “Videos” and “Photos” filters, rather than extra top-level platform tabs.
 - [ ] Tie each gathering livestream, replay and photo album to its gathering and one persistent gathering conversation; show the gathering name/date and an “Open conversation” action.
 - [ ] Allow standalone Community media to have its own named post and replies. Do not silently mix it into an unrelated gathering conversation.
-- [ ] Let Hosts create named photo albums and upload multiple images, optionally attached to a gathering.
-- [ ] Show compact photo grids with an accessible swipeable carousel, captions, keyboard navigation and comfortable mobile controls.
-- [ ] Show the album creator and each photograph's uploader name and upload date; preserve attribution for member contributions.
+- [x] Implement Host album creation and multi-image upload controls, optionally attached to a gathering. Binary uploads remain paused for acceptance.
+- [x] Implement compact photo grids and a native modal viewer with swipe, captions, keyboard navigation and mobile controls. Populated browser acceptance remains open.
+- [ ] Show the album creator alongside existing per-photo uploader/date attribution; verify attribution with real member contributions.
 - [ ] Add a Host-controlled “Allow members to add photos” setting per album, with “Publish immediately” and “Review first” choices. Use immediate publication for pilot member contributions when enabled, retaining Host moderation.
 - [ ] Let members remove their own uploads, let Hosts moderate album photos, and provide reporting and a reminder to obtain permission from people pictured.
 - [ ] Keep album discussion attached to its album or existing gathering conversation; avoid creating duplicate threads for the same gathering.
@@ -191,7 +205,7 @@ Phase 3 remains **open, not complete**. The populated Host/member/video/inbox re
 - [ ] Introduce pilot photo limits: 10 images per upload, 20 member photos per day per Community, 100 photos per album and a 500 MB Community allowance adjustable by Admin. Show remaining allowance and friendly limit messages.
 - [ ] Resize/compress uploaded photos to a maximum stored size of 1 MB, remove location metadata and generate lightweight thumbnails; enforce file type, size and image validation on the backend as well as in the interface.
 - [ ] Enforce member, album and Community quotas server-side, including concurrent uploads and pending photos; reserve upload allowance and release unused reservations so retries cannot bypass limits.
-- [ ] Provide plain Host upload choices: “Only Hosts can add photos”, “Members can add photos immediately” and “Member photos need approval”; let Hosts close individual albums to new contributions.
+- [x] Provide plain Host upload choices: “Only Hosts can add photos”, “Members can add photos immediately” and “Member photos need approval”; let Hosts close individual albums to new contributions.
 - [ ] Provide functional approve, reject, hide and remove controls with uploader attribution. Pending/rejected photos must not be visible to ordinary members; retain member own-upload removal and moderation records.
 - [ ] Clean up abandoned uploads and rejected media; give removed photos a short, documented recovery period before clearing their files. Apply the same access restrictions to thumbnails and originals.
 - [ ] Test quota boundaries, simultaneous uploads, compression failures, metadata removal, approval visibility, storage cleanup and recovery; monitor actual storage and delivery usage before changing pilot allowances.
