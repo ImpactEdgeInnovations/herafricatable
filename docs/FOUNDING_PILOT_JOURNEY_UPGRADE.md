@@ -50,6 +50,25 @@ The open membership pilot is timed; the real first-20 cohort receives creator pr
 
 ## Remaining acceptance
 
+### Next: clearer member UI and gathering media
+
+These are planned tasks, not shipped features. Keep existing permissions and pilot controls intact.
+
+- [ ] Audit member typography: one readable interface font, restrained editorial headings only where useful, smaller headings and tighter spacing.
+- [ ] Remove unnecessary decorative cards, slogans and repeated introductory paragraphs from signed-in screens.
+- [ ] Use plain labels: “Your Communities”, “Start a conversation”, “Upcoming gatherings”, “Invite people” and “Add a livestream link”.
+- [ ] Add optional YouTube livestreams to new or existing Community gatherings; Hosts can add, replace or remove a video link without sharing channel credentials.
+- [ ] Include short YouTube Studio setup instructions and explain that an unlisted link can be shared outside the platform. Platform viewing is restricted to authorised Community members, not a guarantee of YouTube exclusivity.
+- [ ] Build a compact “Watch & discuss” gathering view: video beside its conversation on desktop and above it on mobile; no autoplay by default.
+- [ ] Add a Community “Media” area with “Videos” and “Photos” filters, rather than extra top-level platform tabs.
+- [ ] Tie each gathering livestream, replay and photo album to its gathering and one persistent gathering conversation; show the gathering name/date and an “Open conversation” action.
+- [ ] Allow standalone Community media to have its own named post and replies. Do not silently mix it into an unrelated gathering conversation.
+- [ ] Let Hosts keep or hide a replay; finished gatherings move to past gatherings. Removing a video link must not delete the discussion.
+- [ ] Enforce Community access server-side for media records and conversations, preserve moderation/reporting and Admin suspension, and use permission-aware storage for uploaded photos.
+- [ ] Verify mobile layout, removed-member access, link replacement, unavailable videos, replay visibility and photo-album conversation continuity.
+
+Media remains discoverable through both its gathering and the Community Media area. The general feed may show a short linked announcement, but is not the only place to find a recording or album. Retain replays until the Host hides/removes them or the source becomes unavailable; do not promise permanent availability of externally hosted videos. Obtain permission to publish identifiable attendee photographs, and retain existing reporting/removal processes.
+
 ### Pilot Host cancellation and poster saving
 
 - [x] Eligible founding Hosts can cancel their own future published free events with a public reason.
