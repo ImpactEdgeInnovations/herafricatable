@@ -57,6 +57,14 @@ These are planned tasks, not shipped features. Keep existing permissions and pil
 - [ ] Audit member typography: one readable interface font, restrained editorial headings only where useful, smaller headings and tighter spacing.
 - [ ] Remove unnecessary decorative cards, slogans and repeated introductory paragraphs from signed-in screens.
 - [ ] Use plain labels: “Your Communities”, “Start a conversation”, “Upcoming gatherings”, “Invite people” and “Add a livestream link”.
+- [ ] Audit and refine the entire Community room UI as a frequently used member workspace, not only its discovery page: compact header, clear hierarchy, consistent typography and reduced card/introductory clutter.
+- [ ] Refine Community-local tabs for Conversations, Gatherings, Media and People; keep them visually separate from platform navigation, retain the selected tab and use shareable links without losing the member's place.
+- [ ] Make Community tabs easy to use on mobile, with visible selection, comfortable touch targets and no clipped labels or page-wide horizontal overflow.
+- [ ] Simplify conversation browsing and posting: one obvious “Start a conversation” action, readable threads, clear reply controls and accessible attachment previews.
+- [ ] Refine gathering, video and photo-album layouts with concise metadata, obvious watch/discuss actions and a clear route back to the Community.
+- [ ] Keep member-facing actions simple; show Host management controls only to authorised Hosts without crowding everyday browsing.
+- [ ] Add consistent loading, empty, error and permission states across Community tabs; load only the selected area where practical and preserve unsent drafts when navigating.
+- [ ] Verify the full Community room on desktop and mobile, including keyboard/focus navigation, contrast, long titles, populated feeds, Host controls and member usability with plain wording.
 - [ ] Add optional YouTube livestreams to new or existing Community gatherings; Hosts can add, replace or remove a video link without sharing channel credentials.
 - [ ] Include short YouTube Studio setup instructions and explain that an unlisted link can be shared outside the platform. Platform viewing is restricted to authorised Community members, not a guarantee of YouTube exclusivity.
 - [ ] Build a compact “Watch & discuss” gathering view: video beside its conversation on desktop and above it on mobile; no autoplay by default.
