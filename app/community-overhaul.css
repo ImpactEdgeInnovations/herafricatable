@@ -122,6 +122,13 @@
 .community-host-page .community-host-health strong { font: 600 1.5rem var(--sans, Arial, sans-serif); }
 .community-room-page .community-host-identity { font-size: .85rem; color: #655e60; }
 .community-room-page .community-host-identity a { color: #241e20; font-weight: 600; }
+.community-room-page:has(.community-inline-gathering) > :is(.community-next-gathering, .community-live-notice) { display: none; }
+.community-inline-gathering .gathering-room-hero { padding: 12px 0 16px; }
+.community-inline-gathering .gathering-room-status { margin: 8px 0; }
+.community-inline-gathering .gathering-room-hero h1 { font: 600 clamp(1.35rem, 2vw, 1.75rem) var(--sans, Arial, sans-serif); letter-spacing: -.025em; }
+.community-inline-gathering .gathering-room-hero > p { margin: 8px 0; font-size: .9rem; line-height: 1.5; }
+.community-inline-gathering .gathering-room-hero dl { margin: 12px 0 0; gap: 16px; }
+.community-inline-gathering .gathering-room-hero dd { font-size: .85rem; }
 .gathering-room [hidden] { display: none !important; }
 .gathering-discussion-replies, .gathering-room .gathering-message-list { max-height: 420px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scroll-padding: 12px; border: 1px solid #e4dfdc; border-radius: 8px; padding: 0 14px; }
 .gathering-discussion-replies article, .gathering-room .gathering-message-list article { margin: 0; padding: 12px 0; border: 0; border-bottom: 1px solid #e4dfdc; border-radius: 0; background: transparent; box-shadow: none; }
