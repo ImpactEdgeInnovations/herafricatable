@@ -387,8 +387,6 @@ Migration `20261007110000_pilot_host_event_cancellation.sql` is already applied 
 
 ### Follow-up interface refinements
 
-### Safe Host colours — 7 October
-
 ### Community entry and event joining — 7 October
 
 - [x] Apply `20261007201134_community_invitation_current_policy.sql` live. Activation reads the Host's current `join_policy`; only current Host invitations unlock invitation-only Communities. Preserve existing active roles and reject invitations predating removal. The internal trigger is not callable through browser RPC.
@@ -396,9 +394,10 @@ Migration `20261007110000_pilot_host_event_cancellation.sql` is already applied 
 - [x] People cards show Ask to connect, incoming Accept/Not now, outgoing waiting and accepted Message. Check current discovery/connection preferences before sending; use the existing consent and conversation APIs, not unrestricted inbox access.
 - [x] Pass rollback `049`: pending connections cannot message; recipient acceptance enables a retry-safe conversation; blocking denies opening it. No real private message was sent.
 - [x] Public event pages retain their Community tab and now provide an in-page joining action. Visitors must sign in/register; only active platform members can join. Joining the event and joining its Community remain separate choices. Host approval, invitation-only and paid membership rules still apply; current Community members see Open Community.
+- [x] Pass rollback `050`: pending-account denial, active-member open joining, approval requests, invitation-only denial and anonymous RPC restriction. Verify the deployed Lavington Women event shows its Community tab and Open Community for the existing Host. This owner check does not replace multi-account browser acceptance.
 - [ ] Finish real inbox → OTP → Community return and two-account connection/browser acceptance before marking the Community module fully accepted.
 
-### Host colour checks
+### Safe Host colours — 7 October
 
 - [x] Community Hosts can choose Wine, Gold, Forest, Ocean or Terracotta in Host tools → Look & feel. The selected colour now applies consistently to the room, not just its hero.
 - [x] Event Hosts can choose the same presets in their event workspace → Event colour, with a preview and explicit Save action.
