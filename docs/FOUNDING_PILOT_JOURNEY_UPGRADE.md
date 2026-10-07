@@ -46,7 +46,7 @@ Live owner visual check confirmed the recording under Gatherings → Past, its e
 | ID | Priority / phase | Task | Status | Exit condition |
 |---|---|---|---|---|
 | CINT-01 | P0 / 4–6 | Strengthen scheduled-chat access checks for current platform membership and Community publication/suspension | Shared guard implemented; rollback negative tests passed; separate-account/realtime acceptance open | Removed/suspended/dormant accounts and closed Communities cannot read/send through UI, RPC or realtime; Host/member negative tests recorded |
-| CINT-02 | P0 / 4–6 | Correct invited-newcomer return flow to use current Community join policy | Ready — live activation function reviewed | Open free Communities join immediately after member activation; approval and invitation-only modes retain their rules; no duplicate membership or accidental role changes |
+| CINT-02 | P0 / 4–6 | Correct invited-newcomer return flow to use current Community join policy | Implemented and applied live; rollback policy/role/removal checks passed; real OTP/inbox return acceptance open | Open free Communities join immediately after member activation; approval and invitation-only modes retain their rules; no duplicate membership or accidental role changes |
 | CUI-01 | P1 / 4–6 | Repair Community creation-image handoff and display | Explicit owner reuse and square preview implemented; save/delivery acceptance open | Follow selected file → persisted application asset → authorised Community branding → directory/header/Host preview; valid image remains visible after refresh/navigation; failures have useful feedback |
 | CUI-02 | P1 / 4 | Replace unreadable burgundy button/tab states | Implemented; owner desktop check passed; complete device/state check open | Normal, hover, selected, focus, disabled and busy states remain readable; normal text contrast at least 4.5:1, large text 3:1; keyboard focus visible; no accidental global-style regressions |
 | CUI-03 | P1 / 4 | Unify the complete Community room and tab layouts | Implemented; populated multi-account acceptance open | One shared width, typography, gutters and density; no jump between boxed and full-width content; no oversized empty areas or stacked introductory banners; clear mobile tab/action treatment |
@@ -54,7 +54,7 @@ Live owner visual check confirmed the recording under Gatherings → Past, its e
 | CUI-05 | P1 / 4 | Replace signed-in About redirection with a short in-room panel | Implemented; live owner Escape/focus/no-navigation verified | Name/purpose/Host/joining rule shown briefly without losing the selected tab, scroll position or drafts; accessible close/Escape/focus return; public sharing page remains separate |
 | CINT-03 | P1 / 4–6 | Let members remove their own scheduled live-chat messages | Implemented and live rollback permission/quote tests passed; separate-account browser acceptance open | Own-message action with confirmation, server ownership check and audit record; cannot remove others' messages; existing Host moderation retained |
 | CINT-04 | P1 / 4 | Align the live-chat composer with Host-only/closed modes | Composer guard implemented; two-session mode-change acceptance open | Members see a plain read-only explanation instead of a composer the server will reject; time-window/RSVP/mode changes refresh accurately |
-| CINT-05 | P1 / 4 | Improve People → Connect → Message without unrestricted inbox access | Ready | Clear connection request/pending/accepted/blocked states and obvious message action after mutual consent; preserve opted-in discovery and contact privacy |
+| CINT-05 | P1 / 4 | Improve People → Connect → Message without unrestricted inbox access | In-room actions implemented; pending/accepted/blocked database rehearsal passed; multi-account browser acceptance open | Clear connection request/pending/accepted/blocked states and obvious message action after mutual consent; preserve opted-in discovery and contact privacy |
 | CUI-06 | P1 / 6 | Complete populated desktop/mobile interaction and visual acceptance | Ready; device work deferred to 8 October | Two ordinary members, Host and Admin test joining, topics/replies, linked gatherings/media, own deletion, inbox consent, blocking/suspension, empty/error/loading states and all colour states; screenshots/device/account-role evidence recorded |
 | CINT-06 | P1 / 6–7 | Reconcile current pilot Community availability before opening testing | Ready | Fresh status read-back and owner-approved published testing destination; do not publish or weaken approval as an audit side effect; verify free/open versus approval/invitation-only journeys |
 
@@ -388,6 +388,17 @@ Migration `20261007110000_pilot_host_event_cancellation.sql` is already applied 
 ### Follow-up interface refinements
 
 ### Safe Host colours — 7 October
+
+### Community entry and event joining — 7 October
+
+- [x] Apply `20261007201134_community_invitation_current_policy.sql` live. Activation reads the Host's current `join_policy`; only current Host invitations unlock invitation-only Communities. Preserve existing active roles and reject invitations predating removal. The internal trigger is not callable through browser RPC.
+- [x] Pass rollback `048` for open/approval/invite-only modes, preserved moderator role, removal precedence and trigger privileges. No emails, memberships or invitations from these tests were committed.
+- [x] People cards show Ask to connect, incoming Accept/Not now, outgoing waiting and accepted Message. Check current discovery/connection preferences before sending; use the existing consent and conversation APIs, not unrestricted inbox access.
+- [x] Pass rollback `049`: pending connections cannot message; recipient acceptance enables a retry-safe conversation; blocking denies opening it. No real private message was sent.
+- [x] Public event pages retain their Community tab and now provide an in-page joining action. Visitors must sign in/register; only active platform members can join. Joining the event and joining its Community remain separate choices. Host approval, invitation-only and paid membership rules still apply; current Community members see Open Community.
+- [ ] Finish real inbox → OTP → Community return and two-account connection/browser acceptance before marking the Community module fully accepted.
+
+### Host colour checks
 
 - [x] Community Hosts can choose Wine, Gold, Forest, Ocean or Terracotta in Host tools → Look & feel. The selected colour now applies consistently to the room, not just its hero.
 - [x] Event Hosts can choose the same presets in their event workspace → Event colour, with a preview and explicit Save action.

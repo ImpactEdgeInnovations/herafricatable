@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CommunityAvatar } from "./community-avatar";
+import { CommunityConnectionActions, type CommunityConnection } from "./community-connection-actions";
 
 export type CommunityRosterMember = {
   avatar_url: string | null;
@@ -14,8 +15,14 @@ export type CommunityRosterMember = {
 
 export function CommunityMemberRoster({
   members,
+  currentUserId,
+  connections = [],
+  connectionsReady = false,
 }: {
   members: CommunityRosterMember[];
+  currentUserId?: string;
+  connections?: CommunityConnection[];
+  connectionsReady?: boolean;
 }) {
   if (!members.length) return null;
 
@@ -35,7 +42,7 @@ export function CommunityMemberRoster({
       </header>
       <div>
         {members.map((member) => (
-          <Link href={`/members/${member.user_id}`} key={member.user_id}>
+          <article key={member.user_id}><Link href={member.user_id===currentUserId?"/profile":`/members/${member.user_id}`}>
             <CommunityAvatar name={member.display_name} src={member.avatar_url} />
             <strong>{member.display_name}</strong>
             <small>
@@ -48,7 +55,7 @@ export function CommunityMemberRoster({
                 ? `${member.city || member.country ? " · " : ""}${member.membership_role === "owner" ? "Host" : "Moderator"}`
                 : ""}
             </small>
-          </Link>
+          </Link><CommunityConnectionActions memberId={member.user_id} self={member.user_id===currentUserId} connection={connections.find(item=>item.other_user_id===member.user_id)??null} ready={connectionsReady} /></article>
         ))}
       </div>
       <footer>

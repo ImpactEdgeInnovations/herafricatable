@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { absoluteUrl, publicPageMetadata, serializeJsonLd } from "@/lib/seo";
 import { getPublicEventSeo } from "@/lib/public-event-seo";
 import { brandAccent } from "@/lib/brand-themes";
+import { EventCommunityJoin } from "@/components/events/event-community-join";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -414,9 +415,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <aside>
             <span>{linkedJoining?.join_policy === "open" ? "Members can join immediately" : linkedJoining?.join_policy === "invite_only" ? "Invitation only" : "The Host approves joining requests"}</span>
             <p>{event.audience === "community" ? "This gathering is for active members of the Community." : "This is an open event connected to the Community. Joining either one is always your choice."}</p>
-            <Link className="button button-outline" href={`/communities/${eventCommunity.slug}/about`}>
-              View and join the Community
-            </Link>
+            <EventCommunityJoin communityId={eventCommunity.community_id} slug={eventCommunity.slug} activeMember={activeMember} signedIn={Boolean(user)} initialStatus={communityMembership?.status ?? null} joinPolicy={linkedJoining?.join_policy ?? null} />
           </aside>
         </section>
       ) : null}

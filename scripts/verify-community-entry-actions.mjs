@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=path=>readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
+const event=read('components/events/event-community-join.tsx');
+for(const text of ['request_community_access','respond_to_community_invitation','p_accept:true','Sign in or register to join','Only active Her Africa Table members','Ask to join this event’s Community','initialStatus','setStatus(saved.data.status)','/sign-in?next='])assert(event.includes(text),text);
+assert(read('app/events/[slug]/page.tsx').includes('<EventCommunityJoin'));
+const connect=read('components/member/community-connection-actions.tsx');
+for(const text of ['get_member_profile','get_member_connection_mode','request_connection_with_context','respond_to_connection','ensure_conversation','connection.status!=="accepted"','mode.data!=="open"','Request sent · waiting for her','Messaging opens only after you both agree.','finally{setBusy(false);}'])assert(connect.includes(text),text);
+const migration=read('supabase/migrations/20261007201134_community_invitation_current_policy.sql');
+for(const text of ['community.join_policy','invitation.sent_at','existing.updated_at>=invitation.sent_at','public.can_manage_community(community.id,invitation.inviter_id)','from public,anon,authenticated','public.has_current_community_access'])assert(migration.includes(text),text);
+assert(!migration.includes("community.community_type = 'private'"));
+console.log('Event/member entry actions passed registered-only joining, in-page status, valid invitation acceptance, consent-based connection/message paths and current-policy activation contracts. Inbox and two-session browser acceptance remain separate.');

@@ -1599,7 +1599,7 @@ for (const contract of [
 for (const contract of [
   'id="community-members-title">People',
   "Contact details",
-  'href={`/members/${member.user_id}`}',
+  'href={member.user_id===currentUserId?"/profile":`/members/${member.user_id}`}',
 ]) {
   assert(
     communityRoster.includes(contract),

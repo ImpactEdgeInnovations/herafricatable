@@ -36,6 +36,7 @@ import {
   type CommunityStartPathState,
 } from "@/components/member/community-start-path";
 import type { CommunityBrandIdentity } from "@/components/member/community-branding-panel";
+import type { CommunityConnection } from "@/components/member/community-connection-actions";
 import {
   CommunityCircles,
   type CommunityCircleProgram,
@@ -273,6 +274,7 @@ export default async function CommunityPage({
   const cohort = ((cohortResult.data as CohortRoom[] | null) ?? [])[0];
   const brandIdentity =
     ((brandingResult.data as CommunityBrandIdentity[] | null) ?? [])[0] ?? null;
+  const connectionsResult = showPeople ? await supabase.rpc("list_my_network_with_context") : {data:[],error:null};
   const attachments = paginationOperational
     ? ((pageMediaResult.data as CommunityPostAttachment[] | null) ?? [])
     : ((mediaResult.data as CommunityPostAttachment[] | null) ?? []);
@@ -484,6 +486,9 @@ export default async function CommunityPage({
           ) : null}
           {!memberResult.error ? (
             <CommunityMemberRoster
+              currentUserId={user.id}
+              connections={((connectionsResult.data as CommunityConnection[] | null)??[]).filter(item=>((memberResult.data as CommunityRosterMember[] | null)??[]).some(member=>member.user_id===item.other_user_id)).map(({connection_id,other_user_id,status,direction})=>({connection_id,other_user_id,status,direction}))}
+              connectionsReady={!connectionsResult.error}
               members={
                 (memberResult.data as CommunityRosterMember[] | null) ?? []
               }

@@ -59,10 +59,15 @@
 .community-room-page .community-member-roster > header h2 { margin: 0 0 6px; font-size: 1.25rem; }
 .community-room-page .community-member-roster > header p { margin: 0; max-width: none; font-size: .9rem; color: var(--room-muted); }
 .community-room-page .community-member-roster > div { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-.community-room-page .community-member-roster > div > a { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 14px; row-gap: 4px; align-content: center; min-height: 112px; padding: 18px; border: 1px solid #e4dfdc; border-radius: 8px; background: #fff; }
+.community-room-page .community-member-roster > div > article { padding: 18px; border: 1px solid #e4dfdc; border-radius: 8px; background: #fff; }
+.community-room-page .community-member-roster > div > article > a { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 14px; row-gap: 4px; align-content: center; min-height: 76px; color: #241e20; }
 .community-room-page .community-member-roster .community-person-avatar { grid-column: 1; grid-row: 1 / 4; width: 48px; height: 48px; margin: 0; border-radius: 50%; object-fit: cover; align-self: center; }
 .community-room-page .community-person-avatar.is-placeholder { display: grid; place-items: center; background: #f0e5e7; color: var(--room-accent); font: 600 .95rem var(--sans, Arial, sans-serif); }
-.community-room-page .community-member-roster > div > a > :is(strong, small) { grid-column: 2; margin: 0; overflow-wrap: anywhere; }
+.community-room-page .community-member-roster > div > article > a > :is(strong, small) { grid-column: 2; margin: 0; overflow-wrap: anywhere; }
+.community-connection-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; font-size: .85rem; }
+.community-connection-actions button { min-height: 44px; padding: 8px 12px; border: 1px solid #d5ceca; background: #fff; color: #241e20; border-radius: 6px; cursor: pointer; }
+.community-connection-actions p { flex-basis: 100%; margin: 4px 0; }
+.event-community-join p { font-size: .9rem; line-height: 1.5; }
 .community-room-page .community-member-roster strong { font: 600 1rem var(--sans, Arial, sans-serif); }
 .community-room-page .community-member-roster small { font-size: .825rem; color: var(--room-muted); }
 .community-room-page .community-member-roster footer { margin-top: 20px; }
