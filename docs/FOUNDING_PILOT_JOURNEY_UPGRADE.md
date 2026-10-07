@@ -78,6 +78,13 @@ These are planned tasks, not shipped features. Keep existing permissions and pil
 - [ ] Let members remove their own uploads, let Hosts moderate album photos, and provide reporting and a reminder to obtain permission from people pictured.
 - [ ] Keep album discussion attached to its album or existing gathering conversation; avoid creating duplicate threads for the same gathering.
 - [ ] Test multi-image upload failures, contribution permissions, review visibility, attribution, own-upload removal, moderation and private-album access.
+- [ ] Introduce pilot photo limits: 10 images per upload, 20 member photos per day per Community, 100 photos per album and a 500 MB Community allowance adjustable by Admin. Show remaining allowance and friendly limit messages.
+- [ ] Resize/compress uploaded photos to a maximum stored size of 1 MB, remove location metadata and generate lightweight thumbnails; enforce file type, size and image validation on the backend as well as in the interface.
+- [ ] Enforce member, album and Community quotas server-side, including concurrent uploads and pending photos; reserve upload allowance and release unused reservations so retries cannot bypass limits.
+- [ ] Provide plain Host upload choices: “Only Hosts can add photos”, “Members can add photos immediately” and “Member photos need approval”; let Hosts close individual albums to new contributions.
+- [ ] Provide functional approve, reject, hide and remove controls with uploader attribution. Pending/rejected photos must not be visible to ordinary members; retain member own-upload removal and moderation records.
+- [ ] Clean up abandoned uploads and rejected media; give removed photos a short, documented recovery period before clearing their files. Apply the same access restrictions to thumbnails and originals.
+- [ ] Test quota boundaries, simultaneous uploads, compression failures, metadata removal, approval visibility, storage cleanup and recovery; monitor actual storage and delivery usage before changing pilot allowances.
 - [ ] Let Hosts keep or hide a replay; finished gatherings move to past gatherings. Removing a video link must not delete the discussion.
 - [ ] Enforce Community access server-side for media records and conversations, preserve moderation/reporting and Admin suspension, and use permission-aware storage for uploaded photos.
 - [ ] Verify mobile layout, removed-member access, link replacement, unavailable videos, replay visibility and photo-album conversation continuity.
