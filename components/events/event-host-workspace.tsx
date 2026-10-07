@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { formatEventTimeInput, parseEventTimeInput } from "@/lib/events/zoned-datetime";
+import { EventHostPublicDetails } from "@/components/events/event-host-public-details";
 
 export type HostProgrammeItem = {
   key: string;
@@ -81,7 +82,7 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
   useEffect(() => {
     const openLinkedSection = () => {
       const linked = window.location.hash.replace("#host-", "");
-      if (["introduction", "image", "programme", "community", "partners"].includes(linked)) setSection(linked);
+      if (["introduction", "image", "programme", "community", "partners", "host"].includes(linked)) setSection(linked);
     };
     openLinkedSection();
     window.addEventListener("hashchange", openLinkedSection);
@@ -264,8 +265,10 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
       </header>
 
       <nav className="host-workspace-nav" aria-label="Event preparation sections">
-        {[["introduction", "Event details"], ["image", "Poster"], ["programme", "Programme"], ["community", "Community"], ["partners", "Partners"]].map(([key, label]) => <button key={key} type="button" aria-pressed={section === key} aria-controls={`host-${key}`} onClick={() => setSection(key)}>{label}</button>)}
+        {[["introduction", "Event details"], ["image", "Poster"], ["host", "Host details"], ["programme", "Programme"], ["community", "Community"], ["partners", "Partners"]].map(([key, label]) => <button key={key} type="button" aria-pressed={section === key} aria-controls={`host-${key}`} onClick={() => setSection(key)}>{label}</button>)}
       </nav>
+
+      {section === "host" ? <div className="host-workspace-panel" id="host-host"><EventHostPublicDetails eventId={initial.event_id}/></div> : null}
 
       <div className="host-workspace-panel" id="host-introduction" hidden={section !== "introduction"}>
         <div className="host-workspace-panel-heading"><span>01</span><div><h2>Event details</h2><p>Help guests know why to come and how to arrive.</p></div></div>

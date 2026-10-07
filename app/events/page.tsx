@@ -224,11 +224,6 @@ export default async function EventsPage() {
             See upcoming events, choose what suits you and keep all the details
             in one place.
           </p>
-          {isActiveMember ? (
-            <div>
-              <Link href="#propose-event">Host your own event</Link>
-            </div>
-          ) : null}
         </div>
       </section>
       <section className="public-event-list" id="upcoming-events" aria-label="Upcoming events">

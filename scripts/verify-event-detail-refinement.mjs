@@ -14,4 +14,13 @@ assert(css.includes('--event-reading-width: 1120px') && css.includes('.event-det
 assert(css.includes('min-height: 48px') && css.includes('@media (max-width: 820px)'), 'Retain touch targets and responsive stacking');
 assert(host.includes('window.addEventListener("hashchange", openLinkedSection)') && host.includes('setSection(linked)'), 'Poster deep-link must open the otherwise-hidden Host panel');
 assert(host.includes('window.removeEventListener("hashchange", openLinkedSection)'), 'Clean up the Host navigation listener');
+const publicEditor=read('components/events/event-host-public-details.tsx');
+const migration=read('supabase/migrations/20261007203539_event_host_public_details.sql');
+assert(page.includes('get_event_public_host') && page.includes('Hosted by'), 'Render only the dedicated opted-in Host projection');
+assert(publicEditor.includes('Share these Host details?') && publicEditor.includes('Show these details on this event page'), 'Public contacts require explicit confirmation and a visibility choice');
+assert(migration.includes('enable row level security') && migration.includes('d.enabled') && migration.includes("h.status='active'") && migration.includes('public.can_view_event(e.id)'), 'Public Host details must retain visibility, membership and event guards');
+assert(!migration.includes('profile_private') || migration.includes('-- Separate, explicit public fields: never reuse Auth email or profile_private.'), 'Do not copy private contacts');
+const creation=read('components/events/member-event-proposal.tsx');
+assert(creation.includes('["Your event", "When & where", "On the day", "Check & open"]') && creation.includes('member-event-check'), 'Plain creation steps and a final factual review');
+assert(!creation.includes('className="member-event-promise"'), 'Do not repeat the step navigation in a separate slogan strip');
 console.log('Event detail refinement contracts passed: shared edges, uncropped posters, Host poster destination, compact invitations and non-duplicate gathering conversation.');

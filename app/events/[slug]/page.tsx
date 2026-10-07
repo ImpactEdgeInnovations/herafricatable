@@ -4,6 +4,7 @@ import { absoluteUrl, publicPageMetadata, serializeJsonLd } from "@/lib/seo";
 import { getPublicEventSeo } from "@/lib/public-event-seo";
 import { brandAccent } from "@/lib/brand-themes";
 import { EventCommunityJoin } from "@/components/events/event-community-join";
+import type { PublicEventHost } from "@/components/events/event-host-public-details";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -165,6 +166,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const { data: canHostEvent } = user
     ? await supabase.rpc("can_host_event", { p_event_id: event.id })
     : { data: false };
+  const { data: hostPublicRows } = await supabase.rpc("get_event_public_host", { p_event_id: event.id });
+  const publicHost = ((hostPublicRows as PublicEventHost[] | null) ?? [])[0] ?? null;
   const eventInvitationResult = canInviteToEvent
     ? await supabase.rpc("list_my_table_invitations", {
         p_destination_id: event.id,
@@ -333,6 +336,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         </aside>
       </section>
 
+      {publicHost ? <section className="event-public-host" aria-label="Event Host"><div className="event-public-host-identity"><span className="event-public-host-monogram" aria-hidden="true">{publicHost.display_name.trim().slice(0,1)}</span><div><small>Hosted by</small><h2>{publicHost.display_name}</h2>{publicHost.introduction ? <p>{publicHost.introduction}</p> : null}</div></div><div className="event-public-host-links">{publicHost.website_url ? <a href={publicHost.website_url} target="_blank" rel="noopener noreferrer nofollow">Website ↗</a> : null}{publicHost.linkedin_url ? <a href={publicHost.linkedin_url} target="_blank" rel="noopener noreferrer nofollow">LinkedIn ↗</a> : null}{publicHost.instagram_url ? <a href={publicHost.instagram_url} target="_blank" rel="noopener noreferrer nofollow">Instagram ↗</a> : null}{publicHost.contact_email ? <a href={`mailto:${encodeURIComponent(publicHost.contact_email)}`}>Email Host</a> : null}{publicHost.contact_phone ? <a href={`tel:${publicHost.contact_phone.replace(/[^\d+]/g,"")}`}>Call Host</a> : null}</div></section> : null}
+
       <nav className="event-detail-jump-links" aria-label="On this event page">
         {!hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? <a href="#registration">Places</a> : null}
         {gatheringRoomHref ? <Link href={`${gatheringRoomHref}#questions`}>Conversation</Link> : <a href="#questions">Questions</a>}
@@ -341,7 +346,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         {hasEnded && recap ? <a href="#event-recap">Recap</a> : null}
       </nav>
 
-      {!hasEnded && canHostEvent === true ? <div className="event-host-shortcut"><span>{eventImage ? "Your event is live." : poster || cover ? "Your poster could not load. Check it in your Host tools." : "No poster added yet."}</span><Link href={`/events/${slug}/host#host-image`}>{eventImage ? "Manage poster" : "Add or check poster"}</Link></div> : null}
+      {!hasEnded && canHostEvent === true ? <div className="event-host-shortcut"><span>{eventImage ? "Your event tools" : poster || cover ? "Your poster could not load. Check it in your Host tools." : "No poster added yet."}</span><div><Link href={`/events/${slug}/host#host-image`}>{eventImage ? "Manage poster" : "Add or check poster"}</Link><Link href={`/events/${slug}/host#host-host`}>{publicHost ? "Edit Host details" : "Add Host details"}</Link></div></div> : null}
 
       {!hasEnded && canInviteToEvent ? (
         <details className="event-inline-invitations"><summary>Invite people</summary>

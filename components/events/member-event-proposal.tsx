@@ -57,7 +57,7 @@ export type HostedCommunity = {
   slug: string;
 };
 
-const steps = ["Your idea", "Time & place", "Hosting safely", "What comes next"];
+const steps = ["Your event", "When & where", "On the day", "Check & open"];
 const statusLabels: Record<MemberEventProposal["status"], string> = {
   approved: "Approved and public",
   cancelled: "Cancelled",
@@ -406,19 +406,11 @@ export function MemberEventProposalPanel({
     <section className="member-event-proposals" id="propose-event" aria-labelledby="member-event-proposal-title">
       <header>
         <div>
-          <p className="eyebrow">Have an idea of your own?</p>
-          <h2 id="member-event-proposal-title">Bring women together.</h2>
-          <p>You do not need a Community first. Start with a free event, then decide together whether the relationships should continue as a Community.</p>
+          <h2 id="member-event-proposal-title">Host an event</h2>
+          <p>Start a free event. You can connect a Community now or later.</p>
         </div>
-        {migrationReady ? <button className="button button-primary" onClick={startNew} type="button">Propose an event</button> : null}
+        {migrationReady ? <button className="button button-primary" onClick={startNew} type="button">{pilotAutoPublish ? "Create event" : "Propose an event"}</button> : null}
       </header>
-
-      <div className="member-event-promise" aria-label="How member events work">
-        <span><b>1</b> Share your idea</span>
-        <span><b>2</b> {pilotAutoPublish ? "Open it to guests" : "Our team reviews it"}</span>
-        <span><b>3</b> Prepare for your guests</span>
-        <span><b>4</b> Attendees choose whether to stay connected</span>
-      </div>
 
       {!migrationReady ? (
         <div className="community-panel-empty"><strong>Starting an event is temporarily unavailable</strong><p>We are finishing the private Host review. Your existing proposals remain safe.</p></div>
@@ -433,7 +425,7 @@ export function MemberEventProposalPanel({
 
           {step === 0 ? (
             <div className="community-event-wizard-step">
-              <fieldset className="member-event-paths">
+              {hostedCommunities.length ? <fieldset className="member-event-paths">
                 <legend>Who are you bringing together?</legend>
                 <div>
                   <button
@@ -455,7 +447,7 @@ export function MemberEventProposalPanel({
                     <small>Private Communities keep the event private too.</small>
                   </button>
                 </div>
-              </fieldset>
+              </fieldset> : null}
 
               {eventPath === "community" ? (
                 <div className="member-event-community-route">
@@ -486,8 +478,7 @@ export function MemberEventProposalPanel({
               ) : (
                 <>
               <label>Event name<input maxLength={140} onChange={(event) => update("title", event.target.value)} placeholder="For example: Women in trade breakfast" value={values.title}/></label>
-              <label className={message && values.summary.trim().length < 40 ? "field-needs-attention" : ""}>What will people gain?<textarea aria-describedby="member-event-summary-help" maxLength={2000} minLength={40} onChange={(event) => update("summary", event.target.value)} placeholder="Tell us who the event is for, why it matters and what guests should leave with." rows={5} value={values.summary}/><small id="member-event-summary-help">{values.summary.trim().length < 40 ? `${40 - values.summary.trim().length} more character${40 - values.summary.trim().length === 1 ? "" : "s"} before you can continue` : "Ready to continue"} · {values.summary.length}/2000</small></label>
-              {mediaReady ? <ApplicationImageField altText={posterAltText} existing={editingMedia} file={posterFile} label="Event poster" onAltText={setPosterAltText} onFile={setPosterFile} onRemoveExisting={() => void removePoster()} removing={busy} /> : <p className="application-image-unavailable">Event posters need the image database update. You can still open your event now and add a poster after the update.</p>}
+              <label className={message && values.summary.trim().length < 40 ? "field-needs-attention" : ""}>About the event<textarea aria-describedby="member-event-summary-help" maxLength={2000} minLength={40} onChange={(event) => update("summary", event.target.value)} placeholder="Who is it for? What will you do together?" rows={4} value={values.summary}/><small id="member-event-summary-help">{values.summary.trim().length < 40 ? `${40 - values.summary.trim().length} more character${40 - values.summary.trim().length === 1 ? "" : "s"} before you can continue` : "Ready to continue"} · {values.summary.length}/2000</small></label>
               {hostedCommunities.length ? (
                 <label>Is this event connected to one of your Communities?
                   <select onChange={(event) => update("communityId", event.target.value)} value={values.communityId}>
@@ -497,7 +488,7 @@ export function MemberEventProposalPanel({
                   <small>If you choose one, its name and join button will appear on the approved event.</small>
                 </label>
               ) : null}
-              <div className="community-event-fixed-terms"><span>{pilotAutoPublish ? "Public during the pilot" : "Public after review"}</span><span>Free to attend</span><span>{pilotAutoPublish ? "Instant member booking" : "Guest places reviewed"}</span><p>Paid member events are not available yet.</p></div>
+              <p className="form-hint">{pilotAutoPublish ? "Your free event will be public. Members can book while places remain." : "This is a free event. The team reviews it before it becomes public."}</p>
                 </>
               )}
             </div>
@@ -516,18 +507,21 @@ export function MemberEventProposalPanel({
 
           {step === 2 ? (
             <div className="community-event-wizard-step"><div className="form-grid">
-              <label className="form-wide">How will you host this well?<textarea maxLength={1200} minLength={20} onChange={(event) => update("hostExperience", event.target.value)} placeholder="Share relevant experience, partners or practical preparation." rows={4} value={values.hostExperience}/></label>
+              <label className="form-wide">Your plan for guests<textarea maxLength={1200} minLength={20} onChange={(event) => update("hostExperience", event.target.value)} placeholder="For example: I will welcome guests, make introductions and help everyone find a seat." rows={3} value={values.hostExperience}/><small>A sentence or two is enough.</small></label>
               <label>Responsible person on the day<input maxLength={120} onChange={(event) => update("safetyContactName", event.target.value)} placeholder="Full name" value={values.safetyContactName}/></label>
               <label>Private contact number<input maxLength={40} onChange={(event) => update("safetyContactPhone", event.target.value)} placeholder="+254…" type="tel" value={values.safetyContactPhone}/></label>
-              <label className="form-wide">Accessibility or arrival information <small>Optional</small><textarea maxLength={1200} onChange={(event) => update("accessibilityNotes", event.target.value)} placeholder="Access needs, building entrance, transport or useful context." rows={3} value={values.accessibilityNotes}/></label>
-              <label className="form-wide">Private note for the review team <small>Optional</small><textarea maxLength={1200} onChange={(event) => update("hostNote", event.target.value)} placeholder="Anything else we should understand." rows={3} value={values.hostNote}/></label>
+              <details className="form-wide member-event-optional"><summary>Add arrival or private notes <small>Optional</small></summary><label>Arrival information<textarea maxLength={1200} onChange={(event) => update("accessibilityNotes", event.target.value)} placeholder="Entrance, transport or access needs." rows={3} value={values.accessibilityNotes}/></label><label>Private note for the team<textarea maxLength={1200} onChange={(event) => update("hostNote", event.target.value)} rows={3} value={values.hostNote}/></label></details>
             </div></div>
           ) : null}
 
           {step === 3 ? (
             <div className="community-event-wizard-step">
+              <div className="member-event-check"><h4>{values.title}</h4><p>{values.format === "virtual" ? "Online" : `${values.venueName}, ${values.city}`} · {values.capacity} guests · Free</p><p>{values.startsAt.replace("T", " at ")} — {values.endsAt.replace("T", " at ")} ({values.timezone})</p><p>{values.summary}</p></div>
+              {mediaReady ? <ApplicationImageField altText={posterAltText} existing={editingMedia} file={posterFile} label="Event poster (optional)" onAltText={setPosterAltText} onFile={setPosterFile} onRemoveExisting={() => void removePoster()} removing={busy} /> : <p className="application-image-unavailable">You can add a poster from your Host tools later.</p>}
+              <details className="member-event-optional"><summary>Plan a Community after the event <small>Optional</small></summary>
               <label className="member-event-community-choice"><input checked={values.communityAfterEvent} onChange={(event) => update("communityAfterEvent", event.target.checked)} type="checkbox"/><span><strong>This event may grow into a Community</strong><small>Guests will be asked separately whether they want to hear about it. Nobody is added automatically.</small></span></label>
               {values.communityAfterEvent ? <label>What might continue after the event?<textarea maxLength={800} minLength={20} onChange={(event) => update("communityIdea", event.target.value)} placeholder="Describe the shared purpose and what members could do together after meeting." rows={4} value={values.communityIdea}/></label> : null}
+              </details>
               <div className="community-event-review-note"><strong>What happens next</strong><p>{pilotAutoPublish ? "Your free event opens now, including your poster if you added one. Active members can book immediately while places remain. You become the Host and manage your event from its Host page." : "Your event goes to the team for review. A private Host page may open first so you can prepare."} You can connect a Community before or after the event. Guests choose whether to join it.</p></div>
             </div>
           ) : null}
