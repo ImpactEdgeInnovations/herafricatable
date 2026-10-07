@@ -8,10 +8,37 @@ This is the current sequence. Earlier implementation notes below are historical;
 
 | Phase | Focus | Current state | Completion evidence |
 |---|---|---|---|
-| 4 | Finish everyday Community use | In progress | Plain wording, visible topic browsing, tidy room tabs, named albums, mobile Host/member walkthrough |
+| 4 | Community UI overhaul and everyday use | In progress; priority reassessment after member feedback | Consistent room layout, readable controls, visible branding/avatars, inline About and populated mobile Host/member walkthrough |
 | 5 | Media safety and reliable operations | In progress | Report alerts, hard-delete cleanup manifests, scalable Admin queues and simultaneous-session tests |
 | 6 | Full production rehearsal, including open Phase 3 checks | Pending; populated playback/inbox work deferred to 8 October | Separate Host/member/Admin accounts, real files/video, invitation/OTP return journeys, inbox receipts, permission loss and recovery |
 | 7 | Limited-pilot release review | Pending | Record real acceptance evidence, verify deployed UI, rehearse pause/expiry controls, confirm support ownership and monitor actual failures |
+
+### Priority Community overhaul — 7 October member feedback
+
+This is a complete Community-room usability/visual audit and overhaul, not another isolated styling pass. The Product Owner reports missing creation images, unreadable burgundy button states, inconsistent boxed/full-width tabs, missing People photos and a dense redirected About page. These reports reopen visual acceptance even where earlier source/build checks passed. Do not mark them fixed without reproducing and verifying a populated Community. The exact Community URL/name has been requested; its absence does not block shared-layout investigation.
+
+**Design direction:** a compact identity header; one consistent content width and spacing system across Home, Conversations, Gatherings, Media and People; light surfaces with readable dark text; burgundy used sparingly as an accent; obvious actions and short labels. About is a brief accessible panel inside the signed-in room. Preserve the separate public `/about` route for intentional sharing/SEO, not as the everyday member About destination. Do not expose private media or member profiles to simplify rendering.
+
+| ID | Priority / phase | Task | Status | Exit condition |
+|---|---|---|---|---|
+| CINT-01 | P0 / 4–6 | Strengthen scheduled-chat access checks for current platform membership and Community publication/suspension | Ready — live helper reviewed | Removed/suspended/dormant accounts and closed Communities cannot read/send through UI, RPC or realtime; Host/member negative tests recorded |
+| CINT-02 | P0 / 4–6 | Correct invited-newcomer return flow to use current Community join policy | Ready — live activation function reviewed | Open free Communities join immediately after member activation; approval and invitation-only modes retain their rules; no duplicate membership or accidental role changes |
+| CUI-01 | P1 / 4–6 | Repair Community creation-image handoff and display | Ready — user report; source split confirmed | Follow selected file → persisted application asset → authorised Community branding → directory/header/Host preview; valid image remains visible after refresh/navigation; failures have useful feedback |
+| CUI-02 | P1 / 4 | Replace unreadable burgundy button/tab states | Ready — visual reproduction pending | Normal, hover, selected, focus, disabled and busy states remain readable; normal text contrast at least 4.5:1, large text 3:1; keyboard focus visible; no accidental global-style regressions |
+| CUI-03 | P1 / 4 | Unify the complete Community room and tab layouts | Ready — user report | One shared width, typography, gutters and density; no jump between boxed and full-width content; no oversized empty areas or stacked introductory banners; clear mobile tab/action treatment |
+| CUI-04 | P1 / 4–6 | Make People useful and show available member avatars reliably | Ready — user report | Verify authorised avatar data, file loading/cropping and failures; real supplied avatars visible, honest initials fallback when absent; compact member cards, clear Host labels and no privacy bypass |
+| CUI-05 | P1 / 4 | Replace signed-in About redirection with a short in-room panel | Ready — source navigation confirmed | Name/purpose/Host/joining rule shown briefly without losing the selected tab, scroll position or drafts; accessible close/Escape/focus return; public sharing page remains separate |
+| CINT-03 | P1 / 4–6 | Let members remove their own scheduled live-chat messages | Ready — current live function is Host-only | Own-message action with confirmation, server ownership check and audit record; cannot remove others' messages; existing Host moderation retained |
+| CINT-04 | P1 / 4 | Align the live-chat composer with Host-only/closed modes | Ready — UI condition mismatch confirmed | Members see a plain read-only explanation instead of a composer the server will reject; time-window/RSVP/mode changes refresh accurately |
+| CINT-05 | P1 / 4 | Improve People → Connect → Message without unrestricted inbox access | Ready | Clear connection request/pending/accepted/blocked states and obvious message action after mutual consent; preserve opted-in discovery and contact privacy |
+| CUI-06 | P1 / 6 | Complete populated desktop/mobile interaction and visual acceptance | Ready; device work deferred to 8 October | Two ordinary members, Host and Admin test joining, topics/replies, linked gatherings/media, own deletion, inbox consent, blocking/suspension, empty/error/loading states and all colour states; screenshots/device/account-role evidence recorded |
+| CINT-06 | P1 / 6–7 | Reconcile current pilot Community availability before opening testing | Ready | Fresh status read-back and owner-approved published testing destination; do not publish or weaken approval as an audit side effect; verify free/open versus approval/invitation-only journeys |
+
+**Order:** fix CINT-01/02 safety and joining correctness first; investigate CUI-01 and establish CUI-02/03 shared styles next; complete People and inline About; implement own-live-message removal and consent-based connection UX; finish populated acceptance. Non-critical new Community features and Admin queue paging must not crowd out this correction pass.
+
+**Evidence checkpoint:** the prior read-only audit found Communities enabled, pilot creation enabled, trusted-auto membership intake, and realtime publication for gathering messages. At that observation there were zero published Communities (one draft and one archived fixture). The Product Owner subsequently reports creating a Community; do not present the earlier count as a fresh current-state audit. Existing posts/lasting replies/private messages have own-removal paths; scheduled live messages do not. These are source/live-function observations, not a passed two-device rehearsal.
+
+**Image diagnostic checkpoint:** creation uses `application_proposal_media` in `proposal-media`; the room header reads `icon_storage_path`/`cover_storage_path` from branding and signs `community-media` assets. This separation is a confirmed investigation point, not proof of the particular user's root cause. Check saved asset status/linkage and authorised delivery before changing CSS or exposing a bucket.
 
 ### Phase 4 — conversations and topics
 

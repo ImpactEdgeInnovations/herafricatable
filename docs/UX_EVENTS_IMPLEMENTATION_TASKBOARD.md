@@ -6,6 +6,8 @@ This board turns the 4 October UI/UX and Events audit (saved separately on the P
 
 ## 7 October execution alignment
 
+**Priority correction: full Community UI/UX overhaul.** The Product Owner's populated-room feedback overrides any implication that earlier green source/build checks established a good visual experience. Missing Community creation images, unreadable burgundy interaction states, inconsistent tab widths/boxing, missing People avatars and the dense redirected About journey are now explicit `CUI-01`–`CUI-06` work. The preceding live permissions/invitation/chat audit is tracked as `CINT-01`–`CINT-06`. See the [priority Community overhaul board](./FOUNDING_PILOT_JOURNEY_UPGRADE.md#priority-community-overhaul--7-october-member-feedback) for priorities and acceptance criteria. All are open, not cosmetic fixes marked Done. Safety/join-policy corrections lead; the room redesign is next; populated desktop/mobile acceptance closes the pass. Existing implementation history below remains historical evidence, not acceptance of the reported UI.
+
 The 4–5 October observations below are historical checkpoints, not a fresh live-readiness audit. Later pilot decisions allow founding-cohort automatic free-event publication and Community creation with Admin pause/expiry controls. Old invited-only/private-draft descriptions are superseded, but real onboarding/event-to-Community acceptance is still required.
 
 The [Community completion board](./FOUNDING_PILOT_JOURNEY_UPGRADE.md#remaining-work--phased-taskboard) is a sub-workstream. Its phases 4–7 do not replace this board's phases 0–5 or complete the paused ten-sprint roadmap.
