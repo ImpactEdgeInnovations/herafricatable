@@ -30,8 +30,10 @@ function migrationPending(error: RpcError | null, functionName: string) {
 
 export async function processNotificationQueue({
   dedupeKey,
+  strictTarget = false,
 }: {
   dedupeKey?: string;
+  strictTarget?: boolean;
 } = {}) {
   const admin = createAdminClient();
   const { data: lifecycleData, error: lifecycleError } = await admin.rpc(
@@ -111,7 +113,7 @@ export async function processNotificationQueue({
       })
     : await admin.rpc("claim_notification_jobs", { p_limit: 25 });
   if (
-    dedupeKey &&
+    dedupeKey && !strictTarget &&
     migrationPending(claimResult.error as RpcError | null, "claim_notification_job")
   ) {
     claimResult = await admin.rpc("claim_notification_jobs", { p_limit: 25 });

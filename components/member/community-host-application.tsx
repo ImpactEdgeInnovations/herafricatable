@@ -48,7 +48,7 @@ const statusCopy: Record<
   approved: {
     label: "Approved",
     summary:
-      "Your private community is ready to set up. Members cannot see it until the final checks are complete.",
+      "Your Community workspace is ready. Open it to see its status and manage your next steps.",
   },
   changes_requested: {
     label: "Update requested",
@@ -249,7 +249,7 @@ export function CommunityHostApplication({
         : imageError
           ? `Your application was sent, but the optional image did not upload. ${memberErrorMessage(imageError, "add the image")}`
         : privateDraftReady
-          ? "Your private Community is ready. Open it below to start preparing; members cannot join until its launch checks pass."
+          ? "Your Community is ready. Open it below, welcome members and invite people to join."
         : editable
           ? "Application updated and returned to the review queue."
           : "Application sent. You can follow its progress here.",
@@ -342,7 +342,7 @@ export function CommunityHostApplication({
           <p className="eyebrow">Bring people together</p>
           <h2>Start a community</h2>
           <p>{pilotEligible
-            ? "As a founding tester, your first Community can be ready as a private workspace as soon as you send your idea. Prepare it there; members cannot join until launch checks pass."
+            ? "As a founding member, your first free Community opens as soon as you finish. Choose who can join, then welcome and invite people."
             : "Have a clear idea for a group? Apply to lead it. We review your idea, help you set up privately and open the Community only when it is ready for members."}</p>
         </div>
         {current ? (
@@ -356,7 +356,7 @@ export function CommunityHostApplication({
             className="button button-primary"
             onClick={() => (open ? closeApplication() : openApplication())}
           >
-            {open ? "Close" : "Start your application"}
+            {open ? "Close" : pilotEligible ? "Create a Community" : "Share your Community idea"}
           </button>
         )}
       </div>
@@ -390,9 +390,9 @@ export function CommunityHostApplication({
         </ol>
       ) : (
         <div className="community-host-principles" aria-label="Host safeguards">
-          <span>{pilotEligible ? "Private workspace for founding testers" : "Every application is reviewed"}</span>
-          <span>Set up privately first</span>
-          <span>Open after safety checks</span>
+          <span>{pilotEligible ? "Your first free Community opens automatically" : "Every application is reviewed"}</span>
+          <span>You choose who joins</span>
+          <span>Admin can pause unsafe activity</span>
         </div>
       )}
 
@@ -403,7 +403,7 @@ export function CommunityHostApplication({
             <div>
               <p className="eyebrow">{statusCopy[current.status].label}</p>
               <h3>{current.community_name}</h3>
-              <p>{statusCopy[current.status].summary}</p>
+              <p>{pilotEligible && current.status === "approved" ? "Open your Community to see its status, welcome members and manage joining." : statusCopy[current.status].summary}</p>
             </div>
           </div>
           {current.admin_note ? (

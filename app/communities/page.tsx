@@ -196,9 +196,7 @@ export default async function CommunitiesPage() {
         <div>
           <p className="eyebrow">Communities</p>
           <h1>
-            Your people,
-            <br />
-            one place.
+            Your Communities
           </h1>
           <p>
             Pick up conversations, meet members and find the next useful thing
@@ -212,6 +210,7 @@ export default async function CommunitiesPage() {
       >
         <a href="#your-communities">Your communities</a>
         <a href="#discover-communities">Find a community</a>
+        <a href="#create-community">Start a community</a>
       </nav>
 
       {communityResult.error ? (

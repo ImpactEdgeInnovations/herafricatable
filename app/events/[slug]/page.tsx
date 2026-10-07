@@ -55,12 +55,15 @@ type EventDetail = {
 export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error: eventLoadError } = await supabase
     .from("events")
     .select("id, title, summary, format, audience, capacity, starts_at, ends_at, timezone, registration_mode, free_instant_booking, venues(name, city, country, address_line, map_url)")
     .eq("slug", slug)
     .in("status", ["published", "completed"])
     .maybeSingle();
+  if (eventLoadError) {
+    return <main className="portal-page"><section className="portal-card"><p className="eyebrow">Please try again</p><h1>We could not open this event.</h1><p>The event may still be available. Please reload in a moment; your bookings have not changed.</p><div className="portal-actions"><Link className="button button-primary" href={`/events/${slug}`}>Try again</Link><Link className="button button-outline" href="/events">All events</Link></div></section></main>;
+  }
   if (!data) notFound();
   const event = data as unknown as EventDetail;
   const publiclyIndexable = event.audience === "public" && Boolean((await getPublicEventSeo(slug))[0]);
@@ -120,6 +123,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const { data: { user } } = await supabase.auth.getUser();
   const { data: memberProfile } = user ? await supabase.from("profiles").select("access_status,display_name").eq("id", user.id).maybeSingle() : { data: null };
   const activeMember = Boolean(user && memberProfile?.access_status === "active");
+  const { data: intakeMode } = activeMember ? await supabase.rpc("get_membership_intake_mode") : { data: null };
+  const { data: linkedJoining } = eventCommunity ? await supabase.from("communities").select("join_policy").eq("id", eventCommunity.community_id).maybeSingle() : { data: null };
   const { data: guideAccessRows } = activeMember
     ? await supabase.rpc("get_my_table_guide_access")
     : { data: null };
@@ -365,7 +370,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 eventTitle={event.title}
                 existingStatus={registration?.status ?? ownMembership?.status ?? null}
                 mode={event.registration_mode}
-                freeInstantBooking={event.free_instant_booking && activeMember}
+                freeInstantBooking={event.free_instant_booking && activeMember && intakeMode === "trusted_auto"}
                 passReady={["confirmed", "attended"].includes(ownMembership?.status ?? "")}
                 tickets={availability?.tickets ?? []}
                 availabilityReady={!availability?.checkFailed}
@@ -381,7 +386,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             <div className="event-registration-entry">
               <p className="eyebrow">Your place at the table</p>
               <h2>{user ? "Your account cannot request a place yet." : event.audience === "public" && !eventGuestFlag?.enabled ? "Membership is needed for this event." : "Confirm your email to join this event."}</h2>
-              <p>{user ? "Membership access and event places are reviewed separately. Contact our team if you need help." : event.audience === "public" && !eventGuestFlag?.enabled ? "You can request membership after confirming your email. The team must approve your membership before you can ask for an event place." : "We’ll email you a one-time code and return you to this event."}</p>
+              <p>{user ? "Finish joining Her Africa Table, then return here to book your place. Your membership page shows your next step." : event.audience === "public" && !eventGuestFlag?.enabled ? "Confirm your email and complete the short joining steps. We will return you here when your membership is ready." : "We’ll email you a one-time code and return you to this event."}</p>
               <Link
                 className="button button-primary"
                 href={user ? "/apply" : `/sign-in?${event.audience === "public" && !eventGuestFlag?.enabled ? "mode=apply&" : ""}next=${encodeURIComponent(`/events/${slug}#registration`)}`}
@@ -404,7 +409,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             <p>{eventCommunity.tagline || "Meet members, see event updates and continue the conversation together."}</p>
           </div>
           <aside>
-            <span>{eventCommunity.community_type === "private" ? "Host approval required" : "Open Community"}</span>
+            <span>{linkedJoining?.join_policy === "open" ? "Members can join immediately" : linkedJoining?.join_policy === "invite_only" ? "Invitation only" : "The Host approves joining requests"}</span>
             <p>{event.audience === "community" ? "This gathering is for active members of the Community." : "This is an open event connected to the Community. Joining either one is always your choice."}</p>
             <Link className="button button-outline" href={`/communities/${eventCommunity.slug}/about`}>
               View and join the Community

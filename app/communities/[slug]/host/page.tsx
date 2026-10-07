@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MemberHeader } from "@/components/member/member-header";
+import { PilotCommunityOpenControl } from "@/components/member/pilot-community-open-control";
 import type { CommunitySummary } from "@/components/member/community-directory";
 import {
   CommunityCommercePanel,
@@ -98,6 +99,8 @@ export default async function CommunityHostPage({
       p_community_id: community.community_id,
     }),
   ]);
+  const { data: pilotEligible } = community.status === "draft" && community.membership_role === "owner"
+    ? await supabase.rpc("community_pilot_member_ready") : { data: false };
   const capabilities =
     ((capabilityResult.data as CommunityHostCapabilities[] | null) ?? [])[0] ??
     null;
@@ -253,6 +256,7 @@ export default async function CommunityHostPage({
   return (
     <main className="community-page community-host-page">
       <MemberHeader active="community" label={`${community.name} · Manage`} />
+      {pilotEligible === true ? <PilotCommunityOpenControl communityId={community.community_id} /> : null}
       <section className="community-host-hero">
         <div>
           <p className="eyebrow">Manage community</p>

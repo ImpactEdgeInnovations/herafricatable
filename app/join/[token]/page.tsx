@@ -51,9 +51,9 @@ export default async function TableInvitationPage({
         <div className="table-invitation-boundary">
           <strong>Your choice stays yours.</strong>
           <p>
-            This invitation does not bypass membership review, private Community
-            approval, event capacity or payment. It simply remembers where you
-            wanted to go.
+            Verify your email and finish joining Her Africa Table first. The
+            Community’s joining rule and the event’s available places still apply.
+            We will bring you back to this invitation afterwards.
           </p>
         </div>
         <TableInvitationClaim

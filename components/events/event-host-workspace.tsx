@@ -60,7 +60,7 @@ export type EventHostCommunity = {
   can_select: boolean;
 };
 
-export function EventHostWorkspace({ initial, cover, coverReady, outcomes, communities, communityLinksReady }: { initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean; outcomes: EventHostOutcomes | null; communities: EventHostCommunity[]; communityLinksReady: boolean }) {
+export function EventHostWorkspace({ initial, cover, coverReady, outcomes, communities, communityLinksReady, selfPublish = false }: { initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean; outcomes: EventHostOutcomes | null; communities: EventHostCommunity[]; communityLinksReady: boolean; selfPublish?: boolean }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [summary, setSummary] = useState(initial.summary);
@@ -77,6 +77,7 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [chosenCommunity, setChosenCommunity] = useState("");
+  const [section, setSection] = useState("introduction");
   const hasEnded = new Date(initial.ends_at).getTime() < Date.now();
   const locked = initial.workspace_status === "submitted" || hasEnded;
   const linkedCommunity = communities.find((community) => community.linked_to_event);
@@ -140,7 +141,8 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
     }
     setCoverFile(null);
     setBusy(false);
-    setMessage("Image saved privately. Send your event to the team for review before it appears to guests.");
+    const { data: savedCover } = await supabase.from("event_host_covers").select("published_storage_path").eq("event_id", initial.event_id).maybeSingle();
+    setMessage(savedCover?.published_storage_path === path ? "Your event image is live." : "Image saved privately. Send your event to the team for review before it appears to guests.");
     router.refresh();
   }
 
@@ -183,7 +185,7 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
       return;
     }
     if (sendForReview) {
-      const sent = await supabase.rpc("submit_event_host_workspace", { p_event_id: initial.event_id });
+      const sent = await supabase.rpc(selfPublish ? "publish_my_pilot_event_updates" : "submit_event_host_workspace", { p_event_id: initial.event_id });
       if (sent.error) {
         setBusy(false);
         setMessage(memberErrorMessage(sent.error, "send your event for review"));
@@ -192,12 +194,12 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
       }
     }
     setBusy(false);
-    setMessage(sendForReview ? "Sent to the event team for review. Your changes are not public yet." : "Draft saved privately.");
+    setMessage(sendForReview ? selfPublish ? "Your changes are live. Open the guest view to see them." : "Sent to the event team for review. Your changes are not public yet." : "Draft saved privately.");
     router.refresh();
   }
 
   function communityPanel() {
-    return <div className="host-workspace-panel" id="host-community">
+    return <div className="host-workspace-panel" id="host-community" hidden={!hasEnded && section !== "community"}>
       <div className="host-workspace-panel-heading"><span>04</span><div><h2>Bring people together after the event</h2><p>Connect an existing Community or start one with a name of your choice.</p></div></div>
       <p>A Community is a lasting space for conversation. It can bring people together before this event and continue afterwards. You can use the same Community for future events too.</p>
       {!communityLinksReady ? <p role="status">Community linking will be available after the latest database update.</p>
@@ -245,7 +247,7 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
       <header className="host-workspace-hero">
         <p className="eyebrow">Your event</p>
         <h1 id="host-workspace-heading">{initial.event_title}</h1>
-        <p className="host-workspace-intro">{initial.event_status === "published" ? "Your event page is already public. Prepare extra details here; new words and images appear only after the event team reviews them." : "Prepare the details guests will see when your event opens."}</p>
+        <p className="host-workspace-intro">{selfPublish ? "Your event is public. Save privately while you prepare, then publish your changes when ready." : initial.event_status === "published" ? "Your event is public. Prepare changes here, then send them to the team to publish." : "Prepare the details guests will see when your event opens."}</p>
         <div className="host-workspace-status"><span className="host-workspace-state">{initial.event_status === "published" ? "Event is public" : "Event is private"}</span><span>{initial.workspace_status === "submitted" ? "Updates with the team" : initial.workspace_status === "changes_requested" ? "Updates need changes" : initial.workspace_status === "approved" ? "Latest updates are live" : "Updates not published yet"}</span></div>
         <p className="host-workspace-date">{new Intl.DateTimeFormat("en-KE", { dateStyle: "full", timeStyle: "short", timeZone: initial.timezone }).format(new Date(initial.starts_at))}</p>
         {initial.review_note ? <p className="host-workspace-review-note" role="status"><strong>From the event team:</strong> {initial.review_note}</p> : null}
@@ -253,10 +255,10 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
       </header>
 
       <nav className="host-workspace-nav" aria-label="Event preparation sections">
-        <a href="#host-introduction">Event details</a><a href="#host-image">Image</a><a href="#host-programme">Programme</a><a href="#host-community">Community</a><a href="#host-partners">Partners</a>
+        {[["introduction", "Event details"], ["image", "Image"], ["programme", "Programme"], ["community", "Community"], ["partners", "Partners"]].map(([key, label]) => <button key={key} type="button" aria-pressed={section === key} aria-controls={`host-${key}`} onClick={() => setSection(key)}>{label}</button>)}
       </nav>
 
-      <div className="host-workspace-panel" id="host-introduction">
+      <div className="host-workspace-panel" id="host-introduction" hidden={section !== "introduction"}>
         <div className="host-workspace-panel-heading"><span>01</span><div><h2>Event details</h2><p>Help guests know why to come and how to arrive.</p></div></div>
         <label htmlFor="host-summary">What is this gathering about?</label>
         <textarea id="host-summary" value={summary} disabled={locked || busy} maxLength={2000} rows={5} onChange={(event) => setSummary(event.target.value)} />
@@ -265,9 +267,9 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
         <p className="form-hint">For online or hybrid events, the event team adds the private joining link in Event details. Please keep all links out of these public notes.</p>
       </div>
 
-      <div className="host-workspace-panel" id="host-image">
+      <div className="host-workspace-panel" id="host-image" hidden={section !== "image"}>
         <div className="host-workspace-panel-heading"><span>02</span><div><h2>Event image</h2><p>A recognisable image makes your event easier to find.</p></div></div>
-        <p>One clear image helps guests recognise your gathering. Only the event team can approve it. A previously approved image stays live while a replacement is reviewed.</p>
+        <p>{selfPublish ? "Choose an image you have permission to share. It will appear on your event page when saved." : "One clear image helps guests recognise your gathering. A previous image stays live while the team reviews its replacement."}</p>
         {!coverReady ? <p role="status">Event image uploads will be available after the latest database update.</p> : <>
           {cover?.draft_url ? <figure className="event-host-cover-preview"><img src={cover.draft_url} alt={cover.draft_alt_text} /><figcaption>{cover.draft_storage_path === cover.published_storage_path ? "Live image" : "Private image awaiting review"}</figcaption></figure> : <p>No image added yet. You can still send your draft without one.</p>}
           {cover?.published_url && cover.draft_storage_path !== cover.published_storage_path ? <p>The last approved image remains on the public event page until this one is approved.</p> : null}
@@ -276,12 +278,12 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
             <input id="host-cover-file" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)} />
             <label htmlFor="host-cover-alt">Describe what the image shows</label>
             <input id="host-cover-alt" value={coverAlt} maxLength={240} disabled={busy} onChange={(event) => setCoverAlt(event.target.value)} placeholder="Women gathered around a table in Nairobi" />
-            <button className="button button-outline" type="button" disabled={busy || !coverFile} onClick={() => void uploadCover()}>Save image privately</button>
+            <button className="button button-outline" type="button" disabled={busy || !coverFile} onClick={() => void uploadCover()}>{selfPublish ? "Publish image" : "Save image privately"}</button>
           </div> : null}
         </>}
       </div>
 
-      <div className="host-workspace-panel" id="host-programme">
+      <div className="host-workspace-panel" id="host-programme" hidden={section !== "programme"}>
         <div className="host-workspace-panel-heading"><span>03</span><div><h2>Programme</h2><p>Give guests a sense of how the time will unfold.</p></div></div>
         <p>Add the moments guests can look forward to. All times below use {initial.timezone}, even if your device is elsewhere.</p>
         {programme.map((item, index) => <fieldset key={item.key} className="host-workspace-item">
@@ -298,9 +300,9 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
 
       {communityPanel()}
 
-      <div className="host-workspace-panel" id="host-partners">
+      <div className="host-workspace-panel" id="host-partners" hidden={section !== "partners"}>
         <div className="host-workspace-panel-heading"><span>05</span><div><h2>Partners</h2><p>Optional names you have permission to share.</p></div></div>
-        <p>Only list partners who have agreed to be named. The event team will review them before publication.</p>
+        <p>Only list partners who have agreed to be named.</p>
         {partners.map((partner) => <div key={partner.key} className="host-workspace-item">
           <label>Name<input value={partner.name} disabled={locked || busy} onChange={(event) => setPartners((items) => items.map((item) => item.key === partner.key ? { ...item, name: event.target.value } : item))} /></label>
           <label>Website (optional)<input type="url" value={partner.website_url ?? ""} disabled={locked || busy} onChange={(event) => setPartners((items) => items.map((item) => item.key === partner.key ? { ...item, website_url: event.target.value } : item))} /></label>
@@ -309,7 +311,7 @@ export function EventHostWorkspace({ initial, cover, coverReady, outcomes, commu
         {!locked ? <button className="button button-outline" type="button" disabled={busy || partners.length >= 20} onClick={() => setPartners((items) => [...items, { key: crypto.randomUUID(), name: "", tier: "", website_url: "", logo_url: "" }])}>Add a partner</button> : null}
       </div>
 
-      {!locked ? <div className="host-workspace-actions"><button className="button button-outline" disabled={busy} onClick={() => void save(false)} type="button">Save my changes</button><button className="button button-primary" disabled={busy} onClick={() => void save(true)} type="button">Ask team to publish updates</button></div> : null}
+      {!locked ? <div className="host-workspace-actions"><button className="button button-outline" disabled={busy} onClick={() => void save(false)} type="button">Save draft</button><button className="button button-primary" disabled={busy} onClick={() => void save(true)} type="button">{selfPublish ? "Publish changes" : "Send changes for review"}</button></div> : null}
       {message ? <p className="manager-message" role="status">{message}</p> : null}
     </section>
   );

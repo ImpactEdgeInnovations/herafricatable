@@ -328,7 +328,7 @@ export function MemberEventProposalPanel({
       );
       if (saved?.status === "approved" && saved.canonical_event_id) {
         submittedMessage = pilotAutoPublish
-          ? "Your free event is public. Open your Host page to prepare it. Guest places still need review."
+          ? "Your free event is public. Active members can book immediately. Open your Host page to manage details and invite people."
           : "Your private event is ready. Open its Host page to prepare it; the team will review it before guests can book.";
       }
     }
@@ -365,7 +365,7 @@ export function MemberEventProposalPanel({
   async function publishExisting(proposal: MemberEventProposal) {
     const confirmed = await ask({
       confirmLabel: "Open this event",
-      description: "This free event will become public now. Guests can request a place, but each place still needs review. Your poster, if any, is reviewed separately.",
+      description: "This free event will become public now, including your poster if you added one. Active members can reserve an available place immediately.",
       title: `Open ${proposal.title} to guests?`,
     });
     if (!confirmed) return;
@@ -497,7 +497,7 @@ export function MemberEventProposalPanel({
                   <small>If you choose one, its name and join button will appear on the approved event.</small>
                 </label>
               ) : null}
-              <div className="community-event-fixed-terms"><span>{pilotAutoPublish ? "Public during the pilot" : "Public after review"}</span><span>Free to attend</span><span>Guest places reviewed</span><p>Paid member events will open after payment, refund and settlement checks pass.</p></div>
+              <div className="community-event-fixed-terms"><span>{pilotAutoPublish ? "Public during the pilot" : "Public after review"}</span><span>Free to attend</span><span>{pilotAutoPublish ? "Instant member booking" : "Guest places reviewed"}</span><p>Paid member events are not available yet.</p></div>
                 </>
               )}
             </div>
@@ -528,7 +528,7 @@ export function MemberEventProposalPanel({
             <div className="community-event-wizard-step">
               <label className="member-event-community-choice"><input checked={values.communityAfterEvent} onChange={(event) => update("communityAfterEvent", event.target.checked)} type="checkbox"/><span><strong>This event may grow into a Community</strong><small>Guests will be asked separately whether they want to hear about it. Nobody is added automatically.</small></span></label>
               {values.communityAfterEvent ? <label>What might continue after the event?<textarea maxLength={800} minLength={20} onChange={(event) => update("communityIdea", event.target.value)} placeholder="Describe the shared purpose and what members could do together after meeting." rows={4} value={values.communityIdea}/></label> : null}
-              <div className="community-event-review-note"><strong>What happens next</strong><p>{pilotAutoPublish ? "Your free event will open to guests now. They can request a place, but places are confirmed only after review. The poster is reviewed separately and may appear later. You become the Event Host and can prepare updates from your Host page." : "Your event goes to the team for review. If you have a founding pilot place, a private Host page may open first. The team decides when guests can see or book it."} You can start a related Community before or after the event; guests are never added automatically.</p></div>
+              <div className="community-event-review-note"><strong>What happens next</strong><p>{pilotAutoPublish ? "Your free event opens now, including your poster if you added one. Active members can book immediately while places remain. You become the Host and manage your event from its Host page." : "Your event goes to the team for review. A private Host page may open first so you can prepare."} You can connect a Community before or after the event. Guests choose whether to join it.</p></div>
             </div>
           ) : null}
 

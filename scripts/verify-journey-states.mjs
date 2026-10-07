@@ -1501,7 +1501,7 @@ for (const contract of [
 }
 for (const contract of [
   "Start a community",
-  "Start your application",
+  "Create a Community",
   "Tell us your idea",
   "We review it",
   "Set up privately",

@@ -59,6 +59,7 @@ export default async function RegisterPage({
   const availability = ["waitlist", "closed"].includes(event.registration_mode)
     ? { checkFailed: false, eventFull: false, tickets: [] }
     : await loadEventBookingAvailability(event.id, event.capacity, tickets ?? []);
+  const { data: intakeMode } = await supabase.rpc("get_membership_intake_mode");
   const { data: automaticCheckoutOpen } = event.registration_mode === "automatic"
     ? await supabase.rpc("event_automatic_checkout_open")
     : { data: false };
@@ -78,7 +79,7 @@ export default async function RegisterPage({
         orderHref={order?.reference ? `/orders/${encodeURIComponent(order.reference)}` : null}
         eventTitle={event.title}
         mode={event.registration_mode}
-        freeInstantBooking={Boolean(event.free_instant_booking) && profile?.access_status === "active"}
+        freeInstantBooking={Boolean(event.free_instant_booking) && profile?.access_status === "active" && intakeMode === "trusted_auto"}
         tickets={availability.tickets}
         availabilityReady={!availability.checkFailed}
         automaticCheckoutOpen={event.registration_mode !== "automatic" || automaticCheckoutOpen === true}

@@ -1212,7 +1212,7 @@ export function NetworkHub({
       <section className="member-directory">
         <details
           className="member-directory-browser"
-          open={Boolean(searchQuery || cityFilter || goalFilter)}
+          open
         >
           <summary>
             <span>Browse all members</span>

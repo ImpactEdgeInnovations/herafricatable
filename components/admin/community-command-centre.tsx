@@ -101,11 +101,11 @@ export function CommunityCommandCentre({
     if (!pilot) return;
     const enabled = !pilot.enabled;
     const confirmed = await ask({
-      title: enabled ? "Allow pilot Community drafts?" : "Pause automatic Community drafts?",
-      confirmLabel: enabled ? "Enable pilot drafts" : "Pause pilot drafts",
+      title: enabled ? "Allow automatic Community opening?" : "Pause automatic Community opening?",
+      confirmLabel: enabled ? "Allow Communities" : "Pause opening",
       description: enabled
-        ? "Up to 20 founding testers can get one private Community workspace immediately. It still cannot open to members until launch checks pass."
-        : "New Community proposals will wait for your review. Existing private drafts and their records are unchanged.",
+        ? "The first-20 founding cohort can open one free Community immediately and choose how members join. Admin can pause any Community individually."
+        : "New Community proposals wait for your review. Existing Communities and memberships stay unchanged.",
     });
     if (!confirmed) return;
     setBusy("community-pilot");
@@ -116,8 +116,8 @@ export function CommunityCommandCentre({
     });
     setBusy("");
     setMessage(error ? adminErrorMessage(error, "change the Community pilot") : enabled
-      ? "Automatic private drafts are on for founding testers. Public opening still needs launch checks."
-      : "Automatic private drafts are paused. Existing Communities are unchanged.");
+      ? "Automatic Community opening is on for founding members."
+      : "Automatic Community opening is paused. Existing Communities are unchanged.");
     if (!error) router.refresh();
   }
 
@@ -315,9 +315,9 @@ export function CommunityCommandCentre({
         <p className="eyebrow">Founding test period</p>
         <h2 id="community-pilot-heading">Community pilot</h2>
         {!pilot ? <p>Apply the latest Community database update to manage the pilot here.</p> : <>
-          <p><strong>{pilot.enabled ? "Automatic private drafts are on" : "Automatic private drafts are paused"}.</strong> {pilot.cohort_count} of {pilot.capacity} founding places assigned. {pilot.ends_at ? `The pilot ends ${new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeZone: "Africa/Nairobi" }).format(new Date(pilot.ends_at))}.` : "No active pilot window is set."}</p>
-          <p>Each tester can start one private Community without waiting for the first application review. You still control public opening, safety decisions and every existing Community.</p>
-          <button className={pilot.enabled ? "button button-outline" : "button button-primary"} type="button" disabled={busy === "community-pilot"} onClick={() => void changeCommunityPilot()}>{pilot.enabled ? "Pause automatic drafts" : "Allow automatic drafts"}</button>
+          <p><strong>{pilot.enabled ? "Automatic opening is on" : "Automatic opening is paused"}.</strong> {pilot.cohort_count} of {pilot.capacity} founding places assigned. {pilot.ends_at ? `The pilot ends ${new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeZone: "Africa/Nairobi" }).format(new Date(pilot.ends_at))}.` : "No active pilot window is set."}</p>
+          <p>Each founding member can open one free Community without review. Joining follows her chosen rule. You can pause new openings here or suspend a specific Community.</p>
+          <button className={pilot.enabled ? "button button-outline" : "button button-primary"} type="button" disabled={busy === "community-pilot"} onClick={() => void changeCommunityPilot()}>{pilot.enabled ? "Pause new Communities" : "Allow Communities"}</button>
         </>}
       </section>
 

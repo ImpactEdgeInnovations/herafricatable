@@ -25,7 +25,7 @@ export default async function AdminMembersPage() {
     .maybeSingle();
   if (!role) redirect("/admin");
 
-  const [memberApplicationResult, intakeResult, pilotWindowResult, pilotInvitesResult, pilotEventResult, pilotFreeEventResult] = await Promise.all([
+  const [memberApplicationResult, intakeResult, pilotWindowResult, pilotInvitesResult, pilotEventResult, pilotFreeEventResult, communityPilotResult] = await Promise.all([
     supabase.rpc("list_admin_members_v3"),
     supabase.rpc("get_membership_intake_admin"),
     supabase.rpc("get_membership_pilot_window"),
@@ -36,6 +36,7 @@ export default async function AdminMembersPage() {
       .limit(50),
     supabase.rpc("get_invited_pilot_event_setting"),
     supabase.rpc("get_pilot_free_event_setting"),
+    supabase.rpc("get_community_pilot_admin"),
   ]);
   const fallbackResult = memberApplicationResult.error
     ? await supabase.rpc("list_admin_members_v2")
@@ -58,6 +59,7 @@ export default async function AdminMembersPage() {
     <main className="admin-command-center member-command-page">
       <AdminHeader active="members" label="Member oversight" role="super_admin" />
       <MemberCommandCentre
+        communityPilot={communityPilotResult.error ? null : ((communityPilotResult.data as { enabled: boolean; cohort_count: number; capacity: number; ends_at: string | null }[] | null) ?? [])[0] ?? null}
         applicationJourneyReady={!memberApplicationResult.error}
         currentUserId={user.id}
         intake={

@@ -67,18 +67,27 @@ export function DestinationInvitationPanel({
       p_email: form.get("email"),
       p_personal_note: form.get("note") || null,
     });
-    setBusy(false);
     if (error) {
+      setBusy(false);
       setMessage(memberErrorMessage(error, "send this invitation"));
       return;
     }
-    const result = (data as { invitation_status: string }[] | null)?.[0];
+    const result = (data as { invitation_id: string; invitation_status: string }[] | null)?.[0];
+    let delivered = false;
+    if (result?.invitation_status === "sent") {
+      try {
+        const response = await fetch("/api/member/invitations/deliver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ invitationId: result.invitation_id }) });
+        const delivery = await response.json();
+        delivered = response.ok && Number(delivery.sent) > 0;
+      } catch { /* The queued invitation remains available for scheduled retry. */ }
+    }
     setMessage(
       result?.invitation_status === "sent"
-        ? "Invitation saved for email delivery. She can choose whether to accept it."
+        ? delivered ? "Invitation emailed. She can choose whether to accept it." : "Invitation saved for email delivery. It has not yet been confirmed as sent."
         : "Invitation received. Her Africa Table will review it before emailing someone who is not yet a member.",
     );
     formElement.reset();
+    setBusy(false);
     setNote("");
     setPreset("");
     router.refresh();

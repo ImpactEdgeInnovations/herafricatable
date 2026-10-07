@@ -55,6 +55,7 @@ export function MemberCommandCentre({
   pilotReady,
   pilotEventAutoDrafts,
   pilotFreeEventPublishing,
+  communityPilot,
   members: initialMembers,
   migrationReady,
 }: {
@@ -67,6 +68,7 @@ export function MemberCommandCentre({
   pilotReady: boolean;
   pilotEventAutoDrafts: boolean | null;
   pilotFreeEventPublishing: boolean | null;
+  communityPilot: { enabled: boolean; cohort_count: number; capacity: number; ends_at: string | null } | null;
   members: AdminMember[];
   migrationReady: boolean;
 }) {
@@ -262,7 +264,7 @@ export function MemberCommandCentre({
       description: enabled
         ? "Only approved members admitted through a direct pilot invitation can become Host of their own free, private event. Public publication and bookings still need the event team's approval."
         : "New ideas return to event-team review. Existing private events and Host access are unchanged.",
-      title: enabled ? "Let invited testers start their own events?" : "Stop automatic private event drafts?",
+      title: enabled ? "Let founding members prepare their own events?" : "Stop automatic private event drafts?",
     });
     if (!confirmed) return;
     setBusy("pilot-events");
@@ -283,8 +285,8 @@ export function MemberCommandCentre({
     const confirmed = await ask({
       confirmLabel: enabled ? "Allow free public events" : "Pause automatic publishing",
       description: enabled
-        ? "Active members can publish free events immediately during the 60-day pilot. Guests can request places, but each place still needs review. Existing submitted events remain in review until their Host chooses to publish."
-        : "New events will wait for review, except directly invited testers may still get a private draft if that separate switch is on. Already published events stay public unless you pause them individually.",
+        ? "The first-20 founding cohort can publish free events and updates immediately. Active members can book available places without review. Existing submitted events stay private until their Host opens them."
+        : "New events will wait for review. Founding members may still get a private draft if that separate switch is on. Already published events stay public unless you pause them individually.",
       title: enabled ? "Open free event publishing?" : "Pause free event publishing?",
     });
     if (!confirmed) return;
@@ -295,8 +297,20 @@ export function MemberCommandCentre({
     });
     setBusy("");
     setMessage(error ? adminErrorMessage(error, "change free event publishing") :
-      enabled ? "Active members can now publish free events. Guest places still need review." :
+      enabled ? "Founding members can now publish free events and updates. Active members can book immediately." :
         "Automatic public publishing is off. Existing public events are unchanged.");
+    if (!error) router.refresh();
+  }
+
+  async function changeCommunityOpening() {
+    if (!communityPilot) return;
+    const enabled = !communityPilot.enabled;
+    const confirmed = await ask({ title: enabled ? "Allow founding Communities to open?" : "Pause automatic Community opening?", confirmLabel: enabled ? "Allow opening" : "Pause opening", description: "This changes new automatic Community openings and pilot invitations. Existing Communities and memberships remain unchanged; pause them individually when needed." });
+    if (!confirmed) return;
+    setBusy("pilot-communities");
+    const { error } = await supabase.rpc("set_community_pilot_setting", { p_enabled: enabled, p_reason: `Founding Community automatic opening ${enabled ? "enabled" : "paused"} from pilot controls` });
+    setBusy("");
+    setMessage(error ? adminErrorMessage(error, "change Community opening") : "Community pilot setting saved. Existing Communities are unchanged.");
     if (!error) router.refresh();
   }
 
@@ -364,11 +378,12 @@ export function MemberCommandCentre({
       </section> : null}
 
       <section className="member-intake-summary" aria-label="Free public events">
-        <div><p className="eyebrow">Free public events</p><strong>{pilotFreeEventPublishing === null ? "Database update needed" : pilotFreeEventPublishing ? "Automatic publishing is on" : "Automatic publishing is off"}</strong><span>When on, a member in the first-20 cohort can open a free public event during the 60-day pilot. She becomes its Host. Guests can request a place, but places still need review. Turn this off at any time; already published events remain open until paused individually.</span></div>
+        <div><p className="eyebrow">Free public events</p><strong>{pilotFreeEventPublishing === null ? "Database update needed" : pilotFreeEventPublishing ? "Automatic publishing is on" : "Automatic publishing is off"}</strong><span>When on, a member in the first-20 cohort can open a free public event during the 60-day pilot. She becomes its Host. Active members book available free places immediately. Host updates and images can also publish without review while this is on. Turn this off at any time; already published events remain open until paused individually.</span></div>
         <button className="button button-outline" disabled={busy === "pilot-public-events" || pilotFreeEventPublishing === null || (intake?.mode !== "trusted_auto" && !pilotFreeEventPublishing)} onClick={() => void changePilotFreeEvents()} type="button">{pilotFreeEventPublishing ? "Pause new events" : "Allow free events"}</button>
       </section>
 
       <section className="member-request-desk" id="membership-requests">
+        {communityPilot ? <section className="member-intake-summary" aria-label="Founding Community opening"><div><p className="eyebrow">Community opening</p><strong>{communityPilot.enabled ? "Automatic opening is on" : "Automatic opening is off"}</strong><span>{communityPilot.cohort_count} of {communityPilot.capacity} founding places assigned. Each founding member can open one free Community and choose who joins. Pause an existing Community from Community oversight.</span></div><button className="button button-outline" type="button" disabled={busy === "pilot-communities" || (intake?.mode !== "trusted_auto" && !communityPilot.enabled)} onClick={() => void changeCommunityOpening()}>{communityPilot.enabled ? "Pause new Communities" : "Allow Communities"}</button></section> : null}
         <header className="oversight-heading"><div><p className="eyebrow">Needs your decision</p><h2>Membership requests</h2><p>Review only completed applications. A verified email without an application never becomes a member automatically.</p></div><span>{realRequests.length} real waiting</span></header>
         {!applicationJourneyReady ? <div className="oversight-clear"><strong>Application details need the latest database update.</strong><p>Member access remains protected.</p></div> : realRequests.length ? <div className="member-request-grid">{realRequests.map(renderRequestCard)}</div> : <div className="oversight-clear"><strong>No real membership request needs a decision.</strong><p>New completed requests will appear here automatically.</p></div>}
         {applicationJourneyReady && testRequests.length ? <details className="member-test-requests"><summary>Test applications ({testRequests.length}) — separate from real requests</summary><p>These accounts are for rehearsals. Check the details before making a test decision.</p><div className="member-request-grid">{testRequests.map(renderRequestCard)}</div></details> : null}

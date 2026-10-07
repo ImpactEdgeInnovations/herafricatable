@@ -34017,3 +34017,25 @@ textarea {
 .event-free-booking-control h2 { margin: .2rem 0 .4rem; font-size: clamp(1.2rem, 2vw, 1.55rem); }
 .event-free-booking-control p { margin: .2rem 0; }
 .event-free-booking-control .manager-message { flex-basis: 100%; }
+
+/* Member journeys: useful content before oversized introductory space. */
+.member-welcome { padding: 34px 0 30px; }
+.member-welcome-copy h1 { font-size: clamp(2.25rem, 4vw, 3.65rem); line-height: 1.08; }
+.member-welcome-copy > p:nth-of-type(2) { margin-top: 14px; }
+.community-member-hero, .community-member-hero:has(> div) { padding: 30px 0 22px; }
+.community-member-hero h1 { font-size: clamp(2.2rem, 4vw, 3.5rem); }
+.community-member-hero:has(> div) > div > p:last-child { margin-top: 12px; }
+.community-directory { margin-top: 28px; }
+.community-directory-heading { margin-bottom: 18px; padding-bottom: 12px; }
+.community-directory-heading h2 { font-size: clamp(1.6rem, 2.6vw, 2.35rem); }
+.network-hero h1 { font-size: clamp(2.1rem, 3.6vw, 3.4rem); }
+.community-landing-navigation a, .host-workspace-nav button { min-height: 44px; }
+.host-workspace-panel[hidden] { display: none; }
+.host-workspace-nav { overflow-x: auto; }
+.host-workspace-nav button { border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; background: transparent; color: var(--ink); white-space: nowrap; font: inherit; cursor: pointer; }
+.host-workspace-nav button[aria-pressed="true"] { border-bottom-color: var(--wine); color: var(--wine); }
+@media (max-width: 680px) {
+  .member-welcome { padding: 24px 0; }
+  .community-member-hero, .community-member-hero:has(> div) { padding: 24px 0 18px; }
+  .community-landing-navigation { flex-wrap: wrap; }
+}

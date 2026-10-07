@@ -47,7 +47,7 @@ assert(adminPage.includes('rpc("get_community_pilot_admin")'));
 assert(admin.includes('rpc("set_community_pilot_setting"'));
 assert(memberPage.includes('rpc("community_pilot_member_ready")'));
 assert(member.includes('privateDraftReady'));
-assert(member.includes('members cannot join until'));
+assert(member.includes('your first free Community opens'));
 assert(memberAdmin.includes("first 20 active non-staff members"));
 assert(eventHostPage.includes("<DestinationInvitationPanel"));
 assert(communityHost.includes('communityStatus === "published"'));
