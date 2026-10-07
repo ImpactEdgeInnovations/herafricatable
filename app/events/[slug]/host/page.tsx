@@ -5,6 +5,7 @@ import { DestinationInvitationPanel, type DestinationInvitation } from "@/compon
 import { createClient } from "@/lib/supabase/server";
 import { EventFreeBookingControl } from "@/components/events/event-free-booking-control";
 import type { Metadata } from "next";
+import { PilotEventCancellation, type PilotCancellation } from "@/components/events/pilot-event-cancellation";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -14,11 +15,15 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/sign-in?next=${encodeURIComponent(`/events/${slug}/host`)}`);
+  const { data: cancellationRows } = await supabase.rpc("list_pilot_event_cancellations", { p_slug: slug });
+  const cancellations = (cancellationRows as PilotCancellation[] | null) ?? [];
+  if (cancellations.length) return <main className="event-host-page"><MemberHeader active="events" label="Your event" /><PilotEventCancellation items={cancellations} /></main>;
   const { data, error } = await supabase.rpc("get_my_event_host_workspace", { p_slug: slug });
   const workspace = ((data as EventHostWorkspaceRow[] | null) ?? [])[0];
   if (error) throw new Error("The event workspace could not be loaded. Please try again.");
   if (!workspace) notFound();
   const { data: selfPublish } = await supabase.rpc("can_self_publish_pilot_event", { p_event_id: workspace.event_id });
+  const { data: canCancel } = await supabase.rpc("can_cancel_pilot_event", { p_event_id: workspace.event_id });
   const hasEnded = new Date(workspace.ends_at).getTime() < Date.now();
   const freeBookingResult = workspace.event_status === "published" && !hasEnded
     ? await supabase.from("events").select("free_instant_booking,registration_mode")
@@ -54,5 +59,5 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
     published_url: publishedSigned.data?.signedUrl ?? null,
   } : null;
   const outcomes = ((outcomesResult.data as EventHostOutcomes[] | null) ?? [])[0] ?? null;
-  return <main className="event-host-page"><MemberHeader active="events" label="Your event" /><EventHostWorkspace initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} communities={(communitiesResult.data as EventHostCommunity[] | null) ?? []} communityLinksReady={!communitiesResult.error} selfPublish={selfPublish === true} />{workspace.event_status === "published" && !hasEnded && freeBookingResult.data?.registration_mode === "manual_review" ? <EventFreeBookingControl eventId={workspace.event_id} eventTitle={workspace.event_title} enabled={Boolean(freeBookingResult.data.free_instant_booking)} ready={!freeBookingResult.error} /> : null}{workspace.event_status === "published" && !hasEnded ? <DestinationInvitationPanel destinationId={workspace.event_id} destinationName={workspace.event_title} destinationType="event" invitations={(invitationsResult.data as DestinationInvitation[] | null) ?? []} ready={!invitationsResult.error} /> : null}</main>;
+  return <main className="event-host-page"><MemberHeader active="events" label="Your event" /><EventHostWorkspace initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} communities={(communitiesResult.data as EventHostCommunity[] | null) ?? []} communityLinksReady={!communitiesResult.error} selfPublish={selfPublish === true} />{workspace.event_status === "published" && !hasEnded && freeBookingResult.data?.registration_mode === "manual_review" ? <EventFreeBookingControl eventId={workspace.event_id} eventTitle={workspace.event_title} enabled={Boolean(freeBookingResult.data.free_instant_booking)} ready={!freeBookingResult.error} /> : null}{workspace.event_status === "published" && !hasEnded ? <DestinationInvitationPanel destinationId={workspace.event_id} destinationName={workspace.event_title} destinationType="event" invitations={(invitationsResult.data as DestinationInvitation[] | null) ?? []} ready={!invitationsResult.error} /> : null}{canCancel === true ? <PilotEventCancellation eventId={workspace.event_id} title={workspace.event_title} /> : null}</main>;
 }

@@ -34,6 +34,7 @@ import {
   type MemberEventArchiveAdmin,
 } from "@/components/admin/member-event-archive-manager";
 import { createClient } from "@/lib/supabase/server";
+import { PilotEventCancellation, type PilotCancellation } from "@/components/events/pilot-event-cancellation";
 import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 import { EventGuestAccessControl } from "@/components/admin/event-guest-access-control";
 import { EventAutomaticCheckoutControl } from "@/components/admin/event-automatic-checkout-control";
@@ -421,9 +422,12 @@ export default async function AdminEventsPage({
     };
   });
 
+  const { data: pilotCancellations } = role === "super_admin" && view === "overview"
+    ? await supabase.rpc("list_pilot_event_cancellations") : { data: [] };
   return (
     <main className="admin-command-center event-command-page">
       <AdminHeader active="events" label="Event oversight" role={role} />
+      {view === "overview" && role === "super_admin" ? <PilotEventCancellation admin items={(pilotCancellations as PilotCancellation[] | null) ?? []} /> : null}
       <section className="oversight-subnav-shell">
         <nav className="oversight-subnav" aria-label="Event work">
           {views.filter((item) => role === "super_admin" || !["proposals", "host", "stories", "follow-up"].includes(item.href)).map((item) => (

@@ -26,3 +26,11 @@ for (const path of ["app/events/page.tsx", "app/events/past/page.tsx"]) {
   assert(read(path).includes("Back to home"), `${path} needs an obvious return route`);
 }
 console.log("Founding self-service, owned invitation delivery and pause boundaries verified.");
+const cancel = read("supabase/migrations/20261007110000_pilot_host_event_cancellation.sql");
+for (const boundary of ["public.can_self_publish_pilot_event(p_event_id)", "p_action = ''cancel''", "review_status <> 'pending'", "Tickets will not be restored", "alter table public.pilot_event_cancellations enable row level security", "from public, anon"]) {
+  // Review copy uses the same no-restoration policy in plain language.
+  if (boundary === "Tickets will not be restored") assert(read("components/events/pilot-event-cancellation.tsx").includes("Tickets will not be restored"));
+  else assert(cancel.includes(boundary), `Missing cancellation boundary: ${boundary}`);
+}
+assert(!cancel.includes("set status = 'confirmed'"), "Admin review must never restore tickets");
+assert(read("components/applications/application-image-quick-edit.tsx").includes('saved.status === "approved"'));

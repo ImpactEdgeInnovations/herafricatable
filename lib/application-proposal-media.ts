@@ -71,7 +71,7 @@ export async function uploadApplicationProposalMedia(
     upsert: false,
   });
   if (uploaded.error) throw uploaded.error;
-  const { error } = await supabase.rpc("save_application_proposal_media", {
+  const { data: savedId, error } = await supabase.rpc("save_application_proposal_media", {
     p_alt_text: input.altText.trim(),
     p_context_id: input.contextId,
     p_context_type: input.contextType,
@@ -84,6 +84,8 @@ export async function uploadApplicationProposalMedia(
     await supabase.storage.from("proposal-media").remove([path]);
     throw error;
   }
+  const { data: saved } = await supabase.from("application_proposal_media").select("status").eq("id", savedId).maybeSingle();
+  return { status: saved?.status as string | undefined };
 }
 
 export async function removeApplicationProposalMedia(

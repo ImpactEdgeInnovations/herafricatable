@@ -15,6 +15,7 @@ export function ApplicationImageField({
   onFile,
   onRemoveExisting,
   removing = false,
+  automatic = false,
 }: {
   altText: string;
   existing: ApplicationProposalMedia | null;
@@ -24,6 +25,7 @@ export function ApplicationImageField({
   onFile: (value: File | null) => void;
   onRemoveExisting?: () => void;
   removing?: boolean;
+  automatic?: boolean;
 }) {
   const [preview, setPreview] = useState<string | null>(existing?.image_url ?? null);
 
@@ -42,7 +44,7 @@ export function ApplicationImageField({
       <div>
         <span>Optional image</span>
         <h5>{label}</h5>
-        <p>A good image helps the review team understand the feeling of your idea. It is checked separately and is never published automatically.</p>
+        <p>{automatic ? "Your pilot event poster is saved and published without review. Choose an image you have permission to share." : "A good image helps the review team understand the feeling of your idea. It is checked separately before publication."}</p>
       </div>
       <div className="application-image-field-layout">
         <div className="application-image-preview">

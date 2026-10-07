@@ -50,6 +50,17 @@ The open membership pilot is timed; the real first-20 cohort receives creator pr
 
 ## Remaining acceptance
 
+### Pilot Host cancellation and poster saving
+
+- [x] Eligible founding Hosts can cancel their own future published free events with a public reason.
+- [x] Reuse ticket cancellation and preference-aware notification queueing; inform Super Admin.
+- [x] Admin can accept or reject/request a new plan without restoring tickets.
+- [x] Preserve the cancelled Host record and review note.
+- [x] Show “Save poster” for eligible published pilot events and check the saved status before claiming publication.
+- [x] Database rollback tests confirmed immediate poster approval and public lookup, Host cancellation, and Admin rejection without ticket restoration.
+
+Migration `20261007110000_pilot_host_event_cancellation.sql` is already applied to the live project. No real event was cancelled by these tests. The poster test used rolled-back Storage metadata; a real binary upload and inbox receipt are still separate browser/provider acceptance checks.
+
 ### Follow-up interface refinements
 
 - [x] Add “Join straight away” and “Ask to join” discovery filters without changing joining permissions.
