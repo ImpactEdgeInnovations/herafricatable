@@ -4,6 +4,8 @@ import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
+import { communityDraftKey } from "@/lib/community-drafts";
+import { useCommunityDraft } from "@/lib/use-community-draft";
 
 export type DestinationInvitation = {
   created_at: string;
@@ -28,12 +30,14 @@ const statusCopy: Record<string, string> = {
 
 export function DestinationInvitationPanel({
   destinationId,
+  currentUserId,
   destinationName,
   destinationType,
   invitations,
   ready,
 }: {
   destinationId: string;
+  currentUserId: string;
   destinationName: string;
   destinationType: "community" | "event";
   invitations: DestinationInvitation[];
@@ -43,8 +47,9 @@ export function DestinationInvitationPanel({
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const [note, setNote] = useState("");
-  const [preset, setPreset] = useState("");
+  const [draft, setDraft, clearDraft] = useCommunityDraft(communityDraftKey(currentUserId, `${destinationType}-invitation`, destinationId), { email: "", note: "", preset: "" });
+  const { note, preset } = draft;
+  const dirty = Boolean(draft.email || note || preset);
   const noteIdeas = destinationType === "event"
     ? [
         { label: "A warm invitation", text: `I thought you would enjoy ${destinationName}. It would be lovely to see you there.` },
@@ -57,16 +62,16 @@ export function DestinationInvitationPanel({
 
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy) return;
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
+    if (busy || !ready) return;
+    const submitted = { ...draft };
     setBusy(true);
     setMessage("");
+    try {
     const { data, error } = await supabase.rpc("create_table_invitation", {
       p_destination_id: destinationId,
       p_destination_type: destinationType,
-      p_email: form.get("email"),
-      p_personal_note: form.get("note") || null,
+      p_email: submitted.email.trim(),
+      p_personal_note: submitted.note || null,
     });
     if (error) {
       setBusy(false);
@@ -74,6 +79,8 @@ export function DestinationInvitationPanel({
       return;
     }
     const result = (data as { invitation_id: string; invitation_status: string }[] | null)?.[0];
+    if (!result?.invitation_id) throw new Error("The invitation could not be confirmed. Check recent invitations before sending again.");
+    clearDraft({ email: "", note: "", preset: "" });
     let delivered = false;
     if (result?.invitation_status === "sent") {
       try {
@@ -87,11 +94,9 @@ export function DestinationInvitationPanel({
         ? delivered ? "Invitation emailed. She can choose whether to accept it." : "Invitation saved for email delivery. It has not yet been confirmed as sent."
         : "Invitation received. Her Africa Table will review it before emailing someone who is not yet a member.",
     );
-    formElement.reset();
-    setBusy(false);
-    setNote("");
-    setPreset("");
     router.refresh();
+    } catch (error) { setMessage(memberErrorMessage(error, "send this invitation")); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -122,6 +127,8 @@ export function DestinationInvitationPanel({
                 disabled={busy}
                 maxLength={320}
                 name="email"
+                value={draft.email}
+                onChange={event => setDraft(current => ({ ...current, email: event.target.value }))}
                 placeholder="name@example.com"
                 required
                 type="email"
@@ -134,8 +141,7 @@ export function DestinationInvitationPanel({
                 value={preset}
                 onChange={(event) => {
                   const selected = event.target.value;
-                  setPreset(selected);
-                  setNote(noteIdeas.find((idea) => idea.label === selected)?.text ?? "");
+                  setDraft(current => ({ ...current, preset: selected, note: noteIdeas.find((idea) => idea.label === selected)?.text ?? "" }));
                 }}
               >
                 <option value="">Write my own</option>
@@ -153,14 +159,14 @@ export function DestinationInvitationPanel({
                 rows={4}
                 value={note}
                 onChange={(event) => {
-                  setNote(event.target.value);
-                  setPreset("");
+                  setDraft(current => ({ ...current, note: event.target.value, preset: "" }));
                 }}
               />
             </label>
             <button className="button button-primary" disabled={busy}>
               {busy ? "Sending…" : "Send invitation"}
             </button>
+            {dirty ? <p role="status">This invitation has not been sent. <button type="button" disabled={busy} onClick={() => clearDraft({ email: "", note: "", preset: "" })}>Discard invitation</button></p> : null}
             <small>
               Up to 20 invitations in 24 hours. We do not upload or store your
               address book.

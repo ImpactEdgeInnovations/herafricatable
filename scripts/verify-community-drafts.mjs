@@ -48,4 +48,17 @@ for (const field of ["tagline", "iconAlt", "coverAlt"]) assert(branding.includes
 assert(branding.includes("checked={draft.removeIcon}") && branding.includes("checked={draft.removeCover}"));
 assert(branding.indexOf("if (error) throw error;") < branding.indexOf("setSavedDraft(saved); clearDraft(saved)"));
 assert(branding.includes("Discard changes"));
+const invitations = read("components/member/destination-invitation-panel.tsx");
+assert(invitations.includes('communityDraftKey(currentUserId, `${destinationType}-invitation`, destinationId)'));
+assert(invitations.includes("value={draft.email}") && invitations.includes("value={note}"));
+assert(invitations.includes("Discard invitation") && invitations.includes("finally { setBusy(false); }"));
+assert(invitations.indexOf("if (!result?.invitation_id)") < invitations.indexOf('clearDraft({ email: "", note: "", preset: "" })'), "Invitation drafts must only clear after confirmed creation");
+assert(invitations.includes("Invitation saved for email delivery. It has not yet been confirmed as sent."), "Queued delivery must not be described as emailed");
+const publicPage = read("components/member/community-public-profile-panel.tsx");
+assert(publicPage.includes('communityDraftKey(currentUserId, "public-profile", communityId)'));
+for (const field of ["summary", "audience", "hostName", "hostIntro"]) assert(publicPage.includes(`value={draft.${field}}`));
+assert(publicPage.includes("checked={draft.enabled}") && publicPage.includes("checked={draft.memberCount}"));
+assert(publicPage.includes("Discard changes") && publicPage.includes("finally { setBusy(false); }"));
+assert(publicPage.indexOf("await ask({") < publicPage.indexOf('rpc("save_community_public_profile"'), "Public sharing must still require confirmation");
+assert(publicPage.includes("if (!error) { setSavedDraft(submitted); clearDraft(submitted)"), "Do not discard public-page edits on save failure");
 console.log("Draft store behaviour passed: account/room isolation, clone safety, cleanup, expiry and bounds. Navigation/reload source contracts passed; browser interaction acceptance remains separate.");

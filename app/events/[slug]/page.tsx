@@ -335,6 +335,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       {!hasEnded && canInviteToEvent ? (
         <DestinationInvitationPanel
+          currentUserId={user!.id}
           destinationId={event.id}
           destinationName={event.title}
           destinationType="event"

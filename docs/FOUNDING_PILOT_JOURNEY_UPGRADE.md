@@ -31,7 +31,9 @@ This is the current sequence. Earlier implementation notes below are historical;
 - [x] Pass behavioural file-guard tests (mocked browser/router), draft-store tests, photo pipeline and Community UI contracts, TypeScript and production build. These are automated checks, not real-device acceptance.
 - [x] Keep Community application and branding text drafts account-scoped and bounded in tab memory. Application fields are controlled across carousel close/reopen; consent is never persisted and resets before a new review. Branding removal choices, colour and descriptions have explicit unsaved/Discard states. Image files remain memory-only and use the shared leave guard.
 - [x] Protect Community submission from stuck saving states and avoid calling a confirmed save a failure when the later status refresh fails. Keep answers on submission failure; clear them after confirmed save or withdrawal. Simplify pilot creation/consent copy without changing server approval controls.
-- [ ] Finish invitation/public-profile form draft review, then populated mobile/desktop polish. Not every Host form is covered yet.
+- [x] Retain unfinished invitation email/message/preset by account and destination, with **Discard invitation**. Clear only after confirmed invitation creation; keep queued versus emailed feedback distinct and recover from network errors without a stuck button.
+- [x] Retain shareable Community page fields and visibility choices, with unsaved feedback and Discard. Snapshot edits before confirmation, prevent editing during saves, preserve failed edits and show the last successfully saved visibility rather than an unsaved checkbox. Clarify that the chosen public Host name/introduction can be shared while private Host details stay private.
+- [ ] Complete populated mobile/desktop polish and audit remaining specialised Host tools. The common creation/settings/invitation/profile draft pass is implemented; real-device acceptance is not complete.
 
 ### Phase 5 — reliable media operations
 

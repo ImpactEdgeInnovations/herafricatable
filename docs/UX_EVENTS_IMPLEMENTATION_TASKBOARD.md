@@ -25,6 +25,8 @@ Always distinguish **implemented**, **tested automatically**, and **accepted wit
 
 **7 October — application/branding continuation:** Community creation answers and branding text now use the same private, account-scoped draft store. Closing/reopening the application retains answers and selected-image state within that mounted screen; navigating away protects files but does not persist them. Guidelines consent always starts unchecked. Confirmed submissions are distinguished from later status-refresh failures. Pilot labels now explain immediate first-free-Community creation without overriding database checks. Invitation/public-profile forms and real-device walkthroughs remain open.
 
+**7 October — invitation/public-page continuation:** Account/destination-scoped invitation drafts and account/Community-scoped public-page drafts now retain unfinished text and choices. Both have clear Discard actions and recover from request errors. Invitation feedback still distinguishes database creation, queued email and confirmed delivery; drafts clear only after creation is confirmed. Public-sharing confirmation and server permission checks remain, with edits disabled during confirmation/save and the last saved visibility shown separately from unfinished choices. Public Host display-name/introduction wording is corrected. No new SQL is required. Populated device and real-inbox acceptance remain open.
+
 ## Outcome and scope
 
 The first useful journey is: discover an event → understand its date, place, cost and entry rule → verify email → request one place → see whether it is pending or confirmed → retrieve the pass and arrival details → attend → find a relevant follow-up or Community.

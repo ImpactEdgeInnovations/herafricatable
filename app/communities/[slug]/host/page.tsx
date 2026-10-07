@@ -338,6 +338,7 @@ export default async function CommunityHostPage({
         owner={community.membership_role === "owner"}
       />
       <CommunityPublicProfilePanel
+        currentUserId={user.id}
         communityId={community.community_id}
         communityName={community.name}
         migrationReady={!publicProfileResult.error}
@@ -400,6 +401,7 @@ export default async function CommunityHostPage({
         />
       ) : null}
       <CommunityHostWorkspace
+        currentUserId={user.id}
         communityId={community.community_id}
         communityName={community.name}
         communityStatus={community.status}

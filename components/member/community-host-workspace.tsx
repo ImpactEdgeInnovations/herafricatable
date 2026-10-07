@@ -143,6 +143,7 @@ export function CommunityHostWorkspace({
   automations,
   capabilitiesReady,
   communityId,
+  currentUserId,
   communityName,
   communityStatus,
   continuity,
@@ -160,6 +161,7 @@ export function CommunityHostWorkspace({
   automations: boolean;
   capabilitiesReady: boolean;
   communityId: string;
+  currentUserId: string;
   communityName: string;
   communityStatus: string;
   continuity: CommunityContinuitySummary | null;
@@ -346,6 +348,7 @@ export function CommunityHostWorkspace({
 
       {communityStatus === "published" ? (
         <DestinationInvitationPanel
+          currentUserId={currentUserId}
           destinationId={communityId}
           destinationName={communityName}
           destinationType="community"

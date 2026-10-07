@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
+import { communityDraftKey } from "@/lib/community-drafts";
+import { useCommunityDraft } from "@/lib/use-community-draft";
 
 export type CommunityPublicProfile = {
   about_benefits: string[];
@@ -23,6 +25,7 @@ export type CommunityPublicProfile = {
 
 export function CommunityPublicProfilePanel({
   communityId,
+  currentUserId,
   communityName,
   migrationReady,
   owner,
@@ -31,6 +34,7 @@ export function CommunityPublicProfilePanel({
   taglineReady,
 }: {
   communityId: string;
+  currentUserId: string;
   communityName: string;
   migrationReady: boolean;
   owner: boolean;
@@ -43,6 +47,15 @@ export function CommunityPublicProfilePanel({
   const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const initialDraft = {
+    summary: profile?.about_summary ?? "", audience: profile?.audience_summary ?? "",
+    benefits: Array.from({ length: 6 }, (_, index) => profile?.about_benefits[index] ?? ""),
+    hostName: profile?.host_display_name ?? "", hostIntro: profile?.host_intro ?? "",
+    memberCount: profile?.show_public_member_count ?? false, enabled: profile?.public_preview_enabled ?? false,
+  };
+  const [draft, setDraft, clearDraft] = useCommunityDraft(communityDraftKey(currentUserId, "public-profile", communityId), initialDraft);
+  const [savedDraft, setSavedDraft] = useState(initialDraft);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(savedDraft);
 
   if (!owner) return null;
 
@@ -62,11 +75,10 @@ export function CommunityPublicProfilePanel({
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const enabled = form.get("public_preview_enabled") === "on";
-    const benefits = Array.from({ length: 6 }, (_, index) =>
-      String(form.get(`benefit_${index + 1}`) ?? "").trim(),
-    ).filter(Boolean);
+    if (!owner || busy || !dirty) return;
+    const submitted = { ...draft, benefits: [...draft.benefits] };
+    const enabled = submitted.enabled;
+    const benefits = submitted.benefits.map(value => value.trim()).filter(Boolean);
 
     if (enabled && benefits.length < 3) {
       setMessage("Add at least three clear member benefits before sharing.");
@@ -79,7 +91,10 @@ export function CommunityPublicProfilePanel({
       return;
     }
 
-    if (enabled !== Boolean(profile?.public_preview_enabled)) {
+    setBusy(true);
+    setMessage("");
+    try {
+    if (enabled !== savedDraft.enabled) {
       const confirmed = await ask({
         title: enabled
           ? `Share ${communityName} publicly?`
@@ -93,17 +108,15 @@ export function CommunityPublicProfilePanel({
       if (!confirmed) return;
     }
 
-    setBusy(true);
-    setMessage("");
     const { error } = await supabase.rpc("save_community_public_profile", {
       p_about_benefits: benefits,
-      p_about_summary: String(form.get("about_summary") ?? ""),
-      p_audience_summary: String(form.get("audience_summary") ?? ""),
+      p_about_summary: submitted.summary,
+      p_audience_summary: submitted.audience,
       p_community_id: communityId,
-      p_host_display_name: String(form.get("host_display_name") ?? ""),
-      p_host_intro: String(form.get("host_intro") ?? ""),
+      p_host_display_name: submitted.hostName,
+      p_host_intro: submitted.hostIntro,
       p_public_preview_enabled: enabled,
-      p_show_public_member_count: form.get("show_member_count") === "on",
+      p_show_public_member_count: submitted.memberCount,
     });
     setBusy(false);
     setMessage(
@@ -113,10 +126,11 @@ export function CommunityPublicProfilePanel({
           ? "Public Community page saved and ready to share."
           : "Community page draft saved. It is not publicly visible.",
     );
-    if (!error) router.refresh();
+    if (!error) { setSavedDraft(submitted); clearDraft(submitted); router.refresh(); }
+    } catch (error) { setMessage(memberErrorMessage(error, "save this Community page")); }
+    finally { setBusy(false); }
   }
 
-  const benefits = profile?.about_benefits ?? [];
   const openingReady =
     profile?.community_status === "published" &&
     profile.release_ready &&
@@ -132,16 +146,16 @@ export function CommunityPublicProfilePanel({
           </div>
           <div
             className={
-              profile?.public_preview_enabled
+              savedDraft.enabled
                 ? "community-public-state is-live"
                 : "community-public-state"
             }
           >
             <strong>
-              {profile?.public_preview_enabled ? "Public link on" : "Private draft"}
+              {savedDraft.enabled ? "Public link on" : "Private draft"}
             </strong>
             <small>
-              {profile?.public_preview_enabled
+              {savedDraft.enabled
                 ? "Only approved profile information is visible."
                 : "Nothing on this page is public yet."}
             </small>
@@ -153,10 +167,10 @@ export function CommunityPublicProfilePanel({
             <strong>Always private</strong>
             <p>
               Posts, replies, member names, contact details, joining instructions,
-              payments and Host information never appear on this page.
+              payments and private Host information never appear on this page. The Host name and introduction you choose below can be shared.
             </p>
           </div>
-          {profile?.public_preview_enabled ? (
+          {savedDraft.enabled ? (
             <Link href={`/communities/${slug}/about`} target="_blank">
               Open public page ↗
             </Link>
@@ -181,10 +195,12 @@ export function CommunityPublicProfilePanel({
         ) : null}
 
         <form className="community-public-profile-form" onSubmit={(event) => void save(event)}>
+          <fieldset disabled={busy} className="span-two" style={{ display: "contents" }}>
           <label className="span-two">
             Community overview
             <textarea
-              defaultValue={profile?.about_summary ?? ""}
+              value={draft.summary}
+              onChange={event => setDraft(current => ({ ...current, summary: event.target.value }))}
               maxLength={900}
               minLength={60}
               name="about_summary"
@@ -196,7 +212,8 @@ export function CommunityPublicProfilePanel({
           <label className="span-two">
             Who is this for?
             <textarea
-              defaultValue={profile?.audience_summary ?? ""}
+              value={draft.audience}
+              onChange={event => setDraft(current => ({ ...current, audience: event.target.value }))}
               maxLength={400}
               minLength={20}
               name="audience_summary"
@@ -212,7 +229,8 @@ export function CommunityPublicProfilePanel({
                 <label key={index}>
                   Benefit {index + 1}
                   <input
-                    defaultValue={benefits[index] ?? ""}
+                    value={draft.benefits[index] ?? ""}
+                    onChange={event => { const value = event.target.value; setDraft(current => ({ ...current, benefits: current.benefits.map((benefit, position) => position === index ? value : benefit) })); }}
                     maxLength={180}
                     minLength={8}
                     name={`benefit_${index + 1}`}
@@ -234,7 +252,8 @@ export function CommunityPublicProfilePanel({
           <label>
             Public host name
             <input
-              defaultValue={profile?.host_display_name ?? ""}
+              value={draft.hostName}
+              onChange={event => setDraft(current => ({ ...current, hostName: event.target.value }))}
               maxLength={100}
               minLength={2}
               name="host_display_name"
@@ -245,7 +264,8 @@ export function CommunityPublicProfilePanel({
           <label>
             Host introduction
             <textarea
-              defaultValue={profile?.host_intro ?? ""}
+              value={draft.hostIntro}
+              onChange={event => setDraft(current => ({ ...current, hostIntro: event.target.value }))}
               maxLength={600}
               minLength={20}
               name="host_intro"
@@ -255,7 +275,8 @@ export function CommunityPublicProfilePanel({
 
           <label className="community-public-choice">
             <input
-              defaultChecked={profile?.show_public_member_count ?? false}
+              checked={draft.memberCount}
+              onChange={event => setDraft(current => ({ ...current, memberCount: event.target.checked }))}
               name="show_member_count"
               type="checkbox"
             />
@@ -267,8 +288,9 @@ export function CommunityPublicProfilePanel({
 
           <label className="community-public-choice is-primary">
             <input
-              defaultChecked={profile?.public_preview_enabled ?? false}
-              disabled={!openingReady}
+              checked={draft.enabled}
+              onChange={event => setDraft(current => ({ ...current, enabled: event.target.checked }))}
+              disabled={!openingReady && !savedDraft.enabled}
               name="public_preview_enabled"
               type="checkbox"
             />
@@ -288,11 +310,13 @@ export function CommunityPublicProfilePanel({
                 until every required detail and safety check is complete.
               </small>
             </div>
-            <button className="button button-primary" disabled={busy}>
+            <button className="button button-primary" disabled={busy || !dirty}>
               {busy ? "Saving page…" : "Save Community page"}
             </button>
           </footer>
+          </fieldset>
         </form>
+        {dirty ? <p role="status">Changes are not saved yet. <button type="button" disabled={busy} onClick={() => clearDraft(savedDraft)}>Discard changes</button></p> : null}
 
         {message ? (
           <p className="community-host-message" role="status">
