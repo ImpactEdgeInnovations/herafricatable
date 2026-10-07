@@ -390,7 +390,7 @@ Migration `20261007110000_pilot_host_event_cancellation.sql` is already applied 
 - [x] Keep reading backgrounds light, text dark and the shared typography/layout unchanged. No arbitrary CSS, dark themes or custom button colours.
 - [x] Verify all five button, hover and soft-badge combinations meet 4.5:1 contrast; darker Gold replaces the low-contrast decorative gold for controls.
 - [x] Apply `20261007193510_event_safe_appearance.sql` live and pass rollback-only test `046`: Host persistence, all presets, invalid values, unrelated-member denial and anonymous denial. No real event colour was changed by the tests.
-- [ ] Verify deployed colour previews on desktop/mobile. The remaining photo delivery and multi-account Community acceptance tasks above remain open.
+- [x] Verify deployed event and Lavington Women colour previews on desktop and 390 px mobile: white reading surfaces, dark text, correct accent, no horizontal overflow and working Discard. Real saved colours were left unchanged. The remaining photo delivery and multi-account Community acceptance tasks above remain open.
 
 ### Remaining interface refinements
 
