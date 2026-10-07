@@ -7,13 +7,14 @@ import { memberErrorMessage } from "@/lib/member-error";
 import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
 
-export function CommunityRecordingForm({ communityId, currentUserId }: { communityId: string; currentUserId: string }) {
+export function CommunityRecordingForm({ communityId, currentUserId, autoOpen = false }: { communityId: string; currentUserId: string; autoOpen?: boolean }) {
   const supabase = useMemo(() => createClient(), []);
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft, clearDraft, restored] = useCommunityDraft(communityDraftKey(currentUserId, "community-recording", communityId), {
     requestId: "", title: "", summary: "", link: "", permission: false,
   });
   const requestId = draft.requestId;
+  useEffect(() => { if (autoOpen) { setExpanded(true); setDraft(current => current.requestId ? current : { ...current, requestId: crypto.randomUUID() }); } }, [autoOpen, setDraft]);
   useEffect(() => { if (restored) setExpanded(true); }, [restored]);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");

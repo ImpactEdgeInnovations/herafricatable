@@ -10,6 +10,7 @@ import {
   type DestinationInvitation,
 } from "@/components/member/destination-invitation-panel";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { CommunityHostSection } from "./community-host-section";
 
 export type CommunityHostHealth = {
   active_members: number;
@@ -187,6 +188,7 @@ export function CommunityHostWorkspace({
     const form = new FormData(formElement);
     setBusy("invite");
     setMessage("");
+    try {
     const { error } = await supabase.rpc("invite_community_member", {
       p_community_id: communityId,
       p_email: form.get("email"),
@@ -202,6 +204,8 @@ export function CommunityHostWorkspace({
       formElement.reset();
       router.refresh();
     }
+    } catch (error) { setMessage(memberErrorMessage(error, "invite this member")); }
+    finally { setBusy(""); }
   }
 
   async function review(member: CommunityHostMember, action: string) {
@@ -217,6 +221,7 @@ export function CommunityHostWorkspace({
     }
     setBusy(member.membership_id);
     setMessage("");
+    try {
     const { error } = await supabase.rpc("review_community_membership", {
       p_action: action,
       p_membership_id: member.membership_id,
@@ -228,6 +233,8 @@ export function CommunityHostWorkspace({
         : "Community access updated.",
     );
     if (!error) router.refresh();
+    } catch (error) { setMessage(memberErrorMessage(error, "update this Community member")); }
+    finally { setBusy(""); }
   }
 
   async function updateProgramming(
@@ -237,6 +244,7 @@ export function CommunityHostWorkspace({
   ) {
     setBusy(option.item_id);
     setMessage("");
+    try {
     const rpc =
       option.item_type === "event"
         ? "set_community_event_link"
@@ -253,10 +261,12 @@ export function CommunityHostWorkspace({
       error
         ? memberErrorMessage(error, "update this community programming")
         : active
-        ? "Community events or learning updated."
+        ? option.item_type === "event" ? "Event linked. Members can find it in Gatherings." : "Learning updated."
         : "Item removed from this community.",
     );
     if (!error) router.refresh();
+    } catch (error) { setMessage(memberErrorMessage(error, "link this item")); }
+    finally { setBusy(""); }
   }
 
   async function nudgeIntroduction(member: CommunityIntroductionFollowup) {
@@ -269,6 +279,7 @@ export function CommunityHostWorkspace({
     const action = `nudge-${member.user_id}`;
     setBusy(action);
     setMessage("");
+    try {
     const { error } = await supabase.rpc(
       "send_community_introduction_nudge",
       {
@@ -283,6 +294,8 @@ export function CommunityHostWorkspace({
         : "Reminder scheduled. The member’s notification choices will be respected.",
     );
     if (!error) router.refresh();
+    } catch (error) { setMessage(memberErrorMessage(error, "send this reminder")); }
+    finally { setBusy(""); }
   }
 
   if (!migrationReady || !health) {
@@ -344,7 +357,7 @@ export function CommunityHostWorkspace({
         </p>
       ) : null}
 
-      <CommunityHostAssistant communityId={communityId} />
+      <CommunityHostSection id="writing-area" title="Help writing a post or welcome message"><CommunityHostAssistant communityId={communityId} /></CommunityHostSection>
 
       {communityStatus === "published" ? (
         <DestinationInvitationPanel
@@ -363,6 +376,7 @@ export function CommunityHostWorkspace({
         </section>
       )}
 
+      <CommunityHostSection id="continuity-area" title="How members are taking part">
       <section
         className="community-host-panel community-host-continuity"
         id="continuity"
@@ -529,6 +543,7 @@ export function CommunityHostWorkspace({
           </div>
         )}
       </section>
+      </CommunityHostSection>
 
       <section className="community-host-panel" id="admissions">
         <header>
@@ -541,6 +556,7 @@ export function CommunityHostWorkspace({
             fit this community’s purpose.
           </p>
         </header>
+        <details className="community-moderator-invite"><summary>Invite an existing member or moderator</summary>
         <form className="community-host-invite" onSubmit={(event) => void invite(event)}>
           <label>
             Active member email
@@ -557,6 +573,7 @@ export function CommunityHostWorkspace({
             {busy === "invite" ? "Sending…" : "Send invitation"}
           </button>
         </form>
+        </details>
         <div className="community-host-member-list">
           <h3>{pending.length ? "Waiting for your decision" : "No join requests are waiting"}</h3>
           {pending.map((member) => (
@@ -650,6 +667,7 @@ export function CommunityHostWorkspace({
         title="Link an existing event"
         onUpdate={updateProgramming}
       />
+      <CommunityHostSection id="learning-area" title="Learning resources">
       <ProgrammingPanel
         busy={busy}
         eyebrow="Learning"
@@ -659,6 +677,7 @@ export function CommunityHostWorkspace({
         title="Recommend useful learning."
         onUpdate={updateProgramming}
       />
+      </CommunityHostSection>
       {dialog}
     </>
   );
@@ -685,6 +704,8 @@ function ProgrammingPanel({
   sectionId: string;
   title: string;
 }) {
+  const [selectedId, setSelectedId] = useState("");
+  const selected = options.find(option => option.item_id === selectedId) ?? options[0];
   return (
     <section
       className="community-host-panel community-host-programming"
@@ -699,7 +720,10 @@ function ProgrammingPanel({
           {eyebrow === "Events" ? "Link an available event to show it in this Community. Members still choose whether to attend." : "Choose learning to share with members."}
         </p>
       </header>
-      {options.length ? (
+      {eyebrow === "Events" ? options.length ? <div className="community-event-link-picker">
+        <label>Choose an event<select value={selected?.item_id ?? ""} disabled={Boolean(busy)} onChange={event => setSelectedId(event.target.value)}>{options.map(option => <option key={option.item_id} value={option.item_id}>{option.title}{option.is_linked ? " — linked" : ""}</option>)}</select></label>
+        {selected ? <article><div><strong>{selected.title}</strong><small>{optionMeta(selected)}</small><p>{selected.summary}</p><span>{selected.is_linked ? "This event appears in your Community’s Gatherings tab." : "Link it so members can see it in the Gatherings tab."}</span></div><button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => void onUpdate(selected, !selected.is_linked, false)}>{busy === selected.item_id ? "Saving…" : selected.is_linked ? "Unlink event" : "Link event"}</button>{selected.is_linked ? <details><summary>Display options</summary><button type="button" disabled={Boolean(busy)} onClick={() => void onUpdate(selected, true, !selected.is_featured)}>{selected.is_featured ? "Stop showing first" : "Show first"}</button></details> : null}</article> : null}
+      </div> : <div className="community-host-empty"><p>No available event to link yet.</p><a className="button button-outline" href="#gathering-proposals">Plan a Community gathering</a></div> : options.length ? (
         <div>
           {options.map((option) => (
             <article key={option.item_id}>

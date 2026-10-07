@@ -89,6 +89,31 @@
 .community-host-section > div { padding: 0 20px 20px; }
 .community-host-section > div > :is(section, div) { width: 100%; margin: 0; border: 0; padding: 16px 0; box-shadow: none; }
 .community-host-section h2 { font: 600 1.25rem var(--sans, Arial, sans-serif); letter-spacing: -.02em; }
+.community-host-page [hidden] { display: none !important; }
+.community-host-more-nav { position: relative; }
+.community-host-more-nav > summary { min-height: 40px; padding: 10px 12px; border: 1px solid #e4dfdc; border-radius: 6px; cursor: pointer; font-size: .85rem; }
+.community-host-more-nav > div { position: absolute; right: 0; top: 100%; z-index: 5; display: grid; width: 220px; padding: 8px; gap: 6px; background: #fff; box-shadow: 0 10px 30px #241e2020; border: 1px solid #e4dfdc; border-radius: 8px; }
+.community-creation-choice { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0; }
+.community-creation-choice button { min-height: 44px; padding: 10px 14px; font: 500 .9rem var(--sans, Arial, sans-serif); border: 1px solid #ded8d5; border-radius: 6px; background: #fff; color: #241e20; cursor: pointer; }
+.community-creation-choice button[aria-pressed="true"] { background: #f0e5e7; color: #64172a; border-color: #b9919a; }
+.community-host-page .community-event-proposals h2 { font: 600 1.25rem var(--sans, Arial, sans-serif); letter-spacing: -.02em; }
+.community-host-page .community-event-wizard h3 { font: 600 1.05rem var(--sans, Arial, sans-serif); }
+.community-gathering-extra { margin: 16px 0; }
+.community-gathering-extra summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
+.community-gathering-extra label { display: grid; gap: 6px; margin: 12px 0; }
+.community-gathering-share { padding: 20px; margin: 20px 0; border: 1px solid #e4dfdc; border-radius: 8px; }
+.community-gathering-share > header { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
+.community-gathering-share h3 { font: 600 1.1rem var(--sans, Arial, sans-serif); }
+.community-event-link-picker { display: grid; gap: 14px; max-width: 760px; }
+.community-event-link-picker label { display: grid; gap: 8px; }
+.community-event-link-picker select { width: 100%; min-height: 44px; padding: 10px; font: inherit; border: 1px solid #ded8d5; border-radius: 6px; background: #fff; }
+.community-event-link-picker > article { display: block; padding: 16px; border: 1px solid #e4dfdc; border-radius: 8px; }
+.community-event-link-picker article strong, .community-event-link-picker article small { display: block; margin-bottom: 6px; }
+.community-event-link-picker article p { font-size: .9rem; line-height: 1.5; max-height: 4.5em; overflow: auto; }
+.community-event-link-picker article > button { margin: 12px 0; }
+.community-event-link-picker article details summary { cursor: pointer; min-height: 44px; padding: 12px 0; }
+.community-host-page .community-host-health { padding: 16px; gap: 16px; box-shadow: none; }
+.community-host-page .community-host-health strong { font: 600 1.5rem var(--sans, Arial, sans-serif); }
 @media (max-width: 700px) {
   .community-room-page > .community-room-hero { margin-top: 16px; }
   .community-room-page .community-room-cover { height: 120px; }

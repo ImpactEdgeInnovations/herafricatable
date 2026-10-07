@@ -7,6 +7,9 @@ import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
 import { CommunityRecordingForm } from "./community-recording-form";
+import { CommunityGatheringVideo } from "@/components/member/community-gathering-video";
+import { CommunityPhotoAlbums } from "./community-photo-albums";
+import { youtubeVideoId } from "@/lib/youtube";
 import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
 
@@ -42,7 +45,7 @@ export type CommunityEventProposal = {
   visibility: string;
 };
 
-const steps = ["Purpose", "Time & place", "Safety & open"];
+const steps = ["Details", "Time, link & contact"];
 const statusLabels: Record<CommunityEventProposal["status"], string> = {
   approved: "Approved and open",
   cancelled: "Cancelled",
@@ -61,8 +64,7 @@ function localDateTimeValue(value: string | Date) {
 }
 
 function initialValues() {
-  const starts = new Date(Date.now() + 7 * 86_400_000);
-  starts.setHours(18, 0, 0, 0);
+  const starts = new Date(Date.now() + 60 * 60_000);
   const ends = new Date(starts.getTime() + 2 * 3_600_000);
   return {
     accessibilityNotes: "",
@@ -71,7 +73,7 @@ function initialValues() {
     city: "Nairobi",
     country: "Kenya",
     endsAt: localDateTimeValue(ends),
-    format: "in_person" as CommunityEventProposal["format"],
+    format: "virtual" as CommunityEventProposal["format"],
     hostNote: "",
     mapUrl: "",
     onlineUrl: "",
@@ -84,16 +86,20 @@ function initialValues() {
     venueName: "",
     draftProposalId: null as string | null,
     draftStep: 0,
+    videoLink: "",
+    mediaChoice: "none",
   };
 }
 
 export function CommunityEventProposalPanel({
   communityId,
+  communitySlug,
   currentUserId,
   migrationReady,
   proposals,
 }: {
   communityId: string;
+  communitySlug: string;
   currentUserId: string;
   migrationReady: boolean;
   proposals: CommunityEventProposal[];
@@ -102,9 +108,17 @@ export function CommunityEventProposalPanel({
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [expanded, setExpanded] = useState(false);
+  const [creationMode, setCreationMode] = useState("scheduled");
+  const [shareArea, setShareArea] = useState("video");
+  const [openedRoom, setOpenedRoom] = useState<{ roomId: string; slug: string; communitySlug: string; title: string; endsAt: string } | null>(null);
+  useEffect(() => {
+    const reveal = () => { if (window.location.hash === "#community-video") setCreationMode("video"); else if (window.location.hash === "#gathering-proposals") setCreationMode("scheduled"); };
+    reveal(); window.addEventListener("hashchange", reveal);
+    return () => window.removeEventListener("hashchange", reveal);
+  }, []);
   const [values, setValues, clearDraft, restored] = useCommunityDraft(communityDraftKey(currentUserId, "community-gathering-plan", communityId), initialValues);
   const editingId = values.draftProposalId;
-  const step = values.draftStep;
+  const step = Math.min(values.draftStep, steps.length - 1);
   const setEditingId = (value: string | null) => setValues(current => ({ ...current, draftProposalId: value }));
   const setStep = (next: SetStateAction<number>) => setValues(current => ({ ...current, draftStep: typeof next === "function" ? next(current.draftStep) : next }));
   useEffect(() => { if (restored) setExpanded(true); }, [restored]);
@@ -147,6 +161,8 @@ export function CommunityEventProposalPanel({
       venueName: proposal.venue_name ?? "",
       draftProposalId: proposal.proposal_id,
       draftStep: 0,
+      videoLink: "",
+      mediaChoice: "none",
     });
     setStep(0);
     setMessage("");
@@ -177,7 +193,7 @@ export function CommunityEventProposalPanel({
         setMessage("Add the venue and city for this gathering.");
         return;
       }
-      if (values.format !== "in_person" && !values.onlineUrl.startsWith("https://")) {
+      if ((values.format === "hybrid" || values.onlineUrl.trim()) && !values.onlineUrl.startsWith("https://")) {
         setMessage("Add the full private online link, beginning with https://.");
         return;
       }
@@ -187,12 +203,20 @@ export function CommunityEventProposalPanel({
   }
 
   async function save(submit: boolean) {
+    const start = new Date(values.startsAt), end = new Date(values.endsAt);
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) { setMessage("Choose a valid start and end time."); return; }
+    if (submit && start <= new Date()) { setMessage("Choose a future start time. Online gatherings can start today."); return; }
+    if (submit && values.format !== "virtual" && start.getTime() < Date.now() + 24 * 60 * 60_000) { setMessage("In-person gatherings need 24 hours’ notice. Choose Online for a gathering today."); return; }
+    if (values.onlineUrl.trim() && !values.onlineUrl.startsWith("https://")) { setMessage("Use a full meeting link beginning with https://, or leave it empty for text chat."); return; }
+    if (values.mediaChoice === "video" && values.videoLink.trim() && !youtubeVideoId(values.videoLink)) { setMessage("Paste a YouTube video link, not a channel address."); return; }
     if (!values.safetyContactName.trim() || values.safetyContactPhone.trim().length < 7) {
       setMessage("Add the person responsible on the day and a working phone number.");
       return;
     }
     setBusy(true);
     setMessage("");
+    let gatheringOpened = false;
+    try {
     const { data: savedProposal, error } = await supabase.rpc("save_community_event_proposal", {
       p_accessibility_notes: values.accessibilityNotes.trim() || null,
       p_address_line: values.addressLine.trim() || null,
@@ -225,7 +249,7 @@ export function CommunityEventProposalPanel({
     }
     setEditingId(savedProposal);
     if (submit) {
-      const { error: publishError } = await supabase.rpc(
+      const { data: publishedEventId, error: publishError } = await supabase.rpc(
         "publish_community_gathering",
         { p_proposal_id: savedProposal },
       );
@@ -234,12 +258,26 @@ export function CommunityEventProposalPanel({
         setMessage(memberErrorMessage(publishError, "open this gathering"));
         return;
       }
+      gatheringOpened = true;
+      const cards = await supabase.rpc("list_community_gathering_cards", { p_community_id: communityId });
+      const room = (cards.data as { room_id: string; event_id: string; event_slug: string }[] | null)?.find(item => item.event_id === publishedEventId);
+      if (cards.error || !room) { setMessage("Your gathering is open. Its extra media controls could not load; find it in your gatherings below."); setExpanded(false); clearDraft(initialValues()); router.refresh(); return; }
+      if (room) {
+        setOpenedRoom({ roomId: room.room_id, slug: room.event_slug, communitySlug, title: values.title, endsAt: end.toISOString() });
+        setShareArea(values.mediaChoice === "photos" ? "photos" : "video");
+        if (values.mediaChoice === "video" && values.videoLink.trim()) {
+          const videoResult = await supabase.rpc("save_community_gathering_video_experience", { p_room_id: room.room_id, p_video_id: youtubeVideoId(values.videoLink), p_is_visible: true, p_keep_replay: true, p_viewing_mode: "watch_together" });
+          if (videoResult.error) { setMessage("Your gathering is open, but the video was not saved. Add it below."); setExpanded(false); clearDraft(initialValues()); router.refresh(); return; }
+        }
+      }
     }
     setMessage(submit ? "Your gathering is open to Community members." : "Private draft saved.");
     setBusy(false);
     setExpanded(false);
     clearDraft(initialValues());
     router.refresh();
+    } catch (error) { setMessage(gatheringOpened ? "Your gathering is open, but its extra controls could not load. Find it in your gatherings below." : memberErrorMessage(error, "save this gathering")); }
+    finally { setBusy(false); }
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -266,21 +304,22 @@ export function CommunityEventProposalPanel({
 
   return (
     <section className="community-event-proposals" id="gathering-proposals" aria-labelledby="community-event-proposal-title">
-      {migrationReady ? <CommunityRecordingForm communityId={communityId} currentUserId={currentUserId} /> : null}
       <header>
         <div>
           <p className="eyebrow">Community gatherings</p>
-          <h2 id="community-event-proposal-title">Create a Community gathering</h2>
-          <p>Plan and open a free gathering for your members. You lead the room; Her Africa Table steps in only for public reach, payment or a safety concern.</p>
+          <h2 id="community-event-proposal-title">Bring your Community together</h2>
+          <p>Meet at a set time, or share a video for people to watch and discuss whenever they like.</p>
         </div>
-        {migrationReady ? <button className="button button-primary" onClick={startNew} type="button">Plan a gathering</button> : null}
+        {migrationReady && creationMode === "scheduled" && !expanded ? <button className="button button-primary" onClick={startNew} type="button">Plan a gathering</button> : null}
       </header>
+      {migrationReady ? <div className="community-creation-choice" role="group" aria-label="What would you like to create?"><button type="button" aria-pressed={creationMode === "scheduled"} onClick={() => setCreationMode("scheduled")}>Scheduled gathering</button><button type="button" aria-pressed={creationMode === "video"} onClick={() => setCreationMode("video")}>Watch a video anytime</button></div> : null}
+      <div hidden={creationMode !== "video"}>{migrationReady ? <CommunityRecordingForm communityId={communityId} currentUserId={currentUserId} autoOpen={creationMode === "video"} /> : null}</div>
 
       {!migrationReady ? (
         <div className="community-panel-empty"><strong>Planning a gathering is temporarily unavailable</strong><p>Please try again later. Gatherings you already planned are safe.</p></div>
       ) : null}
 
-      {expanded && migrationReady ? (
+      {expanded && migrationReady && creationMode === "scheduled" ? (
         <form className="community-event-wizard" onSubmit={submit}>
           <header>
             <div><p className="eyebrow">{editingId ? "Continue draft" : "New gathering"}</p><h3>{steps[step]}</h3></div>
@@ -293,7 +332,7 @@ export function CommunityEventProposalPanel({
           {step === 0 ? (
             <div className="community-event-wizard-step">
               <label>Gathering name<input maxLength={140} onChange={(event) => update("title", event.target.value)} placeholder="For example: Founder finance breakfast" value={values.title}/></label>
-              <label>Why should members gather?<textarea maxLength={2000} minLength={40} onChange={(event) => update("summary", event.target.value)} placeholder="Explain the purpose, who it will help and what members should leave with." rows={5} value={values.summary}/><small>{values.summary.length}/2000 characters</small></label>
+              <label>What will you discuss?<textarea maxLength={2000} minLength={40} onChange={(event) => update("summary", event.target.value)} placeholder="A short description and a question to get everyone talking." rows={3} value={values.summary}/><small>At least 40 characters</small></label>
               <div className="community-event-fixed-terms"><span>Members only</span><span>Free</span><p>Public and paid Community events will open only after their stronger financial and safety checks pass.</p></div>
             </div>
           ) : null}
@@ -306,20 +345,15 @@ export function CommunityEventProposalPanel({
                 <label>Starts<input onChange={(event) => update("startsAt", event.target.value)} type="datetime-local" value={values.startsAt}/></label>
                 <label>Ends<input onChange={(event) => update("endsAt", event.target.value)} type="datetime-local" value={values.endsAt}/></label>
                 {values.format !== "virtual" ? <><label>Venue name<input maxLength={160} onChange={(event) => update("venueName", event.target.value)} placeholder="Venue or host space" value={values.venueName}/></label><label>City<input maxLength={120} onChange={(event) => update("city", event.target.value)} value={values.city}/></label><label>Country<input maxLength={120} onChange={(event) => update("country", event.target.value)} value={values.country}/></label><label>Address <small>Shared only with eligible members</small><input maxLength={240} onChange={(event) => update("addressLine", event.target.value)} value={values.addressLine}/></label><label className="form-wide">Map link <small>Optional</small><input onChange={(event) => update("mapUrl", event.target.value)} placeholder="https://…" type="url" value={values.mapUrl}/></label></> : null}
-                {values.format !== "in_person" ? <label className="form-wide">Private online link<input onChange={(event) => update("onlineUrl", event.target.value)} placeholder="https://…" type="url" value={values.onlineUrl}/><small>Only confirmed attendees can receive this link.</small></label> : null}
-              </div>
-            </div>
-          ) : null}
-
-          {step === 2 ? (
-            <div className="community-event-wizard-step">
-              <div className="form-grid">
-                <label>Responsible person on the day<input maxLength={120} onChange={(event) => update("safetyContactName", event.target.value)} placeholder="Full name" value={values.safetyContactName}/></label>
+                {values.format !== "in_person" ? <label className="form-wide">Video call link <small>{values.format === "virtual" ? "Optional" : "Required"}</small><input onChange={(event) => update("onlineUrl", event.target.value)} placeholder="Google Meet, Zoom or another meeting link" type="url" value={values.onlineUrl}/><small>Leave empty to gather using Community text chat. Shared only with eligible members.</small></label> : null}
+                <label className="form-wide">Add something to share <small>Optional</small><select value={values.mediaChoice} onChange={event => update("mediaChoice", event.target.value)}><option value="none">Nothing for now</option><option value="video">YouTube video or livestream</option><option value="photos">Photos in a gathering album</option></select></label>
+                {values.mediaChoice === "video" ? <label className="form-wide">YouTube video link<input type="url" value={values.videoLink} onChange={event => update("videoLink", event.target.value)} placeholder="https://www.youtube.com/watch?v=…" /><small>Use a video you have permission to share. It plays inside your gathering; its YouTube link may still work elsewhere.</small></label> : null}
+                {values.mediaChoice === "photos" ? <p className="form-wide">Open the gathering first, then upload your photos below into an album linked to this gathering. No page change is needed.</p> : null}
+                <label>Host contact name<input maxLength={120} onChange={(event) => update("safetyContactName", event.target.value)} placeholder="Full name" value={values.safetyContactName}/></label>
                 <label>Private contact number<input maxLength={40} onChange={(event) => update("safetyContactPhone", event.target.value)} placeholder="+254…" type="tel" value={values.safetyContactPhone}/></label>
-                <label className="form-wide">Accessibility or arrival information <small>Optional</small><textarea maxLength={1200} onChange={(event) => update("accessibilityNotes", event.target.value)} placeholder="Access needs, building entrance, transport or other useful context." rows={3} value={values.accessibilityNotes}/></label>
-                <label className="form-wide">Private planning note <small>Optional</small><textarea maxLength={1200} onChange={(event) => update("hostNote", event.target.value)} placeholder="Anything your Host team should remember about this gathering." rows={3} value={values.hostNote}/></label>
               </div>
-              <div className="community-event-review-note"><strong>Ready when you are</strong><p>Opening creates the gathering, adds free member places and quietly lets your Community know. It remains private to active members.</p></div>
+              <details className="community-gathering-extra"><summary>Extra details (optional)</summary><label>Access or arrival information<textarea maxLength={1200} rows={2} value={values.accessibilityNotes} onChange={event => update("accessibilityNotes", event.target.value)} /></label><label>Private Host note<textarea maxLength={1200} rows={2} value={values.hostNote} onChange={event => update("hostNote", event.target.value)} /></label></details>
+              <div className="community-event-review-note"><p>Online gatherings can start today. Opening lets your Community know; only active members can take part.</p></div>
             </div>
           ) : null}
 
@@ -334,6 +368,8 @@ export function CommunityEventProposalPanel({
         </form>
       ) : null}
 
+      {openedRoom ? <section className="community-gathering-share"><header><h3>{openedRoom.title} is open</h3><Link href={`/communities/${openedRoom.communitySlug}?view=gatherings&gathering=${encodeURIComponent(openedRoom.slug)}`}>View gathering →</Link></header><div className="community-creation-choice" role="group" aria-label="Add gathering media"><button type="button" aria-pressed={shareArea === "video"} onClick={() => setShareArea("video")}>Video</button><button type="button" aria-pressed={shareArea === "photos"} onClick={() => setShareArea("photos")}>Photos</button></div><div hidden={shareArea !== "video"}><CommunityGatheringVideo roomId={openedRoom.roomId} currentUserId={currentUserId} canManage endsAt={openedRoom.endsAt} title={openedRoom.title} initialVideo={null} ready /></div><div hidden={shareArea !== "photos"}><CommunityPhotoAlbums key={openedRoom.roomId} communityId={communityId} currentUserId={currentUserId} presentation="member" initialGatheringId={openedRoom.roomId} /></div></section> : null}
+
       {proposals.length ? (
         <div className="community-event-proposal-list">
           {proposals.map((proposal) => (
@@ -341,7 +377,7 @@ export function CommunityEventProposalPanel({
               <header><div><span className={`proposal-state state-${proposal.status}`}>{statusLabels[proposal.status]}</span><h3>{proposal.title}</h3><p>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: proposal.timezone }).format(new Date(proposal.starts_at))} · {proposal.format.replaceAll("_", " ")}</p></div><strong>{proposal.capacity} places</strong></header>
               {proposal.review_note ? <div className="proposal-review-guidance"><strong>Review guidance</strong><p>{proposal.review_note}</p></div> : null}
               <footer>
-                {proposal.status === "approved" && proposal.canonical_event_slug ? <Link className="button button-primary" href={`/events/${proposal.canonical_event_slug}`}>View gathering</Link> : null}
+                {proposal.status === "approved" && proposal.canonical_event_slug ? <Link className="button button-primary" href={`/communities/${communitySlug}?view=gatherings&gathering=${encodeURIComponent(proposal.canonical_event_slug)}`}>View gathering</Link> : null}
                 {["draft", "changes_requested"].includes(proposal.status) ? <button className="button button-primary" onClick={() => edit(proposal)} type="button">{proposal.status === "changes_requested" ? "Update and resend" : "Continue draft"}</button> : null}
                 {["draft", "submitted", "changes_requested"].includes(proposal.status) ? <button className="button button-outline" disabled={busy} onClick={() => void cancel(proposal)} type="button">Cancel</button> : null}
               </footer>

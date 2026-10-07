@@ -107,6 +107,8 @@ export default async function CommunityPage({
   ).find((item) => item.slug === slug);
   if (!community) notFound();
   if (community.membership_status !== "active") redirect("/communities");
+  const joiningResult = await supabase.rpc("list_community_joining_settings", { p_community_id: community.community_id });
+  const joiningMode = ((joiningResult.data as { effective_mode: string }[] | null) ?? [])[0]?.effective_mode ?? "unknown";
   const [
     postsResult,
     structuredPostsResult,
@@ -367,7 +369,7 @@ export default async function CommunityPage({
           <p>{community.description}</p>
           <div className="community-room-meta">
             <span>{community.member_count} {community.member_count === 1 ? "member" : "members"}</span>
-            <CommunityAboutPanel name={community.name} description={community.description} joiningMode={community.effective_mode ?? community.admission_mode ?? "approval"} memberCount={community.member_count} />
+            <CommunityAboutPanel name={community.name} description={community.description} joiningMode={joiningMode} memberCount={community.member_count} />
             <Link href="/communities">All Communities</Link>
           </div>
         </div>
@@ -394,23 +396,6 @@ export default async function CommunityPage({
                   )[0] ?? null
             }
           />
-          {Number(readSummary?.new_activity_count ?? 0) > 0 || nextGathering ? <nav className="community-overview-links" aria-label="Community updates">
-            <Link href={`/communities/${slug}?view=conversations`}>
-              <span aria-hidden="true">01</span>
-              <div><strong>Conversations</strong><small>{Number(readSummary?.new_activity_count ?? 0) > 0 ? `${readSummary?.new_activity_count} new updates` : "Questions, ideas and useful updates"}</small></div>
-              <i aria-hidden="true">→</i>
-            </Link>
-            <Link href={`/communities/${slug}?view=gatherings`}>
-              <span aria-hidden="true">02</span>
-              <div><strong>Gatherings</strong><small>{nextGathering ? `${nextGathering.title} · ${new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short" }).format(new Date(nextGathering.starts_at))}` : "See what is coming up"}</small></div>
-              <i aria-hidden="true">→</i>
-            </Link>
-            <Link href={`/communities/${slug}?view=people`}>
-              <span aria-hidden="true">03</span>
-              <div><strong>People</strong><small>Get to know {community.member_count} members</small></div>
-              <i aria-hidden="true">→</i>
-            </Link>
-          </nav> : null}
           {!checkInResult.error ? (
             <details className="community-room-more">
               <summary>

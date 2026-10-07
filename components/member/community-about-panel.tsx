@@ -15,7 +15,7 @@ export function CommunityAboutPanel({ name, description, joiningMode, memberCoun
       onClick={event => { if (event.target === event.currentTarget) { const bounds = event.currentTarget.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) panel.current?.close(); } }}>
       <header><h2 id="community-about-title">About {name}</h2><button type="button" autoFocus onClick={() => panel.current?.close()} aria-label="Close About">×</button></header>
       <p>{description}</p>
-      <dl><div><dt>People</dt><dd>{memberCount} {memberCount === 1 ? "member" : "members"}</dd></div><div><dt>Joining</dt><dd>{joiningMode === "invite_only" ? "By invitation" : joiningMode === "approval" ? "The Host reviews each request" : "Open to active Her Africa Table members"}</dd></div></dl>
+      <dl><div><dt>People</dt><dd>{memberCount} {memberCount === 1 ? "member" : "members"}</dd></div><div><dt>Joining</dt><dd>{joiningMode === "invite_only" ? "By invitation" : joiningMode === "approval" ? "The Host reviews each request" : joiningMode === "open" ? "Open to active Her Africa Table members" : "Ask the Host about joining"}</dd></div></dl>
       <p className="community-about-note">Conversations and shared media are for Community members. You can contact someone privately once you both agree to connect.</p>
     </dialog>
   </>;

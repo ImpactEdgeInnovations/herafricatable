@@ -284,13 +284,14 @@ export default async function CommunityHostPage({
         <a href="#gatherings">Link an event</a>
         <a href="#joining-settings">Who can join?</a>
         <a href="#community-photos">Photos</a>
-        <a href="#welcome">Welcome</a>
         {community.membership_role === "owner" ? (
           <>
             <a href="#identity">Look &amp; feel</a>
-            <a href="#public-page">Public page</a>
           </>
         ) : null}
+        <details className="community-host-more-nav"><summary>More tools</summary><div>
+        <a href="#welcome">Welcome</a>
+        {community.membership_role === "owner" ? <a href="#public-page">Public page</a> : null}
         <a href="#continuity">Member health</a>
         <a href="#resources">Learning</a>
         <a href="#circle-programming">Circles</a>
@@ -301,6 +302,7 @@ export default async function CommunityHostPage({
             <a href="#statement">Earnings</a>
           </>
         ) : null}
+        </div></details>
       </nav>
       <CommunityHostSection id="host-tools" title="Plans and tools">
         <CommunityHostCapabilitiesPanel
@@ -317,6 +319,7 @@ export default async function CommunityHostPage({
       />
       <CommunityEventProposalPanel
         communityId={community.community_id}
+        communitySlug={slug}
         currentUserId={user.id}
         migrationReady={!eventProposalResult.error}
         proposals={

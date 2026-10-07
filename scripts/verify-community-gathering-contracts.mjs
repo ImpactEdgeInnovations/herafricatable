@@ -77,7 +77,7 @@ for (const contract of [
   "publish_community_gathering",
   "Open for members",
   "Your gathering is open to Community members",
-  "public reach, payment or a safety concern",
+  "Online gatherings can start today",
 ]) assert(proposalPanel.includes(contract), `Owner-led gathering UX must include ${contract}`);
 for (const contract of [
   "gatheringRoomHref",

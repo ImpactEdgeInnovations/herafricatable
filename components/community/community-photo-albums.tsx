@@ -19,9 +19,10 @@ const emptyDraft = { title: "", description: "", roomId: "", requestId: "" };
 const choices = [ ["hosts_only", "Only Hosts can add photos"], ["members", "Members can add photos immediately"], ["review", "Member photos need approval"] ];
 const statusLabels: Record<string, string> = { pending: "Waiting for approval", published: "Visible to members", hidden: "Hidden", rejected: "Not approved", removed: "Removed" };
 
-export function CommunityPhotoAlbums({ communityId, currentUserId, presentation = "host", onUnsavedChange, onBusyChange }: {
+export function CommunityPhotoAlbums({ communityId, currentUserId, presentation = "host", onUnsavedChange, onBusyChange, initialGatheringId }: {
   communityId: string; currentUserId: string; presentation?: "host" | "member";
   onUnsavedChange?(unsaved: boolean): void; onBusyChange?(busy: boolean): void;
+  initialGatheringId?: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
@@ -40,7 +41,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
   const closePhoto = useCallback(() => setSelectedPhoto(""), []);
   const input = useRef<HTMLInputElement>(null);
   const requestVersion = useRef(0);
-  const [draft, setDraft, clearDraft] = useCommunityDraft(communityDraftKey(currentUserId, "photo-album", communityId), emptyDraft);
+  const [draft, setDraft, clearDraft] = useCommunityDraft(communityDraftKey(currentUserId, "photo-album", initialGatheringId ? `${communityId}:${initialGatheringId}` : communityId), { ...emptyDraft, roomId: initialGatheringId ?? "" });
   const unsavedFiles = files.some(item => !item.saved);
   const photoSettingsInitial = { mode: details?.album.contribution_mode ?? "hosts_only", closed: details?.album.is_closed ?? false };
   const [photoSettings, setPhotoSettings, clearPhotoSettings] = useCommunityDraft(communityDraftKey(currentUserId, "album-settings", details?.album.id ?? "none"), photoSettingsInitial);
@@ -118,7 +119,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
       await refresh();
       const { data: album, error: albumError } = await supabase.rpc("get_community_photo_album", { p_album_id: data });
       if (albumError) throw albumError;
-      setDetails(album as AlbumDetails); clearDraft(emptyDraft); setMessage("Album created.");
+      setDetails(album as AlbumDetails); clearDraft({ ...emptyDraft, roomId: initialGatheringId ?? "" }); setMessage("Album created.");
     } catch (error) { setMessage(memberErrorMessage(error, "create this album")); }
     finally { setBusy(""); }
   }
@@ -233,7 +234,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
         {list.can_manage ? <details className="community-photo-create"><summary>New album</summary><form onSubmit={create}>
           <label>Album name<input required minLength={3} maxLength={140} value={draft.title} disabled={Boolean(busy)} onChange={event => setDraft(previous => ({ ...previous, title: event.target.value }))} /></label>
           <label>Description (optional)<textarea maxLength={2000} rows={3} value={draft.description} disabled={Boolean(busy)} onChange={event => setDraft(previous => ({ ...previous, description: event.target.value }))} /></label>
-          <label>Related gathering (optional)<select value={draft.roomId} disabled={Boolean(busy)} onChange={event => setDraft(previous => ({ ...previous, roomId: event.target.value }))}><option value="">Community album — no gathering</option>{gatherings.map(item => <option key={item.room_id} value={item.room_id}>{item.title}</option>)}</select></label>
+          <label>{initialGatheringId ? "Linked gathering" : "Related gathering (optional)"}<select value={draft.roomId} disabled={Boolean(busy) || Boolean(initialGatheringId)} onChange={event => setDraft(previous => ({ ...previous, roomId: event.target.value }))}><option value="">Community album — no gathering</option>{gatherings.map(item => <option key={item.room_id} value={item.room_id}>{item.title}</option>)}</select></label>
           <button className="button button-primary" disabled={Boolean(busy) || unsavedFiles}>{busy === "create" ? "Creating…" : "Create album"}</button>
         </form></details> : null}
       </> : null}
