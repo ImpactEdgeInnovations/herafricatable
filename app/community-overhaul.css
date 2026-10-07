@@ -99,6 +99,11 @@
 .community-host-page .community-event-proposals h2 { font: 600 1.25rem var(--sans, Arial, sans-serif); letter-spacing: -.02em; }
 .community-host-page .community-joining-settings h2 { font: 600 1.25rem var(--sans, Arial, sans-serif); letter-spacing: -.02em; }
 .community-host-page .community-event-wizard h3 { font: 600 1.05rem var(--sans, Arial, sans-serif); }
+.community-host-page .community-event-wizard-step .form-grid { margin: 0; gap: 16px 20px; }
+.community-host-page .community-event-wizard-step label { display: grid; gap: 6px; font: 600 .875rem var(--sans, Arial, sans-serif); }
+.community-host-page .community-event-wizard-step label > small { position: static; inset: auto; transform: none; display: block; font: 400 .8rem var(--sans, Arial, sans-serif); line-height: 1.5; color: #655e60; }
+.community-host-page .community-event-wizard-step :is(input, select, textarea) { margin-top: 0; font: 400 .9rem var(--sans, Arial, sans-serif); }
+.community-host-page .community-event-wizard-step .form-wide { grid-column: 1 / -1; }
 .community-gathering-extra { margin: 16px 0; }
 .community-gathering-extra summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
 .community-gathering-extra label { display: grid; gap: 6px; margin: 12px 0; }
