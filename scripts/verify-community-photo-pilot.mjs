@@ -1,0 +1,11 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const read = path => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+const sql = read("supabase/migrations/20261007190000_community_photo_pilot_participation.sql");
+for (const token of ["get_membership_intake_mode()='trusted_auto'", "community_pilot_settings", "m.role='owner'", "community_pilot_access", "failed>0", "admin_paused", "not public.can_manage_community", "reserve_community_album_photos_internal", "community_photo_actor_can_upload_internal", "Photo sharing has been paused by Admin"]) assert(sql.includes(token), token);
+for (const name of ["reserve_community_album_photos_internal(uuid,uuid,integer,boolean)", "get_community_photo_album_internal(uuid)", "list_community_photo_albums_internal(uuid)", "save_admin_community_photo_settings_internal(uuid,integer,boolean,text)"]) assert(sql.includes(`revoke all on function public.${name} from public,anon,authenticated`), name);
+const ui = read("components/community/community-photo-albums.tsx");
+for (const token of ["Allow photos during the pilot", "save_pilot_community_photo_uploads", "list.admin_paused", "Add photos to this album", "Your photos will be saved in", "after the Host approves them"]) assert(ui.includes(token), token);
+assert(ui.includes("details.can_upload ? <form"));
+assert(ui.includes("list.can_manage ? <details"));
+console.log("Pilot photo source contracts passed. Real upload/browser acceptance remains open; members contribute only to Host-created albums.");

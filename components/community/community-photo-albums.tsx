@@ -12,7 +12,7 @@ import { CommunityGatheringDiscussion } from "@/components/member/community-gath
 
 type Album = { id: string; title: string; description: string; contribution_mode: string; is_closed: boolean; photo_count: number; gathering_title: string | null; post_id: string | null };
 type Photo = { id: string; caption: string; status: string; uploader_id: string | null; uploader_name: string; created_at: string };
-type AlbumList = { albums: Album[]; allowance_bytes: number; used_bytes: number; uploads_enabled: boolean; can_manage: boolean };
+type AlbumList = { albums: Album[]; allowance_bytes: number; used_bytes: number; uploads_enabled: boolean; can_manage: boolean; pilot_available?: boolean; admin_paused?: boolean };
 type AlbumDetails = { album: Album; photos: Photo[]; can_manage: boolean; can_upload: boolean };
 type SelectedFile = { file: File; id?: string; saved?: boolean; error?: string };
 const emptyDraft = { title: "", description: "", roomId: "", requestId: "" };
@@ -207,6 +207,19 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
     } catch (error) { setMessage(memberErrorMessage(error, "send your report")); }
     finally { setBusy(""); }
   }
+  async function togglePilotPhotos() {
+    if (!list || busy) return;
+    setBusy("photo-sharing"); setMessage("");
+    try {
+      const { error } = await supabase.rpc("save_pilot_community_photo_uploads", { p_community_id: communityId, p_enabled: !list.uploads_enabled });
+      if (error) throw error;
+      const enabled = !list.uploads_enabled;
+      await load();
+      if (details) await select(details.album.id);
+      setMessage(enabled ? "Photo sharing is on. Each album decides who can add photos." : "Photo sharing is paused. Existing photos are still visible.");
+    } catch (error) { setMessage(memberErrorMessage(error, "change photo sharing")); }
+    finally { setBusy(""); }
+  }
   const content = <div className="community-photo-body">
       {dialog}
       {selectedPhoto && details ? <CommunityPhotoViewer photos={details.photos.filter(photo => ["published", "pending", "hidden"].includes(photo.status))} selectedId={selectedPhoto} onSelect={setSelectedPhoto} onClose={closePhoto} /> : null}
@@ -215,6 +228,10 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
       {!list && !busy ? <button className="button button-outline" onClick={() => void load()}>Try again</button> : null}
       {list ? <>
         {list.can_manage ? <p className="community-photo-allowance">{Math.ceil(list.used_bytes / 1048576)} of {Math.round(list.allowance_bytes / 1048576)} MB used{!list.uploads_enabled ? " · Photo uploads are paused" : ""}</p> : null}
+        {list.can_manage && list.pilot_available ? <div>
+          {list.admin_paused ? <p>Admin has paused photo sharing. Ask Admin to reopen it.</p> : <button className="button button-outline" disabled={Boolean(busy) || unsavedFiles} onClick={() => void togglePilotPhotos()}>{list.uploads_enabled ? "Pause photo sharing" : "Allow photos during the pilot"}</button>}
+        </div> : null}
+        {list.albums.length && !details ? <p>Choose an album to view photos or add yours where the Host allows it.</p> : null}
         <div className="community-photo-album-list" role="group" aria-label="Choose an album">
           {list.albums.map(album => <button key={album.id} disabled={Boolean(busy)} aria-pressed={details?.album.id === album.id} onClick={() => void select(album.id)}><strong>{album.title}</strong><small>{album.gathering_title || "Community album"} · {album.photo_count} photos</small></button>)}
           {!list.albums.length ? <p>{list.can_manage ? "No albums yet. Start with a name and a short description." : "No photos yet. Albums shared by your Community will appear here."}</p> : null}
@@ -227,7 +244,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
         </form></details> : null}
       </> : null}
       {details ? <section className="community-photo-selected" aria-label={details.album.title}>
-        <header><h3>{details.album.title}</h3><p>{details.album.description}</p></header>
+        <header><h3>{details.album.title}</h3>{details.album.gathering_title ? <small>From {details.album.gathering_title}</small> : null}<p>{details.album.description}</p></header>
         <button type="button" className="button button-outline" aria-expanded={showDiscussion} onClick={() => setShowDiscussion(value => !value)}>{showDiscussion ? "Close conversation" : "Open conversation"}</button>
         {showDiscussion ? <CommunityGatheringDiscussion key={details.album.id} albumId={details.album.id} currentUserId={currentUserId} revision={0} /> : null}
         {details.can_manage ? <form onSubmit={settings} className="community-photo-settings">
@@ -236,7 +253,8 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
           <button className="button button-outline" disabled={Boolean(busy)}>Save photo settings</button>
         </form> : null}
         {details.can_upload ? <form onSubmit={upload} className="community-photo-upload">
-          <label>Add photos<input ref={input} type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={Boolean(busy)} onChange={event => {
+          <p>Your photos will be saved in <strong>{details.album.title}</strong>{details.album.contribution_mode === "review" && !details.can_manage ? " after the Host approves them" : ""}.</p>
+          <label>Add photos to this album<input ref={input} type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={Boolean(busy)} onChange={event => {
             const selected = Array.from(event.target.files ?? []);
             if (selected.length > 10 || selected.some(file => file.size > 4 * 1024 * 1024)) { setMessage("Choose up to 10 JPG, PNG or WebP photos, each smaller than 4 MB."); event.target.value = ""; setFiles([]); return; }
             setFiles(selected.map(file => ({ file }))); setBatchId(""); setPermission(false); setMessage("");
@@ -246,7 +264,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
           <label>Caption (optional)<input maxLength={500} value={caption} onChange={event => setCaption(event.target.value)} disabled={Boolean(busy)} /></label>
           <label className="community-photo-check"><input type="checkbox" checked={permission} onChange={event => setPermission(event.target.checked)} disabled={Boolean(busy)} />I have permission to share these photos from the people pictured.</label>
           <button className="button button-primary" disabled={Boolean(busy) || !unsavedFiles || !permission}>{busy === "upload" ? "Saving photos…" : files.some(item => item.error) ? "Retry unsaved photos" : "Save photos"}</button>
-        </form> : <p>{details.album.is_closed ? "This album is closed to new photos." : !list?.uploads_enabled ? "Photo uploads are paused while final checks are completed." : details.album.contribution_mode === "hosts_only" && !details.can_manage ? "Only Community Hosts can add photos here." : "This album is not accepting new photos right now."}</p>}
+        </form> : <p>{details.album.is_closed ? "This album is closed to new photos." : !list?.uploads_enabled ? "Photo sharing is paused in this Community. Your Host can tell you when it reopens." : details.album.contribution_mode === "hosts_only" && !details.can_manage ? "Only Community Hosts can add photos here." : "This album is not accepting new photos right now."}</p>}
         <div className="community-photo-grid">{details.photos.map(photo => <article key={photo.id}>
           {["published", "pending", "hidden"].includes(photo.status) ? <button type="button" className="community-photo-open" aria-label={photo.caption ? `Open photo: ${photo.caption}` : `Open photo shared by ${photo.uploader_name}`} onClick={() => setSelectedPhoto(photo.id)}><img src={`/api/community/photos/${photo.id}`} loading="lazy" alt={photo.caption || `Photo shared by ${photo.uploader_name}`} /></button> : <div className="community-photo-placeholder">{statusLabels[photo.status]}</div>}
           <p>{photo.caption}</p><small>{photo.uploader_name} · {new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", timeZone: "Africa/Nairobi" }).format(new Date(photo.created_at))}</small>

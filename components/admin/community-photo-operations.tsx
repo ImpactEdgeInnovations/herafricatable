@@ -30,7 +30,7 @@ export function CommunityPhotoOperations() {
   await save("save_community_photo_release_check",{p_key:item.key,p_passed:!item.passed,p_evidence:String(result.evidence)});
  }
  async function settings(item: Community) {
-  const result = await ask({ title:`Photo settings · ${item.name}`,description:"Uploads can open only after all four tests pass and the scheduled cleanup has run successfully. Pausing does not hide existing photos.",confirmLabel:"Save settings",fields:[
+  const result = await ask({ title:`Photo settings · ${item.name}`,description:"Eligible pilot Communities can share photos during the pilot. Other Communities need all four tests and a successful cleanup run. Pausing keeps existing photos visible and prevents the Host reopening uploads.",confirmLabel:"Save settings",fields:[
    {name:"allowance",label:"Storage allowance (MB)",type:"number",integer:true,min:2,max:10240,initialValue:String(Math.round(item.allowance_bytes/1048576)),required:true},
    {name:"enabled",label:"Allow photo uploads",type:"checkbox",initialValue:item.uploads_enabled},
    {name:"reason",label:"Reason for this change",type:"textarea",required:true,minLength:5,maxLength:1000},
@@ -59,7 +59,7 @@ export function CommunityPhotoOperations() {
   <div className="admin-section-heading"><div><h2>Community photos</h2><p>Upload permissions, storage limits and cleanup health.</p></div><div><button disabled={busy} onClick={()=>setRetry(value=>value+1)}>Refresh</button> <button disabled={busy} onClick={()=>void cleanup()}>Run cleanup</button></div></div>
   {message?<p role="status">{message}</p>:null}
   {!data ? <p>{busy?"Opening photo controls…":"Photo controls could not be opened. Try Refresh."}</p>:<>
-   <p>{data.health?`Last cleanup: ${new Intl.DateTimeFormat("en-KE",{dateStyle:"medium",timeStyle:"short",timeZone:"Africa/Nairobi"}).format(new Date(data.health.finished_at))} · ${data.health.removed} cleared · ${data.health.failed} failed` : "Cleanup has not reported a run yet. Uploads stay paused."}</p>
+   <p>{data.health?`Last cleanup: ${new Intl.DateTimeFormat("en-KE",{dateStyle:"medium",timeStyle:"short",timeZone:"Africa/Nairobi"}).format(new Date(data.health.finished_at))} · ${data.health.removed} cleared · ${data.health.failed} failed` : "Cleanup has not reported a run yet. Pilot sharing is available; wider release still needs a successful run."}</p>
    {data.health && Date.now()-new Date(data.health.finished_at).getTime()>48*60*60*1000 ? <p>Cleanup is overdue. Run cleanup before opening photo uploads in another Community.</p>:null}
    <details><summary>Photo launch checks · {data.checks.filter(c=>c.passed).length} of 4 checked</summary>
     {data.checks.map(c=><article key={c.key}><strong>{labels[c.key]}</strong><p>{c.passed?"Checked":"Not checked yet"}{c.evidence?` · ${c.evidence}`:""}</p><button disabled={busy} onClick={()=>void check(c)}>{c.passed?"Reopen check":"Record completed test"}</button></article>)}

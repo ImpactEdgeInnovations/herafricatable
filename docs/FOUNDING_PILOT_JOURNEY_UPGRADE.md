@@ -244,6 +244,20 @@ No manual SQL rerun is required. Phase 3's populated-room/playback/inbox rehears
 
 Media remains discoverable through both its gathering and the Community Media area. The general feed may show a short linked announcement, but is not the only place to find a recording or album. Retain replays until the Host hides/removes them or the source becomes unavailable; do not promise permanent availability of externally hosted videos. Obtain permission to publish identifiable attendee photographs, and retain existing reporting/removal processes.
 
+### Pilot photo participation — 7 October update
+
+This supersedes the earlier blanket “uploads remain closed” notes. The founding cohort limits automatic Community creation, not participation in those Communities.
+
+- [x] Eligible founding Community Hosts can select **Allow photos during the pilot** inside Photos. No separate five-tester or 24-hour restriction.
+- [x] Active Community members can contribute even without a creator-cohort place, when the album allows members. Host-only and approval-required albums retain their rules.
+- [x] Keep file, daily, album and storage limits; permission confirmation; private viewing; reporting and removal.
+- [x] Admin can pause and reopen pilot sharing through the existing photo settings. Hosts cannot override an Admin pause.
+- [x] Enforce Community suspension, global pilot pause, pilot expiry and failed cleanup at reservation and upload finalisation. Wider release retains its four evidence checks and cleanup gate; pilot testing does not mark those checks passed.
+- [x] Rollback-only test `039` verifies non-creator member participation, Host-only restrictions, Admin pause/reopening, expiry and protected internal endpoints.
+- [x] Keep uploads inside existing Host-created albums. Clearly identify the related gathering and destination album; members cannot create arbitrary albums or upload ungrouped photos.
+- [x] Apply `20261007190000_community_photo_pilot_participation.sql` live. Typecheck, production build and rollback permission tests passed. No manual SQL run is needed. Post-test state remains zero albums/photos, zero passed production checks and an archived rehearsal Community.
+- [ ] Complete actual file upload/delivery, desktop/mobile and cleanup recovery rehearsal. Source and SQL checks are not real binary acceptance.
+
 ### Pilot Host cancellation and poster saving
 
 - [x] Eligible founding Hosts can cancel their own future published free events with a public reason.

@@ -5,6 +5,8 @@ do $$
 declare cid uuid:='9acb54bc-6d61-45af-b7ca-86249d87de28'; aid uuid:=gen_random_uuid(); denied boolean; key text; result jsonb;
 begin
  perform set_config('request.jwt.claim.sub','e667b8d9-b74d-47e7-b9b6-b91823b01128',true);
+ -- This test exercises wider release gates, not the separate pilot exception.
+ update public.community_pilot_settings set enabled=false where id=true;
  update public.community_release_checks set status='passed' where community_id=cid;
  update public.communities set status='published' where id=cid;
  perform public.save_admin_community_photo_settings(cid,500,false,'Synthetic rollback fixture only.');
