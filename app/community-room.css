@@ -1,5 +1,20 @@
 /* Member Community rooms only; directory and Admin styling stay unchanged. */
 .community-room-page [hidden] { display: none !important; }
+.gathering-discussion { grid-column: 1 / -1; grid-row: 3; border-top: 1px solid var(--line); padding-top: 24px; min-width: 0; }
+.gathering-discussion h2 { font-family: var(--sans); font-size: 1.2rem; letter-spacing: 0; }
+.gathering-discussion > header > p { color: var(--muted); font-size: .9rem; }
+.gathering-discussion-replies { display: grid; gap: 0; margin: 16px 0; }
+.gathering-discussion-replies article { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.gathering-discussion-replies article > header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.gathering-discussion-replies time { color: var(--muted); font-size: .85rem; }
+.gathering-discussion-replies p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+.gathering-discussion button:not(.button) { min-height: 44px; background: transparent; border: 0; padding: 8px 0; color: var(--wine); cursor: pointer; }
+.gathering-discussion-pages { display: flex; gap: 20px; }
+.gathering-discussion form { display: grid; gap: 12px; }
+.gathering-discussion textarea { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 6px; font: inherit; resize: vertical; }
+.gathering-discussion .button { justify-self: start; }
+.gathering-video-settings select { min-height: 44px; padding: 10px; font: inherit; max-width: 100%; }
+@media(max-width: 620px) { .gathering-watch-layout .gathering-discussion { grid-row: 5; } }
 .community-next-gathering { display: flex; align-items: center; gap: 20px; width: var(--community-shell); margin: 0 auto 20px; padding: 14px 18px; border-left: 3px solid var(--wine); background: #fffdf9; }
 .community-next-gathering > div { display: grid; gap: 4px; flex: 1; min-width: 0; }
 .community-next-gathering strong { font-size: 1rem; overflow-wrap: anywhere; }

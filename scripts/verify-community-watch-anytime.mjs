@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const read = file => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
+const sql = read("supabase/migrations/20261007130000_community_watch_anytime_discussions.sql");
+for (const guard of ["enable row level security", "from public, anon, authenticated", "public.can_access_community_video", "public.create_community_post", "public.create_community_comment", "public.is_blocked_pair", "parent.status <> 'published'", "limit 51", "reply.created_at,reply.id", "follow_up_until<=now()", "not exists(select 1 from public.community_gathering_discussions", "from public,anon"]) assert(sql.includes(guard), `Missing permanent discussion guard: ${guard}`);
+assert(!sql.includes("create or replace function public.send_community_gathering_message"), "Do not replace scheduled chat rules");
+const video = read("components/member/community-gathering-video.tsx");
+assert(video.includes('"save_community_gathering_video_experience"') && video.includes("p_viewing_mode: viewingMode"));
+assert(video.includes("Watch together — scheduled live chat") && video.includes("Watch anytime — lasting conversation"));
+const discussion = read("components/member/community-gathering-discussion.tsx");
+for (const token of ["reply_to_community_gathering", "get_community_gathering_discussion", "delete_community_comment", "report_community_post", "p_before: cursor", "item.read_only", "item?.unavailable", "setItem(null)", "30000", "Earlier replies", "Latest replies", "value={draft}"]) assert(discussion.includes(token), `Missing discussion interface contract: ${token}`);
+assert(read("components/member/community-gathering-room.tsx").includes("<CommunityGatheringDiscussion"));
+console.log("Watch-anytime permission, persistent-thread, moderation, pagination and interface contracts passed. Live SQL rollback tests are separate.");

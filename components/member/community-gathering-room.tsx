@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { CommunityGatheringVideo, type GatheringVideo } from "@/components/member/community-gathering-video";
+import { CommunityGatheringDiscussion } from "@/components/member/community-gathering-discussion";
 
 export type CommunityGatheringRoomState = {
   room_id: string;
@@ -110,6 +111,7 @@ export function CommunityGatheringRoom({
   const [reminderWindow, setReminderWindow] = useState(initialReminderWindow ?? "");
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
+  const [videoRevision, setVideoRevision] = useState(0);
   const questionsOpen = Date.now() >= new Date(room.questions_open_at).getTime()
     && Date.now() <= new Date(room.chat_closes_at).getTime();
   const canWrite = room.chat_phase === "open"
@@ -298,7 +300,8 @@ export function CommunityGatheringRoom({
 
       <div className="gathering-room-layout gathering-watch-layout">
         <CommunityGatheringVideo roomId={room.room_id} canManage={room.can_manage}
-          endsAt={room.ends_at} title={room.title} initialVideo={video} ready={videoReady} />
+          endsAt={room.ends_at} title={room.title} initialVideo={video} ready={videoReady} onSaved={() => setVideoRevision(value => value + 1)} />
+        <CommunityGatheringDiscussion roomId={room.room_id} currentUserId={currentUserId} revision={videoRevision} />
         <section className="gathering-questions" id="questions">
           <header><div><p className="eyebrow">Before we meet</p><h2>Questions for the room</h2></div><p>Share what you hope the Host or guest will cover. Support a question instead of repeating it.</p></header>
           {questionsOpen ? <form onSubmit={sendQuestion}><label htmlFor="gathering-question">What would you like discussed?</label><textarea id="gathering-question" maxLength={600} minLength={10} onChange={(event) => setQuestion(event.target.value)} placeholder="I would value a practical discussion about…" rows={3} value={question}/><button className="button button-primary" disabled={busy === "question" || question.trim().length < 10} type="submit">Share question</button></form> : <p className="gathering-soft-note">Questions open seven days before the gathering.</p>}

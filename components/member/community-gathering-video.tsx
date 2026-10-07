@@ -10,17 +10,20 @@ export type GatheringVideo = {
   is_visible: boolean;
   keep_replay: boolean;
   admin_paused: boolean;
+  viewing_mode?: "watch_together" | "watch_anytime";
 };
 
-export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, initialVideo, ready }: {
+export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, initialVideo, ready, onSaved }: {
   roomId: string; canManage: boolean; endsAt: string; title: string;
   initialVideo: GatheringVideo | null; ready: boolean;
+  onSaved?(): void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [video, setVideo] = useState(initialVideo);
   const [link, setLink] = useState(initialVideo?.video_id ? `https://www.youtube.com/watch?v=${initialVideo.video_id}` : "");
   const [visible, setVisible] = useState(initialVideo?.is_visible ?? true);
   const [keepReplay, setKeepReplay] = useState(initialVideo?.keep_replay ?? true);
+  const [viewingMode, setViewingMode] = useState(initialVideo?.viewing_mode ?? "watch_together");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [playing, setPlaying] = useState(false);
@@ -49,11 +52,13 @@ export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, init
     if (!remove && link.trim() && !id) return setNotice("Paste a YouTube video or livestream link, not a channel link.");
     setBusy(true); setNotice("");
     try {
-      const { data, error } = await supabase.rpc("save_community_gathering_video", {
+      const { data, error } = await supabase.rpc("save_community_gathering_video_experience", {
         p_room_id: roomId, p_video_id: id, p_is_visible: visible, p_keep_replay: keepReplay,
+        p_viewing_mode: viewingMode,
       });
       if (error) throw error;
       setVideo(data as GatheringVideo | null); setPlaying(false);
+      onSaved?.();
       if (!id) setLink("");
       setNotice(id ? "Video saved. Your gathering conversation stays in the same place." : "Video removed. The conversation is still here.");
     } catch (error) { setNotice(memberErrorMessage(error, "save this video")); }
@@ -64,8 +69,8 @@ export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, init
   if (!canManage && !watchable && allowed) return null;
   return (
     <section className="gathering-video" id="gathering-video" aria-labelledby="gathering-video-title">
-      <header><h2 id="gathering-video-title">{finished ? "Watch the replay" : "Watch & discuss"}</h2>
-        <p>Watch here and use this gathering’s conversation to share your thoughts.</p></header>
+      <header><h2 id="gathering-video-title">{video?.viewing_mode === "watch_anytime" ? "Watch anytime" : finished ? "Watch the replay" : "Watch & discuss"}</h2>
+        <p>{video?.viewing_mode === "watch_anytime" ? <>Watch at your own pace, then <a href="#gathering-discussion">join the conversation below</a>.</> : "Watch here and use this gathering’s conversation to share your thoughts."}</p></header>
       {!allowed ? <p role="status">Video access has changed. Return to your Community to check your membership.</p> : null}
       {watchable ? <>
         <div className="gathering-video-player">
@@ -85,6 +90,11 @@ export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, init
       {canManage ? <details className="gathering-video-settings"><summary>{video?.video_id ? "Manage video" : "Add a livestream link"}</summary>
         {!ready ? <p role="status">Video settings are not available yet. Ask Admin to complete the livestream setup.</p> : <>
           <form onSubmit={(event) => void save(event)}>
+            <label htmlFor="gathering-viewing-mode">How will members watch?</label>
+            <select id="gathering-viewing-mode" value={viewingMode} onChange={event => setViewingMode(event.target.value as "watch_together" | "watch_anytime")} disabled={busy}>
+              <option value="watch_together">Watch together — scheduled live chat</option>
+              <option value="watch_anytime">Watch anytime — lasting conversation</option>
+            </select>
             <label htmlFor="gathering-youtube-link">YouTube video or livestream link</label>
             <input id="gathering-youtube-link" type="url" value={link} onChange={(event) => setLink(event.target.value)} placeholder="https://www.youtube.com/watch?v=…" maxLength={500} disabled={busy} />
             <label><input type="checkbox" checked={visible} onChange={(event) => setVisible(event.target.checked)} disabled={busy} /> Show video to Community members</label>

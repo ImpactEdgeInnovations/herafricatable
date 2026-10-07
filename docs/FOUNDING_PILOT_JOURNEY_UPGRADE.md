@@ -93,16 +93,22 @@ Implemented:
 - [x] Add Videos beside Upcoming/Past in Gatherings. Each visible video has its gathering title/date and opens that same gathering in place; return navigation preserves the Videos choice.
 - [x] Load discovery videos through the existing protected RPC, with bounded requests, permission rechecks, retry/empty states and no YouTube embed or thumbnail requests before playback is requested.
 - [x] Run the repository suite, Phase 3 navigation/video contracts, TypeScript and production build for the Videos pass. No new migration required; real populated-room browser acceptance is still open.
+- [x] Add Host choices “Watch together” / “Watch anytime”. Watch-anytime creates one permanent gathering-linked Community conversation, with replies, own removal and private reporting; scheduled live chat remains separate.
+- [x] Preserve that discussion when the video is hidden, replaced or removed, or the Host changes viewing mode. Saving again never restores a moderated/removed thread or creates a second one.
+- [x] Add 50-reply cursor pages, permission rechecks and read-only Community handling. Reuse normal Community rate limits, reply notifications, blocks and moderation records.
+- [x] Apply `20261007130000_community_watch_anytime_discussions.sql` to the live project. Rollback acceptance passed duplicate-save, lasting reply, closed live-chat separation, read-only denial, own removal, 65-reply pagination, video-removal continuity, hidden-thread protection and outsider/removed-member/direct/anonymous denial.
+- [x] Preserve existing account/content privacy deletion with `20261007130100_community_discussion_privacy_cleanup.sql`; discussion links cascade only on actual content deletion, not on normal moderation or video removal. Both migrations are applied; do not rerun them manually.
+- [x] Run the repository suite, new watch-anytime source contracts, TypeScript and production build. Security advisors flag the intentional RPC-only table and authenticated security-definer functions; membership/Host checks and direct/anonymous denial passed rollback tests. Legacy advisor findings remain separate.
 
 Required before Phase 3 can close:
 - [ ] Verify the new in-place view with populated member/Host accounts on desktop/mobile; preserve unfinished forms on every navigation path.
-- [ ] Add “Watch together” for scheduled participation and “Watch anytime” for a lasting gathering-linked discussion. Do not simply extend live-chat windows or bypass moderation/RSVP checks.
+- [ ] Rehearse Watch together / Watch anytime in populated desktop/mobile rooms with separate Host/member accounts, including real playback, reporting and reply delivery.
 - [ ] Support Community-only prerecorded-video gatherings separately from public events, with the existing pilot eligibility and Admin suspension controls.
-- [ ] Complete the persistent gathering discussion and Media integration. Videos discovery is shipped; photo albums arrive in Phase 4 and no nonfunctional Photos action is shown.
+- [ ] Complete Media integration. Videos discovery and persistent gathering discussion are shipped; photo albums arrive in Phase 4 and no nonfunctional Photos action is shown.
 
 - [ ] Verify empty, upcoming, live, past and cancelled states and that public event discovery never exposes private Community media.
 
-The earlier duplicate navigation, linking and countdown tasks are consolidated into the implemented items above. Draft preservation and visual acceptance remain open; the Videos view does not yet make scheduled chat a permanent discussion.
+The earlier duplicate navigation, linking and countdown tasks are consolidated into the implemented items above. Draft preservation across navigation and visual acceptance remain open. Watch-anytime replies persist independently of scheduled chat. The SQL under `supabase/tests/033_community_watch_anytime.sql` is a rollback test, not a migration; do not stage it as schema setup.
 
 #### Later phases — cross-platform polish, photos and production acceptance
 
