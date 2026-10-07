@@ -20,6 +20,7 @@
     "test:community-drafts": "node scripts/verify-community-drafts.mjs",
     "test:member-readability": "node scripts/verify-member-readability.mjs",
     "test:community-photo-processing": "node scripts/verify-community-photo-processing.mjs",
+    "test:community-photo-pipeline": "node scripts/verify-community-photo-pipeline.mjs",
     "test:event-questions": "node scripts/verify-event-question-contracts.mjs",
     "test:admin-decisions": "node scripts/verify-admin-decision-contracts.mjs",
     "test:table-guide": "node scripts/verify-table-guide-experience.mjs",
@@ -77,6 +78,7 @@
     "@supabase/supabase-js": "2.110.6",
     "next": "16.3.2",
     "qrcode": "1.5.4",
+    "sharp": "0.35.3",
     "react": "19.2.7",
     "react-dom": "19.2.7"
   },
@@ -85,7 +87,6 @@
     "@types/qrcode": "1.5.6",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
-    "sharp": "0.35.3",
     "typescript": "5.9.3"
   },
   "overrides": {

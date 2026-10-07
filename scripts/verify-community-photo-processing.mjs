@@ -45,4 +45,4 @@ assert(sql.includes("for update") && sql.includes("p_count::bigint*1114112"));
 assert(sql.includes("from public,anon,authenticated"));
 assert(sql.includes("date_trunc('day',now() at time zone 'Africa/Nairobi')"));
 assert(!sql.includes("storage.buckets"), "Do not open unfinished binary uploads");
-console.log("Photo processing passed: format validation, byte/pixel bounds, resizing, orientation, EXIF/GPS removal and thumbnail budgets. SQL source guards passed; upload UI is not shipped.");
+console.log("Photo processing passed: format validation, byte/pixel bounds, resizing, orientation, EXIF/GPS removal and thumbnail budgets. Foundation SQL source guards passed; real Storage delivery is a separate acceptance check.");

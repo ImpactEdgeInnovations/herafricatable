@@ -54,6 +54,7 @@ import {
   type CommunityJoiningSettings,
 } from "@/components/member/community-joining-settings";
 import type { DestinationInvitation } from "@/components/member/destination-invitation-panel";
+import { CommunityPhotoAlbums } from "@/components/community/community-photo-albums";
 
 export const dynamic = "force-dynamic";
 
@@ -279,6 +280,7 @@ export default async function CommunityHostPage({
         <a href="#host-tools">Plan &amp; tools</a>
         <a href="#joining-settings">Who can join?</a>
         <a href="#gathering-proposals">Plan an event</a>
+        <a href="#community-photos">Photos</a>
         <a href="#welcome">Welcome</a>
         {community.membership_role === "owner" ? (
           <>
@@ -319,6 +321,7 @@ export default async function CommunityHostPage({
           (eventProposalResult.data as CommunityEventProposal[] | null) ?? []
         }
       />
+      <CommunityPhotoAlbums communityId={community.community_id} currentUserId={user.id} />
       <CommunityWelcomeQueue
         communityId={community.community_id}
         members={

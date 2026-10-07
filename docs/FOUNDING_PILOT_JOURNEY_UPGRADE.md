@@ -132,7 +132,7 @@ Cross-platform readability, first implementation pass:
 - [x] Pass the repository suite, readability/Community UI/navigation/draft contracts, TypeScript and production build. Inspect the local production event listing at desktop and 390px phone widths: listing and action appear near the top without horizontal clipping.
 - [ ] Verify the new Home/directory/populated Community styling with signed-in member and Host accounts tomorrow. The local event preview does not certify those authenticated screens.
 
-Next implementation sequence: photo data/access/quota design → Host album creation and uploads → member contributions/moderation → Media browsing and accessible carousel → production acceptance. Do not expose a Photos button until it has a working destination. Photo features below remain unimplemented.
+Next implementation sequence: photo data/access/quota design → Host album creation and uploads → member contributions/moderation → Media browsing and accessible carousel → production acceptance. The Host Photos section now has working album tools; member Media discovery and open uploads remain pending.
 
 Photo foundation, 7 October — backend implemented; member upload feature not yet open:
 
@@ -142,11 +142,27 @@ Photo foundation, 7 October — backend implemented; member upload feature not y
 - [x] Reserve a full original/thumbnail budget under a Community row lock: maximum 10 photos per batch, 20 member photos per Nairobi calendar day, 100 per album and default 500 MiB per Community. Retry IDs reuse existing reservations. Pending, expired and removed records continue consuming allowance until trusted cleanup proves their files are gone.
 - [x] Add Node image processing: decode real JPG/PNG/WebP, reject unsupported/animated input, bound source bytes/pixels, apply camera orientation, resize to 1920px, strip EXIF/location metadata and produce a 480px thumbnail. Stored original ≤1 MiB; thumbnail ≤64 KiB. Behavioural tests process actual binary fixtures, not only source strings.
 - [x] Apply `20261007150000_community_photo_album_foundation.sql` live after transactional dry-run acceptance. Repeat rollback tests passed on the applied schema and left zero albums/reservations, zero enabled upload settings and the rehearsal Community archived. Do not rerun this migration manually.
-- [ ] Add private Storage, validated upload/finalisation and cleanup routes; do not enable the upload setting until these work together. Reservation expiry alone does not currently release allowance.
-- [ ] Add Host album forms, member photo contribution/review screens, attribution, reports, moderation, Media discovery and accessible carousel. None of these photo screens is shipped in this foundation pass.
+- [x] Implement private Storage, authenticated binary upload/finalisation and trusted cleanup routes in the follow-up pipeline pass below. Upload settings remain closed pending real binary acceptance.
+- [x] Implement Host album forms, attribution and photo review/removal controls in the follow-up pipeline pass below.
+- [ ] Add member Media discovery, contribution screens, photo reports and an accessible carousel.
 - [ ] Rehearse simultaneous reservations/uploads with separate database sessions, real private binary delivery, removed-member access, cleanup/recovery, mobile carousel and inbox delivery. Sequential rollback tests and lock inspection are not a concurrency/load certification.
 
 Security advisors flag the intentional RPC-only tables and authenticated security-definer entry points. Explicit active-account, published-Community, membership/Host and read-only checks passed the rollback tests; anonymous/direct grants remain denied. This is not a blanket clearance of historical advisor findings. [Supabase advisor guidance](https://supabase.com/docs/guides/database/database-linter).
+
+Photo upload pipeline and Host tools, 7 October — implemented; uploads remain paused:
+
+- [x] Add a private `community-photos` bucket. A restrictive Storage policy blocks direct browser access; authenticated photo delivery checks Community permissions before and after downloading, for both thumbnail and original. No public/signed file links are exposed.
+- [x] Process one photo per request with a 4 MiB streamed-body limit, actual image decoding, metadata removal and fixed original/thumbnail budgets. Upload claims bind to the uploader, expire safely and limit retries; finalisation rechecks membership and album permissions.
+- [x] Preserve already-saved files when a finalisation response is lost. Failed uploads reset only after both binary removals succeed; uncertain states keep their reserved allowance until trusted cleanup.
+- [x] Add lazy-loaded Host Photos tools: named albums, optional gathering association, plain contribution choices, close-album control, permission confirmation, uploader/date/caption, retry of unsaved files and functional approve/decline/hide/restore/remove controls. Unsent album text survives tab navigation; unsaved file navigation warns before leaving.
+- [x] Add cleanup to the authorised daily housekeeping schedule. Expired reservations, stalled uploads, deleted-account photos and removed/rejected photos after seven days are cleared in bounded batches; allowance is released only after successful binary deletion.
+- [x] Apply `20261007160000_community_photo_upload_pipeline.sql` live. Rollback test `036` passed on the applied schema, including review visibility, removal, hidden-uploader denial, cleanup, uploader loss of membership and service-only finalisation. Post-test inspection: zero albums/photos, zero enabled upload settings, private bucket and archived rehearsal Community. No manual SQL rerun is needed.
+- [x] Pass the repository suite, TypeScript, production build, photo-processing binary tests, streamed-body cancellation/bounds tests and Community UI/draft contracts. Source contracts do not replace browser or real Storage acceptance.
+- [ ] Add member-facing Media/Photos discovery, gallery/carousel and photo reporting; retain each album's existing conversation rather than creating duplicate gathering threads.
+- [ ] Add Admin allowance/upload controls and visible cleanup health/backlog. Verify deletion/archive workflows preserve a cleanup manifest before any physical cascade deletion; hard-deleted records must not strand private binaries.
+- [ ] Rehearse real binary uploads/delivery, partial failures, simultaneous sessions, removed-member access, restore/cleanup, desktop/mobile Host controls and member contribution permissions. Uploads stay paused until these checks pass.
+
+Phase 3 remains **open, not complete**. The populated Host/member/video/inbox rehearsal is deferred to 8 October, and the remaining attachment/settings guards are still listed above; this photo pass does not close that gate.
 
 - [ ] Audit member typography: one readable interface font, restrained editorial headings only where useful, smaller headings and tighter spacing.
 - [ ] Remove unnecessary decorative cards, slogans and repeated introductory paragraphs from signed-in screens.
