@@ -362,7 +362,7 @@ export function CommunityEventProposalPanel({
             <button className="button button-outline" disabled={busy} onClick={() => step === 0 ? setExpanded(false) : setStep((current) => current - 1)} type="button">{step === 0 ? "Close" : "Back"}</button>
             <div>
               {step === steps.length - 1 ? <button className="button button-outline" disabled={busy} onClick={() => void save(false)} type="button">Save private draft</button> : null}
-              {step < steps.length - 1 ? <button className="button button-primary" onClick={continueForward} type="button">Continue</button> : <button className="button button-primary" disabled={busy} type="submit">{busy ? "Opening…" : "Open for members"}</button>}
+              {step < steps.length - 1 ? <button key="continue" className="button button-primary" onClick={(event) => { event.preventDefault(); continueForward(); }} type="button">Continue</button> : <button key="publish" className="button button-primary" disabled={busy} type="submit">{busy ? "Opening…" : "Open for members"}</button>}
             </div>
           </footer>
         </form>

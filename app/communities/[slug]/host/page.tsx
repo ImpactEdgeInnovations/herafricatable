@@ -311,12 +311,14 @@ export default async function CommunityHostPage({
           owner={community.membership_role === "owner"}
         />
       </CommunityHostSection>
+      <CommunityHostSection id="joining-area" title="Who can join?">
       <CommunityJoiningSettingsPanel
         communityId={community.community_id}
         currentUserId={user.id}
         owner={community.membership_role === "owner"}
         settings={joiningSettings}
       />
+      </CommunityHostSection>
       <CommunityEventProposalPanel
         communityId={community.community_id}
         communitySlug={slug}

@@ -17,6 +17,7 @@ assert(css.includes('a[aria-current="page"] { color: var(--room-accent); backgro
 const proposal = read("components/community/community-event-proposal-panel.tsx");
 assert(proposal.includes('const steps = ["Details", "Time, link & contact"]'));
 assert(proposal.includes('format: "virtual"'));
+assert(proposal.includes('key="continue"') && proposal.includes('key="publish"') && proposal.includes('event.preventDefault(); continueForward();'), "Advancing must not reuse the submit button or trigger publication");
 assert(proposal.includes("save_community_gathering_video_experience") && proposal.includes("initialGatheringId={openedRoom.roomId}"));
 assert(proposal.includes("list_community_gathering_cards") && proposal.includes("Open the gathering first"));
 assert(!room.includes('className="community-overview-links"'), "Do not duplicate the Community tabs with three Home cards");

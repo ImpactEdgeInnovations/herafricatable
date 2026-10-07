@@ -18,6 +18,8 @@ This pass separates source wiring, real database acceptance and device/inbox acc
 
 Added catch/finally recovery around the legacy invitation, member review, link and reminder actions so an unexpected network rejection cannot leave their controls permanently busy. Gatherings also retain the confirmed draft if publication fails. A saved gathering is not reported as failed merely because its optional video could not be attached.
 
+Deployed owner walkthrough confirmed the two-step wizard, online default, optional call link, video/photo choices and existing-event dropdown. It exposed a React button-reuse issue: advancing could inherit submit behavior. Continue now cancels the click default and uses a distinct button key. Joining controls are folded under “Who can join?” so they do not dominate the initial Host view. No real gathering or invitation was published during the visual check.
+
 ## Open release checks
 
 - Populated mobile/desktop, keyboard and ordinary-member/Host/Admin walkthroughs.
