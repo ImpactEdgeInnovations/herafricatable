@@ -193,6 +193,7 @@ Wave 0 owner actions and Wave 1 engineering work may proceed in parallel. No wav
 - Implemented: Ocean and other saved Community accents carry through local tabs, placeholders, gathering badges, links, outline buttons and the upcoming-gathering strip. The background and body text remain neutral; main platform navigation keeps its own branding.
 - Implemented: five primary topic choices, with secondary/earlier categories behind More topics. Existing records and category search are preserved, including restored drafts using earlier types. This is presentation consolidation, not destructive database category merging.
 - Acceptance: source checks, existing test suite and production build are required; real member-versus-Host and mobile visual checks must be recorded separately. No SQL required for this pass.
+- Verified live as Lavington Women owner: headline attendance absent, Host tools link expands the private count/settings, recap editor folded, Ocean accent rendered on selected tabs/placeholders/badges. Five initial topics and More topics expansion verified without creating posts or changing settings. Desktop questions/chat align in the same row; at 390px they stack without horizontal page overflow. Full test/build and new source contracts passed. Separate ordinary-member account rehearsal remains open.
 
 
 ### 8 October — Community creation entry and location discovery
