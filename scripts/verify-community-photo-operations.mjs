@@ -9,6 +9,11 @@ assert(worker.indexOf(".remove(")<worker.indexOf('rpc("finish_community_photo_cl
 const ui=read("components/admin/community-photo-operations.tsx");
 for(const token of ["get_admin_community_photo_operations","save_admin_community_photo_settings","save_community_photo_release_check","Code checks alone are not enough","Record completed test","Storage allowance (MB)","Refresh"])assert(ui.includes(token),token);
 assert(read("app/admin/operations/page.tsx").includes('<CommunityPhotoOperations />'));
+const paging=read("supabase/migrations/20261008063423_community_photo_operations_paging.sql");
+for(const token of ["Super admin required","limit 21","limit 20","p_after_id","Invalid page position","position(lower(search_text)","from public,anon","communities_photo_operations_name_idx"])assert(paging.includes(token),token);
+for(const token of ["get_admin_community_photo_operations_page","p_search:appliedSearch","p_after_name:cursor?.name","Previous","Next","Clear search","active=false","catch(error)"])assert(ui.includes(token),token);
+assert(!ui.includes("communities.filter"),"Search must cover the database, not only the loaded page");
+assert(ui.includes("if(changingPage.current)return"),"Rapid page changes must be synchronously guarded");
 const route=read("app/api/admin/community/photos/cleanup/route.ts");
 for(const token of ['request.headers.get("origin")','auth.getUser()',"get_admin_community_photo_operations","cleanCommunityPhotos()","status: 403","status: result.failed ? 503 : 200"])assert(route.includes(token),token);
 console.log("Photo Admin operations source contracts passed; real release checks remain unpassed until recorded evidence exists.");

@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { adminErrorMessage } from "@/lib/admin-error";
 type Check = { key: string; passed: boolean; evidence: string; checked_at: string | null };
 type Community = { id: string; name: string; status: string; allowance_bytes: number; used_bytes: number; uploads_enabled: boolean; waiting_cleanup: number };
-type Operations = { checks: Check[]; health: { finished_at: string; removed: number; failed: number } | null; communities: Community[] };
+type Cursor = { name: string; id: string };
+type Operations = { checks: Check[]; health: { finished_at: string; removed: number; failed: number } | null; communities: Community[]; has_more: boolean; next_cursor: Cursor | null };
 const labels: Record<string,string> = { binary_delivery: "Photos upload and open correctly", access_control: "Only authorised people can view photos", cleanup_recovery: "Failed uploads, removal and cleanup work", mobile_review: "Member, Host and Admin screens work on mobile" };
 export function CommunityPhotoOperations() {
  const supabase = useMemo(() => createClient(), []);
@@ -15,15 +16,32 @@ export function CommunityPhotoOperations() {
  const [message,setMessage] = useState("");
  const [retry,setRetry] = useState(0);
  const [search,setSearch] = useState("");
- const visibleCommunities=data?.communities.filter(c=>c.name.toLowerCase().includes(search.trim().toLowerCase()))??[];
- useEffect(() => { let active=true; setBusy(true);
-  supabase.rpc("get_admin_community_photo_operations").then(({data,error}) => {
-   if (!active) return;
-   if (error) { setData(null); setMessage(adminErrorMessage(error,"open photo controls")); }
-   else setData(data as Operations);
-   setBusy(false);
-  }); return () => { active=false; };
- },[retry,supabase]);
+ const [appliedSearch,setAppliedSearch] = useState("");
+ const [positions,setPositions] = useState<(Cursor | null)[]>([null]);
+ const changingPage=useRef(false);
+ const cursor=positions[positions.length-1];
+ useEffect(() => { let active=true; setBusy(true); setData(null);
+  async function load() {
+   try {
+    const {data,error}=await supabase.rpc("get_admin_community_photo_operations_page",{
+     p_search:appliedSearch,p_after_name:cursor?.name??null,p_after_id:cursor?.id??null,
+    });
+    if(error)throw error;
+    if(active)setData(data as Operations);
+   }catch(error){if(active)setMessage(adminErrorMessage(error,"open photo controls"));}
+   finally{if(active){changingPage.current=false;setBusy(false);}}
+  }
+  void load(); return () => { active=false; };
+ },[retry,supabase,appliedSearch,cursor]);
+ function find(value: string) {
+  if(changingPage.current)return;
+  changingPage.current=true;setBusy(true);setData(null);
+  setAppliedSearch(value.trim());setPositions([null]);setMessage("");setRetry(value=>value+1);
+ }
+ function page(next: (Cursor | null)[]) {
+  if(changingPage.current)return;
+  changingPage.current=true;setBusy(true);setData(null);setMessage("");setPositions(next);
+ }
  async function check(item: Check) {
   const result = await ask({ title: item.passed ? "Reopen this check?" : "Record a completed test", description: item.passed ? "Uploads will be paused in every Community until this check passes again." : "Only record a pass after testing the real feature. Code checks alone are not enough.", confirmLabel: item.passed ? "Reopen check and pause uploads" : "Record test result", fields: [{ name:"evidence",label:"What was tested, and when?",type:"textarea",required:true,minLength:10,maxLength:1000 }] });
   if (!result) return;
@@ -64,8 +82,17 @@ export function CommunityPhotoOperations() {
    <details><summary>Photo launch checks · {data.checks.filter(c=>c.passed).length} of 4 checked</summary>
     {data.checks.map(c=><article key={c.key}><strong>{labels[c.key]}</strong><p>{c.passed?"Checked":"Not checked yet"}{c.evidence?` · ${c.evidence}`:""}</p><button disabled={busy} onClick={()=>void check(c)}>{c.passed?"Reopen check":"Record completed test"}</button></article>)}
    </details>
-   <label>Find a Community<input type="search" placeholder="Community name" value={search} onChange={event=>setSearch(event.target.value)} /></label>
-   {visibleCommunities.length?<div>{visibleCommunities.map(c=><article key={c.id} className="community-photo-admin-row"><div><strong>{c.name}</strong><p>{c.status!=="published"?"Community not open":c.uploads_enabled?"Uploads allowed":"Uploads paused"} · {Math.ceil(c.used_bytes/1048576)} of {Math.round(c.allowance_bytes/1048576)} MB used · {c.waiting_cleanup} awaiting cleanup/review</p></div><button disabled={busy} onClick={()=>void settings(c)}>Photo settings</button></article>)}</div>:<p>{data.communities.length?"No matching Communities.":"No Communities yet."}</p>}
+   <form className="community-photo-admin-search" onSubmit={event=>{event.preventDefault();if(!busy)find(search);}}>
+    <label>Find a Community<input type="search" placeholder="Community name" maxLength={120} value={search} onChange={event=>setSearch(event.target.value)} /></label>
+    <button type="submit" disabled={busy}>Search</button>
+    {appliedSearch?<button type="button" disabled={busy} onClick={()=>{setSearch("");find("");}}>Clear search</button>:null}
+   </form>
+   {data.communities.length?<div>{data.communities.map(c=><article key={c.id} className="community-photo-admin-row"><div><strong>{c.name}</strong><p>{c.status!=="published"?"Community not open":c.uploads_enabled?"Uploads allowed":"Uploads paused"} · {Math.ceil(c.used_bytes/1048576)} of {Math.round(c.allowance_bytes/1048576)} MB used · {c.waiting_cleanup} awaiting cleanup/review</p></div><button disabled={busy} onClick={()=>void settings(c)}>Photo settings</button></article>)}</div>:<p>{appliedSearch?"No matching Communities.":positions.length>1?"No Communities on this page. Go back to the previous page.":"No Communities yet."}</p>}
+   <nav className="community-photo-admin-pages" aria-label="Community photo pages">
+    <button type="button" disabled={busy||positions.length===1} onClick={()=>page(positions.slice(0,-1))}>Previous</button>
+    <span role="status"> Page {positions.length} · {data.communities.length} Communities </span>
+    <button type="button" disabled={busy||!data.has_more||!data.next_cursor} onClick={()=>{if(data.next_cursor)page([...positions,data.next_cursor]);}}>Next</button>
+   </nav>
   </>}
  </section>;
 }
