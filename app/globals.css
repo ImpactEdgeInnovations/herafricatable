@@ -33721,7 +33721,6 @@ textarea {
   .community-room-hero h1 { font-size: clamp(2rem, 11vw, 3rem); }
   .community-local-navigation { margin-bottom: 22px; }
   .community-local-navigation > div { gap: 18px; }
-  .community-local-more { display: none !important; }
   .community-start-path { padding: 26px 20px; }
   .community-start-primary { width: 100%; justify-content: center; }
   .community-overview-links > a { min-height: 76px; padding: 15px 16px; }

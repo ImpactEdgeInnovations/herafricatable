@@ -102,7 +102,7 @@ export function CommunityStartPath({
                 description: state.next_gathering_title
                   ? `${state.next_gathering_title} is the next event for this community.`
                   : "See the next event chosen for this community.",
-                href: `/communities/${communitySlug}/gatherings/${state.next_gathering_slug}`,
+                href: `/communities/${communitySlug}?view=gatherings&gathering=${encodeURIComponent(state.next_gathering_slug)}`,
                 label: "Join the next event",
               },
             ]

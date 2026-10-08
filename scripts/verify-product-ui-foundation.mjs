@@ -10,6 +10,7 @@ const StartPath=new Function('React','Link',`${code};return CommunityStartPath;`
 const state={joined_at:'2026-10-08',has_introduction:false,has_contribution:true,has_accepted_connection:false,has_upcoming_registration:false,next_gathering_slug:'test',next_gathering_title:'Our next meeting',next_gathering_starts_at:'2026-10-09'};
 const render=count=>renderToStaticMarkup(React.createElement(StartPath,{cohortActive:false,communitySlug:'test',state,memberCount:count}));
 assert(render(1).includes('Join the next event'));
+assert(render(1).includes('?view=gatherings&amp;gathering=test'));
 assert(!render(1).includes('Meet a member'));
 assert(render(2).includes('Meet a member'));
 assert(!render(2).includes('1 of 3'));
@@ -20,4 +21,6 @@ assert(css.includes('.community-role-badge'));
 assert(!css.includes('display: none'), 'Foundation must not conceal working controls');
 assert(read('app/layout.tsx').indexOf('product-ui-foundation.css')>read('app/layout.tsx').indexOf('event-detail-refinement.css'));
 assert(read('components/member/community-feed.tsx').includes('post.author_id === hostUserId'));
+assert(read('components/member/community-local-navigation.tsx').includes('new ResizeObserver(alignSelected)'));
+assert(!read('app/globals.css').includes('.community-local-more { display: none !important; }'));
 console.log('UI foundation and Community Home behaviour passed: single-member recommendations, retained actions, role badge provenance and scoped final stylesheet. Browser/device acceptance is separate.');

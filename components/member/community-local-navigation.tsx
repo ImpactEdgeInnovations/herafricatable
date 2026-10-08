@@ -33,13 +33,20 @@ export function CommunityLocalNavigation({
     const selected = container?.querySelector<HTMLElement>('[aria-current="page"]');
     if (!container || !selected) return;
     // Scroll only the local tab strip, never the page or member's feed position.
-    const bounds = container.getBoundingClientRect();
-    const selectedBounds = selected.getBoundingClientRect();
-    if (selectedBounds.left < bounds.left) {
-      container.scrollLeft = container.scrollLeft + selectedBounds.left - bounds.left;
-    } else if (selectedBounds.right > bounds.right) {
-      container.scrollLeft = container.scrollLeft + selectedBounds.right - bounds.right;
+    function alignSelected() {
+      if (!container || !selected) return;
+      const bounds = container.getBoundingClientRect();
+      const selectedBounds = selected.getBoundingClientRect();
+      if (selectedBounds.left < bounds.left) {
+        container.scrollLeft = container.scrollLeft + selectedBounds.left - bounds.left;
+      } else if (selectedBounds.right > bounds.right) {
+        container.scrollLeft = container.scrollLeft + selectedBounds.right - bounds.right;
+      }
     }
+    alignSelected();
+    const observer = new ResizeObserver(alignSelected);
+    observer.observe(container);
+    return () => observer.disconnect();
   }, [active]);
   return (
     <nav className="community-local-navigation" aria-label="Inside this Community">
