@@ -226,6 +226,8 @@ export function CommunityDirectory({
     (item) => !memberStates.includes(item.membership_status ?? ""),
   );
   const cleanQuery = query.trim().toLowerCase();
+  const matchesQuery=(item:CommunitySummary)=>!cleanQuery || [item.name,item.description,item.tagline??""].some(value=>value.toLowerCase().includes(cleanQuery));
+  const visibleMember=memberCommunities.filter(matchesQuery);
   const visibleDiscover = discoverCommunities.filter((item) => {
     const matchesJoining = joiningFilter === "all" ||
       (joiningFilter === "open" && item.effective_mode === "open") ||
@@ -484,6 +486,7 @@ export function CommunityDirectory({
   return (
     <>
       {message ? <p className="network-message community-directory-feedback" role="status">{message}</p> : null}
+      <div className="community-directory-global-search"><label htmlFor="community-search">Search communities</label><input id="community-search" type="search" value={query} maxLength={120} onChange={event=>setQuery(event.target.value)} placeholder="Search by name or purpose"/>{query?<button type="button" onClick={()=>setQuery("")}>Clear search</button>:null}</div>
       <section className="community-directory" id="your-communities">
         <header className="community-directory-heading">
           <div>
@@ -494,13 +497,13 @@ export function CommunityDirectory({
             {`${memberCommunities.length} ${memberCommunities.length === 1 ? "community" : "communities"}`}
           </span>
         </header>
-        {memberCommunities.length ? (
+        {visibleMember.length ? (
           <div className="community-member-rooms">
-            {memberCommunities.map((item) =>
+            {visibleMember.map((item) =>
               renderCommunityCard(item, "member"),
             )}
           </div>
-        ) : (
+        ) : cleanQuery ? <div className="community-directory-empty is-search"><strong>No joined communities match “{query}”.</strong><button type="button" className="button button-outline" onClick={()=>setQuery("")}>Clear search</button></div> : (
           <div className="community-directory-empty">
             <span aria-hidden="true">H</span>
             <div>
@@ -523,21 +526,9 @@ export function CommunityDirectory({
             <p className="eyebrow">Find a community</p>
             <h2>Choose a purpose you share.</h2>
           </div>
-          {discoverCommunities.length > 3 ? (
-            <label className="community-directory-search">
-              <span>Search communities</span>
-              <input
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by name or purpose"
-                type="search"
-                value={query}
-              />
-            </label>
-          ) : (
             <span>
               {discoverCommunities.length} available
             </span>
-          )}
         </header>
         {discoverCommunities.length > 1 ? <div className="community-discovery-filters" role="group" aria-label="How you would like to join">
           {[["all", "All communities"], ["open", "Join straight away"], ["approval", "Ask to join"]].map(([value, label]) =>

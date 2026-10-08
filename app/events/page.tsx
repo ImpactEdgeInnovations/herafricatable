@@ -93,16 +93,6 @@ export default async function EventsPage() {
   const bookingAvailability = publicTicketError
     ? new Map<string, EventBookingAvailability>()
     : await loadEventBookingAvailabilityBatch(events, ticketsByEvent);
-  const { data: eventCommunityRows } = events.length
-    ? await supabase
-        .from("community_event_links")
-        .select("event_id,communities(name,slug,community_type)")
-        .in("event_id", events.map((event) => event.id))
-    : { data: [] };
-  const eventCommunities = (eventCommunityRows as unknown as {
-    communities: { community_type: string; name: string; slug: string } | null;
-    event_id: string;
-  }[] | null) ?? [];
   const { data: posterRows } = events.length
     ? await supabase.rpc("list_public_event_proposal_posters", { p_event_ids: events.map((event) => event.id) })
     : { data: [] };
@@ -233,14 +223,13 @@ export default async function EventsPage() {
             <div><p className="eyebrow">Events are temporarily unavailable</p><strong>We could not open the event calendar.</strong><p>Please try again shortly. Your membership and any existing registration remain unchanged.</p><div className="events-empty-actions"><Link className="button button-primary" href="/events">Try again</Link>{isActiveMember ? <Link className="button button-outline" href="/support">Contact support</Link> : null}</div></div>
           </div>
         ) : events.length ? events.map((event) => {
-          const eventCommunity = eventCommunities.find((item) => item.event_id === event.id)?.communities;
           const poster = hostCovers.get(event.id)?.url ? hostCovers.get(event.id) : eventPosters.get(event.id);
           const tickets = ticketsByEvent.get(event.id) ?? [];
           return (
           <article key={event.id}>
             {poster?.url ? <img className="public-event-poster" alt={poster.alt} src={poster.url} /> : null}
             <div className="public-event-date"><strong>{new Intl.DateTimeFormat("en-KE", { day: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))}</strong><span>{new Intl.DateTimeFormat("en-KE", { month: "short", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</span></div>
-            <div className="public-event-copy"><span>{event.audience === "community" ? "Community gathering" : event.format.replace("_", " ")}</span><h2>{event.title}</h2><p className="public-event-facts">{new Intl.DateTimeFormat("en-KE", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} <span aria-hidden="true">·</span> {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"} <span aria-hidden="true">·</span> {eventPrice(tickets, Boolean(publicTicketError))} <span aria-hidden="true">·</span> {bookingLabel(event, bookingAvailability.get(event.id), event.free_instant_booking && isActiveMember && intakeMode === "trusted_auto")}</p><p className="public-event-summary">{event.summary || "Event details will be shared with approved members."}</p>{eventCommunity ? <Link className="event-list-community" href={`/communities/${eventCommunity.slug}/about`}>{eventCommunity.name} <i aria-hidden="true">→</i></Link> : <small className="event-list-standalone">Her Africa Table open event</small>}</div>
+            <div className="public-event-copy"><span>{event.audience === "community" ? "Community gathering" : event.format.replace("_", " ")}</span><h2>{event.title}</h2><p className="public-event-facts">{new Intl.DateTimeFormat("en-KE", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} <span aria-hidden="true">·</span> {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"} <span aria-hidden="true">·</span> {eventPrice(tickets, Boolean(publicTicketError))} <span aria-hidden="true">·</span> {bookingLabel(event, bookingAvailability.get(event.id), event.free_instant_booking && isActiveMember && intakeMode === "trusted_auto")}</p><p className="public-event-summary">{event.summary || "Event details will be shared with approved members."}</p></div>
             <Link href={`/events/${event.slug}`}>View event <span aria-hidden="true">→</span></Link>
           </article>
         );}) : <div className="events-empty"><span className="events-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><p className="eyebrow">No upcoming events</p><strong>We’re preparing the next gathering.</strong><p>{isActiveMember ? "There is no public event just yet. You can be the first to bring people together." : "Published event details will appear here. Join the founding network to hear first."}</p><div className="events-empty-actions"><Link className="button button-primary" href={isActiveMember ? "#propose-event" : "/sign-in?mode=apply"}>{isActiveMember ? "Host an event" : "Request membership"}</Link>{isActiveMember ? <Link className="button button-outline" href="/network">Meet members</Link> : null}</div></div></div>}

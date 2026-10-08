@@ -111,7 +111,7 @@ export function CommunityHostApplication({
   media,
   mediaReady,
   migrationReady,
-  pilotEligible,
+  pilotEligible: pilotEligibleSetting,
 }: {
   applications: CommunityHostApplicationState[];
   currentUserId: string;
@@ -123,11 +123,13 @@ export function CommunityHostApplication({
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
+  const [startingAnother,setStartingAnother]=useState(false);
+  const pilotEligible=pilotEligibleSetting&&!applications.some(item=>item.status==="approved");
   const current = applications.find((item) =>
-    ["pending", "under_review", "changes_requested", "approved"].includes(
+    ["pending", "under_review", "changes_requested"].includes(
       item.status,
     ),
-  );
+  ) ?? (startingAnother ? undefined : applications.find(item=>item.status==="approved"));
   const editable =
     current?.status === "pending" || current?.status === "changes_requested";
   const [open, setOpen] = useState(current?.status === "changes_requested");
@@ -451,7 +453,7 @@ export function CommunityHostApplication({
             <div>
               <p className="eyebrow">{statusCopy[current.status].label}</p>
               <h3>{current.community_name}</h3>
-              <p>{pilotEligible && current.status === "approved" ? "Open your Community to see its status, welcome members and manage joining." : statusCopy[current.status].summary}</p>
+              <p>{current.status === "approved" && current.created_community_slug ? "Open your Community to welcome members and manage joining." : statusCopy[current.status].summary}</p>
             </div>
           </div>
           {current.admin_note ? (
@@ -463,10 +465,10 @@ export function CommunityHostApplication({
           {currentMedia ? (
             <div className="application-image-member-summary">
               {currentMedia.image_url ? <img alt={currentMedia.alt_text} src={currentMedia.image_url} /> : null}
-              <div><strong>{applicationMediaStatus(currentMedia.status)}</strong><p>{currentMedia.alt_text}</p>{currentMedia.review_note ? <small>{currentMedia.review_note}</small> : null}</div>
+              <div><strong>{current.status==="approved"?"Application image":applicationMediaStatus(currentMedia.status)}</strong><p>{current.status==="approved"?"Your application image is separate from the image shown on your Community. Choose and save it in Host tools.":currentMedia.alt_text}</p>{current.status==="approved"&&current.created_community_slug?<Link href={`/communities/${current.created_community_slug}/host#identity`}>Set Community image</Link>:null}{currentMedia.review_note ? <small>{currentMedia.review_note}</small> : null}</div>
             </div>
           ) : null}
-          {!showForm && mediaReady && !["declined", "withdrawn"].includes(current.status) ? (
+          {!showForm && mediaReady && !["approved", "declined", "withdrawn"].includes(current.status) ? (
             <ApplicationImageQuickEdit contextId={current.application_id} contextType="community_application" existing={currentMedia} label="Community cover image" />
           ) : null}
           <footer>
@@ -512,6 +514,8 @@ export function CommunityHostApplication({
           </footer>
         </article>
       ) : null}
+
+      {current?.status==="approved"?<button type="button" className="button button-outline" onClick={()=>{setStartingAnother(true);setImageFile(null);setImageAltText("");setStep(0);setFurthestStep(0);setAcceptGuidelines(false);setOpen(true);}}>Apply to start another Community</button>:null}
 
       {showForm ? (
         <form
@@ -794,11 +798,11 @@ export function CommunityHostApplication({
               )}
             </div>
             {step < applicationSteps.length - 1 ? (
-              <button className="button button-primary" onClick={nextStep} type="button">
+              <button key={`continue-${step}`} className="button button-primary" onClick={event=>{event.preventDefault();nextStep();}} type="button">
                 Continue <span aria-hidden="true">→</span>
               </button>
             ) : (
-              <button className="button button-primary" disabled={busy === "save"}>
+              <button key="submit-community" type="submit" className="button button-primary" disabled={busy === "save"}>
                 {busy === "save"
                   ? "Sending…"
                   : editable
