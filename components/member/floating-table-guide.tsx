@@ -87,9 +87,16 @@ function clampPosition(position: Position): Position {
 }
 
 function defaultPosition(): Position {
+  const actions = window.innerWidth <= 620
+    ? document.querySelector(".event-host-page .host-workspace-actions")
+    : null;
+  const actionTop = actions?.getBoundingClientRect().top;
+  const defaultY = window.innerHeight - DOCK_SIZE - 104;
   return clampPosition({
     x: window.innerWidth - DOCK_SIZE - 24,
-    y: window.innerHeight - DOCK_SIZE - 104,
+    y: actionTop !== undefined && actionTop > 0 && actionTop < window.innerHeight
+      ? Math.min(defaultY, actionTop - DOCK_SIZE - EDGE_GAP)
+      : defaultY,
   });
 }
 
@@ -178,10 +185,24 @@ export function FloatingTableGuide({
     } catch {
       setPosition(fallback);
     }
-    const keepInView = () =>
-      setPosition((current) => (current ? clampPosition(current) : fallback));
+    const hostWorkspace = document.querySelector(".event-host-page .host-workspace");
+    const keepInView = () => setPosition((current) => {
+      const next = current
+        ? clampPosition(hostWorkspace && window.innerWidth <= 620
+          ? { x: current.x, y: defaultPosition().y }
+          : current)
+        : defaultPosition();
+      return current?.x === next.x && current?.y === next.y ? current : next;
+    });
+    const hostObserver = hostWorkspace ? new ResizeObserver(keepInView) : null;
+    if (hostWorkspace) hostObserver?.observe(hostWorkspace);
     window.addEventListener("resize", keepInView);
-    return () => window.removeEventListener("resize", keepInView);
+    if (hostWorkspace) window.addEventListener("scroll", keepInView, { passive: true });
+    return () => {
+      hostObserver?.disconnect();
+      window.removeEventListener("resize", keepInView);
+      window.removeEventListener("scroll", keepInView);
+    };
   }, [pathname]);
 
   useEffect(() => {
