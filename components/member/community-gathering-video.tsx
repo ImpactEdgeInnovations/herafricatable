@@ -16,16 +16,17 @@ export type GatheringVideo = {
   content_kind?: "scheduled" | "prerecorded";
 };
 
-export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, initialVideo, ready, onSaved, currentUserId }: {
+export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, initialVideo, initialLink = "", ready, onSaved, currentUserId }: {
   roomId: string; canManage: boolean; endsAt: string; title: string;
   initialVideo: GatheringVideo | null; ready: boolean;
+  initialLink?: string;
   onSaved?(): void;
   currentUserId: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [video, setVideo] = useState(initialVideo);
   const [settings, setSettings, clearSettings] = useCommunityDraft(communityDraftKey(currentUserId, "gathering-video", roomId), {
-    link: initialVideo?.video_id ? `https://www.youtube.com/watch?v=${initialVideo.video_id}` : "",
+    link: initialVideo?.video_id ? `https://www.youtube.com/watch?v=${initialVideo.video_id}` : initialLink,
     visible: initialVideo?.is_visible ?? true, keepReplay: initialVideo?.keep_replay ?? true,
     viewingMode: initialVideo?.viewing_mode ?? "watch_together",
   });
