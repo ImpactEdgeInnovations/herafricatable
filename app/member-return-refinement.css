@@ -25,9 +25,16 @@
 .network-section-links a { display:inline-flex; align-items:center; min-height:44px; color:var(--wine); font-size:.875rem; text-underline-offset:3px; }
 .network-page :is(#browse-members,#network-connections) { scroll-margin-top:20px; }
 .network-page .network-connections { padding:24px 0; gap:24px; }
+.network-page :is(.network-connections,.member-suggestions,.curated-introductions) h2 { font:600 1.3rem/1.35 var(--sans); letter-spacing:-.02em; }
+.network-page .network-profile-link { font-size:.9375rem; font-weight:600; }
+.network-page .network-connections article small { font-size:.8125rem; line-height:1.5; }
+.network-page .network-introduction-note { font-size:.875rem; line-height:1.6; }
+.network-page .network-introduction-note > span { font-size:.75rem; text-transform:none; letter-spacing:0; font-weight:500; }
+.network-page .network-connections .member-status { font-size:.75rem; text-transform:none; letter-spacing:0; }
 .network-page .network-section-intro { font-size:.875rem; line-height:1.6; }
 .network-page .network-view-tabs { gap:6px; scrollbar-width:thin; }
-.network-page .network-view-tabs button { padding:10px 12px; font-size:.875rem; min-height:44px; color:var(--product-muted); flex-shrink:0; }
+.network-page .network-view-tabs button { padding:10px 12px; font-size:.875rem; font-weight:500; min-height:44px; color:var(--product-muted); flex-shrink:0; }
+.network-page .network-view-tabs button > span { font-weight:inherit; }
 .network-page .network-view-tabs button[aria-pressed="true"] { background:#f3e9ec; color:#64172a; }
 .network-page .network-view-tabs button:disabled { opacity:.6; cursor:not-allowed; }
 .network-page .member-directory-browser { border:0; border-radius:0; background:transparent; }
@@ -40,10 +47,13 @@
 .network-page .member-directory-content .directory-filters :is(input,select) { font-size:1rem; padding:8px 12px; height:44px; min-height:44px; }
 .network-page .member-directory-content .directory-filters > div { display:flex; align-items:center; gap:12px; }
 .network-page .directory-filters :is(button,a) { min-height:44px; font-size:.875rem; }
+.network-page .member-directory-content .directory-filters button { height:44px; }
 .network-page .member-directory .directory-grid { gap:16px; }
 .network-page .member-directory .directory-grid > article { border:1px solid var(--product-rule); border-radius:8px; padding:18px; background:#fff; box-shadow:none; }
 .network-page .member-directory .directory-grid article div > p:not(.eyebrow), .network-page .directory-privacy-note { font-size:.875rem; line-height:1.6; }
 .network-page .directory-grid :is(.eyebrow,.directory-intent small,.directory-tags span) { font-size:.75rem; text-transform:none; letter-spacing:0; }
+.network-page .directory-grid .eyebrow { font-weight:400; color:var(--product-muted); }
+.network-page .directory-grid article strong { font-size:.875rem; font-weight:500; line-height:1.5; }
 .network-page .directory-grid h3 { font-family:var(--sans); font-size:1.2rem; font-weight:600; line-height:1.3; }
 .network-page .directory-profile-link { min-height:44px; display:inline-flex; align-items:center; font-size:.875rem; }
 .network-page .directory-card-actions { display:flex; flex-wrap:wrap; gap:8px; }
