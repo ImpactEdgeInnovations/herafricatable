@@ -101,6 +101,7 @@ Live owner visual check confirmed the recording under Gatherings → Past, its e
 - [x] Add server-backed name search and 20-record cursor paging to Community photo operations; live rollback test `053` traversed 125 draft fixtures with no duplicates and denied member/anonymous access. Populated Admin browser/mobile acceptance remains open.
 - [x] Add 25-report cursor paging to photo reports with open concerns first; rollback test `054` traversed 130 reports, stable timestamp ties and role/expiry boundaries. Populated moderator/Admin browser review remains open.
 - [ ] Rehearse simultaneous upload reservations, cleanup failures and recovery with real files.
+- [x] Verify one application test-email reaches the official Admin inbox: 8 October, 10:01 EAT, `community@caseready.africa` to `impactedgeinnovations@gmail.com`, on deployed `96b78cc`. This is not OTP or safety-alert timing acceptance.
 - [ ] Verify real safety email receipt and actual delivery timing. A queued job is not proof of inbox delivery.
 - [ ] Add targeted immediate safety-report delivery or an approved more-frequent worker schedule. Current Vercel cron runs daily at 08:00 EAT; Admin can also run the notification processor. New report alerts are immediately in the private review queue, but email is not yet an instant-delivery promise.
 

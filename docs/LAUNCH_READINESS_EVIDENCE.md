@@ -1,11 +1,22 @@
 # Launch readiness evidence
 
-Last updated: 13 August 2026<br />
-Production: `https://herafricatable.vercel.app`<br />
-Verified production release: `b6bb161`<br />
-Latest credentialed acceptance: deployed and exact-release smoke-tested
+Last updated: 8 October 2026<br />
+Current production: `https://www.herafricatable.com`<br />
+Latest verified email-control release: `96b78cc`
 
-## Proven automatically
+## 8 October — real Admin test-email receipt
+
+At 10:01 EAT, one private, clearly labelled test sent through the deployed application endpoint reached `impactedgeinnovations@gmail.com` in Gmail **Inbox**. The observed sender was `Her Africa Table <community@caseready.africa>`, and the button pointed to the production Admin notification page. The script confirmed provider acceptance at 07:01:45 UTC; the browser confirmed actual Inbox receipt separately. Local evidence: `tmp/admin-email-inbox-acceptance-20261008.png` (not committed).
+
+A read-only queue audit immediately before the test found zero queued, processing or failed jobs and five provider-accepted jobs in the previous seven days. No general queue processing or member invitations were triggered by this acceptance.
+
+This proves one application-email test delivery, not all emails: OTP, invitation/onboarding return, welcome templates, retry/preference/deduplication behaviour and urgent safety-alert timing remain open. It does not pass a global release gate or establish complete production readiness. See the current [implementation taskboard](./UX_EVENTS_IMPLEMENTATION_TASKBOARD.md).
+
+## Historical baseline — 13 August 2026
+
+The evidence below records the August build (`b6bb161`, then hosted at `https://herafricatable.vercel.app`). It is historical, not a certification of the present release or current pilot settings; changed features require new acceptance.
+
+### Proven automatically at the August baseline
 
 - Production health is ready: HTTP 200, database reachable and server integration ready.
 - Public pages load and protected member/Admin routes preserve their authentication boundaries.
@@ -23,7 +34,7 @@ Latest credentialed acceptance: deployed and exact-release smoke-tested
 - Live membership intake reports `manual_review` and is ready for controlled admission.
 - The release is committed and pushed to `main`; Vercel reports the exact commit.
 
-## Proven with live tagged accounts
+### Proven with live tagged accounts at the August baseline
 
 - Membership intake passed invited, manual-review, paused and trusted-network
   journeys and restored `manual_review` as the launch setting.
@@ -48,7 +59,7 @@ Latest credentialed acceptance: deployed and exact-release smoke-tested
 - The Nairobi Founding Table now has four of eight Community-specific publication
   checks passed and remains a private draft.
 
-## Proven in source and database contracts
+### Proven in source and database contracts at the August baseline
 
 - Member approval moves only a submitted pending application into onboarding or
   active access, records the reviewer and audit event, and triggers a member notice.
