@@ -248,7 +248,7 @@ export function CommunityDirectory({
       item.membership_status === "approved_pending_payment";
     const stateLabel =
       item.membership_status === "active"
-        ? "Member"
+        ? ["owner","host"].includes(item.membership_role??"") ? "Host" : item.membership_role==="moderator" ? "Moderator" : "Member"
         : item.membership_status === "requested"
           ? "Request sent"
           : item.membership_status === "invited"
@@ -298,7 +298,7 @@ export function CommunityDirectory({
             )}
             <div>
               <small>
-                {item.effective_mode === "invite_only"
+                {item.membership_status==="active" ? "You have joined this Community" : item.effective_mode === "invite_only"
                   ? "Invitation only"
                   : item.effective_mode === "approval"
                     ? "Ask the Host to join"
