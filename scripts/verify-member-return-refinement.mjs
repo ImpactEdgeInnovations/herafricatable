@@ -65,6 +65,7 @@ assert.equal(filterFormKey(NetworkHub({...props,cityFilter:'Nairobi',goalFilter:
 assert(healthy.includes('id="browse-members"'));
 assert(healthy.includes('name="q"') && healthy.includes('name="city"') && healthy.includes('name="goal"'));
 assert(healthy.includes('1 member available to meet'));
+assert(render({searchQuery:'Rehearsal'}).includes('1 member matches your search'));
 const failed = render({unavailableAreas:['saved','code']});
 assert(failed.includes('Rehearsal Member') && failed.includes('Some extras could not load'));
 assert(/<button[^>]*disabled=""[^>]*>Save<\/button>/.test(failed));

@@ -45,7 +45,7 @@
 .network-page .member-directory-content .directory-filters { grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,1fr) auto; gap:12px; border:0; background:transparent; padding:0; }
 .network-page .member-directory-content .directory-filters label > span { font-size:.8rem; line-height:1.4; }
 .network-page .member-directory-content .directory-filters :is(input,select) { font-size:1rem; padding:8px 12px; height:44px; min-height:44px; }
-.network-page .member-directory-content .directory-filters > div { display:flex; align-items:center; gap:12px; }
+.network-page .member-directory-content .directory-filters > div { display:flex; align-items:center; gap:12px; min-height:44px; }
 .network-page .directory-filters :is(button,a) { min-height:44px; font-size:.875rem; }
 .network-page .member-directory-content .directory-filters button { height:44px; }
 .network-page .member-directory .directory-grid { gap:16px; }

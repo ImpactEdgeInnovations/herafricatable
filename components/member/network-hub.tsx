@@ -1273,7 +1273,7 @@ export function NetworkHub({
             </div>
           </form>
         </header>
-        {members.length ? <p className="member-directory-result-count" role="status">{members.length === 24 ? "Showing up to 24 members. Use the filters to narrow your search." : `${members.length} ${members.length === 1 ? "member" : "members"} ${searchQuery || cityFilter || goalFilter ? "match your search" : "available to meet"}.`}</p> : null}
+        {members.length ? <p className="member-directory-result-count" role="status">{members.length === 24 ? "Showing up to 24 members. Use the filters to narrow your search." : `${members.length} ${members.length === 1 ? "member" : "members"} ${searchQuery || cityFilter || goalFilter ? (members.length === 1 ? "matches your search" : "match your search") : "available to meet"}.`}</p> : null}
         {members.length ? (
           <div className="directory-grid">
             {members.map((member) => (
