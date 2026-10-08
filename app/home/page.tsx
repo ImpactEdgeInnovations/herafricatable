@@ -18,6 +18,8 @@ import {
   type TableTodaySuggestion,
 } from "@/components/member/your-table-today";
 import { MembershipWaitingRoom } from "@/components/onboarding/membership-waiting-room";
+import { communityReturnSuggestion, memberNextSuggestion, recentPastEvent } from "@/lib/member-return-suggestions.mjs";
+import { InstallAppButton } from "@/components/pwa/install-app";
 
 export const dynamic = "force-dynamic";
 
@@ -584,38 +586,10 @@ export default async function MemberHomePage() {
   const nextBestAction =
     accessStatus !== "active"
       ? null
-      : feedbackPrompt
-        ? {
-            action: "Share private feedback",
-            description: `Reflect on ${feedbackPrompt.title}. Nothing becomes public without separate permission.`,
-            href: `/events/${feedbackPrompt.slug}/feedback`,
-            label: "After the table",
-          }
-        : unreadMessages > 0
-          ? {
-              action: "Open conversations",
-              description: `${unreadMessages} unread message${unreadMessages === 1 ? "" : "s"} waiting for your response.`,
-              href: "/messages",
-              label: "Continue a conversation",
-            }
-          : dueFollowups.length > 0
-            ? {
-                action: "See reminder",
-                description:
-                  dueFollowups.length === 1
-                    ? `${dueFollowups[0].next_step} — ${dueFollowups[0].display_name}`
-                    : `${dueFollowups.length} private reminders are ready for your attention.`,
-                href: "/network",
-                label: "Keep in touch",
-              }
-          : unreadNotifications > 0
-            ? {
-                action: "See your updates",
-                description: `${unreadNotifications} new update${unreadNotifications === 1 ? "" : "s"} across your network and events.`,
-                href: "/notifications",
-                label: "See what changed",
-              }
-            : tableJourneyNext ?? activationNext ??
+      : memberNextSuggestion({
+          unreadMessages, dueFollowups, unreadNotifications,
+          pastEvent: recentPastEvent((pastEventResult.data as { ends_at: string; slug: string; title: string }[] | null) ?? []),
+          fallback: tableJourneyNext ?? activationNext ??
               (nextEvent && !nextRegistrationStatus
                 ? {
                     action: registrationState.action,
@@ -627,12 +601,13 @@ export default async function MemberHomePage() {
                     label: "Your next table",
                   }
                 : {
-                    action: "Explore members",
+                    action: "View events",
                     description:
-                      "Find someone relevant by her work, location, interests or current goals.",
-                    href: "/network",
-                    label: "Your network is ready",
-                  });
+                      "Browse upcoming events or revisit a past gathering.",
+                    href: "/events",
+                    label: "Your next event",
+                  }),
+        });
 
   const activeHomeCommunity = [...homeCommunities]
     .filter((community) => community.membership_status === "active")
@@ -662,27 +637,12 @@ export default async function MemberHomePage() {
         kicker: "Who to meet",
         title: "Meet someone new",
       };
-  const communityToday: TableTodaySuggestion = activeHomeCommunity
-    ? {
-        action: Number(activeHomeCommunity.new_activity_count ?? 0)
-          ? "See what is new"
-          : "Open Community",
-        description: Number(activeHomeCommunity.new_activity_count ?? 0)
-          ? `${activeHomeCommunity.new_activity_count} new update${Number(activeHomeCommunity.new_activity_count) === 1 ? "" : "s"} since your last visit.`
-          : activeHomeCommunity.tagline ||
-            "Return when you want to ask, offer or continue a conversation.",
-        href: `/communities/${activeHomeCommunity.slug}`,
-        kicker: "Your Community",
-        title: activeHomeCommunity.name,
-      }
-    : {
-        action: "Find a Community",
-        description:
-          "Choose one group built around a purpose, interest or place you share.",
-        href: "/communities",
-        kicker: "Your Community",
-        title: "Find a Community",
-      };
+  const communityToday = communityReturnSuggestion({
+    community: activeHomeCommunity, enabled: communityEnabled,
+    featureError: Boolean(communityFlagResult.error || communityAcceptanceFlagResult.error),
+    communityError: Boolean(homeCommunityResult.error),
+    activityError: Boolean(homeCommunityActivityResult.error),
+  });
   const actionToday: TableTodaySuggestion = {
     action: nextBestAction?.action ?? "See your next step",
     description:
@@ -716,6 +676,7 @@ export default async function MemberHomePage() {
             )}
           </div> : null}
         </div>
+        {accessStatus === "active" ? <div className="member-home-tools" aria-label="Home tools"><InstallAppButton compact /><Link href="/explore">More tools</Link></div> : null}
       </section>
       {accessStatus === "active" ? (
         <YourTableToday

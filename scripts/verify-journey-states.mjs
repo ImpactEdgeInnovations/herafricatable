@@ -500,6 +500,7 @@ for (const contract of [
 }
 const adminWorkGroup = read("components/admin/admin-work-group.tsx");
 const memberHome = read("app/home/page.tsx");
+const memberReturnSuggestions = read("lib/member-return-suggestions.mjs");
 const upcomingEvents = read("app/events/page.tsx");
 const pastEvents = read("app/events/past/page.tsx");
 const memberExplore = read("app/explore/page.tsx");
@@ -627,7 +628,7 @@ for (const contract of [
   "Show more",
 ]) {
   assert(
-    memberHome.includes(contract),
+    (memberHome + memberReturnSuggestions).includes(contract),
     `Member home next-event journey must include ${contract}`,
   );
 }
@@ -1634,12 +1635,12 @@ const networkHub = read("components/member/network-hub.tsx");
 assert(
   networkHub.indexOf('className="member-directory"') <
     networkHub.indexOf('className="network-code-tools"') &&
-    networkHub.includes("Show members"),
+    networkHub.includes('type="submit">Search'),
   "Member discovery must appear before optional in-person connection codes",
 );
 for (const contract of [
   "directory-filters",
-  "What would you like?",
+  "Looking for",
   "Ask to connect",
   "request_connection_with_context",
   "save_member_profile",
@@ -1732,7 +1733,7 @@ assert(
 );
 assert(
   memberHome.includes("list_due_connection_followups") &&
-    memberHome.includes("Keep in touch"),
+    memberReturnSuggestions.includes("Keep in touch") && memberHome.includes("memberNextSuggestion"),
   "Member Home must calmly surface due private relationship follow-ups",
 );
 const communityOutcomeSummary = read(

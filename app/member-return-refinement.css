@@ -1,0 +1,74 @@
+/* UI-5: signed-in Home/Members and the Community directory only. */
+:is(.member-home-page, .network-page) { --product-ink:#282320; --product-muted:#625b56; --product-rule:#ded8d2; font-family:var(--sans, Arial, sans-serif); }
+.member-home-page .member-welcome h1, .network-page .network-hero h1 { font-family:var(--sans, Arial, sans-serif); font-weight:600; letter-spacing:-.035em; line-height:1.15; }
+.member-home-page .member-welcome { grid-template-columns:minmax(0,1fr) auto; gap:20px; align-items:center; }
+.member-home-tools { display:flex; flex-wrap:wrap; align-items:center; gap:8px 20px; }
+.member-home-tools > a, .member-home-tools .pwa-install-link { min-height:44px; display:inline-flex; align-items:center; padding:8px 0; font:400 .875rem/1.4 var(--sans); color:var(--wine); }
+.member-home-page .table-today { padding:0; width:min(1120px, calc(100% - 48px)); margin-top:8px; }
+.member-home-page .table-today-grid { gap:16px; }
+.member-home-page .table-today-grid > article { padding:18px; border:1px solid var(--product-rule); border-radius:8px; background:#fff; box-shadow:none; }
+.member-home-page .table-today-grid article > div > span { font-size:.875rem; line-height:1.6; }
+.member-home-page .table-today > header { margin-bottom:12px; padding-bottom:12px; }
+.community-page .community-directory-searchbar { display:grid; grid-template-columns:minmax(0,420px) minmax(160px,240px); gap:8px 16px; align-items:end; width:min(1120px,calc(100% - 48px)); margin:16px auto 20px; }
+.community-page .community-directory-searchbar :is(.community-directory-global-search,.community-directory-location-filter) { display:grid; gap:6px; width:100%; min-width:0; margin:0; }
+.community-page .community-directory-searchbar label { font-size:.875rem; line-height:1.4; width:auto; }
+.community-page .community-directory-searchbar :is(input,select) { box-sizing:border-box; width:100%; min-width:0; max-width:none; height:44px; min-height:44px; margin:0; padding:8px 12px; border:1px solid var(--product-rule); border-radius:5px; background:#fff; color:var(--product-ink); font:400 1rem/normal var(--sans); }
+.community-page .community-directory-search-help { grid-column:1/-1; display:flex; align-items:center; flex-wrap:wrap; gap:4px 20px; }
+.community-page .community-directory-search-help small, .community-page .community-directory-search-help p { font-size:.8rem; color:var(--product-muted); line-height:1.5; margin:0; }
+.community-page .community-directory-search-help p { flex-basis:100%; }
+.community-page .community-directory-search-help button { min-height:44px; padding:4px 0; border:0; background:transparent; color:var(--wine); font:400 .875rem var(--sans); cursor:pointer; text-decoration:underline; }
+.network-page .network-hero { padding:24px 0 20px; gap:24px; grid-template-columns:minmax(0,1fr) auto; }
+.network-page .network-hero:not(:has(aside)) { grid-template-columns:minmax(0,1fr); }
+.network-page .network-hero h1 { font-size:clamp(1.8rem,3.2vw,2.4rem); }
+.network-page .network-hero > div > p { max-width:64ch; font-size:.9rem; line-height:1.6; }
+.network-section-links { display:flex; gap:20px; flex-wrap:wrap; margin-top:10px; }
+.network-section-links a { display:inline-flex; align-items:center; min-height:44px; color:var(--wine); font-size:.875rem; text-underline-offset:3px; }
+.network-page :is(#browse-members,#network-connections) { scroll-margin-top:20px; }
+.network-page .network-connections { padding:24px 0; gap:24px; }
+.network-page .network-section-intro { font-size:.875rem; line-height:1.6; }
+.network-page .network-view-tabs { gap:6px; scrollbar-width:thin; }
+.network-page .network-view-tabs button { padding:10px 12px; font-size:.875rem; min-height:44px; color:var(--product-muted); flex-shrink:0; }
+.network-page .network-view-tabs button[aria-pressed="true"] { background:#f3e9ec; color:#64172a; }
+.network-page .network-view-tabs button:disabled { opacity:.6; cursor:not-allowed; }
+.network-page .member-directory-browser { border:0; border-radius:0; background:transparent; }
+.network-page .member-directory-content { padding:0; border:0; }
+.network-page .member-directory-content > header { grid-template-columns:minmax(0,1fr); gap:16px; margin-bottom:12px; }
+.network-page .member-directory-content > header h2 { font-size:1.3rem; font-weight:600; }
+.network-page .member-directory-content > header > div > p { font-size:.875rem; line-height:1.6; }
+.network-page .member-directory-content .directory-filters { grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,1fr) auto; gap:12px; border:0; background:transparent; padding:0; }
+.network-page .member-directory-content .directory-filters label > span { font-size:.8rem; line-height:1.4; }
+.network-page .member-directory-content .directory-filters :is(input,select) { font-size:1rem; padding:8px 12px; height:44px; min-height:44px; }
+.network-page .member-directory-content .directory-filters > div { display:flex; align-items:center; gap:12px; }
+.network-page .directory-filters :is(button,a) { min-height:44px; font-size:.875rem; }
+.network-page .member-directory .directory-grid { gap:16px; }
+.network-page .member-directory .directory-grid > article { border:1px solid var(--product-rule); border-radius:8px; padding:18px; background:#fff; box-shadow:none; }
+.network-page .member-directory .directory-grid article div > p:not(.eyebrow), .network-page .directory-privacy-note { font-size:.875rem; line-height:1.6; }
+.network-page .directory-grid :is(.eyebrow,.directory-intent small,.directory-tags span) { font-size:.75rem; text-transform:none; letter-spacing:0; }
+.network-page .directory-grid h3 { font-family:var(--sans); font-size:1.2rem; font-weight:600; line-height:1.3; }
+.network-page .directory-profile-link { min-height:44px; display:inline-flex; align-items:center; font-size:.875rem; }
+.network-page .directory-card-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.network-page .directory-card-actions button { min-height:44px; padding:9px 12px; font:500 .875rem/1.4 var(--sans); border:1px solid var(--product-rule); border-radius:5px; background:#fff; color:var(--wine); }
+.network-page .directory-card-actions button:first-child { background:var(--wine); border-color:var(--wine); color:#fff; }
+.network-page .directory-card-actions button:disabled { background:#e8e3df; border-color:#d2cbc5; color:#625b56; cursor:not-allowed; opacity:1; }
+.network-page :is(.member-directory-result-count,.network-partial-notice) { font-size:.875rem; line-height:1.6; color:var(--product-muted); }
+.network-page .network-partial-notice { width:min(1120px,calc(100% - 48px)); margin:16px auto; }
+.member-install-entry { display:flex; align-items:center; justify-content:space-between; gap:20px; width:min(1120px,calc(100% - 48px)); margin:8px auto 24px; padding:16px 0; border-bottom:1px solid var(--line); }
+.member-install-entry h2 { font:600 1.15rem/1.4 var(--sans); margin:0 0 6px; }
+.member-install-entry p { font:400 .875rem/1.6 var(--sans); color:var(--muted); margin:0; }
+@media(max-width:820px) {
+  .member-home-page .member-welcome { grid-template-columns:minmax(0,1fr); gap:12px; }
+  .network-page .member-directory-content .directory-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:640px) {
+  .member-home-page .table-today, .community-page .community-directory-searchbar, .network-page .network-partial-notice, .member-install-entry { width:calc(100% - 32px); }
+  .community-page .community-directory-searchbar { grid-template-columns:minmax(0,1fr); gap:12px; }
+  .network-page .network-hero { grid-template-columns:minmax(0,1fr); gap:12px; }
+  .network-page .member-directory-content .directory-filters { grid-template-columns:minmax(0,1fr); }
+  .network-page .member-directory .directory-grid { grid-template-columns:minmax(0,1fr); }
+  .member-install-entry { align-items:start; flex-direction:column; gap:12px; }
+}
+@media(max-width:360px) {
+  :is(.member-home-page,.network-page,.member-explore-page) > .member-shell-header { flex-wrap:wrap; row-gap:8px; padding-top:12px; padding-bottom:12px; }
+  :is(.member-home-page,.network-page,.member-explore-page) > .member-shell-header > .brand { flex-basis:100%; }
+  :is(.member-home-page,.network-page,.member-explore-page) .member-header-actions { margin-left:0; }
+}

@@ -87,36 +87,42 @@ export default async function NetworkPage({
       }),
     )
   ).filter((item): item is ConnectionContact => Boolean(item));
+  // Discovery and request availability are essential; optional tools must not blank the directory.
+  const coreReadError = Boolean(directoryResult.error || networkResult.error || availabilityResult.error || blocksResult.error);
+  const unavailableAreas = [
+    codeResult.error ? "code" : null,
+    savedResult.error ? "saved" : null,
+    consentSuggestionsResult.error ? "suggestions" : null,
+    introductionResult.error ? "introductions" : null,
+    followupResult.error ? "followups" : null,
+    outcomeResult.error ? "outcomes" : null,
+  ].filter((area): area is string => Boolean(area));
   return (
     <main className="network-page">
-      <MemberHeader active="members" label="Member network" />
+      <MemberHeader active="members" label="Members" />
       <section className="network-hero">
         <div>
           <p className="eyebrow">Members</p>
-          <h1>Meet women across the Table</h1>
+          <h1>Meet members</h1>
           <p>
-            See who is here, learn what they care about and ask to connect when
-            it feels relevant. Messaging opens when you both agree.
+            Find someone by her work, location or interests. You can message
+            each other once you both agree to connect.
           </p>
+          {!coreReadError ? <nav className="network-section-links" aria-label="Members sections">
+            <a href="#browse-members">Find members</a>
+            {connections.length ? <a href="#network-connections">Your connections</a> : null}
+          </nav> : null}
         </div>
-        <aside aria-label="Network summary">
+        {!networkResult.error && (accepted.length || pending.length) ? <aside aria-label="Network summary">
           <span>
             <strong>{accepted.length}</strong> connection{accepted.length === 1 ? "" : "s"}
           </span>
           <span>
             <strong>{pending.length}</strong> waiting for you
           </span>
-        </aside>
+        </aside> : null}
       </section>
-      {directoryResult.error ||
-      networkResult.error ||
-      codeResult.error ||
-      savedResult.error ||
-      suggestionsResult.error ||
-      introductionResult.error ||
-      availabilityResult.error ||
-      followupResult.error ||
-      outcomeResult.error ? (
+      {coreReadError ? (
         <section className="admin-empty network-error">
           <strong>We could not open the member list</strong>
           <p>Please try again or contact support if the problem continues.</p>
@@ -157,6 +163,7 @@ export default async function NetworkPage({
           cityFilter={city ?? ""}
           goalFilter={goal ?? ""}
           searchQuery={q ?? ""}
+          unavailableAreas={unavailableAreas}
         />
       )}
     </main>

@@ -25,7 +25,7 @@ export function YourTableToday({
         <div>
           <h2 id="table-today-title">Your Table today</h2>
         </div>
-        <p>A few suggestions for your next visit.</p>
+        <p>Pick one place to start.</p>
       </header>
       <div className="table-today-grid">
         {suggestions.map((suggestion) => (

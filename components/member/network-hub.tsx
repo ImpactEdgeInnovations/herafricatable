@@ -168,6 +168,7 @@ export function NetworkHub({
   cityFilter,
   goalFilter,
   searchQuery,
+  unavailableAreas = [],
 }: {
   members: DirectoryMember[];
   connections: NetworkConnection[];
@@ -183,6 +184,7 @@ export function NetworkHub({
   cityFilter: string;
   goalFilter: string;
   searchQuery: string;
+  unavailableAreas?: string[];
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -195,6 +197,8 @@ export function NetworkHub({
       : "connections",
   );
   const { ask, dialog } = useActionDialog();
+  const unavailable = (area: string) => unavailableAreas.includes(area);
+  const areaLabels: Record<string,string> = { code:"connection codes", saved:"saved profiles", suggestions:"suggested members", introductions:"introductions", followups:"reminders", outcomes:"private results" };
   const connectionModeFor = (memberId: string) =>
     connectionAvailability.find((item) => item.user_id === memberId)
       ?.request_mode ?? "open";
@@ -287,6 +291,7 @@ export function NetworkHub({
     if (!error) router.refresh();
   }
   async function saveProfile(memberId: string, displayName: string) {
+    if (unavailable("saved")) { setMessage("Saved profiles could not load. Try again before changing your saved list."); return; }
     const result = await ask({
       title: `Save ${displayName}?`,
       description:
@@ -320,6 +325,7 @@ export function NetworkHub({
     if (!error) router.refresh();
   }
   async function removeSavedProfile(memberId: string) {
+    if (unavailable("saved")) { setMessage("Saved profiles could not load. Try again before changing your saved list."); return; }
     setBusy(`save:${memberId}`);
     setMessage("");
     const { error } = await supabase.rpc("remove_saved_member_profile", {
@@ -349,6 +355,7 @@ export function NetworkHub({
     connectionId: string,
     displayName: string,
   ) {
+    if (unavailable("followups")) { setMessage("Reminders could not load. Try again before changing them."); return; }
     const existing = followups.find(
       (item) => item.connection_id === connectionId,
     );
@@ -443,6 +450,7 @@ export function NetworkHub({
     displayName: string,
     existing?: ConnectionOutcome,
   ) {
+    if (unavailable("outcomes")) { setMessage("Private results could not load. Try again before changing them."); return; }
     const result = await ask({
       title: existing
         ? `Update what happened with ${displayName}`
@@ -671,8 +679,10 @@ export function NetworkHub({
   return (
     <>
       {dialog}
+      {unavailableAreas.length ? <p className="network-partial-notice" role="status">Some extras could not load: {unavailableAreas.map(area=>areaLabels[area]).join(", ")}. You can still find members. <Link href="/network">Try again</Link></p> : null}
+      {message ? <p className="network-message" role="status">{message}</p> : null}
       {connections.length ? (
-        <section className="network-connections">
+        <section className="network-connections" id="network-connections">
           <div>
             <p className="eyebrow">Your connections</p>
             <h2>People you know</h2>
@@ -711,6 +721,7 @@ export function NetworkHub({
                   id={`network-tab-${view.id}`}
                   key={view.id}
                   onClick={() => setNetworkView(view.id)}
+                  disabled={view.id === "history" && (unavailable("followups") || unavailable("outcomes"))}
                   type="button"
                 >
                   <span>{view.label}</span>
@@ -914,7 +925,7 @@ export function NetworkHub({
                         Message
                       </button>
                       <button
-                        disabled={busy !== ""}
+                        disabled={busy !== "" || unavailable("followups")}
                         onClick={() =>
                           void planFollowup(
                             item.connection_id,
@@ -925,7 +936,7 @@ export function NetworkHub({
                         {followup ? "Edit reminder" : "Add reminder"}
                       </button>
                       <button
-                        disabled={busy !== ""}
+                        disabled={busy !== "" || unavailable("outcomes")}
                         onClick={() =>
                           void recordOutcome(
                             item.connection_id,
@@ -1125,7 +1136,7 @@ export function NetworkHub({
                   {member.private_note ? <p>{member.private_note}</p> : null}
                 </div>
                 <button
-                  disabled={busy !== ""}
+                  disabled={busy !== "" || unavailable("saved")}
                   onClick={() => void removeSavedProfile(member.user_id)}
                 >
                   Remove
@@ -1189,11 +1200,11 @@ export function NetworkHub({
                     {connectionModeFor(member.user_id) === "open"
                       ? "Ask to connect"
                       : connectionModeFor(member.user_id) === "curated_only"
-                        ? "Introductions through HAT"
+                        ? "Team introductions only"
                         : "Not available right now"}
                   </button>
                   <button
-                    disabled={busy !== ""}
+                    disabled={busy !== "" || unavailable("saved")}
                     onClick={() =>
                       void saveProfile(
                         member.user_id,
@@ -1210,21 +1221,17 @@ export function NetworkHub({
         </section>
       ) : null}
       <section className="member-directory">
-        <details
+        <section
           className="member-directory-browser"
-          open
+          id="browse-members"
+          aria-labelledby="member-directory-title"
         >
-          <summary>
-            <span>Browse all members</span>
-            <small>Search by name, work, location or what matters to you</small>
-          </summary>
           <div className="member-directory-content">
         <header>
           <div>
-            <p className="eyebrow">All members</p>
-            <h2>Who would you like to meet?</h2>
+            <h2 id="member-directory-title">Find members</h2>
             <p>
-              Use one or two details. You can always change your search.
+              Only profiles members choose to share appear here.
             </p>
           </div>
           <form className="directory-filters" method="get">
@@ -1234,6 +1241,8 @@ export function NetworkHub({
                 defaultValue={searchQuery}
                 id="member-search"
                 name="q"
+                type="search"
+                maxLength={120}
                 placeholder="Name, role or company"
               />
             </label>
@@ -1246,7 +1255,7 @@ export function NetworkHub({
               />
             </label>
             <label>
-              <span>What would you like?</span>
+              <span>Looking for</span>
               <select defaultValue={goalFilter} name="goal">
                 <option value="">Any goal</option>
                 {Object.entries(goalLabels).map(([value, label]) => (
@@ -1257,13 +1266,14 @@ export function NetworkHub({
               </select>
             </label>
             <div>
-              <button type="submit">Show members</button>
+              <button type="submit">Search</button>
               {searchQuery || cityFilter || goalFilter ? (
                 <a href="/network">Clear</a>
               ) : null}
             </div>
           </form>
         </header>
+        {members.length ? <p className="member-directory-result-count" role="status">{members.length === 24 ? "Showing up to 24 members. Use the filters to narrow your search." : `${members.length} ${members.length === 1 ? "member" : "members"} ${searchQuery || cityFilter || goalFilter ? "match your search" : "available to meet"}.`}</p> : null}
         {members.length ? (
           <div className="directory-grid">
             {members.map((member) => (
@@ -1333,21 +1343,21 @@ export function NetworkHub({
                           ? "Ask to connect"
                           : connectionModeFor(member.user_id) ===
                               "curated_only"
-                            ? "Introductions through HAT"
+                            ? "Team introductions only"
                             : "Not available right now"}
                   </button>
                   {savedMembers.some(
                     (saved) => saved.user_id === member.user_id,
                   ) ? (
                     <button
-                      disabled={busy !== ""}
+                      disabled={busy !== "" || unavailable("saved")}
                       onClick={() => void removeSavedProfile(member.user_id)}
                     >
                       Saved
                     </button>
                   ) : (
                     <button
-                      disabled={busy !== ""}
+                      disabled={busy !== "" || unavailable("saved")}
                       onClick={() =>
                         void saveProfile(
                           member.user_id,
@@ -1371,14 +1381,15 @@ export function NetworkHub({
           </div>
         ) : (
           <div className="admin-empty">
-            <strong>No one matches this search yet</strong>
-            <p>Try fewer words or remove one of the filters.</p>
+            <strong>{searchQuery || cityFilter || goalFilter ? "No members match these filters" : "No profiles are available yet"}</strong>
+            <p>{searchQuery || cityFilter || goalFilter ? "Try a name, use fewer words or clear the filters." : "New profiles appear here when members choose to share them."}</p>
+            {searchQuery || cityFilter || goalFilter ? <Link className="button button-outline" href="/network">Show all members</Link> : null}
           </div>
         )}
           </div>
-        </details>
+        </section>
       </section>
-      <details className="network-code-tools">
+      {!unavailable("code") ? <details className="network-code-tools">
         <summary>
           <span>
             <strong>Met someone in person?</strong>
@@ -1417,7 +1428,7 @@ export function NetworkHub({
             </button>
           </form>
         </div>
-      </details>
+      </details> : null}
       {blockedMembers.length ? (
         <section className="blocked-members">
           <p className="eyebrow">Blocked members</p>
@@ -1433,11 +1444,6 @@ export function NetworkHub({
             </div>
           ))}
         </section>
-      ) : null}
-      {message ? (
-        <p className="network-message" role="status">
-          {message}
-        </p>
       ) : null}
     </>
   );

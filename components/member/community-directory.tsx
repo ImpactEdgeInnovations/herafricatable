@@ -496,14 +496,25 @@ export function CommunityDirectory({
   return (
     <>
       {message ? <p className="network-message community-directory-feedback" role="status">{message}</p> : null}
-      <div className="community-directory-global-search"><label htmlFor="community-search">Find a community</label><input id="community-search" type="search" list="community-name-suggestions" aria-describedby="community-search-help" value={query} maxLength={120} onChange={event=>setQuery(event.target.value)} placeholder="Name or interest, e.g. trade"/><datalist id="community-name-suggestions">{communities.map(item=><option key={item.community_id} value={item.name}/>)}</datalist>{query?<button type="button" onClick={()=>setQuery("")}>Clear search</button>:null}<small id="community-search-help">Try a community name, interest or place. Words can be in any order.</small>{cleanQuery || locationFilter !== "all" ? <p role="status">{visibleMember.length + visibleDiscover.length} {visibleMember.length + visibleDiscover.length === 1 ? "community matches" : "communities match"} your filters. Only communities available to your account are searched.</p> : null}</div>
-      <div className="community-directory-location-filter"><label htmlFor="community-location">Location</label>
-        <select id="community-location" value={locationFilter} onChange={event=>setLocationFilter(event.target.value)}>
-          <option value="all">Anywhere</option><option value="global">Global / online</option>
-          {locations.map(([key,label]) => <option key={key} value={key}>{label}</option>)}
-        </select>
-        {locationFilter !== "all" ? <button type="button" onClick={()=>setLocationFilter("all")}>Clear location</button> : null}
-      </div>
+      <section className="community-directory-searchbar" aria-label="Find Communities">
+        <div className="community-directory-global-search">
+          <label htmlFor="community-search">Find a community</label>
+          <input id="community-search" type="search" list="community-name-suggestions" aria-describedby="community-search-help" value={query} maxLength={120} onChange={event=>setQuery(event.target.value)} placeholder="Name or interest, e.g. trade"/>
+          <datalist id="community-name-suggestions">{communities.map(item=><option key={item.community_id} value={item.name}/>)}</datalist>
+        </div>
+        <div className="community-directory-location-filter">
+          <label htmlFor="community-location">Location</label>
+          <select id="community-location" value={locationFilter} onChange={event=>setLocationFilter(event.target.value)}>
+            <option value="all">Anywhere</option><option value="global">Global / online</option>
+            {locations.map(([key,label]) => <option key={key} value={key}>{label}</option>)}
+          </select>
+        </div>
+        <div className="community-directory-search-help">
+          <small id="community-search-help">Search by name, interest or place.</small>
+          {cleanQuery || locationFilter !== "all" || joiningFilter !== "all" ? <button type="button" onClick={()=>{setQuery("");setLocationFilter("all");setJoiningFilter("all");}}>Clear filters</button> : null}
+          {cleanQuery || locationFilter !== "all" || joiningFilter !== "all" ? <p role="status">{visibleMember.length + visibleDiscover.length} {visibleMember.length + visibleDiscover.length === 1 ? "community matches" : "communities match"} your filters. Only communities available to your account are searched.</p> : null}
+        </div>
+      </section>
       <section className="community-directory" id="your-communities">
         <header className="community-directory-heading">
           <div>

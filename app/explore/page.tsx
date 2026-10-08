@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MemberHeader } from "@/components/member/member-header";
 import { createClient } from "@/lib/supabase/server";
+import { InstallAppButton } from "@/components/pwa/install-app";
 
 export const dynamic = "force-dynamic";
 
@@ -138,6 +139,11 @@ export default async function ExplorePage() {
           Connect, learn, invite someone or get private help. Only available
           areas appear here.
         </p>
+      </section>
+
+      <section className="member-install-entry" aria-label="Add Her Africa Table to your device">
+        <div><h2>Open your Table in one tap</h2><p>Add it to your phone or computer. You will use the same account.</p></div>
+        <InstallAppButton compact />
       </section>
 
       {flagError ? (
