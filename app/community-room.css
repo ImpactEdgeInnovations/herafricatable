@@ -105,7 +105,21 @@
 .community-gathering-host-actions button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .community-inline-planner { margin: 16px 0 24px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
 .community-inline-planner[hidden] { display: none; }
-.community-inline-planner .community-event-proposals { margin: 0; }
+.community-inline-planner .community-event-proposals { margin: 0; padding: 0; border: 0; background: transparent; }
+.community-page .community-event-proposals h2,
+.community-page .community-event-proposals .community-event-wizard h3 { font-family: inherit; font-size: 1.35rem; font-weight: 600; line-height: 1.25; }
+.community-page .community-event-proposals .community-event-wizard { padding: 16px; min-width: 0; }
+.community-page .community-event-proposals .community-event-wizard label { display: grid; gap: 6px; font-size: 0.9rem; font-weight: 600; }
+.community-page .community-event-proposals .community-event-wizard input:not([type="checkbox"]),
+.community-page .community-event-proposals .community-event-wizard textarea,
+.community-page .community-event-proposals .community-event-wizard select { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; color: var(--ink); background: #fff; font: 400 1rem/1.45 "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif; }
+.community-page .community-event-proposals .community-event-wizard input::placeholder,
+.community-page .community-event-proposals .community-event-wizard textarea::placeholder { font-weight: 400; color: #716a65; opacity: 1; }
+.community-page .community-event-proposals .community-event-wizard label small { font-size: 0.75rem; font-weight: 400; line-height: 1.5; }
+.community-inline-planner .community-event-proposals > header p:not(.eyebrow) { max-width: 60ch; font-size: 0.9rem; }
+.community-inline-planner .community-event-wizard footer { display: flex; gap: 10px; flex-wrap: wrap; }
+.community-inline-planner .community-event-wizard footer > div { display: flex; gap: 10px; flex: 1; }
+.community-inline-planner .community-event-wizard footer .button { min-height: 44px; min-width: 0; padding: 10px 16px; }
 @media (max-width: 640px) { .community-inline-planner { padding: 12px; } }
 .community-inline-back { min-height: 44px; padding: 10px 0; border: 0; background: transparent; color: var(--wine); cursor: pointer; font-size: 0.95rem; }
 .community-inline-gathering .gathering-room { width: 100%; margin: 0; }
