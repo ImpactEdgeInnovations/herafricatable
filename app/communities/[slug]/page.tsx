@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { memberErrorMessage } from "@/lib/member-error";
+import {signCommunityAttachments} from "@/lib/community-attachment-delivery";
 import {
   CommunityFeed,
   type CommunityFeedCursor,
@@ -289,18 +290,7 @@ export default async function CommunityPage({
           .from("community-media")
           .createSignedUrl(brandIdentity.cover_storage_path, 3600)
       : Promise.resolve({ data: null }),
-    Promise.all(
-      attachments.map(async (attachment) => {
-        if (!attachment.storage_path) return attachment;
-        const signed = await supabase.storage
-          .from("community-media")
-          .createSignedUrl(attachment.storage_path, 3600);
-        return {
-          ...attachment,
-          signed_url: signed.data?.signedUrl ?? null,
-        };
-      }),
-    ),
+    signCommunityAttachments(supabase,attachments),
   ]);
   const attachmentByPost = new Map(
     signedAttachments.map((attachment) => [attachment.post_id, attachment]),

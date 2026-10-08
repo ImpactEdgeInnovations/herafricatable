@@ -9,6 +9,8 @@ import { communityDraftKey, readCommunityDraft, writeCommunityDraft } from "@/li
 import { useCommunityDraft } from "@/lib/use-community-draft";
 import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 import { CommunityReplyForm } from "./community-reply-form";
+import {CommunityAttachmentRetry} from "./community-attachment-retry";
+import {signCommunityAttachments} from "@/lib/community-attachment-delivery";
 
 const conversationTypes = [
   { label: "Questions & ideas", value: "discussion" },
@@ -252,6 +254,7 @@ export function CommunityFeed({
   const [searchComments, setSearchComments] = useState<CommunityComment[]>([]);
   const [searchCursor, setSearchCursor] = useState<CommunityFeedCursor | null>(null);
   const [searchHasMore, setSearchHasMore] = useState(false);
+  const [failedAttachments,setFailedAttachments]=useState<Set<string>>(()=>new Set());
   const searchVersion = useRef(0);
   const serverFiltering = enhanced && paginationReady && (category !== "all" || Boolean(query.trim()) || view !== "all");
   const visibleHasMore = serverFiltering ? searchHasMore : hasMore;
@@ -719,19 +722,7 @@ export function CommunityFeed({
 
       const attachments =
         (mediaResult.data as CommunityPostAttachment[] | null) ?? [];
-      const signedAttachments = await Promise.all(
-        attachments.map(async (attachment) => {
-          if (!attachment.storage_path) return attachment;
-          const signed = await supabase.storage
-            .from("community-media")
-            .createSignedUrl(attachment.storage_path, 3600);
-          if (signed.error) throw signed.error;
-          return {
-            ...attachment,
-            signed_url: signed.data.signedUrl,
-          };
-        }),
-      );
+      const signedAttachments = await signCommunityAttachments(supabase,attachments);
       const attachmentByPost = new Map(
         signedAttachments.map((attachment) => [
           attachment.post_id,
@@ -1112,13 +1103,14 @@ export function CommunityFeed({
                 </header>
                 <p>{post.body}</p>
                 {post.attachment?.attachment_type === "image" &&
-                post.attachment.signed_url ? (
+                post.attachment.signed_url && !failedAttachments.has(post.attachment.asset_id) ? (
                   <figure className="community-post-image">
                     <img
                       alt={post.attachment.alt_text ?? ""}
                       height={post.attachment.height ?? undefined}
                       loading="lazy"
                       src={post.attachment.signed_url}
+                      onError={()=>setFailedAttachments(current=>new Set(current).add(post.attachment!.asset_id))}
                       width={post.attachment.width ?? undefined}
                     />
                     {post.attachment.original_name ? (
@@ -1163,7 +1155,7 @@ export function CommunityFeed({
                     </div>
                     <em>Open securely ↗</em>
                   </a>
-                ) : null}
+                ) : post.attachment && ["image","document"].includes(post.attachment.attachment_type) ? <CommunityAttachmentRetry key={`${currentUserId}:${communityId}:${post.post_id}:${post.attachment.asset_id}`} communityId={communityId} postId={post.post_id}/> : null}
 
                 {enhanced ? (
                   <div className="community-post-actions">
