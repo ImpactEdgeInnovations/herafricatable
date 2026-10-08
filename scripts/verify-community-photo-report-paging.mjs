@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=path=>readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
+const sql=read('supabase/migrations/20261008065122_community_photo_report_paging.sql');
+for(const token of ['Moderator role required','auth.uid() is null',"array['super_admin','moderator']",'num_nonnulls','isfinite','limit 26','limit 25','next_cursor','security definer set search_path=\'\'','from public,anon','community_photo_reports_priority_page_idx'])assert(sql.includes(token),token);
+assert(!sql.includes(' offset '),'Use bounded cursor paging');
+const page=read('app/admin/operations/page.tsx');
+for(const token of ['list_community_photo_reports_page','photoReportPage?.reports','new URLSearchParams','Next photo reports','First photo reports','Try opening the first page again','canModerate && loadSafety'])assert(page.includes(token),token);
+assert(!page.includes('supabase.rpc("list_community_photo_reports")'),'Do not silently keep the 100-report UI cap');
+console.log('Photo report paging permissions, stable tie-breaker, bounded cursor API and recoverable Admin navigation contracts passed. Populated browser decisions remain separate acceptance.');

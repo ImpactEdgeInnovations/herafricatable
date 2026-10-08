@@ -245,9 +245,9 @@ export const dynamic = "force-dynamic";
 export default async function AdminOperationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ area?: string }>;
+  searchParams: Promise<{ area?: string; photo_before?: string; photo_id?: string; photo_active?: string }>;
 }) {
-  const { area: requestedArea } = await searchParams;
+  const { area: requestedArea, photo_before, photo_id, photo_active } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -968,12 +968,23 @@ export default async function AdminOperationsPage({
     ? await supabase.rpc("list_event_question_reports")
     : { data: [], error: null };
   const photoReportResult = canModerate && loadSafety
-    ? await supabase.rpc("list_community_photo_reports") : { data: [], error: null };
+    ? await supabase.rpc("list_community_photo_reports_page", {
+        p_before_active: photo_active === "true" ? true : photo_active === "false" ? false : null,
+        p_before_created_at: photo_before || null,
+        p_before_id: photo_id || null,
+      }) : { data: null, error: null };
+  const photoReportPage = photoReportResult.data as {
+    reports: CommunityReport[]; has_more: boolean;
+    next_cursor: { active: boolean; created_at: string; id: string } | null;
+  } | null;
+  const nextPhotoPage = photoReportPage?.has_more && photoReportPage.next_cursor
+    ? `/admin/operations?${new URLSearchParams({area:"safety-work",photo_active:String(photoReportPage.next_cursor.active),photo_before:photoReportPage.next_cursor.created_at,photo_id:photoReportPage.next_cursor.id})}#community-moderation`
+    : null;
   const communityReports = [
     ...((communityReportSource?.data as CommunityReport[] | null) ?? []),
     ...((gatheringReportResult.data as CommunityReport[] | null) ?? []),
     ...((eventQuestionReportResult.data as CommunityReport[] | null) ?? []),
-    ...((photoReportResult.data as CommunityReport[] | null) ?? []),
+    ...(photoReportPage?.reports ?? []),
   ];
   const environmentSignals: EnvironmentSignal[] = [
     {
@@ -1258,7 +1269,12 @@ export default async function AdminOperationsPage({
             reports={communityReports}
             migrationReady={!communityReportSource?.error && !gatheringReportResult.error && !eventQuestionReportResult.error}
           />
-          {photoReportResult.error ? <p role="alert">Photo reports could not be loaded. Refresh this page to try again.</p> : null}
+          {photoReportResult.error ? <p role="alert">Photo reports could not be loaded. <Link href="/admin/operations?area=safety-work#community-moderation">Try opening the first page again</Link>.</p> : null}
+          {photoReportPage ? <nav className="community-photo-admin-pages" aria-label="Photo report pages">
+            <span>{photoReportPage.reports.length} photo reports on this page · open concerns first</span>
+            {photo_before || photo_id || photo_active ? <Link className="button button-outline" href="/admin/operations?area=safety-work#community-moderation">First photo reports</Link> : null}
+            {nextPhotoPage ? <Link className="button button-outline" href={nextPhotoPage}>Next photo reports</Link> : null}
+          </nav> : null}
           {role.role === "super_admin" ? <CommunityPhotoOperations /> : null}
         </AdminWorkGroup>
       ) : null}
