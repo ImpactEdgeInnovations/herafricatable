@@ -78,6 +78,7 @@ const memberHeader = read("components/member/member-header.tsx");
 for (const contract of [
   'aria-label="Member navigation"',
   'aria-label="Member shortcuts"',
+  'aria-label="Guide"',
   "aria-current=",
 ]) {
   assert(

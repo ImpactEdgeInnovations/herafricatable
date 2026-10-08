@@ -75,8 +75,16 @@ async function inspectRole(role) {
 
     const home = await get("/home");
     assert.equal(home.response.status, 200, `${role.name} member home did not load`);
-    assert(home.body.includes("Your Table Today"), `${role.name} did not receive the member home`);
+    assert(/Your Table today/i.test(home.body), `${role.name} did not receive the member home`);
     assert(!redirectsTo(home.response, home.body, "/sign-in"), `${role.name} was sent to sign-in`);
+
+    const directory = await get("/network");
+    assert.equal(directory.response.status, 200, `${role.name} Members page did not load`);
+    assert(directory.body.includes('id="browse-members"') && directory.body.includes('id="member-search"'), `${role.name} did not receive member discovery`);
+    assert(!directory.body.includes("We could not open the member list"), `${role.name} member discovery reads failed`);
+    const discovery = await get("/communities");
+    assert.equal(discovery.response.status, 200, `${role.name} Community discovery did not load`);
+    assert(discovery.body.includes('aria-label="Find Communities"'), `${role.name} did not receive aligned Community search`);
 
     const admin = await get("/admin");
     assert.equal(admin.response.status, 200, `${role.name} member-only Admin explanation did not load`);
@@ -105,11 +113,21 @@ async function inspectRole(role) {
     const hostPage = await get(`/events/${rehearsalSlug}/host`);
     if (role.host) {
       assert.equal(hostPage.response.status, 200, "Assigned Host workspace did not load");
-      assert(hostPage.body.includes("Introduce the gathering"), "Assigned Host did not receive drafting controls");
+      const workspace = await client.rpc("get_my_event_host_workspace", {p_slug:rehearsalSlug});
+      assert.ifError(workspace.error);
+      const row = workspace.data?.[0];
+      assert(row?.ends_at, "Assigned Host's workspace data is missing");
+      assert(hostPage.body.includes('id="host-workspace-heading"'), "Assigned Host did not receive the scoped workspace");
+      if (new Date(row.ends_at).getTime() < Date.now()) {
+        assert(hostPage.body.includes("After your event"), "Ended event must open Host follow-up, not preparation");
+        assert(!hostPage.body.includes('id="host-introduction"'), "Ended event must not offer preparation edits");
+      } else {
+        assert(hostPage.body.includes('aria-label="Event preparation sections"') && hostPage.body.includes('id="host-introduction"'), "Future event Host did not receive drafting controls");
+      }
     } else {
       assert(hiddenNotFound(hostPage.response, hostPage.body),
         `${role.name} could access or index the private Host workspace`);
-      assert(!hostPage.body.includes("Introduce the gathering"),
+      assert(!hostPage.body.includes('id="host-introduction"'),
         `${role.name} received private Host drafting controls`);
     }
     const communities = await client.rpc("list_communities");
@@ -121,7 +139,7 @@ async function inspectRole(role) {
       moderatorCommunitySlug = moderated.slug;
       const moderatorPage = await get(`/communities/${encodeURIComponent(moderatorCommunitySlug)}/host`);
       assert.equal(moderatorPage.response.status, 200, "Community moderator workspace did not load");
-      assert(moderatorPage.body.includes("Lead with clarity"),
+      assert(moderatorPage.body.includes('aria-label="Host workspace areas"') && moderatorPage.body.includes('community-host-page'),
         "Community moderator did not receive the moderation workspace");
     } else {
       assert(moderatorCommunitySlug, "Moderator Community must be checked first");
@@ -129,7 +147,7 @@ async function inspectRole(role) {
       assert(!["owner", "moderator"].includes(membership?.membership_role ?? ""),
         `${role.name} is not an ordinary member for this boundary check`);
       const moderatorPage = await get(`/communities/${encodeURIComponent(moderatorCommunitySlug)}/host`);
-      assert(!moderatorPage.body.includes("Lead with clarity"),
+      assert(!moderatorPage.body.includes('aria-label="Host workspace areas"'),
         `${role.name} received the Community moderator workspace`);
       assert(redirectsTo(moderatorPage.response, moderatorPage.body,
         `/communities/${moderatorCommunitySlug}`) ||
@@ -200,7 +218,7 @@ async function inspectPrimaryAdmin() {
       "Admin cockpit did not separate real requests from tagged test applications");
     const members = await getPage(cookie, "/admin/members");
     assert.equal(members.response.status, 200);
-    assert(members.body.includes("Welcome carefully. Support quietly."),
+    assert(members.body.includes('member-command-page'),
       "Primary Admin membership desk did not render");
     const editor = await getPage(cookie, `/admin/events?view=edit&event=${encodeURIComponent(pilot.event_id)}`);
     assert.equal(editor.response.status, 200);
@@ -245,6 +263,13 @@ assert(redirectsTo(anonymousBoard.response, anonymousBoard.body, "/admin/sign-in
   "Signed-out visitors must not open the launch taskboard");
 assert(!anonymousBoard.body.includes("pilot launch checks accepted with evidence"),
   "Signed-out visitors received private pilot launch evidence");
-for (const role of roles) results.push(await inspectRole(role));
-const primaryAdmin = await inspectPrimaryAdmin();
-console.log(JSON.stringify({ releaseScope: "read-only signed-in pages", anonymousLaunchTaskboard: "denied", results, primaryAdmin }, null, 2));
+for (const role of roles) {
+  try { results.push({...(await inspectRole(role)),passed:true}); }
+  catch(error) { results.push({role:role.name,passed:false,check:error?.code === "ERR_ASSERTION" && typeof error.message === "string" && !error.message.startsWith("ifError") ? error.message : "Read-only role check failed; inspect account configuration privately"}); }
+}
+let primaryAdmin;
+try { primaryAdmin = {...(await inspectPrimaryAdmin()),passed:true}; }
+catch(error) { primaryAdmin = {passed:false,check:error?.code === "ERR_ASSERTION" && typeof error.message === "string" && !error.message.startsWith("ifError") ? error.message : "Read-only Admin check failed; inspect account configuration privately"}; }
+const passed=results.every(row=>row.passed)&&primaryAdmin.passed;
+console.log(JSON.stringify({checkedAt:new Date().toISOString(),releaseScope: "read-only signed-in pages", anonymousLaunchTaskboard: "denied", results, primaryAdmin,passed}, null, 2));
+if(!passed)process.exitCode=2;

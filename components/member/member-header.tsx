@@ -195,6 +195,7 @@ export async function MemberHeader({
           {tableGuideFlag?.enabled ? (
             <Link
               aria-current={active === "guide" ? "page" : undefined}
+              aria-label="Guide"
               className="member-guide-link"
               href="/guide"
             >

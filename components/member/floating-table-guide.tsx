@@ -174,6 +174,21 @@ export function FloatingTableGuide({
     startX: number;
     startY: number;
   } | null>(null);
+  const launcher = useRef<HTMLButtonElement>(null);
+  const guidePanel = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const frame = requestAnimationFrame(() => {
+      guidePanel.current?.querySelector<HTMLElement>('input, button')?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [open]);
+
+  function closeGuide() {
+    setOpen(false);
+    launcher.current?.focus();
+  }
 
   useEffect(() => {
     if (pathname === "/guide") return;
@@ -404,15 +419,16 @@ export function FloatingTableGuide({
       data-side={dockedLeft ? "left" : "right"}
       data-vertical={position.y < 410 ? "below" : "above"}
       style={{ left: position.x, top: position.y }}
+      onKeyDown={event => { if (event.key === "Escape" && open) { event.preventDefault(); closeGuide(); } }}
     >
       {open ? (
-        <section aria-label="Table Guide" className="floating-guide-panel">
+        <section aria-label="Table Guide" className="floating-guide-panel" id="floating-table-guide-panel" ref={guidePanel}>
           <header>
             <div>
               <span>Nia · AI Table Guide</span>
               <strong>{route.title}</strong>
             </div>
-            <button aria-label="Close Table Guide" onClick={() => setOpen(false)} type="button">×</button>
+            <button aria-label="Close Table Guide" onClick={closeGuide} type="button">×</button>
           </header>
           {ready ? (
             <>
@@ -501,7 +517,11 @@ export function FloatingTableGuide({
       ) : null}
       <button
         aria-label="Open Nia, or drag to move her"
+        aria-expanded={open}
+        aria-controls={open ? "floating-table-guide-panel" : undefined}
+        ref={launcher}
         className="floating-guide-character"
+        onClick={event => { if (event.detail === 0) setOpen(current => !current); }}
         onPointerCancel={finishDrag}
         onPointerDown={beginDrag}
         onPointerMove={move}

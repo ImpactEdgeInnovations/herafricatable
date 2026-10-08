@@ -50,6 +50,20 @@ for (const component of [
 }
 
 const floating = read("components/member/floating-table-guide.tsx");
+const keyboardActivation = floating.match(/onClick=\{(event => \{ if \(event\.detail === 0\)[^\n]+)\}/)?.[1];
+assert(keyboardActivation, "Nia needs native keyboard and assistive-click activation");
+let expanded = false;
+const activate = new Function('setOpen','event',`(${keyboardActivation})(event);`);
+const setOpen = update => { expanded = typeof update === 'function' ? update(expanded) : update; };
+activate(setOpen,{detail:0}); assert.equal(expanded,true,'Keyboard click must open Nia');
+activate(setOpen,{detail:1}); assert.equal(expanded,true,'Pointer-generated click must not double-toggle pointer-up');
+activate(setOpen,{detail:0}); assert.equal(expanded,false,'Keyboard click must also close Nia');
+let restoredFocus=false;
+const closeBody=floating.match(/function closeGuide\(\) \{([\s\S]*?)\n  \}/)?.[1];
+assert(closeBody);
+new Function('setOpen','launcher',closeBody)(setOpen,{current:{focus(){restoredFocus=true;}}});
+assert.equal(expanded,false); assert.equal(restoredFocus,true);
+for(const contract of ['aria-expanded={open}','id="floating-table-guide-panel"','event.key === "Escape"','cancelAnimationFrame(frame)']) assert(floating.includes(contract),contract);
 const dockFunctions = ts.transpileModule(floating.slice(floating.indexOf('function clampPosition('), floating.indexOf('function quotaLabel(')), {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const dockAt = (width,height,actionTop,controls=[]) => new Function('window','document','DOCK_SIZE','EDGE_GAP',`${dockFunctions};return defaultPosition();`)(
   {innerWidth:width,innerHeight:height},
