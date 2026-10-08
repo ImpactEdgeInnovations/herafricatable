@@ -50,7 +50,7 @@ export function EventRoundAttendee({ eventId, eventSlug, eventTitle, timeZone,
     hour: "numeric", minute: "2-digit", timeZone,
   }).format(new Date(value));
   return <main className="event-intro-page">
-    <header className="legal-header"><Link className="brand" href="/">Her Africa Table</Link><Link href={`/events/${eventSlug}`}>Back to event</Link></header>
+    <header className="legal-header"><Link className="brand" href="/home">Her Africa Table</Link><Link href={`/events/${eventSlug}`}>Back to event</Link></header>
     <div className="event-intro-shell">
       <div className="event-intro-heading"><p className="eyebrow">Optional · For confirmed guests</p><h1>Find your table</h1><p>{eventTitle} may include short, guided conversations with a few other guests. It is your choice to join. This does not share your email or phone number, and it does not join you to the wider member network.</p></div>
       <div className="event-intro-grid">

@@ -21,7 +21,7 @@ export default async function EventMeetPage({ params }: { params: Promise<{ slug
     supabase.rpc("get_my_event_intro_card", { p_event_id: event.id }),
     supabase.rpc("list_my_event_intros", { p_event_id: event.id }),
   ]);
-  if (cardResult.error || requestsResult.error) return <main className="event-intro-page"><header className="legal-header"><Link className="brand" href="/">Her Africa Table</Link><Link href={`/events/${slug}`}>Back to event</Link></header><section className="event-pass-unavailable"><p className="eyebrow">Event introductions</p><h1>Introductions are not available yet.</h1><p>They are for confirmed guests when the event team has opened this feature. Your event pass is unchanged.</p><Link className="button button-primary" href={`/events/${slug}`}>View event</Link></section></main>;
+  if (cardResult.error || requestsResult.error) return <main className="event-intro-page"><header className="legal-header"><Link className="brand" href="/home">Her Africa Table</Link><Link href={`/events/${slug}`}>Back to event</Link></header><section className="event-pass-unavailable"><p className="eyebrow">Event introductions</p><h1>Introductions are not available yet.</h1><p>They are for confirmed guests when the event team has opened this feature. Your event pass is unchanged.</p><Link className="button button-primary" href={`/events/${slug}`}>View event</Link></section></main>;
   const card = ((cardResult.data as EventIntroCard[] | null) ?? [])[0] ?? null;
   const qrImage = card?.enabled
     ? await QRCode.toDataURL(absoluteUrl(`/events/${encodeURIComponent(slug)}/meet/${card.code}`), {

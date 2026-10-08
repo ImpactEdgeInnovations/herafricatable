@@ -101,6 +101,12 @@
 .community-gathering-toolbar button[aria-pressed="true"] { background: var(--wine); color: #fff; }
 .community-gathering-host-actions { display: flex; flex-wrap: wrap; gap: 18px; font-size: 0.9rem; }
 .community-gathering-host-actions a { min-height: 44px; display: flex; align-items: center; }
+.community-gathering-host-actions button { min-height: 44px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; background: var(--paper, #fffdf9); color: inherit; font: inherit; cursor: pointer; }
+.community-gathering-host-actions button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.community-inline-planner { margin: 16px 0 24px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+.community-inline-planner[hidden] { display: none; }
+.community-inline-planner .community-event-proposals { margin: 0; }
+@media (max-width: 640px) { .community-inline-planner { padding: 12px; } }
 .community-inline-back { min-height: 44px; padding: 10px 0; border: 0; background: transparent; color: var(--wine); cursor: pointer; font-size: 0.95rem; }
 .community-inline-gathering .gathering-room { width: 100%; margin: 0; }
 .community-inline-gathering .gathering-room-hero { padding-top: 18px; }

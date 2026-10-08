@@ -100,17 +100,21 @@ export function CommunityEventProposalPanel({
   currentUserId,
   migrationReady,
   proposals,
+  startExpanded = false,
+  onSaved,
 }: {
   communityId: string;
   communitySlug: string;
   currentUserId: string;
   migrationReady: boolean;
   proposals: CommunityEventProposal[];
+  startExpanded?: boolean;
+  onSaved?: () => void;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(startExpanded);
   const [creationMode, setCreationMode] = useState("scheduled");
   const [shareArea, setShareArea] = useState("video");
   const [openedRoom, setOpenedRoom] = useState<{ roomId: string; slug: string; communitySlug: string; title: string; endsAt: string; video: GatheringVideo | null; videoDraft: string } | null>(null);
@@ -131,6 +135,7 @@ export function CommunityEventProposalPanel({
   const introId=useId();
   const titleInput=useRef<HTMLInputElement>(null);
   const summaryInput=useRef<HTMLTextAreaElement>(null);
+  function refreshGatherings() { router.refresh(); onSaved?.(); }
   const introduction=gatheringIntroduction(values.title,values.summary);
   const setup = gatheringSetup(values);
 
@@ -283,7 +288,7 @@ export function CommunityEventProposalPanel({
       gatheringOpened = true;
       const cards = await supabase.rpc("list_community_gathering_cards", { p_community_id: communityId });
       const room = (cards.data as { room_id: string; event_id: string; event_slug: string }[] | null)?.find(item => item.event_id === publishedEventId);
-      if (cards.error || !room) { setMessage("Your gathering is open. Its extra media controls could not load; find it in your gatherings below."); setExpanded(false); clearDraft(initialValues()); router.refresh(); return; }
+      if (cards.error || !room) { setMessage("Your gathering is open. Its extra media controls could not load; find it in your gatherings below."); setExpanded(false); clearDraft(initialValues()); refreshGatherings(); return; }
       if (room) {
         const opened = { roomId: room.room_id, slug: room.event_slug, communitySlug, title: values.title, endsAt: end.toISOString(), video: null as GatheringVideo | null, videoDraft: setup.videoLink };
         setShareArea(values.mediaChoice === "photos" ? "photos" : "video");
@@ -295,7 +300,7 @@ export function CommunityEventProposalPanel({
             opened.video=videoResult.data as GatheringVideo;
             opened.videoDraft="";
           }catch {
-            setOpenedRoom(opened);setShareArea("video");setMessage("Your gathering is open, but the video was not saved. Your link is kept below—choose Save video to try again."); setExpanded(false); clearDraft(initialValues()); router.refresh(); return;
+            setOpenedRoom(opened);setShareArea("video");setMessage("Your gathering is open, but the video was not saved. Your link is kept below—choose Save video to try again."); setExpanded(false); clearDraft(initialValues()); refreshGatherings(); return;
           }
         }
         setOpenedRoom(opened);
@@ -306,7 +311,7 @@ export function CommunityEventProposalPanel({
     setExpanded(false);
     if(submit)clearDraft(initialValues());
     else setValues(current=>({...current,draftProposalId:savedProposal}));
-    router.refresh();
+    refreshGatherings();
     } catch (error) { setMessage(gatheringOpened ? "Your gathering is open, but its extra controls could not load. Find it in your gatherings below." : memberErrorMessage(error, "save this gathering")); }
     finally { setBusy(false); }
   }
@@ -326,12 +331,19 @@ export function CommunityEventProposalPanel({
     });
     if (!confirmed) return;
     setBusy(true);
-    const { error } = await supabase.rpc("cancel_community_event_proposal", {
-      p_proposal_id: proposal.proposal_id,
-    });
-    setBusy(false);
-    setMessage(error ? memberErrorMessage(error, "cancel this proposal") : "Proposal cancelled.");
-    if (!error) router.refresh();
+    setMessage("");
+    try {
+      const { error } = await supabase.rpc("cancel_community_event_proposal", {
+        p_proposal_id: proposal.proposal_id,
+      });
+      if (error) throw error;
+      setMessage("Draft cancelled.");
+      refreshGatherings();
+    } catch (error) {
+      setMessage(memberErrorMessage(error, "cancel this draft"));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (

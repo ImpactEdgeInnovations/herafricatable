@@ -40,7 +40,7 @@ export default async function FeedbackPage({
       <main className="event-feedback-page">
         {activeMember ? <MemberHeader active="events" label="Private event feedback" /> : (
           <header className="legal-header">
-            <Link className="brand" href="/">Her Africa Table</Link>
+            <Link className="brand" href="/home">Her Africa Table</Link>
             <Link href="/events/past">Past events</Link>
           </header>
         )}
@@ -85,7 +85,7 @@ export default async function FeedbackPage({
     <main className="event-feedback-page">
       {activeMember ? <MemberHeader active="events" label="Private event feedback" /> : (
         <header className="legal-header">
-          <Link className="brand" href="/">Her Africa Table</Link>
+          <Link className="brand" href="/home">Her Africa Table</Link>
           <Link href={`/events/${slug}/follow-up`}>Back to event follow-up</Link>
         </header>
       )}

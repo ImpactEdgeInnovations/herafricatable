@@ -22,7 +22,7 @@ export default async function EventRoundsPage({ params }: { params: Promise<{ sl
   ]);
   const status = ((statusResult.data as { enabled: boolean; opted_in: boolean; interest: string }[] | null) ?? [])[0];
   if (statusResult.error || !status?.enabled) return <main className="event-intro-page">
-    <header className="legal-header"><Link className="brand" href="/">Her Africa Table</Link><Link href={`/events/${slug}`}>Back to event</Link></header>
+    <header className="legal-header"><Link className="brand" href="/home">Her Africa Table</Link><Link href={`/events/${slug}`}>Back to event</Link></header>
     <section className="event-pass-unavailable"><p className="eyebrow">Table rounds</p><h1>Not open yet.</h1><p>The event team will let confirmed guests know if table rounds are part of this gathering. Your event pass is unchanged.</p><Link className="button button-primary" href={`/events/${slug}`}>View event</Link></section>
   </main>;
   return <EventRoundAttendee eventId={event.id} eventSlug={slug} eventTitle={event.title}

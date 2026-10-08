@@ -216,7 +216,7 @@ export function NetworkHub({
     const result = await ask({
       title: "Tell her why you would like to connect",
       description:
-        "A short, friendly note helps her decide. Only the two of you can see it.",
+        "Introduce yourself and say why you would like to connect. Only the two of you can see this note. Private messages open after she accepts.",
       confirmLabel: "Send invitation",
       fields: [
         {
@@ -226,7 +226,7 @@ export function NetworkHub({
           minLength: 10,
           maxLength: 500,
           placeholder:
-            "For example: I would value comparing notes on growing a women-led logistics business in Nairobi.",
+            "Hi, I’m starting a small business in Nairobi. I’d love to hear about your experience.",
         },
       ],
     });
@@ -348,15 +348,19 @@ export function NetworkHub({
   }
   async function startMessage(connectionId: string) {
     setBusy(connectionId);
-    const { data, error } = await supabase.rpc("ensure_conversation", {
-      p_connection_id: connectionId,
-    });
-    setBusy("");
-    if (error) {
+    setMessage("");
+    try {
+      const { data, error } = await supabase.rpc("ensure_conversation", {
+        p_connection_id: connectionId,
+      });
+      if (error) throw error;
+      if (!data || typeof data !== "string") throw new Error("Conversation unavailable");
+      router.push(`/messages?conversation=${encodeURIComponent(data)}`);
+    } catch (error) {
       setMessage(memberErrorMessage(error, "open this conversation"));
-      return;
+    } finally {
+      setBusy("");
     }
-    window.location.assign(`/messages?conversation=${data}`);
   }
   async function planFollowup(
     connectionId: string,

@@ -81,7 +81,7 @@ export function EventIntroWorkspace({ card, eventId, eventSlug, eventTitle, qrIm
   }
 
   return <main className="event-intro-page">
-    <header className="legal-header"><Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Event introductions</small></span></Link><Link href={`/events/${eventSlug}`}>Back to event</Link></header>
+    <header className="legal-header"><Link className="brand" href="/home"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Event introductions</small></span></Link><Link href={`/events/${eventSlug}`}>Back to event</Link></header>
     <div className="event-intro-shell">
       <div className="event-intro-heading"><p className="eyebrow">For confirmed guests</p><h1>Meet at {eventTitle}</h1><p>Share a short hello with someone in the room. Your entry pass is separate. This card never shows your email, phone number or member-network profile.</p></div>
       <div className="event-intro-grid">

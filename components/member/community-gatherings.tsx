@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { CommunityGatheringInline } from "./community-gathering-inline";
 import { CommunityVideoLibrary } from "./community-video-library";
+import { CommunityGatheringPlanner } from "./community-gathering-planner";
 
 export type CommunityGatheringCard = {
   room_id: string;
@@ -78,6 +79,8 @@ export function CommunityGatherings({
     return initial && new Date(initial.ends_at).getTime() < Date.now() ? "past" : "upcoming";
   });
   const [selected,setSelected] = useState(initialSelection ?? "");
+  const [plannerOpened, setPlannerOpened] = useState(false);
+  const [plannerMounted, setPlannerMounted] = useState(false);
   useEffect(()=>setItems(cards),[cards]);
   useEffect(()=>{const update=()=>{
     const params = new URL(window.location.href).searchParams;
@@ -94,6 +97,7 @@ export function CommunityGatherings({
   }
   function changeArea(next: "upcoming" | "past" | "videos") {
     setArea(next);
+    setSelected("");
     const url = new URL(window.location.href);
     url.searchParams.set("view", "gatherings");
     url.searchParams.set("gatheringArea", next);
@@ -107,22 +111,24 @@ export function CommunityGatherings({
     setBusyId(card.room_id);
     setMessage("");
     const next = card.my_rsvp === "going" ? "not_going" : "going";
-    const { error } = await supabase.rpc("set_community_gathering_rsvp", {
-      p_discoverable: false,
-      p_room_id: card.room_id,
-      p_status: next,
-    });
-    setBusyId(null);
-    if (error) {
+    try {
+      const { error } = await supabase.rpc("set_community_gathering_rsvp", {
+        p_discoverable: false,
+        p_room_id: card.room_id,
+        p_status: next,
+      });
+      if (error) throw error;
+      setItems((current) => current.map((item) => item.room_id === card.room_id ? {
+        ...item,
+        going_count: Math.max(0, Number(item.going_count) + (next === "going" ? 1 : -1)),
+        my_rsvp: next,
+      } : item));
+      setMessage(next === "going" ? "Your place is saved." : "Your response was updated.");
+    } catch (error) {
       setMessage(memberErrorMessage(error, "save your place"));
-      return;
+    } finally {
+      setBusyId(null);
     }
-    setItems((current) => current.map((item) => item.room_id === card.room_id ? {
-      ...item,
-      going_count: Math.max(0, Number(item.going_count) + (next === "going" ? 1 : -1)),
-      my_rsvp: next,
-    } : item));
-    setMessage(next === "going" ? "Your place is saved." : "Your response was updated.");
   }
 
   function renderCard(card: CommunityGatheringCard) {
@@ -183,7 +189,8 @@ export function CommunityGatherings({
         <button type="button" aria-pressed={area==="upcoming"} onClick={()=>changeArea("upcoming")}>Upcoming <span>{upcoming.length}</span></button>
         <button type="button" aria-pressed={area==="past"} onClick={()=>changeArea("past")}>Past <span>{past.length}</span></button>
         <button type="button" aria-pressed={area==="videos"} onClick={()=>changeArea("videos")}>Videos</button>
-      </div>{canManage ? <div className="community-gathering-host-actions"><Link href={`/communities/${slug}/host#gathering-proposals`}>Create a gathering</Link><Link href={`/communities/${slug}/host#community-video`}>Add a video</Link><Link href={`/communities/${slug}/host#gatherings`}>Link an event</Link></div> : null}</div>
+      </div>{canManage ? <div className="community-gathering-host-actions"><button type="button" aria-expanded={plannerOpened} aria-controls="community-inline-planner" onClick={() => { setPlannerMounted(true); setPlannerOpened(open => !open); }}>{plannerOpened ? "Hide gathering tools" : "Create a gathering"}</button><Link href={`/communities/${slug}/host#gatherings`}>Link an existing event</Link></div> : null}</div>
+      {canManage && plannerMounted ? <div id="community-inline-planner" className="community-inline-planner" hidden={!plannerOpened}><CommunityGatheringPlanner communityId={communityId} slug={slug} currentUserId={currentUserId} /></div> : null}
       {message ? <p className="form-message" role="status">{message}</p> : null}
       {!migrationReady ? (
         <div className="community-program-empty">

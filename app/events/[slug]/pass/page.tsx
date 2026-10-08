@@ -42,7 +42,7 @@ export default async function EventPassPage({ params }: { params: Promise<{ slug
   if (!event) notFound();
   const { data, error } = await supabase.rpc("get_my_event_pass", { p_event_id: event.id });
   const pass = (data?.[0] as EventPass | undefined) ?? null;
-  if (error || !pass) return <main className="event-pass-page"><header className="legal-header"><Link className="brand" href="/"><span className="brand-mark">H</span><span>Her Africa Table<small>Event pass</small></span></Link><Link href={`/events/${slug}`}>Back to event</Link></header><section className="event-pass-unavailable"><p className="eyebrow">Event access</p><h1>Your pass is not ready yet.</h1><p>A pass is issued after your registration and payment review are confirmed. If you believe this is an error, contact support with your order reference.</p><div><Link className="button button-primary" href={`/events/${slug}`}>View my event</Link><a className="button button-outline" href="mailto:support@herafricatable.com">Contact support</a></div></section></main>;
+  if (error || !pass) return <main className="event-pass-page"><header className="legal-header"><Link className="brand" href="/home"><span className="brand-mark">H</span><span>Her Africa Table<small>Event pass</small></span></Link><Link href={`/events/${slug}`}>Back to event</Link></header><section className="event-pass-unavailable"><p className="eyebrow">Event access</p><h1>Your pass is not ready yet.</h1><p>A pass is issued after your registration and payment review are confirmed. If you believe this is an error, contact support with your order reference.</p><div><Link className="button button-primary" href={`/events/${slug}`}>View my event</Link><a className="button button-outline" href="mailto:support@herafricatable.com">Contact support</a></div></section></main>;
 
   // The pass RPC establishes the current member's confirmed, non-revoked access.
   // Read private arrival details only after that check and render them only here.
@@ -84,7 +84,7 @@ export default async function EventPassPage({ params }: { params: Promise<{ slug
   return (
     <main className="event-pass-page">
       <header className="legal-header">
-        <Link className="brand" href="/"><span className="brand-mark">H</span><span>Her Africa Table<small>Event pass</small></span></Link>
+        <Link className="brand" href="/home"><span className="brand-mark">H</span><span>Her Africa Table<small>Event pass</small></span></Link>
         <Link href={`/events/${slug}`}>Event details</Link>
       </header>
       <section className="event-pass-shell">

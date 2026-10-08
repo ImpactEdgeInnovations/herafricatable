@@ -67,7 +67,7 @@ export default async function RegisterPage({
   return (
     <main className="event-registration-page">
       <header className="legal-header">
-        <Link className="brand" href="/">
+        <Link className="brand" href="/home">
           <span className="brand-mark">H</span>
           <span>Her Africa Table<small>Registration</small></span>
         </Link>

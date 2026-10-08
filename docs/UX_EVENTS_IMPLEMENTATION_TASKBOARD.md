@@ -14,6 +14,8 @@ This board turns the 4 October UI/UX and Events audit (saved separately on the P
 
 This track refines the existing modules; it does not replace the event-first launch gates. Review means implemented and waiting for the relevant acceptance, not fully certified.
 
+**8 October navigation and gathering continuation:** Event details now have a predictable All events return; signed-in pass, feedback, follow-up, introduction and round pages return Home from the logo rather than the public landing page. A Host’s linked Community opens its room instead of the public About page. Members open accepted-connection conversations without a full browser reload, with failed/empty response recovery. Connection invitations explain that a short private introduction note precedes accepted-connection messaging; access rules are unchanged. The Community Gatherings tab now opens its existing guarded creation/video tools in place, on demand. Hiding the planner preserves the mounted draft. Linking an existing event still opens the focused Host linking section. RSVP and draft-cancellation requests recover from thrown errors without claiming success. The full suite and production build passed. Tagged live accounts confirmed Host draft access, ordinary-member denial and denied non-connection inbox/message attempts; no content was saved. Browser/device review of the new planner is recorded separately; UI-2/UI-4 and UI-6 are not declared complete. No migration is required.
+
 | Phase | State | Deliverable / remaining acceptance |
 | --- | --- | --- |
 | UI-1 Visual foundation | Review | Scoped shared interface typography, smaller Event/Host headings, readable button states and consistent touch targets. Landing/Admin styles excluded. Cross-device regression remains. |

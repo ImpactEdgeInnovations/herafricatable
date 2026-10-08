@@ -124,7 +124,7 @@ export default async function EventFollowUpPage({
     <main className="event-follow-up-page">
       {activeMember ? <MemberHeader active="events" label="After the table" /> : (
         <header className="legal-header">
-          <Link className="brand" href="/">Her Africa Table</Link>
+          <Link className="brand" href="/home">Her Africa Table</Link>
           <Link href={`/events/${slug}`}>Back to event</Link>
         </header>
       )}

@@ -331,7 +331,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       }) }} /> : null}
       <header className="legal-header">
         <Link className="brand" href={user ? "/home" : "/"} prefetch={false}><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></Link>
-        <Link href={eventCommunity ? `/communities/${eventCommunity.slug}?view=people` : "/events"}>{eventCommunity ? `Back to ${eventCommunity.name}` : "All events"}</Link>
+        <Link href="/events">All events</Link>
       </header>
       <section className="event-detail-hero" aria-label="Event details">
         <div><p className="eyebrow">{event.audience === "community" ? "Community gathering" : event.format === "hybrid" ? "In person & online" : event.format === "online" ? "Online" : "In person"} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "See when, where and how to join below."}</p>{eventCommunity && event.audience === "community" ? <span className="event-community-badge">For active members of {eventCommunity.name}</span> : null}</div>
