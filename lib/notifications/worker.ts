@@ -30,69 +30,79 @@ function migrationPending(error: RpcError | null, functionName: string) {
 
 export async function processNotificationQueue({
   dedupeKey,
-  strictTarget = false,
+  strictTarget = true,
 }: {
   dedupeKey?: string;
   strictTarget?: boolean;
 } = {}) {
+  if (dedupeKey && !strictTarget) {
+    return NextResponse.json({ error: "Targeted delivery must stay scoped." }, { status: 400 });
+  }
   const admin = createAdminClient();
-  const { data: lifecycleData, error: lifecycleError } = await admin.rpc(
-    "reconcile_community_host_subscriptions",
-  );
-  if (
-    lifecycleError &&
-    !migrationPending(lifecycleError as RpcError, "reconcile_community_host_subscriptions")
-  ) {
-    return NextResponse.json(
-      { error: "Community host lifecycle unavailable" },
-      { status: 503 },
+  let hostLifecycle: Record<string, number> | null = null;
+  let briefingsQueued = 0;
+  let eventRemindersQueued = 0;
+  let standaloneRemindersQueued = 0;
+  // A single invitation must not queue unrelated work or depend on its availability.
+  if (!dedupeKey) {
+    const { data: lifecycleData, error: lifecycleError } = await admin.rpc(
+      "reconcile_community_host_subscriptions",
     );
-  }
-  const hostLifecycle = lifecycleError
-    ? null
-    : ((lifecycleData as Record<string, number>[] | null) ?? [])[0] ?? null;
+    if (
+      lifecycleError &&
+      !migrationPending(lifecycleError as RpcError, "reconcile_community_host_subscriptions")
+    ) {
+      return NextResponse.json(
+        { error: "Community host lifecycle unavailable" },
+        { status: 503 },
+      );
+    }
+    hostLifecycle = lifecycleError
+      ? null
+      : ((lifecycleData as Record<string, number>[] | null) ?? [])[0] ?? null;
 
-  const { data: briefingData, error: briefingError } = await admin.rpc(
-    "queue_community_weekly_briefings",
-  );
-  if (
-    briefingError &&
-    !migrationPending(briefingError as RpcError, "queue_community_weekly_briefings")
-  ) {
-    return NextResponse.json(
-      { error: "Community briefing queue unavailable" },
-      { status: 503 },
+    const { data: briefingData, error: briefingError } = await admin.rpc(
+      "queue_community_weekly_briefings",
     );
-  }
-  const briefingsQueued = Number(briefingData ?? 0);
+    if (
+      briefingError &&
+      !migrationPending(briefingError as RpcError, "queue_community_weekly_briefings")
+    ) {
+      return NextResponse.json(
+        { error: "Community briefing queue unavailable" },
+        { status: 503 },
+      );
+    }
+    briefingsQueued = Number(briefingData ?? 0);
 
-  const { data: reminderData, error: reminderError } = await admin.rpc(
-    "queue_due_community_event_reminders",
-  );
-  if (
-    reminderError &&
-    !migrationPending(reminderError as RpcError, "queue_due_community_event_reminders")
-  ) {
-    return NextResponse.json(
-      { error: "Community event reminders unavailable" },
-      { status: 503 },
+    const { data: reminderData, error: reminderError } = await admin.rpc(
+      "queue_due_community_event_reminders",
     );
-  }
-  const eventRemindersQueued = Number(reminderData ?? 0);
+    if (
+      reminderError &&
+      !migrationPending(reminderError as RpcError, "queue_due_community_event_reminders")
+    ) {
+      return NextResponse.json(
+        { error: "Community event reminders unavailable" },
+        { status: 503 },
+      );
+    }
+    eventRemindersQueued = Number(reminderData ?? 0);
 
-  const { data: standaloneReminderData, error: standaloneReminderError } = await admin.rpc(
-    "queue_due_standalone_event_reminders",
-  );
-  if (
-    standaloneReminderError &&
-    !migrationPending(standaloneReminderError as RpcError, "queue_due_standalone_event_reminders")
-  ) {
-    return NextResponse.json(
-      { error: "Standalone event reminders unavailable" },
-      { status: 503 },
+    const { data: standaloneReminderData, error: standaloneReminderError } = await admin.rpc(
+      "queue_due_standalone_event_reminders",
     );
+    if (
+      standaloneReminderError &&
+      !migrationPending(standaloneReminderError as RpcError, "queue_due_standalone_event_reminders")
+    ) {
+      return NextResponse.json(
+        { error: "Standalone event reminders unavailable" },
+        { status: 503 },
+      );
+    }
+    standaloneRemindersQueued = Number(standaloneReminderData ?? 0);
   }
-  const standaloneRemindersQueued = Number(standaloneReminderData ?? 0);
 
   if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
     return NextResponse.json(
@@ -107,17 +117,11 @@ export async function processNotificationQueue({
     );
   }
 
-  let claimResult = dedupeKey
+  const claimResult = dedupeKey
     ? await admin.rpc("claim_notification_job", {
         p_dedupe_key: dedupeKey,
       })
     : await admin.rpc("claim_notification_jobs", { p_limit: 25 });
-  if (
-    dedupeKey && !strictTarget &&
-    migrationPending(claimResult.error as RpcError | null, "claim_notification_job")
-  ) {
-    claimResult = await admin.rpc("claim_notification_jobs", { p_limit: 25 });
-  }
   const { data, error } = claimResult;
   if (error) {
     return NextResponse.json(

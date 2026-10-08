@@ -13,7 +13,7 @@
     "test:community-entry": "node scripts/verify-community-entry-actions.mjs",
     "test:journeys": "node scripts/verify-journey-states.mjs",
     "test:accessibility": "node scripts/verify-accessibility-contracts.mjs",
-    "test:operations": "node scripts/verify-operations-contracts.mjs && node scripts/verify-community-photo-operations.mjs && node scripts/verify-community-photo-report-paging.mjs && node scripts/verify-notification-admin-access.mjs",
+    "test:operations": "node scripts/verify-operations-contracts.mjs && node scripts/verify-community-photo-operations.mjs && node scripts/verify-community-photo-report-paging.mjs && node scripts/verify-notification-admin-access.mjs && node scripts/verify-targeted-notification-worker.mjs",
     "test:community-gatherings": "node scripts/verify-community-gathering-contracts.mjs && node scripts/verify-gathering-introduction.mjs",
     "test:community-room-ui": "node scripts/verify-community-room-ui.mjs",
     "test:community-video": "node scripts/verify-community-video.mjs",
