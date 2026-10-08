@@ -16,6 +16,8 @@ Updated: 8 October 2026. This is an install-promotion enhancement to the existin
 
 Automated tests verify platform detection including desktop-identifying iPads, pause duration/route exclusions, one-use native events, simultaneous clicks, decline/error outcomes, manifest/icons and private-cache boundaries. These are not real OS installation tests.
 
+Live Chrome review on `54ebb4e` confirmed the 15-second invitation and a captured native install event (Install app label). Its phone-width rendering fit at 390px without page overflow. Not now dismissed the invitation; engineering did not click Install app or change OS installation settings. Phone-width Chrome is not iOS/Android emulation, so those device rows remain awaiting acceptance. The browser used for this review now has the ordinary seven-day reminder pause; its manual install actions remain available.
+
 | Device/browser | Required test | Status |
 | --- | --- | --- |
 | Desktop Chrome/Edge | Native prompt → decline → no repeated event; install → launcher shortcut → authenticated app; sign out | Awaiting device acceptance |

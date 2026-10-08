@@ -44,6 +44,10 @@ function eventPrice(tickets: PublicTicket[], lookupFailed = false) {
   return `From ${lowest.currency} ${new Intl.NumberFormat("en-KE").format(lowest.price_minor / 100)}`;
 }
 
+function eventFormatLabel(format: string) {
+  return format === "hybrid" ? "In person & online" : format === "online" ? "Online" : "In person";
+}
+
 function bookingLabel(
   event: PublicEvent,
   availability: EventBookingAvailability | undefined,
@@ -224,11 +228,11 @@ export default async function EventsPage() {
         ) : events.length ? <EventDiscovery items={events.map((event) => {
           const poster = hostCovers.get(event.id)?.url ? hostCovers.get(event.id) : eventPosters.get(event.id);
           const tickets = ticketsByEvent.get(event.id) ?? [];
-          return { id: event.id, title: event.title, summary: event.summary, location: event.venues?.city ?? "Online", format: event.format.replaceAll("_", " "), content: (
+          return { id: event.id, title: event.title, summary: event.summary, location: event.venues?.city ?? "Online", format: `${event.format.replaceAll("_", " ")} ${eventFormatLabel(event.format)}`, content: (
           <article key={event.id} className={poster?.url ? "has-poster" : "without-poster"}>
             {poster?.url ? <Link href={`/events/${event.slug}`} className="public-event-image-link" tabIndex={-1} aria-hidden="true"><img className="public-event-poster" alt="" src={poster.url} loading="lazy" /></Link> : null}
             <div className="public-event-date"><strong>{new Intl.DateTimeFormat("en-KE", { day: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))}</strong><span>{new Intl.DateTimeFormat("en-KE", { month: "short", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</span></div>
-            <div className="public-event-copy"><span>{event.audience === "community" ? "Community gathering" : event.format.replaceAll("_", " ")}</span><h2><Link href={`/events/${event.slug}`}>{event.title}</Link></h2><p className="public-event-facts">{new Intl.DateTimeFormat("en-KE", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} <span aria-hidden="true">·</span> {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"} <span aria-hidden="true">·</span> {eventPrice(tickets, Boolean(publicTicketError))}</p><p className="public-event-summary">{event.summary || "Open this event to see the details."}</p><p className="public-event-booking-state">{bookingLabel(event, bookingAvailability.get(event.id), event.free_instant_booking && isActiveMember && intakeMode === "trusted_auto")}</p></div>
+            <div className="public-event-copy"><span>{event.audience === "community" ? "Community gathering" : eventFormatLabel(event.format)}</span><h2><Link href={`/events/${event.slug}`}>{event.title}</Link></h2><p className="public-event-facts">{new Intl.DateTimeFormat("en-KE", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} <span aria-hidden="true">·</span> {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"} <span aria-hidden="true">·</span> {eventPrice(tickets, Boolean(publicTicketError))}</p><p className="public-event-summary">{event.summary || "Open this event to see the details."}</p><p className="public-event-booking-state">{bookingLabel(event, bookingAvailability.get(event.id), event.free_instant_booking && isActiveMember && intakeMode === "trusted_auto")}</p></div>
             <Link className="public-event-open" href={`/events/${event.slug}`}>View event <span aria-hidden="true">→</span></Link>
           </article>
         ) };})} /> : <div className="events-empty"><span className="events-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><p className="eyebrow">No upcoming events</p><strong>We’re preparing the next gathering.</strong><p>{isActiveMember ? "There is no public event just yet. You can be the first to bring people together." : "Published event details will appear here. Join the founding network to hear first."}</p><div className="events-empty-actions"><Link className="button button-primary" href={isActiveMember ? "#propose-event" : "/sign-in?mode=apply"}>{isActiveMember ? "Host an event" : "Request membership"}</Link>{isActiveMember ? <Link className="button button-outline" href="/network">Meet members</Link> : null}</div></div></div>}
