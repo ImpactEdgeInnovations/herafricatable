@@ -51,6 +51,8 @@ Photos can be added to the gathering's linked album after opening, subject to th
 
 New clarity pass: Community search supports words in any order and name suggestions, with scoped result counts. Inside each joined Community, **Your membership** explains leaving; leaders see handover guidance. Host/Admin **Remove member** explains access loss without account deletion or automatic refund. Re-test T07/T13 on the deployed release; no real leave/removal was performed by engineering in this slice.
 
+Community UI pass, 8 October: Home keeps the cover and short description; other tabs retain only the compact identity and About action. People show permitted photographs or initials plus actual Host/Moderator badges. Conversation replies have a bounded scroll area. Home does not suggest meeting another member when the Community contains only one. The Lavington Women owner inspected Home, Conversations, People and About on desktop and a 390px phone viewport without changing records. This does not replace T09's two-member discussion test, populated media/search tests, keyboard review or separate ordinary-member acceptance. Mobile Host tools and selected-tab visibility require explicit checking after every navigation/resize.
+
 Use two separate browser profiles/accounts, a controlled Community, one free test event and controlled inboxes. The test organiser must provision membership/Host/moderator roles; do not give all testers Super Admin. Start on desktop Chrome, then iPhone Safari and Android Chrome. Agree which writes/emails are allowed before testing. Never cancel real members' bookings or post test safety reports about real people.
 
 For every row record **Pass / Fail / Blocked / Not run**. Pass requires observed behaviour, not just a visible button.
