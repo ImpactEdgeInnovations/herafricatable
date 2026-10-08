@@ -237,6 +237,7 @@ export function CommunityHostApplication({
   function closeApplication() {
     if (busy) return;
     setOpen(false);
+    setStartingAnother(false);
     setAcceptGuidelines(false);
   }
 
@@ -866,15 +867,6 @@ export function CommunityHostApplication({
           </footer>
           </fieldset>
         </form>
-      ) : null}
-
-      {!current && applications.length > 0 ? (
-        <button
-          className="community-host-new-proposal"
-          onClick={openApplication}
-        >
-          Start a new community application
-        </button>
       ) : null}
 
       {message ? (

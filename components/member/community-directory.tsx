@@ -516,7 +516,7 @@ export function CommunityDirectory({
           </span>
         </header>
         {visibleMember.length ? (
-          <div className="community-member-rooms">
+          <div className="community-member-rooms" role="region" aria-label="Your Community list" tabIndex={visibleMember.length > 1 ? 0 : undefined}>
             {visibleMember.map((item) =>
               renderCommunityCard(item, "member"),
             )}
@@ -554,7 +554,7 @@ export function CommunityDirectory({
           )}
         </div> : null}
         {visibleDiscover.length ? (
-          <div className="community-discovery-grid">
+          <div className="community-discovery-grid" role="region" aria-label="Available Community list" tabIndex={visibleDiscover.length > 1 ? 0 : undefined}>
             {visibleDiscover.map((item) =>
               renderCommunityCard(item, "discover"),
             )}
