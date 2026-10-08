@@ -13,6 +13,7 @@ import { youtubeVideoId } from "@/lib/youtube";
 import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
 import { gatheringIntroduction } from "@/lib/gathering-introduction.mjs";
+import { gatheringSetup } from "@/lib/gathering-setup.mjs";
 
 export type CommunityEventProposal = {
   accessibility_notes: string | null;
@@ -89,6 +90,7 @@ function initialValues() {
     draftStep: 0,
     videoLink: "",
     mediaChoice: "none",
+    gatheringStyle: "video_call",
   };
 }
 
@@ -130,6 +132,12 @@ export function CommunityEventProposalPanel({
   const titleInput=useRef<HTMLInputElement>(null);
   const summaryInput=useRef<HTMLTextAreaElement>(null);
   const introduction=gatheringIntroduction(values.title,values.summary);
+  const setup = gatheringSetup(values);
+
+  function chooseGatheringStyle(kind: string) {
+    setValues(current => ({ ...current, gatheringStyle: kind, format: kind === "in_person" ? "in_person" : kind === "hybrid" ? "hybrid" : "virtual" }));
+    setMessage("");
+  }
 
   function update(key: keyof ReturnType<typeof initialValues>, value: string) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -171,6 +179,7 @@ export function CommunityEventProposalPanel({
       draftStep: 0,
       videoLink: "",
       mediaChoice: "none",
+      gatheringStyle: proposal.format === "in_person" ? "in_person" : proposal.format === "hybrid" ? "hybrid" : "video_call",
     });
     setStep(0);
     setMessage("");
@@ -219,8 +228,9 @@ export function CommunityEventProposalPanel({
     if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) { setMessage("Choose a valid start and end time."); return; }
     if (submit && start <= new Date()) { setMessage("Choose a future start time. Online gatherings can start today."); return; }
     if (submit && values.format !== "virtual" && start.getTime() < Date.now() + 24 * 60 * 60_000) { setMessage("In-person gatherings need 24 hours’ notice. Choose Online for a gathering today."); return; }
-    if (values.onlineUrl.trim() && !values.onlineUrl.startsWith("https://")) { setMessage("Use a full meeting link beginning with https://, or leave it empty for text chat."); return; }
-    if (values.videoLink.trim() && !youtubeVideoId(values.videoLink)) { setMessage("Paste a YouTube video or livestream link, not a channel address."); return; }
+    if (setup.onlineUrl && !setup.onlineUrl.startsWith("https://")) { setMessage("Use a full meeting link beginning with https://, or leave it empty for text chat."); return; }
+    if (setup.kind === "hybrid" && !setup.onlineUrl) { setMessage("Add the video call link for this in-person and online gathering."); return; }
+    if (setup.kind === "watch_video" && (submit || setup.videoLink) && !youtubeVideoId(setup.videoLink)) { setMessage("Add a YouTube video or livestream link so members have something to watch. Use a video link, not a channel address."); return; }
     if (!values.safetyContactName.trim() || values.safetyContactPhone.trim().length < 7) {
       setMessage("Add the person responsible on the day and a working phone number.");
       return;
@@ -237,10 +247,10 @@ export function CommunityEventProposalPanel({
       p_community_id: communityId,
       p_country: values.country.trim(),
       p_ends_at: new Date(values.endsAt).toISOString(),
-      p_format: values.format,
+      p_format: setup.format,
       p_host_note: values.hostNote.trim() || null,
       p_map_url: values.mapUrl.trim() || null,
-      p_online_url: values.onlineUrl.trim() || null,
+      p_online_url: setup.onlineUrl || null,
       p_proposal_id: editingId,
       p_safety_contact_name: values.safetyContactName.trim(),
       p_safety_contact_phone: values.safetyContactPhone.trim(),
@@ -275,11 +285,11 @@ export function CommunityEventProposalPanel({
       const room = (cards.data as { room_id: string; event_id: string; event_slug: string }[] | null)?.find(item => item.event_id === publishedEventId);
       if (cards.error || !room) { setMessage("Your gathering is open. Its extra media controls could not load; find it in your gatherings below."); setExpanded(false); clearDraft(initialValues()); router.refresh(); return; }
       if (room) {
-        const opened = { roomId: room.room_id, slug: room.event_slug, communitySlug, title: values.title, endsAt: end.toISOString(), video: null as GatheringVideo | null, videoDraft: values.videoLink.trim() };
+        const opened = { roomId: room.room_id, slug: room.event_slug, communitySlug, title: values.title, endsAt: end.toISOString(), video: null as GatheringVideo | null, videoDraft: setup.videoLink };
         setShareArea(values.mediaChoice === "photos" ? "photos" : "video");
-        if (values.videoLink.trim()) {
+        if (setup.videoLink) {
           try {
-            const videoResult = await supabase.rpc("save_community_gathering_video_experience", { p_room_id: room.room_id, p_video_id: youtubeVideoId(values.videoLink), p_is_visible: true, p_keep_replay: true, p_viewing_mode: "watch_together" });
+            const videoResult = await supabase.rpc("save_community_gathering_video_experience", { p_room_id: room.room_id, p_video_id: youtubeVideoId(setup.videoLink), p_is_visible: true, p_keep_replay: true, p_viewing_mode: "watch_together" });
             if(videoResult.error)throw videoResult.error;
             if(!videoResult.data)throw new Error("Video save was not confirmed");
             opened.video=videoResult.data as GatheringVideo;
@@ -329,10 +339,10 @@ export function CommunityEventProposalPanel({
       <header>
         <div>
           <p className="eyebrow">Community gatherings</p>
-          <h2 id="community-event-proposal-title">Bring your Community together</h2>
-          <p>Meet at a set time, or share a video for people to watch and discuss whenever they like.</p>
+          <h2 id="community-event-proposal-title">Create a gathering</h2>
+          <p>Meet in person, join a video call, or watch a video together. Only your Community members can take part.</p>
         </div>
-        {migrationReady && creationMode === "scheduled" && !expanded ? <button className="button button-primary" onClick={startNew} type="button">Plan a gathering</button> : null}
+        {migrationReady && creationMode === "scheduled" && !expanded ? <button className="button button-primary" onClick={startNew} type="button">Create a gathering</button> : null}
       </header>
       {migrationReady ? <div className="community-creation-choice" role="group" aria-label="What would you like to create?"><button type="button" aria-pressed={creationMode === "scheduled"} onClick={() => setCreationMode("scheduled")}>Scheduled gathering</button><button type="button" aria-pressed={creationMode === "video"} onClick={() => setCreationMode("video")}>Watch a video anytime</button></div> : null}
       <div hidden={creationMode !== "video"}>{migrationReady ? <CommunityRecordingForm communityId={communityId} currentUserId={currentUserId} autoOpen={creationMode === "video"} /> : null}</div>
@@ -364,13 +374,13 @@ export function CommunityEventProposalPanel({
           {step === 1 ? (
             <div className="community-event-wizard-step">
               <div className="form-grid">
-                <label>Format<select onChange={(event) => update("format", event.target.value)} value={values.format}><option value="in_person">In person</option><option value="virtual">Online</option><option value="hybrid">In person and online</option></select></label>
+                <label>How will you gather?<select onChange={(event) => chooseGatheringStyle(event.target.value)} value={setup.kind}><option value="in_person">In person</option><option value="video_call">Video call</option><option value="watch_video">Watch a video together</option>{setup.kind === "hybrid" ? <option value="hybrid">In person and online (existing draft)</option> : null}</select></label>
                 <label>Maximum guests<input min={2} max={500} onChange={(event) => update("capacity", event.target.value)} type="number" value={values.capacity}/></label>
                 <label>Starts<input onChange={(event) => update("startsAt", event.target.value)} type="datetime-local" value={values.startsAt}/></label>
                 <label>Ends<input onChange={(event) => update("endsAt", event.target.value)} type="datetime-local" value={values.endsAt}/></label>
                 {values.format !== "virtual" ? <><label>Venue name<input maxLength={160} onChange={(event) => update("venueName", event.target.value)} placeholder="Venue or host space" value={values.venueName}/></label><label>City<input maxLength={120} onChange={(event) => update("city", event.target.value)} value={values.city}/></label><label>Country<input maxLength={120} onChange={(event) => update("country", event.target.value)} value={values.country}/></label><label>Address <small>Shared only with eligible members</small><input maxLength={240} onChange={(event) => update("addressLine", event.target.value)} value={values.addressLine}/></label><label className="form-wide">Map link <small>Optional</small><input onChange={(event) => update("mapUrl", event.target.value)} placeholder="https://…" type="url" value={values.mapUrl}/></label></> : null}
-                {values.format !== "in_person" ? <label className="form-wide">Video call link <small>{values.format === "virtual" ? "Optional" : "Required"}</small><input onChange={(event) => update("onlineUrl", event.target.value)} placeholder="Google Meet, Zoom or another meeting link" type="url" value={values.onlineUrl}/><small>Leave empty to gather using Community text chat. Shared only with eligible members.</small></label> : null}
-                <label className="form-wide">YouTube video or livestream <small>Optional</small><input type="url" value={values.videoLink} onChange={event => update("videoLink", event.target.value)} placeholder="https://www.youtube.com/watch?v=…" /><small>Live or prerecorded. Members can watch and discuss inside this gathering. Leave the video call link empty if you do not need Meet or Zoom. The YouTube link may still work outside this platform.</small></label>
+                {setup.kind === "video_call" || setup.kind === "hybrid" ? <label className="form-wide">Video call link <small>{setup.kind === "hybrid" ? "Required" : "Optional"}</small><input onChange={(event) => update("onlineUrl", event.target.value)} placeholder="Google Meet or Zoom link" type="url" value={values.onlineUrl}/><small>Members open the call in Meet or Zoom. Leave empty if you only want text chat.</small></label> : null}
+                {setup.kind === "watch_video" ? <label className="form-wide">YouTube video or livestream<input type="url" required value={values.videoLink} onChange={event => update("videoLink", event.target.value)} placeholder="https://www.youtube.com/watch?v=…" /><small>Use a recorded video or a livestream. Members watch and discuss here. Anyone with the YouTube link may also watch outside this platform.</small></label> : null}
                 <label className="form-wide community-gathering-photo-choice"><input type="checkbox" checked={values.mediaChoice === "photos"} onChange={event => update("mediaChoice", event.target.checked ? "photos" : "none")} /><span>Add photos after opening</span><small>Optional. Photos stay in this gathering’s album; no poster is required.</small></label>
                 {values.mediaChoice === "photos" ? <p className="form-wide">Open the gathering first, then upload your photos below into an album linked to this gathering. No page change is needed.</p> : null}
                 <label>Host contact name<input maxLength={120} onChange={(event) => update("safetyContactName", event.target.value)} placeholder="Full name" value={values.safetyContactName}/></label>

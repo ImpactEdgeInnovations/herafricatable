@@ -2035,7 +2035,7 @@ const hostEventProposal = read(
   "components/community/community-event-proposal-panel.tsx",
 );
 for (const contract of [
-  "Plan a gathering",
+  "Create a gathering",
   "Members only",
   "Save private draft",
   "Open for members",

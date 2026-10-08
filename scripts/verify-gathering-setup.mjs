@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import { gatheringSetup } from '../lib/gathering-setup.mjs';
+import { readFileSync } from 'node:fs';
+const links = { onlineUrl: ' https://meet.google.com/test ', videoLink: ' https://youtu.be/abcdef12345 ' };
+assert.deepEqual(gatheringSetup({ ...links, format: 'virtual', gatheringStyle: 'watch_video' }), { kind: 'watch_video', format: 'virtual', onlineUrl: '', videoLink: 'https://youtu.be/abcdef12345' });
+assert.deepEqual(gatheringSetup({ ...links, format: 'virtual', gatheringStyle: 'video_call' }), { kind: 'video_call', format: 'virtual', onlineUrl: 'https://meet.google.com/test', videoLink: '' });
+assert.deepEqual(gatheringSetup({ ...links, format: 'in_person', gatheringStyle: 'in_person' }), { kind: 'in_person', format: 'in_person', onlineUrl: '', videoLink: '' });
+assert.equal(gatheringSetup({ format: 'hybrid', ...links }).kind, 'hybrid');
+assert.equal(gatheringSetup({ format: 'virtual', videoLink: links.videoLink }).kind, 'watch_video');
+assert.equal(gatheringSetup({ format: 'virtual' }).kind, 'video_call');
+const source = readFileSync(new URL('../components/community/community-event-proposal-panel.tsx', import.meta.url), 'utf8');
+for (const label of ['Create a gathering', 'In person', 'Video call', 'Watch a video together']) assert(source.includes(label));
+assert(source.includes('p_online_url: setup.onlineUrl || null'));
+assert(source.includes('youtubeVideoId(setup.videoLink)'));
+assert(source.includes('no poster is required'));
+console.log('Gathering choices passed: relevant links only, legacy draft recovery, existing hybrid preservation and three plain-language options. No live gathering was published.');
