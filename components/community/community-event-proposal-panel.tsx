@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState, type SetStateAction } from "react";
+import { FormEvent, useEffect, useId, useMemo, useRef, useState, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -12,6 +12,7 @@ import { CommunityPhotoAlbums } from "./community-photo-albums";
 import { youtubeVideoId } from "@/lib/youtube";
 import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
+import { gatheringIntroduction } from "@/lib/gathering-introduction.mjs";
 
 export type CommunityEventProposal = {
   accessibility_notes: string | null;
@@ -124,6 +125,11 @@ export function CommunityEventProposalPanel({
   useEffect(() => { if (restored) setExpanded(true); }, [restored]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [introAttempted,setIntroAttempted] = useState(false);
+  const introId=useId();
+  const titleInput=useRef<HTMLInputElement>(null);
+  const summaryInput=useRef<HTMLTextAreaElement>(null);
+  const introduction=gatheringIntroduction(values.title,values.summary);
 
   function update(key: keyof ReturnType<typeof initialValues>, value: string) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -133,6 +139,7 @@ export function CommunityEventProposalPanel({
   function startNew() {
     if (!values.title && !values.summary) clearDraft(initialValues());
     setMessage("");
+    setIntroAttempted(false);
     setExpanded(true);
   }
 
@@ -141,6 +148,7 @@ export function CommunityEventProposalPanel({
       if (!await ask({ title: "Open a different draft?", description: "Your unfinished plan on this screen will be replaced. Choose Cancel to keep working on it.", confirmLabel: "Open draft" })) return;
     }
     setEditingId(proposal.proposal_id);
+    setIntroAttempted(false);
     setValues({
       accessibilityNotes: proposal.accessibility_notes ?? "",
       addressLine: proposal.address_line ?? "",
@@ -170,9 +178,13 @@ export function CommunityEventProposalPanel({
   }
 
   function continueForward() {
-    if (step === 0 && (values.title.trim().length < 4 || values.summary.trim().length < 40)) {
-      setMessage("Add a clear name and a short explanation of why members should gather.");
-      return;
+    if (step === 0) {
+      setIntroAttempted(true);
+      if(introduction.titleError||introduction.summaryError){
+        setMessage("");
+        (introduction.titleError?titleInput:summaryInput).current?.focus();
+        return;
+      }
     }
     if (step === 1) {
       const start = new Date(values.startsAt);
@@ -332,8 +344,10 @@ export function CommunityEventProposalPanel({
 
           {step === 0 ? (
             <div className="community-event-wizard-step">
-              <label>Gathering name<input maxLength={140} onChange={(event) => update("title", event.target.value)} placeholder="For example: Founder finance breakfast" value={values.title}/></label>
-              <label>What will you discuss?<textarea maxLength={2000} minLength={40} onChange={(event) => update("summary", event.target.value)} placeholder="A short description and a question to get everyone talking." rows={3} value={values.summary}/><small>At least 40 characters</small></label>
+              <label>Gathering name<input ref={titleInput} aria-invalid={introAttempted&&Boolean(introduction.titleError)} aria-describedby={`${introId}-name-help`} minLength={4} maxLength={140} onChange={(event) => update("title", event.target.value)} placeholder="For example: World Today" value={values.title}/><small id={`${introId}-name-help`}>4–140 characters. Choose any name that suits your gathering.</small></label>
+              {introAttempted&&introduction.titleError?<p role="alert" className="manager-message">{introduction.titleError}</p>:null}
+              <label>What will you discuss?<textarea ref={summaryInput} aria-invalid={introAttempted&&Boolean(introduction.summaryError)} aria-describedby={`${introId}-summary-help`} maxLength={2000} minLength={40} onChange={(event) => update("summary", event.target.value)} placeholder="For example: A brief overview of the platform and how members can use it." rows={3} value={values.summary}/><small id={`${introId}-summary-help`}>{introduction.summaryLength} characters · {introduction.summaryLength<40?`add at least ${40-introduction.summaryLength} more`:"minimum length reached"}. Keep it within 2,000 characters.</small></label>
+              {introAttempted&&introduction.summaryError?<p role="alert" className="manager-message">{introduction.summaryError}</p>:null}
               <div className="community-event-fixed-terms"><span>Members only</span><span>Free</span><p>Only members of your Community can take part.</p></div>
             </div>
           ) : null}
