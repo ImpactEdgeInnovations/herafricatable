@@ -86,18 +86,27 @@ function clampPosition(position: Position): Position {
   };
 }
 
-function defaultPosition(): Position {
+function defaultPosition(preferredX?: number): Position {
   const actions = window.innerWidth <= 620
     ? document.querySelector(".event-host-page .host-workspace-actions")
     : null;
   const actionTop = actions?.getBoundingClientRect().top;
   const defaultY = window.innerHeight - DOCK_SIZE - 104;
-  return clampPosition({
-    x: window.innerWidth - DOCK_SIZE - 24,
+  const placed = clampPosition({
+    x: preferredX ?? window.innerWidth - DOCK_SIZE - 24,
     y: actionTop !== undefined && actionTop > 0 && actionTop < window.innerHeight
       ? Math.min(defaultY, actionTop - DOCK_SIZE - EDGE_GAP)
       : defaultY,
   });
+  if (!actions) return placed;
+  const controls = Array.from(document.querySelectorAll(".event-host-page .host-workspace :is(button, a, select, summary)"))
+    .map(element => element.getBoundingClientRect())
+    .filter(rect => rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight && rect.right > placed.x && rect.left < placed.x + DOCK_SIZE);
+  const candidates = [placed.y, ...controls.flatMap(rect => [rect.top - DOCK_SIZE - EDGE_GAP, rect.bottom + EDGE_GAP])]
+    .filter(y => y >= EDGE_GAP && y <= placed.y)
+    .sort((left, right) => Math.abs(left - placed.y) - Math.abs(right - placed.y));
+  const clearY = candidates.find(y => controls.every(rect => y + DOCK_SIZE <= rect.top || y >= rect.bottom));
+  return { ...placed, y: clearY ?? placed.y };
 }
 
 function quotaLabel(remaining: number) {
@@ -189,7 +198,7 @@ export function FloatingTableGuide({
     const keepInView = () => setPosition((current) => {
       const next = current
         ? clampPosition(hostWorkspace && window.innerWidth <= 620
-          ? { x: current.x, y: defaultPosition().y }
+          ? { x: current.x, y: defaultPosition(current.x).y }
           : current)
         : defaultPosition();
       return current?.x === next.x && current?.y === next.y ? current : next;
@@ -340,6 +349,7 @@ export function FloatingTableGuide({
           : window.innerWidth - DOCK_SIZE - EDGE_GAP,
       y: position.y,
     });
+    if (window.innerWidth <= 620 && document.querySelector(".event-host-page .host-workspace-actions")) next.y = defaultPosition(next.x).y;
     setPosition(next);
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   }

@@ -51,9 +51,9 @@ for (const component of [
 
 const floating = read("components/member/floating-table-guide.tsx");
 const dockFunctions = ts.transpileModule(floating.slice(floating.indexOf('function clampPosition('), floating.indexOf('function quotaLabel(')), {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const dockAt = (width,height,actionTop) => new Function('window','document','DOCK_SIZE','EDGE_GAP',`${dockFunctions};return defaultPosition();`)(
+const dockAt = (width,height,actionTop,controls=[]) => new Function('window','document','DOCK_SIZE','EDGE_GAP',`${dockFunctions};return defaultPosition();`)(
   {innerWidth:width,innerHeight:height},
-  {querySelector:()=>actionTop === null ? null : {getBoundingClientRect:()=>({top:actionTop})}},
+  {querySelector:()=>actionTop === null ? null : {getBoundingClientRect:()=>({top:actionTop})},querySelectorAll:()=>controls.map(rect=>({getBoundingClientRect:()=>rect}))},
   64,16,
 );
 assert.equal(dockAt(320,740,474).y + 64,458, 'Nia must rest above Host save buttons with a 16px gap');
@@ -61,6 +61,9 @@ assert.equal(dockAt(390,844,640).y + 64,624);
 assert.equal(dockAt(390,844,null).y,676, 'Other pages retain the existing resting position');
 assert.equal(dockAt(1200,900,640).y,732, 'Desktop positions remain unchanged');
 assert.equal(dockAt(320,400,30).y,16, 'Positions stay inside the viewport');
+const invitation = {width:130,height:44,left:170,right:300,top:400,bottom:444};
+assert.equal(dockAt(320,740,474,[invitation]).y,320, 'Moving above the footer must not obscure the invitation button');
+assert.equal(dockAt(320,740,474,[{...invitation,left:0,right:130}]).y,394, 'Controls outside the dock lane must not displace it');
 assert(floating.includes('hostObserver?.disconnect()') && floating.includes('window.removeEventListener("scroll", keepInView)'));
 for (const contract of [
   "Reset position",
