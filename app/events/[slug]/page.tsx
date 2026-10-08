@@ -22,6 +22,7 @@ import {
   type MemberEventArchiveAccess,
 } from "@/components/events/member-event-archive";
 import { EventRegistrationForm } from "@/components/events/event-registration-form";
+import { EventMobileAction } from "@/components/events/event-mobile-action";
 import { loadEventBookingAvailability } from "@/lib/events/server-booking-availability";
 import { EventQuestions, type EventQuestion } from "@/components/events/event-questions";
 import {
@@ -310,9 +311,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const entryLabel = hasEnded ? "Completed" : event.audience === "community" ? "Community members"
     : activeMember ? "Member booking"
       : eventGuestFlag?.enabled ? "Guest booking available" : "Membership required";
+  // Reuse the existing destination; this bar cannot book or bypass any eligibility check.
+  const mobileActionHref = hasEnded ? null : gatheringRoomHref ?? (
+    isConfirmedGuest ? `/events/${slug}/pass`
+      : registration?.status === "waitlisted" ? "#registration"
+        : event.registration_mode !== "closed" && !bookingClosed ? "#registration" : null
+  );
 
   return (
-    <main className="event-detail-page" data-brand-accent={brandAccent(event.appearance_accent_key)}>
+    <main className="event-detail-page" data-brand-accent={brandAccent(event.appearance_accent_key)} data-mobile-action={Boolean(mobileActionHref)}>
       {publiclyIndexable ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd({
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
@@ -331,7 +338,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         {eventImage ? <figure className="event-detail-poster"><img alt={eventImage.alt} src={eventImage.url} fetchPriority="high" /></figure> : null}
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div><div><dt>Cost</dt><dd>{costLabel}</dd></div><div><dt>Entry</dt><dd>{entryLabel}</dd></div></dl>
-          {gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : hasEnded && recap ? <a className="button button-primary" href="#event-recap">{cta}</a> : !hasEnded && isConfirmedGuest ? <Link className="button button-primary" href={`/events/${slug}/pass`}>{cta}</Link> : !hasEnded && registration?.status === "waitlisted" ? <a className="button button-primary" href="#registration">{cta}</a> : hasEnded || event.registration_mode === "closed" || bookingClosed ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}
+          <div id="event-primary-action">{gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : hasEnded && recap ? <a className="button button-primary" href="#event-recap">{cta}</a> : !hasEnded && isConfirmedGuest ? <Link className="button button-primary" href={`/events/${slug}/pass`}>{cta}</Link> : !hasEnded && registration?.status === "waitlisted" ? <a className="button button-primary" href="#registration">{cta}</a> : hasEnded || event.registration_mode === "closed" || bookingClosed ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}</div>
           {gatheringRoomHref && isConfirmedGuest && !hasEnded ? <Link className="event-pass-inline-link" href={`/events/${slug}/pass`}>Open my entry pass</Link> : null}
         </aside>
       </section>
@@ -492,6 +499,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           remainingToday={guideAccess.remaining_today}
         />
       ) : null}
+      {mobileActionHref ? <EventMobileAction href={mobileActionHref} label={cta} detail={costLabel} /> : null}
     </main>
   );
 }

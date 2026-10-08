@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EventDiscovery } from "@/components/events/event-discovery";
 import { createClient } from "@/lib/supabase/server";
 import { MemberHeader } from "@/components/member/member-header";
 import {
@@ -206,13 +207,11 @@ export default async function EventsPage() {
       </nav>
       <section className="events-intro">
         <div>
-          <p className="eyebrow">Gatherings</p>
           <h1>What’s coming up</h1>
         </div>
         <div className="events-intro-guide">
           <p>
-            See upcoming events, choose what suits you and keep all the details
-            in one place.
+            Find an event and book your place.
           </p>
         </div>
       </section>
@@ -222,17 +221,17 @@ export default async function EventsPage() {
             <span className="events-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span>
             <div><p className="eyebrow">Events are temporarily unavailable</p><strong>We could not open the event calendar.</strong><p>Please try again shortly. Your membership and any existing registration remain unchanged.</p><div className="events-empty-actions"><Link className="button button-primary" href="/events">Try again</Link>{isActiveMember ? <Link className="button button-outline" href="/support">Contact support</Link> : null}</div></div>
           </div>
-        ) : events.length ? events.map((event) => {
+        ) : events.length ? <EventDiscovery items={events.map((event) => {
           const poster = hostCovers.get(event.id)?.url ? hostCovers.get(event.id) : eventPosters.get(event.id);
           const tickets = ticketsByEvent.get(event.id) ?? [];
-          return (
-          <article key={event.id}>
-            {poster?.url ? <img className="public-event-poster" alt={poster.alt} src={poster.url} /> : null}
+          return { id: event.id, title: event.title, summary: event.summary, location: event.venues?.city ?? "Online", format: event.format.replaceAll("_", " "), content: (
+          <article key={event.id} className={poster?.url ? "has-poster" : "without-poster"}>
+            {poster?.url ? <Link href={`/events/${event.slug}`} className="public-event-image-link" tabIndex={-1} aria-hidden="true"><img className="public-event-poster" alt="" src={poster.url} loading="lazy" /></Link> : null}
             <div className="public-event-date"><strong>{new Intl.DateTimeFormat("en-KE", { day: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))}</strong><span>{new Intl.DateTimeFormat("en-KE", { month: "short", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</span></div>
-            <div className="public-event-copy"><span>{event.audience === "community" ? "Community gathering" : event.format.replace("_", " ")}</span><h2>{event.title}</h2><p className="public-event-facts">{new Intl.DateTimeFormat("en-KE", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} <span aria-hidden="true">·</span> {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"} <span aria-hidden="true">·</span> {eventPrice(tickets, Boolean(publicTicketError))} <span aria-hidden="true">·</span> {bookingLabel(event, bookingAvailability.get(event.id), event.free_instant_booking && isActiveMember && intakeMode === "trusted_auto")}</p><p className="public-event-summary">{event.summary || "Event details will be shared with approved members."}</p></div>
-            <Link href={`/events/${event.slug}`}>View event <span aria-hidden="true">→</span></Link>
+            <div className="public-event-copy"><span>{event.audience === "community" ? "Community gathering" : event.format.replaceAll("_", " ")}</span><h2><Link href={`/events/${event.slug}`}>{event.title}</Link></h2><p className="public-event-facts">{new Intl.DateTimeFormat("en-KE", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} <span aria-hidden="true">·</span> {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"} <span aria-hidden="true">·</span> {eventPrice(tickets, Boolean(publicTicketError))}</p><p className="public-event-summary">{event.summary || "Open this event to see the details."}</p><p className="public-event-booking-state">{bookingLabel(event, bookingAvailability.get(event.id), event.free_instant_booking && isActiveMember && intakeMode === "trusted_auto")}</p></div>
+            <Link className="public-event-open" href={`/events/${event.slug}`}>View event <span aria-hidden="true">→</span></Link>
           </article>
-        );}) : <div className="events-empty"><span className="events-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><p className="eyebrow">No upcoming events</p><strong>We’re preparing the next gathering.</strong><p>{isActiveMember ? "There is no public event just yet. You can be the first to bring people together." : "Published event details will appear here. Join the founding network to hear first."}</p><div className="events-empty-actions"><Link className="button button-primary" href={isActiveMember ? "#propose-event" : "/sign-in?mode=apply"}>{isActiveMember ? "Host an event" : "Request membership"}</Link>{isActiveMember ? <Link className="button button-outline" href="/network">Meet members</Link> : null}</div></div></div>}
+        ) };})} /> : <div className="events-empty"><span className="events-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><p className="eyebrow">No upcoming events</p><strong>We’re preparing the next gathering.</strong><p>{isActiveMember ? "There is no public event just yet. You can be the first to bring people together." : "Published event details will appear here. Join the founding network to hear first."}</p><div className="events-empty-actions"><Link className="button button-primary" href={isActiveMember ? "#propose-event" : "/sign-in?mode=apply"}>{isActiveMember ? "Host an event" : "Request membership"}</Link>{isActiveMember ? <Link className="button button-outline" href="/network">Meet members</Link> : null}</div></div></div>}
       </section>
       {myEvents.length ? <section className="my-events-section" id="my-events" aria-labelledby="my-events-title">
         <div className="my-events-heading"><div><p className="eyebrow">Your plans</p><h2 id="my-events-title">Your places</h2></div><p>Requests and confirmed places you can return to.</p></div>

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { PwaProvider } from "@/components/pwa/pwa-provider";
+import { InstallAppSuggestion } from "@/components/pwa/install-app";
 import { getSiteUrl, siteDescription } from "@/lib/seo";
 import "./globals.css";
 import "./community-compact.css";
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           <div id="hat-page-content" tabIndex={-1}>
             {children}
           </div>
+          <InstallAppSuggestion />
         </PwaProvider>
       </body>
     </html>

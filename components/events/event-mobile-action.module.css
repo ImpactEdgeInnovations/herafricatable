@@ -1,0 +1,7 @@
+.bar { display: none; }
+@media(max-width:820px) {
+  .bar:not([hidden]) { position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: #fffdf8; border-top: 1px solid #ded8d2; box-shadow: 0 -4px 18px #2823200c; color: #282320; font-family: var(--sans); }
+  .bar span { font-size: .875rem; }
+  .bar a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; max-width: 75%; padding: 10px 16px; box-sizing: border-box; border-radius: 5px; background: #64172a; color: white; font-size: .875rem; font-weight: 600; text-decoration: none; text-align: center; }
+  .bar a:focus-visible { outline: 2px solid #64172a; outline-offset: 3px; }
+}
