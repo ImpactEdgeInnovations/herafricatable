@@ -91,13 +91,9 @@ The evidence below records the August build (`b6bb161`, then hosted at `https://
 
 ## Current release position
 
-The application is approved for a limited live pilot with manual membership review,
-free/manual events and automatic creator payments disabled. Do not begin an
-unrestricted public campaign, publish the Nairobi Community, enable automatic
-payments, creator payouts or Paystack split settlement until the remaining P0
-evidence is recorded as passed.
+See the [8 October tester handover and current live audit](./TESTER_HANDOVER_AND_LAUNCH_READINESS.md). Current intake was observed as `trusted_auto`, not the historical manual-review setting below. Zero of ten formal launch gates are accepted. The named 9 October event remains a draft beyond its publication cutoff, and the engineering recommendation for its release is hold. Technical availability and individual successful rehearsals do not authorise unrestricted launch, automatic payments or creator payouts.
 
-### Limited pilot operating boundary
+### Historical August pilot operating boundary (not current settings)
 
 - Public and member-facing access uses email OTP only; no beta or temporary-password
   option is presented.

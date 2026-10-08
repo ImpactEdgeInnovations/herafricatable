@@ -298,7 +298,7 @@ export default async function CommunityHostPage({
         <a href="#invite-people">Invite people</a>
         <a href="#admissions">Join requests</a>
         <a href="#people">Members</a>
-        <a href="#gathering-proposals">Plan a gathering</a>
+        <a href="#gathering-proposals">Create a gathering</a>
         <a href="#gatherings">Link an event</a>
         <a href="#joining-settings">Who can join?</a>
         <a href="#community-photos">Photos</a>

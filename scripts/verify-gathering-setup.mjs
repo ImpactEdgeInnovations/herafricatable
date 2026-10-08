@@ -8,6 +8,7 @@ assert.deepEqual(gatheringSetup({ ...links, format: 'in_person', gatheringStyle:
 assert.equal(gatheringSetup({ format: 'hybrid', ...links }).kind, 'hybrid');
 assert.equal(gatheringSetup({ format: 'virtual', videoLink: links.videoLink }).kind, 'watch_video');
 assert.equal(gatheringSetup({ format: 'virtual' }).kind, 'video_call');
+assert.equal(gatheringSetup({ format: 'virtual', gatheringStyle: 'unknown' }).kind, 'video_call');
 const source = readFileSync(new URL('../components/community/community-event-proposal-panel.tsx', import.meta.url), 'utf8');
 for (const label of ['Create a gathering', 'In person', 'Video call', 'Watch a video together']) assert(source.includes(label));
 assert(source.includes('p_online_url: setup.onlineUrl || null'));
