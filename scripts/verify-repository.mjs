@@ -210,7 +210,7 @@ assert(
 assert(
   targetedNotificationProcessRoute.includes("referral-invite") &&
     targetedNotificationProcessRoute.includes("table-invitation") &&
-    targetedNotificationProcessRoute.includes("processNotificationQueue({ dedupeKey })"),
+    targetedNotificationProcessRoute.includes("processNotificationQueue({ dedupeKey, strictTarget: Boolean(dedupeKey) })"),
   "Admin notification processing must validate invitation delivery keys",
 );
 assert(

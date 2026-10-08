@@ -1,38 +1,20 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { requireNotificationAdmin } from "@/lib/notifications/admin-access";
 import { sendNotificationEmail } from "@/lib/notifications/email";
 
 const TEST_COOLDOWN_SECONDS = 60;
 
-export async function POST() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user?.email) {
-    return NextResponse.json({ error: "Sign in is required." }, { status: 401 });
-  }
-
-  const { data: role } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("role", "super_admin")
-    .maybeSingle();
-
-  if (!role) {
-    return NextResponse.json(
-      { error: "Super Admin access is required." },
-      { status: 403 },
-    );
-  }
+export async function POST(request: Request) {
+  const access=await requireNotificationAdmin(request);
+  if(access.response)return access.response;
+  const user=access.user;
+  if(!user.email)return NextResponse.json({error:"Your account needs an email address for this test."},{status:400});
 
   const admin = createAdminClient();
   const since = new Date(Date.now() - TEST_COOLDOWN_SECONDS * 1000).toISOString();
-  const { count } = await admin
+  const { count, error: cooldownError } = await admin
     .from("audit_events")
     .select("id", { count: "exact", head: true })
     .eq("actor_id", user.id)
@@ -41,6 +23,8 @@ export async function POST() {
       "notification.delivery_test_failed",
     ])
     .gte("created_at", since);
+
+  if(cooldownError)return NextResponse.json({error:"The delivery test could not be checked. Please try again."},{status:503});
 
   if ((count ?? 0) > 0) {
     return NextResponse.json(

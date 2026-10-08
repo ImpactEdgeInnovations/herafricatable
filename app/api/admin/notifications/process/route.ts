@@ -1,39 +1,24 @@
 import { NextResponse } from "next/server";
 import { processNotificationQueue } from "@/lib/notifications/worker";
-import { createClient } from "@/lib/supabase/server";
+import { requireNotificationAdmin } from "@/lib/notifications/admin-access";
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Sign in is required." }, { status: 401 });
+  const access=await requireNotificationAdmin(request);
+  if(access.response)return access.response;
+  let body: {dedupeKey?:unknown}|null=null;
+  const raw=await request.text();
+  if(raw.trim()){
+    try {body=JSON.parse(raw);}catch{return NextResponse.json({error:"The delivery request was not understood."},{status:400});}
+    if(!body||typeof body!=="object"||Array.isArray(body))return NextResponse.json({error:"The delivery request was not understood."},{status:400});
   }
-
-  const { data: role } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("role", "super_admin")
-    .maybeSingle();
-  if (!role) {
-    return NextResponse.json(
-      { error: "Super Admin access is required." },
-      { status: 403 },
-    );
-  }
-
-  const body = (await request.json().catch(() => null)) as {
-    dedupeKey?: unknown;
-  } | null;
   const requestedKey =
     typeof body?.dedupeKey === "string" ? body.dedupeKey.trim() : "";
-  const dedupeKey = /^(?:referral-invite|table-invitation|pilot-member-invite|member-approved):[0-9a-f-]{36}$/i.test(
+  const dedupeKey = /^(?:referral-invite|table-invitation|pilot-member-invite|member-approved):[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
     requestedKey,
   )
     ? requestedKey
     : undefined;
+  if(body && Object.hasOwn(body,"dedupeKey") && !dedupeKey)return NextResponse.json({error:"Choose a valid invitation or welcome email."},{status:400});
 
-  return processNotificationQueue({ dedupeKey });
+  return processNotificationQueue({ dedupeKey, strictTarget: Boolean(dedupeKey) });
 }
