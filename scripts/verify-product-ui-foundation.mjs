@@ -24,4 +24,6 @@ assert(read('components/member/community-feed.tsx').includes('post.author_id ===
 assert(read('components/member/community-local-navigation.tsx').includes('new ResizeObserver(alignSelected)'));
 assert(!read('app/globals.css').includes('.community-local-more { display: none !important; }'));
 assert(css.includes('flex: 1 1 auto; min-width: 0; overflow-x: auto;'), 'Only the local tabs should scroll; Host tools stays outside that strip');
+assert(css.includes('@media (max-width: 360px)'));
+assert(css.includes('> .member-shell-header > .brand { flex-basis: 100%; }'), 'The smallest screens must wrap header actions rather than hide them');
 console.log('UI foundation and Community Home behaviour passed: single-member recommendations, retained actions, role badge provenance and scoped final stylesheet. Browser/device acceptance is separate.');

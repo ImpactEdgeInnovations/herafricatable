@@ -160,3 +160,8 @@
   .community-room-page .community-local-navigation { gap: 0; }
   .community-room-page .community-local-navigation a { padding: 10px; }
 }
+@media (max-width: 360px) {
+  :is(.community-page, .events-page, .event-detail-page, .event-host-page) > .member-shell-header { flex-wrap: wrap; row-gap: 8px; padding-top: 12px; padding-bottom: 12px; }
+  :is(.community-page, .events-page, .event-detail-page, .event-host-page) > .member-shell-header > .brand { flex-basis: 100%; }
+  :is(.community-page, .events-page, .event-detail-page, .event-host-page) .member-header-actions { margin-left: 0; }
+}
