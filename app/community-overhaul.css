@@ -207,17 +207,17 @@
 .community-inline-gathering .gathering-live > header { display: block; margin-bottom: 16px; }
 .community-inline-gathering :is(.gathering-questions,.gathering-live) header p { margin: 6px 0; font-size: .875rem; line-height: 1.5; max-width: none; }
 .community-inline-gathering .gathering-video:not(:has(.gathering-video-player)) { grid-column: 1 / -1; padding: 0 0 12px; border-bottom: 1px solid #e4dfdc; }
-.community-inline-gathering .gathering-watch-layout:has(.gathering-video:not(:has(.gathering-video-player))) .gathering-live { grid-column: 2; grid-row: 2; }
-.community-inline-gathering .gathering-watch-layout:has(.gathering-video:not(:has(.gathering-video-player))) .gathering-questions { grid-column: 1; grid-row: 2; }
-.community-inline-gathering .gathering-watch-layout:has(.gathering-video:not(:has(.gathering-video-player))) .gathering-attendees { grid-column: 1 / -1; grid-row: 3; }
+.community-inline-gathering .gathering-watch-layout:has(.gathering-video):not(:has(.gathering-video-player)) .gathering-live { grid-column: 2; grid-row: 2; }
+.community-inline-gathering .gathering-watch-layout:has(.gathering-video):not(:has(.gathering-video-player)) .gathering-questions { grid-column: 1; grid-row: 2; }
+.community-inline-gathering .gathering-watch-layout:has(.gathering-video):not(:has(.gathering-video-player)) .gathering-attendees { grid-column: 1 / -1; grid-row: 3; }
 .community-inline-gathering .gathering-room:not(.is-recording) .gathering-watch-layout:not(:has(.gathering-video)) { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
 .community-inline-gathering .gathering-room:not(.is-recording) .gathering-watch-layout:not(:has(.gathering-video)) .gathering-questions { grid-column: 1; grid-row: 1; }
 .community-inline-gathering .gathering-room:not(.is-recording) .gathering-watch-layout:not(:has(.gathering-video)) .gathering-live { grid-column: 2; grid-row: 1; }
 @media(max-width:820px) {
   .community-inline-gathering .gathering-room:not(.is-recording) .gathering-watch-layout { grid-template-columns: minmax(0,1fr); }
-  .community-inline-gathering .gathering-watch-layout:has(.gathering-video:not(:has(.gathering-video-player))) .gathering-questions { grid-column: 1; grid-row: 2; }
-  .community-inline-gathering .gathering-watch-layout:has(.gathering-video:not(:has(.gathering-video-player))) .gathering-live { grid-column: 1; grid-row: 3; }
-  .community-inline-gathering .gathering-watch-layout:has(.gathering-video:not(:has(.gathering-video-player))) .gathering-attendees { grid-column: 1; grid-row: 4; }
+  .community-inline-gathering .gathering-watch-layout:has(.gathering-video):not(:has(.gathering-video-player)) .gathering-questions { grid-column: 1; grid-row: 2; }
+  .community-inline-gathering .gathering-watch-layout:has(.gathering-video):not(:has(.gathering-video-player)) .gathering-live { grid-column: 1; grid-row: 3; }
+  .community-inline-gathering .gathering-watch-layout:has(.gathering-video):not(:has(.gathering-video-player)) .gathering-attendees { grid-column: 1; grid-row: 4; }
   .community-inline-gathering .gathering-room:not(.is-recording) .gathering-watch-layout:not(:has(.gathering-video)) { grid-template-columns: minmax(0,1fr); }
   .community-inline-gathering .gathering-room:not(.is-recording) .gathering-watch-layout:not(:has(.gathering-video)) .gathering-live { grid-column: 1; grid-row: 2; }
 }

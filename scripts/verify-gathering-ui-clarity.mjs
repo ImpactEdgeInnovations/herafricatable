@@ -15,4 +15,6 @@ assert(feed.includes('event.target.value === "more" ? setMoreTopics(true) : setC
 const css=read("app/community-overhaul.css");
 assert(css.includes('--wine: var(--room-accent)'));
 assert(css.includes('background: var(--room-accent-soft)'));
+assert(!css.includes(':has(.gathering-video:not(:has('), 'CSS must not nest :has inside :has');
+assert(css.includes(':has(.gathering-video):not(:has(.gathering-video-player))'));
 console.log('Gathering clarity contracts passed: Host-only attendance rendering, progressive Host/recap tools, five primary topic choices and scoped theme accents. Real-role/browser acceptance is separate.');
