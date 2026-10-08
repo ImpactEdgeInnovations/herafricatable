@@ -4075,6 +4075,11 @@ svg {
     z-index: 98;
   }
 
+  .floating-table-guide.is-open .floating-guide-character {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .floating-guide-panel,
   .floating-table-guide[data-side="left"] .floating-guide-panel {
     position: fixed;

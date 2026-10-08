@@ -61,9 +61,10 @@ activate(setOpen,{detail:0}); assert.equal(expanded,false,'Keyboard click must a
 let restoredFocus=false;
 const closeBody=floating.match(/function closeGuide\(\) \{([\s\S]*?)\n  \}/)?.[1];
 assert(closeBody);
-new Function('setOpen','launcher',closeBody)(setOpen,{current:{focus(){restoredFocus=true;}}});
+new Function('setOpen','launcher','requestAnimationFrame',closeBody)(setOpen,{current:{focus(){restoredFocus=true;}}},callback=>callback());
 assert.equal(expanded,false); assert.equal(restoredFocus,true);
 for(const contract of ['aria-expanded={open}','id="floating-table-guide-panel"','event.key === "Escape"','cancelAnimationFrame(frame)']) assert(floating.includes(contract),contract);
+assert(read('app/globals.css').includes('.floating-table-guide.is-open .floating-guide-character {\n    visibility: hidden;\n    pointer-events: none;'), 'The open mobile panel must not be covered by its floating launcher');
 const dockFunctions = ts.transpileModule(floating.slice(floating.indexOf('function clampPosition('), floating.indexOf('function quotaLabel(')), {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const dockAt = (width,height,actionTop,controls=[]) => new Function('window','document','DOCK_SIZE','EDGE_GAP',`${dockFunctions};return defaultPosition();`)(
   {innerWidth:width,innerHeight:height},

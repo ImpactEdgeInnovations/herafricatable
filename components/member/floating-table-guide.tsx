@@ -187,7 +187,7 @@ export function FloatingTableGuide({
 
   function closeGuide() {
     setOpen(false);
-    launcher.current?.focus();
+    requestAnimationFrame(() => launcher.current?.focus());
   }
 
   useEffect(() => {
