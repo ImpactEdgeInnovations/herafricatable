@@ -182,7 +182,7 @@
 .community-room-page:has(.community-inline-gathering) > :is(.community-next-gathering, .community-live-notice) { display: none; }
 .community-inline-gathering .gathering-room-hero { padding: 12px 0 16px; }
 .community-inline-gathering .gathering-room-status { margin: 8px 0; }
-.community-inline-gathering .gathering-room-hero h1 { font: 600 clamp(1.35rem, 2vw, 1.75rem) var(--sans, Arial, sans-serif); letter-spacing: -.025em; }
+.community-inline-gathering .gathering-room-hero :is(h1,h2) { font: 600 clamp(1.35rem, 2vw, 1.75rem) var(--sans, Arial, sans-serif); letter-spacing: -.025em; }
 .community-inline-gathering .gathering-room-hero > p { margin: 8px 0; font-size: .9rem; line-height: 1.5; }
 .community-inline-gathering .gathering-room-hero dl { margin: 12px 0 0; gap: 16px; }
 .community-inline-gathering .gathering-room-hero dd { font-size: .85rem; }
@@ -191,6 +191,35 @@
 .community-room-page:has(.community-inline-gathering) > .community-room-hero { margin: 16px auto 8px; }
 .community-room-page:has(.community-inline-gathering) .community-room-hero-copy > p:last-of-type { display: none; }
 .gathering-room [hidden] { display: none !important; }
+.community-room-page[data-brand-accent] :is(.community-gatherings,.community-conversation-shell,.community-media,.community-member-roster,.community-next-gathering) { --wine: var(--room-accent); }
+.community-room-page .community-room-icon.is-placeholder,
+.community-room-page .community-person-avatar.is-placeholder { background: var(--room-accent-soft); }
+.community-room-page .community-local-navigation a:hover { background: var(--room-accent-soft); }
+.community-room-page .community-local-navigation a[aria-current="page"] { background: var(--room-accent-soft); }
+.community-room-page .community-room-title .eyebrow { color: var(--room-accent); }
+.community-room-page .community-room-cover { border-bottom: 3px solid var(--room-accent); }
+.community-room-page .community-next-gathering { border-left-color: var(--room-accent); background: var(--room-accent-soft); }
+.community-room-page .gathering-room .button-outline { color: var(--room-accent); border-color: var(--room-accent); background: #fff; }
+.community-room-page .gathering-room-status span { color: var(--room-accent); background: var(--room-accent-soft); }
+.community-inline-gathering .gathering-watch-layout { gap: 24px; padding: 20px 0; }
+.community-inline-gathering .gathering-live { padding-top: 0; border-top: 0; }
+.community-inline-gathering .gathering-questions > header,
+.community-inline-gathering .gathering-live > header { display: block; margin-bottom: 16px; }
+.community-inline-gathering :is(.gathering-questions,.gathering-live) header p { margin: 6px 0; font-size: .875rem; line-height: 1.5; max-width: none; }
+.community-inline-gathering .gathering-video:not(:has(.gathering-video-player)) { grid-column: 1 / -1; padding: 0 0 12px; border-bottom: 1px solid #e4dfdc; }
+.gathering-host-panel { margin: 16px 0; border: 1px solid #e4dfdc; border-radius: 8px; background: #fff; }
+.gathering-host-panel > summary { min-height: 48px; padding: 14px 18px; color: var(--wine); font-size: .95rem; font-weight: 600; cursor: pointer; }
+.gathering-host-panel > summary small { margin-left: 12px; color: #655e60; font-weight: 400; font-size: .8rem; }
+.gathering-host-panel .gathering-host-settings { margin: 0; padding: 18px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.gathering-host-panel .gathering-host-settings > header { display: block; }
+.gathering-host-panel .gathering-host-settings > header p { margin: 8px 0; max-width: 700px; font-size: .875rem; }
+.gathering-host-attendance { padding: 10px 12px; background: var(--room-accent-soft,#f3e9ec); border-radius: 6px; font-size: .875rem; }
+.community-inline-gathering .gathering-recap { margin: 16px 0; padding: 18px; border-radius: 8px; border: 1px solid #e4dfdc; background: #fff; box-shadow: none; }
+.community-inline-gathering .gathering-recap > header { display: block; }
+.community-inline-gathering .gathering-recap > header h2 { margin: 4px 0 8px; font-size: 1.1rem; }
+.community-inline-gathering .gathering-recap > header p { margin: 6px 0; font-size: .875rem; }
+.gathering-recap-editor > summary { min-height: 44px; padding: 12px 0; color: var(--wine); cursor: pointer; font-size: .875rem; font-weight: 600; }
+@media(max-width:640px) { .gathering-host-panel > summary small { display: block; margin: 6px 0 0; } .community-inline-gathering .gathering-watch-layout { grid-template-columns: minmax(0,1fr); } .community-inline-gathering :is(.gathering-questions,.gathering-live,.gathering-attendees) { grid-column: 1; } }
 .gathering-discussion-replies, .gathering-room .gathering-message-list { max-height: 420px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scroll-padding: 12px; border: 1px solid #e4dfdc; border-radius: 8px; padding: 0 14px; }
 .gathering-discussion-replies article, .gathering-room .gathering-message-list article { margin: 0; padding: 12px 0; border: 0; border-bottom: 1px solid #e4dfdc; border-radius: 0; background: transparent; box-shadow: none; }
 .gathering-discussion-replies article:last-child, .gathering-room .gathering-message-list article:last-child { border-bottom: 0; }

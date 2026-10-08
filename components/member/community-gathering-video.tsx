@@ -79,7 +79,7 @@ export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, init
   if (!canManage && !watchable && allowed) return null;
   return (
     <section className="gathering-video" id="gathering-video" aria-labelledby="gathering-video-title">
-      <header><h2 id="gathering-video-title">{video?.viewing_mode === "watch_anytime" ? "Watch anytime" : finished ? "Watch the replay" : "Watch & discuss"}</h2>
+      <header hidden={!watchable && canManage}><h2 id="gathering-video-title">{video?.viewing_mode === "watch_anytime" ? "Watch anytime" : finished ? "Watch the replay" : "Watch & discuss"}</h2>
         <p>{video?.viewing_mode === "watch_anytime" ? <>Watch at your own pace, then <a href="#gathering-discussion">join the discussion</a>.</> : "Watch here and use this gathering’s conversation to share your thoughts."}</p></header>
       {!allowed ? <p role="status">Video access has changed. Return to your Community to check your membership.</p> : null}
       {watchable ? <>
@@ -96,8 +96,8 @@ export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, init
         <p className="gathering-video-note">For Community members. A YouTube link can still be shared and watched outside this platform.</p>
         {playing ? <details><summary>Video not playing?</summary><p>The Host may not have started yet, or YouTube may have disabled playback here.</p>
           <a href={`https://www.youtube.com/watch?v=${video.video_id}`} target="_blank" rel="noopener noreferrer">Open on YouTube ↗</a></details> : null}
-      </> : canManage ? <p className="gathering-video-note">{video?.admin_paused ? "Admin has paused this video. Only Admin can resume it." : video?.video_id ? "This video is hidden from members." : "No video added. Livestreaming is optional."}</p> : null}
-      {canManage ? <details className="gathering-video-settings"><summary>{video?.video_id ? "Manage video" : "Add a livestream link"}</summary>
+      </> : canManage && video?.video_id ? <p className="gathering-video-note">{video?.admin_paused ? "Admin has paused this video. Only Admin can resume it." : "This video is hidden from members."}</p> : null}
+      {canManage ? <details className="gathering-video-settings"><summary>{video?.video_id ? "Manage video" : "Add an optional video"}</summary>
         {!ready ? <p role="status">Video settings are not available yet. Ask Admin to complete the livestream setup.</p> : <>
           <form onSubmit={(event) => void save(event)}>
             {video?.content_kind === "prerecorded" ? <p>Members can watch and reply at their own pace.</p> : <><label htmlFor="gathering-viewing-mode">How will members watch?</label>

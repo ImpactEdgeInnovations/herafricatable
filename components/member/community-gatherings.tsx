@@ -150,7 +150,7 @@ export function CommunityGatherings({
             {card.city ? `${card.city}, ${card.country}` : card.format === "virtual" ? "Online" : card.format === "hybrid" ? "In person and online" : "In person"}
           </small>
           {new Date(card.ends_at).getTime() >= Date.now() ? <div className="gathering-card-signals">
-            <span>{Number(card.going_count)} going</span>
+            {canManage ? <span>{Number(card.going_count)} going · Host only</span> : null}
             {Number(card.question_count) ? <span>{Number(card.question_count)} questions</span> : null}
           </div> : null}
         </div>

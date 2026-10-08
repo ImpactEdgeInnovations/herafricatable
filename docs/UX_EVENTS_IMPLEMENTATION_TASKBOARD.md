@@ -186,6 +186,15 @@ Wave 0 owner actions and Wave 1 engineering work may proceed in parallel. No wav
 
 ## What to monitor here in Codex
 
+### 8 October — Gathering room, themes and topic clarity
+
+- Implemented: remove attendance totals from member gathering hero/cards; total remains in Host-only expandable tools. Hide an empty opted-in attendee section for all members.
+- Implemented: compact gathering layout, in-page expandable Host settings and recap editor, one initial RSVP action, contextual question opening date and reduced empty-video/live-chat messaging. No booking, timing, moderation or permission rules changed.
+- Implemented: Ocean and other saved Community accents carry through local tabs, placeholders, gathering badges, links, outline buttons and the upcoming-gathering strip. The background and body text remain neutral; main platform navigation keeps its own branding.
+- Implemented: five primary topic choices, with secondary/earlier categories behind More topics. Existing records and category search are preserved, including restored drafts using earlier types. This is presentation consolidation, not destructive database category merging.
+- Acceptance: source checks, existing test suite and production build are required; real member-versus-Host and mobile visual checks must be recorded separately. No SQL required for this pass.
+
+
 ### 8 October — Community creation entry and location discovery
 
 - Implemented: `Start a community` links and the direct `#create-community` URL open the application form, including a fresh application for an existing approved Host. Existing pending applications are continued rather than duplicated.

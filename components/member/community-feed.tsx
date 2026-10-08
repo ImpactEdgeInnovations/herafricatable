@@ -28,7 +28,7 @@ const hostConversationTypes = [
   { label: "Announcement", value: "announcement" },
 ] as const;
 
-const everydayTopics = new Set(["discussion", "introduction", "ask", "offer", "win"]);
+const everydayTopics = new Set(["discussion", "introduction", "ask", "opportunity", "resource"]);
 
 const categoryLabels = new Map<string, string>([
   ...conversationTypes.map((item) => [item.value, item.label] as const),
@@ -207,6 +207,8 @@ export function CommunityFeed({
     useState<AttachmentMode>("none");
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [category, setCategory] = useState("all");
+  const [moreTopics, setMoreTopics] = useState(false);
+  const [morePostTypes, setMorePostTypes] = useState(false);
   const availableTypes = canManage
     ? [...hostConversationTypes, ...conversationTypes]
     : [...conversationTypes];
@@ -793,10 +795,10 @@ export function CommunityFeed({
         </div>
         {enhanced ? <label className="community-topic-picker">
           Browse topics
-          <select value={category} onChange={event => setCategory(event.target.value)}>
+          <select value={category} onChange={event => event.target.value === "more" ? setMoreTopics(true) : setCategory(event.target.value)}>
             <option value="all">All topics</option>
             <optgroup label="Everyday conversations">{conversationTypes.filter(item => everydayTopics.has(item.value)).map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</optgroup>
-            <optgroup label="More topics">{[...hostConversationTypes, ...conversationTypes.filter(item => !everydayTopics.has(item.value))].map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</optgroup>
+            {moreTopics || (category !== "all" && !everydayTopics.has(category)) ? <optgroup label="More topics">{[...hostConversationTypes, ...conversationTypes.filter(item => !everydayTopics.has(item.value))].map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</optgroup> : <option value="more">More topics…</option>}
           </select>
         </label> : <p>Ask a question, offer help or share an update.</p>}
       </header>
@@ -846,7 +848,7 @@ export function CommunityFeed({
                   What are you sharing?
                   <select
                     name="category"
-                    onChange={(event) => setComposerType(event.target.value)}
+                    onChange={(event) => event.target.value === "more" ? setMorePostTypes(true) : setComposerType(event.target.value)}
                     value={composerType}
                   >
                     <optgroup label="Everyday conversations">{availableTypes.filter(item => everydayTopics.has(item.value)).map((item) => (
@@ -854,7 +856,7 @@ export function CommunityFeed({
                         {item.label}
                       </option>
                     ))}</optgroup>
-                    <optgroup label="More topics">{availableTypes.filter(item => !everydayTopics.has(item.value)).map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</optgroup>
+                    {morePostTypes || !everydayTopics.has(composerType) ? <optgroup label="More topics">{availableTypes.filter(item => !everydayTopics.has(item.value)).map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</optgroup> : <option value="more">More topics…</option>}
                   </select>
                 </label>
               ) : null}

@@ -1,0 +1,18 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const read=file=>readFileSync(new URL(`../${file}`,import.meta.url),"utf8");
+const room=read("components/member/community-gathering-room.tsx");
+assert(!room.includes('<dt>Going</dt>'));
+assert(room.includes('room.can_manage && !isRecording ? <details className="gathering-host-panel"'));
+assert(room.includes('Only Hosts see this total.'));
+assert(room.includes('hidden={isRecording || !attendees.length}'));
+assert(room.includes('onClick={()=>setHostToolsOpen(true)}'));
+assert(room.includes('className="gathering-recap-editor"'));
+assert(read("components/member/community-gatherings.tsx").includes('canManage ? <span>{Number(card.going_count)}'));
+const feed=read("components/member/community-feed.tsx");
+assert(feed.includes('new Set(["discussion", "introduction", "ask", "opportunity", "resource"])'));
+assert(feed.includes('event.target.value === "more" ? setMoreTopics(true) : setCategory'));
+const css=read("app/community-overhaul.css");
+assert(css.includes('--wine: var(--room-accent)'));
+assert(css.includes('background: var(--room-accent-soft)'));
+console.log('Gathering clarity contracts passed: Host-only attendance rendering, progressive Host/recap tools, five primary topic choices and scoped theme accents. Real-role/browser acceptance is separate.');

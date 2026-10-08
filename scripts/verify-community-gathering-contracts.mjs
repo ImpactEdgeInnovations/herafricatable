@@ -53,10 +53,10 @@ assert(page.includes("membership_status !== \"active\"") && page.includes("get_c
   "Gathering route must require active Community membership and use its protected RPC");
 for (const contract of [
   "Let other attendees see me",
-  "Questions for the room",
+  "Questions",
   "Live conversation",
   "Report this message",
-  "Host settings",
+  "Host tools",
   "Publish to Conversations",
   "Gathering reminder",
   "One day before",
