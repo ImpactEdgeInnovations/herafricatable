@@ -1234,7 +1234,7 @@ export function NetworkHub({
               Only profiles members choose to share appear here.
             </p>
           </div>
-          <form className="directory-filters" method="get">
+          <form key={JSON.stringify([searchQuery, cityFilter, goalFilter])} className="directory-filters" method="get">
             <label>
               <span>Name or work</span>
               <input

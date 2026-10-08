@@ -47,6 +47,21 @@ const member = {avatar_url:null,bio:'A test profile',business_name:null,city:'Na
 const props = {members:[member],connections:[],connectionCode:'ABC12345',contacts:[],blockedMembers:[],savedMembers:[],suggestedMembers:[],curatedIntroductions:[],connectionAvailability:[],followups:[],outcomes:[],cityFilter:'',goalFilter:'',searchQuery:''};
 const render = extra=>renderToStaticMarkup(React.createElement(NetworkHub,{...props,...extra}));
 const healthy = render({});
+function filterFormKey(element) {
+  if (!element || typeof element !== 'object') return undefined;
+  if (Array.isArray(element)) {
+    for (const child of element) {
+      const found = filterFormKey(child);
+      if (found !== undefined) return found;
+    }
+    return undefined;
+  }
+  if (element.type === 'form' && element.props.className === 'directory-filters') return element.key;
+  return filterFormKey(element.props?.children);
+}
+assert.equal(filterFormKey(NetworkHub(props)), JSON.stringify(['','','']));
+assert.notEqual(filterFormKey(NetworkHub({...props,searchQuery:'missing'})), filterFormKey(NetworkHub(props)), 'Filter fields must remount when server query changes, including Show all members recovery');
+assert.equal(filterFormKey(NetworkHub({...props,cityFilter:'Nairobi',goalFilter:'business'})), JSON.stringify(['','Nairobi','business']));
 assert(healthy.includes('id="browse-members"'));
 assert(healthy.includes('name="q"') && healthy.includes('name="city"') && healthy.includes('name="goal"'));
 assert(healthy.includes('1 member available to meet'));
