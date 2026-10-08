@@ -24,6 +24,7 @@ assert(proposal.includes('YouTube video or livestream <small>Optional</small>'),
 assert(!proposal.includes('values.mediaChoice === "video" && values.videoLink.trim()'),"Photos must not disable a supplied YouTube link");
 assert(proposal.includes('initialVideo={openedRoom.video}')&&proposal.includes('initialLink={openedRoom.videoDraft}'),"Confirmed video and failed-link retry must reach the player");
 assert(proposal.includes('if(submit)clearDraft(initialValues());'),"Private draft save must retain optional link details until opening");
+assert(proposal.includes('community-gathering-photo-choice')&&css.includes('input[type="checkbox"] { width: 18px; height: 18px;'),"Photo choice must not inherit full-width text-field styling");
 assert(proposal.includes("list_community_gathering_cards") && proposal.includes("Open the gathering first"));
 assert(!room.includes('className="community-overview-links"'), "Do not duplicate the Community tabs with three Home cards");
 assert(read("components/member/community-host-workspace.tsx").includes("Choose an event"));
