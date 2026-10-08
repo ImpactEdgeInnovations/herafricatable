@@ -17,6 +17,7 @@ import "./community-overhaul.css";
 import "./event-detail-refinement.css";
 import "./product-ui-foundation.css";
 import "./member-return-refinement.css";
+import "./member-directory-refinement.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),

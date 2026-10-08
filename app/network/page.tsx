@@ -15,15 +15,21 @@ import {
 } from "@/components/member/network-hub";
 import { MemberHeader } from "@/components/member/member-header";
 import { createClient } from "@/lib/supabase/server";
+import { memberDirectoryWindow, memberPageNumber, memberPageSize } from "@/lib/member-directory-paging.mjs";
 
 export const dynamic = "force-dynamic";
 
 export default async function NetworkPage({
   searchParams,
 }: {
-  searchParams: Promise<{ city?: string; goal?: string; q?: string }>;
+  searchParams: Promise<{ city?: string; goal?: string; q?: string; page?: string; view?: string }>;
 }) {
-  const { city, goal, q } = await searchParams;
+  const query = await searchParams;
+  const city = typeof query.city === "string" ? query.city.trim().slice(0, 120) : "";
+  const goal = typeof query.goal === "string" ? query.goal.slice(0, 80) : "";
+  const q = typeof query.q === "string" ? query.q.trim().slice(0, 120) : "";
+  const page = memberPageNumber(query.page);
+  const view = query.view === "connections" ? "connections" : "find";
   const supabase = await createClient();
   const {
     data: { user },
@@ -47,14 +53,14 @@ export default async function NetworkPage({
     followupResult,
     outcomeResult,
   ] = await Promise.all([
-      supabase.rpc("ensure_connection_code"),
-      supabase.rpc("list_member_directory", {
+      view === "connections" ? supabase.rpc("ensure_connection_code") : Promise.resolve({ data: "", error: null }),
+      view === "find" ? supabase.rpc("list_member_directory", {
         p_city: city || null,
         p_goal: goal || null,
-        p_limit: 24,
-        p_offset: 0,
+        p_limit: memberPageSize + 1,
+        p_offset: (page - 1) * memberPageSize,
         p_search: q || null,
-      }),
+      }) : Promise.resolve({ data: [], error: null }),
       supabase.rpc("list_my_network_with_context"),
       supabase.rpc("list_my_blocks"),
       supabase.rpc("list_my_saved_profiles"),
@@ -74,7 +80,7 @@ export default async function NetworkPage({
   );
   const contacts = (
     await Promise.all(
-      accepted.map(async (item) => {
+      (view === "connections" ? accepted : []).map(async (item) => {
         const { data } = await supabase.rpc("get_connection_contact", {
           p_member_id: item.other_user_id,
         });
@@ -89,6 +95,7 @@ export default async function NetworkPage({
   ).filter((item): item is ConnectionContact => Boolean(item));
   // Discovery and request availability are essential; optional tools must not blank the directory.
   const coreReadError = Boolean(directoryResult.error || networkResult.error || availabilityResult.error || blocksResult.error);
+  const directory = memberDirectoryWindow((directoryResult.data as DirectoryMember[] | null) ?? [], page);
   const unavailableAreas = [
     codeResult.error ? "code" : null,
     savedResult.error ? "saved" : null,
@@ -104,14 +111,7 @@ export default async function NetworkPage({
         <div>
           <p className="eyebrow">Members</p>
           <h1>Meet members</h1>
-          <p>
-            Find someone by her work, location or interests. You can message
-            each other once you both agree to connect.
-          </p>
-          {!coreReadError ? <nav className="network-section-links" aria-label="Members sections">
-            <a href="#browse-members">Find members</a>
-            {connections.length ? <a href="#network-connections">Your connections</a> : null}
-          </nav> : null}
+          <p>Find people to meet, or keep in touch with your connections.</p>
         </div>
         {!networkResult.error && (accepted.length || pending.length) ? <aside aria-label="Network summary">
           <span>
@@ -137,7 +137,10 @@ export default async function NetworkPage({
         </section>
       ) : (
         <NetworkHub
-          members={(directoryResult.data as DirectoryMember[] | null) ?? []}
+          members={directory.members}
+          directoryPage={page}
+          hasNextDirectoryPage={directory.hasNextPage}
+          directoryView={view}
           connections={connections}
           connectionCode={(codeResult.data as string) ?? ""}
           contacts={contacts}

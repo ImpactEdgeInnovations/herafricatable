@@ -5,6 +5,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { communityReturnSuggestion, memberNextSuggestion, recentPastEvent } from '../lib/member-return-suggestions.mjs';
 import { matchesDiscoverySearch } from '../lib/discovery-search.mjs';
+import {memberDirectoryHref,memberDirectoryWindow,memberPageNumber,memberPageSize} from '../lib/member-directory-paging.mjs';
 const read = path => readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
 const community = {name:'Lavington Women',slug:'lavington-women',new_activity_count:2,new_conversation_count:1,new_reply_count:1};
 const options = {community,enabled:true,featureError:false,communityError:false,activityError:false};
@@ -24,7 +25,7 @@ assert.equal(recentPastEvent([{...past,ends_at:'2026-10-09T12:00:00Z'}],now),nul
 const fallback = {label:'Events',action:'View events',description:'Browse events',href:'/events'};
 const next = {unreadMessages:0,dueFollowups:[],pastEvent:past,unreadNotifications:0,fallback};
 assert.equal(memberNextSuggestion({...next,unreadMessages:1}).href,'/messages');
-assert.equal(memberNextSuggestion({...next,dueFollowups:[{next_step:'Compare notes',display_name:'Test member'}]}).href,'/network#network-connections');
+assert.equal(memberNextSuggestion({...next,dueFollowups:[{next_step:'Compare notes',display_name:'Test member'}]}).href,'/network?view=connections#network-connections');
 assert.equal(memberNextSuggestion(next).href,'/events/rehearsal/follow-up');
 assert.equal(memberNextSuggestion({...next,pastEvent:null,unreadNotifications:2}).href,'/notifications');
 assert.equal(memberNextSuggestion({...next,pastEvent:null}),fallback);
@@ -32,9 +33,9 @@ assert.equal(memberNextSuggestion({...next,pastEvent:null}),fallback);
 function component(path,name) {
   const source = read(path).replace(/^import[\s\S]*?;\n/gm,'').replace(/^export /gm,'');
   const code = ts.transpileModule(source,{compilerOptions:{jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
-  return new Function('React','Link','useMemo','useState','useRouter','createClient','useActionDialog','memberErrorMessage','matchesDiscoverySearch',`${code};return ${name};`)(
+  return new Function('React','Link','useMemo','useState','useRouter','createClient','useActionDialog','memberErrorMessage','matchesDiscoverySearch','memberDirectoryHref','memberPageSize',`${code};return ${name};`)(
     React,({href,children,...props})=>React.createElement('a',{href,...props},children),
-    fn=>fn(),initial=>[typeof initial==='function'?initial():initial,()=>{}],()=>({refresh(){}}),()=>({rpc(){throw Error('Rendering must not call a database command');}}),()=>({dialog:null,ask:async()=>null}),()=> 'Try again',matchesDiscoverySearch,
+    fn=>fn(),initial=>[typeof initial==='function'?initial():initial,()=>{}],()=>({refresh(){}}),()=>({rpc(){throw Error('Rendering must not call a database command');}}),()=>({dialog:null,ask:async()=>null}),()=> 'Try again',matchesDiscoverySearch,memberDirectoryHref,memberPageSize,
   );
 }
 const CommunityDirectory = component('components/member/community-directory.tsx','CommunityDirectory');
@@ -71,8 +72,42 @@ assert(failed.includes('Rehearsal Member') && failed.includes('Some extras could
 assert(/<button[^>]*disabled=""[^>]*>Save<\/button>/.test(failed));
 assert(!failed.includes('network-code-tools'));
 assert(render({members:[],searchQuery:'missing'}).includes('Show all members'));
+// Exercise 100 authorised profiles without creating public dummy accounts.
+const hundred = Array.from({length:100},(_,index)=>({...member,user_id:`fixture-${index}`,display_name:`Member ${index+1}`}));
+const seen = [];
+for(let pageNumber=1;pageNumber<=9;pageNumber++) {
+  const offset=(pageNumber-1)*memberPageSize;
+  const window=memberDirectoryWindow(hundred.slice(offset,offset+memberPageSize+1),pageNumber);
+  assert(window.members.length<=12);
+  assert.equal(window.hasNextPage,pageNumber<9);
+  seen.push(...window.members.map(row=>row.user_id));
+  const html=render({members:window.members,directoryPage:pageNumber,hasNextDirectoryPage:window.hasNextPage,cityFilter:'Nairobi',searchQuery:'Trade & business'});
+  assert.equal((html.match(/<article[ >]/g)||[]).length,window.members.length);
+  if(pageNumber>1)assert(html.includes('rel="prev"'));
+  if(window.hasNextPage)assert(html.includes('rel="next"'));
+  else assert(!html.includes('rel="next"'));
+  assert(!html.includes('A test profile'), 'Full biographies belong on the profile, not every card');
+}
+assert.equal(new Set(seen).size,100);
+assert.deepEqual(seen,hundred.map(row=>row.user_id));
+for(const invalid of [undefined,'0','-1','2x','1.5','1e2','999999999', ['2']])assert.equal(memberPageNumber(invalid),1);
+assert.equal(memberPageNumber('3'),3);
+const pagedHref=memberDirectoryHref({page:2,city:'Nairobi',goal:'learn',search:'Trade & business'});
+const parsedHref=new URL(pagedHref,'https://example.invalid');
+assert.equal(parsedHref.searchParams.get('q'),'Trade & business');
+assert.equal(parsedHref.searchParams.get('city'),'Nairobi');
+assert.equal(parsedHref.searchParams.get('goal'),'learn');
+assert.equal(parsedHref.searchParams.get('page'),'2');
+assert(!memberDirectoryHref({page:1}).includes('page='));
+assert(render({directoryPage:3,members:[],cityFilter:'Nairobi'}).includes('Back to first page'));
+const findMarkup=render({connections:[{connection_id:'only-on-other-tab',status:'accepted'}]});
+assert(!findMarkup.includes('id="network-connections"'));
+const connectionsMarkup=render({directoryView:'connections'});
+assert(connectionsMarkup.includes('id="network-connections"') && connectionsMarkup.includes('No connections yet'));
+assert(!connectionsMarkup.includes('id="browse-members"'));
+assert(connectionsMarkup.includes('aria-current="page">Your connections'));
 const connection = {avatar_url:null,city:'Nairobi',company:null,connection_id:'connection',country:'Kenya',direction:'outgoing',display_name:'Test connection',job_title:null,introduction_note:null,other_user_id:'other',status:'accepted',updated_at:'2026-10-08'};
-const unavailablePrivateTools = render({connections:[connection],unavailableAreas:['followups','outcomes']});
+const unavailablePrivateTools = render({connections:[connection],directoryView:'connections',unavailableAreas:['followups','outcomes']});
 assert(/<button[^>]*disabled=""[^>]*>Add reminder<\/button>/.test(unavailablePrivateTools));
 assert(/<button[^>]*disabled=""[^>]*>Add result<\/button>/.test(unavailablePrivateTools));
 const page = read('app/network/page.tsx');
@@ -80,10 +115,11 @@ const critical = page.slice(page.indexOf('const coreReadError'),page.indexOf('co
 for (const result of ['directoryResult.error','networkResult.error','availabilityResult.error','blocksResult.error']) assert(critical.includes(result));
 for (const result of ['codeResult.error','savedResult.error','followupResult.error','outcomeResult.error']) assert(!critical.includes(result));
 const pageCode = ts.transpileModule(page.replace(/^import[\s\S]*?;\n/gm,'').replace(/^export default /gm,'').replace(/^export /gm,''),{compilerOptions:{jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
-async function pageHtml(failedRpc, authenticated=true) {
-  const fakeClient = {auth:{getUser:async()=>({data:{user:authenticated?{id:'fixture'}:null}})},from:()=>({select(){return this;},eq(){return this;},maybeSingle:async()=>({data:{access_status:'active'}})}),rpc:async name=>name===failedRpc?{data:null,error:{message:'Simulated unavailable read'}}:{data:name==='list_member_directory'?[member]:name==='ensure_connection_code'?'ABC12345':[],error:null}};
-  const Page = new Function('React','Link','redirect','NetworkHub','MemberHeader','createClient',`${pageCode};return NetworkPage;`)(React,({href,children})=>React.createElement('a',{href},children),path=>{throw Error(`redirect:${path}`);},props=>React.createElement('div',{'data-testid':'loaded-directory'},`${props.members.length}:${props.unavailableAreas.join(',')}`),()=>null,async()=>fakeClient);
-  return renderToStaticMarkup(await Page({searchParams:Promise.resolve({})}));
+const pageCalls=[];
+async function pageHtml(failedRpc, authenticated=true,query={}) {
+  const fakeClient = {auth:{getUser:async()=>({data:{user:authenticated?{id:'fixture'}:null}})},from:()=>({select(){return this;},eq(){return this;},maybeSingle:async()=>({data:{access_status:'active'}})}),rpc:async (name,args)=>{pageCalls.push({name,args});return name===failedRpc?{data:null,error:{message:'Simulated unavailable read'}}:{data:name==='list_member_directory'?[member]:name==='ensure_connection_code'?'ABC12345':[],error:null};}};
+  const Page = new Function('React','Link','redirect','NetworkHub','MemberHeader','createClient','memberDirectoryWindow','memberPageNumber','memberPageSize',`${pageCode};return NetworkPage;`)(React,({href,children})=>React.createElement('a',{href},children),path=>{throw Error(`redirect:${path}`);},props=>React.createElement('div',{'data-testid':'loaded-directory'},`${props.members.length}:${props.unavailableAreas.join(',')}`),()=>null,async()=>fakeClient,memberDirectoryWindow,memberPageNumber,memberPageSize);
+  return renderToStaticMarkup(await Page({searchParams:Promise.resolve(query)}));
 }
 for (const rpc of ['list_my_saved_profiles','list_my_connection_followups','list_my_connection_outcomes','ensure_connection_code']) assert((await pageHtml(rpc)).includes('loaded-directory'),`${rpc} must not blank Members`);
 for (const rpc of ['list_member_directory','list_my_network_with_context','list_connection_availability','list_my_blocks']) {
@@ -92,10 +128,23 @@ for (const rpc of ['list_member_directory','list_my_network_with_context','list_
   assert(html.includes('We could not open the member list'));
 }
 await assert.rejects(()=>pageHtml(null,false),/redirect:\/sign-in/);
+pageCalls.length=0;
+await pageHtml(null,true,{page:'3',q:'Trade',city:'Nairobi',goal:'learn'});
+assert.deepEqual(pageCalls.find(call=>call.name==='list_member_directory').args,{p_city:'Nairobi',p_goal:'learn',p_limit:13,p_offset:24,p_search:'Trade'});
+assert(!pageCalls.some(call=>call.name==='ensure_connection_code' || call.name==='get_connection_contact'), 'Find members must not create codes or fetch private contacts');
+pageCalls.length=0;
+await pageHtml(null,true,{view:'connections'});
+assert(!pageCalls.some(call=>call.name==='list_member_directory'),'Connections must not load unused directory pages');
+assert(pageCalls.some(call=>call.name==='ensure_connection_code'));
 assert(read('app/home/page.tsx').includes('<InstallAppButton compact />'));
 assert(read('app/explore/page.tsx').includes('<InstallAppButton compact />'));
 const css = read('app/member-return-refinement.css');
 assert(css.includes('grid-template-columns:minmax(0,420px) minmax(160px,240px)'));
 assert(css.includes('@media(max-width:640px)'));
 assert(!/\b(?:body|html|:root)\s*\{/.test(css));
+const compactCss=read('app/member-directory-refinement.css');
+assert(compactCss.includes('repeat(3,minmax(0,1fr))'));
+assert(compactCss.includes('repeat(2,minmax(0,1fr))'));
+assert(compactCss.includes('@media(max-width:640px)'));
+assert(!compactCss.includes('overflow-y') && !compactCss.includes('max-height'), 'Browse with page scrolling, not a nested scroll box');
 console.log('Returning-member behaviour and rendered discovery passed: permission-projected catch-up, recent-event bounds, message/reminder priority, aligned search markup, real filter names, honest partial failures and disabled unknown private tools. Live role/device acceptance remains separate.');

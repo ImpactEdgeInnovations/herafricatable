@@ -5,6 +5,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
+import { memberDirectoryHref, memberPageSize } from "@/lib/member-directory-paging.mjs";
 
 export type DirectoryMember = {
   avatar_url: string | null;
@@ -169,6 +170,9 @@ export function NetworkHub({
   goalFilter,
   searchQuery,
   unavailableAreas = [],
+  directoryPage = 1,
+  hasNextDirectoryPage = false,
+  directoryView = "find",
 }: {
   members: DirectoryMember[];
   connections: NetworkConnection[];
@@ -185,6 +189,9 @@ export function NetworkHub({
   goalFilter: string;
   searchQuery: string;
   unavailableAreas?: string[];
+  directoryPage?: number;
+  hasNextDirectoryPage?: boolean;
+  directoryView?: "find" | "connections";
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -676,12 +683,21 @@ export function NetworkHub({
       : networkView === "history"
         ? historyConnections
         : acceptedConnections;
+  const directoryLink = (page: number, view: "find" | "connections" = "find") => memberDirectoryHref({
+    page, view, city: cityFilter, goal: goalFilter, search: searchQuery,
+  });
   return (
     <>
       {dialog}
-      {unavailableAreas.length ? <p className="network-partial-notice" role="status">Some extras could not load: {unavailableAreas.map(area=>areaLabels[area]).join(", ")}. You can still find members. <Link href="/network">Try again</Link></p> : null}
+      <nav className="member-area-tabs" aria-label="Members sections">
+        <Link href={directoryLink(directoryPage)} aria-current={directoryView === "find" ? "page" : undefined}>Find members</Link>
+        <Link href={directoryLink(directoryPage, "connections")} aria-current={directoryView === "connections" ? "page" : undefined}>
+          Your connections{requestConnections.length ? <span>{requestConnections.length} invitation{requestConnections.length === 1 ? "" : "s"}</span> : null}
+        </Link>
+      </nav>
+      {unavailableAreas.length ? <p className="network-partial-notice" role="status">Some extras could not load: {unavailableAreas.map(area=>areaLabels[area]).join(", ")}. You can still find members. <Link href={directoryLink(directoryPage,directoryView)}>Try again</Link></p> : null}
       {message ? <p className="network-message" role="status">{message}</p> : null}
-      {connections.length ? (
+      {directoryView === "connections" ? (
         <section className="network-connections" id="network-connections">
           <div>
             <p className="eyebrow">Your connections</p>
@@ -1018,7 +1034,7 @@ export function NetworkHub({
                     ? "New invitations you send or receive will appear here."
                     : networkView === "history"
                       ? "Private reminders and results will appear here when you add them."
-                      : "Choose someone below and ask to connect when it feels relevant."}
+                      : "Open Find members, view a profile and ask to connect."}
                 </p>
               </div>
             )}
@@ -1026,7 +1042,7 @@ export function NetworkHub({
           </div>
         </section>
       ) : null}
-      {curatedIntroductions.some((item) => item.status === "pending") ? (
+      {directoryView === "connections" && curatedIntroductions.some((item) => item.status === "pending") ? (
         <section
           className="curated-introductions"
           id="curated-introductions"
@@ -1105,7 +1121,7 @@ export function NetworkHub({
           </div>
         </section>
       ) : null}
-      {savedMembers.length ? (
+      {directoryView === "connections" && savedMembers.length ? (
         <section className="saved-member-profiles">
           <header>
             <div>
@@ -1146,7 +1162,9 @@ export function NetworkHub({
           </div>
         </section>
       ) : null}
-      {suggestedMembers.length ? (
+      {directoryView === "find" && suggestedMembers.length ? (
+        <details className="member-suggestion-options">
+          <summary>People you may like to meet</summary>
         <section className="member-suggestions">
           <header>
             <div>
@@ -1219,8 +1237,9 @@ export function NetworkHub({
             ))}
           </div>
         </section>
+        </details>
       ) : null}
-      <section className="member-directory">
+      {directoryView === "find" ? <section className="member-directory">
         <section
           className="member-directory-browser"
           id="browse-members"
@@ -1231,7 +1250,7 @@ export function NetworkHub({
           <div>
             <h2 id="member-directory-title">Find members</h2>
             <p>
-              Only profiles members choose to share appear here.
+              Only shared profiles appear here. Messaging opens when you both agree to connect.
             </p>
           </div>
           <form key={JSON.stringify([searchQuery, cityFilter, goalFilter])} className="directory-filters" method="get">
@@ -1251,6 +1270,7 @@ export function NetworkHub({
               <input
                 defaultValue={cityFilter}
                 name="city"
+                maxLength={120}
                 placeholder="For example, Nairobi"
               />
             </label>
@@ -1273,7 +1293,11 @@ export function NetworkHub({
             </div>
           </form>
         </header>
-        {members.length ? <p className="member-directory-result-count" role="status">{members.length === 24 ? "Showing up to 24 members. Use the filters to narrow your search." : `${members.length} ${members.length === 1 ? "member" : "members"} ${searchQuery || cityFilter || goalFilter ? (members.length === 1 ? "matches your search" : "match your search") : "available to meet"}.`}</p> : null}
+        {members.length ? <p className="member-directory-result-count" role="status">
+          {directoryPage === 1 && !hasNextDirectoryPage
+            ? `${members.length} ${members.length === 1 ? "member" : "members"} ${searchQuery || cityFilter || goalFilter ? (members.length === 1 ? "matches your search" : "match your search") : "available to meet"}.`
+            : `Members ${(directoryPage - 1) * memberPageSize + 1}–${(directoryPage - 1) * memberPageSize + members.length}${searchQuery || cityFilter || goalFilter ? " matching your search" : ""}`}
+        </p> : null}
         {members.length ? (
           <div className="directory-grid">
             {members.map((member) => (
@@ -1299,31 +1323,12 @@ export function NetworkHub({
                       .filter(Boolean)
                       .join(" · ")}
                   </strong>
-                  <p>{member.bio}</p>
-                  {member.goals.length ? (
-                    <div className="directory-intent">
-                      <small>Would like to</small>
-                      <strong>
-                        {member.goals
-                          .slice(0, 2)
-                          .map((goal) => goalLabels[goal] ?? goal)
-                          .join(" · ")}
-                      </strong>
-                    </div>
-                  ) : null}
-                  {member.interests.length ? (
-                    <div className="directory-tags">
-                      {member.interests.slice(0, 3).map((x) => (
-                        <span key={x}>{x}</span>
-                      ))}
-                    </div>
-                  ) : null}
                 </div>
                 <Link
                   className="directory-profile-link"
                   href={`/members/${member.user_id}`}
                 >
-                  See profile
+                  View profile
                 </Link>
                 <div className="directory-card-actions">
                   <button
@@ -1369,27 +1374,25 @@ export function NetworkHub({
                     </button>
                   )}
                 </div>
-                <small className="directory-privacy-note">
-                  {connectionModeFor(member.user_id) === "open"
-                    ? "Messaging opens when you both agree."
-                    : connectionModeFor(member.user_id) === "curated_only"
-                      ? "Her Africa Table can make an introduction."
-                      : "She is taking a pause from new connections."}
-                </small>
               </article>
             ))}
           </div>
         ) : (
           <div className="admin-empty">
-            <strong>{searchQuery || cityFilter || goalFilter ? "No members match these filters" : "No profiles are available yet"}</strong>
-            <p>{searchQuery || cityFilter || goalFilter ? "Try a name, use fewer words or clear the filters." : "New profiles appear here when members choose to share them."}</p>
-            {searchQuery || cityFilter || goalFilter ? <Link className="button button-outline" href="/network">Show all members</Link> : null}
+            <strong>{directoryPage > 1 ? "No members on this page" : searchQuery || cityFilter || goalFilter ? "No members match these filters" : "No profiles are available yet"}</strong>
+            <p>{directoryPage > 1 ? "The list may have changed. Return to the first page to keep browsing." : searchQuery || cityFilter || goalFilter ? "Try a name, use fewer words or clear the filters." : "New profiles appear here when members choose to share them."}</p>
+            {directoryPage > 1 ? <Link className="button button-outline" href={directoryLink(1)}>Back to first page</Link> : searchQuery || cityFilter || goalFilter ? <Link className="button button-outline" href="/network">Show all members</Link> : null}
           </div>
         )}
+        {directoryPage > 1 || hasNextDirectoryPage ? <nav className="member-directory-paging" aria-label="Member pages">
+          {directoryPage > 1 ? <Link href={`${directoryLink(directoryPage - 1)}#browse-members`} rel="prev">Previous</Link> : <span aria-disabled="true">Previous</span>}
+          <span>Page {directoryPage}</span>
+          {hasNextDirectoryPage ? <Link href={`${directoryLink(directoryPage + 1)}#browse-members`} rel="next">Next</Link> : <span aria-disabled="true">Next</span>}
+        </nav> : null}
           </div>
         </section>
-      </section>
-      {!unavailable("code") ? <details className="network-code-tools">
+      </section> : null}
+      {directoryView === "connections" && !unavailable("code") ? <details className="network-code-tools">
         <summary>
           <span>
             <strong>Met someone in person?</strong>
@@ -1429,7 +1432,7 @@ export function NetworkHub({
           </form>
         </div>
       </details> : null}
-      {blockedMembers.length ? (
+      {directoryView === "connections" && blockedMembers.length ? (
         <section className="blocked-members">
           <p className="eyebrow">Blocked members</p>
           {blockedMembers.map((member) => (

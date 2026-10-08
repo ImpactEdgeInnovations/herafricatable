@@ -1,0 +1,38 @@
+/* Compact Members browsing only; no global, Admin or Community overrides. */
+.network-page .network-hero { padding:20px 0 16px; border-bottom:0; }
+.network-page .network-hero h1 { font-size:clamp(1.65rem,3vw,2.15rem); }
+.network-page .network-hero > div > p { margin:8px 0 0; }
+.network-page .member-area-tabs { display:flex; align-items:center; flex-wrap:wrap; gap:8px 24px; width:min(1120px,calc(100% - 48px)); margin:0 auto 20px; border-bottom:1px solid var(--product-rule); }
+.network-page .member-area-tabs > a { display:inline-flex; align-items:center; flex-wrap:wrap; gap:8px; min-height:48px; border-bottom:2px solid transparent; padding:10px 0; color:var(--product-muted); font:500 .9375rem/1.4 var(--sans); text-decoration:none; }
+.network-page .member-area-tabs > a[aria-current="page"] { color:var(--wine); border-bottom-color:var(--wine); }
+.network-page .member-area-tabs > a > span { font-size:.75rem; color:var(--product-muted); }
+.network-page .member-directory { margin-top:0; padding:0 0 24px; }
+.network-page .member-directory-content > header { gap:12px; margin-bottom:10px; }
+.network-page .member-directory-content > header h2 { font-size:1.125rem; }
+.network-page .member-directory-content > header > div > p { margin:6px 0 0; }
+.network-page .member-directory-result-count { margin:12px 0; }
+.network-page .member-directory .directory-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; align-items:stretch; }
+.network-page .member-directory .directory-grid > article { padding:16px; grid-template-columns:40px minmax(0,1fr); column-gap:12px; align-content:start; }
+.network-page .member-directory .directory-grid .directory-avatar { width:40px; height:40px; font-size:1rem; }
+.network-page .member-directory .directory-grid h3 { margin:4px 0 6px; font-size:1rem; overflow-wrap:anywhere; }
+.network-page .member-directory .directory-grid article > div > strong { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:.8125rem; line-height:1.5; }
+.network-page .member-directory .directory-grid .eyebrow { margin:0; font-size:.75rem; line-height:1.5; overflow-wrap:anywhere; }
+.network-page .directory-profile-link { margin:4px 0 0; font-size:.8125rem; }
+.network-page .member-directory .directory-grid > article > .directory-card-actions { grid-column:1/-1; padding-top:8px; gap:8px; }
+.network-page .directory-card-actions button { font-size:.8125rem; padding:8px 10px; overflow-wrap:anywhere; }
+.network-page .member-directory-paging { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:12px 24px; padding:16px 0 0; margin-top:16px; border-top:1px solid var(--product-rule); font:.875rem/1.4 var(--sans); }
+.network-page .member-directory-paging > :is(a,span) { display:inline-flex; align-items:center; justify-content:center; min-height:44px; }
+.network-page .member-directory-paging a { color:var(--wine); text-underline-offset:3px; padding:0 8px; }
+.network-page .member-directory-paging [aria-disabled="true"] { color:var(--product-muted); opacity:.65; }
+.network-page .member-suggestion-options { width:min(1120px,calc(100% - 48px)); margin:0 auto 16px; border-bottom:1px solid var(--product-rule); }
+.network-page .member-suggestion-options > summary { min-height:44px; padding:8px 0; cursor:pointer; color:var(--product-muted); font:.875rem/1.5 var(--sans); }
+.network-page .member-suggestion-options .member-suggestions { width:100%; margin:0; padding:16px 0; }
+.network-page :is(.member-area-tabs a,.member-directory-paging a,.member-suggestion-options summary):focus-visible { outline:2px solid var(--wine); outline-offset:4px; border-radius:3px; }
+@media(max-width:1000px) { .network-page .member-directory .directory-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:640px) {
+  .network-page .member-area-tabs,.network-page .member-suggestion-options { width:calc(100% - 32px); }
+  .network-page .member-area-tabs { gap:4px 20px; margin-bottom:16px; }
+  .network-page .member-area-tabs > a { font-size:.875rem; }
+  .network-page .member-directory .directory-grid { grid-template-columns:minmax(0,1fr); }
+  .network-page .member-directory .directory-grid > article { padding:14px; }
+}
