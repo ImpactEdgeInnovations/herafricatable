@@ -26,7 +26,7 @@ m=mock();await saveHostPoster(m.client,{...input,previousDraft:"live"});assert.d
 const workspace=read("components/events/event-host-workspace.tsx");
 assert(workspace.includes('communityDraftKey(currentUserId,"event-host",initial.event_id)'));
 assert(workspace.includes("useCommunityFileGuard(Boolean(coverFile)"));
-assert(workspace.includes("finally{setBusy(false);}"));
+assert(workspace.includes("finally{setBusy(false);setBusyAction(null);}"));
 assert(workspace.includes("Selected image — not saved yet"));
 assert(read("app/events/[slug]/host/page.tsx").includes("event-host-extra-tools"));
 console.log("Event Host resilience: poster ambiguity, published-file preservation, cleanup recovery and draft/file guards passed.");
