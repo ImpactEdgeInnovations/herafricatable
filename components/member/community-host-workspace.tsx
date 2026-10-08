@@ -220,10 +220,10 @@ export function CommunityHostWorkspace({
     try {
     if (action === "remove" || action === "promote") {
       const confirmed = await ask({
-        title: action === "promote" ? `Make ${member.display_name} a moderator?` : `Remove ${member.display_name}?`,
+        title: action === "promote" ? `Make ${member.display_name} a moderator?` : `Remove ${member.display_name} from this community?`,
         description:
-          action === "promote" ? "She will be able to manage this Community’s members and conversations. This does not give her platform Admin access." : "She will lose access to this room. Her platform membership is not affected.",
-        confirmLabel: action === "promote" ? "Make moderator" : "Remove from room",
+          action === "promote" ? "She will be able to manage this Community’s members and conversations. This does not give her platform Admin access." : "She will no longer be able to enter or take part in this community. Her earlier posts and replies stay here, and her Her Africa Table account is not suspended or deleted. This action does not automatically refund a payment.",
+        confirmLabel: action === "promote" ? "Make moderator" : "Remove member",
         tone: action === "promote" ? "default" : "danger",
       });
       if (!confirmed) return;
@@ -657,7 +657,7 @@ export function CommunityHostWorkspace({
                     disabled={Boolean(busy)}
                     onClick={() => void review(member, "remove")}
                   >
-                    Remove
+                    Remove member
                   </button>
                 </div>
               ) : (

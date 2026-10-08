@@ -49,6 +49,8 @@ Photos can be added to the gathering's linked album after opening, subject to th
 
 ## 4. Tester checklist
 
+New clarity pass: Community search supports words in any order and name suggestions, with scoped result counts. Inside each joined Community, **Your membership** explains leaving; leaders see handover guidance. Host/Admin **Remove member** explains access loss without account deletion or automatic refund. Re-test T07/T13 on the deployed release; no real leave/removal was performed by engineering in this slice.
+
 Use two separate browser profiles/accounts, a controlled Community, one free test event and controlled inboxes. The test organiser must provision membership/Host/moderator roles; do not give all testers Super Admin. Start on desktop Chrome, then iPhone Safari and Android Chrome. Agree which writes/emails are allowed before testing. Never cancel real members' bookings or post test safety reports about real people.
 
 For every row record **Pass / Fail / Blocked / Not run**. Pass requires observed behaviour, not just a visible button.

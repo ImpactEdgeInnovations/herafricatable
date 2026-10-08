@@ -1475,7 +1475,7 @@ for (const contract of [
   "Pick up where you left off",
   'id="discover-communities"',
   "Choose a purpose you share",
-  "Search communities",
+  "Find a community",
   "Show all communities",
   "Join straight away",
   "Your access is temporarily paused",

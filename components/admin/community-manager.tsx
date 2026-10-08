@@ -132,6 +132,7 @@ export function CommunityManager({
       await lifecycle("replace_host", id);
       return;
     }
+    if(action === "remove" && !await ask({title:`Remove ${members.find(item=>item.membership_id === id)?.display_name || "this member"} from the community?`,description:"She will lose access to this community. Her earlier posts and replies stay here, and her Her Africa Table account is not suspended or deleted. This does not automatically refund a payment.",confirmLabel:"Remove member",tone:"danger"}))return;
     setBusy(id);
     const { error } = await supabase.rpc("review_community_membership", {
       p_action: action,
@@ -513,7 +514,7 @@ export function CommunityManager({
                               void review(member.membership_id, "remove")
                             }
                           >
-                            Remove
+                            Remove member
                           </button>
                         </>
                       ) : null}

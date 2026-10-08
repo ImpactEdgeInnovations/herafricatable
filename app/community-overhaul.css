@@ -152,9 +152,16 @@
 .community-attachment-unavailable button:focus-visible { outline: 2px solid var(--wine); outline-offset: 3px; }
 .community-page .community-member-rooms { background: transparent; }
 .community-page .community-member-rooms:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
-.community-directory-global-search { width: min(1120px, calc(100% - 40px)); margin: 20px auto; display: flex; align-items: center; gap: 12px; }
+.community-directory-global-search { width: min(1120px, calc(100% - 40px)); margin: 20px auto; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
 .community-directory-global-search label { font-size: .875rem; font-weight: 600; }
-.community-directory-global-search input { flex: 1; max-width: 520px; min-height: 44px; }
+.community-directory-global-search input { flex: 0 1 360px; width: 100%; min-width: 0; max-width: 360px; min-height: 44px; }
+.community-directory-global-search > small, .community-directory-global-search > p { flex-basis: 100%; margin: 0; color: var(--ink-soft); font-size: .85rem; line-height: 1.5; }
+.community-membership-control { width: min(1120px, calc(100% - 40px)); margin: 8px auto 12px; font-size: .875rem; }
+.community-membership-control > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; text-decoration: underline; }
+.community-membership-control > div { max-width: 620px; padding: 0 0 12px; }
+.community-membership-control p { line-height: 1.6; }
+.community-membership-control button, .community-membership-control a { min-height: 44px; display: inline-flex; align-items: center; color: var(--wine); background: transparent; border: 0; padding: 8px 0; font: inherit; text-decoration: underline; }
+.community-membership-control summary:focus-visible, .community-membership-control button:focus-visible, .community-membership-control a:focus-visible { outline: 2px solid var(--wine); outline-offset: 3px; }
 .community-directory-global-search button { min-height: 44px; border: 0; background: transparent; color: var(--wine); text-decoration: underline; cursor: pointer; }
 .community-directory-location-filter { width: min(1120px, calc(100% - 40px)); margin: -8px auto 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .community-directory-location-filter label { font-size: .875rem; font-weight: 600; }

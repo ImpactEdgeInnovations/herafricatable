@@ -18,6 +18,7 @@ import {
   type CohortRoom,
 } from "@/components/member/cohort-activation";
 import type { CommunitySummary } from "@/components/member/community-directory";
+import { CommunityMembershipControl } from "@/components/member/community-membership-control";
 import { MemberHeader } from "@/components/member/member-header";
 import {
   CommunityMemberRoster,
@@ -373,6 +374,7 @@ export default async function CommunityPage({
         </div>
       </section>
       <CommunityLocalNavigation active={view} canManage={canManage} slug={slug} />
+      <CommunityMembershipControl communityId={community.community_id} name={community.name} role={community.membership_role} />
       {!liveGathering && !gatheringCardResult.error ? <CommunityNextGathering cards={gatheringCards} slug={slug} /> : null}
       {liveGathering ? (
         <aside className="community-live-notice" aria-label="Gathering live now">

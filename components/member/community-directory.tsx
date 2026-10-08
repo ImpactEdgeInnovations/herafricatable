@@ -6,6 +6,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { matchesDiscoverySearch } from "@/lib/discovery-search.mjs";
 
 export type CommunitySummary = {
   community_id: string;
@@ -236,15 +237,13 @@ export function CommunityDirectory({
     (item) => !memberStates.includes(item.membership_status ?? ""),
   );
   const cleanQuery = query.trim().toLowerCase();
-  const matchesQuery=(item:CommunitySummary)=>!cleanQuery || [item.name,item.description,item.tagline??""].some(value=>value.toLowerCase().includes(cleanQuery));
+  const matchesQuery=(item:CommunitySummary)=>matchesDiscoverySearch(query, [item.name,item.description,item.tagline,item.location_label]);
   const visibleMember=memberCommunities.filter(item => matchesQuery(item) && matchesLocation(item));
   const visibleDiscover = discoverCommunities.filter((item) => {
     const matchesJoining = joiningFilter === "all" ||
       (joiningFilter === "open" && item.effective_mode === "open") ||
       (joiningFilter === "approval" && item.effective_mode === "approval");
-    const matchesSearch = !cleanQuery || [item.name, item.description, item.tagline ?? ""].some(
-      (value) => value.toLowerCase().includes(cleanQuery),
-    );
+    const matchesSearch = matchesQuery(item);
     return matchesJoining && matchesSearch && matchesLocation(item);
   });
 
@@ -497,7 +496,7 @@ export function CommunityDirectory({
   return (
     <>
       {message ? <p className="network-message community-directory-feedback" role="status">{message}</p> : null}
-      <div className="community-directory-global-search"><label htmlFor="community-search">Search communities</label><input id="community-search" type="search" value={query} maxLength={120} onChange={event=>setQuery(event.target.value)} placeholder="Search by name or purpose"/>{query?<button type="button" onClick={()=>setQuery("")}>Clear search</button>:null}</div>
+      <div className="community-directory-global-search"><label htmlFor="community-search">Find a community</label><input id="community-search" type="search" list="community-name-suggestions" aria-describedby="community-search-help" value={query} maxLength={120} onChange={event=>setQuery(event.target.value)} placeholder="Name or interest, e.g. trade"/><datalist id="community-name-suggestions">{communities.map(item=><option key={item.community_id} value={item.name}/>)}</datalist>{query?<button type="button" onClick={()=>setQuery("")}>Clear search</button>:null}<small id="community-search-help">Try a community name, interest or place. Words can be in any order.</small>{cleanQuery || locationFilter !== "all" ? <p role="status">{visibleMember.length + visibleDiscover.length} {visibleMember.length + visibleDiscover.length === 1 ? "community matches" : "communities match"} your filters. Only communities available to your account are searched.</p> : null}</div>
       <div className="community-directory-location-filter"><label htmlFor="community-location">Location</label>
         <select id="community-location" value={locationFilter} onChange={event=>setLocationFilter(event.target.value)}>
           <option value="all">Anywhere</option><option value="global">Global / online</option>
