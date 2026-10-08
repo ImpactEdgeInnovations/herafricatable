@@ -1,0 +1,20 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const source=readFileSync(new URL("./audit-community-rehearsal-live.mjs",import.meta.url),"utf8");
+const body=source.slice(source.indexOf("async function conversationReads("),source.indexOf("for(const [identity,email,expectedRole]"));
+const {conversationReads}=await import(`data:text/javascript;base64,${Buffer.from(`export ${body}`).toString("base64")}`);
+let count=0;
+const client={rpc:async(name)=>{
+  if(name==="list_community_comments_for_posts")return {data:[{comment_id:"reply"}],error:null};
+  if(name==="search_community_conversation_page")return {data:[],error:null};
+  const offset=count++*20;const length=offset<40?21:5;
+  return {data:Array.from({length},(_,i)=>({post_id:`post-${offset+i}`,created_at:"2026-10-01",is_pinned:false})),error:null};
+}};
+const result=await conversationReads(client,"fixture");assert.equal(result.conversations,45);assert.equal(result.pages,3);assert.equal(result.scale_data_ready,true);assert.equal(result.search,"passed");
+const denied=await conversationReads({rpc:async()=>({error:Error("denied")})},"fixture");assert.equal(denied.read_access,"denied or unavailable");
+const repeating={rpc:async(name)=>name==="list_community_comments_for_posts"?{data:[],error:null}:{data:Array.from({length:21},(_,i)=>({post_id:`same-${i}`,created_at:"2026-10-01"})),error:null}};
+await assert.rejects(conversationReads(repeating,"fixture"),/Repeated cursor page/);
+const rpcNames=[...source.matchAll(/\.rpc\("([^"]+)"/g)].map(match=>match[1]);
+assert.deepEqual(new Set(rpcNames),new Set(["list_communities","list_community_conversation_page","list_community_comments_for_posts","search_community_conversation_page"]));
+assert(!source.includes("service_role")&&!source.includes("SUPABASE_SECRET"));assert(source.includes('signOut({scope:"local"})'));assert(source.includes('reads.search==="passed"'));
+console.log("Rehearsal preflight passed: read-only RPC allowlist, bounded cursors, duplicate rejection and no secret-key requirement.");
