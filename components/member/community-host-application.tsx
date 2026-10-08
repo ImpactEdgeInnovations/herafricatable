@@ -42,6 +42,8 @@ export type CommunityHostApplicationState = {
   updated_at: string;
   created_community_id: string | null;
   created_community_slug: string | null;
+  location_scope?: "global" | "place" | null;
+  location_label?: string | null;
 };
 
 const statusCopy: Record<
@@ -112,6 +114,7 @@ export function CommunityHostApplication({
   mediaReady,
   migrationReady,
   pilotEligible: pilotEligibleSetting,
+  locationReady = false,
 }: {
   applications: CommunityHostApplicationState[];
   currentUserId: string;
@@ -119,6 +122,7 @@ export function CommunityHostApplication({
   mediaReady: boolean;
   migrationReady: boolean;
   pilotEligible: boolean;
+  locationReady?: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -142,6 +146,7 @@ export function CommunityHostApplication({
   const [imageAltText, setImageAltText] = useState("");
   const [acceptGuidelines, setAcceptGuidelines] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const initialHashChecked = useRef(false);
   const applicationDefaults: Record<string, string> = {
     community_name: editable ? current.community_name : "",
     category: editable ? current.category : "",
@@ -152,6 +157,8 @@ export function CommunityHostApplication({
     host_experience: editable ? current.host_experience : "",
     safety_plan: editable ? current.safety_plan : "",
     applicant_message: editable ? current.applicant_message ?? "" : "",
+    location_scope: editable ? current.location_scope ?? "" : "",
+    location_label: editable ? current.location_label ?? "" : "",
   };
   const [draft, setDraft, clearDraft, restored] = useCommunityDraft(
     communityDraftKey(currentUserId, "host-application", editable ? current.application_id : "new"), applicationDefaults,
@@ -169,6 +176,34 @@ export function CommunityHostApplication({
   const currentMedia = current
     ? media.find((item) => item.context_type === "community_application" && item.context_id === current.application_id) ?? null
     : null;
+
+  useEffect(() => {
+    function beginFromLink() {
+      if (busy || !migrationReady) return;
+      if (current?.status === "approved") setStartingAnother(true);
+      if (!current || current.status === "approved" || editable) {
+        setOpen(true);
+        setAcceptGuidelines(false);
+      }
+    }
+    function onHash() {
+      if (window.location.hash === "#create-community") beginFromLink();
+    }
+    function onClick(event: MouseEvent) {
+      const link = (event.target as Element | null)?.closest('a[href="#create-community"]');
+      if (link) beginFromLink();
+    }
+    if (!initialHashChecked.current) {
+      initialHashChecked.current = true;
+      onHash();
+    }
+    window.addEventListener("hashchange", onHash);
+    document.addEventListener("click", onClick);
+    return () => {
+      window.removeEventListener("hashchange", onHash);
+      document.removeEventListener("click", onClick);
+    };
+  }, [busy, migrationReady, current?.status, editable]);
 
   useEffect(() => {
     if (open && stepHeadingRef.current) {
@@ -246,7 +281,7 @@ export function CommunityHostApplication({
     let detailsSaved = false;
     try {
     const { data: savedApplicationId, error } = await supabase.rpc(
-      "save_community_host_application",
+      locationReady ? "save_community_host_application_with_location" : "save_community_host_application",
       {
         p_accept_guidelines: form.get("accept_guidelines") === "on",
         p_admission_model: String(form.get("admission_model") ?? ""),
@@ -259,6 +294,10 @@ export function CommunityHostApplication({
         p_intended_members: String(form.get("intended_members") ?? ""),
         p_purpose: String(form.get("purpose") ?? ""),
         p_safety_plan: String(form.get("safety_plan") ?? ""),
+        ...(locationReady ? {
+          p_location_scope: String(form.get("location_scope") ?? ""),
+          p_location_label: String(form.get("location_label") ?? ""),
+        } : {}),
       },
     );
     detailsSaved = !error && Boolean(savedApplicationId);
@@ -619,6 +658,19 @@ export function CommunityHostApplication({
                   />
                   <small>A few honest sentences are enough.</small>
                 </label>
+                {locationReady ? <>
+                  <label>Where is your Community based?
+                    <select {...field("location_scope")} name="location_scope" required>
+                      <option value="" disabled>Choose one</option>
+                      <option value="global">Global / online</option>
+                      <option value="place">A specific place</option>
+                    </select>
+                    <small>This helps members find your group. It does not limit who can join.</small>
+                  </label>
+                  {draft.location_scope === "place" ? <label>City or area
+                    <input {...field("location_label")} name="location_label" required minLength={2} maxLength={100} placeholder="e.g. Lavington, Nairobi" />
+                  </label> : null}
+                </> : null}
               </div>
             </section>
 
@@ -743,6 +795,7 @@ export function CommunityHostApplication({
                   <span>Your idea</span>
                   <h5>{reviewValues.community_name || "Community name"}</h5>
                   <small>{categoryLabels[reviewValues.category] || "Main focus"}</small>
+                  {locationReady ? <small>{reviewValues.location_scope === "global" ? "Global / online" : reviewValues.location_label}</small> : null}
                   <p>{reviewValues.purpose || "Your shared purpose will appear here."}</p>
                   <button onClick={() => setStep(0)} type="button">Change</button>
                 </article>

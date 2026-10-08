@@ -36,6 +36,8 @@ export type CommunitySummary = {
   new_conversation_count?: number;
   new_reply_count?: number;
   public_preview_enabled?: boolean;
+  location_scope?: "global" | "place" | null;
+  location_label?: string | null;
 };
 
 export type CommunityActivitySummary = {
@@ -74,6 +76,14 @@ export function CommunityDirectory({
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
   const [joiningFilter, setJoiningFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("all");
+  const locations = Array.from(new Map(communities
+    .filter(item => item.location_scope === "place" && item.location_label)
+    .map(item => [item.location_label!.toLocaleLowerCase(), item.location_label!])).entries())
+    .sort((a,b) => a[1].localeCompare(b[1]));
+  const matchesLocation = (item: CommunitySummary) => locationFilter === "all" ||
+    (locationFilter === "global" ? item.location_scope === "global" :
+      item.location_scope === "place" && item.location_label?.toLocaleLowerCase() === locationFilter);
 
   async function join(item: CommunitySummary) {
     setBusy(item.community_id);
@@ -227,7 +237,7 @@ export function CommunityDirectory({
   );
   const cleanQuery = query.trim().toLowerCase();
   const matchesQuery=(item:CommunitySummary)=>!cleanQuery || [item.name,item.description,item.tagline??""].some(value=>value.toLowerCase().includes(cleanQuery));
-  const visibleMember=memberCommunities.filter(matchesQuery);
+  const visibleMember=memberCommunities.filter(item => matchesQuery(item) && matchesLocation(item));
   const visibleDiscover = discoverCommunities.filter((item) => {
     const matchesJoining = joiningFilter === "all" ||
       (joiningFilter === "open" && item.effective_mode === "open") ||
@@ -235,7 +245,7 @@ export function CommunityDirectory({
     const matchesSearch = !cleanQuery || [item.name, item.description, item.tagline ?? ""].some(
       (value) => value.toLowerCase().includes(cleanQuery),
     );
-    return matchesJoining && matchesSearch;
+    return matchesJoining && matchesSearch && matchesLocation(item);
   });
 
   function renderCommunityCard(
@@ -305,6 +315,7 @@ export function CommunityDirectory({
                     : "Open to members · Join now"}
               </small>
               <h3>{item.name}</h3>
+              {item.location_scope ? <small>{item.location_scope === "global" ? "Global / online" : item.location_label}</small> : null}
             </div>
           </div>
           <div className={paid ? "community-price paid" : "community-price"}>
@@ -487,6 +498,13 @@ export function CommunityDirectory({
     <>
       {message ? <p className="network-message community-directory-feedback" role="status">{message}</p> : null}
       <div className="community-directory-global-search"><label htmlFor="community-search">Search communities</label><input id="community-search" type="search" value={query} maxLength={120} onChange={event=>setQuery(event.target.value)} placeholder="Search by name or purpose"/>{query?<button type="button" onClick={()=>setQuery("")}>Clear search</button>:null}</div>
+      <div className="community-directory-location-filter"><label htmlFor="community-location">Location</label>
+        <select id="community-location" value={locationFilter} onChange={event=>setLocationFilter(event.target.value)}>
+          <option value="all">Anywhere</option><option value="global">Global / online</option>
+          {locations.map(([key,label]) => <option key={key} value={key}>{label}</option>)}
+        </select>
+        {locationFilter !== "all" ? <button type="button" onClick={()=>setLocationFilter("all")}>Clear location</button> : null}
+      </div>
       <section className="community-directory" id="your-communities">
         <header className="community-directory-heading">
           <div>
@@ -503,7 +521,7 @@ export function CommunityDirectory({
               renderCommunityCard(item, "member"),
             )}
           </div>
-        ) : cleanQuery ? <div className="community-directory-empty is-search"><strong>No joined communities match “{query}”.</strong><button type="button" className="button button-outline" onClick={()=>setQuery("")}>Clear search</button></div> : (
+        ) : cleanQuery || locationFilter !== "all" ? <div className="community-directory-empty is-search"><strong>No joined communities match these filters.</strong><button type="button" className="button button-outline" onClick={()=>{setQuery("");setLocationFilter("all");}}>Clear filters</button></div> : (
           <div className="community-directory-empty">
             <span aria-hidden="true">H</span>
             <div>
@@ -545,20 +563,20 @@ export function CommunityDirectory({
           <div className="community-directory-empty is-search">
             <div>
               <strong>
-                {cleanQuery || joiningFilter !== "all"
+                {cleanQuery || joiningFilter !== "all" || locationFilter !== "all"
                   ? "No communities match that search."
                   : "No new communities are open yet."}
               </strong>
               <p>
-                {cleanQuery || joiningFilter !== "all"
+                {cleanQuery || joiningFilter !== "all" || locationFilter !== "all"
                   ? "Try another word or show all communities."
                   : "You can start a community around an interest, a shared goal or your next event."}
               </p>
             </div>
-            {cleanQuery || joiningFilter !== "all" ? (
+            {cleanQuery || joiningFilter !== "all" || locationFilter !== "all" ? (
               <button
                 className="button button-outline"
-                onClick={() => { setQuery(""); setJoiningFilter("all"); }}
+                onClick={() => { setQuery(""); setJoiningFilter("all"); setLocationFilter("all"); }}
               >
                 Show all communities
               </button>

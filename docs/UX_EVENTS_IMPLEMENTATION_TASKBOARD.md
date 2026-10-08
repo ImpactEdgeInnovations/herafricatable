@@ -186,6 +186,16 @@ Wave 0 owner actions and Wave 1 engineering work may proceed in parallel. No wav
 
 ## What to monitor here in Codex
 
+### 8 October — Community creation entry and location discovery
+
+- Implemented: `Start a community` links and the direct `#create-community` URL open the application form, including a fresh application for an existing approved Host. Existing pending applications are continued rather than duplicated.
+- Implemented: location choice (`Global / online` or a named city/area) during creation, saved atomically through the existing approval/pilot workflow. Existing owners can choose or change location under Host tools → Community image and appearance.
+- Implemented: directory location dropdown populated from the saved locations of authorised, visible Communities, case-insensitive grouping, clear filters and location labels. No names or locations inferred from private profiles.
+- Database: `20261008055808_community_location_discovery.sql` applied to the live project. Transactional checks passed for normalization, anonymous denial, an owner save/read round trip and non-owner update rejection; rehearsal writes were rolled back.
+- Verification: full existing test suite, TypeScript, production build and new source contracts passed. Browser acceptance is tracked separately; creation tests must not submit real duplicate Communities or accept terms on behalf of the owner.
+- Security follow-up: the pre-existing advisor reports many anonymous-executable legacy RPCs and disabled leaked-password protection. These require a separate function-by-function access audit; a callable RPC is not by itself proof of a data leak. New location RPCs revoke anonymous access and retain explicit sign-in/owner checks. Their authenticated security-definer notices are intentional for the bounded private-data paths.
+
+
 For each update, report:
 
 1. Task IDs moved and the new status.

@@ -57,6 +57,7 @@ import {
 } from "@/components/member/community-joining-settings";
 import type { DestinationInvitation } from "@/components/member/destination-invitation-panel";
 import { CommunityPhotoAlbums } from "@/components/community/community-photo-albums";
+import { CommunityLocationPanel, type CommunityLocation } from "@/components/member/community-location-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -104,6 +105,8 @@ export default async function CommunityHostPage({
   ]);
   const { data: pilotEligible } = community.status === "draft" && community.membership_role === "owner"
     ? await supabase.rpc("community_pilot_member_ready") : { data: false };
+  const locationResult = community.membership_role === "owner" ? await supabase.rpc("list_community_locations") : {data:[],error:null};
+  const location = ((locationResult.data??[]) as CommunityLocation[]).find(item=>item.community_id===community.community_id)??null;
   const capabilities =
     ((capabilityResult.data as CommunityHostCapabilities[] | null) ?? [])[0] ??
     null;
@@ -354,6 +357,7 @@ export default async function CommunityHostPage({
       />
       </CommunityHostSection>
       <CommunityHostSection id="identity-area" title="Community image and appearance">
+      {community.membership_role === "owner" && !locationResult.error ? <CommunityLocationPanel communityId={community.community_id} location={location}/> : null}
       <CommunityBrandingPanel
         applicationImage={applicationImage}
         currentUserId={user.id}

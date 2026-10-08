@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 const read=file=>readFileSync(new URL(`../${file}`,import.meta.url),"utf8");
 const directory=read("components/member/community-directory.tsx");
-assert(directory.includes('id="community-search"'));assert(!directory.includes("discoverCommunities.length > 3"));assert(directory.includes("const visibleMember=memberCommunities.filter(matchesQuery)"));assert(directory.includes("visibleMember.map"));
+assert(directory.includes('id="community-search"'));assert(!directory.includes("discoverCommunities.length > 3"));assert(directory.includes("matchesQuery(item) && matchesLocation(item)"));assert(directory.includes("visibleMember.map"));
 const application=read("components/member/community-host-application.tsx");
 for(const token of ["Apply to start another Community","startingAnother ? undefined",'pilotEligibleSetting&&!applications.some(item=>item.status==="approved")',"Set Community image",'key={`continue-${step}`}','key="submit-community"'])assert(application.includes(token));
 assert(!read("app/events/[slug]/page.tsx").includes("Hosted with"));assert(!read("app/events/page.tsx").includes("event-list-community"));

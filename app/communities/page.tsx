@@ -55,8 +55,15 @@ export default async function CommunitiesPage() {
 
   if (profile?.access_status !== "active") redirect("/home");
 
-  const applications =
-    (applicationResult.data as CommunityHostApplicationState[] | null) ?? [];
+  const [locationResult, applicationLocationResult] = await Promise.all([
+    supabase.rpc("list_community_locations"),
+    supabase.from("community_host_applications").select("id,location_scope,location_label").eq("applicant_id",user.id),
+  ]);
+  const locationByCommunity = new Map(((locationResult.data ?? []) as {community_id:string;location_scope:"global"|"place"|null;location_label:string|null}[]).map(item=>[item.community_id,item]));
+  const applicationLocations = new Map(((applicationLocationResult.data ?? []) as {id:string;location_scope:"global"|"place"|null;location_label:string|null}[]).map(item=>[item.id,item]));
+  const applications = (
+    (applicationResult.data as CommunityHostApplicationState[] | null) ?? []
+  ).map(item=>({...item,...applicationLocations.get(item.application_id)}));
   const applicationMedia = await Promise.all(
     (((mediaResult.data as Omit<ApplicationProposalMedia, "image_url">[] | null) ?? [])
       .filter((item) => item.context_type === "community_application"))
@@ -138,6 +145,7 @@ export default async function CommunitiesPage() {
           </ol>
         </section>
         <CommunityHostApplication
+          locationReady={!locationResult.error && !applicationLocationResult.error}
           currentUserId={user.id}
           applications={applications}
           media={applicationMedia}
@@ -236,11 +244,13 @@ export default async function CommunitiesPage() {
             ...(brandingByCommunity.get(community.community_id) ?? {}),
             ...(activityByCommunity.get(community.community_id) ?? {}),
             ...(joiningByCommunity.get(community.community_id) ?? {}),
+            ...(locationByCommunity.get(community.community_id) ?? {}),
           }))}
         />
       )}
 
       <CommunityHostApplication
+        locationReady={!locationResult.error && !applicationLocationResult.error}
         currentUserId={user.id}
         applications={applications}
         media={applicationMedia}

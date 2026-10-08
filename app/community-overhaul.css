@@ -153,6 +153,10 @@
 .community-directory-global-search label { font-size: .875rem; font-weight: 600; }
 .community-directory-global-search input { flex: 1; max-width: 520px; min-height: 44px; }
 .community-directory-global-search button { min-height: 44px; border: 0; background: transparent; color: var(--wine); text-decoration: underline; cursor: pointer; }
+.community-directory-location-filter { width: min(1120px, calc(100% - 40px)); margin: -8px auto 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.community-directory-location-filter label { font-size: .875rem; font-weight: 600; }
+.community-directory-location-filter select { min-height: 44px; max-width: 100%; min-width: 180px; padding: 8px 12px; border: 1px solid var(--hat-rule); border-radius: 6px; background: white; color: var(--ink); }
+.community-directory-location-filter button { min-height: 44px; border: 0; background: transparent; color: var(--wine); text-decoration: underline; cursor: pointer; }
 @media(max-width:640px) { .community-directory-global-search { flex-wrap: wrap; } .community-directory-global-search label { width: 100%; } .community-directory-global-search input { min-width: 0; } }
 .safe-accent-picker { border: 0; padding: 0; margin: 16px 0; }
 .safe-accent-picker > div { display: flex; flex-wrap: wrap; gap: 8px; }

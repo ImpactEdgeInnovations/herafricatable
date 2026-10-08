@@ -1,0 +1,11 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const read=file=>readFileSync(new URL(`../${file}`,import.meta.url),"utf8");
+const directory=read("components/member/community-directory.tsx");
+for(const value of ['id="community-location"','Global / online','Anywhere','matchesLocation(item)','location_label!.toLocaleLowerCase()'])assert(directory.includes(value));
+const form=read("components/member/community-host-application.tsx");
+for(const value of ['hashchange','a[href="#create-community"]','initialHashChecked','setStartingAnother(true)','save_community_host_application_with_location','Where is your Community based?','locationReady'])assert(form.includes(value));
+const sql=read("supabase/migrations/20261008055808_community_location_discovery.sql");
+for(const value of ['join public.list_communities() visible','applicant_id = auth.uid()','Community owner or Super Admin required','from public,anon','sync_approved_community_location','public.save_community_host_application('])assert(sql.includes(value));
+assert(!sql.includes('disable row level security'));
+console.log('Community location and direct-create source contracts passed. Database and browser acceptance are separate.');
