@@ -11,6 +11,7 @@ import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 import { CommunityReplyForm } from "./community-reply-form";
 import {CommunityAttachmentRetry} from "./community-attachment-retry";
 import {signCommunityAttachments} from "@/lib/community-attachment-delivery";
+import { CommunityAvatar } from "./community-avatar";
 
 const conversationTypes = [
   { label: "Questions & ideas", value: "discussion" },
@@ -164,6 +165,7 @@ function linkHost(url: string | null) {
 
 export function CommunityFeed({
   canManage,
+  hostUserId,
   communityId,
   currentUserId,
   enhanced,
@@ -181,6 +183,7 @@ export function CommunityFeed({
   prompt,
 }: {
   canManage: boolean;
+  hostUserId?: string;
   communityId: string;
   currentUserId: string;
   enhanced: boolean;
@@ -1072,7 +1075,8 @@ export function CommunityFeed({
                 tabIndex={-1}
               >
                 <header>
-                  <div>
+                  <div className="community-post-author">
+                    <CommunityAvatar name={post.author_name} src={null} />
                     <span className="community-post-category">
                       {post.is_pinned ? "Pinned · " : ""}
                       {categoryLabels.get(post.category ?? "discussion") ??
@@ -1087,6 +1091,7 @@ export function CommunityFeed({
                       </span>
                     ) : null}
                     <strong>{post.author_name}</strong>
+                    {post.author_id === hostUserId ? <span className="community-role-badge">Host</span> : null}
                     <small>
                       {[post.author_role, post.author_company]
                         .filter(Boolean)

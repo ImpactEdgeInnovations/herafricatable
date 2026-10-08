@@ -1,0 +1,87 @@
+/* UI-1 / UI-2: scoped product tokens; public landing and Admin are untouched. */
+:is(.community-page, .events-page, .event-detail-page, .event-host-page) {
+  --product-ink: #282320;
+  --product-muted: #625b56;
+  --product-rule: #ded8d2;
+  --product-width: 1120px;
+  --product-gutter: 40px;
+  font-family: var(--sans, Arial, sans-serif);
+  color: var(--product-ink);
+}
+:is(.community-page, .events-page, .event-detail-page, .event-host-page) :is(h2, h3, button, input, select, textarea) {
+  font-family: var(--sans, Arial, sans-serif);
+}
+:is(.community-page, .events-page, .event-detail-page, .event-host-page) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { font-size: 1rem; }
+:is(.community-page, .events-page, .event-detail-page, .event-host-page) .button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: .9rem;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: none;
+}
+:is(.community-page, .events-page, .event-detail-page, .event-host-page) .button:focus-visible {
+  outline: 2px solid var(--room-accent, #64172a);
+  outline-offset: 4px;
+}
+:is(.community-page, .events-page, .event-detail-page, .event-host-page) .button:disabled {
+  cursor: not-allowed;
+  background: #e8e3df;
+  color: #625b56;
+  border-color: #d2cbc5;
+  opacity: 1;
+}
+.event-detail-page .event-detail-hero h1,
+.event-host-page .host-workspace-hero h1 {
+  font-family: var(--sans, Arial, sans-serif);
+  font-size: clamp(1.8rem, 3.3vw, 2.8rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -.035em;
+}
+.event-detail-page .event-detail-hero { padding: 24px 0; }
+.event-detail-page .event-community-companion h2 { font-size: 1.4rem; }
+
+/* A compact identity, with the full description still available in About. */
+.community-room-page > .community-room-hero { margin-top: 18px; margin-bottom: 12px; }
+.community-room-page .community-room-cover { height: 112px; margin-bottom: 12px; border-radius: 8px; }
+.community-room-page .community-room-hero h1 { font-family: var(--sans, Arial, sans-serif); font-weight: 600; font-size: clamp(1.5rem, 3vw, 2rem); }
+.community-room-page .community-room-title .eyebrow { text-transform: none; letter-spacing: 0; font-size: .8rem; color: var(--product-muted); }
+.community-room-page .community-room-hero-copy > p:last-of-type { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 72ch; }
+.community-room-page .community-room-meta { column-gap: 16px; row-gap: 4px; }
+.community-room-page > .community-local-navigation { margin-bottom: 8px; }
+.community-room-page .community-local-tabs { scrollbar-width: thin; }
+.community-room-page .community-local-navigation a { padding: 10px 12px; }
+.community-room-page .community-start-path { padding: 20px; }
+.community-room-page .community-start-path h2 { font-size: 1.25rem; }
+.community-room-page .community-start-path .community-progress > summary { min-height: 44px; font-size: .875rem; }
+.community-room-page .community-start-path .community-progress a { padding: 12px 0; }
+.community-room-page .community-feed > article { padding: 18px 20px; border: 1px solid var(--product-rule); border-radius: 8px; background: #fff; box-shadow: none; margin-bottom: 12px; }
+.community-room-page .community-feed > article > header { align-items: start; gap: 12px; margin-bottom: 10px; }
+.community-room-page .community-feed > article > header > .community-post-author { display: grid; grid-template-columns: 36px minmax(0, 1fr); column-gap: 10px; row-gap: 2px; }
+.community-post-author > .community-person-avatar { grid-column: 1; grid-row: 1 / 6; width: 36px; height: 36px; margin: 0; border-radius: 50%; align-self: start; }
+.community-post-author > :not(.community-person-avatar) { grid-column: 2; }
+.community-room-page .community-post-category { font-size: .75rem; letter-spacing: 0; text-transform: none; }
+.community-room-page .community-post-timestamp { font-size: .75rem; color: var(--product-muted); }
+.community-room-page .community-feed > article > p { margin: 10px 0 14px; line-height: 1.65; max-width: 78ch; overflow-wrap: anywhere; }
+.community-room-page .community-comments { max-height: 360px; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: thin; }
+.community-room-page .community-comments > article { padding: 12px 14px; margin: 8px 0; background: #f8f6f3; border: 0; border-radius: 6px; }
+.community-room-page .community-comments > article > p { margin: 8px 0; line-height: 1.55; }
+.community-room-page .community-comments > article > header strong { font-size: .875rem; }
+.community-room-page .community-comment-thread > summary { min-height: 44px; padding: 10px 0; font-size: .875rem; }
+.community-role-badge { display: inline-flex; align-items: center; width: fit-content; padding: 2px 7px; border-radius: 4px; background: var(--room-accent-soft, #f3e9ec); color: var(--room-accent, #64172a); font-size: .75rem; font-weight: 600; line-height: 1.5; }
+.community-room-page .community-member-roster > div > article { padding: 16px; }
+.community-room-page .community-member-roster > div > article > a > .community-role-badge { grid-column: 2; }
+.community-room-page .community-member-roster .community-person-avatar { width: 48px; height: 48px; grid-row: 1 / span 4; }
+@media (max-width: 640px) {
+  :is(.community-page, .events-page, .event-detail-page, .event-host-page) { --product-gutter: 32px; }
+  .community-room-page .community-room-cover { height: 88px; }
+  .community-room-page .community-feed > article { padding: 14px; }
+  .community-room-page .community-post-timestamp { max-width: 95px; text-align: right; }
+  .community-room-page .community-start-path { padding: 18px; }
+  .community-room-page .community-member-roster > div { grid-template-columns: minmax(0, 1fr); }
+  .community-room-page .community-local-navigation { gap: 0; }
+  .community-room-page .community-local-navigation a { padding: 10px; }
+}

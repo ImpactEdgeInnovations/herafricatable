@@ -47,10 +47,12 @@ export function CommunityStartPath({
   cohortActive,
   communitySlug,
   state,
+  memberCount,
 }: {
   cohortActive: boolean;
   communitySlug: string;
   state: CommunityStartPathState | null;
+  memberCount?: number;
 }) {
   const steps: StartStep[] = state
     ? [
@@ -116,11 +118,12 @@ export function CommunityStartPath({
               : `/communities/${communitySlug}?view=gatherings`,
       }));
 
-  const recommended = steps.find((step) => !step.complete);
+  const availableSteps = steps.filter(step => step.label !== "Meet a member" || memberCount === undefined || memberCount > 1);
+  const recommended = availableSteps.find((step) => !step.complete);
   const allComplete = state && !recommended;
   const supportingSteps = recommended
-    ? steps.filter((step) => step !== recommended)
-    : steps;
+    ? availableSteps.filter((step) => step !== recommended)
+    : availableSteps;
 
   return (
     <section
@@ -157,14 +160,13 @@ export function CommunityStartPath({
       </header>
       {supportingSteps.length ? (
         <details className="community-progress">
-          <summary>More ways to take part <span>{steps.filter((step) => step.complete).length} of {steps.length}</span></summary>
+          <summary>More ways to take part</summary>
           <div aria-label="Other ways to participate in this community">
             {supportingSteps.map((step) => (
               <Link className={step.complete ? "is-complete" : undefined} href={step.href} key={step.label}>
-                <span>{String(steps.indexOf(step) + 1).padStart(2, "0")}</span>
                 <strong>{step.label}</strong>
-                <small>{step.complete ? "Complete" : step.description}</small>
-                <em>{step.complete ? "Done" : step.action}</em>
+                <small>{step.description}</small>
+                <em>{step.action}</em>
               </Link>
             ))}
           </div>

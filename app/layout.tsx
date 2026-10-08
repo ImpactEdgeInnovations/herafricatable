@@ -14,6 +14,7 @@ import "./community-room.css";
 import "./member-readability.css";
 import "./community-overhaul.css";
 import "./event-detail-refinement.css";
+import "./product-ui-foundation.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),

@@ -45,15 +45,13 @@ export function CommunityMemberRoster({
           <article key={member.user_id}><Link href={member.user_id===currentUserId?"/profile":`/members/${member.user_id}`}>
             <CommunityAvatar name={member.display_name} src={member.avatar_url} />
             <strong>{member.display_name}</strong>
+            {member.membership_role !== "member" ? <span className="community-role-badge">{member.membership_role === "owner" ? "Host" : "Moderator"}</span> : null}
             <small>
               {[member.job_title, member.company].filter(Boolean).join(" · ") ||
                 "Community member"}
             </small>
             <small>
               {[member.city, member.country].filter(Boolean).join(", ")}
-              {member.membership_role !== "member"
-                ? `${member.city || member.country ? " · " : ""}${member.membership_role === "owner" ? "Host" : "Moderator"}`
-                : ""}
             </small>
           </Link><CommunityConnectionActions memberId={member.user_id} self={member.user_id===currentUserId} connection={connections.find(item=>item.other_user_id===member.user_id)??null} ready={connectionsReady} /></article>
         ))}

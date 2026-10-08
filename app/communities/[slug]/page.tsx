@@ -327,7 +327,7 @@ export default async function CommunityPage({
         className={`community-room-hero accent-${brandIdentity?.accent_key ?? "wine"}${coverSigned.data?.signedUrl ? " has-cover" : ""}`}
         id="overview"
       >
-        {coverSigned.data?.signedUrl ? (
+        {showToday && coverSigned.data?.signedUrl ? (
           <figure className="community-room-cover">
             <img
               alt={brandIdentity?.cover_alt_text ?? ""}
@@ -359,12 +359,12 @@ export default async function CommunityPage({
               <h1>{community.name}</h1>
             </div>
           </div>
-          {brandIdentity?.tagline && brandIdentity.tagline.trim().toLowerCase() !== community.name.trim().toLowerCase() ? (
+          {showToday && brandIdentity?.tagline && brandIdentity.tagline.trim().toLowerCase() !== community.name.trim().toLowerCase() ? (
             <strong className="community-room-tagline">
               {brandIdentity.tagline}
             </strong>
           ) : null}
-          <p>{community.description}</p>
+          {showToday ? <p>{community.description}</p> : null}
           <div className="community-room-meta">
             {communityHost ? <span className="community-host-identity">Community Host · <Link href={`/members/${communityHost.user_id}`}>{communityHost.display_name || "View Host"}</Link></span> : null}
             <span>{community.member_count} {community.member_count === 1 ? "member" : "members"}</span>
@@ -386,6 +386,7 @@ export default async function CommunityPage({
       {showToday ? (
         <>
           <CommunityStartPath
+            memberCount={community.member_count}
             cohortActive={cohort?.cohort_status === "active"}
             communitySlug={slug}
             state={
@@ -429,6 +430,7 @@ export default async function CommunityPage({
         </section>
       ) : showConversations ? (
         <CommunityFeed
+          hostUserId={communityHost?.user_id}
           canManage={canManage}
           composerInitiallyOpen={isEventFollowUp}
           enhanced={structuredConversationsReady}

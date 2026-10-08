@@ -10,6 +10,21 @@ This board turns the 4 October UI/UX and Events audit (saved separately on the P
 
 ### Current continuation sequence
 
+### UI refinement track — 8 October
+
+This track refines the existing modules; it does not replace the event-first launch gates. Review means implemented and waiting for the relevant acceptance, not fully certified.
+
+| Phase | State | Deliverable / remaining acceptance |
+| --- | --- | --- |
+| UI-1 Visual foundation | Review | Scoped shared interface typography, smaller Event/Host headings, readable button states and consistent touch targets. Landing/Admin styles excluded. Cross-device regression remains. |
+| UI-2 Community experience | In progress | Compact Home-only cover/description, full About retained, lower-weight tabs/cards/replies, explicit People/Host badges and member-count-aware Home recommendation. Populated search/replies, photos and ordinary-member/mobile acceptance remain. |
+| UI-3 Events experience | Ready | Poster-led discovery, simplified details, booking/pass states and safe mobile booking bar; verify capacity/permission behaviour unchanged. |
+| UI-4 Host workspace | Ready | Everyday tasks first, advanced tools secondary, consistent save/upload/recovery feedback; actual file and decision acceptance required. |
+| UI-5 Returning members | Ready | Since-last-visit prompts, meaningful follow-up and consolidated post-event content; avoid noisy counters/gamification. |
+| UI-6 Acceptance | Ready | Separate-role populated browser/device/keyboard/slow-request rehearsal, dated evidence and issue retesting. |
+
+**UI-1/2 first slice:** Shared styles are scoped to Community/Events/Host main classes, with no landing or Admin redesign and no changes to database permissions. The Community cover/tagline/description appear on Home only; every tab retains name, Host and About. Conversations gain author initials and a badge from the existing identified Host, not inferred job titles. People preserve existing permitted profile photographs and gain clear Host/Moderator badges. Replies become compact and scrollable. Home no longer recommends meeting another member when only one exists, and optional participation links no longer use numbered completion counters. Source/render checks and role/device acceptance are tracked separately.
+
 **8 October search and membership clarity:** Community discovery now matches all entered words across permitted names/descriptions/taglines/locations regardless of word order or accents. The narrower input has existing-name suggestions, plain examples, result counts and permission-scope guidance; it does not promise to search inaccessible Communities. Inside a Community, Your membership exposes the existing member-only Leave action with content-retention, account and refund explanations. Owners/moderators see handover guidance instead of an invalid Leave button. Host/Admin removal controls now say Remove member and confirm that only Community access changes. Existing database commands and permissions are unchanged; no SQL migration or real membership change performed. Automated matching/source tests cover this slice; separate-account browser leave/removal and populated usability remain open. Events discovery can reuse the matching helper in a subsequent slice; it has not been retrofitted by this change.
 
 **Gathering-choice live form acceptance — 8 October:** Deployed `7afc872` was inspected in a separate Lavington Women Owner tab. A valid Test Run description progressed to Step 2; switching In person / Video call / Watch a video together showed venue / optional Meet-Zoom / YouTube respectively and hid the irrelevant link inputs. No save, publication or email was performed, and the user's in-progress tab was not altered. Screenshot remains local under `tmp/gathering-three-choices-20261008.png`. Actual creation, playback and simultaneous discussion acceptance remain open.
