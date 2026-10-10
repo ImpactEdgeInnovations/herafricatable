@@ -120,6 +120,16 @@
 .community-inline-planner .community-event-wizard footer { display: flex; gap: 10px; flex-wrap: wrap; }
 .community-inline-planner .community-event-wizard footer > div { display: flex; gap: 10px; flex: 1; }
 .community-inline-planner .community-event-wizard footer .button { min-height: 44px; min-width: 0; padding: 10px 16px; }
+.community-inline-event-linker { display: grid; gap: 16px; min-width: 0; }
+.community-inline-event-linker h2 { margin: 0; font-family: inherit; font-size: 1.25rem; font-weight: 600; }
+.community-inline-event-linker header p { margin: 8px 0 0; color: var(--muted); font-size: .9rem; line-height: 1.6; }
+.community-inline-event-choice { display: grid; gap: 16px; min-width: 0; }
+.community-inline-event-choice label { display: grid; gap: 8px; font-size: .9rem; font-weight: 600; }
+.community-inline-event-choice select { width: 100%; min-width: 0; max-width: 100%; min-height: 44px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); font: 400 1rem/1.4 "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif; }
+.community-inline-event-choice article { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line); min-width: 0; overflow-wrap: anywhere; }
+.community-inline-event-choice article > span, .community-inline-event-choice small { color: var(--muted); font-size: .8rem; }
+.community-inline-event-choice article p { margin: 0; font-size: .9rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.community-inline-event-choice article .button { justify-self: start; min-height: 44px; margin-top: 8px; }
 @media (max-width: 640px) { .community-inline-planner { padding: 12px; } }
 .community-inline-back { min-height: 44px; padding: 10px 0; border: 0; background: transparent; color: var(--wine); cursor: pointer; font-size: 0.95rem; }
 .community-inline-gathering .gathering-room { width: 100%; margin: 0; }

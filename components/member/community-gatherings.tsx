@@ -7,6 +7,9 @@ import { memberErrorMessage } from "@/lib/member-error";
 import { CommunityGatheringInline } from "./community-gathering-inline";
 import { CommunityVideoLibrary } from "./community-video-library";
 import { CommunityGatheringPlanner } from "./community-gathering-planner";
+import dynamic from "next/dynamic";
+
+const CommunityEventLinker = dynamic(() => import("./community-event-linker").then(module => module.CommunityEventLinker), { loading: () => <p role="status">Opening event linking…</p> });
 
 export type CommunityGatheringCard = {
   room_id: string;
@@ -81,6 +84,8 @@ export function CommunityGatherings({
   const [selected,setSelected] = useState(initialSelection ?? "");
   const [plannerOpened, setPlannerOpened] = useState(false);
   const [plannerMounted, setPlannerMounted] = useState(false);
+  const [linkerOpened, setLinkerOpened] = useState(false);
+  const [linkerMounted, setLinkerMounted] = useState(false);
   useEffect(()=>setItems(cards),[cards]);
   useEffect(()=>{const update=()=>{
     const params = new URL(window.location.href).searchParams;
@@ -189,8 +194,9 @@ export function CommunityGatherings({
         <button type="button" aria-pressed={area==="upcoming"} onClick={()=>changeArea("upcoming")}>Upcoming <span>{upcoming.length}</span></button>
         <button type="button" aria-pressed={area==="past"} onClick={()=>changeArea("past")}>Past <span>{past.length}</span></button>
         <button type="button" aria-pressed={area==="videos"} onClick={()=>changeArea("videos")}>Videos</button>
-      </div>{canManage ? <div className="community-gathering-host-actions"><button type="button" aria-expanded={plannerOpened} aria-controls="community-inline-planner" onClick={() => { setPlannerMounted(true); setPlannerOpened(open => !open); }}>{plannerOpened ? "Hide gathering tools" : "Create a gathering"}</button><Link href={`/communities/${slug}/host#gatherings`}>Link an existing event</Link></div> : null}</div>
+      </div>{canManage ? <div className="community-gathering-host-actions"><button type="button" aria-expanded={plannerOpened} aria-controls="community-inline-planner" onClick={() => { setPlannerMounted(true); setPlannerOpened(open => !open); setLinkerOpened(false); }}>{plannerOpened ? "Hide gathering tools" : "Create a gathering"}</button><button type="button" aria-expanded={linkerOpened} aria-controls="community-inline-event-linker" onClick={() => { setLinkerMounted(true); setLinkerOpened(open => !open); setPlannerOpened(false); }}>{linkerOpened ? "Hide event linking" : "Link an existing event"}</button></div> : null}</div>
       {canManage && plannerMounted ? <div id="community-inline-planner" className="community-inline-planner" hidden={!plannerOpened}><CommunityGatheringPlanner communityId={communityId} slug={slug} currentUserId={currentUserId} /></div> : null}
+      {canManage && linkerMounted ? <div id="community-inline-event-linker" className="community-inline-planner" hidden={!linkerOpened}><CommunityEventLinker key={communityId} communityId={communityId} onCreateGathering={() => { setPlannerMounted(true); setPlannerOpened(true); setLinkerOpened(false); }} /></div> : null}
       {message ? <p className="form-message" role="status">{message}</p> : null}
       {!migrationReady ? (
         <div className="community-program-empty">
