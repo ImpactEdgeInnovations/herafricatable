@@ -70,7 +70,6 @@ export function CommunityEventLinker({ communityId, onCreateGathering }: {
   async function updateLink(option: EventOption, active: boolean) {
     if (actionBusy.current || status !== "ready" || needsRefresh) return;
     actionBusy.current = true;
-    setBusy(true);
     setNotice("");
     try {
       if (!active) {
@@ -82,6 +81,7 @@ export function CommunityEventLinker({ communityId, onCreateGathering }: {
         });
         if (!confirmed || !alive.current) return;
       }
+      setBusy(true);
       const { error } = await supabase.rpc("set_community_event_link", {
         p_active: active,
         p_community_id: communityId,
