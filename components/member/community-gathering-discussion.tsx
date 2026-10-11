@@ -29,7 +29,7 @@ export function CommunityGatheringDiscussion({ roomId, albumId, currentUserId, r
       running = true;
       try {
         const result = albumId ? await supabase.rpc("get_community_album_discussion", { p_album_id: albumId, p_before: cursor }) : await supabase.rpc("get_community_gathering_discussion", { p_room_id: roomId, p_before: cursor });
-        if (result.error) throw result.error;
+        if (result.error || !result.data) throw result.error || new Error("This conversation is unavailable. Please try again.");
         if (active) { setItem(result.data as Discussion | null); setError(""); }
       } catch (cause) { if (active) { setItem(null); setError(memberErrorMessage(cause, "open this conversation")); } }
       finally { running = false; if (active) setLoading(false); }

@@ -75,7 +75,7 @@ export function CommunityEventLinker({ communityId, onCreateGathering }: {
       if (!active) {
         const confirmed = await ask({
           title: `Unlink ${option.title}?`,
-          description: "Members will no longer find this event in your Community. The event and its guest bookings will not be cancelled.",
+          description: "Members will no longer find this event in your Community. The event and bookings will not be cancelled. A gathering with conversations, photos or member activity must stay linked.",
           confirmLabel: "Unlink event",
           tone: "danger",
         });
@@ -96,10 +96,13 @@ export function CommunityEventLinker({ communityId, onCreateGathering }: {
       setOptions(latest);
       setNotice(active ? "Event linked. Members can find it in Gatherings." : "Event unlinked. The event and guest bookings are unchanged.");
       router.refresh();
-    } catch {
+    } catch (error) {
       if (!alive.current) return;
       setNeedsRefresh(true);
-      setNotice("We couldn’t confirm this change. Refresh the event list to check before trying again.");
+      const reason = memberErrorMessage(error, "change this event link");
+      setNotice(reason.startsWith("This gathering already has member activity")
+        ? `${reason} Refresh the event list to see its current link.`
+        : "We couldn’t confirm this change. Refresh the event list to check before trying again.");
     } finally {
       actionBusy.current = false;
       if (alive.current) setBusy(false);

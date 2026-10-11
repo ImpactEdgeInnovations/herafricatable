@@ -56,13 +56,22 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
   useEffect(() => {
     if (!opened) return;
     let stopped = false;
+    let checking = false;
     async function recheckList() {
-      const { data, error } = await supabase.rpc("list_community_photo_albums", { p_community_id: communityId });
-      if (stopped) return;
-      if (error || !data) {
+      if (checking) return;
+      checking = true;
+      try {
+        const { data, error } = await supabase.rpc("list_community_photo_albums", { p_community_id: communityId });
+        if (stopped) return;
+        if (error || !data) throw error || new Error("Photos unavailable");
+        setList(data as AlbumList);
+      } catch {
+        if (stopped) return;
+        requestVersion.current++;
         setList(null); setDetails(null); setSelectedPhoto(""); setFiles([]);
+        setBusy(current => current === "album" ? "" : current);
         setMessage("Photos could not be opened. Please try again when your connection or membership access is restored.");
-      } else setList(data as AlbumList);
+      } finally { checking = false; }
     }
     const timer = window.setInterval(() => void recheckList(), 30000);
     window.addEventListener("focus", recheckList);
@@ -72,11 +81,20 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
   useEffect(() => {
     if (!selectedAlbumId) return;
     let stopped = false;
+    let checking = false;
     async function recheck() {
-      const { data, error } = await supabase.rpc("get_community_photo_album", { p_album_id: selectedAlbumId });
-      if (stopped) return;
-      if (error || !data) { setDetails(null); setList(null); setFiles([]); setSelectedPhoto(""); setMessage("This album could not be opened. Try again when your connection or access is restored."); }
-      else setDetails(previous => previous && previous.album.id === selectedAlbumId ? { ...previous, photos: (data as AlbumDetails).photos, can_upload: (data as AlbumDetails).can_upload } : previous);
+      if (checking) return;
+      checking = true;
+      try {
+        const { data, error } = await supabase.rpc("get_community_photo_album", { p_album_id: selectedAlbumId });
+        if (stopped) return;
+        if (error || !data) throw error || new Error("Album unavailable");
+        setDetails(previous => previous?.album.id === selectedAlbumId ? data as AlbumDetails : previous);
+      } catch {
+        if (stopped) return;
+        setDetails(null); setList(null); setFiles([]); setSelectedPhoto("");
+        setMessage("This album could not be opened. Try again when your connection or access is restored.");
+      } finally { checking = false; }
     }
     const timer = window.setInterval(() => void recheck(), 30000);
     window.addEventListener("focus", recheck);
@@ -85,7 +103,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
 
   async function refresh() {
     const { data, error } = await supabase.rpc("list_community_photo_albums", { p_community_id: communityId });
-    if (error) throw error;
+    if (error || !data) throw error || new Error("Photos unavailable");
     setList(data as AlbumList);
   }
   async function load() {
@@ -101,10 +119,16 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
     if (unsavedFiles && !(await ask({ title: "Choose a different album?", description: "The photos you have not saved will need to be selected again.", confirmLabel: "Change album", tone: "danger" }))) return;
     const version = ++requestVersion.current;
     setFiles([]); setBatchId(""); setCaption(""); setPermission(false); setSelectedPhoto(""); setShowDiscussion(false); setDetails(null); setBusy("album"); setMessage("");
-    const { data, error } = await supabase.rpc("get_community_photo_album", { p_album_id: id });
-    if (version !== requestVersion.current) return;
-    if (error) setMessage(memberErrorMessage(error, "open this album")); else setDetails(data as AlbumDetails);
-    setBusy("");
+    try {
+      const { data, error } = await supabase.rpc("get_community_photo_album", { p_album_id: id });
+      if (version !== requestVersion.current) return;
+      if (error || !data) throw error || new Error("Album unavailable");
+      setDetails(data as AlbumDetails);
+    } catch (error) {
+      if (version === requestVersion.current) setMessage(memberErrorMessage(error, "open this album"));
+    } finally {
+      if (version === requestVersion.current) setBusy("");
+    }
   }
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

@@ -75,6 +75,7 @@ const eventOption={item_type:'event',item_id:'event-one',title:'Test gathering',
 function linkingContext(outcome='success') {
   const calls=[],busy=[],notices=[],snapshots=[],refreshes=[],prompts=[];
   const ctx={calls,busy,notices,snapshots,refreshes,prompts,status:'ready',needsRefresh:false,actionBusy:{current:false},alive:{current:true},communityId:'community-one',setBusy:value=>busy.push(value),setNotice:value=>notices.push(value),setNeedsRefresh:value=>ctx.needsRefresh=value,setOptions:value=>snapshots.push(value),ask:async prompt=>{prompts.push(prompt);return outcome!=='decline';},supabase:{rpc:async(name,args)=>{calls.push([name,args]);if(outcome==='throw')throw Error('Offline');return {error:outcome==='denied'?Error('Host required'):null};}},readOptions:async()=>{if(outcome==='read-failed')throw Error('Offline');return [{...eventOption,is_linked:outcome!=='mismatch'}];},router:{refresh:()=>refreshes.push(true)}};
+  ctx.memberErrorMessage=error=>error?.message || 'Please try again.';
   return ctx;
 }
 for(const outcome of ['success','denied','throw','read-failed','mismatch']) {
@@ -88,6 +89,9 @@ for(const outcome of ['success','denied','throw','read-failed','mismatch']) {
 }
 let ctx=linkingContext('decline');await action(linker,'updateLink','  return <section',ctx)(eventOption,false);assert.equal(ctx.calls.length,0);assert.equal(ctx.prompts[0].confirmLabel,'Unlink event');assert.equal(ctx.busy.at(-1),false);
 ctx=linkingContext();let release;ctx.supabase.rpc=async(name,args)=>{ctx.calls.push([name,args]);return new Promise(done=>release=done);};const run=action(linker,'updateLink','  return <section',ctx);const pending=run(eventOption,true);await run(eventOption,true);assert.equal(ctx.calls.length,1);release({error:null});await pending;
+ctx=linkingContext();ctx.supabase.rpc=async()=>({error:{message:'This gathering already has member activity or saved content. Keep it linked to protect its conversations and photos.'}});
+await action(linker,'updateLink','  return <section',ctx)(eventOption,false);
+assert(ctx.notices.at(-1).includes('Keep it linked'));assert(ctx.needsRefresh);assert.equal(ctx.snapshots.length,0);assert.equal(ctx.actionBusy.current,false);
 ctx=linkingContext();ctx.needsRefresh=true;await action(linker,'updateLink','  return <section',ctx)(eventOption,true);assert.equal(ctx.calls.length,0,'An uncertain write must be reconciled before another write');
 for(const outcome of ['events','empty','denied','throw','stale']) {
   const h=hookHarness();const calls=[];let resolve;
