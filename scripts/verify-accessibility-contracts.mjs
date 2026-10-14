@@ -78,7 +78,7 @@ const memberHeader = read("components/member/member-header.tsx");
 for (const contract of [
   'aria-label="Member navigation"',
   'aria-label="Member shortcuts"',
-  'aria-label="Guide"',
+  '<FloatingTableGuide',
   "aria-current=",
 ]) {
   assert(
@@ -86,6 +86,12 @@ for (const contract of [
     `The member shell must include ${contract}`,
   );
 }
+
+const destinationBlock = memberHeader.slice(memberHeader.indexOf('}[] = ['), memberHeader.indexOf('function MemberIcon'));
+const destinationKeys = [...destinationBlock.matchAll(/key: "([^"]+)"/g)].map(match => match[1]);
+assert.deepEqual(destinationKeys, ['home', 'events', 'community', 'members', 'messages', 'explore', 'account'], 'Events must follow Home in the shared desktop/mobile navigation');
+assert(!memberHeader.includes('href="/guide"'), 'The redundant Guide header link must stay removed; Nia remains available');
+assert(memberHeader.includes('supabase.rpc("get_my_table_guide_access")') && memberHeader.includes('featureEnabled={Boolean(guideAccess?.feature_enabled)}'), 'Removing the Guide shortcut must preserve Nia’s access controls');
 
 const adminHeader = read("components/admin/admin-header.tsx");
 for (const contract of [

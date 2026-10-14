@@ -29,6 +29,7 @@ const destinations: {
   shortLabel: string;
 }[] = [
   { href: "/home", key: "home", label: "Home", shortLabel: "Home" },
+  { href: "/events", key: "events", label: "Events", shortLabel: "Events" },
   {
     href: "/communities",
     key: "community",
@@ -36,7 +37,6 @@ const destinations: {
     shortLabel: "Community",
   },
   { href: "/network", key: "members", label: "Members", shortLabel: "Members" },
-  { href: "/events", key: "events", label: "Events", shortLabel: "Events" },
   {
     href: "/messages",
     key: "messages",
@@ -118,7 +118,6 @@ export async function MemberHeader({
     { data: profile },
     { count: unreadAlerts },
     { data: communityActivity },
-    { data: tableGuideFlag },
     { data: tableGuideAccess },
   ] = user
     ? await Promise.all([
@@ -132,14 +131,9 @@ export async function MemberHeader({
           .select("id", { count: "exact", head: true })
           .is("read_at", null),
         supabase.rpc("list_my_community_activity"),
-        supabase
-          .from("feature_flags")
-          .select("enabled")
-          .eq("key", "table_guide")
-          .maybeSingle(),
         supabase.rpc("get_my_table_guide_access"),
       ])
-    : [{ data: null }, { count: 0 }, { data: null }, { data: null }, { data: null }];
+    : [{ data: null }, { count: 0 }, { data: null }, { data: null }];
   const navigation = destinations.map((destination) =>
     destination.key === "account"
       ? { ...destination, href: accountHref, label: accountLabel }
@@ -192,19 +186,6 @@ export async function MemberHeader({
           ))}
         </nav>
         <div className="member-header-actions">
-          {tableGuideFlag?.enabled ? (
-            <Link
-              aria-current={active === "guide" ? "page" : undefined}
-              aria-label="Guide"
-              className="member-guide-link"
-              href="/guide"
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="M12 3 14 9l6 2-6 2-2 6-2-6-6-2 6-2 2-6Z" />
-              </svg>
-              <span>Guide</span>
-            </Link>
-          ) : null}
           <Link
             aria-current={active === "search" ? "page" : undefined}
             aria-label="Search your table"
