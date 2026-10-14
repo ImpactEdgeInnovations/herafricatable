@@ -11,15 +11,20 @@ export function SignOutButton({ className = "" }: { className?: string }) {
   async function signOut() {
     setBusy(true);
     setFailed(false);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signOut({ scope: "local" });
-    if (error) {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signOut({ scope: "local" });
+      if (error) {
+        setFailed(true);
+        return;
+      }
+      clearCommunityDrafts();
+      window.location.replace("/");
+    } catch {
       setFailed(true);
+    } finally {
       setBusy(false);
-      return;
     }
-    clearCommunityDrafts();
-    window.location.replace("/");
   }
 
   return (

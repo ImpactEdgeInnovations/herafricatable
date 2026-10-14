@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
 import { createClient } from "@/lib/supabase/server";
@@ -71,7 +72,7 @@ export default async function OnboardingPage({
     <main className="onboarding-page">
       <header className="onboarding-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></Link>
-        <span>Member onboarding</span>
+        <SignOutButton />
       </header>
       <section className="onboarding-intro">
         <p className="eyebrow">Welcome to the table</p>

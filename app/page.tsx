@@ -114,8 +114,21 @@ async function getPublishedCountdown(): Promise<CountdownEvent | null> {
   }
 }
 
+async function getOpenPilot(): Promise<boolean> {
+  try {
+    const { url, publishableKey } = getSupabasePublicEnv();
+    const response = await fetch(`${url}/rest/v1/rpc/get_membership_intake_mode`, {
+      method: "POST",
+      headers: { apikey: publishableKey, Authorization: `Bearer ${publishableKey}`, "Content-Type": "application/json" },
+      body: "{}",
+      next: { revalidate },
+    });
+    return response.ok && (await response.json()) === "trusted_auto";
+  } catch { return false; }
+}
+
 export default async function HomePage() {
-  const countdown = await getPublishedCountdown();
+  const [countdown, openPilot] = await Promise.all([getPublishedCountdown(), getOpenPilot()]);
   const eventDate = formatEventDate(countdown?.starts_at);
 
   return (
@@ -140,7 +153,7 @@ export default async function HomePage() {
         <nav className="header-actions" aria-label="Account navigation">
           <Link className="editorial-sign-in" href="/sign-in">Sign in</Link>
           <Link className="button button-small button-primary" href="/sign-in?mode=apply">
-            Request membership
+            Join Her Africa Table
           </Link>
         </nav>
       </header>
@@ -158,12 +171,12 @@ export default async function HomePage() {
           </p>
           <div className="hero-actions">
             <Link className="button button-primary" href="/sign-in?mode=apply">
-              Request membership <ArrowIcon />
+              Join Her Africa Table <ArrowIcon />
             </Link>
             <Link className="text-link" href="/events">Explore gatherings</Link>
           </div>
           <div className="editorial-proof" aria-label="Membership qualities">
-            <span>Carefully selected</span>
+            <span>{openPilot ? "Open pilot" : "Carefully selected"}</span>
             <span>Private by design</span>
             <span>Relationships with purpose</span>
           </div>
@@ -253,12 +266,13 @@ export default async function HomePage() {
           <p className="eyebrow light-eyebrow">Private membership</p>
           <h2 id="membership-title">Bring your work.<br />Find your people.</h2>
           <p>
-            Request a place in the Nairobi founding circle. Your answers are
-            reviewed privately and we will email you when your seat is ready.
+            {openPilot
+              ? "Join the pilot. Confirm your email, share a few details and complete your profile. Registration is approved automatically."
+              : "Request a place in the Nairobi founding circle. Your answers are reviewed privately and we will email you when your seat is ready."}
           </p>
           <div>
             <Link className="button button-light" href="/sign-in?mode=apply">
-              Request membership <ArrowIcon />
+              Join Her Africa Table <ArrowIcon />
             </Link>
             <a href="mailto:support@herafricatable.com">Ask us a question</a>
           </div>
@@ -267,7 +281,7 @@ export default async function HomePage() {
           {membershipSteps.map(([number, title, description]) => (
             <li key={number}>
               <span>{number}</span>
-              <p><strong>{title}</strong><small>{description}</small></p>
+              <p><strong>{openPilot && number === "03" ? "Automatic approval" : title}</strong><small>{openPilot && number === "03" ? "During the pilot, continue straight to your profile." : description}</small></p>
             </li>
           ))}
         </ol>

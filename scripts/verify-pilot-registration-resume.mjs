@@ -23,8 +23,20 @@ const onboarding=page('app/home/page.tsx','MemberHomePage',{React,createClient:a
 await assert.rejects(onboarding(),/REDIRECT:\/onboarding$/);
 function findForm(node) {if(!node||typeof node!=='object')return null;if(node.type===Form)return node;if(Array.isArray(node)){for(const child of node){const found=findForm(child);if(found)return found;}return null;}return findForm(node.props?.children);}
 for(const mode of ['trusted_auto','manual_review'])for(const status of ['submitted','in_review',null]) {
-  const apply=page('app/apply/page.tsx','MembershipApplicationPage',{React,Link:()=>null,MembershipApplicationForm:Form,createClient:async()=>client(mode,status),redirect,safeInternalDestination:()=>null});
+  const apply=page('app/apply/page.tsx','MembershipApplicationPage',{React,Link:()=>null,SignOutButton:()=>null,MembershipApplicationForm:Form,createClient:async()=>client(mode,status),redirect,safeInternalDestination:()=>null});
   const result=await apply({searchParams:Promise.resolve({})});
   assert.equal(findForm(result).props.startEditing,mode==='trusted_auto'&&status!==null);
 }
 console.log('Pilot registration resume passed: earlier requests reopen during automatic intake, manual/closed waiting stays intact, approved members continue to profile setup.');
+
+const signout=readFileSync(new URL('../components/auth/sign-out-button.tsx',import.meta.url),'utf8');
+const signoutBody=signout.slice(signout.indexOf('  async function signOut()'),signout.indexOf('  return ('));
+for(const outcome of ['success','denied','throw']) {
+  const events=[],busy=[],failed=[];
+  const signOut=new Function('createClient','setBusy','setFailed','clearCommunityDrafts','window',`${signoutBody};return signOut;`)(
+    ()=>({auth:{signOut:async options=>{assert.equal(options.scope,'local');if(outcome==='throw')throw Error('Offline');return {error:outcome==='denied'?Error('Denied'):null};}}}),
+    value=>busy.push(value),value=>failed.push(value),()=>events.push('clear-drafts'),{location:{replace:href=>events.push(href)}});
+  await signOut();assert.equal(busy.at(-1),false);assert.equal(failed.at(-1),outcome!=='success');
+  assert.deepEqual(events,outcome==='success'?['clear-drafts','/']:[]);
+}
+console.log('Account switching sign-out passed: local session scope, drafts cleared after success, and failed requests remain recoverable.');

@@ -127,8 +127,8 @@ export function AuthPanel({
         <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 10h11m-4-4 4 4-4 4" /></svg>
         Back to Her Africa Table
       </Link>
-      <p className="auth-kicker">{isAdmin ? "Approved team only" : memberJourney === "apply" ? "Membership request" : "Member sign in"}</p>
-      <h2>{isAdmin ? "Admin sign in" : step === "verify" ? "Check your email" : memberJourney === "apply" ? "Begin your request" : "Welcome back"}</h2>
+      <p className="auth-kicker">{isAdmin ? "Approved team only" : memberJourney === "apply" ? "Join Her Africa Table" : "Member sign in"}</p>
+      <h2>{isAdmin ? "Admin sign in" : step === "verify" ? "Check your email" : memberJourney === "apply" ? "Create your account" : "Welcome back"}</h2>
       <p className="auth-description">
         {isAdmin
           ? <>Enter an approved team email. We will send a private sign-in code, then confirm your Admin access.</>
@@ -155,7 +155,7 @@ export function AuthPanel({
             type="button"
           >
             <strong>I’m new here</strong>
-            <span>Request membership</span>
+            <span>Create my account</span>
           </button>
         </div>
       ) : null}
@@ -163,8 +163,8 @@ export function AuthPanel({
       {!isAdmin && step === "request" && memberJourney === "apply" ? (
         <ol className="auth-journey" aria-label="How a membership request works">
           <li><span>1</span><div><strong>Confirm your email</strong><small>We send you a private code.</small></div></li>
-          <li><span>2</span><div><strong>Complete your request</strong><small>Answer a few short questions.</small></div></li>
-          <li><span>3</span><div><strong>Receive our decision</strong><small>We email you after review.</small></div></li>
+          <li><span>2</span><div><strong>Tell us about yourself</strong><small>Answer a few short questions.</small></div></li>
+          <li><span>3</span><div><strong>Complete your profile</strong><small>During the open pilot, you can continue automatically.</small></div></li>
         </ol>
       ) : null}
 
@@ -224,7 +224,7 @@ export function AuthPanel({
         Need help? <a href="mailto:support@herafricatable.com">Contact us</a>.
       </p>
       <p className="intent-switch">
-        {isAdmin ? <>Not signing in for the team? <Link href="/sign-in">Use the member sign-in</Link></> : memberJourney === "sign-in" ? <>New to Her Africa Table? <button className="auth-inline-switch" onClick={() => chooseMemberJourney("apply")} type="button">Request membership</button>.</> : <>Already approved? <button className="auth-inline-switch" onClick={() => chooseMemberJourney("sign-in")} type="button">Return to member sign in</button>.</>}
+        {isAdmin ? <>Not signing in for the team? <Link href="/sign-in">Use the member sign-in</Link></> : memberJourney === "sign-in" ? <>New to Her Africa Table? <button className="auth-inline-switch" onClick={() => chooseMemberJourney("apply")} type="button">Create an account</button>.</> : <>Already registered? <button className="auth-inline-switch" onClick={() => chooseMemberJourney("sign-in")} type="button">Sign in</button>.</>}
       </p>
     </div>
   );

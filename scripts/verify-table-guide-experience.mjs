@@ -9,8 +9,8 @@ for (const contract of [
   "I’m already a member",
   "I’m new here",
   "Welcome back",
-  "Begin your request",
-  "Receive our decision",
+  "Create your account",
+  "Complete your profile",
 ]) {
   assert(auth.includes(contract), `Sign-in journey is missing: ${contract}`);
 }

@@ -966,7 +966,7 @@ const membershipApplicationForm = read(
 );
 const memberReview = read("components/admin/member-review.tsx");
 for (const contract of [
-  "Private membership request",
+  "<SignOutButton",
   "membership_applications",
   "MembershipApplicationForm",
   'edit === "1"',

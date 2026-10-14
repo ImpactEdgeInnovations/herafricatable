@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { redirect } from "next/navigation";
 import {
   MembershipApplicationForm,
@@ -75,7 +76,7 @@ export default async function MembershipApplicationPage({
             <span className="brand-mark" aria-hidden="true">H</span>
             <span>Her Africa Table<small>Meet. Connect. Rise.</small></span>
           </Link>
-          <span>Membership requests</span>
+          <SignOutButton />
         </header>
         <section className="membership-intake-paused">
           <span className="application-complete-mark" aria-hidden="true">H</span>
@@ -101,7 +102,7 @@ export default async function MembershipApplicationPage({
           <span className="brand-mark" aria-hidden="true">H</span>
           <span>Her Africa Table<small>Meet. Connect. Rise.</small></span>
         </Link>
-        <span>{intakeMode === "trusted_auto" ? "Complete your registration" : "Private membership request"}</span>
+        <SignOutButton />
       </header>
       <div className="membership-application-shell">
         <aside className="application-welcome">
