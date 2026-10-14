@@ -67,7 +67,7 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
     <MemberHeader active="events" label="Your event" />
     <EventHostWorkspace currentUserId={user.id} initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} communities={(communitiesResult.data as EventHostCommunity[] | null) ?? []} communityLinksReady={!communitiesResult.error} selfPublish={selfPublish === true} />
     <EventHostExtraTools>
-      <EventRepeatPlanner eventId={workspace.event_id} currentUserId={user.id} sourceStartsAt={workspace.starts_at} />
+      {["published", "completed"].includes(workspace.event_status) ? <EventRepeatPlanner eventId={workspace.event_id} currentUserId={user.id} sourceStartsAt={workspace.starts_at} /> : null}
       {!hasEnded ? <EventAppearance eventId={workspace.event_id} initialAccent={appearanceResult.data?.appearance_accent_key} ready={!appearanceResult.error} /> : null}
       {workspace.event_status === "published" && !hasEnded && freeBookingResult.data?.registration_mode === "manual_review" ? <details id="host-bookings"><summary>Booking settings</summary><EventFreeBookingControl eventId={workspace.event_id} eventTitle={workspace.event_title} enabled={Boolean(freeBookingResult.data.free_instant_booking)} ready={!freeBookingResult.error}/></details> : null}
       {workspace.event_status === "published" && !hasEnded ? <details id="host-invites"><summary>Invite people</summary><DestinationInvitationPanel currentUserId={user.id} destinationId={workspace.event_id} destinationName={workspace.event_title} destinationType="event" invitations={(invitationsResult.data as DestinationInvitation[] | null) ?? []} ready={!invitationsResult.error}/></details> : null}
