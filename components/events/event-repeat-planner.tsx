@@ -46,7 +46,7 @@ export function EventRepeatPlanner({ eventId, communityId, communitySlug = "", c
         if(drafts.error)throw drafts.error;
         setRows((drafts.data??[]).filter((row: MemberEventProposal | CommunityEventProposal)=>saved.proposal_ids.includes(row.proposal_id)));
         if(!communityId) {
-          const [setting,images,rooms]=await Promise.all([supabase.rpc("get_pilot_free_event_setting"),supabase.rpc("list_my_application_proposal_media"),supabase.rpc("list_communities")]);
+          const [setting,images,rooms]=await Promise.all([supabase.rpc("get_repeat_event_auto_publish_setting"),supabase.rpc("list_my_application_proposal_media"),supabase.rpc("list_communities")]);
           setPilot(!setting.error&&setting.data===true);setMediaReady(!images.error);
           const ownImages=((images.data??[]) as ApplicationProposalMedia[]).filter(item=>item.context_type==='member_event_proposal'&&saved.proposal_ids.includes(item.context_id));
           setMedia(await Promise.all(ownImages.map(async item=>{try{const signed=await supabase.storage.from("proposal-media").createSignedUrl(item.storage_path,3600);return {...item,image_url:signed.data?.signedUrl??null};}catch{return {...item,image_url:null};}})));
@@ -81,6 +81,7 @@ export function EventRepeatPlanner({ eventId, communityId, communitySlug = "", c
     <summary>Repeat this {communityId?"gathering":"event"} <small>Optional</small></summary>
     {opened ? <div className="event-repeat-body">
       <p>Plan daily, weekly or monthly dates. Each starts as a private draft with its own guest limit, bookings and reminders. Check the time, venue and contact before opening each date.</p>
+      {!communityId ? <p>The pilot allows two events to open automatically. Later repeat dates go to the team for review.</p> : null}
       {busy?<p role="status">Saving or opening repeat dates…</p>:null}
       {!plan&&ready?<div className="event-repeat-fields">
         <label>Repeat<select disabled={busy} value={frequency} onChange={event=>setFrequency(event.target.value)}><option value="none">Does not repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></label>
