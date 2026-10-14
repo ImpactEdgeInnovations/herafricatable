@@ -1,6 +1,6 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 11 October 2026. Historical baseline release: `b4be9ca`.
+Updated: 14 October 2026. Historical baseline release: `b4be9ca`.
 
 This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
@@ -13,6 +13,8 @@ This board turns the 4 October UI/UX and Events audit (saved separately on the P
 ### UI refinement track — 8 October
 
 This track refines the existing modules; it does not replace the event-first launch gates. Review means implemented and waiting for the relevant acceptance, not fully certified.
+
+**14 October pilot registration repair:** A pre-pilot submitted application remained on Home's manual waiting screen, including the misleading two-business-day response target. Home now checks the effective intake mode and sends pending/submitted/in-review pilot registrations to their saved form; the form opens for confirmation even without an edit query parameter. Pilot wording explains automatic approval and uses **Continue to my profile**. Final submission still uses the existing database approval rules and requires the member's confirmation. Manual/closed intake retains its waiting journey. Continue buttons have separate identities and suppress accidental submission while moving between steps. Route/form regression checks and production build passed. No database change or automatic backfill of old applications is required; members confirm their saved details once to continue.
 
 **11 October Community reliability and live linking acceptance:** Album selection now releases its loading state after thrown, denied or empty reads; late responses cannot replace a newer selection. Background album/list checks catch connection failures, avoid overlapping focus/timer requests and fail closed with a retry message. Album refresh updates the full current settings and Host/upload permissions rather than leaving stale controls visible. Gathering/album conversations show a recoverable error instead of disappearing when the API returns no data. Behaviour tests cover these paths; real-file delivery remains a separate check.
 

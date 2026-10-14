@@ -102,6 +102,7 @@ export function MembershipApplicationForm({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy || step !== STEPS.length - 1) return;
     if (!values.acknowledged) {
       setMessage("Please confirm the membership expectations before submitting.");
       return;
@@ -163,7 +164,7 @@ export function MembershipApplicationForm({
     <form className="membership-application-form" onSubmit={submit} noValidate>
       <header className="application-form-header">
         <div>
-          <p className="eyebrow">Request membership</p>
+          <p className="eyebrow">{intakeMode === "trusted_auto" ? "Complete your registration" : "Request membership"}</p>
           <h1>A little about you.</h1>
           <p>
             This helps us welcome you with care. Your answers stay private with
@@ -295,7 +296,7 @@ export function MembershipApplicationForm({
       {message ? <p className="manager-message" role="alert">{message}</p> : null}
       <footer className="application-form-actions">
         {step > 0 ? <button className="button button-outline" disabled={busy} onClick={() => { setStep((current) => current - 1); setMessage(""); }} type="button">Back</button> : <Link className="button button-outline" href="/">Not now</Link>}
-        {step < STEPS.length - 1 ? <button className="button button-primary" onClick={continueForward} type="button">Continue</button> : <button className="button button-primary" disabled={busy || !values.acknowledged} type="submit">{busy ? "Sending…" : "Send my request"}</button>}
+        {step < STEPS.length - 1 ? <button key={`continue-${step}`} className="button button-primary" onClick={event => { event.preventDefault(); continueForward(); }} type="button">Continue</button> : <button key="submit-registration" className="button button-primary" disabled={busy || !values.acknowledged} type="submit">{busy ? "Saving…" : intakeMode === "trusted_auto" ? "Continue to my profile" : "Send my request"}</button>}
       </footer>
     </form>
   );

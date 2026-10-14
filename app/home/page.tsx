@@ -108,6 +108,11 @@ export default async function MemberHomePage() {
     !membershipApplicationResult.error &&
     applicationStatus !== "declined"
   ) {
+    const { data: intakeMode } = await supabase.rpc("get_membership_intake_mode");
+    if (intakeMode === "trusted_auto" &&
+      (applicationStatus === null || applicationStatus === "submitted" || applicationStatus === "in_review")) {
+      redirect("/apply");
+    }
     return (
       <MembershipWaitingRoom
         displayName={profile?.display_name ?? null}

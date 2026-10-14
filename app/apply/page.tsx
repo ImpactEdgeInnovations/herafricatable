@@ -101,19 +101,20 @@ export default async function MembershipApplicationPage({
           <span className="brand-mark" aria-hidden="true">H</span>
           <span>Her Africa Table<small>Meet. Connect. Rise.</small></span>
         </Link>
-        <span>Private membership request</span>
+        <span>{intakeMode === "trusted_auto" ? "Complete your registration" : "Private membership request"}</span>
       </header>
       <div className="membership-application-shell">
         <aside className="application-welcome">
-          <p className="eyebrow">A considered community</p>
-          <h2>Every seat begins with intention.</h2>
+          <p className="eyebrow">{intakeMode === "trusted_auto" ? "Welcome to the pilot" : "A considered community"}</p>
+          <h2>{intakeMode === "trusted_auto" ? "Let’s get you started." : "Every seat begins with intention."}</h2>
           <p>
-            We ask a few thoughtful questions so introductions remain useful,
-            respectful and grounded in genuine shared purpose.
+            {intakeMode === "trusted_auto"
+              ? "Confirm a few details, then complete your member profile. During the pilot, registration is approved automatically—there is no team review to wait for."
+              : "We ask a few thoughtful questions so introductions remain useful, respectful and grounded in genuine shared purpose."}
           </p>
-          <blockquote>
+          {intakeMode !== "trusted_auto" ? <blockquote>
             “The strongest tables are built with care—not simply filled.”
-          </blockquote>
+          </blockquote> : null}
           <small>Your answers are visible only to the membership team.</small>
         </aside>
         <MembershipApplicationForm
@@ -126,7 +127,9 @@ export default async function MembershipApplicationPage({
           }
           nextHref={nextHref}
           startEditing={
-            edit === "1" && applicationResult.data?.status === "submitted"
+            (edit === "1" && applicationResult.data?.status === "submitted") ||
+            (intakeMode === "trusted_auto" &&
+              ["submitted", "in_review"].includes(applicationResult.data?.status ?? ""))
           }
         />
       </div>
