@@ -7,6 +7,7 @@ import { memberErrorMessage } from "@/lib/member-error";
 import { CommunityGatheringInline } from "./community-gathering-inline";
 import { CommunityVideoLibrary } from "./community-video-library";
 import { CommunityGatheringPlanner } from "./community-gathering-planner";
+import { CommunityCalendar } from "./community-calendar";
 import dynamic from "next/dynamic";
 
 const CommunityEventLinker = dynamic(() => import("./community-event-linker").then(module => module.CommunityEventLinker), { loading: () => <p role="status">Opening event linking…</p> });
@@ -76,10 +77,10 @@ export function CommunityGatherings({
   const [items, setItems] = useState(cards);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const [area,setArea] = useState<"upcoming" | "past" | "videos">(() => {
-    if (initialArea === "videos" || initialArea === "past") return initialArea;
+  const [area,setArea] = useState<"calendar" | "upcoming" | "past" | "videos">(() => {
+    if (initialArea === "calendar" || initialArea === "upcoming" || initialArea === "videos" || initialArea === "past") return initialArea;
     const initial = cards.find(card => card.event_slug === initialSelection);
-    return initial && new Date(initial.ends_at).getTime() < Date.now() ? "past" : "upcoming";
+    return initial ? new Date(initial.ends_at).getTime() < Date.now() ? "past" : "upcoming" : "calendar";
   });
   const [selected,setSelected] = useState(initialSelection ?? "");
   const [plannerOpened, setPlannerOpened] = useState(false);
@@ -91,7 +92,7 @@ export function CommunityGatherings({
     const params = new URL(window.location.href).searchParams;
     setSelected(params.get("gathering") ?? "");
     const next = params.get("gatheringArea");
-    setArea(next === "videos" || next === "past" ? next : "upcoming");
+    setArea(next === "videos" || next === "past" || next === "upcoming" ? next : "calendar");
   }; window.addEventListener("popstate",update);return()=>window.removeEventListener("popstate",update);},[]);
   function select(slug: string) {
     setSelected(slug);
@@ -100,7 +101,7 @@ export function CommunityGatherings({
     if(slug) url.searchParams.set("gathering",slug); else url.searchParams.delete("gathering");
     window.history.pushState(null,"",url.toString());
   }
-  function changeArea(next: "upcoming" | "past" | "videos") {
+  function changeArea(next: "calendar" | "upcoming" | "past" | "videos") {
     setArea(next);
     setSelected("");
     const url = new URL(window.location.href);
@@ -184,13 +185,14 @@ export function CommunityGatherings({
       <header className="community-section-heading" hidden={Boolean(selected)}>
         <div>
           <p className="eyebrow">Gatherings</p>
-          <h2 id="community-gatherings-title">{area === "videos" ? "Community videos" : area === "upcoming" ? "Upcoming gatherings" : "Past gatherings"}</h2>
+          <h2 id="community-gatherings-title">{area === "calendar" ? "Community calendar" : area === "videos" ? "Community videos" : area === "upcoming" ? "Upcoming gatherings" : "Past gatherings"}</h2>
         </div>
         <p>{area === "videos" ? "Each video stays with its gathering and conversation." : "Choose a gathering to see details, save your place or join the conversation."}</p>
       </header>
       {selected && items.find(item=>item.event_slug===selected) ? <CommunityGatheringInline card={items.find(item=>item.event_slug===selected)!} communityId={communityId} currentUserId={currentUserId} onClose={()=>select("")} backLabel={area === "videos" ? "Back to videos" : "Back to gatherings"} /> : selected ? <div role="status"><p>This gathering is no longer available in your Community.</p><button type="button" onClick={()=>select("")}>{area === "videos" ? "Back to videos" : "Back to gatherings"}</button></div> : null}
       <div hidden={Boolean(selected)}>
       <div className="community-gathering-toolbar"><div role="group" aria-label="Gathering dates">
+        <button type="button" aria-pressed={area==="calendar"} onClick={()=>changeArea("calendar")}>Calendar</button>
         <button type="button" aria-pressed={area==="upcoming"} onClick={()=>changeArea("upcoming")}>Upcoming <span>{upcoming.length}</span></button>
         <button type="button" aria-pressed={area==="past"} onClick={()=>changeArea("past")}>Past <span>{past.length}</span></button>
         <button type="button" aria-pressed={area==="videos"} onClick={()=>changeArea("videos")}>Videos</button>
@@ -203,7 +205,7 @@ export function CommunityGatherings({
           <strong>The new gathering rooms are being prepared.</strong>
           <p>Your existing Community events are safe. Please try again later.</p>
         </div>
-      ) : area === "videos" ? <CommunityVideoLibrary cards={items} slug={slug} onOpen={select} /> : (area === "upcoming" ? upcoming : past).length ? (
+      ) : area === "calendar" ? <CommunityCalendar cards={items} onOpen={select} /> : area === "videos" ? <CommunityVideoLibrary cards={items} slug={slug} onOpen={select} /> : (area === "upcoming" ? upcoming : past).length ? (
         <div className="gathering-list">{(area === "upcoming" ? upcoming : past).map(renderCard)}</div>
       ) : (
         <div className="community-program-empty">

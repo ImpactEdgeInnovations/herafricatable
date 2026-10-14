@@ -20,6 +20,7 @@ begin
   insert into public.events(id,slug,title,format,audience,status,starts_at,ends_at,registration_mode,created_by)
     values(eid,'link-rehearsal-'||eid,'[TEST] Linking acceptance','virtual','public','published',now()+interval '7 days',now()+interval '7 days 1 hour','closed',host_id),
       (draft_eid,'link-rehearsal-'||draft_eid,'[TEST] Draft denial','virtual','public','draft',now()+interval '7 days',now()+interval '7 days 1 hour','closed',host_id);
+  insert into public.event_hosts(event_id,user_id,assigned_by) values(eid,host_id,host_id);
   perform set_config('request.jwt.claim.sub',host_id::text,true);
   perform set_config('request.jwt.claims',jsonb_build_object('sub',host_id,'role','authenticated')::text,true);
   execute 'set local role authenticated';

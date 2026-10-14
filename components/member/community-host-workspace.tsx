@@ -727,7 +727,7 @@ function ProgrammingPanel({
           <h2>{title}</h2>
         </div>
         <p>
-          {eyebrow === "Events" ? "Link an available event to show it in this Community. Members still choose whether to attend." : "Choose learning to share with members."}
+          {eyebrow === "Events" ? "Choose a published event you host. Gatherings made for this Community and events already linked here also appear." : "Choose learning to share with members."}
         </p>
       </header>
       {eyebrow === "Events" ? options.length ? <div className="community-event-link-picker">

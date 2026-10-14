@@ -39,7 +39,7 @@ function hookHarness() {
   return {states,effects,reset(){index=0;refIndex=0;},useState(initial){const i=index++;if(!(i in states))states[i]=typeof initial==='function'?initial():initial;return [states[i],value=>states[i]=typeof value==='function'?value(states[i]):value];},useRef(initial){const i=refIndex++;return refs[i]??(refs[i]={current:initial});},useEffect:fn=>effects.push(fn),useMemo:fn=>fn()};
 }
 const hooks=hookHarness();
-const Gatherings=compileComponent('components/member/community-gatherings.tsx','CommunityGatherings',{React,Link,...hooks,createClient:()=>({}),memberErrorMessage:()=>'',CommunityGatheringInline:()=>null,CommunityVideoLibrary:()=>null,CommunityGatheringPlanner:()=>React.createElement('p',{},'Inline planner'),dynamic:()=>()=>React.createElement('p',{},'Inline event linker')});
+const Gatherings=compileComponent('components/member/community-gatherings.tsx','CommunityGatherings',{React,Link,...hooks,createClient:()=>({}),memberErrorMessage:()=>'',CommunityGatheringInline:()=>null,CommunityVideoLibrary:()=>null,CommunityCalendar:()=>React.createElement('p',{},'Community calendar'),CommunityGatheringPlanner:()=>React.createElement('p',{},'Inline planner'),dynamic:()=>()=>React.createElement('p',{},'Inline event linker')});
 const props={cards:[],migrationReady:true,slug:'test',communityId:'community-one',currentUserId:'host-one'};
 const renderGatherings=extra=>{hooks.reset();return Gatherings({...props,...extra});};
 assert(!renderToStaticMarkup(renderGatherings({canManage:false})).includes('Create a gathering'));
@@ -93,6 +93,7 @@ ctx=linkingContext();ctx.supabase.rpc=async()=>({error:{message:'This gathering 
 await action(linker,'updateLink','  return <section',ctx)(eventOption,false);
 assert(ctx.notices.at(-1).includes('Keep it linked'));assert(ctx.needsRefresh);assert.equal(ctx.snapshots.length,0);assert.equal(ctx.actionBusy.current,false);
 ctx=linkingContext();ctx.needsRefresh=true;await action(linker,'updateLink','  return <section',ctx)(eventOption,true);assert.equal(ctx.calls.length,0,'An uncertain write must be reconciled before another write');
+ctx=linkingContext();ctx.readOptions=async()=>[];await action(linker,'updateLink','  return <section',ctx)({...eventOption,is_linked:true},false);assert.equal(ctx.refreshes.length,1);assert.equal(ctx.needsRefresh,false,'An unlinked event no longer hosted by this person can disappear from their chooser');
 for(const outcome of ['events','empty','denied','throw','stale']) {
   const h=hookHarness();const calls=[];let resolve;
   const rpc=async(name,args)=>{calls.push([name,args]);if(outcome==='throw')throw Error('Offline');if(outcome==='stale')return new Promise(done=>resolve=done);return {data:outcome==='events'?[eventOption,{...eventOption,item_type:'resource',item_id:'course-one',title:'Private course'}]:[],error:outcome==='denied'?Error('Host required'):null};};
