@@ -29,6 +29,12 @@ begin
  ids:=public.plan_repeat_events(eid,null,'monthly',3,first_start,request_id);
  again:=public.plan_repeat_events(eid,null,'monthly',3,first_start,request_id);
  if ids<>again or cardinality(ids)<>3 then raise exception 'Repeat request duplicated drafts';end if;
+ perform public.save_member_event_proposal(
+  p_proposal_id=>null,p_title=>'[TEST] One-off after repeats',p_summary=>'A normal one-off event should still be allowed after planning a repeat series.',
+  p_format=>'virtual',p_starts_at=>first_start,p_ends_at=>first_start+interval '1 hour',p_timezone=>'Africa/Nairobi',
+  p_venue_name=>null,p_city=>null,p_country=>'Kenya',p_address_line=>null,p_map_url=>null,p_online_url=>'https://meet.google.com/abc-defg-hij',
+  p_capacity=>20,p_safety_contact_name=>'Test Host',p_safety_contact_phone=>'+254700000000',p_accessibility_notes=>null,
+  p_host_experience=>'I will welcome guests and support the discussion.',p_host_note=>null,p_community_after_event=>false,p_community_idea=>null,p_submit=>false);
  execute 'reset role';
  if (select count(*) from public.member_event_proposals where id=any(ids) and status='draft' and canonical_event_id is null)<>3 then raise exception 'Repeat dates bypassed draft approval';end if;
  if not exists(select 1 from public.member_event_proposals where id=ids[2] and extract(month from starts_at at time zone 'Africa/Nairobi')=2
