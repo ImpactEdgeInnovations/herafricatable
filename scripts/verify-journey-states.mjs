@@ -846,7 +846,7 @@ for (const contract of [
   "Your Table Journey",
   "Make your profile useful",
   "Take your seat in a Community",
-  "Join a gathering",
+  "Join an event",
   "Make one trusted connection",
   "Continue the relationship",
   "not a score, requirement or public ranking",
@@ -1035,7 +1035,6 @@ for (const contract of [
   'active="community"',
   "CommunityLocalNavigation",
   "Conversations",
-  "Gatherings",
   "People",
   "showToday",
   "showConversations",
@@ -1066,6 +1065,7 @@ for (const contract of [
     `Community Hub must include ${contract}`,
   );
 }
+assert(read("components/member/community-local-navigation.tsx").includes('label: "Meetups"'), "Community navigation must use the member-facing Meetups label");
 for (const contract of [
   "CommunityActivitySummary",
   "new_activity_count",

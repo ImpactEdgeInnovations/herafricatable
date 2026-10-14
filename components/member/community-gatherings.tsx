@@ -40,16 +40,16 @@ function gatheringLabel(value: string) {
     guest_conversation: "Guest conversation",
     networking_circle: "Networking circle",
     social_wellbeing: "Social & wellbeing",
-    webinar: "Online gathering",
+    webinar: "Online meetup",
     workshop: "Workshop",
   };
-  return labels[value] ?? "Community gathering";
+  return labels[value] ?? "Community meetup";
 }
 
 function timingLabel(card: CommunityGatheringCard) {
-  if (new Date(card.ends_at).getTime() < Date.now()) return card.recap_published ? "Recap ready" : "Past gathering";
+  if (new Date(card.ends_at).getTime() < Date.now()) return card.recap_published ? "Recap ready" : "Past meetup";
   if (card.chat_phase === "open") return "Conversation open";
-  if (card.chat_phase === "archived") return card.recap_published ? "Recap ready" : "Past gathering";
+  if (card.chat_phase === "archived") return card.recap_published ? "Recap ready" : "Past meetup";
   if (card.chat_phase === "closed") return "Conversation closed";
   return "Coming up";
 }
@@ -168,7 +168,7 @@ export function CommunityGatherings({
         </div>
         <div className="gathering-card-actions">
           <Link className="button button-primary" href={roomHref} onClick={(event)=>{event.preventDefault();select(card.event_slug);}}>
-            {card.chat_phase === "open" ? "Open gathering" : card.chat_phase === "archived" ? "View recap" : "View details"}
+            {card.chat_phase === "open" ? "Join meetup" : card.chat_phase === "archived" ? "View recap" : "View meetup"}
           </Link>
           {new Date(card.ends_at).getTime() >= Date.now() ? (
             <button disabled={busyId === card.room_id} onClick={() => void rsvp(card)} type="button">
@@ -184,38 +184,38 @@ export function CommunityGatherings({
     <section className="community-gatherings" aria-labelledby="community-gatherings-title">
       <header className="community-section-heading" hidden={Boolean(selected)}>
         <div>
-          <p className="eyebrow">Gatherings</p>
-          <h2 id="community-gatherings-title">{area === "calendar" ? "Community calendar" : area === "videos" ? "Community videos" : area === "upcoming" ? "Upcoming gatherings" : "Past gatherings"}</h2>
+          <p className="eyebrow">Meetups</p>
+          <h2 id="community-gatherings-title">{area === "calendar" ? "Community calendar" : area === "videos" ? "Community videos" : area === "upcoming" ? "Upcoming meetups" : "Past meetups"}</h2>
         </div>
-        <p>{area === "videos" ? "Each video stays with its gathering and conversation." : "Choose a gathering to see details, save your place or join the conversation."}</p>
+        <p>{area === "videos" ? "Each video stays with its meetup and conversation." : "Choose a meetup to see details, save your place or join the conversation."}</p>
       </header>
-      {selected && items.find(item=>item.event_slug===selected) ? <CommunityGatheringInline card={items.find(item=>item.event_slug===selected)!} communityId={communityId} currentUserId={currentUserId} onClose={()=>select("")} backLabel={area === "videos" ? "Back to videos" : "Back to gatherings"} /> : selected ? <div role="status"><p>This gathering is no longer available in your Community.</p><button type="button" onClick={()=>select("")}>{area === "videos" ? "Back to videos" : "Back to gatherings"}</button></div> : null}
+      {selected && items.find(item=>item.event_slug===selected) ? <CommunityGatheringInline card={items.find(item=>item.event_slug===selected)!} communityId={communityId} currentUserId={currentUserId} onClose={()=>select("")} backLabel={area === "videos" ? "Back to videos" : "Back to meetups"} /> : selected ? <div role="status"><p>This meetup is no longer available in your Community.</p><button type="button" onClick={()=>select("")}>{area === "videos" ? "Back to videos" : "Back to meetups"}</button></div> : null}
       <div hidden={Boolean(selected)}>
-      <div className="community-gathering-toolbar"><div role="group" aria-label="Gathering dates">
+      <div className="community-gathering-toolbar"><div role="group" aria-label="Meetup dates">
         <button type="button" aria-pressed={area==="calendar"} onClick={()=>changeArea("calendar")}>Calendar</button>
         <button type="button" aria-pressed={area==="upcoming"} onClick={()=>changeArea("upcoming")}>Upcoming <span>{upcoming.length}</span></button>
         <button type="button" aria-pressed={area==="past"} onClick={()=>changeArea("past")}>Past <span>{past.length}</span></button>
         <button type="button" aria-pressed={area==="videos"} onClick={()=>changeArea("videos")}>Videos</button>
-      </div>{canManage ? <div className="community-gathering-host-actions"><button type="button" aria-expanded={plannerOpened} aria-controls="community-inline-planner" onClick={() => { setPlannerMounted(true); setPlannerOpened(open => !open); setLinkerOpened(false); }}>{plannerOpened ? "Hide gathering tools" : "Create a gathering"}</button><button type="button" aria-expanded={linkerOpened} aria-controls="community-inline-event-linker" onClick={() => { setLinkerMounted(true); setLinkerOpened(open => !open); setPlannerOpened(false); }}>{linkerOpened ? "Hide event linking" : "Link an existing event"}</button></div> : null}</div>
+      </div>{canManage ? <div className="community-gathering-host-actions"><button type="button" aria-expanded={plannerOpened} aria-controls="community-inline-planner" onClick={() => { setPlannerMounted(true); setPlannerOpened(open => !open); setLinkerOpened(false); }}>{plannerOpened ? "Hide meetup tools" : "Create a meetup"}</button><button type="button" aria-expanded={linkerOpened} aria-controls="community-inline-event-linker" onClick={() => { setLinkerMounted(true); setLinkerOpened(open => !open); setPlannerOpened(false); }}>{linkerOpened ? "Hide event linking" : "Link an existing event"}</button></div> : null}</div>
       {canManage && plannerMounted ? <div id="community-inline-planner" className="community-inline-planner" hidden={!plannerOpened}><CommunityGatheringPlanner communityId={communityId} slug={slug} currentUserId={currentUserId} /></div> : null}
       {canManage && linkerMounted ? <div id="community-inline-event-linker" className="community-inline-planner" hidden={!linkerOpened}><CommunityEventLinker key={communityId} communityId={communityId} onCreateGathering={() => { setPlannerMounted(true); setPlannerOpened(true); setLinkerOpened(false); }} /></div> : null}
       {message ? <p className="form-message" role="status">{message}</p> : null}
       {!migrationReady ? (
         <div className="community-program-empty">
-          <strong>The new gathering rooms are being prepared.</strong>
+          <strong>The new meetup rooms are being prepared.</strong>
           <p>Your existing Community events are safe. Please try again later.</p>
         </div>
       ) : area === "calendar" ? <CommunityCalendar cards={items} onOpen={select} /> : area === "videos" ? <CommunityVideoLibrary cards={items} slug={slug} onOpen={select} /> : (area === "upcoming" ? upcoming : past).length ? (
         <div className="gathering-list">{(area === "upcoming" ? upcoming : past).map(renderCard)}</div>
       ) : (
         <div className="community-program-empty">
-          <strong>{area === "past" ? "No past gatherings yet." : "No gathering is scheduled yet."}</strong>
+          <strong>{area === "past" ? "No past meetups yet." : "No meetup is scheduled yet."}</strong>
           <p>When your Host schedules one, it will appear here. You can browse the main event calendar in the meantime.</p>
           <Link href="/events">Explore events</Link>
         </div>
       )}
       <footer className="gathering-boundary-note">
-        <p>Each gathering has its own conversation. Look in Past gatherings for earlier discussions and recaps.</p>
+        <p>Each meetup has its own conversation. Look in Past meetups for earlier discussions and recaps.</p>
       </footer>
       </div>
     </section>

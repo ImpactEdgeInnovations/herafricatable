@@ -428,7 +428,7 @@ export default async function MemberHomePage() {
                   label: "Approval pending",
                   title: "Your request is with our team.",
                   description:
-                    "We are reviewing your request privately. You can explore upcoming gatherings while your seat is being considered.",
+                    "We are reviewing your request privately. You can explore upcoming events while your seat is being considered.",
                   action: "Explore events",
                   href: "/events",
                 };
@@ -507,7 +507,7 @@ export default async function MemberHomePage() {
           ? {
               action: "Find your next event",
               description:
-                "Choose a gathering before moving into attendee introductions.",
+                "Choose an event before moving into attendee introductions.",
               href: "/events",
               label: "Confirm a table",
             }
@@ -564,9 +564,9 @@ export default async function MemberHomePage() {
           }
         : !tableJourney.gathering_reserved
           ? {
-              action: "Find a gathering",
+              action: "Find an event",
               description:
-                "Reserve one gathering where a useful conversation can begin.",
+                "Reserve one event where a useful conversation can begin.",
               href: "/events",
               label: "Join a real table",
             }
@@ -608,7 +608,7 @@ export default async function MemberHomePage() {
                 : {
                     action: "View events",
                     description:
-                      "Browse upcoming events or revisit a past gathering.",
+                      "Browse upcoming events or revisit a past event.",
                     href: "/events",
                     label: "Your next event",
                   }),

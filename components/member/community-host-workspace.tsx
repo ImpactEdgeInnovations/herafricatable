@@ -269,7 +269,7 @@ export function CommunityHostWorkspace({
       error
         ? memberErrorMessage(error, "update what members can see")
         : active
-        ? option.item_type === "event" ? "Event linked. Members can find it in Gatherings." : "Learning updated."
+        ? option.item_type === "event" ? "Event linked. Members can find it in Meetups." : "Learning updated."
         : "Item removed from this community.",
     );
     if (!error) router.refresh();
@@ -727,13 +727,13 @@ function ProgrammingPanel({
           <h2>{title}</h2>
         </div>
         <p>
-          {eyebrow === "Events" ? "Choose a published event you host. Gatherings made for this Community and events already linked here also appear." : "Choose learning to share with members."}
+          {eyebrow === "Events" ? "Choose a published event you host. Meetups made for this Community and events already linked here also appear." : "Choose learning to share with members."}
         </p>
       </header>
       {eyebrow === "Events" ? options.length ? <div className="community-event-link-picker">
         <label>Choose an event<select value={selected?.item_id ?? ""} disabled={Boolean(busy)} onChange={event => setSelectedId(event.target.value)}>{options.map(option => <option key={option.item_id} value={option.item_id}>{option.title}{option.is_linked ? " — linked" : ""}</option>)}</select></label>
-        {selected ? <article><div><strong>{selected.title}</strong><small>{optionMeta(selected)}</small><p>{selected.summary}</p><span>{selected.is_linked ? "This event appears in your Community’s Gatherings tab." : "Link it so members can see it in the Gatherings tab."}</span></div><button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => void onUpdate(selected, !selected.is_linked, false)}>{busy === selected.item_id ? "Saving…" : selected.is_linked ? "Unlink event" : "Link event"}</button>{selected.is_linked ? <details><summary>Display options</summary><button type="button" disabled={Boolean(busy)} onClick={() => void onUpdate(selected, true, !selected.is_featured)}>{selected.is_featured ? "Stop showing first" : "Show first"}</button></details> : null}</article> : null}
-      </div> : <div className="community-host-empty"><p>No available event to link yet.</p><a className="button button-outline" href="#gathering-proposals">Plan a Community gathering</a></div> : options.length ? (
+        {selected ? <article><div><strong>{selected.title}</strong><small>{optionMeta(selected)}</small><p>{selected.summary}</p><span>{selected.is_linked ? "This event appears in your Community’s Meetups tab." : "Link it so members can see it in the Meetups tab."}</span></div><button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => void onUpdate(selected, !selected.is_linked, false)}>{busy === selected.item_id ? "Saving…" : selected.is_linked ? "Unlink event" : "Link event"}</button>{selected.is_linked ? <details><summary>Display options</summary><button type="button" disabled={Boolean(busy)} onClick={() => void onUpdate(selected, true, !selected.is_featured)}>{selected.is_featured ? "Stop showing first" : "Show first"}</button></details> : null}</article> : null}
+      </div> : <div className="community-host-empty"><p>No available event to link yet.</p><a className="button button-outline" href="#gathering-proposals">Plan a Community meetup</a></div> : options.length ? (
         <div>
           {options.map((option) => (
             <article key={option.item_id}>

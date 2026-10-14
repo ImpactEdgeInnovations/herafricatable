@@ -258,7 +258,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
         {list.can_manage ? <details className="community-photo-create"><summary>New album</summary><form onSubmit={create}>
           <label>Album name<input required minLength={3} maxLength={140} value={draft.title} disabled={Boolean(busy)} onChange={event => setDraft(previous => ({ ...previous, title: event.target.value }))} /></label>
           <label>Description (optional)<textarea maxLength={2000} rows={3} value={draft.description} disabled={Boolean(busy)} onChange={event => setDraft(previous => ({ ...previous, description: event.target.value }))} /></label>
-          <label>{initialGatheringId ? "Linked gathering" : "Related gathering (optional)"}<select value={draft.roomId} disabled={Boolean(busy) || Boolean(initialGatheringId)} onChange={event => setDraft(previous => ({ ...previous, roomId: event.target.value }))}><option value="">Community album — no gathering</option>{gatherings.map(item => <option key={item.room_id} value={item.room_id}>{item.title}</option>)}</select></label>
+          <label>{initialGatheringId ? "Linked meetup" : "Related meetup (optional)"}<select value={draft.roomId} disabled={Boolean(busy) || Boolean(initialGatheringId)} onChange={event => setDraft(previous => ({ ...previous, roomId: event.target.value }))}><option value="">Community album — no meetup</option>{gatherings.map(item => <option key={item.room_id} value={item.room_id}>{item.title}</option>)}</select></label>
           <button className="button button-primary" disabled={Boolean(busy) || unsavedFiles}>{busy === "create" ? "Creating…" : "Create album"}</button>
         </form></details> : null}
       </> : null}

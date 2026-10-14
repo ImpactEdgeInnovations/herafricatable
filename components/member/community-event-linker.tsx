@@ -75,7 +75,7 @@ export function CommunityEventLinker({ communityId, onCreateGathering }: {
       if (!active) {
         const confirmed = await ask({
           title: `Unlink ${option.title}?`,
-          description: "Members will no longer find this event in your Community. The event and bookings will not be cancelled. A gathering with conversations, photos or member activity must stay linked.",
+          description: "Members will no longer find this event in your Community. The event and bookings will not be cancelled. A meetup with conversations, photos or member activity must stay linked.",
           confirmLabel: "Unlink event",
           tone: "danger",
         });
@@ -96,7 +96,7 @@ export function CommunityEventLinker({ communityId, onCreateGathering }: {
       // a valid authoritative confirmation of removal, not an uncertain write.
       if (active ? !saved?.is_linked : saved?.is_linked) throw new Error("Link change was not confirmed");
       setOptions(latest);
-      setNotice(active ? "Event linked. Members can find it in Gatherings." : "Event unlinked. The event and guest bookings are unchanged.");
+      setNotice(active ? "Event linked. Members can find it in Meetups." : "Event unlinked. The event and guest bookings are unchanged.");
       router.refresh();
     } catch (error) {
       if (!alive.current) return;
@@ -112,14 +112,14 @@ export function CommunityEventLinker({ communityId, onCreateGathering }: {
   }
 
   return <section className="community-inline-event-linker" aria-labelledby={titleId}>
-    <header><h2 id={titleId}>Link an existing event</h2><p>Choose a published event you host. Gatherings made for this Community and events already linked here also appear. Members still choose whether to attend.</p></header>
+    <header><h2 id={titleId}>Link an existing event</h2><p>Choose a published event you host. Meetups made for this Community and events already linked here also appear. Members still choose whether to attend.</p></header>
     {status === "loading" ? <p role="status">Loading available events…</p> : status === "error" ? <div role="alert"><p>{notice}</p><button type="button" className="button button-outline" onClick={() => { setNotice(""); setRevision(value => value + 1); }}>Try again</button></div> : <>
       {notice ? <p role={needsRefresh ? "alert" : "status"}>{notice}</p> : null}
       {needsRefresh ? <button type="button" className="button button-outline" onClick={() => { setNotice(""); setRevision(value => value + 1); }}>Refresh event list</button> : null}
       {selected ? <div className="community-inline-event-choice">
         <label>Choose an event<select value={selected.item_id} disabled={busy || needsRefresh} onChange={event => { setSelectedId(event.target.value); setNotice(""); }}>{options.map(option => <option key={option.item_id} value={option.item_id}>{option.title}{option.is_linked ? " — linked" : ""}</option>)}</select></label>
         <article><strong>{selected.title}</strong>{eventTime(selected.starts_at) ? <small>{eventTime(selected.starts_at)}</small> : null}<span>{selected.is_linked ? "Linked to this Community" : "Not linked yet"}</span>{selected.summary ? <p>{selected.summary}</p> : null}<small>Linking does not change the event’s Host or register anyone.</small><button type="button" className="button button-outline" disabled={busy || needsRefresh} onClick={() => void updateLink(selected, !selected.is_linked)}>{busy ? "Saving…" : selected.is_linked ? "Unlink event" : "Link event"}</button></article>
-      </div> : <div className="community-program-empty"><strong>No available event to link yet.</strong><p>Publish an event you host first, or create a gathering just for this Community. Another Host’s event cannot be linked without their involvement.</p><button type="button" className="button button-outline" onClick={onCreateGathering}>Create a gathering</button></div>}
+      </div> : <div className="community-program-empty"><strong>No available event to link yet.</strong><p>Publish an event you host first, or create a meetup just for this Community. Another Host’s event cannot be linked without their involvement.</p><button type="button" className="button button-outline" onClick={onCreateGathering}>Create a meetup</button></div>}
     </>}
     {dialog}
   </section>;

@@ -13,7 +13,7 @@ export type CommunityArea =
 const areas: { key: CommunityArea; label: string }[] = [
   { key: "overview", label: "Home" },
   { key: "conversations", label: "Conversations" },
-  { key: "gatherings", label: "Gatherings" },
+  { key: "gatherings", label: "Meetups" },
   { key: "media", label: "Media" },
   { key: "people", label: "People" },
 ];

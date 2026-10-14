@@ -60,7 +60,7 @@ find(tree, item => item.type === 'button' && item.props.children === 'Today').pr
 render(); assert.equal(states[2], today.slice(0, 7)); assert.equal(states[3], today);
 tree = render(); find(tree, item => item.props?.['aria-label'] === 'Calendar time zone').props.onChange({ target: { value: 'America/Los_Angeles' } });
 render(); assert.equal(states[0], 'America/Los_Angeles'); assert.equal(states[3], calendarDay(new Date().toISOString(), 'America/Los_Angeles'));
-html = renderToStaticMarkup(render([])); assert(html.includes('Nothing scheduled yet') && html.includes('No gatherings on this day'));
+html = renderToStaticMarkup(render([])); assert(html.includes('Nothing scheduled yet') && html.includes('No meetups on this day'));
 const css = read('app/community-room.css');
 assert(css.includes('grid-template-columns: repeat(7, minmax(0, 1fr))'));
 assert(css.includes('.community-calendar-cell-events { display: none; }'));

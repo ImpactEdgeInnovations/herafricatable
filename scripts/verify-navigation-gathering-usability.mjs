@@ -42,7 +42,7 @@ const hooks=hookHarness();
 const Gatherings=compileComponent('components/member/community-gatherings.tsx','CommunityGatherings',{React,Link,...hooks,createClient:()=>({}),memberErrorMessage:()=>'',CommunityGatheringInline:()=>null,CommunityVideoLibrary:()=>null,CommunityCalendar:()=>React.createElement('p',{},'Community calendar'),CommunityGatheringPlanner:()=>React.createElement('p',{},'Inline planner'),dynamic:()=>()=>React.createElement('p',{},'Inline event linker')});
 const props={cards:[],migrationReady:true,slug:'test',communityId:'community-one',currentUserId:'host-one'};
 const renderGatherings=extra=>{hooks.reset();return Gatherings({...props,...extra});};
-assert(!renderToStaticMarkup(renderGatherings({canManage:false})).includes('Create a gathering'));
+assert(!renderToStaticMarkup(renderGatherings({canManage:false})).includes('Create a meetup'));
 assert(!renderToStaticMarkup(renderGatherings({canManage:true})).includes('Inline planner'));
 function find(element,predicate) {if(!element)return null;if(Array.isArray(element)){for(const item of element){const found=find(item,predicate);if(found)return found;}return null;}if(typeof element!=='object')return null;return predicate(element)?element:find(element.props?.children,predicate);}
 let tree=renderGatherings({canManage:true});
@@ -60,14 +60,14 @@ for(const outcome of ['success','denied','throw','stale']) {
   const rpc=async(name,args)=>{calls.push([name,args]);if(outcome==='throw')throw Error('Offline');if(outcome==='stale')return new Promise(done=>resolve=done);return {data:[],error:outcome==='denied'?Error('Host required'):null};};
   const Planner=compileComponent('components/member/community-gathering-planner.tsx','CommunityGatheringPlanner',{React,...h,createClient:()=>({rpc}),memberErrorMessage:()=> 'Could not load',dynamic:()=>()=>React.createElement('p',{},'Ready planner')});
   const render=()=>{h.reset();return Planner(props);};
-  assert(renderToStaticMarkup(render()).includes('Loading your gathering drafts'));assert.equal(calls.length,0);
+  assert(renderToStaticMarkup(render()).includes('Loading your meetup drafts'));assert.equal(calls.length,0);
   const cleanup=h.effects[0]();
   if(outcome==='stale'){cleanup();resolve({data:[],error:null});}
   await new Promise(done=>setImmediate(done));
   assert.deepEqual(calls,[['list_my_community_event_proposals',{p_community_id:'community-one'}]]);
   const html=renderToStaticMarkup(render());
   if(outcome==='success')assert(html.includes('Ready planner'));
-  else if(outcome==='stale')assert(html.includes('Loading your gathering drafts'));
+  else if(outcome==='stale')assert(html.includes('Loading your meetup drafts'));
   else {assert(html.includes('Could not load'));assert(html.includes('Try again'));assert(!html.includes('Ready planner'));}
 }
 const linker=read('components/member/community-event-linker.tsx');
@@ -104,7 +104,7 @@ for(const outcome of ['events','empty','denied','throw','stale']) {
   assert.deepEqual(calls,[['list_community_programming_options',{p_community_id:'community-one'}]]);
   const html=renderToStaticMarkup(render());
   if(outcome==='events'){assert(html.includes('Choose an event'));assert(!html.includes('Private course'));assert(html.includes('Link event'));}
-  else if(outcome==='empty'){assert(html.includes('No available event to link'));assert(html.includes('Create a gathering'));}
+  else if(outcome==='empty'){assert(html.includes('No available event to link'));assert(html.includes('Create a meetup'));}
   else if(outcome==='stale')assert(html.includes('Loading available events'));
   else {assert(html.includes('Could not load'));assert(html.includes('Try again'));assert(!html.includes('Choose an event'));}
 }

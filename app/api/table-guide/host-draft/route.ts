@@ -52,7 +52,7 @@ function fallbackDraft(
   if (task === "discussion")
     return `${notes || `A question for ${communityName}`}: what experience, idea or introduction would help you move forward this week?\n\nShare only what feels useful. A short reply is enough.`;
   if (task === "event")
-    return `${notes || `${communityName} gathering`}\n\nJoin us for a focused conversation designed to turn shared experience into useful next steps. Members will leave with one practical idea, one relevant connection and a clear action to take.\n\nWe will begin with context, move into a guided exchange and close with individual next steps.`;
+    return `${notes || `${communityName} meetup`}\n\nJoin us for a focused conversation designed to turn shared experience into useful next steps. Members will leave with one practical idea, one relevant connection and a clear action to take.\n\nWe will begin with context, move into a guided exchange and close with individual next steps.`;
   return `${communityName} came together around ${notes || "a shared purpose"}.\n\nWe exchanged practical perspectives and identified the ideas worth carrying forward.\n\nNext, members can continue the conversation in the Community and follow up privately where there is mutual interest.`;
 }
 

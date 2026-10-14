@@ -388,7 +388,7 @@ export function CommunityCommandCentre({
                   <article><strong>{Number(communityHealth?.active_members ?? community.member_count)}</strong><span>members</span></article>
                   <article><strong>{Number(communityHealth?.pending_members ?? community.pending_count)}</strong><span>joining</span></article>
                   <article><strong>{Number(communityHealth?.posts_7d ?? 0) + Number(communityHealth?.comments_7d ?? 0)}</strong><span>contributions this week</span></article>
-                  <article><strong>{Number(communityHealth?.upcoming_gatherings ?? 0)}</strong><span>upcoming gatherings</span></article>
+                  <article><strong>{Number(communityHealth?.upcoming_gatherings ?? 0)}</strong><span>upcoming meetups</span></article>
                 </div>
                 <div className="community-oversight-notes">
                   <p><strong>Owner-led:</strong> {community.effective_mode === "open" ? "Approved platform members join automatically." : "The owner reviews requests and welcomes members."}</p>

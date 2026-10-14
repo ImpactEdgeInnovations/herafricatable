@@ -8,7 +8,7 @@ import type { CommunityEventProposal } from "@/components/community/community-ev
 
 const ProposalPanel = dynamic(
   () => import("@/components/community/community-event-proposal-panel").then(module => module.CommunityEventProposalPanel),
-  { loading: () => <p role="status">Opening gathering tools…</p> },
+  { loading: () => <p role="status">Opening meetup tools…</p> },
 );
 
 // Mounted only after a Host opens the planner; the RPC independently checks Host access.
@@ -30,7 +30,7 @@ export function CommunityGatheringPlanner({ communityId, slug, currentUserId }: 
       try {
         const { data, error } = await supabase.rpc("list_my_community_event_proposals", { p_community_id: communityId });
         if (error) throw error;
-        if (!Array.isArray(data)) throw new Error("Gathering tools unavailable");
+        if (!Array.isArray(data)) throw new Error("Meetup tools unavailable");
         if (!active) return;
         setProposals(data as CommunityEventProposal[]);
         loaded.current = true;
@@ -38,7 +38,7 @@ export function CommunityGatheringPlanner({ communityId, slug, currentUserId }: 
         setStatus("ready");
       } catch (error) {
         if (!active) return;
-        setMessage(memberErrorMessage(error, "open gathering tools"));
+        setMessage(memberErrorMessage(error, "open meetup tools"));
         if (!loaded.current) setStatus("error");
       }
     }
@@ -46,7 +46,7 @@ export function CommunityGatheringPlanner({ communityId, slug, currentUserId }: 
     return () => { active = false; };
   }, [communityId, supabase, attempt]);
 
-  if (status === "loading") return <p role="status">Loading your gathering drafts…</p>;
+  if (status === "loading") return <p role="status">Loading your meetup drafts…</p>;
   if (status === "error") return <div role="alert"><p>{message}</p><button type="button" className="button button-outline" onClick={() => setAttempt(value => value + 1)}>Try again</button></div>;
   return <>{message ? <div role="alert"><p>{message} Your open form is still here.</p><button type="button" onClick={() => setAttempt(value => value + 1)}>Refresh drafts</button></div> : null}<ProposalPanel communityId={communityId} communitySlug={slug} currentUserId={currentUserId} proposals={proposals} migrationReady startExpanded onSaved={() => setAttempt(value => value + 1)} /></>;
 }

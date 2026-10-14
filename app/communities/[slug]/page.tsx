@@ -377,7 +377,7 @@ export default async function CommunityPage({
       <CommunityMembershipControl communityId={community.community_id} name={community.name} role={community.membership_role} />
       {!liveGathering && !gatheringCardResult.error ? <CommunityNextGathering cards={gatheringCards} slug={slug} /> : null}
       {liveGathering ? (
-        <aside className="community-live-notice" aria-label="Gathering live now">
+        <aside className="community-live-notice" aria-label="Meetup live now">
           <span aria-hidden="true" />
           <div><small>Live now</small><strong>{liveGathering.title}</strong></div>
           <Link href={`/communities/${slug}?view=gatherings&gathering=${encodeURIComponent(liveGathering.event_slug)}`}>Join the room →</Link>

@@ -20,7 +20,7 @@ const conversationTypes = [
   { label: "Offer help", value: "offer" },
   { label: "Opportunity", value: "opportunity" },
   { label: "Useful links", value: "resource" },
-  { label: "After a gathering", value: "event_follow_up" },
+  { label: "After a meetup", value: "event_follow_up" },
   { label: "Good news", value: "win" },
 ] as const;
 
@@ -44,7 +44,7 @@ const conversationTypeHints = new Map<string, string>([
   ["offer", "Offer a skill, introduction or resource another member can use."],
   ["opportunity", "Explain the opportunity and how someone can take part."],
   ["resource", "Share a useful link or file and explain why you recommend it."],
-  ["event_follow_up", "Share a memory, question or update after a gathering."],
+  ["event_follow_up", "Share a memory, question or update after a meetup."],
   ["win", "Share your good news and thank anyone who helped."],
   ["start_here", "Explain the community purpose, rules and best first step."],
   ["announcement", "Share an important update with every member."],

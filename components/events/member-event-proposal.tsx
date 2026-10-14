@@ -461,7 +461,7 @@ export function MemberEventProposalPanel({
                     onClick={() => { setEventPath("community"); setMessage(""); }}
                     type="button"
                   >
-                    <span>Community gathering</span>
+                    <span>Community meetup</span>
                     <strong>For one Community</strong>
                     <small>Private Communities keep the event private too.</small>
                   </button>
@@ -472,8 +472,8 @@ export function MemberEventProposalPanel({
                 <div className="member-event-community-route">
                   <div>
                     <p className="eyebrow">Plan it with your people</p>
-                    <h4>Community gatherings begin inside the Community.</h4>
-                    <p>The host can invite the right members, share updates in one place and keep private gatherings out of public discovery.</p>
+                    <h4>Community meetups begin inside the Community.</h4>
+                    <p>The host can invite the right members, share updates in one place and keep private meetups out of public discovery.</p>
                   </div>
                   {hostedCommunities.length ? (
                     <div>

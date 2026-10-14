@@ -8,7 +8,7 @@ import type { CommunityGatheringCard } from "./community-gatherings";
 
 type Loaded = { room: CommunityGatheringRoomState; messages: CommunityGatheringMessage[]; questions: CommunityGatheringQuestion[]; attendees: CommunityGatheringAttendee[]; video: GatheringVideo | null; videoReady: boolean; contentKind: "scheduled" | "prerecorded"; reminder: "day_before" | "hour_before" | null };
 
-export function CommunityGatheringInline({ card, communityId, currentUserId, onClose, backLabel = "Back to gatherings" }: {
+export function CommunityGatheringInline({ card, communityId, currentUserId, onClose, backLabel = "Back to meetups" }: {
   card: CommunityGatheringCard; communityId: string; currentUserId: string; onClose(): void; backLabel?: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
@@ -23,11 +23,11 @@ export function CommunityGatheringInline({ card, communityId, currentUserId, onC
       try {
         const { data: profile, error: profileError } = await supabase.from("profiles").select("access_status").eq("id",currentUserId).maybeSingle();
         if (profileError) throw profileError;
-        if (profile?.access_status !== "active") throw new Error("Your membership needs to be active to open this gathering.");
+        if (profile?.access_status !== "active") throw new Error("Your membership needs to be active to open this meetup.");
         const result = await supabase.rpc("get_community_gathering_room", {p_community_id:communityId,p_event_id:card.event_id});
         if (result.error) throw result.error;
         const room = (result.data as CommunityGatheringRoomState[] | null)?.[0];
-        if (!room) throw new Error("This gathering is no longer available.");
+        if (!room) throw new Error("This meetup is no longer available.");
         const [messages,questions,attendees,video,preferences,kind] = await Promise.all([
           supabase.rpc("list_community_gathering_chat",{p_room_id:room.room_id}),
           supabase.rpc("list_community_gathering_questions",{p_room_id:room.room_id}),
@@ -40,14 +40,14 @@ export function CommunityGatheringInline({ card, communityId, currentUserId, onC
         if (active) setData({room,messages:messages.data ?? [],questions:questions.data ?? [],attendees:attendees.data ?? [],video:video.data as GatheringVideo | null,videoReady:!video.error,
           contentKind: kind.data === "prerecorded" ? "prerecorded" : "scheduled",
           reminder:((preferences.data as {event_id:string;reminder_window:"day_before"|"hour_before"|null}[] | null) ?? []).find(item=>item.event_id===card.event_id)?.reminder_window ?? null});
-      } catch (cause) { if (active) setError(memberErrorMessage(cause,"open this gathering")); }
+      } catch (cause) { if (active) setError(memberErrorMessage(cause,"open this meetup")); }
     }
     void load(); return () => {active=false;};
   },[card.event_id,communityId,currentUserId,retry,supabase]);
   return <section className="community-inline-gathering" aria-labelledby="inline-gathering-title">
     <button type="button" className="community-inline-back" onClick={onClose}>← {backLabel}</button>
     <h2 ref={heading} id="inline-gathering-title" tabIndex={-1} className="sr-only">{card.title}</h2>
-    {error ? <div role="alert"><p>{error}</p><button type="button" onClick={()=>setRetry(value=>value+1)}>Try again</button></div> : !data ? <p role="status">Opening gathering…</p> :
+    {error ? <div role="alert"><p>{error}</p><button type="button" onClick={()=>setRetry(value=>value+1)}>Try again</button></div> : !data ? <p role="status">Opening meetup…</p> :
       <CommunityGatheringRoom key={data.room.room_id} room={data.room} communityId={communityId} currentUserId={currentUserId} eventId={card.event_id}
         messages={data.messages} questions={data.questions} attendees={data.attendees} reminderWindow={data.reminder}
         video={data.video} videoReady={data.videoReady} contentKind={data.contentKind} embedded />}

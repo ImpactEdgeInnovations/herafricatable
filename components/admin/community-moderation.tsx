@@ -146,7 +146,7 @@ export function CommunityModeration({
                 <div>
                   <span className="member-status">{report.status}</span>
                   <small>
-                    {report.community_name} · {report.content_type === "photo" ? "Photo" : report.content_type === "check_in" ? "Quick check-in" : report.content_type === "event_question" ? "Event question" : report.content_type === "gathering_message" ? "Gathering message" : "Post"} · {report.category}
+                    {report.community_name} · {report.content_type === "photo" ? "Photo" : report.content_type === "check_in" ? "Quick check-in" : report.content_type === "event_question" ? "Event question" : report.content_type === "gathering_message" ? "Meetup message" : "Post"} · {report.category}
                   </small>
                 </div>
                 <div>

@@ -282,7 +282,7 @@ export default async function CommunityHostPage({
           <p className="eyebrow">Manage community</p>
           <h1>{community.name}</h1>
           <p>
-            Invite people, manage members and plan your next gathering.
+            Invite people, manage members and plan your next meetup.
           </p>
           <Link href={`/communities/${slug}`}>← Return to community</Link>
         </div>
@@ -298,7 +298,7 @@ export default async function CommunityHostPage({
         <a href="#invite-people">Invite people</a>
         <a href="#admissions">Join requests</a>
         <a href="#people">Members</a>
-        <a href="#gathering-proposals">Create a gathering</a>
+        <a href="#gathering-proposals">Create a meetup</a>
         <a href="#gatherings">Link an event</a>
         <a href="#joining-settings">Who can join?</a>
         <a href="#community-photos">Photos</a>

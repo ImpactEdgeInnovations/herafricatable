@@ -27,7 +27,7 @@ export function CommunityVideoControls({ initialItems }: { initialItems: Communi
     {items.length ? items.map((item) => <article key={item.room_id}>
       <div><strong>{item.title}</strong><p>{item.community_name} · {item.admin_paused ? "Paused by Admin" : item.is_visible ? "Host visibility on" : "Hidden by Host"}</p></div>
       <button type="button" disabled={busy !== null} onClick={() => void toggle(item)}>{busy === item.room_id ? "Saving…" : item.admin_paused ? "Resume video" : "Pause video"}</button>
-    </article>) : <p>No gathering videos have been added yet.</p>}
+    </article>) : <p>No meetup videos have been added yet.</p>}
     {message ? <p role="status">{message}</p> : null}
   </details>;
 }

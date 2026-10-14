@@ -217,7 +217,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
       <div className="host-workspace-panel">
         <p className="eyebrow">After your event</p>
         <h1 id="host-workspace-heading">{initial.event_title}</h1>
-        <p>Your event details are now read-only. You can still connect a Community for future gatherings. The team reviews and publishes the public recap; private guest feedback stays with the event team.</p>
+        <p>Your event details are now read-only. You can still connect a Community for future meetups. The team reviews and publishes the public recap; private guest feedback stays with the event team.</p>
         <Link className="button button-outline" href={`/events/${initial.event_slug}`}>View event page</Link>
       </div>
       <div className="host-workspace-panel">

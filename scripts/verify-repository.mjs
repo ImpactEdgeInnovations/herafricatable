@@ -2035,7 +2035,7 @@ const hostEventProposal = read(
   "components/community/community-event-proposal-panel.tsx",
 );
 for (const contract of [
-  "Create a gathering",
+  "Create a meetup",
   "Members only",
   "Save private draft",
   "Open for members",
@@ -2051,7 +2051,7 @@ const adminEventProposal = read(
   "components/admin/community-event-proposal-manager.tsx",
 );
 for (const contract of [
-  "Approve free gathering",
+  "Approve free meetup",
   "Request changes",
   "Responsible person",
   "adminErrorMessage",

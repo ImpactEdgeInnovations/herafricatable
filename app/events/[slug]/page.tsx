@@ -293,7 +293,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         ? "Bookings open soon"
         : "Booking unavailable";
   const cta = gatheringRoomHref
-    ? hasEnded ? "View gathering recap" : "Open gathering room"
+    ? hasEnded ? "View meetup recap" : "Join meetup"
     : hasEnded ? recap ? "Read event recap" : "Event completed" : isConfirmedGuest ? "Open my event pass"
       : registration?.status === "pending_payment" || registration?.status === "pending_review"
         ? "View my request"
@@ -325,7 +325,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Her Africa Table", item: absoluteUrl() },
-          { "@type": "ListItem", position: 2, name: "Gatherings", item: absoluteUrl("/events") },
+          { "@type": "ListItem", position: 2, name: "Events", item: absoluteUrl("/events") },
           { "@type": "ListItem", position: 3, name: event.title, item: absoluteUrl(`/events/${encodeURIComponent(slug)}`) },
         ],
       }) }} /> : null}
@@ -334,7 +334,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <Link href="/events">All events</Link>
       </header>
       <section className="event-detail-hero" aria-label="Event details">
-        <div><p className="eyebrow">{event.audience === "community" ? "Community gathering" : event.format === "hybrid" ? "In person & online" : event.format === "online" ? "Online" : "In person"} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "See when, where and how to join below."}</p>{eventCommunity && event.audience === "community" ? <span className="event-community-badge">For active members of {eventCommunity.name}</span> : null}</div>
+        <div><p className="eyebrow">{event.audience === "community" ? "Community meetup" : event.format === "hybrid" ? "In person & online" : event.format === "online" ? "Online" : "In person"} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "See when, where and how to join below."}</p>{eventCommunity && event.audience === "community" ? <span className="event-community-badge">For active members of {eventCommunity.name}</span> : null}</div>
         {eventImage ? <figure className="event-detail-poster"><img alt={eventImage.alt} src={eventImage.url} fetchPriority="high" /></figure> : null}
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div><div><dt>Cost</dt><dd>{costLabel}</dd></div><div><dt>Entry</dt><dd>{entryLabel}</dd></div></dl>
@@ -435,7 +435,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           </div>
           <aside>
             <span>{linkedJoining?.join_policy === "open" ? "Members can join immediately" : linkedJoining?.join_policy === "invite_only" ? "Invitation only" : linkedJoining?.join_policy === "approval" ? "The Host approves joining requests" : "Community membership"}</span>
-            <p>{event.audience === "community" ? "This gathering is for active members of the Community." : "This is an open event connected to the Community. Joining either one is always your choice."}</p>
+            <p>{event.audience === "community" ? "This meetup is for active members of the Community." : "This is an open event connected to the Community. Joining either one is always your choice."}</p>
             <EventCommunityJoin communityId={eventCommunity.community_id} slug={eventCommunity.slug} activeMember={activeMember} signedIn={Boolean(user)} initialStatus={communityMembership?.status ?? null} joinPolicy={linkedJoining?.join_policy ?? null} />
           </aside>
         </section>
@@ -455,7 +455,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       {sessions?.length ? <section className="event-content-section" id="event-programme"><div><p className="eyebrow">The gathering</p><h2>Programme</h2></div><div className="programme-list">{sessions.map((session) => { const speakers = speakersFor(session.id); return <article key={session.id}><time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(session.starts_at))}</time><div><h3>{session.title}</h3>{speakers.map((speaker) => <p className="programme-speaker" key={`${session.id}-${speaker.name}`}><strong>{speaker.name}</strong>{[speaker.job_title, speaker.company].filter(Boolean).join(" · ") ? ` · ${[speaker.job_title, speaker.company].filter(Boolean).join(" · ")}` : ""}</p>)}<p>{session.description}</p>{session.room ? <span>{session.room}</span> : null}</div></article>; })}</div></section> : null}
 
-      {hasEnded && recap ? <section className="event-public-recap" id="event-recap"><div><p className="eyebrow">From the Host</p><h2>{recap.title}</h2><p>{recap.summary}</p>{recap.highlights?.length ? <ul>{recap.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}</ul> : null}</div>{continuation ? <aside><span>The conversation continues</span><strong>{continuation.name}</strong><p>Join the approved Community for future gatherings and ongoing conversation.</p><Link className="button button-primary" href={`/communities/${continuation.slug}`}>View Community</Link></aside> : null}</section> : null}
+      {hasEnded && recap ? <section className="event-public-recap" id="event-recap"><div><p className="eyebrow">From the Host</p><h2>{recap.title}</h2><p>{recap.summary}</p>{recap.highlights?.length ? <ul>{recap.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}</ul> : null}</div>{continuation ? <aside><span>The conversation continues</span><strong>{continuation.name}</strong><p>Join the approved Community for future meetups and ongoing conversation.</p><Link className="button button-primary" href={`/communities/${continuation.slug}`}>View Community</Link></aside> : null}</section> : null}
       {hasEnded && isConfirmedGuest && (activeMember || guestFollowUpAccess) ? <section className="event-intro-entry"><div><p className="eyebrow">For guests who attended</p><h2>Continue after the table</h2><p>Read the approved recap, share private feedback and choose whether to hear about the next gathering. An event place does not approve network membership.</p></div><Link className="button button-outline" href={`/events/${slug}/follow-up`}>Open my follow-up</Link></section> : null}
 
       {hasEnded && testimonials.length ? <section className="event-public-reflections"><header><p className="eyebrow">Shared with permission</p><h2>What guests carried forward.</h2></header><div>{testimonials.map((item) => <blockquote key={`${item.attribution}-${item.quote}`}><p>“{item.quote}”</p><cite>— {item.attribution}</cite></blockquote>)}</div></section> : null}

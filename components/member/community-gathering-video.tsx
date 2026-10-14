@@ -71,7 +71,7 @@ export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, init
       setVideo(data as GatheringVideo | null); setPlaying(false);
       onSaved?.();
       clearSettings({ link: id ? `https://www.youtube.com/watch?v=${id}` : "", visible, keepReplay, viewingMode });
-      setNotice(id ? "Video saved. Your gathering conversation stays in the same place." : "Video removed. The conversation is still here.");
+      setNotice(id ? "Video saved. Your meetup conversation stays in the same place." : "Video removed. The conversation is still here.");
     } catch (error) { setNotice(memberErrorMessage(error, "save this video")); }
     finally { setBusy(false); }
   }
@@ -81,7 +81,7 @@ export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, init
   return (
     <section className="gathering-video" id="gathering-video" aria-labelledby="gathering-video-title">
       <header hidden={!watchable && canManage}><h2 id="gathering-video-title">{video?.viewing_mode === "watch_anytime" ? "Watch anytime" : finished ? "Watch the replay" : "Watch & discuss"}</h2>
-        <p>{video?.viewing_mode === "watch_anytime" ? <>Watch at your own pace, then <a href="#gathering-discussion">join the discussion</a>.</> : "Watch here and use this gathering’s conversation to share your thoughts."}</p></header>
+        <p>{video?.viewing_mode === "watch_anytime" ? <>Watch at your own pace, then <a href="#gathering-discussion">join the discussion</a>.</> : "Watch here and use this meetup’s conversation to share your thoughts."}</p></header>
       {!allowed ? <p role="status">Video access has changed. Return to your Community to check your membership.</p> : null}
       {watchable ? <>
         <div className="gathering-video-player">
@@ -109,7 +109,7 @@ export function CommunityGatheringVideo({ roomId, canManage, endsAt, title, init
             <label htmlFor="gathering-youtube-link">YouTube video or livestream link</label>
             <input id="gathering-youtube-link" type="url" value={link} onChange={(event) => setLink(event.target.value)} placeholder="https://www.youtube.com/watch?v=…" maxLength={500} disabled={busy} />
             <label><input type="checkbox" checked={visible} onChange={(event) => setVisible(event.target.checked)} disabled={busy} /> Show video to Community members</label>
-            {video?.content_kind !== "prerecorded" ? <label><input type="checkbox" checked={keepReplay} onChange={(event) => setKeepReplay(event.target.checked)} disabled={busy} /> Keep the replay after the gathering</label> : null}
+            {video?.content_kind !== "prerecorded" ? <label><input type="checkbox" checked={keepReplay} onChange={(event) => setKeepReplay(event.target.checked)} disabled={busy} /> Keep the replay after the meetup</label> : null}
             <div className="gathering-video-actions"><button className="button button-primary" disabled={busy} type="submit">{busy ? "Saving…" : "Save video"}</button>
               {video?.video_id ? <button disabled={busy} type="button" onClick={(event) => void save(event, true)}>Remove video</button> : null}</div>
           </form>

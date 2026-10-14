@@ -1,6 +1,6 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 14 October 2026. Historical baseline release: `b4be9ca`.
+Updated: 15 October 2026. Historical baseline release: `b4be9ca`.
 
 This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
@@ -11,6 +11,8 @@ This board turns the 4 October UI/UX and Events audit (saved separately on the P
 ### Current continuation sequence
 
 ### UI refinement track — 8 October
+
+**15 October Community language — Meetups:** Renamed member/Host/Admin Community labels from Gathering(s) to Meetup(s), including local navigation, creation, calendar day descriptions, reminders, linked albums, videos, repeat dates and empty/loading states. Member actions use Join meetup/View meetup; the YouTube choice is Watch together. Platform-wide Events remains separate. Existing route names, query parameters, RPCs, record fields, CSS hooks and draft keys remain unchanged, preserving old links and data. Nia's Community guidance follows the new terminology. This is a wording change, not a new database feature or permission change; no SQL migration is required. Acceptance evidence follows release.
 
 **14 October member navigation tidy-up:** Events now follows Home in the shared desktop header and mobile dock. Removed the separate header Guide shortcut and its redundant feature-flag read; Nia and her existing account/feature access checks remain unchanged. Search, Updates, profile and Sign out remain available. Regression checks assert the exact shared order, absent Guide shortcut and retained Nia access controls. No SQL migration is required.
 

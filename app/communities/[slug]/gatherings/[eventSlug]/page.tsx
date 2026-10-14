@@ -48,9 +48,9 @@ export default async function CommunityGatheringPage({
         <MemberHeader active="community" label={community.name} />
         <CommunityLocalNavigation active="gatherings" canManage={canManage} slug={slug} />
         <section className="admin-empty opportunity-error" role="alert">
-          <strong>This gathering room is being prepared.</strong>
+          <strong>This meetup room is being prepared.</strong>
           <p>Your event is safe. Please try again later or ask the Community host for help.</p>
-          <Link className="button button-primary" href={`/communities/${slug}?view=gatherings`}>Back to gatherings</Link>
+          <Link className="button button-primary" href={`/communities/${slug}?view=gatherings`}>Back to meetups</Link>
         </section>
       </main>
     );

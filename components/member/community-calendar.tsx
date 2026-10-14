@@ -40,7 +40,7 @@ export function CommunityCalendar({ cards, onOpen }: { cards: CommunityGathering
       {days.map(day => {
         const events = byDay.get(day) ?? [];
         return <button key={day} type="button" className={`${day.startsWith(month) ? "" : "is-outside"} ${events.length ? "has-gatherings" : ""}`} aria-current={day === today ? "date" : undefined} aria-pressed={day === selectedDay}
-          aria-label={`${dateLabel(day, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}, ${events.length} ${events.length === 1 ? "gathering" : "gatherings"}`}
+          aria-label={`${dateLabel(day, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}, ${events.length} ${events.length === 1 ? "meetup" : "meetups"}`}
           onClick={() => { setSelectedDay(day); if (!day.startsWith(month)) setMonth(day.slice(0, 7)); }}>
           <span className="community-calendar-day-number">{Number(day.slice(-2))}</span>
           <span className="community-calendar-cell-events" aria-hidden="true">{events.slice(0, 2).map(event => <span key={event.room_id}>{event.title}</span>)}{events.length > 2 ? <small>+{events.length - 2} more</small> : null}</span>
@@ -54,8 +54,8 @@ export function CommunityCalendar({ cards, onOpen }: { cards: CommunityGathering
         <button type="button" onClick={() => onOpen(card.event_slug)}>
           <span><strong>{card.title}</strong><small>{new Intl.DateTimeFormat("en-KE", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone }).format(new Date(card.starts_at))} · {card.format === "virtual" ? "Online" : card.city || "In person"}{card.my_rsvp === "going" ? " · Your place is saved" : ""}</small></span><span aria-hidden="true">›</span>
         </button>
-      </li>)}</ul> : <p>No gatherings on this day. Dates with a dot have something planned.</p>}
+      </li>)}</ul> : <p>No meetups on this day. Dates with a dot have something planned.</p>}
     </div>
-    {!cards.length ? <p className="community-calendar-empty">Nothing scheduled yet. Your Community’s gatherings and linked events will appear here.</p> : null}
+    {!cards.length ? <p className="community-calendar-empty">Nothing scheduled yet. Your Community’s meetups and linked events will appear here.</p> : null}
   </section>;
 }

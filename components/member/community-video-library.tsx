@@ -60,7 +60,7 @@ export function CommunityVideoLibrary({ cards, slug, onOpen }: {
     <p>Please try again. If your membership has changed, return to your Community home.</p>
     <button type="button" onClick={() => setRetry(value => value + 1)}>Try again</button></div>;
   if (!recordings.length) return <div className="community-program-empty"><strong>No videos to watch yet.</strong>
-    <p>Videos added to this Community’s gatherings will appear here.</p></div>;
+    <p>Videos added to this Community’s meetups will appear here.</p></div>;
 
   return <div className="community-video-library">
     {recordings.map(({ card, video }) => {
@@ -68,7 +68,7 @@ export function CommunityVideoLibrary({ cards, slug, onOpen }: {
       const href = `/communities/${slug}?view=gatherings&gatheringArea=videos&gathering=${encodeURIComponent(card.event_slug)}`;
       return <article className="community-video-library-card" key={card.room_id}>
         <div className="community-video-library-symbol" aria-hidden="true">▶</div>
-        <div><small>{video.content_kind === "prerecorded" ? "Video discussion · Added" : past ? "Replay" : "Gathering video"} · {new Intl.DateTimeFormat("en-KE", {
+        <div><small>{video.content_kind === "prerecorded" ? "Video discussion · Added" : past ? "Replay" : "Meetup video"} · {new Intl.DateTimeFormat("en-KE", {
           day: "numeric", month: "short", year: "numeric", timeZone: card.timezone || "Africa/Nairobi",
         }).format(new Date(card.starts_at))}</small>
           <h3><Link href={href} onClick={event => { event.preventDefault(); onOpen(card.event_slug); }}>{card.title}</Link></h3>

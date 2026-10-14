@@ -135,9 +135,9 @@ export function CommunityEventProposalManager({
     setBusy("");
     setMessage(
       error
-        ? adminErrorMessage(error, "review this Community gathering")
+        ? adminErrorMessage(error, "review this Community meetup")
         : action === "approve"
-          ? "Gathering approved and opened inside the Community."
+          ? "Meetup approved and opened inside the Community."
           : action === "request_changes"
             ? "Guidance sent to the Host."
             : action === "decline"
@@ -152,7 +152,7 @@ export function CommunityEventProposalManager({
       <div className="admin-section-heading">
         <div>
           <p className="eyebrow">Community-hosted events</p>
-          <h2 id="community-event-review-title">Review member gatherings</h2>
+          <h2 id="community-event-review-title">Review member meetups</h2>
           <p>Check purpose, timing, location and the responsible person. The first launch tier is always free and visible only to active Community members.</p>
         </div>
         <span className="status-count">{openCount} need review</span>
@@ -186,13 +186,13 @@ export function CommunityEventProposalManager({
                   </dl>
                   <footer>
                     {proposal.status === "submitted" ? <button className="button button-outline" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "start_review")} type="button">Begin review</button> : null}
-                    {openStatuses.has(proposal.status) ? <><button className="button button-primary" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "approve")} type="button">Approve free gathering</button><button className="button button-outline" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "request_changes")} type="button">Request changes</button><button className="button button-outline danger-action" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "decline")} type="button">Decline</button></> : null}
+                    {openStatuses.has(proposal.status) ? <><button className="button button-primary" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "approve")} type="button">Approve free meetup</button><button className="button button-outline" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "request_changes")} type="button">Request changes</button><button className="button button-outline danger-action" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "decline")} type="button">Decline</button></> : null}
                     {proposal.canonical_event_slug ? <Link className="button button-outline" href={`/events/${proposal.canonical_event_slug}`}>View event</Link> : null}
                   </footer>
                 </article>
               ))}
             </div>
-          ) : <div className="admin-empty admin-empty-compact"><strong>No gathering needs a decision</strong><p>Host drafts remain private until they are sent. Earlier decisions are available under Reviewed.</p></div>}
+          ) : <div className="admin-empty admin-empty-compact"><strong>No meetup needs a decision</strong><p>Host drafts remain private until they are sent. Earlier decisions are available under Reviewed.</p></div>}
         </>
       )}
       {message ? <p className="manager-message" role="status">{message}</p> : null}

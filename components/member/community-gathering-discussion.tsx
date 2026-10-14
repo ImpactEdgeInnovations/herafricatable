@@ -82,13 +82,13 @@ export function CommunityGatheringDiscussion({ roomId, albumId, currentUserId, r
   }
   if (!item && !error) return loading ? <p role="status">Opening conversation…</p> : notStarted ? <p className="gathering-discussion-empty">The Host hasn’t opened a separate discussion here. Questions and the live conversation appear below when available.</p> : null;
   return <section className="gathering-discussion" id="gathering-discussion" aria-labelledby="gathering-discussion-title">
-    {dialog}<header><h2 id="gathering-discussion-title">{albumId ? "Album conversation" : "Discussion"}</h2><p>{albumId ? "Questions and replies stay with this album or its related gathering." : "Questions and replies stay here with this gathering."}</p></header>
+    {dialog}<header><h2 id="gathering-discussion-title">{albumId ? "Album conversation" : "Discussion"}</h2><p>{albumId ? "Questions and replies stay with this album or its related meetup." : "Questions and replies stay here with this meetup."}</p></header>
     {restored && draft ? <small>Your unsent reply is still here.</small> : null}
     {error ? <div role="alert"><p>{error}</p><button type="button" onClick={() => setRetry(value => value + 1)}>Try again</button></div>
       : item?.unavailable ? <p>This conversation is no longer available.</p> : item ? <>
         <div className="gathering-discussion-pages">{cursor ? <button type="button" onClick={() => setCursor(null)}>Latest replies</button> : null}
           {item.has_more && item.comments.length ? <button type="button" onClick={() => setCursor(item.comments[0].comment_id)}>Earlier replies</button> : null}</div>
-        {item.comments.length ? <div className="gathering-discussion-replies" role="region" aria-label="Gathering replies" tabIndex={0}>{item.comments.map(reply => <article key={reply.comment_id}>
+        {item.comments.length ? <div className="gathering-discussion-replies" role="region" aria-label="Meetup replies" tabIndex={0}>{item.comments.map(reply => <article key={reply.comment_id}>
           <header><strong>{reply.author_name || "Community member"}</strong><time dateTime={reply.created_at}>{new Intl.DateTimeFormat("en-KE", { dateStyle: "medium" }).format(new Date(reply.created_at))}</time></header>
           {reply.reply_to ? <blockquote><strong>Reply to {reply.reply_to.author_name || "a member"}</strong><p>{reply.reply_to.body}</p></blockquote> : null}
           <p>{reply.body}</p><footer>{!albumId && !item.read_only ? <button type="button" disabled={busy} onClick={() => { setReplyTo(reply); composer.current?.focus(); }}>Reply</button> : null}<details><summary>More</summary><button type="button" disabled={busy} onClick={() => void (reply.author_id === currentUserId ? remove(reply) : report(reply))}>{reply.author_id === currentUserId ? "Remove" : "Report privately"}</button></details></footer>

@@ -58,7 +58,7 @@ for (const contract of [
   "Report this message",
   "Host tools",
   "Publish to Conversations",
-  "Gathering reminder",
+  "Meetup reminder",
   "One day before",
   'target="_blank"',
 ]) assert(room.includes(contract), `Gathering room UI must include ${contract}`);
@@ -76,13 +76,13 @@ for (const contract of [
 for (const contract of [
   "publish_community_gathering",
   "Open for members",
-  "Your gathering is open to Community members",
-  "Online gatherings can start today",
+  "Your meetup is open to Community members",
+  "Online meetups can start today",
 ]) assert(proposalPanel.includes(contract), `Owner-led gathering UX must include ${contract}`);
 for (const contract of [
   "gatheringRoomHref",
-  "Open gathering room",
-  "View gathering recap",
+  "Join meetup",
+  "View meetup recap",
   "!gatheringRoomHref",
 ]) assert(eventPage.includes(contract), `Community event page must keep private gathering participation owner-led through ${contract}`);
 

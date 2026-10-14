@@ -236,7 +236,7 @@ export function CommunityPublicProfilePanel({
                     name={`benefit_${index + 1}`}
                     placeholder={
                       index === 0
-                        ? "A trusted monthly gathering"
+                        ? "A trusted monthly meetup"
                         : index === 1
                           ? "Warm introductions to relevant members"
                           : index === 2

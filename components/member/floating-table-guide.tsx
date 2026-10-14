@@ -30,7 +30,7 @@ const routeHelp: Record<string, { prompts: string[]; title: string }> = {
   "/communities": {
     prompts: [
       "What can I do in this Community?",
-      "Help me prepare for a gathering.",
+      "Help me prepare for a meetup.",
       "Draft a warm Community post.",
     ],
     title: "Taking part in Community?",

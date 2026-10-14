@@ -62,12 +62,12 @@ export function TableJourney({
       label: "Take your seat in a Community",
     },
     {
-      action: journey.gathering_reserved ? "View events" : "Find a gathering",
+      action: journey.gathering_reserved ? "View events" : "Find an event",
       complete: journey.gathering_reserved,
       description:
-        "Reserve one gathering where a real conversation can begin.",
+        "Reserve one event where a real conversation can begin.",
       href: "/events",
-      label: "Join a gathering",
+      label: "Join an event",
     },
     {
       action: journey.trusted_connection_made

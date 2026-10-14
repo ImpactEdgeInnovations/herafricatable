@@ -78,7 +78,7 @@ export function EventRepeatPlanner({ eventId, communityId, communitySlug = "", c
     finally{pending.current=false;setBusy(false);}
   }
   return <details className="event-repeat-planner" onToggle={event=>{if(event.currentTarget.open&&!opened){setOpened(true);void load();}}}>
-    <summary>Repeat this {communityId?"gathering":"event"} <small>Optional</small></summary>
+    <summary>Repeat this {communityId?"meetup":"event"} <small>Optional</small></summary>
     {opened ? <div className="event-repeat-body">
       <p>Plan daily, weekly or monthly dates. Each starts as a private draft with its own guest limit, bookings and reminders. Check the time, venue and contact before opening each date.</p>
       {!communityId ? <p>The pilot allows two events to open automatically. Later repeat dates go to the team for review.</p> : null}
