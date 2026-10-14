@@ -91,11 +91,16 @@ export async function assessOperationalHealth(): Promise<OperationalHealth> {
 
   let automaticPublishedEvents = 0;
   let queuedEmailJobs = 0;
+  let dispatcherReady = false;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
   if (publicEnvironment && secretKey) {
     const adminClient = createClient(publicEnvironment.url, secretKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+    try {
+      const dispatcher = await adminClient.rpc("get_notification_dispatcher_status");
+      dispatcherReady = !dispatcher.error && dispatcher.data === true;
+    } catch { dispatcherReady = false; }
     const [auditResult, automaticResult, emailJobResult] = await Promise.all([
       adminClient
         .from("audit_events")
@@ -171,7 +176,7 @@ export async function assessOperationalHealth(): Promise<OperationalHealth> {
   const emailConfigured = Boolean(
     process.env.RESEND_API_KEY &&
       process.env.EMAIL_FROM &&
-      cronSecretReady &&
+      (cronSecretReady || dispatcherReady) &&
       siteReady,
   );
   const emailRequired = queuedEmailJobs > 0;

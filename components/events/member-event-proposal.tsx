@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -113,6 +113,8 @@ export function MemberEventProposalPanel({
   pilotAutoPublish,
   publishedEventIds,
   proposals,
+  initialEditingId,
+  onSaved,
 }: {
   hostEventIds: string[];
   hostedCommunities: HostedCommunity[];
@@ -122,6 +124,8 @@ export function MemberEventProposalPanel({
   pilotAutoPublish: boolean;
   publishedEventIds: string[];
   proposals: MemberEventProposal[];
+  initialEditingId?: string;
+  onSaved?: () => void;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -135,6 +139,14 @@ export function MemberEventProposalPanel({
   const [message, setMessage] = useState("");
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [posterAltText, setPosterAltText] = useState("");
+  const hostPlanInput = useRef<HTMLTextAreaElement>(null);
+  const contactNameInput = useRef<HTMLInputElement>(null);
+  const contactPhoneInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const proposal = proposals.find(item => item.proposal_id === initialEditingId);
+    if (proposal && ["draft", "changes_requested"].includes(proposal.status)) edit(proposal);
+  // Open the chosen draft once; background refreshes must not replace edits.
+  }, [initialEditingId]);
   const editingMedia = editingId
     ? media.find((item) => item.context_type === "member_event_proposal" && item.context_id === editingId) ?? null
     : null;
@@ -197,7 +209,7 @@ export function MemberEventProposalPanel({
     if (step === 1) {
       const start = new Date(values.startsAt);
       const end = new Date(values.endsAt);
-      if (!values.startsAt || !values.endsAt || end <= start) {
+      if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) {
         return "Choose a start and end time for the event.";
       }
       if (start.getTime() < Date.now() + 7 * 86_400_000) {
@@ -220,12 +232,10 @@ export function MemberEventProposalPanel({
         return "Add the full private online link, beginning with https://.";
       }
     }
-    if (step === 2 && (
-      values.hostExperience.trim().length < 20 ||
-      values.safetyContactName.trim().length < 2 ||
-      values.safetyContactPhone.trim().length < 7
-    )) {
-      return "Tell us how you will host responsibly and add the day-of-event contact.";
+    if (step === 2) {
+      if (values.hostExperience.trim().length < 20) return `Add ${20 - values.hostExperience.trim().length} more characters to Your plan for guests. Arrival information and the private note are optional.`;
+      if (values.safetyContactName.trim().length < 2) return "Add the name of the person guests can contact on the day.";
+      if (values.safetyContactPhone.trim().length < 7) return "Add a working contact number with at least 7 digits or characters.";
     }
     if (step === 3 && values.communityAfterEvent && values.communityIdea.trim().length < 20) {
       return "Briefly describe the Community that might continue after this event.";
@@ -237,6 +247,10 @@ export function MemberEventProposalPanel({
     const issue = currentStepIssue();
     if (issue) {
       setMessage(issue);
+      if (step === 2) {
+        const field = values.hostExperience.trim().length < 20 ? hostPlanInput : values.safetyContactName.trim().length < 2 ? contactNameInput : contactPhoneInput;
+        field.current?.focus();
+      }
       return;
     }
     setStep((current) => Math.min(current + 1, steps.length - 1));
@@ -338,6 +352,7 @@ export function MemberEventProposalPanel({
     setPosterFile(null);
     setPosterAltText("");
     router.refresh();
+    onSaved?.();
   }
 
   async function removePoster() {
@@ -511,9 +526,9 @@ export function MemberEventProposalPanel({
 
           {step === 2 ? (
             <div className="community-event-wizard-step"><div className="form-grid">
-              <label className="form-wide">Your plan for guests<textarea maxLength={1200} minLength={20} onChange={(event) => update("hostExperience", event.target.value)} placeholder="For example: I will welcome guests, make introductions and help everyone find a seat." rows={3} value={values.hostExperience}/><small>A sentence or two is enough.</small></label>
-              <label>Responsible person on the day<input maxLength={120} onChange={(event) => update("safetyContactName", event.target.value)} placeholder="Full name" value={values.safetyContactName}/></label>
-              <label>Private contact number<input maxLength={40} onChange={(event) => update("safetyContactPhone", event.target.value)} placeholder="+254…" type="tel" value={values.safetyContactPhone}/></label>
+              <label className="form-wide">Your plan for guests <small>Required</small><textarea ref={hostPlanInput} maxLength={1200} minLength={20} onChange={(event) => update("hostExperience", event.target.value)} placeholder="For example: I will welcome guests, make introductions and help everyone find a seat." rows={3} value={values.hostExperience}/><small>{values.hostExperience.trim().length} of 1,200 characters · {values.hostExperience.trim().length < 20 ? `add at least ${20-values.hostExperience.trim().length} more` : "ready"}. Arrival information and private notes below are optional.</small></label>
+              <label>Responsible person on the day <small>Required</small><input ref={contactNameInput} maxLength={120} onChange={(event) => update("safetyContactName", event.target.value)} placeholder="Full name" value={values.safetyContactName}/></label>
+              <label>Private contact number <small>Required</small><input ref={contactPhoneInput} maxLength={40} onChange={(event) => update("safetyContactPhone", event.target.value)} placeholder="+254…" type="tel" value={values.safetyContactPhone}/></label>
               <details className="form-wide member-event-optional"><summary>Add arrival or private notes <small>Optional</small></summary><label>Arrival information<textarea maxLength={1200} onChange={(event) => update("accessibilityNotes", event.target.value)} placeholder="Entrance, transport or access needs." rows={3} value={values.accessibilityNotes}/></label><label>Private note for the team<textarea maxLength={1200} onChange={(event) => update("hostNote", event.target.value)} rows={3} value={values.hostNote}/></label></details>
             </div></div>
           ) : null}

@@ -480,8 +480,9 @@ export default async function CommunityPage({
           ) : null}
           {!memberResult.error ? (
             <CommunityMemberRoster
+              communityId={community.community_id}
               currentUserId={user.id}
-              connections={((connectionsResult.data as CommunityConnection[] | null)??[]).filter(item=>((memberResult.data as CommunityRosterMember[] | null)??[]).some(member=>member.user_id===item.other_user_id)).map(({connection_id,other_user_id,status,direction})=>({connection_id,other_user_id,status,direction}))}
+              connections={((connectionsResult.data as CommunityConnection[] | null)??[]).map(({connection_id,other_user_id,status,direction})=>({connection_id,other_user_id,status,direction}))}
               connectionsReady={!connectionsResult.error}
               members={
                 (memberResult.data as CommunityRosterMember[] | null) ?? []

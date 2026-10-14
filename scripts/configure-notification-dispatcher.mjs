@@ -1,0 +1,18 @@
+import {randomBytes} from 'node:crypto';
+import {createClient} from '@supabase/supabase-js';
+process.loadEnvFile('.env.local');
+if(process.env.HAT_CONFIGURE_NOTIFICATION_DISPATCHER!=='1')throw Error('Set HAT_CONFIGURE_NOTIFICATION_DISPATCHER=1 to configure the live scheduler.');
+const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
+if(new URL(url).hostname!=='gtzwqromwvzqytygebfc.supabase.co')throw Error('Unexpected project.');
+const client=createClient(url,process.env.SUPABASE_SECRET_KEY??process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+const token=randomBytes(32).toString('hex');
+const save=await client.rpc('configure_notification_dispatcher',{p_token:token,p_enabled:false});
+if(save.error)throw Error('Could not save the dispatcher configuration.');
+const response=await fetch('https://www.herafricatable.com/api/cron/notifications?check=1',{headers:{Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(20000)});
+const health=await response.json();
+if(!response.ok||health.authorized!==true||health.email_configured!==true)throw Error('Live dispatcher or email configuration is not ready. Scheduler remains disabled.');
+const enable=await client.rpc('configure_notification_dispatcher',{p_token:token,p_enabled:true});
+if(enable.error)throw Error('Could not enable the dispatcher.');
+const status=await client.rpc('get_notification_dispatcher_status');
+if(status.error||status.data!==true)throw Error('Scheduler activation was not confirmed.');
+console.log('Notification dispatcher enabled every five minutes; daily housekeeping retained. Live authorization and email configuration check passed. No email test was sent.');

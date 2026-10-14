@@ -29,19 +29,19 @@ export function StandaloneEventReminder({
     setBusy(true);
     setMessage("");
     setMessageIsError(false);
+    try {
     const { error } = await supabase.rpc("set_my_standalone_event_reminder", {
       p_enabled: next,
       p_event_id: eventId,
     });
-    setBusy(false);
     if (error) {
-      setMessageIsError(true);
-      setMessage(memberErrorMessage(error, "change your event reminder"));
-      return;
+      throw error;
     }
     setEnabled(next);
     setMessage(next ? "Reminder requested." : "Reminder removed.");
     router.refresh();
+    } catch (cause) { setMessageIsError(true); setMessage(memberErrorMessage(cause, "change your event reminder")); }
+    finally { setBusy(false); }
   }
 
   return (

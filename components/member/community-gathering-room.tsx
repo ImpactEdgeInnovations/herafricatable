@@ -10,6 +10,8 @@ import { CommunityGatheringVideo, type GatheringVideo } from "@/components/membe
 import { CommunityGatheringDiscussion } from "@/components/member/community-gathering-discussion";
 import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
+import { AddToCalendarButton } from "@/components/events/add-to-calendar-button";
+import { EventRepeatPlanner } from "@/components/events/event-repeat-planner";
 
 export type CommunityGatheringRoomState = {
   room_id: string;
@@ -171,17 +173,18 @@ export function CommunityGatheringRoom({
     const previous = reminderWindow;
     setReminderWindow(next);
     setBusy("reminder"); setNotice("");
+    try {
     const { error } = await supabase.rpc("set_my_community_event_reminder", {
       p_community_id: communityId,
       p_event_id: eventId,
       p_reminder_window: next || null,
     });
-    setBusy("");
     if (error) {
-      setReminderWindow(previous);
-      return setNotice(memberErrorMessage(error, "save your reminder"));
+      throw error;
     }
     setNotice(next ? "Your reminder is saved." : "Your reminder was removed.");
+    } catch (cause) { setReminderWindow(previous); setNotice(memberErrorMessage(cause, "save your reminder")); }
+    finally { setBusy(""); }
   }
 
   async function sendMessage(event: FormEvent) {
@@ -321,8 +324,10 @@ export function CommunityGatheringRoom({
           </> : null}
           {room.meeting_url ? <a className="button button-primary" href={room.meeting_url} rel="noopener noreferrer" target="_blank">Join online gathering ↗</a> : room.format !== "in_person" && room.my_rsvp === "going" ? <small>The private joining link appears here 30 minutes before the gathering.</small> : null}
         </div>
+        {!isRecording ? <div className="gathering-calendar-actions"><AddToCalendarButton endsAt={room.ends_at} eventId={eventId} location={[room.venue_name,room.city].filter(Boolean).join(", ") || "Online"} slug={room.event_slug} startsAt={room.starts_at} summary={room.summary} title={room.title} detailsPath={`/communities/${room.community_slug}?view=gatherings&gathering=${encodeURIComponent(room.event_slug)}`} /><small>For email reminders, turn on Event emails in <Link href="/notifications">notification settings</Link>.</small></div> : null}
         {notice ? <p className="form-message" role="status">{notice}</p> : null}
       </header>
+      {room.can_manage && !isRecording ? <EventRepeatPlanner eventId={eventId} communityId={communityId} communitySlug={room.community_slug} currentUserId={currentUserId} sourceStartsAt={room.starts_at} /> : null}
 
       <nav hidden={isRecording} className="gathering-room-jump" aria-label="Gathering areas">
         <a href="#questions">Questions</a><a href="#live-conversation">Conversation</a>{attendees.length ? <a href="#attendees">Meet members</a> : null}{room.can_manage ? <a href="#host-settings" onClick={()=>setHostToolsOpen(true)}>Host tools</a> : null}
