@@ -57,11 +57,14 @@ for(const outcome of ['success','empty','denied','throw'])for(const albumId of [
   const states={};const calls=[];
   const context={running:false,active:true,albumId,roomId:'room-one',cursor:null,
     supabase:{rpc:async(name,args)=>{calls.push([name,args]);if(outcome==='throw')throw Error('Offline');return {data:outcome==='empty'?null:{comments:[]},error:outcome==='denied'?Error('Denied'):null};}},
-    setItem:v=>states.item=v,setError:v=>states.error=v,setLoading:v=>states.loading=v,memberErrorMessage:()=> 'Please try opening this conversation again.'};
-  const code=ts.transpileModule(discussion.slice(discussion.indexOf('    async function load()'),discussion.indexOf('    setItem(null); setLoading(true);')),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+    setItem:v=>states.item=v,setNotStarted:v=>states.notStarted=v,setError:v=>states.error=v,setLoading:v=>states.loading=v,memberErrorMessage:()=> 'Please try opening this conversation again.'};
+  const code=ts.transpileModule(discussion.slice(discussion.indexOf('    async function load()'),discussion.indexOf('    setItem(null); setNotStarted(false); setLoading(true);')),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
   await new Function(...Object.keys(context),`${code};return load;`)(...Object.values(context))();
   assert.equal(states.loading,false);assert.equal(calls[0][0],albumId?'get_community_album_discussion':'get_community_gathering_discussion');
-  assert.equal(states.error,outcome==='success'?'':'Please try opening this conversation again.');
+  const optionalEmpty=outcome==='empty'&&!albumId;
+  assert.equal(states.error,outcome==='success'||optionalEmpty?'':'Please try opening this conversation again.');
+  assert.equal(states.notStarted,optionalEmpty);
   if(outcome!=='success')assert.equal(states.item,null);
 }
-console.log('Gathering and album conversations recover from empty, denied and thrown reads instead of becoming blank.');
+assert(discussion.includes('notStarted ? <p') && discussion.includes('The Host hasn’t opened a separate discussion here'));
+console.log('Gathering optional-discussion empty state is distinct from denied/thrown reads; album failures retain retry and no empty response enables posting.');

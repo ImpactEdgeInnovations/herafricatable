@@ -30,3 +30,15 @@ export function eventsForCalendarDay<T extends { starts_at: string; ends_at: str
     return start <= day && end >= day;
   }).sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
 }
+
+export function calendarEventsByDay<T extends { starts_at: string; ends_at: string }>(events: T[], days: string[], timeZone: string): Map<string, T[]> {
+  // Convert each event once, rather than repeating time-zone formatting for
+  // every cell. Long-running Communities can retain many past gatherings.
+  const ranges = events.flatMap(event => {
+    const starts = new Date(event.starts_at).getTime();
+    const ends = new Date(event.ends_at).getTime();
+    if (!Number.isFinite(starts) || !Number.isFinite(ends) || ends <= starts) return [];
+    return [{ event, starts, first: calendarDay(event.starts_at, timeZone), last: calendarDay(new Date(ends - 1).toISOString(), timeZone) }];
+  }).sort((a, b) => a.starts - b.starts);
+  return new Map(days.map(day => [day, ranges.filter(range => range.first <= day && range.last >= day).map(range => range.event)]));
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { calendarDay, calendarMonthDays, eventsForCalendarDay, shiftCalendarMonth } from "@/lib/events/community-calendar";
+import { calendarDay, calendarMonthDays, calendarEventsByDay, shiftCalendarMonth } from "@/lib/events/community-calendar";
 import type { CommunityGatheringCard } from "./community-gatherings";
 
 const dateLabel = (day: string, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-KE", { ...options, timeZone: "UTC" }).format(new Date(`${day}T12:00:00Z`));
@@ -14,7 +14,7 @@ export function CommunityCalendar({ cards, onOpen }: { cards: CommunityGathering
   const [selectedDay, setSelectedDay] = useState(today);
   useEffect(() => { setLocalZone(Intl.DateTimeFormat().resolvedOptions().timeZone); }, []);
   const days = useMemo(() => calendarMonthDays(month), [month]);
-  const byDay = useMemo(() => new Map(days.map(day => [day, eventsForCalendarDay(cards, day, timeZone)])), [cards, days, timeZone]);
+  const byDay = useMemo(() => calendarEventsByDay(cards, days, timeZone), [cards, days, timeZone]);
   const selectedEvents = byDay.get(selectedDay) ?? [];
   function moveMonth(offset: number) {
     const next = shiftCalendarMonth(month, offset);

@@ -21,6 +21,7 @@ export function CommunityGatheringDiscussion({ roomId, albumId, currentUserId, r
   const [retry, setRetry] = useState(0);
   const [loading, setLoading] = useState(true);
   const [replyTo, setReplyTo] = useState<Reply | null>(null);
+  const [notStarted, setNotStarted] = useState(false);
   const composer = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     let active = true; let running = false;
@@ -29,12 +30,19 @@ export function CommunityGatheringDiscussion({ roomId, albumId, currentUserId, r
       running = true;
       try {
         const result = albumId ? await supabase.rpc("get_community_album_discussion", { p_album_id: albumId, p_before: cursor }) : await supabase.rpc("get_community_gathering_discussion", { p_room_id: roomId, p_before: cursor });
-        if (result.error || !result.data) throw result.error || new Error("This conversation is unavailable. Please try again.");
-        if (active) { setItem(result.data as Discussion | null); setError(""); }
-      } catch (cause) { if (active) { setItem(null); setError(memberErrorMessage(cause, "open this conversation")); } }
+        if (result.error) throw result.error;
+        // This RPC deliberately returns null when no optional discussion exists.
+        // That is not a network failure, and must not enable a reply composer.
+        if (!albumId && result.data === null) {
+          if (active) { setItem(null); setNotStarted(true); setError(""); }
+          return;
+        }
+        if (!result.data) throw new Error("This conversation is unavailable. Please try again.");
+        if (active) { setItem(result.data as Discussion); setNotStarted(false); setError(""); }
+      } catch (cause) { if (active) { setItem(null); setNotStarted(false); setError(memberErrorMessage(cause, "open this conversation")); } }
       finally { running = false; if (active) setLoading(false); }
     }
-    setItem(null); setLoading(true); void load();
+    setItem(null); setNotStarted(false); setLoading(true); void load();
     const timer = window.setInterval(() => void load(), 30000);
     const focus = () => void load(); window.addEventListener("focus", focus);
     return () => { active = false; window.clearInterval(timer); window.removeEventListener("focus", focus); };
@@ -72,7 +80,7 @@ export function CommunityGatheringDiscussion({ roomId, albumId, currentUserId, r
     } catch (cause) { setNotice(memberErrorMessage(cause, "send your report")); }
     finally { setBusy(false); }
   }
-  if (!item && !error) return loading ? <p role="status">Opening conversation…</p> : null;
+  if (!item && !error) return loading ? <p role="status">Opening conversation…</p> : notStarted ? <p className="gathering-discussion-empty">The Host hasn’t opened a separate discussion here. Questions and the live conversation appear below when available.</p> : null;
   return <section className="gathering-discussion" id="gathering-discussion" aria-labelledby="gathering-discussion-title">
     {dialog}<header><h2 id="gathering-discussion-title">{albumId ? "Album conversation" : "Discussion"}</h2><p>{albumId ? "Questions and replies stay with this album or its related gathering." : "Questions and replies stay here with this gathering."}</p></header>
     {restored && draft ? <small>Your unsent reply is still here.</small> : null}

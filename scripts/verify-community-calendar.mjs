@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 const read = file => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
 const helperSource = read('lib/events/community-calendar.ts').replace(/^export /gm, '');
 const helperCode = ts.transpileModule(helperSource, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-const helpers = new Function(`${helperCode};return {calendarDay,calendarMonthDays,shiftCalendarMonth,eventsForCalendarDay};`)();
+const helpers = new Function(`${helperCode};return {calendarDay,calendarMonthDays,shiftCalendarMonth,eventsForCalendarDay,calendarEventsByDay};`)();
 const { calendarDay, calendarMonthDays, shiftCalendarMonth, eventsForCalendarDay } = helpers;
 assert.equal(calendarDay('2026-10-14T22:30:00Z', 'Africa/Nairobi'), '2026-10-15');
 assert.equal(calendarDay('2026-10-14T22:30:00Z', 'America/Los_Angeles'), '2026-10-14');
@@ -24,6 +24,10 @@ assert.equal(eventsForCalendarDay(multi, '2026-10-14', 'Africa/Nairobi').length,
 assert.equal(eventsForCalendarDay(multi, '2026-10-15', 'Africa/Nairobi').length, 1);
 assert.equal(eventsForCalendarDay(multi, '2026-10-16', 'Africa/Nairobi').length, 0, 'Midnight end is exclusive');
 assert.equal(eventsForCalendarDay([{ starts_at: 'invalid', ends_at: 'invalid' }], '2026-10-14', 'Africa/Nairobi').length, 0);
+const calendarEvents = [...multi, { starts_at: 'invalid', ends_at: 'invalid' }];
+const indexed = helpers.calendarEventsByDay(calendarEvents, october, 'Africa/Nairobi');
+for (const day of october) assert.deepEqual(indexed.get(day), eventsForCalendarDay(calendarEvents, day, 'Africa/Nairobi'));
+assert.equal(helpers.calendarEventsByDay(Array.from({length:1000},()=>multi[0]), october, 'Africa/Nairobi').get('2026-10-15').length, 1000);
 
 const states = []; let index = 0; const effects = [];
 const dependencies = { React, ...helpers, useMemo: fn => fn(), useEffect: fn => effects.push(fn), useState: initial => {
