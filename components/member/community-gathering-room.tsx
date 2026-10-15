@@ -11,6 +11,7 @@ import { CommunityGatheringDiscussion } from "@/components/member/community-gath
 import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
 import { AddToCalendarButton } from "@/components/events/add-to-calendar-button";
+import { MeetupPlaceConfirmation } from "./meetup-place-confirmation";
 import { EventRepeatPlanner } from "@/components/events/event-repeat-planner";
 
 export type CommunityGatheringRoomState = {
@@ -157,15 +158,18 @@ export function CommunityGatheringRoom({
 
   async function saveRsvp(status: "going" | "not_going") {
     setBusy("rsvp"); setNotice("");
+    try {
     const { error } = await supabase.rpc("set_community_gathering_rsvp", {
       p_discoverable: status === "going" && discoverable,
       p_room_id: room.room_id, p_status: status,
     });
     setBusy("");
-    if (error) return setNotice(memberErrorMessage(error, "save your response"));
+    if (error) throw error;
     setRoom((current) => ({ ...current, my_rsvp: status, my_discoverable: status === "going" && discoverable }));
     setNotice(status === "going" ? "Your place is saved." : "Thanks for letting the Host know.");
     router.refresh();
+    } catch (error) { setNotice(memberErrorMessage(error, "save your response")); }
+    finally { setBusy(""); }
   }
 
   async function saveReminder(event: ChangeEvent<HTMLSelectElement>) {
@@ -315,6 +319,7 @@ export function CommunityGatheringRoom({
           <div><dt>{isRecording ? "Added" : "When"}</dt><dd>{new Intl.DateTimeFormat("en-KE", { dateStyle: "full", timeStyle: isRecording ? undefined : "short", timeZone: timezone }).format(new Date(room.starts_at))}</dd></div>
           <div><dt>Where</dt><dd>{room.city ? [room.venue_name, room.city, room.country].filter(Boolean).join(", ") : plainLabel(room.format)}</dd></div>
         </dl>
+        {!isRecording && room.my_rsvp === "going" && new Date(room.ends_at).getTime() > Date.now() ? <MeetupPlaceConfirmation /> : null}
         <div className="gathering-rsvp">
           {!isRecording && new Date(room.ends_at).getTime() > Date.now() ? <>
             <button className={room.my_rsvp === "going" ? "button button-primary" : "button button-outline"} disabled={busy === "rsvp"} onClick={() => void saveRsvp("going")} type="button">I’m going</button>
@@ -325,7 +330,7 @@ export function CommunityGatheringRoom({
           {room.meeting_url ? <a className="button button-primary" href={room.meeting_url} rel="noopener noreferrer" target="_blank">Join online meetup ↗</a> : room.format !== "in_person" && room.my_rsvp === "going" ? <small>The private joining link appears here 30 minutes before the meetup.</small> : null}
         </div>
         {!isRecording ? <div className="gathering-calendar-actions"><AddToCalendarButton endsAt={room.ends_at} eventId={eventId} location={[room.venue_name,room.city].filter(Boolean).join(", ") || "Online"} slug={room.event_slug} startsAt={room.starts_at} summary={room.summary} title={room.title} detailsPath={`/communities/${room.community_slug}?view=gatherings&gathering=${encodeURIComponent(room.event_slug)}`} /><small>For email reminders, turn on Event emails in <Link href="/notifications">notification settings</Link>.</small></div> : null}
-        {notice ? <p className="form-message" role="status">{notice}</p> : null}
+        {notice && notice !== "Your place is saved." ? <p className="form-message" role="status">{notice}</p> : null}
       </header>
       {room.can_manage && !isRecording ? <EventRepeatPlanner eventId={eventId} communityId={communityId} communitySlug={room.community_slug} currentUserId={currentUserId} sourceStartsAt={room.starts_at} /> : null}
 

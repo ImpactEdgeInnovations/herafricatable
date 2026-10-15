@@ -11,11 +11,20 @@ const items = [
   { id: 'a', title: 'Women in Trade', summary: 'Finance and business', location: 'Nairobi', format: 'in person', content: React.createElement('article', null, 'NAIROBI_EVENT') },
   { id: 'b', title: 'Café founders', summary: 'Meet business owners', location: 'Online', format: 'online', content: React.createElement('article', null, 'ONLINE_EVENT') },
 ];
-function render(query, location) {
+function render(query, location, format='', month='', visible=12, data=items) {
   let state = 0;
-  const Component = new Function('React', 'Fragment', 'useId', 'useState', 'matchesDiscoverySearch', `${code};return EventDiscovery;`)(React, React.Fragment, () => 'suggestions', () => [state++ === 0 ? query : location, () => {}], matchesDiscoverySearch);
-  return renderToStaticMarkup(React.createElement(Component, { items }));
+  const states=[query,location,format,month,visible];
+  const Component = new Function('React', 'Fragment', 'useId', 'useState', 'matchesDiscoverySearch', `${code};return EventDiscovery;`)(React, React.Fragment, () => 'suggestions', initial => [states[state++] ?? initial, () => {}], matchesDiscoverySearch);
+  return renderToStaticMarkup(React.createElement(Component, { items:data }));
 }
+assert(!render('','','online').includes('NAIROBI_EVENT'));
+assert(render('','','online').includes('ONLINE_EVENT'));
+const many=Array.from({length:100},(_,index)=>({...items[0],id:String(index),startsAt:'2026-10-31T22:30:00Z',timezone:'Africa/Nairobi',content:React.createElement('article',{'data-event':index},`EVENT_${index}`)}));
+assert.equal((render('','','','',12,many).match(/data-event=/g)||[]).length,12);
+assert(render('','','','',12,many).includes('Show more events'));
+assert.equal((render('','','','',24,many).match(/data-event=/g)||[]).length,24);
+assert(render('','','','2026-10',12,many).includes('No events match'));
+assert(render('','','','2026-11',12,many).includes('EVENT_0'));
 assert(render('', '').includes('NAIROBI_EVENT') && render('', '').includes('ONLINE_EVENT'));
 assert(render('trade women', '').includes('NAIROBI_EVENT'));
 assert(!render('trade women', '').includes('ONLINE_EVENT'));
@@ -56,6 +65,13 @@ assert(mobileRender().includes('hidden=""'));
 cleanup();
 assert(disconnected);
 const detail = read('app/events/[slug]/page.tsx');
+assert(detail.includes('viewingAsHost ? "Manage your event"'));
+assert(detail.includes('!viewingAsHost && !hasEnded && !gatheringRoomHref'));
+assert(detail.includes('<MemberHeader active="events"'));
+const confirmationCode=ts.transpileModule(read('components/member/meetup-place-confirmation.tsx').replace('export function','function'),{compilerOptions:{jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022}}).outputText;
+const Confirmation=new Function('React',`${confirmationCode};return MeetupPlaceConfirmation;`)(React);
+const confirmation=renderToStaticMarkup(React.createElement(Confirmation));
+assert(confirmation.includes('role="status"')&&confirmation.includes('Your place is saved')&&confirmation.includes('You’re going'));
 assert(detail.includes('const mobileActionHref = hasEnded ? null') && detail.includes('event.registration_mode !== "closed" && !bookingClosed'));
 assert(detail.includes('isConfirmedGuest ? `/events/${slug}/pass`'));
 console.log('Events UI rendering passed: all-permitted results, multi-word/accent search, location filters, no-match recovery, uncropped posters and state-derived mobile action. Live booking/device acceptance remains separate.');

@@ -1,0 +1,34 @@
+.event-detail-back { width:min(1120px,calc(100% - 40px)); margin:16px auto 0; display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+.event-detail-back a { min-height:44px; display:inline-flex; align-items:center; color:var(--wine); font-size:.875rem; }
+.event-detail-back span { font-size:.875rem; color:#655e60; }
+.event-detail-page:has(.member-shell-header) { padding-bottom:100px; }
+.meetup-place-confirmation { display:flex; gap:12px; align-items:center; padding:16px 20px; margin:16px 0; border:1px solid #8eae99; border-left:4px solid #35654b; border-radius:8px; background:#edf6ef; color:#244b35; font:500 1rem/1.5 var(--sans,Arial,sans-serif); }
+.meetup-place-confirmation > span { display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; border-radius:50%; background:#35654b; color:#fff; }
+.meetup-place-confirmation strong { font-size:1.125rem; }
+.meetup-place-confirmation p { margin:3px 0 0; font:400 .9375rem/1.5 var(--sans,Arial,sans-serif); }
+.meetup-going-badge { background:#edf6ef; color:#244b35 !important; border:1px solid #8eae99; padding:5px 9px; border-radius:5px; font-weight:600; }
+.events-page .event-discovery-controls { display:grid; grid-template-columns:minmax(0,2fr) repeat(3,minmax(0,1fr)); gap:12px; }
+.events-page .event-discovery-controls label,.events-page .event-discovery-controls label:has(select) { width:100%; min-width:0; }
+.event-discovery-controls :is(input,select) { font:400 1rem/1.4 var(--sans,Arial,sans-serif); }
+.events-page .event-discovery-count { grid-column:1/-1; margin:0; }
+.events-page .event-discovery-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; align-items:stretch; }
+.events-page .event-discovery-grid > article { display:flex; flex-direction:column; gap:12px; min-width:0; padding:18px; border:1px solid #ded8d2; border-radius:8px; background:#fff; box-shadow:none; margin:0; }
+.events-page .event-discovery-grid .public-event-image-link { display:block; width:100%; padding:0; min-height:0; }
+.events-page .event-discovery-grid .public-event-poster { width:100%; max-width:none; height:200px; object-fit:contain; background:#f7f5f2; border-radius:5px; }
+.events-page .event-discovery-grid .public-event-date { display:flex; align-items:baseline; gap:8px; text-align:left; border:0; padding:0; }
+.events-page .event-discovery-grid .public-event-date strong { font:600 1.35rem/1.3 var(--sans,Arial,sans-serif); }
+.events-page .event-discovery-grid .public-event-date span { font-size:.8125rem; }
+.events-page .event-discovery-grid .public-event-copy { min-width:0; flex:1; }
+.events-page .event-discovery-grid h2 { font:600 1.25rem/1.35 var(--sans,Arial,sans-serif); margin:8px 0; overflow-wrap:anywhere; }
+.events-page .event-discovery-grid .public-event-summary { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:.875rem; line-height:1.6; }
+.events-page .event-discovery-grid .public-event-facts { font-size:.8125rem; line-height:1.6; }
+.events-page .event-discovery-grid .public-event-open { display:inline-flex; align-items:center; min-height:44px; padding:8px 0; align-self:flex-start; color:var(--wine); font-size:.875rem; }
+.event-discovery-more { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:16px; padding:20px 0; font-size:.875rem; }
+@media(max-width:960px) { .events-page .event-discovery-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:640px) {
+  .event-detail-back { width:calc(100% - 32px); }
+  .events-page .event-discovery-grid { grid-template-columns:minmax(0,1fr); }
+  .events-page .event-discovery-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .events-page .event-discovery-controls label:first-child { grid-column:1/-1; }
+  .meetup-place-confirmation { padding:14px; }
+}

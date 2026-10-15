@@ -163,6 +163,7 @@ export function CommunityGatherings({
           </small>
           {new Date(card.ends_at).getTime() >= Date.now() ? <div className="gathering-card-signals">
             {canManage ? <span>{Number(card.going_count)} going · Host only</span> : null}
+            {card.my_rsvp === "going" ? <span className="meetup-going-badge">✓ You’re going</span> : null}
             {Number(card.question_count) ? <span>{Number(card.question_count)} questions</span> : null}
           </div> : null}
         </div>
@@ -199,7 +200,7 @@ export function CommunityGatherings({
       </div>{canManage ? <div className="community-gathering-host-actions"><button type="button" aria-expanded={plannerOpened} aria-controls="community-inline-planner" onClick={() => { setPlannerMounted(true); setPlannerOpened(open => !open); setLinkerOpened(false); }}>{plannerOpened ? "Hide meetup tools" : "Create a meetup"}</button><button type="button" aria-expanded={linkerOpened} aria-controls="community-inline-event-linker" onClick={() => { setLinkerMounted(true); setLinkerOpened(open => !open); setPlannerOpened(false); }}>{linkerOpened ? "Hide event linking" : "Link an existing event"}</button></div> : null}</div>
       {canManage && plannerMounted ? <div id="community-inline-planner" className="community-inline-planner" hidden={!plannerOpened}><CommunityGatheringPlanner communityId={communityId} slug={slug} currentUserId={currentUserId} /></div> : null}
       {canManage && linkerMounted ? <div id="community-inline-event-linker" className="community-inline-planner" hidden={!linkerOpened}><CommunityEventLinker key={communityId} communityId={communityId} onCreateGathering={() => { setPlannerMounted(true); setPlannerOpened(true); setLinkerOpened(false); }} /></div> : null}
-      {message ? <p className="form-message" role="status">{message}</p> : null}
+      {message ? <p className={message === "Your place is saved." ? "meetup-place-confirmation" : "form-message"} role="status">{message === "Your place is saved." ? "✓ You’re going. Your place is saved." : message}</p> : null}
       <div hidden={plannerOpened || linkerOpened}>
       {!migrationReady ? (
         <div className="community-program-empty">

@@ -20,6 +20,7 @@ import "./host-tools-refinement.css";
 import "./member-return-refinement.css";
 import "./member-directory-refinement.css";
 import "./community-member-refinement.css";
+import "./event-discovery-refinement.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),

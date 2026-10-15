@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MemberHeader } from "@/components/member/member-header";
 import type { Metadata } from "next";
 import { absoluteUrl, publicPageMetadata, serializeJsonLd } from "@/lib/seo";
 import { getPublicEventSeo } from "@/lib/public-event-seo";
@@ -167,6 +168,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const { data: canHostEvent } = user
     ? await supabase.rpc("can_host_event", { p_event_id: event.id })
     : { data: false };
+  const viewingAsHost = canInviteToEvent || canHostEvent === true;
   const { data: hostPublicRows } = await supabase.rpc("get_event_public_host", { p_event_id: event.id });
   const publicHost = ((hostPublicRows as PublicEventHost[] | null) ?? [])[0] ?? null;
   const eventInvitationResult = canInviteToEvent
@@ -292,7 +294,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       : availability?.tickets.some((ticket) => ticket.bookingState === "not_open")
         ? "Bookings open soon"
         : "Booking unavailable";
-  const cta = gatheringRoomHref
+  const cta = viewingAsHost ? "Manage your event" : gatheringRoomHref
     ? hasEnded ? "View meetup recap" : "Join meetup"
     : hasEnded ? recap ? "Read event recap" : "Event completed" : isConfirmedGuest ? "Open my event pass"
       : registration?.status === "pending_payment" || registration?.status === "pending_review"
@@ -303,16 +305,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           : event.registration_mode === "waitlist" ? "Join the waiting list"
             : event.registration_mode === "closed" ? "Registration closed"
               : bookingClosed ? bookingClosedLabel
-                : event.registration_mode === "manual_review" ? "Request a seat" : "Register";
+                : "View booking options";
   const lowestTicket = [...(tickets ?? [])].sort((first, second) => first.price_minor - second.price_minor)[0];
   const costLabel = hasEnded ? "Past event" : lowestTicket
     ? lowestTicket.price_minor === 0 ? "Free" : `From ${lowestTicket.currency} ${new Intl.NumberFormat("en-KE").format(lowestTicket.price_minor / 100)}`
     : "See booking details";
-  const entryLabel = hasEnded ? "Completed" : event.audience === "community" ? "Community members"
+  const entryLabel = viewingAsHost ? "You manage this event" : hasEnded ? "Completed" : event.audience === "community" ? "Community members"
     : activeMember ? "Member booking"
       : eventGuestFlag?.enabled ? "Guest booking available" : "Membership required";
   // Reuse the existing destination; this bar cannot book or bypass any eligibility check.
-  const mobileActionHref = hasEnded ? null : gatheringRoomHref ?? (
+  const mobileActionHref = hasEnded ? null : viewingAsHost ? `/events/${slug}/host` : gatheringRoomHref ?? (
     isConfirmedGuest ? `/events/${slug}/pass`
       : registration?.status === "waitlisted" ? "#registration"
         : event.registration_mode !== "closed" && !bookingClosed ? "#registration" : null
@@ -329,16 +331,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           { "@type": "ListItem", position: 3, name: event.title, item: absoluteUrl(`/events/${encodeURIComponent(slug)}`) },
         ],
       }) }} /> : null}
-      <header className="legal-header">
+      {user ? <MemberHeader active="events" label="Event details" /> : <header className="legal-header">
         <Link className="brand" href={user ? "/home" : "/"} prefetch={false}><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></Link>
         <Link href="/events">All events</Link>
-      </header>
+      </header>}
+      <div className="event-detail-back"><Link href="/events">← All events</Link>{viewingAsHost ? <span>You are viewing your event as a Host.</span> : null}</div>
       <section className="event-detail-hero" aria-label="Event details">
         <div><p className="eyebrow">{event.audience === "community" ? "Community meetup" : event.format === "hybrid" ? "In person & online" : event.format === "online" ? "Online" : "In person"} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "See when, where and how to join below."}</p>{eventCommunity && event.audience === "community" ? <span className="event-community-badge">For active members of {eventCommunity.name}</span> : null}</div>
         {eventImage ? <figure className="event-detail-poster"><img alt={eventImage.alt} src={eventImage.url} fetchPriority="high" /></figure> : null}
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div><div><dt>Cost</dt><dd>{costLabel}</dd></div><div><dt>Entry</dt><dd>{entryLabel}</dd></div></dl>
-          <div id="event-primary-action">{gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : hasEnded && recap ? <a className="button button-primary" href="#event-recap">{cta}</a> : !hasEnded && isConfirmedGuest ? <Link className="button button-primary" href={`/events/${slug}/pass`}>{cta}</Link> : !hasEnded && registration?.status === "waitlisted" ? <a className="button button-primary" href="#registration">{cta}</a> : hasEnded || event.registration_mode === "closed" || bookingClosed ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}</div>
+          <div id="event-primary-action">{viewingAsHost ? <Link className="button button-primary" href={`/events/${slug}/host`}>{cta}</Link> : gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : hasEnded && recap ? <a className="button button-primary" href="#event-recap">{cta}</a> : !hasEnded && isConfirmedGuest ? <Link className="button button-primary" href={`/events/${slug}/pass`}>{cta}</Link> : !hasEnded && registration?.status === "waitlisted" ? <a className="button button-primary" href="#registration">{cta}</a> : hasEnded || event.registration_mode === "closed" || bookingClosed ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}</div>
           {gatheringRoomHref && isConfirmedGuest && !hasEnded ? <Link className="event-pass-inline-link" href={`/events/${slug}/pass`}>Open my entry pass</Link> : null}
         </aside>
       </section>
@@ -346,7 +349,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       {publicHost ? <section className="event-public-host" aria-label="Event Host"><div className="event-public-host-identity"><span className="event-public-host-monogram" aria-hidden="true">{publicHost.display_name.trim().slice(0,1)}</span><div><small>Hosted by</small><h2>{publicHost.display_name}</h2>{publicHost.introduction ? <p>{publicHost.introduction}</p> : null}</div></div><div className="event-public-host-links">{publicHost.website_url ? <a href={publicHost.website_url} target="_blank" rel="noopener noreferrer nofollow">Website ↗</a> : null}{publicHost.linkedin_url ? <a href={publicHost.linkedin_url} target="_blank" rel="noopener noreferrer nofollow">LinkedIn ↗</a> : null}{publicHost.instagram_url ? <a href={publicHost.instagram_url} target="_blank" rel="noopener noreferrer nofollow">Instagram ↗</a> : null}{publicHost.contact_email ? <a href={`mailto:${encodeURIComponent(publicHost.contact_email)}`}>Email Host</a> : null}{publicHost.contact_phone ? <a href={`tel:${publicHost.contact_phone.replace(/[^\d+]/g,"")}`}>Call Host</a> : null}</div></section> : null}
 
       <nav className="event-detail-jump-links" aria-label="On this event page">
-        {!hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? <a href="#registration">Places</a> : null}
+        {!viewingAsHost && !hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? <a href="#registration">Places</a> : null}
         {gatheringRoomHref ? <Link href={`${gatheringRoomHref}#questions`}>Conversation</Link> : <a href="#questions">Questions</a>}
         {eventCommunity ? <a href="#event-community">Community</a> : null}
         {sessions?.length ? <a href="#event-programme">Programme</a> : null}
@@ -370,7 +373,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         </details>
       ) : null}
 
-      {!hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? (
+      {!viewingAsHost && !hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? (
         <section className="event-inline-registration" id="registration">
           {bookingClosed && !registration && !isConfirmedGuest ? (
             <div className="event-registration-entry">
@@ -499,7 +502,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           remainingToday={guideAccess.remaining_today}
         />
       ) : null}
-      {mobileActionHref ? <EventMobileAction href={mobileActionHref} label={cta} detail={costLabel} /> : null}
+      {mobileActionHref && !user ? <EventMobileAction href={mobileActionHref} label={cta} detail={costLabel} /> : null}
     </main>
   );
 }

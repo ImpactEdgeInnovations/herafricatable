@@ -228,7 +228,7 @@ export default async function EventsPage() {
         ) : events.length ? <EventDiscovery items={events.map((event) => {
           const poster = hostCovers.get(event.id)?.url ? hostCovers.get(event.id) : eventPosters.get(event.id);
           const tickets = ticketsByEvent.get(event.id) ?? [];
-          return { id: event.id, title: event.title, summary: event.summary, location: event.venues?.city ?? "Online", format: `${event.format.replaceAll("_", " ")} ${eventFormatLabel(event.format)}`, content: (
+          return { id: event.id, title: event.title, summary: event.summary, location: event.venues?.city ?? "Online", startsAt:event.starts_at, timezone:event.timezone, format: `${event.format.replaceAll("_", " ")} ${eventFormatLabel(event.format)}`, content: (
           <article key={event.id} className={poster?.url ? "has-poster" : "without-poster"}>
             {poster?.url ? <Link href={`/events/${event.slug}`} className="public-event-image-link" tabIndex={-1} aria-hidden="true"><img className="public-event-poster" alt="" src={poster.url} loading="lazy" /></Link> : null}
             <div className="public-event-date"><strong>{new Intl.DateTimeFormat("en-KE", { day: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))}</strong><span>{new Intl.DateTimeFormat("en-KE", { month: "short", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</span></div>
