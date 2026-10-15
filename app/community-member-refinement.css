@@ -1,4 +1,5 @@
 /* Member room: activity first, personal settings after the selected content. */
+.community-mobile-menu { display:none; }
 .community-room-page .community-home-conversations,
 .community-room-page .community-people-error { width:min(1120px,calc(100% - 40px)); margin:24px auto; }
 .community-home-conversations > header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
@@ -27,6 +28,11 @@
 .community-room-page .community-feed-empty { padding:24px; min-height:0; border:1px solid #e4dfdc; text-align:left; }
 .community-room-page .community-feed-empty p { margin:8px 0 0; }
 @media(max-width:640px) {
+  .community-room-page .community-local-navigation > .community-local-tabs { display:none; }
+  .community-room-page .community-local-navigation { align-items:end; gap:12px; padding-bottom:12px; background:transparent; }
+  .community-room-page .community-mobile-menu { display:grid; gap:6px; flex:1; min-width:0; color:var(--room-muted); font:400 .8125rem/1.4 var(--sans,Arial,sans-serif); }
+  .community-mobile-menu select { width:100%; min-height:44px; border:1px solid #d8d1cd; border-radius:6px; padding:8px 12px; background:#fff; color:var(--room-ink); font:500 1rem/1.4 var(--sans,Arial,sans-serif); }
+  .community-room-page .community-local-more a { max-width:none; white-space:nowrap; min-height:44px; }
   .community-room-page .community-home-conversations,.community-room-page .community-people-error { width:calc(100% - 32px); margin:20px auto; }
   .community-home-conversations > header { align-items:flex-start; flex-direction:column; gap:12px; }
   .community-home-empty { padding:18px; }

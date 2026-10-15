@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 export type CommunityArea =
@@ -27,6 +28,7 @@ export function CommunityLocalNavigation({
   canManage: boolean;
   slug: string;
 }) {
+  const router = useRouter();
   const tabs = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const container = tabs.current;
@@ -50,6 +52,12 @@ export function CommunityLocalNavigation({
   }, [active]);
   return (
     <nav className="community-local-navigation" aria-label="Inside this Community">
+      <label className="community-mobile-menu">
+        <span>Community menu</span>
+        <select value={active} onChange={event => router.push(`/communities/${slug}?view=${event.target.value}`)}>
+          {areas.map(area => <option key={area.key} value={area.key}>{area.label}</option>)}
+        </select>
+      </label>
       <div className="community-local-tabs" ref={tabs}>
         {areas.map((area) => (
           <Link
