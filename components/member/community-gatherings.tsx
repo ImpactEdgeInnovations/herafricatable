@@ -88,6 +88,7 @@ export function CommunityGatherings({
   const [linkerOpened, setLinkerOpened] = useState(false);
   const [linkerMounted, setLinkerMounted] = useState(false);
   useEffect(()=>setItems(cards),[cards]);
+  useEffect(()=>setSelected(initialSelection ?? ""),[initialSelection]);
   useEffect(()=>{const update=()=>{
     const params = new URL(window.location.href).searchParams;
     setSelected(params.get("gathering") ?? "");
