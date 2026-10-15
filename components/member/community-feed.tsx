@@ -1340,7 +1340,7 @@ export function CommunityFeed({
             <p>
               {serverFiltering || allPosts.length
                 ? "Try a broader search or return to the latest conversations."
-                : "Share one focused thought, request, opportunity or resource that another member can act on."}
+                : "Say hello, ask a question or share an update with the Community."}
             </p>
             {serverFiltering || allPosts.length ? (
               <button

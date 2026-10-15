@@ -14,7 +14,7 @@ const areas: { key: CommunityArea; label: string }[] = [
   { key: "overview", label: "Home" },
   { key: "conversations", label: "Conversations" },
   { key: "gatherings", label: "Meetups" },
-  { key: "media", label: "Media" },
+  { key: "media", label: "Photos & videos" },
   { key: "people", label: "People" },
 ];
 

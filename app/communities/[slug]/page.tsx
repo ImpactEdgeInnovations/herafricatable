@@ -49,6 +49,7 @@ import {
   type CommunityCheckIn,
 } from "@/components/member/community-check-ins";
 import { CommunityLocalNavigation } from "@/components/member/community-local-navigation";
+import { CommunityHomeConversations } from "@/components/member/community-home-conversations";
 import { CommunityAboutPanel } from "@/components/member/community-about-panel";
 import { brandAccent } from "@/lib/brand-themes";
 import { CommunityMedia } from "@/components/member/community-media";
@@ -150,12 +151,12 @@ export default async function CommunityPage({
         p_limit: 30,
         p_offset: 0,
       }) : Promise.resolve({ data: [], error: null }),
-      showConversations ? supabase.rpc("list_community_conversation_page", {
+      showConversations || showToday ? supabase.rpc("list_community_conversation_page", {
         p_before_activity_at: null,
         p_before_pinned: null,
         p_before_post_id: null,
         p_community_id: community.community_id,
-        p_limit: 21,
+        p_limit: showToday ? 3 : 21,
       }) : Promise.resolve({ data: [], error: null }),
       showConversations ? supabase.rpc("list_community_comments", {
         p_community_id: community.community_id,
@@ -235,7 +236,7 @@ export default async function CommunityPage({
     : null;
   const paginatedPostIds = visiblePaginatedPosts.map((post) => post.post_id);
   const [pageCommentsResult, pageMediaResult] =
-    paginationReady && paginatedPostIds.length
+    showConversations && paginationReady && paginatedPostIds.length
       ? await Promise.all([
           supabase.rpc("list_community_comments_for_posts", {
             p_community_id: community.community_id,
@@ -379,7 +380,6 @@ export default async function CommunityPage({
         </div>
       </section>
       <CommunityLocalNavigation active={view} canManage={canManage} slug={slug} />
-      <CommunityMembershipControl communityId={community.community_id} name={community.name} role={community.membership_role} />
       {!liveGathering && !gatheringCardResult.error ? <CommunityNextGathering cards={gatheringCards} slug={slug} /> : null}
       {liveGathering ? (
         <aside className="community-live-notice" aria-label="Meetup live now">
@@ -390,6 +390,9 @@ export default async function CommunityPage({
       ) : null}
       {showToday ? (
         <>
+          <CommunityHomeConversations posts={paginatedPosts} slug={slug} unavailable={Boolean(paginatedPostsResult.error)} readOnly={cohort?.cohort_status === "read_only"} />
+          <details className="community-room-more community-getting-started">
+            <summary><span>New here?</span><strong>A few ways to take part</strong></summary>
           <CommunityStartPath
             memberCount={community.member_count}
             cohortActive={cohort?.cohort_status === "active"}
@@ -402,6 +405,7 @@ export default async function CommunityPage({
                   )[0] ?? null
             }
           />
+          </details>
           {!checkInResult.error ? (
             <details className="community-room-more">
               <summary>
@@ -493,7 +497,7 @@ export default async function CommunityPage({
                 (memberResult.data as CommunityRosterMember[] | null) ?? []
               }
             />
-          ) : null}
+          ) : <section className="community-people-error" role="status"><p>Members could not load just now.</p><Link href={`/communities/${slug}?view=people`}>Try again</Link></section>}
         </>
       ) : null}
       {showGatherings ? (
@@ -546,6 +550,7 @@ export default async function CommunityPage({
           }
         />
       ) : null}
+      <CommunityMembershipControl communityId={community.community_id} name={community.name} role={community.membership_role} />
     </main>
   );
 }

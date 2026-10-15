@@ -19,6 +19,7 @@ import "./product-ui-foundation.css";
 import "./host-tools-refinement.css";
 import "./member-return-refinement.css";
 import "./member-directory-refinement.css";
+import "./community-member-refinement.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),

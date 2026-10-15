@@ -28,6 +28,7 @@ export function CommunityNotificationPreferences({
     event.preventDefault();
     setBusy(true);
     setMessage("");
+    try {
     const { error } = await supabase.rpc(
       "update_community_notification_preferences",
       {
@@ -38,26 +39,23 @@ export function CommunityNotificationPreferences({
         p_weekly_briefing_email: preferences.weekly_briefing_email,
       },
     );
-    setBusy(false);
-    setMessage(
-      error
-        ? memberErrorMessage(error, "save your community update choices")
-        : "Your choices for this community have been saved.",
-    );
+    if (error) throw error;
+    setMessage("Your notification choices have been saved.");
+    } catch (error) {
+      setMessage(memberErrorMessage(error, "save your community update choices"));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
     <details className="community-update-preferences" id="room-updates">
       <summary>
         <span>
-          <small>Community notifications</small>
-          <strong>Choose which updates you receive.</strong>
-          <em>
-            See replies in Updates, receive a weekly summary, or turn email
-            updates on and off.
-          </em>
+          <strong>Notifications</strong>
+          <small>Choose your email and reply updates</small>
         </span>
-        <b>Change notifications</b>
+        <b>Change</b>
       </summary>
       <form onSubmit={(event) => void save(event)}>
         <div>
