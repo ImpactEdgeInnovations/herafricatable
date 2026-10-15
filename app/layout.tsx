@@ -21,6 +21,7 @@ import "./member-return-refinement.css";
 import "./member-directory-refinement.css";
 import "./community-member-refinement.css";
 import "./event-discovery-refinement.css";
+import "./featured-spots.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),

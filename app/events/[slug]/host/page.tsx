@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { FeaturedRequestPanel } from "@/components/featured/featured-request-panel";
 import { MemberHeader } from "@/components/member/member-header";
 import { EventHostWorkspace, type EventHostCommunity, type EventHostCover, type EventHostOutcomes, type EventHostWorkspaceRow } from "@/components/events/event-host-workspace";
 import { DestinationInvitationPanel, type DestinationInvitation } from "@/components/member/destination-invitation-panel";
@@ -68,6 +69,7 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
     <MemberHeader active="events" label="Your event" />
     <EventHostWorkspace currentUserId={user.id} initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} communities={(communitiesResult.data as EventHostCommunity[] | null) ?? []} communityLinksReady={!communitiesResult.error} selfPublish={selfPublish === true} />
     <EventHostExtraTools>
+      {workspace.event_status === "published" && !hasEnded ? <FeaturedRequestPanel kind="event" targetId={workspace.event_id}/> : null}
       {workspace.event_status === "published" && !hasEnded ? <details id="guest-requests"><summary>Guest requests and waiting list</summary><EventHostRequests eventId={workspace.event_id}/></details> : null}
       {["published", "completed"].includes(workspace.event_status) ? <EventRepeatPlanner eventId={workspace.event_id} currentUserId={user.id} sourceStartsAt={workspace.starts_at} /> : null}
       {!hasEnded ? <EventAppearance eventId={workspace.event_id} initialAccent={appearanceResult.data?.appearance_accent_key} ready={!appearanceResult.error} /> : null}

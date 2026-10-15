@@ -1,0 +1,53 @@
+-- TEST ONLY: isolated records and existing tagged accounts. Entire test rolls back.
+begin;
+create temporary table featured_results(result text);
+do $$
+declare host_id uuid; member_id uuid; admin_id uuid; eid uuid:=gen_random_uuid(); cid uuid:=gen_random_uuid(); aid uuid:=gen_random_uuid(); rid uuid; crid uuid; denied boolean;
+begin
+ select u.id into strict host_id from auth.users u join public.profiles p on p.id=u.id where u.email='community.host@hat-test.invalid' and p.is_test_account and p.access_status='active';
+ select u.id into strict member_id from auth.users u join public.profiles p on p.id=u.id where u.email='community.member.one@hat-test.invalid' and p.is_test_account;
+ select user_id into admin_id from public.user_roles where role='super_admin' limit 1;
+ if admin_id is null then raise exception 'An existing Super Admin is required'; end if;
+ insert into public.events(id,slug,title,format,audience,status,starts_at,ends_at,registration_mode,created_by) values(eid,'featured-test-'||eid,'[TEST] Featured event','virtual','public','published',now()+interval '20 days',now()+interval '21 days','closed',host_id);
+ insert into public.event_hosts(event_id,user_id,assigned_by) values(eid,host_id,host_id);
+ insert into public.communities(id,slug,name,description,community_type,status,created_by,join_policy) values(cid,'featured-test-'||cid,'[TEST] Featured Community','Rollback only test Community for featured placements.','private','draft',host_id,'open');
+ insert into public.community_memberships(community_id,user_id,role,status) values(cid,host_id,'owner','active');
+ insert into public.community_host_applications(id,applicant_id,community_name,proposed_slug,category,purpose,intended_members,expected_members,admission_model,host_experience,safety_plan,guidelines_accepted_at,status,created_community_id,pilot_auto_draft)
+ values(aid,host_id,'[TEST] Featured Community','featured-test-'||cid,'other','Rollback only test Community for featured placements.','Tagged test members only.',20,'open_request','This is an isolated rollback-only rehearsal.','All changes roll back. No messages sent.',now(),'approved',cid,true);
+ insert into public.community_pilot_publications(community_id,owner_id,application_id) values(cid,host_id,aid);
+ update public.communities set status='published',public_preview_enabled=true,tagline='A test Community',about_summary='A synthetic Community used only for verifying featured spots with rollback. No real member activity is changed.',audience_summary='Tagged test members only.',host_display_name='Test Host',host_intro='An isolated tagged test Host for this rehearsal.',about_benefits=array['Meet test members','Discuss test topics','Verify featured spots'] where id=cid;
+ perform set_config('request.jwt.claim.sub',host_id::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',host_id,'role','authenticated')::text,true);execute 'set local role authenticated';
+ rid:=public.request_featured_spot('event',eid,'Please feature this test event.',now()-interval '1 minute',now()+interval '2 days');
+ crid:=public.request_featured_spot('community',cid,'Please feature this test Community.',now()-interval '1 minute',now()+interval '2 days');
+ if not exists(select 1 from public.featured_spot_requests where id=rid and status='pending') then raise exception 'Host request read-back failed';end if;
+ denied:=false;begin perform public.request_featured_spot('event',eid,'Duplicate request test.',now(),now()+interval '1 day');exception when others then if sqlerrm='A request is already waiting for a decision' then denied:=true;else raise;end if;end;if not denied then raise exception 'Duplicate request accepted';end if;
+ denied:=false;begin perform public.review_featured_spot(rid,'approved',now(),now()+interval '1 day','');exception when others then if sqlerrm='Super Admin access required' then denied:=true;else raise;end if;end;if not denied then raise exception 'Host approved own request';end if;
+ perform set_config('request.jwt.claim.sub',member_id::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',member_id,'role','authenticated')::text,true);
+ if exists(select 1 from public.featured_spot_requests where id in(rid,crid)) then raise exception 'Private reason leaked';end if;
+ denied:=false;begin insert into public.featured_spot_requests(event_id,reason,requested_start,requested_end) values(eid,'Unauthorised member request',now(),now()+interval '1 day');exception when insufficient_privilege then denied:=true;end;if not denied then raise exception 'Unrelated member requested a spot';end if;
+ perform set_config('request.jwt.claim.sub',admin_id::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',admin_id,'role','authenticated')::text,true);
+ denied:=false;begin perform public.review_featured_spot(rid,'approved',now()+interval '1 day',now(),'');exception when others then if sqlerrm='Choose a future period of up to 30 days' then denied:=true;else raise;end if;end;if not denied then raise exception 'Reversed dates accepted';end if;
+ perform public.review_featured_spot(rid,'approved',now()-interval '1 minute',now()+interval '2 days','Approved for test.');
+ perform public.review_featured_spot(crid,'approved',now()-interval '1 minute',now()+interval '2 days','Approved for test.');
+ perform set_config('request.jwt.claim.sub',host_id::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',host_id,'role','authenticated')::text,true);
+ if (select count(*) from public.featured_spot_placements where request_id in(rid,crid))<>2 then raise exception 'Approved spots not visible';end if;
+ if not exists(select 1 from public.featured_spot_requests where id=rid and reviewed_by=admin_id and review_note='Approved for test.') then raise exception 'Decision not persisted';end if;
+ perform set_config('request.jwt.claim.sub','',true);perform set_config('request.jwt.claims','{"role":"anon"}',true);execute 'set local role anon';
+ if not exists(select 1 from public.featured_spot_placements where request_id=rid) then raise exception 'Public active event placement not visible';end if;
+ denied:=false;begin perform 1 from public.featured_spot_requests;exception when insufficient_privilege then denied:=true;end;if not denied then raise exception 'Anonymous request access allowed';end if;
+ execute 'reset role';
+ perform set_config('request.jwt.claim.sub',host_id::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',host_id,'role','authenticated')::text,true);
+ update public.featured_spot_placements set ends_at=now(),starts_at=now()-interval '1 day' where request_id=rid;
+ update public.featured_spot_placements set starts_at=now()+interval '1 day',ends_at=now()+interval '2 days' where request_id=crid;
+ execute 'set local role authenticated';
+ if exists(select 1 from public.featured_spot_placements where request_id in(rid,crid)) then raise exception 'Expired or future placement visible';end if;
+ perform set_config('request.jwt.claim.sub',admin_id::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',admin_id,'role','authenticated')::text,true);
+ perform public.review_featured_spot(crid,'removed',null,null,'Removed for test.');
+ perform set_config('request.jwt.claim.sub',host_id::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',host_id,'role','authenticated')::text,true);
+ if not exists(select 1 from public.featured_spot_requests where id=crid and status='removed') then raise exception 'Early removal not saved';end if;
+ execute 'reset role';
+ if exists(select 1 from public.notification_jobs where payload::text like '%'||eid||'%' or payload::text like '%'||cid||'%') then raise exception 'Unexpected notification job';end if;
+ insert into featured_results values('PASS L2: event and Community Host request, duplicate denial, unrelated-member denial, private reason, Host cannot approve, Admin date validation, approval read-back, future/expiry boundary and early removal. Rolled back; no email.');
+end $$;
+select * from featured_results;
+rollback;

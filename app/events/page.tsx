@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FeaturedSpots } from "@/components/featured/featured-spots";
 import { EventDiscovery } from "@/components/events/event-discovery";
 import { createClient } from "@/lib/supabase/server";
 import { MemberHeader } from "@/components/member/member-header";
@@ -219,6 +220,7 @@ export default async function EventsPage() {
           </p>
         </div>
       </section>
+      <FeaturedSpots kind="event"/>
       <section className="public-event-list" id="upcoming-events" aria-label="Upcoming events">
         {eventsError ? (
           <div className="events-empty">

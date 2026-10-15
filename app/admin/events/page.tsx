@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FeaturedRequestPanel } from "@/components/featured/featured-request-panel";
 import { redirect } from "next/navigation";
 import { AdminHeader, type AdminRole } from "@/components/admin/admin-header";
 import {
@@ -427,6 +428,7 @@ export default async function AdminEventsPage({
   return (
     <main className="admin-command-center event-command-page">
       <AdminHeader active="events" label="Event oversight" role={role} />
+      {role === "super_admin" ? <FeaturedRequestPanel kind="event" admin/> : null}
       {view === "overview" && role === "super_admin" ? <PilotEventCancellation admin items={(pilotCancellations as PilotCancellation[] | null) ?? []} /> : null}
       <section className="oversight-subnav-shell">
         <nav className="oversight-subnav" aria-label="Event work">

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { FeaturedRequestPanel } from "@/components/featured/featured-request-panel";
 import { AdminHeader } from "@/components/admin/admin-header";
 import {
   CommunityCommandCentre,
@@ -124,6 +125,7 @@ export default async function AdminCommunitiesPage() {
         role="super_admin"
       />
       {!videoResult.error ? <CommunityVideoControls initialItems={(videoResult.data as CommunityVideoControl[] | null) ?? []} /> : null}
+      <FeaturedRequestPanel kind="community" admin/>
       <CommunityCommandCentre
         applicationReady={!applicationResult.error}
         applications={

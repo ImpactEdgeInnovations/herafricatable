@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FeaturedRequestPanel } from "@/components/featured/featured-request-panel";
 import { notFound, redirect } from "next/navigation";
 import { CommunityCapacityPanel } from "@/components/member/community-capacity-panel";
 import { HostToolsShell, HostToolArea } from "@/components/member/host-tools-shell";
@@ -298,6 +299,7 @@ export default async function CommunityHostPage({
       </section>
       <HostToolsShell>
       <HostToolArea area="settings">
+      <FeaturedRequestPanel kind="community" targetId={community.community_id}/>
       <CommunityHostSection id="host-tools" title="Plans and tools">
         <CommunityHostCapabilitiesPanel
           capabilities={capabilities}

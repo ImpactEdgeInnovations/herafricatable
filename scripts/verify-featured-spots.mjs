@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import ts from 'typescript';
+const source=readFileSync(new URL('../components/featured/featured-spot-links.tsx',import.meta.url),'utf8').replace(/^import .*;\n/gm,'').replace('export function','function');
+const code=ts.transpileModule(source,{compilerOptions:{jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022}}).outputText;
+let now=Date.parse('2026-10-15T18:00:00Z');
+let tick,cleaned=false;
+const Component=new Function('React','Link','useState','useEffect','setInterval','clearInterval',`${code};return FeaturedSpotLinks;`)(React,({href,children})=>React.createElement('a',{href},children),()=>[now,value=>{now=value;}],fn=>{tick=fn();},()=>1,()=>{cleaned=true;});
+const items=[{id:'a',slug:'active',label:'Active spot',endsAt:'2026-10-15T18:01:00Z'},{id:'b',slug:'expired',label:'Expired spot',endsAt:'2026-10-15T18:00:00Z'}];
+let html=renderToStaticMarkup(React.createElement(Component,{kind:'event',items}));
+assert(html.includes('/events/active'));assert(!html.includes('Expired spot'));
+now=Date.parse('2026-10-15T18:01:00Z');
+html=renderToStaticMarkup(React.createElement(Component,{kind:'community',items}));
+assert.equal(html,'');tick();assert(cleaned);
+console.log('L1 rendered featured spots: active link, exclusive expiry boundary, empty section removal and timer cleanup passed. L2 and L3 are separately recorded.');

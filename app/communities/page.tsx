@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FeaturedSpots } from "@/components/featured/featured-spots";
 import { redirect } from "next/navigation";
 import {
   CommunityDirectory,
@@ -232,6 +233,7 @@ export default async function CommunitiesPage() {
         <a href="#create-community">Start a community</a>
       </nav>
 
+      <FeaturedSpots kind="community"/>
       {communityResult.error ? (
         <section className="admin-empty opportunity-error">
           <strong>Community is temporarily unavailable</strong>
