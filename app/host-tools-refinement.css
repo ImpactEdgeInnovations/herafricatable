@@ -1,0 +1,55 @@
+/* Host workspaces: quiet controls, clear areas, retained forms and readable labels. */
+.community-host-page:has(.host-tools-shell) > .community-host-hero { margin-bottom:22px;padding-bottom:22px; }
+.community-host-page:has(.host-tools-shell) > .community-host-hero h1 { font-family:var(--sans);font-size:clamp(1.6rem,3vw,2.1rem);letter-spacing:-.035em;line-height:1.2; }
+.host-tools-shell { margin:0 auto 48px;max-width:1120px; }
+.host-tools-tabs { display:flex;gap:4px;border-bottom:1px solid #ded9d1;overflow:auto;scrollbar-width:thin;padding:0 0 2px; }
+.host-tools-tabs button { flex:0 0 auto;min-height:48px;padding:12px 18px;border:0;border-bottom:2px solid transparent;background:transparent;color:#625951;font:600 15px/1.4 var(--sans);cursor:pointer; }
+.host-tools-tabs button[aria-selected="true"] { border-bottom-color:#612c3c;color:#292521;background:#fffdf9; }
+.host-tools-tabs button:focus-visible,.host-tools-shell button:focus-visible,.invitation-history-list:focus-visible { outline:3px solid #35678e;outline-offset:2px; }
+.host-tools-help { margin:18px 0;color:#625951;font-size:14px;line-height:1.6; }
+.host-tools-shortcuts { display:flex;flex-wrap:wrap;gap:10px;margin:0 0 22px; }
+.host-tools-shortcuts button { min-height:44px;border:1px solid #ded9d1;background:#fffdf9;color:#292521;border-radius:5px;padding:10px 16px;font:600 14px var(--sans);cursor:pointer; }
+.host-tools-shortcuts button:first-child { background:#612c3c;color:#fff;border-color:#612c3c; }
+.host-tool-area[hidden] { display:none!important; }
+.host-tools-shell .community-host-health { margin:8px 0 24px;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px; }
+.community-host-page .host-tools-shell .community-host-health>button { min-height:108px;padding:14px;border-radius:5px;gap:8px; }
+.host-tools-shell .community-host-health>button strong { font-family:var(--sans);font-size:1.75rem;line-height:1; }
+.host-tools-shell .community-host-health>button span { font-size:13px;letter-spacing:0;text-transform:none; }
+.host-tools-shell .community-host-health>button small { font-size:12px;line-height:1.4; }
+.host-tools-shell .community-host-section { margin:12px 0;border:1px solid #ded9d1;border-radius:5px;background:#fffdf9;box-shadow:none; }
+.host-tools-shell .community-host-section>summary { min-height:48px;padding:14px 18px;font-size:15px; }
+.host-tools-shell .community-host-section>div { padding:0 18px 18px; }
+.host-tools-shell .community-host-panel,.host-tools-shell .destination-invitation-panel { margin:0 0 20px;padding:24px 0;border:0;border-bottom:1px solid #ded9d1;box-shadow:none;border-radius:0;background:transparent; }
+.host-tools-shell .community-host-panel>header,.host-tools-shell .destination-invitation-panel>header { display:block;margin-bottom:22px; }
+.host-tools-shell .community-host-panel h2,.host-tools-shell .destination-invitation-panel h2 { font-family:var(--sans);font-size:clamp(1.25rem,2vw,1.55rem);font-weight:600;line-height:1.35;letter-spacing:-.025em;margin:6px 0 10px; }
+.host-tools-shell .community-host-panel>header>p,.host-tools-shell .destination-invitation-panel>header>p { max-width:680px;font-size:14px;line-height:1.65; }
+.host-tools-shell .community-host-invite label,.destination-invitation-panel label { font-size:14px;line-height:1.5;text-transform:none;letter-spacing:0; }
+.host-tools-shell .community-host-invite input,.host-tools-shell .community-host-invite select,.destination-invitation-panel input,.destination-invitation-panel textarea,.destination-invitation-panel select { font-size:15px;line-height:1.5;font-weight:400;min-height:44px; }
+.destination-invitation-panel textarea[name="email"] { min-height:94px;resize:vertical; }
+.destination-invitation-panel .destination-invitation-layout { align-items:start;gap:32px; }
+.destination-invitation-panel .destination-invitation-history small { display:block;font-size:12px;line-height:1.6;color:#625951; }
+.destination-invitation-panel .destination-invitation-history button,.invitation-draft-note button { min-height:44px;padding:8px 12px;border:1px solid #ded9d1;background:#fffdf9;color:#292521;border-radius:5px;font:inherit;cursor:pointer; }
+.invitation-history-list { max-height:430px;overflow:auto;overscroll-behavior:contain; }
+.invitation-history-list article { display:flex;justify-content:space-between;align-items:start;gap:12px;padding:16px 0;border-bottom:1px solid #ded9d1; }
+.invitation-history-list article strong { overflow-wrap:anywhere;font-size:13px; }
+.invitation-history-list article>span { font-size:11px;line-height:1.4;max-width:130px;flex:0 0 auto;background:#f2eee6;color:#4b443c;padding:5px 8px;border-radius:4px; }
+.invitation-history-list article>span[data-status="sent"] { background:#edf4ef;color:#284b34; }
+.invitation-history-list article>span[data-status="failed"] { background:#f9eded;color:#8a2633; }
+.invitation-address-preview { margin:10px 0 18px; }
+.invitation-address-preview>div { display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-height:150px;overflow:auto; }
+.invitation-address-preview span { font-size:12px;overflow-wrap:anywhere;padding:5px 8px;border:1px solid #ded9d1;border-radius:4px;background:#fffdf9; }
+.invitation-address-preview .is-invalid { border-color:#a33242;background:#f9eded;color:#8a2633; }
+.connection-review-profile { display:inline-flex;align-items:center;min-height:44px;padding:8px 12px;border:1px solid #ded9d1;border-radius:4px;font-size:13px; }
+.event-host-extra-tools { border-top:1px solid #ded9d1;padding-top:20px; }
+.event-host-extra-tools>details { margin:10px 0;border:1px solid #ded9d1;border-radius:5px;background:#fffdf9;box-shadow:none; }
+.event-host-extra-tools>details>summary { padding:16px 18px;font:600 15px/1.4 var(--sans);min-height:48px; }
+.event-host-extra-tools .destination-invitation-panel { box-shadow:none;border:0;margin:0;padding:22px; }
+@media(max-width:700px){
+  .host-tools-tabs button { padding:12px 14px;font-size:14px; }
+  .host-tools-shell .community-host-health { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .host-tools-shell .destination-invitation-layout { grid-template-columns:minmax(0,1fr);gap:24px; }
+  .host-tools-shell .community-host-section>div { padding:0 12px 12px; }
+  .invitation-history-list article { flex-direction:column;gap:8px; }
+  .host-tools-shell .community-host-invite { padding:14px; }
+  .host-tools-shortcuts { display:grid;grid-template-columns:1fr; }
+}

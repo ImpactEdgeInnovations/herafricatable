@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { CommunityHostActivity } from "./community-host-activity";
+import { HostToolArea, useHostTools } from "./host-tools-shell";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -178,6 +179,7 @@ export function CommunityHostWorkspace({
   outcomeTrends: CommunityOutcomeTrend[];
 }) {
   const router = useRouter();
+  const hostTools = useHostTools();
   const supabase = useMemo(() => createClient(), []);
   const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState("");
@@ -187,7 +189,7 @@ export function CommunityHostWorkspace({
   useEffect(()=>{if(activity){document.getElementById("host-activity")?.scrollIntoView({block:"start",behavior:"smooth"});document.getElementById("host-activity-title")?.focus({preventScroll:true});}},[activity]);
   function openMetric(key:keyof CommunityHostHealth){
     if(key==="active_members"||key==="pending_members"){
-      const target=document.getElementById(key==="active_members"?"people":"admissions");target?.scrollIntoView({block:"start",behavior:"smooth"});const heading=target?.querySelector("h2");heading?.setAttribute("tabindex","-1");heading?.focus({preventScroll:true});return;
+      const id=key==="active_members"?"people":"admissions";if(hostTools){hostTools.openTarget(id);return;}const target=document.getElementById(id);target?.scrollIntoView({block:"start",behavior:"smooth"});const heading=target?.querySelector("h2");heading?.setAttribute("tabindex","-1");heading?.focus({preventScroll:true});return;
     }
     setActivity(key==="posts_7d"?"posts":key==="comments_7d"?"replies":key==="unanswered_asks"?"asks":key==="open_reports"?"reports":"events");
   }
@@ -345,7 +347,7 @@ export function CommunityHostWorkspace({
 
   return (
     <>
-      <section className="community-host-health" aria-label="Community health">
+      <HostToolArea area="overview"><section className="community-host-health" aria-label="Community health">
         {metrics.map((metric) => (
           <button
             type="button"
@@ -378,6 +380,7 @@ export function CommunityHostWorkspace({
           </a>
         </aside>
       ) : null}
+      </HostToolArea>
 
       {message ? (
         <p className="community-host-message" role="status">
@@ -385,8 +388,9 @@ export function CommunityHostWorkspace({
         </p>
       ) : null}
 
-      <CommunityHostSection id="writing-area" title="Help writing a post or welcome message"><CommunityHostAssistant communityId={communityId} /></CommunityHostSection>
+      <HostToolArea area="overview"><CommunityHostSection id="writing-area" title="Help writing a post or welcome message"><CommunityHostAssistant communityId={communityId} /></CommunityHostSection></HostToolArea>
 
+      <HostToolArea area="people">
       {communityStatus === "published" ? (
         <DestinationInvitationPanel
           currentUserId={currentUserId}
@@ -403,7 +407,9 @@ export function CommunityHostWorkspace({
           <p>Once your Community is approved and open, you can enter email addresses here and send a personal invitation. People cannot join this private draft yet.</p>
         </section>
       )}
+      </HostToolArea>
 
+      <HostToolArea area="overview">
       <CommunityHostSection id="continuity-area" title="How members are taking part">
       <section
         className="community-host-panel community-host-continuity"
@@ -572,7 +578,9 @@ export function CommunityHostWorkspace({
         )}
       </section>
       </CommunityHostSection>
+      </HostToolArea>
 
+      <HostToolArea area="people">
       <section className="community-host-panel" id="admissions">
         <header>
           <div>
@@ -685,7 +693,9 @@ export function CommunityHostWorkspace({
           ))}
         </div>
       </section>
+      </HostToolArea>
 
+      <HostToolArea area="meetups">
       <ProgrammingPanel
         busy={busy}
         eyebrow="Events"
@@ -695,6 +705,8 @@ export function CommunityHostWorkspace({
         title="Link an existing event"
         onUpdate={updateProgramming}
       />
+      </HostToolArea>
+      <HostToolArea area="settings">
       <CommunityHostSection id="learning-area" title="Learning resources">
       <ProgrammingPanel
         busy={busy}
@@ -706,6 +718,7 @@ export function CommunityHostWorkspace({
         onUpdate={updateProgramming}
       />
       </CommunityHostSection>
+      </HostToolArea>
       {dialog}
     </>
   );

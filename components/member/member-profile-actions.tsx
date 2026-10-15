@@ -43,7 +43,7 @@ export function MemberProfileActions({
           minLength: 10,
           maxLength: 500,
           placeholder:
-            "For example: I would value comparing notes on growing a women-led logistics business in Nairobi.",
+            "For example: We met at Geco Cafe. I enjoyed our conversation and would love to keep in touch.",
         },
       ],
     });
@@ -221,7 +221,7 @@ export function MemberProfileActions({
 
   return (
     <>
-      <div className="member-profile-actions">
+      <div className="member-profile-actions" id="connection-request">
         {connectionStatus === "pending" && introductionNote ? (
           <blockquote className="member-profile-introduction">
             <span>

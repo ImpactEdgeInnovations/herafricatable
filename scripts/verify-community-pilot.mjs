@@ -52,5 +52,6 @@ assert(memberAdmin.includes("first 20 active non-staff members"));
 assert(eventHostPage.includes("<DestinationInvitationPanel"));
 assert(communityHost.includes('communityStatus === "published"'));
 assert(invitePanel.includes("Start with a note"));
-assert(invitePanel.includes('rpc("create_table_invitation"'));
+assert(invitePanel.includes('rpc("create_table_invitation_batch"'));
+assert(read('supabase/migrations/20261015074506_connection_alerts_and_invitation_batches.sql').includes('public.create_table_invitation(p_destination_type,p_destination_id,email_value,p_personal_note)'));
 console.log("Founding Community pilot gates and member/Admin controls verified.");

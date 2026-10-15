@@ -17,7 +17,7 @@ export function CommunityConnectionActions({memberId,self,connection,ready}:{mem
         if(mode.error)throw mode.error;
         const person=profile.data?.[0];
         if(!person || mode.data!=="open") {setNotice("She is not accepting new connection requests right now.");return;}
-        const choice=await ask({title:"Ask to connect",description:"She can accept or decline privately. Messaging opens only after you both agree.",confirmLabel:"Send request",fields:[{name:"note",label:"A short note (optional)",type:"textarea",minLength:10,maxLength:500}]});
+        const choice=await ask({title:"Ask to connect",description:"She can view your profile and accept or decline privately. Messaging opens only after you both agree.",confirmLabel:"Send request",fields:[{name:"note",label:"A short note (optional)",type:"textarea",minLength:10,maxLength:500,placeholder:"We met at Geco Cafe. I would love to keep in touch."}]});
         if(!choice)return;
         const result=await client.rpc("request_connection_with_context",{p_member_id:memberId,p_connection_code:null,p_introduction_note:String(choice.note??"")});
         if(result.error)throw result.error;setNotice("Request sent. We will let you know when she accepts.");router.refresh();

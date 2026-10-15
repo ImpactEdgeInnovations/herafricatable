@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CommunityCapacityPanel } from "@/components/member/community-capacity-panel";
+import { HostToolsShell, HostToolArea } from "@/components/member/host-tools-shell";
 import { createClient } from "@/lib/supabase/server";
 import { MemberHeader } from "@/components/member/member-header";
 import { CommunityHostSection } from "@/components/member/community-host-section";
@@ -242,7 +243,7 @@ export default async function CommunityHostPage({
     supabase.rpc("list_my_community_event_proposals", {
       p_community_id: community.community_id,
     }),
-    supabase.rpc("list_my_table_invitations", {
+    supabase.rpc("list_my_table_invitation_delivery", {
       p_destination_id: community.community_id,
       p_destination_type: "community",
     }),
@@ -295,34 +296,8 @@ export default async function CommunityHostPage({
           <small>Important changes are recorded for safety.</small>
         </aside>
       </section>
-      <nav className="community-room-navigation" aria-label="Host workspace areas">
-        <a href="#invite-people">Invite people</a>
-        <a href="#admissions">Join requests</a>
-        <a href="#people">Members</a>
-        <a href="#gathering-proposals">Create a meetup</a>
-        <a href="#gatherings">Link an event</a>
-        <a href="#joining-settings">Who can join?</a>
-        <a href="#community-photos">Photos</a>
-        {community.membership_role === "owner" ? (
-          <>
-            <a href="#identity">Look &amp; feel</a>
-          </>
-        ) : null}
-        <details className="community-host-more-nav"><summary>More tools</summary><div>
-        <a href="#welcome">Welcome</a>
-        {community.membership_role === "owner" ? <a href="#public-page">Public page</a> : null}
-        <a href="#continuity">Member health</a>
-        <a href="#resources">Learning</a>
-        <a href="#circle-programming">Circles</a>
-        <a href="#host-tools">Plans &amp; tools</a>
-        {community.membership_role === "owner" ? (
-          <>
-            <a href="#commerce">Payments</a>
-            <a href="#statement">Earnings</a>
-          </>
-        ) : null}
-        </div></details>
-      </nav>
+      <HostToolsShell>
+      <HostToolArea area="settings">
       <CommunityHostSection id="host-tools" title="Plans and tools">
         <CommunityHostCapabilitiesPanel
           capabilities={capabilities}
@@ -330,6 +305,8 @@ export default async function CommunityHostPage({
           owner={community.membership_role === "owner"}
         />
       </CommunityHostSection>
+      </HostToolArea>
+      <HostToolArea area="settings">
       <CommunityHostSection id="joining-area" title="Who can join?">
       <CommunityJoiningSettingsPanel
         communityId={community.community_id}
@@ -339,6 +316,8 @@ export default async function CommunityHostPage({
       />
       <CommunityCapacityPanel communityId={community.community_id} owner={community.membership_role === "owner"} />
       </CommunityHostSection>
+      </HostToolArea>
+      <HostToolArea area="meetups">
       <CommunityEventProposalPanel
         communityId={community.community_id}
         communitySlug={slug}
@@ -348,7 +327,11 @@ export default async function CommunityHostPage({
           (eventProposalResult.data as CommunityEventProposal[] | null) ?? []
         }
       />
+      </HostToolArea>
+      <HostToolArea area="appearance">
       <CommunityPhotoAlbums communityId={community.community_id} currentUserId={user.id} />
+      </HostToolArea>
+      <HostToolArea area="people">
       <CommunityHostSection id="welcome-area" title="Welcome new members">
       <CommunityWelcomeQueue
         communityId={community.community_id}
@@ -358,6 +341,8 @@ export default async function CommunityHostPage({
         migrationReady={!welcomeQueueResult.error}
       />
       </CommunityHostSection>
+      </HostToolArea>
+      <HostToolArea area="appearance">
       <CommunityHostSection id="identity-area" title="Community image and appearance">
       {community.membership_role === "owner" && !locationResult.error ? <CommunityLocationPanel communityId={community.community_id} location={location}/> : null}
       <CommunityBrandingPanel
@@ -369,6 +354,8 @@ export default async function CommunityHostPage({
         owner={community.membership_role === "owner"}
       />
       </CommunityHostSection>
+      </HostToolArea>
+      <HostToolArea area="settings">
       <CommunityHostSection id="public-page-area" title="Shareable Community page">
       <CommunityPublicProfilePanel
         currentUserId={user.id}
@@ -440,6 +427,7 @@ export default async function CommunityHostPage({
         />
         </CommunityHostSection>
       ) : null}
+      </HostToolArea>
       <CommunityHostWorkspace
         currentUserId={user.id}
         communityId={community.community_id}
@@ -468,6 +456,7 @@ export default async function CommunityHostPage({
           (outcomeResult.data as CommunityOutcomeTrend[] | null) ?? []
         }
       />
+      </HostToolsShell>
     </main>
   );
 }

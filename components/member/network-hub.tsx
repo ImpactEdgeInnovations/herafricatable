@@ -226,7 +226,7 @@ export function NetworkHub({
           minLength: 10,
           maxLength: 500,
           placeholder:
-            "Hi, I’m starting a small business in Nairobi. I’d love to hear about your experience.",
+            "We met at Geco Cafe. I enjoyed our conversation and would love to keep in touch.",
         },
       ],
     });
@@ -919,6 +919,7 @@ export function NetworkHub({
                   {item.status === "pending" &&
                   item.direction === "incoming" ? (
                     <div className="member-actions">
+                      <Link href={`/members/${item.other_user_id}`} className="connection-review-profile">View profile &amp; note</Link>
                       <button
                         disabled={busy === item.connection_id}
                         onClick={() =>
@@ -933,7 +934,7 @@ export function NetworkHub({
                           void respond(item.connection_id, "ignore")
                         }
                       >
-                        Ignore
+                        Not now
                       </button>
                     </div>
                   ) : item.status === "accepted" ? (

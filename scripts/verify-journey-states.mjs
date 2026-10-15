@@ -776,7 +776,8 @@ const communityNotificationPreferences = read(
 for (const contract of [
   "CommunityPublicProfilePanel",
   "get_community_public_profile_admin",
-  'href="#public-page"',
+  'id="public-page-area"',
+  '<HostToolArea area="settings">',
   "taglineReady",
 ]) {
   assert(
@@ -1311,22 +1312,22 @@ for (const contract of [
   "Manage community",
   "get_community_host_commerce",
   "CommunityCommercePanel",
-  'href="#commerce"',
+  'id="payments-area"',
   "hostBilling?.grace_days",
   "get_community_financial_summary",
   "list_community_financial_statement",
   "CommunityFinancialStatement",
-  'href="#statement"',
+  'id="earnings-area"',
   "get_community_host_capabilities",
   "CommunityHostCapabilitiesPanel",
-  'href="#host-tools"',
+  'id="host-tools"',
   "advancedAnalytics",
   "automations",
   "CommunityBrandingPanel",
-  'href="#identity"',
+  'id="identity-area"',
   "list_community_circle_options",
   "CommunityCircleHostPanel",
-  'href="#circle-programming"',
+  'id="circle-area"',
 ]) {
   assert(
     communityHostPage.includes(contract),
@@ -1986,7 +1987,7 @@ const invitationPanel = read(
 );
 assert(
   invitationPanel.includes("create_table_invitation") &&
-    invitationPanel.includes("We do not upload or store your") &&
+    invitationPanel.includes("We do not upload your address book") &&
     invitationPanel.includes("router.refresh"),
   "Hosts must send and review invitation state without leaving the destination",
 );

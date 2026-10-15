@@ -14,7 +14,7 @@ assert(consistency.includes("invitation.expires_at>now()"));
 assert(consistency.includes("blocked.updated_at>=invitation.sent_at"));
 assert(consistency.includes("not profile.is_test_account"));
 assert(route.includes('.eq("inviter_id", user.id)'));
-assert(route.includes('data.status !== "sent"'));
+assert(route.includes('data.some(row=>row.status!=="sent")'));
 assert(route.includes("strictTarget: true"));
 assert(read("lib/notifications/worker.ts").includes("dedupeKey && !strictTarget"));
 assert(read("components/events/event-host-workspace.tsx").includes('hidden={section !== "programme"}'));

@@ -43,7 +43,7 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
       : Promise.resolve({ data: null, error: null }),
     supabase.rpc("list_my_host_event_communities", { p_event_id: workspace.event_id }),
     workspace.event_status === "published" && !hasEnded
-      ? supabase.rpc("list_my_table_invitations", {
+      ? supabase.rpc("list_my_table_invitation_delivery", {
           p_destination_id: workspace.event_id,
           p_destination_type: "event",
         })

@@ -30,6 +30,7 @@ export async function sendNotificationEmail(job: EmailJob) {
     job.template_key === "member_welcome" ||
     job.dedupe_key.startsWith("member-approved:");
   const isPhotoReport = job.dedupe_key.startsWith("community-photo-report:");
+  const isConnectionRequest = job.dedupe_key.startsWith("connection-request:");
   const isEventReview = job.dedupe_key.startsWith("event-registration-review:");
   const isWaitlistOpening = job.dedupe_key.startsWith("event-waitlist-open:");
   const isStandaloneReminder = job.dedupe_key.startsWith("standalone-event-reminder:");
@@ -46,7 +47,7 @@ export async function sendNotificationEmail(job: EmailJob) {
       "Your event refund needs review",
       "Your event refund was recorded",
     ].includes(title);
-  const buttonLabel = isPhotoReport
+  const buttonLabel = isConnectionRequest ? "View her profile & request" : isPhotoReport
     ? "Review photo report"
     : isInvitation
     ? "Open your invitation"

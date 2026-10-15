@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
+import {useActionDialog} from "@/components/ui/action-dialog";
 
 export type EventAttendee = {
   avatar_url: string | null;
@@ -35,6 +36,7 @@ export function EventAttendeeDirectory({
   mode?: "after" | "before";
 }) {
   const router = useRouter();
+  const {ask,dialog}=useActionDialog();
   const supabase = useMemo(() => createClient(), []);
   const [discoverable, setDiscoverable] = useState(
     initialPreference?.discoverable ?? false,
@@ -69,11 +71,16 @@ export function EventAttendeeDirectory({
   }
 
   async function connect(memberId: string) {
+    if(connectingId)return;
     setConnectingId(memberId);
     setMessage("");
-    const { error } = await supabase.rpc("request_connection", {
+    try {
+    const choice=await ask({title:"Ask to connect",description:"She can read your profile and note before deciding. Private messages open after she accepts.",confirmLabel:"Send request",fields:[{name:"note",label:"Your note (optional)",type:"textarea",minLength:10,maxLength:500,placeholder:"We met at this event. I would love to keep in touch."}]});
+    if(!choice)return;
+    const { error } = await supabase.rpc("request_connection_with_context", {
       p_connection_code: null,
       p_member_id: memberId,
+      p_introduction_note:String(choice.note??""),
     });
     setConnectingId("");
     setMessage(
@@ -82,6 +89,7 @@ export function EventAttendeeDirectory({
         : "Connection request sent. Contact details will appear only if she accepts.",
     );
     if (!error) router.refresh();
+    } catch(error){setMessage(memberErrorMessage(error,"send this connection request"));}finally{setConnectingId("");}
   }
 
   return (
@@ -214,6 +222,7 @@ export function EventAttendeeDirectory({
           )}
         </div>
       </div>
+      {dialog}
     </section>
   );
 }
