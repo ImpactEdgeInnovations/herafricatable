@@ -44,6 +44,6 @@ const provider = read("components/pwa/pwa-provider.tsx");
 assert(provider.includes('navigator.serviceWorker.register("/sw.js"'), "PWA provider must register the service worker");
 assert(provider.includes("beforeinstallprompt"), "PWA provider must support the browser install prompt");
 assert(read("components/member/account-settings.tsx").includes("InstallAppCard"), "Members need a plain-language install action");
-assert(read("app/page.tsx").includes("InstallAppButton"), "Public visitors need an install action");
+assert(read("app/page.tsx").includes("<LandingPage") && read("components/landing/landing-page.tsx").includes("<InstallAppButton compact"), "Public visitors need an install action on the rendered landing page");
 
 console.log("PWA install, icon, privacy-safe caching and member guidance contracts passed.");

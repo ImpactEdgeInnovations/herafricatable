@@ -48,9 +48,9 @@ export function EventCountdown({
   return (
     <section className="countdown-section" aria-label="Next Her Africa Table event">
       <div className="countdown-intro">
-        <span>Next gathering</span>
-        <strong>{activeEvent?.event_name ?? "A new gathering is being prepared"}</strong>
-        <small>{activeEvent?.city ?? "Nairobi · Date to be shared"}</small>
+        <span>Next event</span>
+        <strong>{activeEvent?.event_name ?? "See what’s coming up"}</strong>
+        {activeEvent?.city ? <small>{activeEvent.city}</small> : null}
       </div>
 
       {activeEvent && timeLeft ? (
@@ -61,10 +61,10 @@ export function EventCountdown({
           <span><b suppressHydrationWarning>{twoDigits(timeLeft.seconds)}</b><small>Seconds</small></span>
         </div>
       ) : (
-        <p className="countdown-pending">We’ll share the date when it is confirmed.</p>
+        <p className="countdown-pending">See the event calendar for upcoming dates.</p>
       )}
 
-      <Link href={activeEvent?.slug ? `/events/${activeEvent.slug}` : "/events"}>{activeEvent ? "View gathering" : "Explore gatherings"} <span aria-hidden="true">→</span></Link>
+      <Link href={activeEvent?.slug ? `/events/${activeEvent.slug}` : "/events"}>{activeEvent ? "View event" : "Explore events"} <span aria-hidden="true">→</span></Link>
     </section>
   );
 }

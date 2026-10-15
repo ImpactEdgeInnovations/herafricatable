@@ -1019,15 +1019,15 @@ for (const contract of [
     `Admin membership review must include ${contract}`,
   );
 }
-const publicHome = read("app/page.tsx");
+const publicHome = read("components/landing/landing-page.tsx");
 for (const contract of [
-  "Where African women",
-  "Meet women doing meaningful work",
-  "What happens at the table",
-  "Your member space",
+  "A place to meet.",
+  "A reason to stay.",
+  "Explore events",
+  "Explore member Communities",
   "Confirm your email",
-  "Private review",
-  "Relationships with purpose",
+  "Our team reviews your request privately",
+  "Make yourself at home",
 ]) {
   assert(publicHome.includes(contract), `Public home must include ${contract}`);
 }
