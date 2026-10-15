@@ -493,7 +493,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           userId={user.id}
         />
       ) : null}
-      {guideAccess?.feature_enabled ? (
+      {!user && guideAccess?.feature_enabled ? (
         <FloatingTableGuide
           assistantEnabled={guideAccess.assistant_enabled}
           featureEnabled

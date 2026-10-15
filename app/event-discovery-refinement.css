@@ -11,8 +11,8 @@
 .events-page .event-discovery-controls label,.events-page .event-discovery-controls label:has(select) { width:100%; min-width:0; }
 .event-discovery-controls :is(input,select) { font:400 1rem/1.4 var(--sans,Arial,sans-serif); }
 .events-page .event-discovery-count { grid-column:1/-1; margin:0; }
-.events-page .event-discovery-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; align-items:stretch; }
-.events-page .event-discovery-grid > article { display:flex; flex-direction:column; gap:12px; min-width:0; padding:18px; border:1px solid #ded8d2; border-radius:8px; background:#fff; box-shadow:none; margin:0; }
+.events-page .event-discovery-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:20px; align-items:start; }
+.events-page .event-discovery-grid > article { display:flex; flex-direction:column; gap:12px; min-width:0; width:100%; max-width:560px; box-sizing:border-box; padding:18px; border:1px solid #ded8d2; border-radius:8px; background:#fff; box-shadow:none; margin:0; }
 .events-page .event-discovery-grid .public-event-image-link { display:block; width:100%; padding:0; min-height:0; }
 .events-page .event-discovery-grid .public-event-poster { width:100%; max-width:none; height:200px; object-fit:contain; background:#f7f5f2; border-radius:5px; }
 .events-page .event-discovery-grid .public-event-date { display:flex; align-items:baseline; gap:8px; text-align:left; border:0; padding:0; }
