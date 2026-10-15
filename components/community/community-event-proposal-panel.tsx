@@ -14,6 +14,7 @@ import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
 import { gatheringIntroduction } from "@/lib/gathering-introduction.mjs";
 import { gatheringSetup } from "@/lib/gathering-setup.mjs";
+import { gatheringTimeError } from "@/lib/gathering-time.mjs";
 
 export type CommunityEventProposal = {
   accessibility_notes: string | null;
@@ -135,6 +136,15 @@ export function CommunityEventProposalPanel({
   const introId=useId();
   const titleInput=useRef<HTMLInputElement>(null);
   const summaryInput=useRef<HTMLTextAreaElement>(null);
+  const endInput=useRef<HTMLInputElement>(null);
+  const feedback=useRef<HTMLParagraphElement>(null);
+  const timeError=gatheringTimeError(values.startsAt,values.endsAt);
+  useEffect(() => {
+    if (message && expanded) {
+      feedback.current?.focus();
+      feedback.current?.scrollIntoView({block:"nearest"});
+    }
+  }, [message, expanded]);
   function refreshGatherings() { router.refresh(); onSaved?.(); }
   const introduction=gatheringIntroduction(values.title,values.summary);
   const setup = gatheringSetup(values);
@@ -230,7 +240,7 @@ export function CommunityEventProposalPanel({
 
   async function save(submit: boolean) {
     const start = new Date(values.startsAt), end = new Date(values.endsAt);
-    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) { setMessage("Choose a valid start and end time."); return; }
+    if (timeError) { setMessage(timeError); endInput.current?.focus(); return; }
     if (submit && start <= new Date()) { setMessage("Choose a future start time. Online meetups can start today."); return; }
     if (submit && values.format !== "virtual" && start.getTime() < Date.now() + 24 * 60 * 60_000) { setMessage("In-person meetups need 24 hours’ notice. Choose Online for a meetup today."); return; }
     if (setup.onlineUrl && !setup.onlineUrl.startsWith("https://")) { setMessage("Use a full meeting link beginning with https://, or leave it empty for text chat."); return; }
@@ -364,7 +374,7 @@ export function CommunityEventProposalPanel({
       ) : null}
 
       {expanded && migrationReady && creationMode === "scheduled" ? (
-        <form className="community-event-wizard" onSubmit={submit}>
+        <form className="community-event-wizard" onSubmit={submit} onInvalid={() => setMessage("Check the highlighted field before opening your meetup.")}>
           <header>
             <div><p className="eyebrow">{editingId ? "Continue draft" : "New meetup"}</p><h3>{steps[step]}</h3></div>
             <span>{step + 1} of {steps.length}</span>
@@ -389,7 +399,7 @@ export function CommunityEventProposalPanel({
                 <label>How will you meet?<select onChange={(event) => chooseGatheringStyle(event.target.value)} value={setup.format === "virtual" ? "online" : setup.kind}><option value="in_person">In person</option><option value="online">Online</option>{setup.kind === "hybrid" ? <option value="hybrid">In person and online (existing draft)</option> : null}</select></label>
                 <label>Maximum guests<input min={2} max={500} onChange={(event) => update("capacity", event.target.value)} type="number" value={values.capacity}/></label>
                 <label>Starts<input onChange={(event) => update("startsAt", event.target.value)} type="datetime-local" value={values.startsAt}/></label>
-                <label>Ends<input onChange={(event) => update("endsAt", event.target.value)} type="datetime-local" value={values.endsAt}/></label>
+                <label>Ends<input ref={endInput} aria-invalid={Boolean(timeError)} aria-describedby={timeError ? `${introId}-time-error` : undefined} onChange={(event) => update("endsAt", event.target.value)} type="datetime-local" value={values.endsAt}/>{timeError ? <small id={`${introId}-time-error`} className="community-meetup-time-error" role="alert">{timeError}</small> : <small>If your meetup finishes after midnight, choose the following day.</small>}</label>
                 {values.format !== "virtual" ? <><label>Venue name<input maxLength={160} onChange={(event) => update("venueName", event.target.value)} placeholder="Venue or host space" value={values.venueName}/></label><label>City<input maxLength={120} onChange={(event) => update("city", event.target.value)} value={values.city}/></label><label>Country<input maxLength={120} onChange={(event) => update("country", event.target.value)} value={values.country}/></label><label>Address <small>Shared only with eligible members</small><input maxLength={240} onChange={(event) => update("addressLine", event.target.value)} value={values.addressLine}/></label><label className="form-wide">Map link <small>Optional</small><input onChange={(event) => update("mapUrl", event.target.value)} placeholder="https://…" type="url" value={values.mapUrl}/></label></> : null}
                 {setup.format !== "in_person" ? (
                   <label className="form-wide community-meetup-link">
@@ -408,7 +418,7 @@ export function CommunityEventProposalPanel({
             </div>
           ) : null}
 
-          {message ? <p className="manager-message" role="alert">{message}</p> : null}
+          {message ? <p ref={feedback} tabIndex={-1} className="manager-message" role="alert">{message}</p> : null}
           <footer>
             <button className="button button-outline" disabled={busy} onClick={() => step === 0 ? setExpanded(false) : setStep((current) => current - 1)} type="button">{step === 0 ? "Close" : "Back"}</button>
             <div>

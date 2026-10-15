@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import { gatheringSetup } from '../lib/gathering-setup.mjs';
+import { gatheringTimeError } from '../lib/gathering-time.mjs';
 import { readFileSync } from 'node:fs';
 const links = { onlineUrl: ' https://meet.google.com/test ', videoLink: ' https://youtu.be/abcdef12345 ' };
+assert.match(gatheringTimeError('2026-10-26T22:01','2026-10-26T12:07'),/end must be after the start/);
+assert.match(gatheringTimeError('2026-10-26T22:01','2026-10-26T22:01'),/following day/);
+assert.equal(gatheringTimeError('2026-10-26T22:01','2026-10-27T00:07'),'');
+assert.equal(gatheringTimeError('2026-10-26T10:01','2026-10-26T12:07'),'');
+assert.match(gatheringTimeError('','2026-10-27T00:07'),/start date/);
+assert.match(gatheringTimeError('2026-10-26T22:01','invalid'),/end date/);
 assert.deepEqual(gatheringSetup({ ...links, format: 'virtual', gatheringStyle: 'watch_video' }), { kind: 'watch_video', format: 'virtual', onlineUrl: '', videoLink: 'https://youtu.be/abcdef12345' });
 assert.deepEqual(gatheringSetup({ ...links, format: 'virtual', gatheringStyle: 'video_call' }), { kind: 'video_call', format: 'virtual', onlineUrl: 'https://meet.google.com/test', videoLink: '' });
 assert.deepEqual(gatheringSetup({ ...links, format: 'in_person', gatheringStyle: 'in_person' }), { kind: 'in_person', format: 'in_person', onlineUrl: '', videoLink: '' });

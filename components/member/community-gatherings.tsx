@@ -200,6 +200,7 @@ export function CommunityGatherings({
       {canManage && plannerMounted ? <div id="community-inline-planner" className="community-inline-planner" hidden={!plannerOpened}><CommunityGatheringPlanner communityId={communityId} slug={slug} currentUserId={currentUserId} /></div> : null}
       {canManage && linkerMounted ? <div id="community-inline-event-linker" className="community-inline-planner" hidden={!linkerOpened}><CommunityEventLinker key={communityId} communityId={communityId} onCreateGathering={() => { setPlannerMounted(true); setPlannerOpened(true); setLinkerOpened(false); }} /></div> : null}
       {message ? <p className="form-message" role="status">{message}</p> : null}
+      <div hidden={plannerOpened || linkerOpened}>
       {!migrationReady ? (
         <div className="community-program-empty">
           <strong>The new meetup rooms are being prepared.</strong>
@@ -217,6 +218,7 @@ export function CommunityGatherings({
       <footer className="gathering-boundary-note">
         <p>Each meetup has its own conversation. Look in Past meetups for earlier discussions and recaps.</p>
       </footer>
+      </div>
       </div>
     </section>
   );
