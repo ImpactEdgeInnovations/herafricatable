@@ -90,7 +90,7 @@ function initialValues() {
     draftStep: 0,
     videoLink: "",
     mediaChoice: "none",
-    gatheringStyle: "video_call",
+    gatheringStyle: "online",
   };
 }
 
@@ -140,7 +140,7 @@ export function CommunityEventProposalPanel({
   const setup = gatheringSetup(values);
 
   function chooseGatheringStyle(kind: string) {
-    setValues(current => ({ ...current, gatheringStyle: kind, format: kind === "in_person" ? "in_person" : kind === "hybrid" ? "hybrid" : "virtual" }));
+    setValues(current => ({ ...current, gatheringStyle: kind, onlineUrl: kind === "online" && current.gatheringStyle === "watch_video" ? current.videoLink : current.onlineUrl, format: kind === "in_person" ? "in_person" : kind === "hybrid" ? "hybrid" : "virtual" }));
     setMessage("");
   }
 
@@ -352,7 +352,7 @@ export function CommunityEventProposalPanel({
         <div>
           <p className="eyebrow">Community meetups</p>
           <h2 id="community-event-proposal-title">Create a meetup</h2>
-          <p>Meet in person, join a video call, or watch a video together. Only your Community members can take part.</p>
+          <p>Meet in person or online with your Community.</p>
         </div>
         {migrationReady && creationMode === "scheduled" && !expanded ? <button className="button button-primary" onClick={startNew} type="button">Create a meetup</button> : null}
       </header>
@@ -386,15 +386,20 @@ export function CommunityEventProposalPanel({
           {step === 1 ? (
             <div className="community-event-wizard-step">
               <div className="form-grid">
-                <label>How will you meet?<select onChange={(event) => chooseGatheringStyle(event.target.value)} value={setup.kind}><option value="in_person">In person</option><option value="video_call">Video call</option><option value="watch_video">Watch together</option>{setup.kind === "hybrid" ? <option value="hybrid">In person and online (existing draft)</option> : null}</select></label>
+                <label>How will you meet?<select onChange={(event) => chooseGatheringStyle(event.target.value)} value={setup.format === "virtual" ? "online" : setup.kind}><option value="in_person">In person</option><option value="online">Online</option>{setup.kind === "hybrid" ? <option value="hybrid">In person and online (existing draft)</option> : null}</select></label>
                 <label>Maximum guests<input min={2} max={500} onChange={(event) => update("capacity", event.target.value)} type="number" value={values.capacity}/></label>
                 <label>Starts<input onChange={(event) => update("startsAt", event.target.value)} type="datetime-local" value={values.startsAt}/></label>
                 <label>Ends<input onChange={(event) => update("endsAt", event.target.value)} type="datetime-local" value={values.endsAt}/></label>
                 {values.format !== "virtual" ? <><label>Venue name<input maxLength={160} onChange={(event) => update("venueName", event.target.value)} placeholder="Venue or host space" value={values.venueName}/></label><label>City<input maxLength={120} onChange={(event) => update("city", event.target.value)} value={values.city}/></label><label>Country<input maxLength={120} onChange={(event) => update("country", event.target.value)} value={values.country}/></label><label>Address <small>Shared only with eligible members</small><input maxLength={240} onChange={(event) => update("addressLine", event.target.value)} value={values.addressLine}/></label><label className="form-wide">Map link <small>Optional</small><input onChange={(event) => update("mapUrl", event.target.value)} placeholder="https://…" type="url" value={values.mapUrl}/></label></> : null}
-                {setup.kind === "video_call" || setup.kind === "hybrid" ? <label className="form-wide">Video call link <small>{setup.kind === "hybrid" ? "Required" : "Optional"}</small><input onChange={(event) => update("onlineUrl", event.target.value)} placeholder="Google Meet or Zoom link" type="url" value={values.onlineUrl}/><small>Members open the call in Meet or Zoom. Leave empty if you only want text chat.</small></label> : null}
-                {setup.kind === "watch_video" ? <label className="form-wide">YouTube video or livestream<input type="url" required value={values.videoLink} onChange={event => update("videoLink", event.target.value)} placeholder="https://www.youtube.com/watch?v=…" /><small>Use a recorded video or a livestream. Members watch and discuss here. Anyone with the YouTube link may also watch outside this platform.</small></label> : null}
-                <label className="form-wide community-gathering-photo-choice"><input type="checkbox" checked={values.mediaChoice === "photos"} onChange={event => update("mediaChoice", event.target.checked ? "photos" : "none")} /><span>Add photos after opening</span><small>Optional. Photos stay in this meetup’s album; no poster is required.</small></label>
-                {values.mediaChoice === "photos" ? <p className="form-wide">Open the meetup first, then upload your photos below into an album linked to this meetup. No page change is needed.</p> : null}
+                {setup.format !== "in_person" ? (
+                  <label className="form-wide community-meetup-link">
+                    Online link <small>{setup.kind === "hybrid" ? "Required" : "Optional"}</small>
+                    <input onChange={(event) => setValues(current => ({ ...current, gatheringStyle: current.format === "hybrid" ? "hybrid" : "online", onlineUrl: event.target.value, videoLink: "" }))} placeholder="https://…" type="url" value={setup.videoLink || values.onlineUrl}/>
+                    <small>Add a YouTube video, livestream, Meet or Zoom link. Leave blank for text chat.</small>
+                    {setup.videoLink ? <small>YouTube plays inside the meetup. Anyone with its link can also watch on YouTube.</small> : null}
+                  </label>
+                ) : null}
+                <label className="form-wide community-gathering-photo-choice"><input type="checkbox" checked={values.mediaChoice === "photos"} onChange={event => update("mediaChoice", event.target.checked ? "photos" : "none")} /><span>Add photos after opening<small>Optional. Photos stay in this meetup’s album; no poster is required.</small></span></label>
                 <label>Host contact name<input maxLength={120} onChange={(event) => update("safetyContactName", event.target.value)} placeholder="Full name" value={values.safetyContactName}/></label>
                 <label>Private contact number<input maxLength={40} onChange={(event) => update("safetyContactPhone", event.target.value)} placeholder="+254…" type="tel" value={values.safetyContactPhone}/></label>
               </div>

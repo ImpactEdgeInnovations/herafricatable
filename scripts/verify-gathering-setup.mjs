@@ -10,8 +10,16 @@ assert.equal(gatheringSetup({ format: 'virtual', videoLink: links.videoLink }).k
 assert.equal(gatheringSetup({ format: 'virtual' }).kind, 'video_call');
 assert.equal(gatheringSetup({ format: 'virtual', gatheringStyle: 'unknown' }).kind, 'video_call');
 const source = readFileSync(new URL('../components/community/community-event-proposal-panel.tsx', import.meta.url), 'utf8');
-for (const label of ['Create a meetup', 'In person', 'Video call', 'Watch together']) assert(source.includes(label));
+for (const label of ['Create a meetup', 'In person', 'Online', 'Online link']) assert(source.includes(label));
+for (const link of ['https://youtu.be/abcdef12345','https://www.youtube.com/live/abcdef12345']) {
+  const setup=gatheringSetup({format:'virtual',gatheringStyle:'online',onlineUrl:link});
+  assert.equal(setup.videoLink,link); assert.equal(setup.onlineUrl,'');
+}
+assert.equal(gatheringSetup({format:'virtual',gatheringStyle:'online',onlineUrl:links.onlineUrl}).onlineUrl,links.onlineUrl.trim());
+assert.equal(gatheringSetup({format:'virtual',gatheringStyle:'online',onlineUrl:'https://vimeo.com/example'}).kind,'video_call');
+assert.equal(gatheringSetup({format:'virtual',gatheringStyle:'online',onlineUrl:'https://youtube.com.example.invalid/watch?v=abcdef12345'}).videoLink,'');
+assert.equal(gatheringSetup({format:'virtual',gatheringStyle:'online',onlineUrl:''}).videoLink,'');
 assert(source.includes('p_online_url: setup.onlineUrl || null'));
 assert(source.includes('youtubeVideoId(setup.videoLink)'));
 assert(source.includes('no poster is required'));
-console.log('Gathering choices passed: relevant links only, legacy draft recovery, existing hybrid preservation and three plain-language options. No live gathering was published.');
+console.log('Meetup choices passed: In person/Online, automatic YouTube classification, external call links, optional text-only rooms and legacy draft preservation. No live meetup was published.');

@@ -9,7 +9,7 @@ const nav = read('components/member/community-local-navigation.tsx');
 const source = nav.replace(/^import[\s\S]*?;\n/gm, '').replace(/^export /gm, '');
 const code = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
 const Link = ({ children, ...props }) => React.createElement('a', props, children);
-const Navigation = new Function('React', 'Link', 'useRef', 'useEffect', `${code};return CommunityLocalNavigation;`)(React, Link, () => ({ current: null }), () => {});
+const Navigation = new Function('React', 'Link', 'useRef', 'useEffect', 'useRouter', `${code};return CommunityLocalNavigation;`)(React, Link, () => ({ current: null }), () => {}, () => ({push(){}}));
 for (const canManage of [false, true]) {
   const html = renderToStaticMarkup(React.createElement(Navigation, { active: 'gatherings', canManage, slug: 'lavington-women' }));
   assert(html.includes('>Meetups</a>') && !html.includes('>Gatherings</a>'));
@@ -17,8 +17,8 @@ for (const canManage of [false, true]) {
   assert.equal(html.includes('Host tools'), canManage);
 }
 const planner = read('components/community/community-event-proposal-panel.tsx');
-for (const label of ['Create a meetup', 'Meetup name', 'Watch together', 'View meetup']) assert(planner.includes(label), label);
-for (const stable of ['publish_community_gathering', 'list_community_gathering_cards', 'value="watch_video"', 'value="video_call"', 'id="gathering-proposals"']) assert(planner.includes(stable), stable);
+for (const label of ['Create a meetup', 'Meetup name', 'Online link', 'View meetup']) assert(planner.includes(label), label);
+for (const stable of ['publish_community_gathering', 'list_community_gathering_cards', 'value="online"', 'value="in_person"', 'id="gathering-proposals"']) assert(planner.includes(stable), stable);
 const list = read('components/member/community-gatherings.tsx');
 for (const label of ['Upcoming meetups', 'Past meetups', 'Join meetup', 'Back to meetups']) assert(list.includes(label), label);
 assert(list.includes('url.searchParams.set("view","gatherings")') && list.includes('"gatheringArea"'));
