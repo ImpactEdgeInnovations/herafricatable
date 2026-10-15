@@ -58,6 +58,12 @@ export function EventRegistrationForm({
   const isFree = ticket?.price_minor === 0;
   const canClaimWaitlist = allowNewRequest && canClaimEventWaitlistPlace(existingStatus, mode, tickets, availabilityReady);
   const canRequestAgain = allowNewRequest && (existingStatus === "cancelled" || canClaimWaitlist);
+  async function joinFullWaitlist() {
+    if(busy||!allowNewRequest||!availabilityReady)return;
+    setBusy(true);setMessage("");
+    try{const {error}=await supabase.rpc("join_full_event_waitlist",{p_event_id:eventId});if(error)throw error;setMessage("You’re on the waiting list. No seat is reserved. The Host has been notified.");router.refresh();}
+    catch(error){setMessage(memberErrorMessage(error,"join the waiting list"));}finally{setBusy(false);}
+  }
   async function leaveWaitlist() {
     setBusy(true);
     setMessage("");
@@ -243,6 +249,7 @@ export function EventRegistrationForm({
               : tickets.length === 0
                 ? "Booking options have not opened yet."
                 : "No places can be requested right now. Please check back later."}</p>
+          {availabilityReady && eventFull && allowNewRequest && mode!=="closed" ? <button type="button" className="button button-outline" disabled={busy} onClick={()=>void joinFullWaitlist()}>{busy?"Joining…":"Join waiting list"}</button> : null}
           {!availabilityReady ? (
             <button className="button button-outline" type="button" onClick={() => router.refresh()}>
               Check again

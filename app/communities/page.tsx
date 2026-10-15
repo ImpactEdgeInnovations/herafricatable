@@ -13,6 +13,7 @@ import type { CommunityBrandIdentity } from "@/components/member/community-brand
 import { MemberHeader } from "@/components/member/member-header";
 import { createClient } from "@/lib/supabase/server";
 import type { CommunityJoiningSettings } from "@/components/member/community-joining-settings";
+import type { CommunityJoinLimit } from "@/components/member/community-capacity-panel";
 import type { ApplicationProposalMedia } from "@/lib/application-proposal-media";
 
 export const dynamic = "force-dynamic";
@@ -55,15 +56,17 @@ export default async function CommunitiesPage() {
 
   if (profile?.access_status !== "active") redirect("/home");
 
-  const [locationResult, applicationLocationResult] = await Promise.all([
+  const [locationResult, applicationLocationResult, applicationLimitsResult] = await Promise.all([
     supabase.rpc("list_community_locations"),
     supabase.from("community_host_applications").select("id,location_scope,location_label").eq("applicant_id",user.id),
+    supabase.from("community_application_join_limits").select("application_id,maximum_members,waiting_list_enabled"),
   ]);
   const locationByCommunity = new Map(((locationResult.data ?? []) as {community_id:string;location_scope:"global"|"place"|null;location_label:string|null}[]).map(item=>[item.community_id,item]));
   const applicationLocations = new Map(((applicationLocationResult.data ?? []) as {id:string;location_scope:"global"|"place"|null;location_label:string|null}[]).map(item=>[item.id,item]));
+  const applicationLimits = new Map(((applicationLimitsResult.data??[]) as {application_id:string;maximum_members:number|null;waiting_list_enabled:boolean}[]).map(item=>[item.application_id,item]));
   const applications = (
     (applicationResult.data as CommunityHostApplicationState[] | null) ?? []
-  ).map(item=>({...item,...applicationLocations.get(item.application_id)}));
+  ).map(item=>({...item,...applicationLocations.get(item.application_id),...applicationLimits.get(item.application_id)}));
   const applicationMedia = await Promise.all(
     (((mediaResult.data as Omit<ApplicationProposalMedia, "image_url">[] | null) ?? [])
       .filter((item) => item.context_type === "community_application"))
@@ -157,7 +160,7 @@ export default async function CommunitiesPage() {
     );
   }
 
-  const [communityResult, brandingResult, activityResult, joiningResult] = await Promise.all([
+  const [communityResult, brandingResult, activityResult, joiningResult, limitsResult, creationImagesResult] = await Promise.all([
     supabase.rpc("list_communities"),
     supabase.rpc("list_community_brand_identities", {
       p_community_id: null,
@@ -166,9 +169,16 @@ export default async function CommunitiesPage() {
     supabase.rpc("list_community_joining_settings", {
       p_community_id: null,
     }),
+    supabase.rpc("list_community_join_limits", {p_community_id:null}),
+    supabase.rpc("list_community_creation_images", {p_community_id:null}),
   ]);
   const communities =
     (communityResult.data as CommunitySummary[] | null) ?? [];
+  const limitsByCommunity = new Map(((limitsResult.data as CommunityJoinLimit[]|null)??[]).map(item=>[item.community_id,item]));
+  const creationImages = await Promise.all(((creationImagesResult.data??[]) as {community_id:string;storage_path:string;alt_text:string;icon_hidden:boolean}[]).filter(image=>!image.icon_hidden).map(async image=>{
+    try{const signed=await supabase.storage.from("proposal-media").createSignedUrl(image.storage_path,3600);return {...image,url:signed.error?null:signed.data?.signedUrl};}catch{return {...image,url:null};}
+  }));
+  const creationByCommunity = new Map(creationImages.map(image=>[image.community_id,image]));
   const branding =
     (brandingResult.data as CommunityBrandIdentity[] | null) ?? [];
   const signedBranding = await Promise.all(
@@ -239,12 +249,16 @@ export default async function CommunitiesPage() {
         </section>
       ) : (
         <CommunityDirectory
+          joinLimitsReady={!limitsResult.error}
           communities={communities.map((community) => ({
             ...community,
             ...(brandingByCommunity.get(community.community_id) ?? {}),
             ...(activityByCommunity.get(community.community_id) ?? {}),
             ...(joiningByCommunity.get(community.community_id) ?? {}),
+            ...(limitsByCommunity.get(community.community_id) ?? {}),
             ...(locationByCommunity.get(community.community_id) ?? {}),
+            icon_url: brandingByCommunity.get(community.community_id)?.icon_url ?? creationByCommunity.get(community.community_id)?.url ?? null,
+            icon_alt_text: brandingByCommunity.get(community.community_id)?.icon_alt_text ?? creationByCommunity.get(community.community_id)?.alt_text ?? null,
           }))}
         />
       )}

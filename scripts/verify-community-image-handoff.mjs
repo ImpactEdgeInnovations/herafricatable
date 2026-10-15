@@ -18,7 +18,8 @@ try {
 const read=path=>readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
 const panel=read('components/member/community-branding-panel.tsx');
 assert(panel.includes('Use this as Community image'));assert(panel.includes('.download(applicationImage.storage_path)'));
-assert(panel.includes('Nothing has been changed yet.'));assert(panel.includes('save_community_brand_identity'));
+assert(panel.includes('Nothing has been changed yet.'));assert(panel.includes('save_community_brand_with_creation_image'));
+assert(read('supabase/migrations/20261015072442_community_creation_image_removal.sql').includes('perform public.save_community_brand_identity('));
 assert(panel.includes('setIcon(null); setCover(null); clearFileInputs(); setMessage("");'));
 const page=read('app/communities/[slug]/host/page.tsx');
 assert(page.includes('.eq("owner_id", user.id)'));assert(page.includes('.in("status", ["submitted", "approved"])'));

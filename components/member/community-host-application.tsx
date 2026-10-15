@@ -44,6 +44,8 @@ export type CommunityHostApplicationState = {
   created_community_slug: string | null;
   location_scope?: "global" | "place" | null;
   location_label?: string | null;
+  maximum_members?: number | null;
+  waiting_list_enabled?: boolean;
 };
 
 const statusCopy: Record<
@@ -153,6 +155,8 @@ export function CommunityHostApplication({
     purpose: editable ? current.purpose : "",
     intended_members: editable ? current.intended_members : "",
     expected_members: String(editable ? current.expected_members : 20),
+    maximum_members: editable && current.maximum_members ? String(current.maximum_members) : "",
+    waiting_list_enabled: editable && current.waiting_list_enabled === false ? "false" : "true",
     admission_model: editable && current.admission_model !== "open_request" ? current.admission_model : "application_review",
     host_experience: editable ? current.host_experience : "",
     safety_plan: editable ? current.safety_plan : "",
@@ -282,7 +286,7 @@ export function CommunityHostApplication({
     let detailsSaved = false;
     try {
     const { data: savedApplicationId, error } = await supabase.rpc(
-      locationReady ? "save_community_host_application_with_location" : "save_community_host_application",
+      locationReady ? "save_community_host_application_with_limits" : "save_community_host_application",
       {
         p_accept_guidelines: form.get("accept_guidelines") === "on",
         p_admission_model: String(form.get("admission_model") ?? ""),
@@ -290,7 +294,7 @@ export function CommunityHostApplication({
         p_application_id: editable ? current.application_id : null,
         p_category: String(form.get("category") ?? ""),
         p_community_name: String(form.get("community_name") ?? ""),
-        p_expected_members: Number(form.get("expected_members")),
+        p_expected_members: Number(form.get("expected_members")) || 20,
         p_host_experience: String(form.get("host_experience") ?? ""),
         p_intended_members: String(form.get("intended_members") ?? ""),
         p_purpose: String(form.get("purpose") ?? ""),
@@ -298,6 +302,8 @@ export function CommunityHostApplication({
         ...(locationReady ? {
           p_location_scope: String(form.get("location_scope") ?? ""),
           p_location_label: String(form.get("location_label") ?? ""),
+          p_maximum_members: draft.maximum_members?.trim() ? Number(draft.maximum_members) : null,
+          p_waiting_list: draft.waiting_list_enabled !== "false",
         } : {}),
       },
     );
@@ -673,6 +679,21 @@ export function CommunityHostApplication({
                   </label> : null}
                 </> : null}
               </div>
+              {mediaReady ? (
+                <ApplicationImageField
+                  altText={imageAltText}
+                  existing={currentMedia}
+                  file={imageFile}
+                  label="Community image (optional)"
+                  automatic={pilotEligible}
+                  onAltText={setImageAltText}
+                  onFile={setImageFile}
+                  onRemoveExisting={() => void removeImage()}
+                  removing={busy === "remove-image"}
+                />
+              ) : (
+                <p className="application-image-unavailable">Optional image uploads will appear after the latest database update. You can still send the written application now.</p>
+              )}
             </section>
 
             <section
@@ -703,16 +724,17 @@ export function CommunityHostApplication({
                   />
                 </label>
                 <label>
-                  About how many members in the first year?
+                  Maximum members (optional)
                   <input
-                    {...field("expected_members")}
+                    {...field("maximum_members")}
                     max={100000}
-                    min={5}
-                    name="expected_members"
-                    required
+                    min={2}
+                    name="maximum_members"
                     type="number"
                   />
+                  <small>Includes you and moderators. Leave blank for no limit. You can change it later.</small>
                 </label>
+                <label>When the Community is full<select {...field("waiting_list_enabled")} name="waiting_list_enabled"><option value="true">Allow a waiting list</option><option value="false">Stop new requests</option></select></label>
                 <label>
                   How should people join?
                   <select {...field("admission_model")} name="admission_model" required>
@@ -802,7 +824,7 @@ export function CommunityHostApplication({
                 </article>
                 <article>
                   <span>The people</span>
-                  <h5>{reviewValues.expected_members || "20"} members in the first year</h5>
+                  <h5>{reviewValues.maximum_members ? `Up to ${reviewValues.maximum_members} members` : "No member limit"}</h5>
                   <small>{admissionLabels[reviewValues.admission_model] || "How people will join"}</small>
                   <p>{reviewValues.intended_members || "Who the Community is for will appear here."}</p>
                   <button onClick={() => setStep(1)} type="button">Change</button>
@@ -815,20 +837,6 @@ export function CommunityHostApplication({
                   <button onClick={() => setStep(2)} type="button">Change</button>
                 </article>
               </div>
-              {mediaReady ? (
-                <ApplicationImageField
-                  altText={imageAltText}
-                  existing={currentMedia}
-                  file={imageFile}
-                  label="Community cover image"
-                  onAltText={setImageAltText}
-                  onFile={setImageFile}
-                  onRemoveExisting={() => void removeImage()}
-                  removing={busy === "remove-image"}
-                />
-              ) : (
-                <p className="application-image-unavailable">Optional image uploads will appear after the latest database update. You can still send the written application now.</p>
-              )}
               <label className="community-host-consent">
                 <input name="accept_guidelines" required type="checkbox" checked={acceptGuidelines} onChange={event => setAcceptGuidelines(event.target.checked)} />
                 <span>

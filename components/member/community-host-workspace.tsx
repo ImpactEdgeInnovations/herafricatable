@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { CommunityHostActivity } from "./community-host-activity";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -182,6 +183,14 @@ export function CommunityHostWorkspace({
   const [busy, setBusy] = useState("");
   const actionBusy = useRef(false);
   const [message, setMessage] = useState("");
+  const [activity,setActivity]=useState<"posts"|"replies"|"asks"|"events"|"reports"|null>(null);
+  useEffect(()=>{if(activity){document.getElementById("host-activity")?.scrollIntoView({block:"start",behavior:"smooth"});document.getElementById("host-activity-title")?.focus({preventScroll:true});}},[activity]);
+  function openMetric(key:keyof CommunityHostHealth){
+    if(key==="active_members"||key==="pending_members"){
+      const target=document.getElementById(key==="active_members"?"people":"admissions");target?.scrollIntoView({block:"start",behavior:"smooth"});const heading=target?.querySelector("h2");heading?.setAttribute("tabindex","-1");heading?.focus({preventScroll:true});return;
+    }
+    setActivity(key==="posts_7d"?"posts":key==="comments_7d"?"replies":key==="unanswered_asks"?"asks":key==="open_reports"?"reports":"events");
+  }
 
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -218,6 +227,12 @@ export function CommunityHostWorkspace({
     setBusy(member.membership_id);
     setMessage("");
     try {
+    let reason: string | null = null;
+    if (action === "decline") {
+      const answer = await ask({title:`Decline ${member.display_name}’s request?`,description:"Your explanation will be sent privately to this person. Other Community members will not see it.",confirmLabel:"Decline request",tone:"danger",fields:[{name:"reason",label:"Reason for declining",type:"textarea",required:true,minLength:5,maxLength:500}]});
+      if (!answer) return;
+      reason = String(answer.reason ?? "");
+    }
     if (action === "remove" || action === "promote") {
       const confirmed = await ask({
         title: action === "promote" ? `Make ${member.display_name} a moderator?` : `Remove ${member.display_name} from this community?`,
@@ -228,10 +243,9 @@ export function CommunityHostWorkspace({
       });
       if (!confirmed) return;
     }
-    const { error } = await supabase.rpc("review_community_membership", {
-      p_action: action,
-      p_membership_id: member.membership_id,
-    });
+    const { error } = member.status === "requested" && ["approve","decline"].includes(action)
+      ? await supabase.rpc("review_community_join_request", {p_action:action,p_membership_id:member.membership_id,p_reason:reason})
+      : await supabase.rpc("review_community_membership", {p_action:action,p_membership_id:member.membership_id});
     setBusy("");
     setMessage(
       error
@@ -333,7 +347,10 @@ export function CommunityHostWorkspace({
     <>
       <section className="community-host-health" aria-label="Community health">
         {metrics.map((metric) => (
-          <article
+          <button
+            type="button"
+            onClick={()=>openMetric(metric.key)}
+            aria-label={`${metric.label}: ${health[metric.key]}. View details`}
             key={metric.key}
             className={
               metric.attention && health[metric.key] > 0 ? "needs-attention" : ""
@@ -342,9 +359,10 @@ export function CommunityHostWorkspace({
             <span>{metric.label}</span>
             <strong>{health[metric.key]}</strong>
             <small>{metric.detail}</small>
-          </article>
+          </button>
         ))}
       </section>
+      {activity?<CommunityHostActivity communityId={communityId} kind={activity} onClose={()=>setActivity(null)}/>:null}
 
       {health.open_reports > 0 ? (
         <aside className="community-host-safety">

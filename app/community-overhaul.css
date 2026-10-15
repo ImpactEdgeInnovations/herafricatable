@@ -1,4 +1,12 @@
 /* Final scoped room layer: identity, navigation and content share one rhythm. */
+.community-host-page .community-host-health > button { display:grid;align-content:space-between;text-align:left;min-height:130px;padding:18px;border:1px solid #ded8d5;border-radius:8px;background:#fff;color:#241e20;cursor:pointer;font:inherit; }
+.community-host-page .community-host-health > button:hover { border-color:#612c3c;background:#faf7f3; }
+.community-host-page .community-host-health > button:focus-visible { outline:3px solid #35678e;outline-offset:3px; }
+.community-host-page .community-host-health > button.needs-attention { border-color:#b88b31;background:#fffdf8; }
+.community-host-activity { scroll-margin-top:24px; }
+.community-host-activity-list { max-height:480px;overflow:auto;overscroll-behavior:contain; }
+.community-host-activity-list > article { padding:18px 0;border-bottom:1px solid #ded8d5; }
+.community-host-activity-list p { white-space:pre-wrap;overflow-wrap:anywhere; }
 [data-brand-accent="wine"] { --room-accent: #64172a; --room-accent-hover: #461020; --room-accent-soft: #f3e9ec; }
 [data-brand-accent="gold"] { --room-accent: #6f4e16; --room-accent-hover: #50380f; --room-accent-soft: #f6efdf; }
 [data-brand-accent="forest"] { --room-accent: #365e4c; --room-accent-hover: #254334; --room-accent-soft: #eaf1ec; }

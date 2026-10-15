@@ -276,6 +276,11 @@ export default async function CommunityPage({
   const cohort = ((cohortResult.data as CohortRoom[] | null) ?? [])[0];
   const brandIdentity =
     ((brandingResult.data as CommunityBrandIdentity[] | null) ?? [])[0] ?? null;
+  const creationResult = !brandIdentity?.icon_storage_path || !brandIdentity?.cover_storage_path
+    ? await supabase.rpc("list_community_creation_images",{p_community_id:community.community_id})
+    : {data:[],error:null};
+  const creationImage = ((creationResult.data??[]) as {storage_path:string;alt_text:string;icon_hidden:boolean;cover_hidden:boolean}[])[0];
+  const creationSigned = creationImage ? supabase.storage.from("proposal-media").createSignedUrl(creationImage.storage_path,3600).then(result=>result.error?{data:null}:result).catch(()=>({data:null})) : Promise.resolve({data:null});
   const connectionsResult = showPeople ? await supabase.rpc("list_my_network_with_context") : {data:[],error:null};
   const attachments = paginationOperational
     ? ((pageMediaResult.data as CommunityPostAttachment[] | null) ?? [])
@@ -285,12 +290,12 @@ export default async function CommunityPage({
       ? supabase.storage
           .from("community-media")
           .createSignedUrl(brandIdentity.icon_storage_path, 3600)
-      : Promise.resolve({ data: null }),
+      : creationImage?.icon_hidden ? Promise.resolve({data:null}) : creationSigned,
     brandIdentity?.cover_storage_path
       ? supabase.storage
           .from("community-media")
           .createSignedUrl(brandIdentity.cover_storage_path, 3600)
-      : Promise.resolve({ data: null }),
+      : creationImage?.cover_hidden ? Promise.resolve({data:null}) : creationSigned,
     signCommunityAttachments(supabase,attachments),
   ]);
   const attachmentByPost = new Map(
@@ -330,7 +335,7 @@ export default async function CommunityPage({
         {showToday && coverSigned.data?.signedUrl ? (
           <figure className="community-room-cover">
             <img
-              alt={brandIdentity?.cover_alt_text ?? ""}
+              alt={brandIdentity?.cover_alt_text ?? creationImage?.alt_text ?? ""}
               height={brandIdentity?.cover_height ?? undefined}
               src={coverSigned.data.signedUrl}
               width={brandIdentity?.cover_width ?? undefined}
@@ -341,7 +346,7 @@ export default async function CommunityPage({
           <div className="community-room-title">
             {iconSigned.data?.signedUrl ? (
               <img
-                alt={brandIdentity?.icon_alt_text ?? ""}
+                alt={brandIdentity?.icon_alt_text ?? creationImage?.alt_text ?? ""}
                 className="community-room-icon"
                 height={brandIdentity?.icon_height ?? undefined}
                 src={iconSigned.data.signedUrl}

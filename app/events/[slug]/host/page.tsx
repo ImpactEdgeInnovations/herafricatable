@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 import { PilotEventCancellation, type PilotCancellation } from "@/components/events/pilot-event-cancellation";
 import { EventHostExtraTools } from "@/components/events/event-host-extra-tools";
 import { EventRepeatPlanner } from "@/components/events/event-repeat-planner";
+import { EventHostRequests } from "@/components/events/event-host-requests";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -67,6 +68,7 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
     <MemberHeader active="events" label="Your event" />
     <EventHostWorkspace currentUserId={user.id} initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} communities={(communitiesResult.data as EventHostCommunity[] | null) ?? []} communityLinksReady={!communitiesResult.error} selfPublish={selfPublish === true} />
     <EventHostExtraTools>
+      {workspace.event_status === "published" && !hasEnded ? <details id="guest-requests"><summary>Guest requests and waiting list</summary><EventHostRequests eventId={workspace.event_id}/></details> : null}
       {["published", "completed"].includes(workspace.event_status) ? <EventRepeatPlanner eventId={workspace.event_id} currentUserId={user.id} sourceStartsAt={workspace.starts_at} /> : null}
       {!hasEnded ? <EventAppearance eventId={workspace.event_id} initialAccent={appearanceResult.data?.appearance_accent_key} ready={!appearanceResult.error} /> : null}
       {workspace.event_status === "published" && !hasEnded && freeBookingResult.data?.registration_mode === "manual_review" ? <details id="host-bookings"><summary>Booking settings</summary><EventFreeBookingControl eventId={workspace.event_id} eventTitle={workspace.event_title} enabled={Boolean(freeBookingResult.data.free_instant_booking)} ready={!freeBookingResult.error}/></details> : null}

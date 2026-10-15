@@ -6,7 +6,7 @@ export function EventHostExtraTools({ children }: { children: ReactNode }) {
   useEffect(() => {
     function openLinkedTool() {
       const id = window.location.hash.slice(1);
-      if (!["host-invites", "host-bookings", "host-cancel"].includes(id)) return;
+      if (!["host-invites", "host-bookings", "host-cancel", "guest-requests"].includes(id)) return;
       const panel = tools.current?.querySelector<HTMLDetailsElement>(`details[id="${id}"]`);
       if (!panel) return;
       panel.open = true;

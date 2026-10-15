@@ -167,7 +167,7 @@ export function RegistrationManager({
           ? freePlace
             ? "Confirm this free place. The guest will receive an event pass; membership remains a separate decision."
             : "Confirm that you checked the payment details. The guest will receive an event pass; membership remains a separate decision."
-          : "The guest will not receive an event pass. Add a clear reason for the decision record.",
+          : "The guest will not receive an event pass. Your reason will be sent privately to the guest as well as saved in the decision record.",
       confirmLabel:
         action === "approve" ? "Approve registration" : "Decline registration",
       tone: action === "reject" ? "danger" : "default",
@@ -187,7 +187,7 @@ export function RegistrationManager({
               ? freePlace
                 ? "Add any useful event context. No payment reference is needed for a free place."
                 : "Include the payment reference or verification detail when useful."
-              : "Use at least 5 characters. This note is retained in the audit history.",
+              : "Use 5–500 characters. The guest will receive this explanation; do not include payment details or information about other people.",
         },
       ],
     });

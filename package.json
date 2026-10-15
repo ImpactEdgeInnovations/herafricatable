@@ -13,7 +13,7 @@
     "test:community-entry": "node scripts/verify-community-entry-actions.mjs",
     "test:journeys": "node scripts/verify-journey-states.mjs && node scripts/verify-pilot-registration-resume.mjs && node scripts/verify-event-planning-extensions.mjs && node scripts/verify-landing-redesign.mjs",
     "test:accessibility": "node scripts/verify-accessibility-contracts.mjs",
-    "test:operations": "node scripts/verify-operations-contracts.mjs && node scripts/verify-community-photo-operations.mjs && node scripts/verify-community-photo-report-paging.mjs && node scripts/verify-notification-admin-access.mjs && node scripts/verify-targeted-notification-worker.mjs",
+    "test:operations": "node scripts/verify-operations-contracts.mjs && node scripts/verify-community-photo-operations.mjs && node scripts/verify-community-photo-report-paging.mjs && node scripts/verify-notification-admin-access.mjs && node scripts/verify-targeted-notification-worker.mjs && node scripts/verify-joining-and-email.mjs",
     "test:community-gatherings": "node scripts/verify-community-gathering-contracts.mjs && node scripts/verify-gathering-introduction.mjs && node scripts/verify-gathering-setup.mjs && node scripts/verify-discovery-membership-clarity.mjs && node scripts/verify-product-ui-foundation.mjs && node scripts/verify-events-ui-phase.mjs && node scripts/verify-community-calendar.mjs && node scripts/verify-community-meetup-wording.mjs",
     "test:community-room-ui": "node scripts/verify-community-room-ui.mjs",
     "test:community-video": "node scripts/verify-community-video.mjs",

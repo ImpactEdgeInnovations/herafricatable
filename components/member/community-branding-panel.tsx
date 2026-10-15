@@ -228,7 +228,7 @@ export function CommunityBrandingPanel({
         coverUpload = { ...dimensions, path };
       }
 
-      const { error } = await supabase.rpc("save_community_brand_identity", {
+      const { error } = await supabase.rpc("save_community_brand_with_creation_image", {
         p_accent_key: String(form.get("accent_key") ?? "wine"),
         p_community_id: communityId,
         p_cover_alt_text: cover
@@ -387,7 +387,7 @@ export function CommunityBrandingPanel({
               required={Boolean(icon)}
             />
           </label>
-          {identity?.icon_asset_id ? (
+          {identity?.icon_asset_id || applicationImage ? (
             <label className="community-brand-remove">
               <input name="remove_icon" type="checkbox" checked={draft.removeIcon} onChange={event => setDraft(current => ({ ...current, removeIcon: event.target.checked }))} />
               Remove the current icon
@@ -419,7 +419,7 @@ export function CommunityBrandingPanel({
               required={Boolean(cover)}
             />
           </label>
-          {identity?.cover_asset_id ? (
+          {identity?.cover_asset_id || applicationImage ? (
             <label className="community-brand-remove">
               <input name="remove_cover" type="checkbox" checked={draft.removeCover} onChange={event => setDraft(current => ({ ...current, removeCover: event.target.checked }))} />
               Remove the current cover

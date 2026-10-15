@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { CommunityCapacityPanel } from "@/components/member/community-capacity-panel";
 import { createClient } from "@/lib/supabase/server";
 import { MemberHeader } from "@/components/member/member-header";
 import { CommunityHostSection } from "@/components/member/community-host-section";
@@ -336,6 +337,7 @@ export default async function CommunityHostPage({
         owner={community.membership_role === "owner"}
         settings={joiningSettings}
       />
+      <CommunityCapacityPanel communityId={community.community_id} owner={community.membership_role === "owner"} />
       </CommunityHostSection>
       <CommunityEventProposalPanel
         communityId={community.community_id}

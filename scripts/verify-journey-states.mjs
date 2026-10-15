@@ -758,7 +758,7 @@ const membershipAdminNotificationMigration = read(
 const memberWelcomeMigration = read(
   "supabase/migrations/20260813150000_member_welcome_email.sql",
 );
-const memberWelcomeEmail = read("lib/notifications/email.ts");
+const memberWelcomeEmail = read("lib/notifications/email.ts") + read("lib/notifications/template.ts");
 const membershipApprovalReview = read("components/admin/member-review.tsx");
 const targetedNotificationRoute = read(
   "app/api/admin/notifications/process/route.ts",
@@ -1362,7 +1362,7 @@ for (const contract of [
   "Look &amp; feel",
   "Make the community recognisable",
   "Colour preview",
-  "save_community_brand_identity",
+  "save_community_brand_with_creation_image",
   'from("community-media")',
   "Community logo",
   "Cover image",
@@ -1785,8 +1785,8 @@ assert(
 );
 assert(
   read("components/member/community-directory.tsx").includes(
-    "respond_to_community_invitation",
-  ),
+    "join_community_with_capacity",
+  ) && read("supabase/migrations/20261015062516_joining_capacity_host_reviews.sql").includes("respond_to_community_invitation(c.id,true)"),
   "Cohort invitations must require an explicit member acceptance action",
 );
 const cohortMemberExperience = read(

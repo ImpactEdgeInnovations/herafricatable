@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import ts from 'typescript';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {matchesDiscoverySearch} from '../lib/discovery-search.mjs';
+const read=file=>readFileSync(new URL(`../${file}`,import.meta.url),'utf8');
+const compile=source=>ts.transpileModule(source.replace(/^import[\s\S]*?;\n/gm,'').replace(/^export /gm,''),{compilerOptions:{module:ts.ModuleKind.None,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React}}).outputText;
+const {renderBrandedEmail}=new Function(`${compile(read('lib/notifications/template.ts'))};return {renderBrandedEmail};`)();
+const html=renderBrandedEmail({title:'A <private> update',body:'First line\nSecond & third <script>alert(1)</script>',href:'https://www.herafricatable.com/communities/example?view=all&x=1',buttonLabel:'Review request',preferenceNote:'Private message'});
+for(const text of ['Her Africa Table','MEET. CONNECT. RISE.','role="presentation"','Contact Her Africa Table','Privacy','Terms','Review request'])assert(html.includes(text),text);
+assert(html.includes('A &lt;private&gt; update')&&html.includes('Second &amp; third &lt;script&gt;'));
+assert(!html.includes('<script>')&&!html.includes('<img')&&!html.includes('@import'));
+assert.equal((html.match(/<h1 /g)||[]).length,1);
+assert(renderBrandedEmail({title:'Welcome',body:'Hello',href:'https://www.herafricatable.com/onboarding',buttonLabel:'Complete my profile',preferenceNote:'Private',welcome:true}).includes('A simple place to begin'));
+
+let providerPayload;
+const senderCode=compile(read('lib/notifications/email.ts'));
+const send=new Function('renderBrandedEmail','process','fetch',`${senderCode};return sendNotificationEmail;`)(renderBrandedEmail,{env:{RESEND_API_KEY:'mock-key',EMAIL_FROM:'Her Africa Table <community@example.invalid>',NEXT_PUBLIC_SITE_URL:'https://www.herafricatable.com'}},async(url,options)=>{assert.equal(url,'https://api.resend.com/emails');providerPayload=JSON.parse(options.body);assert.equal(options.headers['idempotency-key'],'test-job');return {ok:true,json:async()=>({id:'test-provider-id'})};});
+const job={job_id:'test-job',to_email:'host@example.invalid',template_key:'community',dedupe_key:'community-join-requested:test',payload:{title:'New request',body:'A member would like to join.',href:'/communities/example/host#admissions'}};
+assert.equal(await send(job),'test-provider-id');
+assert(providerPayload.html.includes('Review join request')&&providerPayload.html.includes('Her Africa Table'));
+assert.equal(providerPayload.to[0],'host@example.invalid');
+for(const unsafe of ['https://evil.invalid','//evil.invalid','/\\evil.invalid']){await send({...job,payload:{...job.payload,href:unsafe}});assert(!providerPayload.html.includes(unsafe));assert(providerPayload.text.includes('https://www.herafricatable.com'));}
+for(const file of ['docs/SUPABASE_OTP_TEMPLATE.html','docs/SUPABASE_SIGNUP_OTP_TEMPLATE.html']){const template=read(file);assert(template.includes('{{ .Token }}'));assert(!template.includes('.ConfirmationURL')&&!template.includes('.TokenHash'));assert(!/6-digit|six.digit|8-digit/.test(template));assert(template.includes('Never share your code'));}
+
+const source=read('components/member/community-directory.tsx');
+const Directory=new Function('React','Link','useRouter','useMemo','useState','createClient','memberErrorMessage','useActionDialog','matchesDiscoverySearch',`${compile(source)};return CommunityDirectory;`)(React,({children,...props})=>React.createElement('a',props,children),()=>({}),React.useMemo,React.useState,()=>({}),()=>'',()=>({ask:async()=>false,dialog:null}),matchesDiscoverySearch);
+const community={community_id:'test',slug:'test',name:'Test Community',description:'A shared interest',community_type:'private',status:'published',effective_mode:'open',membership_status:null,membership_role:null,member_count:10,pending_count:0,offer_id:null,offer_access_type:'free',offer_price_minor:null,offer_currency:null,offer_billing_interval:null,offer_payment_mode:null,is_full:true,waiting_list_enabled:true,maximum_members:10};
+const render=overrides=>renderToStaticMarkup(React.createElement(Directory,{communities:[{...community,...overrides}]}));
+assert(render().includes('Join waiting list'));
+assert(render({on_waiting_list:true}).includes('Leave waiting list'));
+assert(render({waiting_list_enabled:false}).includes('The Host is not accepting waiting-list requests.'));
+assert(render({membership_status:'active',on_waiting_list:true}).includes('Open community'));
+assert(render({effective_mode:'invite_only'}).includes('Ask the Host to invite you.'));
+
+const host=read('components/member/community-host-workspace.tsx');
+const review=host.slice(host.indexOf('  async function review('),host.indexOf('  async function updateProgramming('));
+const harness=new Function('context',`${compile(`const {actionBusy,setBusy,setMessage,ask,supabase,router,memberErrorMessage}=context;${review}`)};return review;`);
+let calls=[];const lock={current:false};
+const context={actionBusy:lock,setBusy:()=>{},setMessage:()=>{},ask:async()=>({reason:'This group serves a different purpose.'}),supabase:{rpc:async(name,args)=>{calls.push({name,args});return {error:null};}},router:{refresh(){}},memberErrorMessage:()=>''};
+await harness(context)({membership_id:'test-member',display_name:'Test',status:'requested'},'decline');
+assert.equal(calls[0].name,'review_community_join_request');assert.equal(calls[0].args.p_reason,'This group serves a different purpose.');assert(!lock.current);
+calls=[];await harness({...context,ask:async()=>false})({membership_id:'test-member',display_name:'Test',status:'requested'},'decline');assert.equal(calls.length,0);assert(!lock.current);
+assert(host.includes('onClick={()=>openMetric(metric.key)}'));
+assert(read('components/member/community-host-activity.tsx').includes('Report details are private'));
+const form=read('components/member/community-host-application.tsx');assert(form.includes('Maximum members (optional)')&&form.includes('p_maximum_members:'));
+assert(form.indexOf('label="Community image (optional)"')<form.indexOf('aria-labelledby="community-host-step-people"'));
+const eventForm=read('components/events/member-event-proposal.tsx');assert(eventForm.indexOf('label="Event poster (optional)"')<eventForm.indexOf('{step === 1 ?'));
+console.log('Joining/email behaviour passed: rendered full/waitlist/invitation/member states, private decline dialog cancellation, correct RPC/reason, escaped branded HTML/plain text, provider idempotency, safe links, OTP-only templates and early optional image/limit controls. No live email sent.');

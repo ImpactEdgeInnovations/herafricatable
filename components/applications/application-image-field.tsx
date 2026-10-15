@@ -44,7 +44,7 @@ export function ApplicationImageField({
       <div>
         <span>Optional image</span>
         <h5>{label}</h5>
-        <p>{automatic ? "Your pilot event poster is saved and published without review. Choose an image you have permission to share." : "A good image helps the review team understand the feeling of your idea. It is checked separately before publication."}</p>
+        <p>{automatic ? "Your image is saved without a separate review during the pilot. Choose an image you have permission to share." : "Your image will appear after approval. Choose an image you have permission to share."}</p>
       </div>
       <div className="application-image-field-layout">
         <div className="application-image-preview">

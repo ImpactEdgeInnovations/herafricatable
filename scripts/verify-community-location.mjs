@@ -7,7 +7,7 @@ assert(directory.includes('useState("all")'));
 assert(directory.includes('aria-label="Available Community list"'));
 assert(read("app/community-overhaul.css").includes('overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable'));
 const form=read("components/member/community-host-application.tsx");
-for(const value of ['hashchange','a[href="#create-community"]','initialHashChecked','setStartingAnother(true)','save_community_host_application_with_location','Where is your Community based?','locationReady'])assert(form.includes(value));
+for(const value of ['hashchange','a[href="#create-community"]','initialHashChecked','setStartingAnother(true)','save_community_host_application_with_limits','Where is your Community based?','locationReady'])assert(form.includes(value));
 const sql=read("supabase/migrations/20261008055808_community_location_discovery.sql");
 for(const value of ['join public.list_communities() visible','applicant_id = auth.uid()','Community owner or Super Admin required','from public,anon','sync_approved_community_location','public.save_community_host_application('])assert(sql.includes(value));
 assert(!sql.includes('disable row level security'));

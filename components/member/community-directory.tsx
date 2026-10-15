@@ -20,6 +20,10 @@ export type CommunitySummary = {
   membership_status: string | null;
   membership_role: string | null;
   member_count: number;
+  maximum_members?: number | null;
+  is_full?: boolean;
+  on_waiting_list?: boolean;
+  waiting_list_enabled?: boolean;
   pending_count: number;
   offer_id: string | null;
   offer_access_type: "free" | "paid" | null;
@@ -67,8 +71,10 @@ function intervalLabel(interval: CommunitySummary["offer_billing_interval"]) {
 
 export function CommunityDirectory({
   communities,
+  joinLimitsReady = true,
 }: {
   communities: CommunitySummary[];
+  joinLimitsReady?: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -87,33 +93,20 @@ export function CommunityDirectory({
       item.location_scope === "place" && item.location_label?.toLocaleLowerCase() === locationFilter);
 
   async function join(item: CommunitySummary) {
+    if (busy || !joinLimitsReady) return;
     setBusy(item.community_id);
     setMessage("");
-    const { error } =
-      item.membership_status === "invited"
-        ? await supabase.rpc("respond_to_community_invitation", {
-            p_accept: true,
-            p_community_id: item.community_id,
-          })
-        : await supabase.rpc("request_community_access", {
-            p_community_id: item.community_id,
-          });
-    setBusy("");
-    setMessage(
-      error
-        ? memberErrorMessage(error, "update your community membership")
-        : item.membership_status === "invited"
-          ? item.offer_access_type === "paid" &&
-            item.membership_role === "member"
-            ? "Invitation accepted. Pay to finish joining this community."
-            : "Invitation accepted. You can now open the community."
-          : item.effective_mode === "approval"
-          ? "Your request has been sent to the community leader."
-          : item.offer_access_type === "paid"
-            ? "Your request was approved. Pay to finish joining."
-            : "You have joined the community.",
-    );
-    if (!error) router.refresh();
+    try {
+      const {data,error}=await supabase.rpc("join_community_with_capacity",{p_community_id:item.community_id});
+      if(error)throw error;
+      setMessage(data==="waitlisted"?"This Community is full. You are on the waiting list; no place is reserved. The Host has been notified.":data==="requested"?"Your request has been sent to the Host.":data==="approved_pending_payment"?"Your place is approved. Complete payment to join.":"You have joined the Community.");
+      router.refresh();
+    }catch(error){setMessage(memberErrorMessage(error,"join this Community"));}finally{setBusy("");}
+  }
+  async function leaveWaitingList(item:CommunitySummary){
+    if(busy)return;setBusy(item.community_id);setMessage("");
+    try{const {error}=await supabase.rpc("leave_community_waitlist",{p_community_id:item.community_id});if(error)throw error;setMessage("You have left the waiting list.");router.refresh();}
+    catch(error){setMessage(memberErrorMessage(error,"leave the waiting list"));}finally{setBusy("");}
   }
 
   async function checkout(item: CommunitySummary) {
@@ -329,6 +322,7 @@ export function CommunityDirectory({
           </div>
         </div>
         <p>{item.tagline || item.description}</p>
+        {item.is_full && item.membership_status!=="active" ? <p className="community-membership-state"><strong>Community full</strong><small>{item.waiting_list_enabled?"You can wait for a place. Joining the waiting list does not reserve one.":"The Host is not accepting waiting-list requests."}</small></p> : null}
         {context === "discover" && item.public_preview_enabled ? (
           <Link
             className="community-directory-about-link"
@@ -362,7 +356,7 @@ export function CommunityDirectory({
                 </button>
               ) : null}
             </div>
-          ) : item.membership_status === "requested" ? (
+          ) : item.on_waiting_list ? <div className="community-membership-actions"><span className="community-membership-state"><strong>You’re on the waiting list</strong><small>The Host will review your request when a place is available.</small></span><button type="button" disabled={Boolean(busy)} onClick={()=>void leaveWaitingList(item)}>Leave waiting list</button></div> : item.membership_status === "requested" ? (
             <div className="community-membership-actions">
               <span className="community-membership-state">
                 <strong>Waiting for approval</strong>
@@ -454,11 +448,11 @@ export function CommunityDirectory({
             <div className="community-membership-actions">
               <button
                 className="button button-outline"
-                disabled={busy === item.community_id}
+                disabled={Boolean(busy)||!joinLimitsReady||(item.is_full&&!item.waiting_list_enabled)}
                 onClick={() => void join(item)}
                 type="button"
               >
-                Accept invitation
+                {item.is_full?"Join waiting list":"Accept invitation"}
               </button>
               <button
                 className="community-membership-secondary"
@@ -476,10 +470,10 @@ export function CommunityDirectory({
               <span className="community-membership-state"><strong>By invitation</strong><small>Ask the Host to invite you.</small></span>
             ) : <button
               className="button button-outline"
-              disabled={busy === item.community_id}
+              disabled={Boolean(busy)||!joinLimitsReady||(item.is_full&&!item.waiting_list_enabled)}
               onClick={() => void join(item)}
             >
-              {item.membership_status === "invited"
+              {item.is_full ? item.waiting_list_enabled ? "Join waiting list" : "Community full" : item.membership_status === "invited"
                 ? "Accept invitation"
                 : item.effective_mode === "approval"
                   ? "Ask to join"
@@ -495,6 +489,7 @@ export function CommunityDirectory({
 
   return (
     <>
+      {!joinLimitsReady?<p className="network-message" role="status">We couldn’t check Community places. Refresh to try again before joining.</p>:null}
       {message ? <p className="network-message community-directory-feedback" role="status">{message}</p> : null}
       <section className="community-directory-searchbar" aria-label="Find Communities">
         <div className="community-directory-global-search">
