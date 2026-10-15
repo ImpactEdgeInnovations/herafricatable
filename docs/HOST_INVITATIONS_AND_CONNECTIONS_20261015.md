@@ -26,6 +26,8 @@ The limit remains 20 invitations in 24 hours, across events and Communities. An 
 
 ## Missing invitation investigation
 
+Resolved: the Product Owner found the correct Community invitation in Gmail Spam. Mark it Not spam and add the sender to contacts. The generic “New connection request” was a separate message from 14 October at 19:59 EAT, not the Community invitation. Do not resend the already received invitation merely because it appeared in Spam.
+
 The Food, Fitness, Fashion invitation reported on 15 October was accepted by Resend at 09:36 EAT, with one attempt and no sending error. It was not resent during investigation. The send-only key cannot retrieve later provider events; this is expected restricted access, not a reason to expose or broaden the key.
 
 Product Owner: in Resend → Emails, inspect message `01a13e46-fdaf-7516-9ced-121b1f5f208b` and its delivered/bounced status. Ask the recipient to check Spam/Promotions and search for Her Africa Table. The provider's [retrieve-email documentation](https://resend.com/docs/api-reference/emails/retrieve-email) distinguishes dispatch from later delivery events. The platform currently reports provider acceptance; it does not claim a verified inbox receipt or open tracking.

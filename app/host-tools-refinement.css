@@ -2,7 +2,7 @@
 .community-host-page:has(.host-tools-shell) > .community-host-hero { margin-bottom:22px;padding-bottom:22px; }
 .community-host-page:has(.host-tools-shell) > .community-host-hero h1 { font-family:var(--sans);font-size:clamp(1.6rem,3vw,2.1rem);letter-spacing:-.035em;line-height:1.2; }
 .host-tools-shell { margin:0 auto 48px;max-width:1120px; }
-.host-tools-tabs { display:flex;gap:4px;border-bottom:1px solid #ded9d1;overflow:auto;scrollbar-width:thin;padding:0 0 2px; }
+.host-tools-tabs { position:sticky;top:0;z-index:10;background:#f8f6f1;display:flex;gap:4px;border-bottom:1px solid #ded9d1;overflow:auto;scrollbar-width:thin;padding:0 0 2px; }
 .host-tools-tabs button { flex:0 0 auto;min-height:48px;padding:12px 18px;border:0;border-bottom:2px solid transparent;background:transparent;color:#625951;font:600 15px/1.4 var(--sans);cursor:pointer; }
 .host-tools-tabs button[aria-selected="true"] { border-bottom-color:#612c3c;color:#292521;background:#fffdf9; }
 .host-tools-tabs button:focus-visible,.host-tools-shell button:focus-visible,.invitation-history-list:focus-visible { outline:3px solid #35678e;outline-offset:2px; }
@@ -45,6 +45,7 @@
 .event-host-extra-tools>details>summary { padding:16px 18px;font:600 15px/1.4 var(--sans);min-height:48px; }
 .event-host-extra-tools .destination-invitation-panel { box-shadow:none;border:0;margin:0;padding:22px; }
 @media(max-width:700px){
+  .community-host-page .host-tools-shell { padding-inline:16px;box-sizing:border-box; }
   .host-tools-tabs button { padding:12px 14px;font-size:14px; }
   .host-tools-shell .community-host-health { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .host-tools-shell .destination-invitation-layout { grid-template-columns:minmax(0,1fr);gap:24px; }

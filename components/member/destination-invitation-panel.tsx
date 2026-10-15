@@ -20,7 +20,7 @@ const deliveryCopy:Record<string,string>={sent:"Email sent",queued:"Email waitin
 
 export function DestinationInvitationPanel({destinationId,currentUserId,destinationName,destinationType,invitations,ready}:{destinationId:string;currentUserId:string;destinationName:string;destinationType:"community"|"event";invitations:DestinationInvitation[];ready:boolean}) {
   const router=useRouter();const supabase=useMemo(()=>createClient(),[]);const {ask,dialog}=useActionDialog();
-  const [busy,setBusy]=useState(false);const lock=useRef(false);const [message,setMessage]=useState("");
+  const [busy,setBusy]=useState(false);const [checking,setChecking]=useState(false);const lock=useRef(false);const [message,setMessage]=useState("");
   const [history,setHistory]=useState(invitations);const [results,setResults]=useState<BatchResult[]>([]);const [showAll,setShowAll]=useState(false);
   const [draft,setDraft,clearDraft]=useCommunityDraft(communityDraftKey(currentUserId,`${destinationType}-invitation`,destinationId),{email:"",note:"",preset:""});
   const parsed=parseInvitationEmails(draft.email);const dirty=Boolean(draft.email||draft.note||draft.preset);
@@ -31,7 +31,7 @@ export function DestinationInvitationPanel({destinationId,currentUserId,destinat
     if(result.error||!Array.isArray(result.data))throw result.error||Error("Delivery status could not be loaded.");
     setHistory(result.data as DestinationInvitation[]);
   }
-  async function checkDelivery(){if(lock.current)return;lock.current=true;setBusy(true);setMessage("");try{await refreshHistory();setMessage("Delivery status updated. Email sent means our email provider accepted it; check spam or promotions if it is missing.");}catch(error){setMessage(memberErrorMessage(error,"check invitation delivery"));}finally{lock.current=false;setBusy(false);}}
+  async function checkDelivery(){if(lock.current)return;lock.current=true;setBusy(true);setChecking(true);setMessage("");try{await refreshHistory();setMessage("Delivery status updated. Email sent means our email provider accepted it; check spam or promotions if it is missing.");}catch(error){setMessage(memberErrorMessage(error,"check invitation delivery"));}finally{lock.current=false;setBusy(false);setChecking(false);}}
   async function send(event:FormEvent<HTMLFormElement>){
     event.preventDefault();if(lock.current||!ready)return;
     if(!parsed.emails.length||parsed.invalid.length||parsed.tooMany){setMessage("Add up to 20 valid email addresses before sending.");return;}
@@ -64,11 +64,11 @@ export function DestinationInvitationPanel({destinationId,currentUserId,destinat
         {parsed.tooMany?<p role="status">Choose no more than 20 people in this batch.</p>:null}
         <label>Start with a note <small>Optional</small><select disabled={busy} value={draft.preset} onChange={event=>{const selected=event.target.value;setDraft(current=>({...current,preset:selected,note:noteIdeas.find(idea=>idea.label===selected)?.text??""}));}}><option value="">Write my own</option>{noteIdeas.map(idea=><option key={idea.label} value={idea.label}>{idea.label}</option>)}</select></label>
         <label>Your message <small>Sent to each person</small><textarea disabled={busy} maxLength={600} minLength={10} name="note" placeholder="I thought you would enjoy joining us…" rows={3} value={draft.note} onChange={event=>setDraft(current=>({...current,note:event.target.value,preset:""}))}/></label>
-        <button className="button button-primary" disabled={busy||!parsed.emails.length||parsed.invalid.length>0||parsed.tooMany}>{busy?"Preparing invitations…":"Review & send"}</button>
+        <button className="button button-primary" disabled={busy||!parsed.emails.length||parsed.invalid.length>0||parsed.tooMany}>{busy&&!checking?"Preparing invitations…":"Review & send"}</button>
         {dirty?<p className="invitation-draft-note">Not sent yet. <button type="button" disabled={busy} onClick={()=>clearDraft({email:"",note:"",preset:""})}>Clear</button></p>:null}
         <small>We do not upload your address book or share addresses between recipients.</small>
       </form>
-      <div className="destination-invitation-history"><div><strong>Recent invitations</strong><button type="button" disabled={busy} onClick={()=>void checkDelivery()}>Refresh status</button></div>
+      <div className="destination-invitation-history"><div><strong>Recent invitations</strong><button type="button" disabled={busy} onClick={()=>void checkDelivery()}>{checking?"Checking…":"Refresh status"}</button></div>
         <div className="invitation-history-list" tabIndex={0} aria-label="Recent invitation delivery">{history.length?history.slice(0,showAll?50:6).map(invitation=><article key={invitation.invitation_id}><div><strong>{invitation.invitee_email}</strong><small>{new Intl.DateTimeFormat("en-KE",{day:"numeric",month:"short"}).format(new Date(invitation.created_at))} · {statusCopy[invitation.invitation_status]||"In progress"}</small></div><span data-status={invitation.delivery_status}>{invitation.invitation_status==="pending_review"?"Not emailed yet":deliveryCopy[invitation.delivery_status??""]||"Delivery not confirmed"}</span></article>):<p>Your invitations and their email status will appear here.</p>}</div>
         {history.length>6?<button type="button" onClick={()=>setShowAll(value=>!value)}>{showAll?"Show fewer":"Show all recent invitations"}</button>:null}
         <small>“Email sent” means the email provider accepted it, not that it reached the inbox. Ask her to check Spam or Promotions.</small>
