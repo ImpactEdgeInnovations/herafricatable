@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -74,6 +75,7 @@ export function CommunityGatherings({
   canManage?: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
+  const urlSelection = useSearchParams().get("gathering") ?? "";
   const [items, setItems] = useState(cards);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -88,7 +90,7 @@ export function CommunityGatherings({
   const [linkerOpened, setLinkerOpened] = useState(false);
   const [linkerMounted, setLinkerMounted] = useState(false);
   useEffect(()=>setItems(cards),[cards]);
-  useEffect(()=>setSelected(initialSelection ?? ""),[initialSelection]);
+  useEffect(()=>setSelected(urlSelection),[urlSelection]);
   useEffect(()=>{const update=()=>{
     const params = new URL(window.location.href).searchParams;
     setSelected(params.get("gathering") ?? "");

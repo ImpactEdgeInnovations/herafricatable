@@ -39,7 +39,7 @@ function hookHarness() {
   return {states,effects,reset(){index=0;refIndex=0;},useState(initial){const i=index++;if(!(i in states))states[i]=typeof initial==='function'?initial():initial;return [states[i],value=>states[i]=typeof value==='function'?value(states[i]):value];},useRef(initial){const i=refIndex++;return refs[i]??(refs[i]={current:initial});},useEffect:fn=>effects.push(fn),useMemo:fn=>fn()};
 }
 const hooks=hookHarness();
-const Gatherings=compileComponent('components/member/community-gatherings.tsx','CommunityGatherings',{React,Link,...hooks,createClient:()=>({}),memberErrorMessage:()=>'',CommunityGatheringInline:()=>null,CommunityVideoLibrary:()=>null,CommunityCalendar:()=>React.createElement('p',{},'Community calendar'),CommunityGatheringPlanner:()=>React.createElement('p',{},'Inline planner'),dynamic:()=>()=>React.createElement('p',{},'Inline event linker')});
+const Gatherings=compileComponent('components/member/community-gatherings.tsx','CommunityGatherings',{React,Link,...hooks,useSearchParams:()=>new URLSearchParams(),createClient:()=>({}),memberErrorMessage:()=>'',CommunityGatheringInline:()=>null,CommunityVideoLibrary:()=>null,CommunityCalendar:()=>React.createElement('p',{},'Community calendar'),CommunityGatheringPlanner:()=>React.createElement('p',{},'Inline planner'),dynamic:()=>()=>React.createElement('p',{},'Inline event linker')});
 const props={cards:[],migrationReady:true,slug:'test',communityId:'community-one',currentUserId:'host-one'};
 const renderGatherings=extra=>{hooks.reset();return Gatherings({...props,...extra});};
 assert(!renderToStaticMarkup(renderGatherings({canManage:false})).includes('Create a meetup'));
