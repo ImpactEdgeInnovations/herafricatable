@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAdminOperation } from "@/lib/use-admin-operation";
 import { adminErrorMessage } from "@/lib/admin-error";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
@@ -70,12 +71,12 @@ export function EventCommandCentre({
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const { ask, dialog } = useActionDialog();
+  const { ask, dialog, clearDraft } = useActionDialog({ retainDrafts: true });
   const ordered = [...events].sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
   const nextEvent = ordered.find((event) => event.status === "published" && new Date(event.ends_at) >= new Date());
   const [selected, setSelected] = useState(selectedEventId ?? nextEvent?.id ?? ordered[0]?.id ?? "");
-  const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
+  const { busy, setBusy, runAdminAction, markSaved } = useAdminOperation<string>("", "pending", setMessage, clearDraft);
   const event = events.find((item) => item.id === selected) ?? ordered[0];
   const pendingRegistrations = workCounts.reduce((sum, item) => sum + Number(item.pending_registrations), 0);
   const pendingRefunds = workCounts.reduce((sum, item) => sum + Number(item.pending_refunds), 0);
@@ -94,89 +95,93 @@ export function EventCommandCentre({
   async function manageLifecycle(
     action: "cancel" | "pause_registrations" | "reopen" | "resume_registrations" | "suspend",
   ) {
-    if (!event || !lifecycleReady) return;
-    const copy = {
-      cancel: {
-        confirm: "Cancel event",
-        description: "The event closes permanently. Registrations are cancelled, paid orders enter refund review and every affected guest receives your message.",
-        title: `Cancel ${event.title}?`,
-      },
-      pause_registrations: {
-        confirm: "Pause registrations",
-        description: "The event remains visible to guests who already know about it, but no new registration can begin.",
-        title: `Pause registration for ${event.title}?`,
-      },
-      reopen: {
-        confirm: "Reopen event",
-        description: "The event returns to public discovery and its previous registration setting is restored.",
-        title: `Reopen ${event.title}?`,
-      },
-      resume_registrations: {
-        confirm: "Reopen registrations",
-        description: "The previous registration setting is restored. Existing guest records are unchanged.",
-        title: `Reopen registration for ${event.title}?`,
-      },
-      suspend: {
-        confirm: "Suspend and preserve",
-        description: "The event leaves public discovery, registration closes and all records are preserved while the concern is resolved.",
-        title: `Suspend ${event.title}?`,
-      },
-    }[action];
-    const needsMemberMessage = ["cancel", "reopen", "suspend"].includes(action);
-    const result = await ask({
-      confirmLabel: copy.confirm,
-      description: copy.description,
-      fields: [
-        {
-          help: "This stays in the private Admin audit record.",
-          label: "Internal reason",
-          maxLength: 1000,
-          minLength: 10,
-          name: "reason",
-          required: true,
-          type: "textarea",
+    const actionKey = "event:" + event?.id + ":" + action;
+    return runAdminAction(actionKey, async () => {
+      if (!event || !lifecycleReady) return;
+      const copy = {
+        cancel: {
+          confirm: "Cancel event",
+          description: "The event closes permanently. Registrations are cancelled, paid orders enter refund review and every affected guest receives your message.",
+          title: `Cancel ${event.title}?`,
         },
-        ...(needsMemberMessage
-          ? [{
-              help: "Use calm, useful language. The Host and affected guests receive this message.",
-              label: "Message for the Host and guests",
-              maxLength: 800,
-              minLength: 20,
-              name: "memberMessage",
-              required: true,
-              type: "textarea" as const,
-            }]
-          : []),
-      ],
-      title: copy.title,
-      tone: ["cancel", "suspend"].includes(action) ? "danger" : "default",
+        pause_registrations: {
+          confirm: "Pause registrations",
+          description: "The event remains visible to guests who already know about it, but no new registration can begin.",
+          title: `Pause registration for ${event.title}?`,
+        },
+        reopen: {
+          confirm: "Reopen event",
+          description: "The event returns to public discovery and its previous registration setting is restored.",
+          title: `Reopen ${event.title}?`,
+        },
+        resume_registrations: {
+          confirm: "Reopen registrations",
+          description: "The previous registration setting is restored. Existing guest records are unchanged.",
+          title: `Reopen registration for ${event.title}?`,
+        },
+        suspend: {
+          confirm: "Suspend and preserve",
+          description: "The event leaves public discovery, registration closes and all records are preserved while the concern is resolved.",
+          title: `Suspend ${event.title}?`,
+        },
+      }[action];
+      const needsMemberMessage = ["cancel", "reopen", "suspend"].includes(action);
+      const result = await ask({ draftKey: actionKey,
+        confirmLabel: copy.confirm,
+        description: copy.description,
+        fields: [
+          {
+            help: "This stays in the private Admin audit record.",
+            label: "Internal reason",
+            maxLength: 1000,
+            minLength: 10,
+            name: "reason",
+            required: true,
+            type: "textarea",
+          },
+          ...(needsMemberMessage
+            ? [{
+                help: "Use calm, useful language. The Host and affected guests receive this message.",
+                label: "Message for the Host and guests",
+                maxLength: 800,
+                minLength: 20,
+                name: "memberMessage",
+                required: true,
+                type: "textarea" as const,
+              }]
+            : []),
+        ],
+        title: copy.title,
+        tone: ["cancel", "suspend"].includes(action) ? "danger" : "default",
+      });
+      if (!result) return;
+      setBusy(event.id);
+      setMessage("");
+      const { error } = await supabase.rpc("manage_event_lifecycle", {
+        p_action: action,
+        p_event_id: event.id,
+        p_member_message: needsMemberMessage
+          ? String(result.memberMessage ?? "")
+          : null,
+        p_reason: String(result.reason ?? ""),
+      });
+      if (!error) markSaved();
+      setBusy("");
+      setMessage(
+        error
+          ? adminErrorMessage(error, "change this event")
+          : action === "cancel"
+            ? "Event cancelled. Paid places are in refund review. Guest messages are queued for delivery."
+            : action === "suspend"
+              ? "Event suspended. Registration stopped and records were preserved."
+              : action === "reopen"
+                ? "Event reopened. Guest messages are queued for delivery."
+                : action === "pause_registrations"
+                  ? "New registrations are paused."
+                  : "Registrations reopened using the previous setting.",
+      );
+      if (!error) router.refresh();
     });
-    if (!result) return;
-    setBusy(event.id);
-    setMessage("");
-    const { error } = await supabase.rpc("manage_event_lifecycle", {
-      p_action: action,
-      p_event_id: event.id,
-      p_member_message: needsMemberMessage
-        ? String(result.memberMessage ?? "")
-        : null,
-      p_reason: String(result.reason ?? ""),
-    });
-    setBusy("");
-    setMessage(
-      error
-        ? adminErrorMessage(error, "change this event")
-        : action === "cancel"
-          ? "Event cancelled. Paid places are in refund review and guests were informed."
-          : action === "suspend"
-            ? "Event suspended. Registration stopped and records were preserved."
-            : action === "reopen"
-              ? "Event reopened and guests were informed."
-              : action === "pause_registrations"
-                ? "New registrations are paused."
-                : "Registrations reopened using the previous setting.",
-    );
-    if (!error) router.refresh();
   }
 
   return (
@@ -271,11 +276,11 @@ export function EventCommandCentre({
                 <Link className="button button-outline" href={eventToolHref("/admin/events?view=arrival", event.id)}>Guest arrival</Link>
                 <Link className="button button-outline" href="/admin/events?view=stories">Stories & media</Link>
                 <Link className="button button-outline" href={eventToolHref("/admin/events?view=edit", event.id)}>Edit details</Link>
-                {event.status === "published" && lifecycle?.active_action === "registrations_paused" ? <button className="button button-outline" disabled={busy === event.id || !lifecycleReady} onClick={() => void manageLifecycle("resume_registrations")} type="button">Reopen registrations</button> : null}
-                {event.status === "published" && event.registration_mode !== "closed" ? <button className="button button-quiet" disabled={busy === event.id || !lifecycleReady} onClick={() => void manageLifecycle("pause_registrations")} type="button">Pause registrations</button> : null}
-                {canControlLifecycle && event.status === "published" ? <button className="button button-quiet" disabled={busy === event.id || !lifecycleReady} onClick={() => void manageLifecycle("suspend")} type="button">Suspend event</button> : null}
-                {canControlLifecycle && event.status === "suspended" ? <button className="button button-primary" disabled={busy === event.id || !lifecycleReady} onClick={() => void manageLifecycle("reopen")} type="button">Reopen event</button> : null}
-                {canControlLifecycle && ["published", "suspended", "draft"].includes(event.status) ? <button className="button button-quiet danger-action" disabled={busy === event.id || !lifecycleReady} onClick={() => void manageLifecycle("cancel")} type="button">Cancel event</button> : null}
+                {event.status === "published" && lifecycle?.active_action === "registrations_paused" ? <button className="button button-outline" disabled={Boolean(busy)|| !lifecycleReady} onClick={() => void manageLifecycle("resume_registrations")} type="button">Reopen registrations</button> : null}
+                {event.status === "published" && event.registration_mode !== "closed" ? <button className="button button-quiet" disabled={Boolean(busy)|| !lifecycleReady} onClick={() => void manageLifecycle("pause_registrations")} type="button">Pause registrations</button> : null}
+                {canControlLifecycle && event.status === "published" ? <button className="button button-quiet" disabled={Boolean(busy)|| !lifecycleReady} onClick={() => void manageLifecycle("suspend")} type="button">Suspend event</button> : null}
+                {canControlLifecycle && event.status === "suspended" ? <button className="button button-primary" disabled={Boolean(busy)|| !lifecycleReady} onClick={() => void manageLifecycle("reopen")} type="button">Reopen event</button> : null}
+                {canControlLifecycle && ["published", "suspended", "draft"].includes(event.status) ? <button className="button button-quiet danger-action" disabled={Boolean(busy)|| !lifecycleReady} onClick={() => void manageLifecycle("cancel")} type="button">Cancel event</button> : null}
                 <Link className="button button-quiet" href="/admin/operations?area=event-work#event-work">Programme and content</Link>
               </footer>
               {!lifecycleReady ? <p className="event-lifecycle-unavailable">Run the latest database migration before using pause, suspend or cancellation controls.</p> : null}

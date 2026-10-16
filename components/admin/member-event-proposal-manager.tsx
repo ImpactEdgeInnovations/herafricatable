@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { useAdminOperation } from "@/lib/use-admin-operation";
 import { adminErrorMessage } from "@/lib/admin-error";
 import { createClient } from "@/lib/supabase/client";
 import { ApplicationImageReview } from "@/components/admin/application-image-review";
@@ -72,10 +73,10 @@ export function MemberEventProposalManager({
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const { ask, dialog } = useActionDialog();
+  const { ask, dialog, clearDraft } = useActionDialog({ retainDrafts: true });
   const [filter, setFilter] = useState<"open" | "closed" | "all">("open");
-  const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
+  const { busy, setBusy, runAdminAction, markSaved } = useAdminOperation<string>("", "pending", setMessage, clearDraft);
   const visible = proposals.filter((proposal) =>
     filter === "all" ? true : filter === "open" ? openStatuses.has(proposal.status) : !openStatuses.has(proposal.status),
   );
@@ -85,53 +86,57 @@ export function MemberEventProposalManager({
     proposal: MemberEventProposalAdmin,
     action: "approve" | "decline" | "request_changes" | "start_review",
   ) {
-    let note = "";
-    if (action !== "start_review") {
-      const result = await ask({
-        confirmLabel: action === "approve" ? "Approve idea" : action === "request_changes" ? "Send guidance" : "Decline proposal",
-        description:
-          action === "approve"
-            ? "This creates a private free-event draft and gives the member a Host workspace. The event only becomes public after you review the finished details. The Host cannot access guest lists or payments."
-            : action === "request_changes"
-              ? "The member can update her private proposal and return it for review."
-              : "This closes the proposal without creating an event. The decision remains in the audit record.",
-        fields: [{
-          help: action === "approve" ? "Optional internal context for the audit record." : "The member will see this guidance under Events.",
-          label: action === "approve" ? "Approval note" : "Clear guidance for the member",
-          maxLength: 1200,
-          minLength: action === "approve" ? undefined : 10,
-          name: "note",
-          placeholder: action === "approve" ? "Optional note" : "Explain what should change or why this cannot proceed.",
-          required: action !== "approve",
-          type: "textarea",
-        }],
-        title: action === "approve" ? `Approve the idea for ${proposal.title}?` : action === "request_changes" ? `Ask ${proposal.proposer_name || "the member"} for an update?` : `Decline ${proposal.title}?`,
-        tone: action === "decline" ? "danger" : "default",
-      });
-      if (!result) return;
-      note = String(result.note ?? "");
-    }
+    const actionKey = "event-proposal:" + proposal.proposal_id + ":" + action;
+    return runAdminAction(actionKey, async () => {
+      let note = "";
+      if (action !== "start_review") {
+        const result = await ask({ draftKey: actionKey,
+          confirmLabel: action === "approve" ? "Approve idea" : action === "request_changes" ? "Send guidance" : "Decline proposal",
+          description:
+            action === "approve"
+              ? "This creates a private free-event draft and gives the member a Host workspace. The event only becomes public after you review the finished details. The Host cannot access guest lists or payments."
+              : action === "request_changes"
+                ? "The member can update her private proposal and return it for review."
+                : "This closes the proposal without creating an event. The decision remains in the audit record.",
+          fields: [{
+            help: action === "approve" ? "Optional internal context for the audit record." : "The member will see this guidance under Events.",
+            label: action === "approve" ? "Approval note" : "Clear guidance for the member",
+            maxLength: 1200,
+            minLength: action === "approve" ? undefined : 10,
+            name: "note",
+            placeholder: action === "approve" ? "Optional note" : "Explain what should change or why this cannot proceed.",
+            required: action !== "approve",
+            type: "textarea",
+          }],
+          title: action === "approve" ? `Approve the idea for ${proposal.title}?` : action === "request_changes" ? `Ask ${proposal.proposer_name || "the member"} for an update?` : `Decline ${proposal.title}?`,
+          tone: action === "decline" ? "danger" : "default",
+        });
+        if (!result) return;
+        note = String(result.note ?? "");
+      }
 
-    setBusy(proposal.proposal_id);
-    setMessage("");
-    const { error } = await supabase.rpc("review_member_event_proposal", {
-      p_action: action,
-      p_proposal_id: proposal.proposal_id,
-      p_review_note: note || null,
+      setBusy(proposal.proposal_id);
+      setMessage("");
+      const { error } = await supabase.rpc("review_member_event_proposal", {
+        p_action: action,
+        p_proposal_id: proposal.proposal_id,
+        p_review_note: note || null,
+      });
+      if (!error) markSaved();
+      setBusy("");
+      setMessage(
+        error
+          ? adminErrorMessage(error, "review this public event proposal")
+          : action === "approve"
+            ? "Idea approved. The event remains private while the Host prepares details for final review."
+            : action === "request_changes"
+              ? "Guidance sent to the member."
+              : action === "decline"
+                ? "Proposal declined."
+                : "Proposal marked as in review.",
+      );
+      if (!error) router.refresh();
     });
-    setBusy("");
-    setMessage(
-      error
-        ? adminErrorMessage(error, "review this public event proposal")
-        : action === "approve"
-          ? "Idea approved. The event remains private while the Host prepares details for final review."
-          : action === "request_changes"
-            ? "Guidance sent to the member."
-            : action === "decline"
-              ? "Proposal declined."
-              : "Proposal marked as in review.",
-    );
-    if (!error) router.refresh();
   }
 
   return (
@@ -171,8 +176,8 @@ export function MemberEventProposalManager({
                 {proposal.review_note ? <div className="wide review"><dt>Review note</dt><dd>{proposal.review_note}</dd></div> : null}
               </dl>
               <footer>
-                {proposal.status === "submitted" ? <button className="button button-outline" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "start_review")} type="button">Begin review</button> : null}
-                {openStatuses.has(proposal.status) ? <><button className="button button-primary" disabled={busy === proposal.proposal_id || !hostHandoffReady} onClick={() => void review(proposal, "approve")} type="button">Approve idea</button><button className="button button-outline" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "request_changes")} type="button">Request changes</button><button className="button button-outline danger-action" disabled={busy === proposal.proposal_id} onClick={() => void review(proposal, "decline")} type="button">Decline</button></> : null}
+                {proposal.status === "submitted" ? <button className="button button-outline" disabled={Boolean(busy)} onClick={() => void review(proposal, "start_review")} type="button">Begin review</button> : null}
+                {openStatuses.has(proposal.status) ? <><button className="button button-primary" disabled={Boolean(busy)|| !hostHandoffReady} onClick={() => void review(proposal, "approve")} type="button">Approve idea</button><button className="button button-outline" disabled={Boolean(busy)} onClick={() => void review(proposal, "request_changes")} type="button">Request changes</button><button className="button button-outline danger-action" disabled={Boolean(busy)} onClick={() => void review(proposal, "decline")} type="button">Decline</button></> : null}
                 {proposal.canonical_event_slug ? <Link className="button button-outline" href="/admin/events?view=host">Review Host draft</Link> : null}
               </footer>
             </article>

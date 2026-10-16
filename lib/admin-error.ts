@@ -43,7 +43,7 @@ export function adminErrorMessage(error: unknown, action: string) {
       : "";
 
   if (/failed to fetch|load failed|network/i.test(message)) {
-    return "The platform could not connect. Check your internet connection and try again.";
+    return "The connection failed. If you were saving a change, refresh to check whether it was recorded before trying again.";
   }
 
   if (/jwt|session|authentication|not authenticated/i.test(message)) {

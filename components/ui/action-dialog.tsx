@@ -24,6 +24,7 @@ type DialogField = {
 };
 
 type DialogOptions = {
+  draftKey?: string;
   confirmLabel: string;
   description: string;
   fields?: DialogField[];
@@ -32,6 +33,7 @@ type DialogOptions = {
 };
 
 type PendingDialog = DialogOptions & {
+  instance: number;
   resolve: (result: DialogResult | null) => void;
 };
 
@@ -113,14 +115,30 @@ function ActionDialog({ pending, settle }: { pending: PendingDialog; settle: (re
   );
 }
 
-export function useActionDialog(): { ask: (options: DialogOptions) => Promise<DialogResult | null>; dialog: ReactNode } {
+export function useActionDialog({ retainDrafts = false }: { retainDrafts?: boolean } = {}): { ask: (options: DialogOptions) => Promise<DialogResult | null>; clearDraft: (key: string) => void; dialog: ReactNode } {
   const [pending, setPending] = useState<PendingDialog | null>(null);
-  const ask = useCallback((options: DialogOptions) => new Promise<DialogResult | null>((resolve) => setPending({ ...options, resolve })), []);
+  const currentDialog = useRef<PendingDialog | null>(null);
+  const instance = useRef(0);
+  // Deliberately component-memory only: private decision notes never go to disk.
+  const drafts = useRef(new Map<string, DialogResult>());
+  const clearDraft = useCallback((key: string) => { drafts.current.delete(key); }, []);
+  const ask = useCallback((options: DialogOptions) => new Promise<DialogResult | null>((resolve) => {
+    const saved = retainDrafts && options.draftKey ? drafts.current.get(options.draftKey) : undefined;
+    currentDialog.current?.resolve(null);
+    const next = { ...options, instance: ++instance.current, fields: options.fields?.map((field) => ({ ...field, initialValue: saved?.[field.name] ?? field.initialValue })), resolve };
+    currentDialog.current = next;
+    setPending(next);
+  }), [retainDrafts]);
   const settle = useCallback((result: DialogResult | null) => {
-    setPending((current) => {
-      current?.resolve(result);
-      return null;
-    });
-  }, []);
-  return { ask, dialog: pending ? <ActionDialog pending={pending} settle={settle} /> : null };
+    const current = currentDialog.current;
+    currentDialog.current = null;
+    if (retainDrafts && current?.draftKey && result) {
+      drafts.current.set(current.draftKey, result);
+      while (drafts.current.size > 40) drafts.current.delete(drafts.current.keys().next().value!);
+    }
+    current?.resolve(result);
+    setPending(null);
+  }, [retainDrafts]);
+  useEffect(() => () => { currentDialog.current?.resolve(null); currentDialog.current = null; drafts.current.clear(); }, []);
+  return { ask, clearDraft, dialog: pending ? <ActionDialog key={pending.instance} pending={pending} settle={settle} /> : null };
 }

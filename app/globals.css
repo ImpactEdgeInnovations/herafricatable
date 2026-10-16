@@ -15704,6 +15704,17 @@ body {
   font: inherit;
   font-size: 0.72rem;
 }
+.support-reply-recipient,
+.support-clear-draft {
+  grid-column: 1 / -1;
+}
+.support-reply-recipient {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.support-clear-draft {
+  justify-self: start;
+}
 .support-closed {
   margin: 0;
   padding: 20px;

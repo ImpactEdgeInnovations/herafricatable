@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { AdminEvent } from "@/components/admin/event-manager";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { useAdminOperation } from "@/lib/use-admin-operation";
 import { adminErrorMessage } from "@/lib/admin-error";
 
 export type AdminTicket = {
@@ -113,11 +114,11 @@ export function RegistrationManager({
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const { ask, dialog } = useActionDialog();
+  const { ask, dialog, clearDraft } = useActionDialog({ retainDrafts: true });
   const [eventId, setEventId] = useState(selectedEventId ?? events[0]?.id ?? "");
   const [form, setForm] = useState(blank);
-  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const { busy, setBusy, runAdminAction, markSaved } = useAdminOperation<boolean>(false, true, setMessage, clearDraft);
   const tickets = initialTickets.filter((x) => x.event_id === eventId);
   const registrations = initialRegistrations.filter(
     (x) => x.event_id === eventId,
@@ -132,149 +133,170 @@ export function RegistrationManager({
   }
   async function save(e: FormEvent) {
     e.preventDefault();
-    setBusy(true);
-    setMessage("");
-    const { error } = await supabase.rpc("save_ticket_type", {
-      p_currency: form.currency,
-      p_description: form.description,
-      p_event_id: eventId,
-      p_inventory: form.inventory ? Number(form.inventory) : null,
-      p_name: form.name,
-      p_price_minor: Math.round(Number(form.price) * 100),
-      p_sales_end: form.salesEnd ? new Date(form.salesEnd).toISOString() : null,
-      p_sales_start: form.salesStart
-        ? new Date(form.salesStart).toISOString()
-        : null,
-      p_sort_order: Number(form.sortOrder) || 0,
-      p_status: form.status,
-      p_ticket_id: form.id,
+    const actionKey = "ticket:" + eventId + ":" + form.id;
+    return runAdminAction(actionKey, async () => {
+      setBusy(true);
+      setMessage("");
+      const { error } = await supabase.rpc("save_ticket_type", {
+        p_currency: form.currency,
+        p_description: form.description,
+        p_event_id: eventId,
+        p_inventory: form.inventory ? Number(form.inventory) : null,
+        p_name: form.name,
+        p_price_minor: Math.round(Number(form.price) * 100),
+        p_sales_end: form.salesEnd ? new Date(form.salesEnd).toISOString() : null,
+        p_sales_start: form.salesStart
+          ? new Date(form.salesStart).toISOString()
+          : null,
+        p_sort_order: Number(form.sortOrder) || 0,
+        p_status: form.status,
+        p_ticket_id: form.id,
+      });
+      if (!error) markSaved();
+      if (fail(error)) return;
+      setBusy(false);
+      setMessage("Ticket saved and added to the records.");
+      router.refresh();
     });
-    if (fail(error)) return;
-    setBusy(false);
-    setMessage("Ticket saved and added to the records.");
-    router.refresh();
   }
   async function review(orderId: string, action: "approve" | "reject") {
-    const registration = initialRegistrations.find((item) => item.order_id === orderId);
-    const freePlace = registration?.total_minor === 0;
-    const result = await ask({
-      title:
-        action === "approve"
-          ? "Approve this registration?"
-          : "Decline this registration?",
-      description:
-        action === "approve"
-          ? freePlace
-            ? "Confirm this free place. The guest will receive an event pass; membership remains a separate decision."
-            : "Confirm that you checked the payment details. The guest will receive an event pass; membership remains a separate decision."
-          : "The guest will not receive an event pass. Your reason will be sent privately to the guest as well as saved in the decision record.",
-      confirmLabel:
-        action === "approve" ? "Approve registration" : "Decline registration",
-      tone: action === "reject" ? "danger" : "default",
-      fields: [
-        {
-          name: "note",
-          label:
-            action === "approve"
-              ? "Review note (optional)"
-              : "Reason for declining",
-          type: "textarea",
-          required: action === "reject",
-          minLength: action === "reject" ? 5 : undefined,
-          maxLength: 500,
-          help:
-            action === "approve"
-              ? freePlace
-                ? "Add any useful event context. No payment reference is needed for a free place."
-                : "Include the payment reference or verification detail when useful."
-              : "Use 5–500 characters. The guest will receive this explanation; do not include payment details or information about other people.",
-        },
-      ],
+    const actionKey = "registration:" + orderId + ":" + action;
+    return runAdminAction(actionKey, async () => {
+      const registration = initialRegistrations.find((item) => item.order_id === orderId);
+      const freePlace = registration?.total_minor === 0;
+      const result = await ask({ draftKey: actionKey,
+        title:
+          action === "approve"
+            ? "Approve this registration?"
+            : "Decline this registration?",
+        description:
+          action === "approve"
+            ? freePlace
+              ? "Confirm this free place. The guest will receive an event pass; membership remains a separate decision."
+              : "Confirm that you checked the payment details. The guest will receive an event pass; membership remains a separate decision."
+            : "The guest will not receive an event pass. Your reason will be sent privately to the guest as well as saved in the decision record.",
+        confirmLabel:
+          action === "approve" ? "Approve registration" : "Decline registration",
+        tone: action === "reject" ? "danger" : "default",
+        fields: [
+          {
+            name: "note",
+            label:
+              action === "approve"
+                ? "Review note (optional)"
+                : "Reason for declining",
+            type: "textarea",
+            required: action === "reject",
+            minLength: action === "reject" ? 5 : undefined,
+            maxLength: 500,
+            help:
+              action === "approve"
+                ? freePlace
+                  ? "Add any useful event context. No payment reference is needed for a free place."
+                  : "Include the payment reference or verification detail when useful."
+                : "Use 5–500 characters. The guest will receive this explanation; do not include payment details or information about other people.",
+          },
+        ],
+      });
+      if (!result) return;
+      const note = String(result.note ?? "");
+      setBusy(true);
+      const { error } = await supabase.rpc("review_manual_registration", {
+        p_action: action,
+        p_order_id: orderId,
+        p_reviewer_note: note,
+      });
+      if (!error) markSaved();
+      if (fail(error)) return;
+      setBusy(false);
+      setMessage(action === "approve" ? "Event place confirmed and saved." : "Event place declined and saved.");
+      router.refresh();
     });
-    if (!result) return;
-    const note = String(result.note ?? "");
-    setBusy(true);
-    const { error } = await supabase.rpc("review_manual_registration", {
-      p_action: action,
-      p_order_id: orderId,
-      p_reviewer_note: note,
-    });
-    if (fail(error)) return;
-    setBusy(false);
-    setMessage(action === "approve" ? "Event place confirmed and saved." : "Event place declined and saved.");
-    router.refresh();
   }
   async function emailWaitlistOpening(requestId: string) {
-    const person = initialWaitlist.find((item) => item.request_id === requestId);
-    if (!person) return;
-    const confirmed = await ask({
-      title: `Email ${person.display_name || person.email}?`,
-      description: "Tell this person that bookings have reopened. This does not hold a seat or approve a place; availability may change before she responds.",
-      confirmLabel: "Send opening notice",
-      tone: "default",
+    const actionKey = "waitlist:" + requestId;
+    return runAdminAction(actionKey, async () => {
+      const person = initialWaitlist.find((item) => item.request_id === requestId);
+      if (!person) return;
+      const confirmed = await ask({ draftKey: actionKey,
+        title: `Email ${person.display_name || person.email}?`,
+        description: "Tell this person that bookings have reopened. This does not hold a seat or approve a place; availability may change before she responds.",
+        confirmLabel: "Send opening notice",
+        tone: "default",
+      });
+      if (!confirmed) return;
+      setBusy(true);
+      setMessage("");
+      const { error } = await supabase.rpc("notify_waitlisted_event_guest", {
+        p_request_id: requestId,
+      });
+      if (!error) markSaved();
+      if (fail(error)) return;
+      setBusy(false);
+      setMessage("Opening notice queued for email. The place is not reserved.");
+      router.refresh();
     });
-    if (!confirmed) return;
-    setBusy(true);
-    setMessage("");
-    const { error } = await supabase.rpc("notify_waitlisted_event_guest", {
-      p_request_id: requestId,
-    });
-    if (fail(error)) return;
-    setBusy(false);
-    setMessage("Opening notice queued for email. The place is not reserved.");
-    router.refresh();
   }
   async function reviewRefund(refundId: string, action: "approve" | "reject") {
-    const result = await ask({
-      title:
+    const actionKey = "refund:" + refundId + ":" + action;
+    return runAdminAction(actionKey, async () => {
+      const result = await ask({ draftKey: actionKey,
+        title:
+          action === "approve"
+            ? "Approve this refund request?"
+            : "Decline this refund request?",
+        description:
+          action === "approve"
+            ? "This records approval only. For a manual payment, return the money separately, then record its transfer reference here. For Paystack, arrange the refund in the provider dashboard; this button does not send it."
+            : "The refund will not proceed. Write a clear reason for the member and your records.",
+        confirmLabel: action === "approve" ? "Approve refund" : "Decline refund",
+        tone: action === "reject" ? "danger" : "default",
+        fields: [
+          {
+            name: "note",
+            label:
+              action === "approve"
+                ? "Approval note (optional)"
+                : "Reason for declining",
+            type: "textarea",
+            required: action === "reject",
+            minLength: action === "reject" ? 5 : undefined,
+            maxLength: 500,
+            help: "Do not include full card or bank account details.",
+          },
+        ],
+      });
+      if (!result) return;
+      const note = String(result.note ?? "");
+      setBusy(true);
+      const { error } = await supabase.rpc("review_refund_request", {
+        p_action: action,
+        p_refund_id: refundId,
+        p_reviewer_note: note,
+      });
+      if (!error) markSaved();
+      if (fail(error)) return;
+      setBusy(false);
+      setMessage(
         action === "approve"
-          ? "Approve this refund request?"
-          : "Decline this refund request?",
-      description:
-        action === "approve"
-          ? "This records approval only. For a manual payment, return the money separately, then record its transfer reference here. For Paystack, arrange the refund in the provider dashboard; this button does not send it."
-          : "The refund will not proceed. Write a clear reason for the member and your records.",
-      confirmLabel: action === "approve" ? "Approve refund" : "Decline refund",
-      tone: action === "reject" ? "danger" : "default",
-      fields: [
-        {
-          name: "note",
-          label:
-            action === "approve"
-              ? "Approval note (optional)"
-              : "Reason for declining",
-          type: "textarea",
-          required: action === "reject",
-          minLength: action === "reject" ? 5 : undefined,
-          maxLength: 500,
-          help: "Do not include full card or bank account details.",
-        },
-      ],
+          ? "Refund approved. Return the money separately, then record or confirm completion."
+          : "Refund request declined and saved in the records.",
+      );
+      router.refresh();
     });
-    if (!result) return;
-    const note = String(result.note ?? "");
-    setBusy(true);
-    const { error } = await supabase.rpc("review_refund_request", {
-      p_action: action,
-      p_refund_id: refundId,
-      p_reviewer_note: note,
-    });
-    if (fail(error)) return;
-    setBusy(false);
-    setMessage(
-      action === "approve"
-        ? "Refund approved. Return the money separately, then record or confirm completion."
-        : "Refund request declined and saved in the records.",
-    );
-    router.refresh();
   }
   async function completeManualRefund(refund: AdminRefund) {
-    const result=await ask({title:"Record a completed refund?",description:"Use this only after the money has been returned outside Her Africa Table. This records completion; it does not transfer money.",confirmLabel:"Record refund completion",fields:[{name:"reference",label:"Confirmed transfer reference",type:"text",required:true,minLength:3,maxLength:160,help:"Use the transfer receipt/reference. Do not include bank account or card details."}]});
-    if(!result)return;
-    setBusy(true);setMessage("");
-    try{const {error}=await supabase.rpc("record_manual_refund_completion",{p_refund_id:refund.refund_id,p_reference:String(result.reference??"")});if(error)throw error;setMessage("Completed refund recorded.");router.refresh();}
-    catch(error){setMessage(adminErrorMessage(error,"record this refund completion"));}
-    finally{setBusy(false);}
+    const actionKey = "refund-complete:" + refund.refund_id;
+    return runAdminAction(actionKey, async () => {
+      const result=await ask({ draftKey: actionKey,title:"Record a completed refund?",description:"Use this only after the money has been returned outside Her Africa Table. This records completion; it does not transfer money.",confirmLabel:"Record refund completion",fields:[{name:"reference",label:"Confirmed transfer reference",type:"text",required:true,minLength:3,maxLength:160,help:"Use the transfer receipt/reference. Do not include bank account or card details."}]});
+      if(!result)return;
+      setBusy(true);setMessage("");
+      const { error } = await supabase.rpc("record_manual_refund_completion", { p_refund_id: refund.refund_id, p_reference: String(result.reference ?? "") });
+      if (error) throw error;
+      markSaved();
+      setMessage("Completed refund recorded.");
+      router.refresh();
+    });
   }
   if (!migrationReady)
     return (
@@ -313,7 +335,7 @@ export function RegistrationManager({
           </div>
           <label className="event-content-select">
             Working event
-            <select
+            <select disabled={Boolean(busy)}
               value={eventId}
               onChange={(e) => {
                 setEventId(e.target.value);
@@ -381,7 +403,7 @@ export function RegistrationManager({
             <div className="form-grid">
               <label>
                 Ticket name
-                <input
+                <input disabled={Boolean(busy)}
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
@@ -389,7 +411,7 @@ export function RegistrationManager({
               </label>
               <label>
                 Price
-                <input
+                <input disabled={Boolean(busy)}
                   type="number"
                   min="0"
                   step="0.01"
@@ -400,7 +422,7 @@ export function RegistrationManager({
               </label>
               <label>
                 Currency
-                <input
+                <input disabled={Boolean(busy)}
                   maxLength={3}
                   value={form.currency}
                   onChange={(e) =>
@@ -411,7 +433,7 @@ export function RegistrationManager({
               </label>
               <label>
                 Inventory
-                <input
+                <input disabled={Boolean(busy)}
                   type="number"
                   min="1"
                   value={form.inventory}
@@ -423,7 +445,7 @@ export function RegistrationManager({
               </label>
               <label>
                 Sales open
-                <input
+                <input disabled={Boolean(busy)}
                   type="datetime-local"
                   value={form.salesStart}
                   onChange={(e) =>
@@ -433,7 +455,7 @@ export function RegistrationManager({
               </label>
               <label>
                 Sales close
-                <input
+                <input disabled={Boolean(busy)}
                   type="datetime-local"
                   value={form.salesEnd}
                   onChange={(e) =>
@@ -443,7 +465,7 @@ export function RegistrationManager({
               </label>
               <label>
                 Status
-                <select
+                <select disabled={Boolean(busy)}
                   value={form.status}
                   onChange={(e) =>
                     setForm({
@@ -461,7 +483,7 @@ export function RegistrationManager({
               </label>
               <label className="form-wide">
                 Description
-                <textarea
+                <textarea disabled={Boolean(busy)}
                   rows={3}
                   value={form.description}
                   onChange={(e) =>

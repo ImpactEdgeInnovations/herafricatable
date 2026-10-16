@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { useAdminOperation } from "@/lib/use-admin-operation";
 import { adminErrorMessage } from "@/lib/admin-error";
 
 export type AdminPrivacyRequest = {
@@ -36,110 +37,111 @@ export function PrivacyOperations({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
-  const { ask, dialog } = useActionDialog();
-  const [busy, setBusy] = useState("");
+  const { ask, dialog, clearDraft } = useActionDialog({ retainDrafts: true });
   const [notice, setNotice] = useState("");
-  const saving=useRef(false);
+  const { busy, setBusy, runAdminAction, markSaved } = useAdminOperation<string>("", "pending", setNotice, clearDraft);
 
   async function manage(
     id: string,
     action: "start_review" | "approve" | "reject",
   ) {
-    const result = await ask({
-      title:
-        action === "start_review"
-          ? "Start reviewing this request?"
-          : action === "approve"
-            ? "Approve this privacy request?"
-            : "Reject this privacy request?",
-      description:
-        action === "start_review"
-          ? "This records that an authorized administrator has begun handling the request."
-          : action === "approve"
-            ? "Approval records the decision. Account deletion still observes its cooling-off period and requires a separate final confirmation."
-            : "Record a clear reason explaining why this request cannot be approved.",
-      confirmLabel:
-        action === "start_review"
-          ? "Start review"
-          : action === "approve"
-            ? "Approve request"
-            : "Reject request",
-      tone: action === "reject" ? "danger" : "default",
-      fields: [
-        {
-          name: "note",
-          label:
-            action === "reject"
-              ? "Reason for rejection"
-              : "Review note (optional)",
-          type: "textarea",
-          required: action === "reject",
-          minLength: action === "reject" ? 5 : undefined,
-          maxLength: 1000,
-          help: "Do not copy identity documents or unrelated personal information into this note.",
-        },
-      ],
+    const actionKey = "privacy:" + id + ":" + action;
+    return runAdminAction(actionKey, async () => {
+      const result = await ask({ draftKey: actionKey,
+        title:
+          action === "start_review"
+            ? "Start reviewing this request?"
+            : action === "approve"
+              ? "Approve this privacy request?"
+              : "Reject this privacy request?",
+        description:
+          action === "start_review"
+            ? "This records that an authorized administrator has begun handling the request."
+            : action === "approve"
+              ? "Approval records the decision. Account deletion still observes its cooling-off period and requires a separate final confirmation."
+              : "Record a clear reason explaining why this request cannot be approved.",
+        confirmLabel:
+          action === "start_review"
+            ? "Start review"
+            : action === "approve"
+              ? "Approve request"
+              : "Reject request",
+        tone: action === "reject" ? "danger" : "default",
+        fields: [
+          {
+            name: "note",
+            label:
+              action === "reject"
+                ? "Reason for rejection"
+                : "Review note (optional)",
+            type: "textarea",
+            required: action === "reject",
+            minLength: action === "reject" ? 5 : undefined,
+            maxLength: 1000,
+            help: "Do not copy identity documents or unrelated personal information into this note.",
+          },
+        ],
+      });
+      if (!result) return;
+      setBusy(id);
+      const { error } = await supabase.rpc("manage_privacy_request", {
+        p_action: action,
+        p_note: String(result.note ?? ""),
+        p_request_id: id,
+      });
+      if (!error) markSaved();
+      setBusy("");
+      setNotice(
+        error
+          ? adminErrorMessage(
+              error,
+              `${action.replace("_", " ")} this privacy request`,
+            )
+          : `Request ${action.replace("_", " ")} completed.`,
+      );
+      if (!error) router.refresh();
     });
-    if (!result) return;
-    setBusy(id);
-    const { error } = await supabase.rpc("manage_privacy_request", {
-      p_action: action,
-      p_note: String(result.note ?? ""),
-      p_request_id: id,
-    });
-    setBusy("");
-    setNotice(
-      error
-        ? adminErrorMessage(
-            error,
-            `${action.replace("_", " ")} this privacy request`,
-          )
-        : `Request ${action.replace("_", " ")} completed.`,
-    );
-    if (!error) router.refresh();
   }
 
   async function execute(item: AdminPrivacyRequest) {
-    if(saving.current)return;
-    const resuming=item.status==='processing';
-    const result = await ask({
-      title: resuming ? "Retry account cleanup?" : "Permanently anonymize this account?",
-      description:
-        "This revokes sign-in access and removes personal profile data. Only records required for financial, security and audit obligations are retained. This cannot be undone.",
-      confirmLabel: resuming ? "Retry cleanup" : "Permanently anonymize",
-      tone: "danger",
-      fields: resuming ? [] : [
-        {
-          name: "email",
-          label: "Type the member email to confirm",
-          type: "text",
-          required: true,
-          matchValue: item.email,
-          maxLength: 320,
-          placeholder: item.email,
-          help: `Enter ${item.email} exactly.`,
-        },
-      ],
+    const actionKey = "privacy-execute:" + item.request_id;
+    return runAdminAction(actionKey, async () => {
+      const resuming=item.status==='processing';
+      const result = await ask({ draftKey: actionKey,
+        title: resuming ? "Retry account cleanup?" : "Permanently anonymize this account?",
+        description:
+          "This revokes sign-in access and removes personal profile data. Only records required for financial, security and audit obligations are retained. This cannot be undone.",
+        confirmLabel: resuming ? "Retry cleanup" : "Permanently anonymize",
+        tone: "danger",
+        fields: resuming ? [] : [
+          {
+            name: "email",
+            label: "Type the member email to confirm",
+            type: "text",
+            required: true,
+            matchValue: item.email,
+            maxLength: 320,
+            placeholder: item.email,
+            help: `Enter ${item.email} exactly.`,
+          },
+        ],
+      });
+      if (!result) return;
+      setBusy(item.request_id);
+      const response = await fetch("/api/admin/privacy/delete", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ requestId: item.request_id }),
+      });
+      const payload = (await response.json()) as { error?: string };
+      if (response.ok) markSaved();
+      setNotice(
+        response.ok
+          ? "Account cleanup completed. New sign-in is blocked."
+          : adminErrorMessage(payload.error, "execute this account deletion"),
+      );
+      router.refresh();
     });
-    if (!result) return;
-    if(saving.current)return;
-    saving.current=true;
-    setBusy(item.request_id);
-    try {
-    const response = await fetch("/api/admin/privacy/delete", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ requestId: item.request_id }),
-    });
-    const payload = (await response.json()) as { error?: string };
-    setNotice(
-      response.ok
-        ? "Account cleanup completed. New sign-in is blocked."
-        : adminErrorMessage(payload.error, "execute this account deletion"),
-    );
-    router.refresh();
-    } catch {setNotice("The connection failed. Refresh to check the saved cleanup steps before retrying.");}
-    finally {saving.current=false;setBusy("");}
   }
 
   return (
@@ -190,7 +192,7 @@ export function PrivacyOperations({
                 <div className="member-actions">
                   {item.status === "submitted" ? (
                     <button
-                      disabled={busy === item.request_id}
+                      disabled={Boolean(busy)}
                       onClick={() =>
                         void manage(item.request_id, "start_review")
                       }
@@ -201,13 +203,13 @@ export function PrivacyOperations({
                   {["submitted", "in_review"].includes(item.status) ? (
                     <>
                       <button
-                        disabled={busy === item.request_id}
+                        disabled={Boolean(busy)}
                         onClick={() => void manage(item.request_id, "approve")}
                       >
                         Approve
                       </button>
                       <button
-                        disabled={busy === item.request_id}
+                        disabled={Boolean(busy)}
                         onClick={() => void manage(item.request_id, "reject")}
                       >
                         Reject

@@ -1833,7 +1833,7 @@ for (const module of adminRecoveryModules) {
   const path = `components/admin/${module}.tsx`;
   const content = read(path);
   assert(
-    content.includes("adminErrorMessage"),
+    content.includes("adminErrorMessage") || (content.includes("useAdminOperation") && read("lib/use-admin-operation.ts").includes("adminErrorMessage")),
     `${path} must use Admin-safe error recovery`,
   );
   assert(

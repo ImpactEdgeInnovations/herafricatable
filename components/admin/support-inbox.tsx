@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { SupportMessage } from "@/components/member/support-center";
-import { adminErrorMessage } from "@/lib/admin-error";
+import { useAdminOperation } from "@/lib/use-admin-operation";
+
+type SupportDraft = { reply: string; note: string; status: string; priority: string; assignee: string };
 
 export type AdminSupportTicket = {
   ticket_id: string;
@@ -38,30 +40,40 @@ export function SupportInbox({
   tickets,
   messages,
   selectedTicketId,
+  messagesReady,
 }: {
   adminEmail: string;
   tickets: AdminSupportTicket[];
   messages: SupportMessage[];
   selectedTicketId: string | null;
+  messagesReady: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const selected =
     tickets.find((item) => item.ticket_id === selectedTicketId) ?? null;
-  const [reply, setReply] = useState("");
-  const [status, setStatus] = useState(selected?.status ?? "open");
-  const [priority, setPriority] = useState(selected?.priority ?? "normal");
-  const [assignee, setAssignee] = useState(
-    selected?.assigned_email ?? adminEmail,
-  );
-  const [note, setNote] = useState("");
-  const [notice, setNotice] = useState("");
-  const [busy, setBusy] = useState(false);
+  // Private drafts belong to a ticket, never to whichever ticket happens to open next.
+  // Component memory only; closing/reloading this page clears them.
+  const [drafts, setDrafts] = useState<Record<string, Partial<SupportDraft>>>({});
+  const [notices, setNotices] = useState<Record<string, string>>({});
+  const contextId = selectedTicketId ?? "";
+  const baseline: SupportDraft = { reply: "", note: "", status: selected?.status ?? "open", priority: selected?.priority ?? "normal", assignee: selected?.assigned_email ?? adminEmail };
+  const { reply, note, status, priority, assignee } = { ...baseline, ...drafts[contextId] };
+  const notice = notices[contextId] ?? "";
+  const setNotice: Dispatch<SetStateAction<string>> = (next) => setNotices((current) => ({ ...current, [contextId]: typeof next === "function" ? next(current[contextId] ?? "") : next }));
+  const { busy, runAdminAction, markSaved } = useAdminOperation<boolean>(false, true, setNotice);
+  function updateDraft(patch: Partial<SupportDraft>) {
+    setDrafts((current) => ({ ...current, [contextId]: { ...current[contextId], ...patch } }));
+  }
   useEffect(() => {
-    setStatus(selected?.status ?? "open");
-    setPriority(selected?.priority ?? "normal");
-    setAssignee(selected?.assigned_email ?? adminEmail);
-  }, [adminEmail, selected]);
+    function warn(event: BeforeUnloadEvent) {
+      if (Object.values(drafts).some((draft) => draft.reply?.trim() || draft.note?.trim())) {
+        event.preventDefault(); event.returnValue = "";
+      }
+    }
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [drafts]);
   useEffect(() => {
     if (!selectedTicketId) return;
     const channel = supabase
@@ -83,44 +95,36 @@ export function SupportInbox({
   }, [router, selectedTicketId, supabase]);
   async function send(event: FormEvent) {
     event.preventDefault();
-    if (!selectedTicketId) return;
-    setBusy(true);
-    const { error } = await supabase.rpc("reply_support_ticket", {
-      p_body: reply,
-      p_ticket_id: selectedTicketId,
-    });
-    setBusy(false);
-    setNotice(
-      error
-        ? adminErrorMessage(error, "send this support reply")
-        : "Reply sent.",
-    );
-    if (!error) {
-      setReply("");
+    if (!selected || !messagesReady || !reply.trim()) return;
+    const ticketId = selected.ticket_id;
+    const body = reply;
+    return runAdminAction(`support-reply:${ticketId}`, async () => {
+      const { error } = await supabase.rpc("reply_support_ticket", { p_body: body, p_ticket_id: ticketId });
+      if (error) throw error;
+      markSaved();
+      setDrafts((current) => ({ ...current, [ticketId]: { ...current[ticketId], reply: current[ticketId]?.reply === body ? "" : current[ticketId]?.reply ?? "" } }));
+      setNotice(`Reply saved for ${selected.email}. Email delivery is tracked in Message delivery.`);
       router.refresh();
-    }
+    });
   }
   async function manage(event: FormEvent) {
     event.preventDefault();
-    if (!selectedTicketId) return;
-    setBusy(true);
-    const { error } = await supabase.rpc("manage_support_ticket", {
-      p_assignee_email: assignee,
-      p_note: note,
-      p_priority: priority,
-      p_status: status,
-      p_ticket_id: selectedTicketId,
-    });
-    setBusy(false);
-    setNotice(
-      error
-        ? adminErrorMessage(error, "update this support request")
-        : "Request updated.",
-    );
-    if (!error) {
-      setNote("");
+    if (!selected || !messagesReady) return;
+    const ticketId = selected.ticket_id;
+    return runAdminAction(`support-manage:${ticketId}`, async () => {
+      const { error } = await supabase.rpc("manage_support_ticket", { p_assignee_email: assignee, p_note: note, p_priority: priority, p_status: status, p_ticket_id: ticketId });
+      if (error) throw error;
+      markSaved();
+      setDrafts((current) => {
+        const next = { ...current[ticketId] };
+        for (const [field, saved] of Object.entries({ note, status, priority, assignee })) {
+          if (next[field as keyof SupportDraft] === saved) delete next[field as keyof SupportDraft];
+        }
+        return { ...current, [ticketId]: next };
+      });
+      setNotice("Request updated and saved.");
       router.refresh();
-    }
+    });
   }
   return (
     <div className="support-shell admin-support-shell">
@@ -145,6 +149,8 @@ export function SupportInbox({
               }
               href={`/admin/support?ticket=${ticket.ticket_id}`}
               key={ticket.ticket_id}
+              onClick={(event) => { if (busy) event.preventDefault(); }}
+              aria-disabled={busy}
             >
               <span>
                 <strong>{ticket.subject}</strong>
@@ -175,6 +181,7 @@ export function SupportInbox({
               </span>
             </header>
             <div className="support-thread">
+              {!messagesReady ? <div className="admin-empty network-error" role="alert"><strong>Replies could not be loaded</strong><p>This is not an empty conversation. Reload the replies before responding; your draft stays here while you retry.</p><button className="button button-outline" type="button" onClick={() => router.refresh()}>Reload replies</button></div> : null}
               <article className="support-opening">
                 <div>
                   <strong>{selected.display_name || selected.email}</strong>
@@ -182,7 +189,8 @@ export function SupportInbox({
                   <time>{date(selected.created_at)}</time>
                 </div>
               </article>
-              {messages.map((message) => (
+              {messagesReady && !messages.length ? <p className="form-help">No replies yet.</p> : null}
+              {messagesReady && messages.map((message) => (
                 <article
                   className={message.is_staff ? "staff" : "own"}
                   key={message.id}
@@ -200,6 +208,7 @@ export function SupportInbox({
               ))}
             </div>
             <form className="support-composer" onSubmit={send}>
+              <p className="form-help support-reply-recipient">Reply to <strong>{selected.display_name || selected.email}</strong> · {selected.email}. Only this member and the support team can read this reply.</p>
               <label>
                 <span className="sr-only">Reply</span>
                 <textarea
@@ -207,16 +216,18 @@ export function SupportInbox({
                   maxLength={4000}
                   required
                   value={reply}
-                  onChange={(event) => setReply(event.target.value)}
+                  onChange={(event) => updateDraft({ reply: event.target.value })}
+                  disabled={busy || !messagesReady}
                   placeholder="Reply as Her Africa Table support…"
                 />
               </label>
               <button
                 className="button button-primary"
-                disabled={busy || !reply.trim()}
+                disabled={busy || !messagesReady || !reply.trim()}
               >
-                Send reply
+                {busy ? "Saving…" : "Send reply"}
               </button>
+              {reply ? <button className="button button-outline support-clear-draft" disabled={busy} onClick={() => updateDraft({ reply: "" })} type="button">Clear draft</button> : null}
             </form>
             <form
               className="support-admin-controls"
@@ -231,7 +242,8 @@ export function SupportInbox({
                 Status
                 <select
                   value={status}
-                  onChange={(event) => setStatus(event.target.value)}
+                  onChange={(event) => updateDraft({ status: event.target.value })}
+                  disabled={busy || !messagesReady}
                 >
                   {[
                     "open",
@@ -240,7 +252,7 @@ export function SupportInbox({
                     "resolved",
                     "closed",
                   ].map((item) => (
-                    <option key={item}>{item}</option>
+                    <option key={item} value={item}>{item === "waiting_member" ? "Waiting for member" : label(item)}</option>
                   ))}
                 </select>
               </label>
@@ -248,7 +260,8 @@ export function SupportInbox({
                 Priority
                 <select
                   value={priority}
-                  onChange={(event) => setPriority(event.target.value)}
+                  onChange={(event) => updateDraft({ priority: event.target.value })}
+                  disabled={busy || !messagesReady}
                 >
                   {["low", "normal", "high", "urgent"].map((item) => (
                     <option key={item}>{item}</option>
@@ -260,7 +273,8 @@ export function SupportInbox({
                 <input
                   type="email"
                   value={assignee}
-                  onChange={(event) => setAssignee(event.target.value)}
+                  onChange={(event) => updateDraft({ assignee: event.target.value })}
+                  disabled={busy || !messagesReady}
                 />
               </label>
               <label className="support-note">
@@ -268,7 +282,8 @@ export function SupportInbox({
                 <input
                   maxLength={4000}
                   value={note}
-                  onChange={(event) => setNote(event.target.value)}
+                  onChange={(event) => updateDraft({ note: event.target.value })}
+                  disabled={busy || !messagesReady}
                   aria-describedby="support-action-note-help"
                 />
                 <small className="form-help" id="support-action-note-help">
@@ -276,8 +291,8 @@ export function SupportInbox({
                   investigation details.
                 </small>
               </label>
-              <button className="button button-outline" disabled={busy}>
-                Save operations
+              <button className="button button-outline" disabled={busy || !messagesReady}>
+                Save changes
               </button>
             </form>
           </>

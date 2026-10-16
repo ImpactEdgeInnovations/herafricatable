@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useAdminOperation } from "@/lib/use-admin-operation";
 import { adminErrorMessage } from "@/lib/admin-error";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
@@ -78,9 +79,9 @@ export function CommunityCommandCentre({
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const { ask, dialog } = useActionDialog();
-  const [busy, setBusy] = useState("");
+  const { ask, dialog, clearDraft } = useActionDialog({ retainDrafts: true });
   const [message, setMessage] = useState("");
+  const { busy, setBusy, runAdminAction, markSaved } = useAdminOperation<string>("", "pending", setMessage, clearDraft);
   const [selected, setSelected] = useState(communities[0]?.community_id ?? "");
   const openApplications = applications.filter((application) =>
     ["pending", "under_review"].includes(application.status),
@@ -98,187 +99,199 @@ export function CommunityCommandCentre({
   );
 
   async function changeCommunityPilot() {
-    if (!pilot) return;
-    const enabled = !pilot.enabled;
-    const confirmed = await ask({
-      title: enabled ? "Allow automatic Community opening?" : "Pause automatic Community opening?",
-      confirmLabel: enabled ? "Allow Communities" : "Pause opening",
-      description: enabled
-        ? "The first-20 founding cohort can open one free Community immediately and choose how members join. Admin can pause any Community individually."
-        : "New Community proposals wait for your review. Existing Communities and memberships stay unchanged.",
+    const actionKey = "community-pilot";
+    return runAdminAction(actionKey, async () => {
+      if (!pilot) return;
+      const enabled = !pilot.enabled;
+      const confirmed = await ask({ draftKey: actionKey,
+        title: enabled ? "Allow automatic Community opening?" : "Pause automatic Community opening?",
+        confirmLabel: enabled ? "Allow Communities" : "Pause opening",
+        description: enabled
+          ? "The first-20 founding cohort can open one free Community immediately and choose how members join. Admin can pause any Community individually."
+          : "New Community proposals wait for your review. Existing Communities and memberships stay unchanged.",
+      });
+      if (!confirmed) return;
+      setBusy("community-pilot");
+      setMessage("");
+      const { error } = await supabase.rpc("set_community_pilot_setting", {
+        p_enabled: enabled,
+        p_reason: `Founding Community pilot ${enabled ? "enabled" : "paused"} from Community oversight`,
+      });
+      if (!error) markSaved();
+      setBusy("");
+      setMessage(error ? adminErrorMessage(error, "change the Community pilot") : enabled
+        ? "Automatic Community opening is on for founding members."
+        : "Automatic Community opening is paused. Existing Communities are unchanged.");
+      if (!error) router.refresh();
     });
-    if (!confirmed) return;
-    setBusy("community-pilot");
-    setMessage("");
-    const { error } = await supabase.rpc("set_community_pilot_setting", {
-      p_enabled: enabled,
-      p_reason: `Founding Community pilot ${enabled ? "enabled" : "paused"} from Community oversight`,
-    });
-    setBusy("");
-    setMessage(error ? adminErrorMessage(error, "change the Community pilot") : enabled
-      ? "Automatic Community opening is on for founding members."
-      : "Automatic Community opening is paused. Existing Communities are unchanged.");
-    if (!error) router.refresh();
   }
 
   async function reviewApplication(
     application: CommunityHostApplicationAdmin,
     action: "approve" | "decline" | "request_changes" | "start_review",
   ) {
-    const needsNote = action === "decline" || action === "request_changes";
-    const result = await ask({
-      confirmLabel:
-        action === "approve"
-          ? "Approve and create draft"
-          : action === "request_changes"
-            ? "Send guidance"
-            : action === "decline"
-              ? "Decline proposal"
-              : "Begin review",
-      description:
-        action === "approve"
-          ? "This creates a private draft and makes the applicant its owner. Nothing is published until the launch checks pass."
-          : action === "start_review"
-            ? "The member will see that her proposal is being reviewed."
-            : "The member will receive your note and the decision will remain in the audit record.",
-      fields: [
-        ...(action === "approve"
-          ? [{
-              help: "This becomes the Community address. Lowercase letters and hyphens only.",
-              initialValue: application.proposed_slug,
-              label: "Community address",
-              name: "slug",
-              required: true,
-              type: "text" as const,
-            }]
-          : []),
-        ...(needsNote
-          ? [{
-              label: "Clear guidance for the member",
-              maxLength: 2000,
-              minLength: 10,
-              name: "note",
-              required: true,
-              type: "textarea" as const,
-            }]
-          : []),
-      ],
-      title:
-        action === "approve"
-          ? `Approve ${application.community_name}?`
-          : action === "request_changes"
-            ? `Ask ${application.applicant_name} for an update?`
-            : action === "decline"
-              ? `Decline ${application.community_name}?`
-              : `Review ${application.community_name}?`,
-      tone: action === "decline" ? "danger" : "default",
-    });
-    if (!result) return;
-    setBusy(application.application_id);
-    setMessage("");
-    const { error } = await supabase.rpc("review_community_host_application", {
-      p_action: action,
-      p_admin_note: String(result.note ?? ""),
-      p_application_id: application.application_id,
-      p_approved_slug: String(result.slug ?? application.proposed_slug),
-    });
-    setBusy("");
-    setMessage(
-      error
-        ? adminErrorMessage(error, "review this Community proposal")
-        : action === "approve"
-          ? "Approved. A private draft was created and the member is now its owner."
-          : action === "request_changes"
-            ? "Your guidance was sent to the member."
+    const actionKey = "community-application:" + application.application_id + ":" + action;
+    return runAdminAction(actionKey, async () => {
+      const needsNote = action === "decline" || action === "request_changes";
+      const result = await ask({ draftKey: actionKey,
+        confirmLabel:
+          action === "approve"
+            ? "Approve and create draft"
+            : action === "request_changes"
+              ? "Send guidance"
+              : action === "decline"
+                ? "Decline proposal"
+                : "Begin review",
+        description:
+          action === "approve"
+            ? "This creates a private draft and makes the applicant its owner. Nothing is published until the launch checks pass."
             : action === "start_review"
-              ? "This proposal is now marked as in review."
-              : "The proposal was declined and the member was informed.",
-    );
-    if (!error) router.refresh();
+              ? "The member will see that her proposal is being reviewed."
+              : "The member will receive your note and the decision will remain in the audit record.",
+        fields: [
+          ...(action === "approve"
+            ? [{
+                help: "This becomes the Community address. Lowercase letters and hyphens only.",
+                initialValue: application.proposed_slug,
+                label: "Community address",
+                name: "slug",
+                required: true,
+                type: "text" as const,
+              }]
+            : []),
+          ...(needsNote
+            ? [{
+                label: "Clear guidance for the member",
+                maxLength: 2000,
+                minLength: 10,
+                name: "note",
+                required: true,
+                type: "textarea" as const,
+              }]
+            : []),
+        ],
+        title:
+          action === "approve"
+            ? `Approve ${application.community_name}?`
+            : action === "request_changes"
+              ? `Ask ${application.applicant_name} for an update?`
+              : action === "decline"
+                ? `Decline ${application.community_name}?`
+                : `Review ${application.community_name}?`,
+        tone: action === "decline" ? "danger" : "default",
+      });
+      if (!result) return;
+      setBusy(application.application_id);
+      setMessage("");
+      const { error } = await supabase.rpc("review_community_host_application", {
+        p_action: action,
+        p_admin_note: String(result.note ?? ""),
+        p_application_id: application.application_id,
+        p_approved_slug: String(result.slug ?? application.proposed_slug),
+      });
+      if (!error) markSaved();
+      setBusy("");
+      setMessage(
+        error
+          ? adminErrorMessage(error, "review this Community proposal")
+          : action === "approve"
+            ? "Approved. A private draft was created and the member is now its owner."
+            : action === "request_changes"
+              ? "Your guidance was sent to the member."
+              : action === "start_review"
+                ? "This proposal is now marked as in review."
+                : "The proposal was declined. Check Message delivery for the member notice.",
+      );
+      if (!error) router.refresh();
+    });
   }
 
   async function manageLifecycle(
     community: CommunitySummary,
     action: "pause" | "close" | "reopen" | "replace_host",
   ) {
-    const roster = members.filter(
-      (member) => member.community_id === community.community_id,
-    );
-    const successorOptions = roster
-      .filter(
-        (member) =>
-          member.role !== "owner" &&
-          ["active", "paused", "suspended"].includes(member.status),
-      )
-      .map((member) => ({
-        label: `${member.display_name || "Member"} · ${member.role}`,
-        value: member.membership_id,
-      }));
-    if (action === "replace_host" && !successorOptions.length) {
-      setMessage(
-        "Add an active member or backup moderator before replacing the owner.",
+    const actionKey = "community:" + community.community_id + ":" + action;
+    return runAdminAction(actionKey, async () => {
+      const roster = members.filter(
+        (member) => member.community_id === community.community_id,
       );
-      return;
-    }
-    const labels = {
-      close: { confirm: "Close and preserve", title: "Close" },
-      pause: { confirm: "Pause and preserve", title: "Pause" },
-      reopen: { confirm: "Reopen Community", title: "Reopen" },
-      replace_host: { confirm: "Transfer ownership", title: "Replace the owner of" },
-    }[action];
-    const result = await ask({
-      confirmLabel: labels.confirm,
-      description:
-        action === "pause"
-          ? "Member access and new activity will stop. Posts, memberships and records remain preserved while the issue is reviewed."
-          : action === "reopen"
-            ? "Member access and preserved conversations return after the release checks confirm an active owner and backup moderator."
-            : action === "replace_host"
-              ? "The selected person becomes the owner. The previous owner remains in the Community as a member and the transfer is recorded."
-              : "The Community will close to new activity. Its records remain preserved under the platform retention policy.",
-      fields: [
-        ...(action === "replace_host"
-          ? [{
-              help: "Choose an existing member or backup moderator who has agreed to lead.",
-              label: "New Community owner",
-              name: "successor",
-              options: successorOptions,
-              required: true,
-              type: "select" as const,
-            }]
-          : []),
-        {
-          help: "Record the operational or safety reason without adding unnecessary private information.",
-          label: action === "reopen" ? "Reason for reopening" : "Reason",
-          maxLength: 1000,
-          minLength: 10,
-          name: "reason",
-          required: true,
-          type: "textarea" as const,
-        },
-      ],
-      title: `${labels.title} ${community.name}?`,
-      tone: ["pause", "close"].includes(action) ? "danger" : "default",
+      const successorOptions = roster
+        .filter(
+          (member) =>
+            member.role !== "owner" &&
+            ["active", "paused", "suspended"].includes(member.status),
+        )
+        .map((member) => ({
+          label: `${member.display_name || "Member"} · ${member.role}`,
+          value: member.membership_id,
+        }));
+      if (action === "replace_host" && !successorOptions.length) {
+        setMessage(
+          "Add an active member or backup moderator before replacing the owner.",
+        );
+        return;
+      }
+      const labels = {
+        close: { confirm: "Close and preserve", title: "Close" },
+        pause: { confirm: "Pause and preserve", title: "Pause" },
+        reopen: { confirm: "Reopen Community", title: "Reopen" },
+        replace_host: { confirm: "Transfer ownership", title: "Replace the owner of" },
+      }[action];
+      const result = await ask({ draftKey: actionKey,
+        confirmLabel: labels.confirm,
+        description:
+          action === "pause"
+            ? "Member access and new activity will stop. Posts, memberships and records remain preserved while the issue is reviewed."
+            : action === "reopen"
+              ? "Member access and preserved conversations return after the release checks confirm an active owner and backup moderator."
+              : action === "replace_host"
+                ? "The selected person becomes the owner. The previous owner remains in the Community as a member and the transfer is recorded."
+                : "The Community will close to new activity. Its records remain preserved under the platform retention policy.",
+        fields: [
+          ...(action === "replace_host"
+            ? [{
+                help: "Choose an existing member or backup moderator who has agreed to lead.",
+                label: "New Community owner",
+                name: "successor",
+                options: successorOptions,
+                required: true,
+                type: "select" as const,
+              }]
+            : []),
+          {
+            help: "Record the operational or safety reason without adding unnecessary private information.",
+            label: action === "reopen" ? "Reason for reopening" : "Reason",
+            maxLength: 1000,
+            minLength: 10,
+            name: "reason",
+            required: true,
+            type: "textarea" as const,
+          },
+        ],
+        title: `${labels.title} ${community.name}?`,
+        tone: ["pause", "close"].includes(action) ? "danger" : "default",
+      });
+      if (!result) return;
+      setBusy(`lifecycle-${community.community_id}`);
+      setMessage("");
+      const { error } = await supabase.rpc("manage_community_lifecycle", {
+        p_action: action,
+        p_community_id: community.community_id,
+        p_reason: String(result.reason ?? ""),
+        p_successor_membership_id:
+          action === "replace_host" ? String(result.successor) : null,
+      });
+      if (!error) markSaved();
+      setBusy("");
+      setMessage(
+        error
+          ? adminErrorMessage(error, `${action} this Community`)
+          : action === "replace_host"
+            ? `${community.name} now has a new owner. The transfer was recorded.`
+            : `${community.name} was ${action === "pause" ? "paused" : action === "reopen" ? "reopened" : "closed"}. Members were informed and records were preserved.`,
+      );
+      if (!error) router.refresh();
     });
-    if (!result) return;
-    setBusy(`lifecycle-${community.community_id}`);
-    setMessage("");
-    const { error } = await supabase.rpc("manage_community_lifecycle", {
-      p_action: action,
-      p_community_id: community.community_id,
-      p_reason: String(result.reason ?? ""),
-      p_successor_membership_id:
-        action === "replace_host" ? String(result.successor) : null,
-    });
-    setBusy("");
-    setMessage(
-      error
-        ? adminErrorMessage(error, `${action} this Community`)
-        : action === "replace_host"
-          ? `${community.name} now has a new owner. The transfer was recorded.`
-          : `${community.name} was ${action === "pause" ? "paused" : action === "reopen" ? "reopened" : "closed"}. Members were informed and records were preserved.`,
-    );
-    if (!error) router.refresh();
   }
 
   if (!migrationReady) {
@@ -317,7 +330,7 @@ export function CommunityCommandCentre({
         {!pilot ? <p>Apply the latest Community database update to manage the pilot here.</p> : <>
           <p><strong>{pilot.enabled ? "Automatic opening is on" : "Automatic opening is paused"}.</strong> {pilot.cohort_count} of {pilot.capacity} founding places assigned. {pilot.ends_at ? `The pilot ends ${new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeZone: "Africa/Nairobi" }).format(new Date(pilot.ends_at))}.` : "No active pilot window is set."}</p>
           <p>Each founding member can open one free Community without review. Joining follows her chosen rule. You can pause new openings here or suspend a specific Community.</p>
-          <button className={pilot.enabled ? "button button-outline" : "button button-primary"} type="button" disabled={busy === "community-pilot"} onClick={() => void changeCommunityPilot()}>{pilot.enabled ? "Pause new Communities" : "Allow Communities"}</button>
+          <button className={pilot.enabled ? "button button-outline" : "button button-primary"} type="button" disabled={Boolean(busy)} onClick={() => void changeCommunityPilot()}>{pilot.enabled ? "Pause new Communities" : "Allow Communities"}</button>
         </>}
       </section>
 
@@ -349,10 +362,10 @@ export function CommunityCommandCentre({
                   </div>
                 </details>
                 <footer>
-                  {application.status === "pending" ? <button className="button button-outline" disabled={busy === application.application_id} onClick={() => void reviewApplication(application, "start_review")}>Begin review</button> : null}
-                  <button className="button button-outline" disabled={busy === application.application_id} onClick={() => void reviewApplication(application, "request_changes")}>Ask for an update</button>
-                  <button className="button button-primary" disabled={busy === application.application_id} onClick={() => void reviewApplication(application, "approve")}>Approve and create draft</button>
-                  <button className="button button-quiet" disabled={busy === application.application_id} onClick={() => void reviewApplication(application, "decline")}>Decline</button>
+                  {application.status === "pending" ? <button className="button button-outline" disabled={Boolean(busy)} onClick={() => void reviewApplication(application, "start_review")}>Begin review</button> : null}
+                  <button className="button button-outline" disabled={Boolean(busy)} onClick={() => void reviewApplication(application, "request_changes")}>Ask for an update</button>
+                  <button className="button button-primary" disabled={Boolean(busy)} onClick={() => void reviewApplication(application, "approve")}>Approve and create draft</button>
+                  <button className="button button-quiet" disabled={Boolean(busy)} onClick={() => void reviewApplication(application, "decline")}>Decline</button>
                 </footer>
               </article>
             ))}
@@ -403,10 +416,10 @@ export function CommunityCommandCentre({
                   <Link className="button button-outline" href={`/communities/${community.slug}/about`}>View public details</Link>
                   <Link className="button button-outline" href={`/admin/cohort?community=${community.community_id}#community-release-title`}>Launch checks</Link>
                   {Number(communityHealth?.open_reports ?? 0) ? <Link className="button button-primary" href="/admin/safety">Review concern</Link> : null}
-                  {isPaused ? <button className="button button-primary" disabled={busy === `lifecycle-${community.community_id}`} onClick={() => void manageLifecycle(community, "reopen")}>Reopen Community</button> : null}
-                  {community.status === "published" ? <button className="button button-quiet" disabled={busy === `lifecycle-${community.community_id}`} onClick={() => void manageLifecycle(community, "pause")}>Pause Community</button> : null}
-                  {community.status !== "archived" && roster.some((member) => member.role !== "owner" && ["active", "paused", "suspended"].includes(member.status)) ? <button className="button button-quiet" disabled={busy === `lifecycle-${community.community_id}`} onClick={() => void manageLifecycle(community, "replace_host")}>Replace owner</button> : null}
-                  {community.status !== "archived" ? <button className="button button-quiet danger-action" disabled={busy === `lifecycle-${community.community_id}`} onClick={() => void manageLifecycle(community, "close")}>Close</button> : null}
+                  {isPaused ? <button className="button button-primary" disabled={Boolean(busy)} onClick={() => void manageLifecycle(community, "reopen")}>Reopen Community</button> : null}
+                  {community.status === "published" ? <button className="button button-quiet" disabled={Boolean(busy)} onClick={() => void manageLifecycle(community, "pause")}>Pause Community</button> : null}
+                  {community.status !== "archived" && roster.some((member) => member.role !== "owner" && ["active", "paused", "suspended"].includes(member.status)) ? <button className="button button-quiet" disabled={Boolean(busy)} onClick={() => void manageLifecycle(community, "replace_host")}>Replace owner</button> : null}
+                  {community.status !== "archived" ? <button className="button button-quiet danger-action" disabled={Boolean(busy)} onClick={() => void manageLifecycle(community, "close")}>Close</button> : null}
                 </footer>
               </article>;
             })}

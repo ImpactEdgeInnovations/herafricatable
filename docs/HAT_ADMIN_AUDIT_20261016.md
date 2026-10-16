@@ -204,8 +204,8 @@ Keep existing wine/cream identity, readable interface typography, Member/Admin s
 | ADMIN-02 resumable privacy cleanup | 1 | P1 | IMPLEMENTED: L1 service-failure mocks and live SQL checkpoint/retry pass; real disposable-account acceptance open |
 | ADMIN-03 durable email-worker outcomes | 1 | P1 | IMPLEMENTED: controlled persistence/provider failure tests pass; real external failure acceptance open |
 | ADMIN-04 truthful refund workflow | 1, required before paid use | P1 | IMPLEMENTED: separate manual completion/reference and live state checks pass; Paystack initiation remains an external dashboard step |
-| ADMIN-05 safe action recovery | 2 — reliable decisions | P1/P2 | QUEUED: critical handlers recover from thrown/rejected requests and double clicks |
-| ADMIN-06 support thread/draft context | 2 | P1/P2 | QUEUED: failed read visible; draft never silently follows another recipient |
+| ADMIN-05 safe action recovery | 2 — reliable decisions | P1/P2 | IMPLEMENTED: synchronous locks, finally recovery, retained decision notes and saved/unknown feedback; controlled L1 pass; live recovery acceptance open |
+| ADMIN-06 support thread/draft context | 2 | P1/P2 | IMPLEMENTED: failed-read gating, recipient-scoped drafts and stale-response isolation; controlled L1 pass; real thread/inbox/browser acceptance open |
 | ADMIN-07 trustworthy counts | 3 — accurate operational data | P1 | QUEUED: failed count ≠ zero; real aggregate totals and partial-state display |
 | ADMIN-08 readiness inputs and meaning | 3 | P1 | QUEUED: all required sources loaded; explained groups and consistent denominator |
 | ADMIN-09 daily workspace simplification | 4 — plain language and navigation | P2 | QUEUED: canonical record tools, preserved context, fewer repeated forms |
@@ -213,7 +213,7 @@ Keep existing wine/cream identity, readable interface typography, Member/Admin s
 | ADMIN-11 paged oversight / activity | 5 — scale and investigation | P2 | QUEUED: aggregate overview, selected rosters/media, paged jobs/support/members/history |
 | ADMIN-12 permission and release acceptance | 5 | P1/P2 | OPEN: 200-operation inventory is catalog checked; per-operation permission/write/refresh cases, concurrent users and clean replay remain |
 
-Phase-1 implementation statuses were updated only after the linked handover recorded scoped evidence. Featured-spot work has its own evidence sheet. Phase 1 acceptance should precede expanding paid features; phase 2/3 will improve everyday free-pilot reliability. Visual polish follows verified workflows.
+Phase-1 and phase-2 implementation statuses have scoped handovers. [Phase 2 evidence and tester checklist](ADMIN_PHASE_TWO_HANDOVER_20261016.md) distinguish implementation from live acceptance. Featured-spot work has its own evidence sheet. Phase 1 acceptance should precede expanding paid features; phase 3 is next for everyday free-pilot reliability. Visual polish follows verified workflows.
 
 ## Standalone implementation briefs
 

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { adminErrorMessage } from "@/lib/admin-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { useAdminOperation } from "@/lib/use-admin-operation";
 
 export type AdminMember = {
   access_status:
@@ -44,10 +45,10 @@ export function MemberReview({
   applicationJourneyReady: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
-  const { ask, dialog } = useActionDialog();
+  const { ask, dialog, clearDraft } = useActionDialog({ retainDrafts: true });
   const [members, setMembers] = useState(initialMembers);
-  const [workingId, setWorkingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const { busy: workingId, setBusy: setWorkingId, runAdminAction, markSaved } = useAdminOperation<string | null>(null, "pending", setMessage, clearDraft);
   const realRequests = members.filter(
     (member) =>
       member.access_status === "pending" &&
@@ -66,6 +67,14 @@ export function MemberReview({
     decision: "approve" | "decline" | "suspend" | "restore",
     note = "Updated from the Her Africa Table admin workspace",
   ) {
+    return runAdminAction(`member:${memberId}:${decision}`, () => performReview(memberId, decision, note));
+  }
+
+  async function performReview(
+    memberId: string,
+    decision: "approve" | "decline" | "suspend" | "restore",
+    note = "Updated from the Her Africa Table admin workspace",
+  ) {
     setWorkingId(memberId);
     setMessage("");
     const { data, error } = await supabase.rpc("review_member", {
@@ -73,6 +82,7 @@ export function MemberReview({
       p_decision: decision,
       p_note: note,
     });
+    if (!error) markSaved();
 
     if (error) {
       setMessage(adminErrorMessage(error, "update this member's access"));
@@ -106,12 +116,12 @@ export function MemberReview({
           };
           setMessage(
             response.ok && (delivery.sent ?? 0) > 0
-              ? "Membership approved and the welcome email was sent."
-              : "Membership approved. The welcome email is safely queued under Message delivery.",
+              ? "Membership approved. The welcome email was accepted for delivery."
+              : "Membership approved. Check Message delivery for the welcome email status.",
           );
         } catch {
           setMessage(
-            "Membership approved. The welcome email is safely queued under Message delivery.",
+            "Membership approved. Check Message delivery for the welcome email status.",
           );
         }
       } else {
@@ -125,38 +135,42 @@ export function MemberReview({
     member: AdminMember,
     decision: "approve" | "decline",
   ) {
-    const result = await ask({
-      confirmLabel: decision === "approve" ? "Approve membership" : "Decline request",
-      description:
-        decision === "approve"
-          ? "This opens the member's private onboarding. Community and network access remain closed until she completes it."
-          : "This keeps member access closed. She can update and resubmit her request later.",
-      fields: [
-        {
-          help:
-            decision === "approve"
-              ? "Optional internal context for the audit record."
-              : "Record a clear internal reason for this decision.",
-          label: "Review note",
-          maxLength: 1200,
-          minLength: decision === "decline" ? 10 : undefined,
-          name: "note",
-          placeholder:
-            decision === "approve"
-              ? "Optional note"
-              : "Why is this request not being approved?",
-          required: decision === "decline",
-          type: "textarea",
-        },
-      ],
-      title:
-        decision === "approve"
-          ? `Welcome ${member.display_name || member.email}?`
-          : `Decline ${member.display_name || member.email}'s request?`,
-      tone: decision === "decline" ? "danger" : "default",
+    const actionKey = `member:${member.user_id}:${decision}`;
+    return runAdminAction(actionKey, async () => {
+      const result = await ask({
+        draftKey: actionKey,
+        confirmLabel: decision === "approve" ? "Approve membership" : "Decline request",
+        description:
+          decision === "approve"
+            ? "This opens the member's private onboarding. Community and network access remain closed until she completes it."
+            : "This keeps member access closed. She can update and resubmit her request later.",
+        fields: [
+          {
+            help:
+              decision === "approve"
+                ? "Optional internal context for the audit record."
+                : "Record a clear internal reason for this decision.",
+            label: "Review note",
+            maxLength: 1200,
+            minLength: decision === "decline" ? 10 : undefined,
+            name: "note",
+            placeholder:
+              decision === "approve"
+                ? "Optional note"
+                : "Why is this request not being approved?",
+            required: decision === "decline",
+            type: "textarea",
+          },
+        ],
+        title:
+          decision === "approve"
+            ? `Welcome ${member.display_name || member.email}?`
+            : `Decline ${member.display_name || member.email}'s request?`,
+        tone: decision === "decline" ? "danger" : "default",
+      });
+      if (!result) return;
+      await performReview(member.user_id, decision, String(result.note ?? ""));
     });
-    if (!result) return;
-    await review(member.user_id, decision, String(result.note ?? ""));
   }
 
   return (
@@ -212,7 +226,7 @@ export function MemberReview({
                 <footer>
                   <button
                     className="button button-primary"
-                    disabled={workingId === member.user_id}
+                    disabled={Boolean(workingId)}
                     onClick={() => void confirmReview(member, "approve")}
                     type="button"
                   >
@@ -220,7 +234,7 @@ export function MemberReview({
                   </button>
                   <button
                     className="button button-outline"
-                    disabled={workingId === member.user_id}
+                    disabled={Boolean(workingId)}
                     onClick={() => void confirmReview(member, "decline")}
                     type="button"
                   >
@@ -325,7 +339,7 @@ export function MemberReview({
                         member.application_status ?? "",
                       ) ? (
                         <button
-                          disabled={workingId === member.user_id}
+                          disabled={Boolean(workingId)}
                           onClick={() => void confirmReview(member, "approve")}
                         >
                           Approve
@@ -333,7 +347,7 @@ export function MemberReview({
                       ) : null}
                       {member.access_status === "suspended" ? (
                         <button
-                          disabled={workingId === member.user_id}
+                          disabled={Boolean(workingId)}
                           onClick={() => review(member.user_id, "restore")}
                         >
                           Restore
@@ -345,7 +359,7 @@ export function MemberReview({
                       ) ? (
                         <button
                           className="danger-action"
-                          disabled={workingId === member.user_id}
+                          disabled={Boolean(workingId)}
                           onClick={() => review(member.user_id, "suspend")}
                         >
                           Suspend

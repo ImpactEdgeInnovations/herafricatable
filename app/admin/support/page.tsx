@@ -31,13 +31,19 @@ export default async function AdminSupportPage({
       ? ticket
       : (tickets[0]?.ticket_id ?? null);
   let messages: SupportMessage[] = [];
+  let messagesReady = true;
   if (selected) {
-    const { data } = await supabase
-      .from("support_messages")
-      .select("id,ticket_id,author_id,body,is_staff,created_at")
-      .eq("ticket_id", selected)
-      .order("created_at", { ascending: true });
-    messages = (data as SupportMessage[] | null) ?? [];
+    try {
+      const { data, error } = await supabase
+        .from("support_messages")
+        .select("id,ticket_id,author_id,body,is_staff,created_at")
+        .eq("ticket_id", selected)
+        .order("created_at", { ascending: true });
+      messages = (data as SupportMessage[] | null) ?? [];
+      messagesReady = !error;
+    } catch {
+      messagesReady = false;
+    }
   }
 
   return (
@@ -64,6 +70,7 @@ export default async function AdminSupportPage({
           tickets={tickets}
           messages={messages}
           selectedTicketId={selected}
+          messagesReady={messagesReady}
         />
       )}
     </main>

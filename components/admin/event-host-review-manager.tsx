@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useAdminOperation } from "@/lib/use-admin-operation";
 import { adminErrorMessage } from "@/lib/admin-error";
 import type { AdminEvent } from "@/components/admin/event-manager";
 import { useActionDialog } from "@/components/ui/action-dialog";
@@ -59,7 +60,7 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const { ask, dialog } = useActionDialog();
+  const { ask, dialog, clearDraft } = useActionDialog({ retainDrafts: true });
   const [eventId, setEventId] = useState(
     (selectedEventId && events.some((event) => event.id === selectedEventId && ["draft", "published"].includes(event.status))
       ? selectedEventId : events.find((event) => ["draft", "published"].includes(event.status))?.id) ?? "",
@@ -67,118 +68,134 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [contactDrafts, setContactDrafts] = useState<Record<string, { name: string; phone: string }>>({});
-  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const { busy, setBusy, runAdminAction, markSaved } = useAdminOperation<boolean>(false, true, setMessage, clearDraft);
 
   async function assign() {
-    if (!eventId || !email.trim()) return;
-    const existing = workspaces.find((item) => item.event_id === eventId);
-    if (existing && !lifecycleReady) {
-      setMessage("Apply the Host pause and transfer migration before replacing an existing Host.");
-      return;
-    }
-    if (!await ask({ title: existing ? "Replace this Event Host?" : "Give this member Host access?", description: existing ? `This ends ${existing.host_name || existing.host_email}'s Host access. The new Host inherits the private draft and must review and submit it again. Published content stays live until another approval.` : "This member will prepare this event privately. Guest lists and payments remain with the event team.", confirmLabel: existing ? "Replace Host" : "Assign Host" })) return;
-    setBusy(true);
-    setMessage("");
-    const { error } = await supabase.rpc("assign_event_host", { p_event_id: eventId, p_email: email.trim() });
-    setBusy(false);
-    setMessage(error?.message?.includes("Choose an active member with a verified account")
-      ? "This person is not an active member yet. Ask her to verify her email and request membership. Once approved and set up, enter the same email here to assign Host access."
-      : error ? adminErrorMessage(error, "assign the Event Host") : "Host assigned. Their private workspace is ready.");
-    if (!error) { setEmail(""); router.refresh(); }
+    const actionKey = "event-host:" + eventId;
+    return runAdminAction(actionKey, async () => {
+      if (!eventId || !email.trim()) return;
+      const existing = workspaces.find((item) => item.event_id === eventId);
+      if (existing && !lifecycleReady) {
+        setMessage("Apply the Host pause and transfer migration before replacing an existing Host.");
+        return;
+      }
+      if (!await ask({ draftKey: actionKey, title: existing ? "Replace this Event Host?" : "Give this member Host access?", description: existing ? `This ends ${existing.host_name || existing.host_email}'s Host access. The new Host inherits the private draft and must review and submit it again. Published content stays live until another approval.` : "This member will prepare this event privately. Guest lists and payments remain with the event team.", confirmLabel: existing ? "Replace Host" : "Assign Host" })) return;
+      setBusy(true);
+      setMessage("");
+      const { error } = await supabase.rpc("assign_event_host", { p_event_id: eventId, p_email: email.trim() });
+      if (!error) markSaved();
+      setBusy(false);
+      setMessage(error?.message?.includes("Choose an active member with a verified account")
+        ? "This person is not an active member yet. Ask her to verify her email and request membership. Once approved and set up, enter the same email here to assign Host access."
+        : error ? adminErrorMessage(error, "assign the Event Host") : "Host assigned. Their private workspace is ready.");
+      if (!error) { setEmail(""); router.refresh(); }
+    });
   }
 
   async function review(item: AdminEventHostWorkspace, action: "approve" | "request_changes") {
-    const note = notes[item.event_id] ?? "";
-    const event = events.find((candidate) => candidate.id === item.event_id);
-    const context = reviewContexts.find((candidate) => candidate.event_id === item.event_id);
-    if (action === "approve" && item.event_status === "draft" &&
-      !hostDraftPublicationWindowOpen(item.starts_at)) {
-      setMessage("This new event is now less than 48 hours away. Change its start date in Event details, then review the Host draft again.");
-      return;
-    }
-    if (action === "approve" && !exactArrivalReady(event)) {
-      setMessage("Add the exact venue address or a map link in Event details before publishing.");
-      return;
-    }
-    if (action === "approve" && event?.format !== "in_person" && !context?.online_link_ready) {
-      setMessage("Add the private online joining link in Event details before publishing.");
-      return;
-    }
-    if (action === "approve" && (!ticketsReady || !ticketEventIds.includes(item.event_id))) {
-      setMessage(ticketsReady ? "Add an event ticket under Registrations before publishing." : "Tickets could not be checked. Refresh before publishing.");
-      return;
-    }
-    if (action === "approve" && (!safetyReady || !safetyContacts.some((entry) => entry.event_id === item.event_id))) {
-      setMessage("Save the event safety contact before publishing this event.");
-      return;
-    }
-    if (action === "request_changes" && note.trim().length < 10) {
-      setMessage("Write at least 10 characters explaining what the Host should change.");
-      return;
-    }
-    if (!await ask({
-      title: action === "approve" ? `Publish ${item.event_title}?` : `Ask the Host to update ${item.event_title}?`,
-      description: action === "approve"
-        ? `The reviewed event page becomes public. ${event?.registration_mode === "closed" ? "Registration will stay closed until you change its setting." : "Who can request a place still depends on registration and member-access settings."} Confirm the venue, capacity, safety contact and joining details before continuing.`
-        : "Your note will return the draft to the Host. The event stays as it is until you approve a revised draft.",
-      confirmLabel: action === "approve" ? "Approve and publish" : "Send guidance",
-    })) return;
-    setBusy(true);
-    setMessage("");
-    const { error } = await supabase.rpc("review_event_host_workspace", {
-      p_event_id: item.event_id,
-      p_action: action,
-      p_note: note,
+    const actionKey = "host-review:" + item.event_id + ":" + action;
+    return runAdminAction(actionKey, async () => {
+      const note = notes[item.event_id] ?? "";
+      const event = events.find((candidate) => candidate.id === item.event_id);
+      const context = reviewContexts.find((candidate) => candidate.event_id === item.event_id);
+      if (action === "approve" && item.event_status === "draft" &&
+        !hostDraftPublicationWindowOpen(item.starts_at)) {
+        setMessage("This new event is now less than 48 hours away. Change its start date in Event details, then review the Host draft again.");
+        return;
+      }
+      if (action === "approve" && !exactArrivalReady(event)) {
+        setMessage("Add the exact venue address or a map link in Event details before publishing.");
+        return;
+      }
+      if (action === "approve" && event?.format !== "in_person" && !context?.online_link_ready) {
+        setMessage("Add the private online joining link in Event details before publishing.");
+        return;
+      }
+      if (action === "approve" && (!ticketsReady || !ticketEventIds.includes(item.event_id))) {
+        setMessage(ticketsReady ? "Add an event ticket under Registrations before publishing." : "Tickets could not be checked. Refresh before publishing.");
+        return;
+      }
+      if (action === "approve" && (!safetyReady || !safetyContacts.some((entry) => entry.event_id === item.event_id))) {
+        setMessage("Save the event safety contact before publishing this event.");
+        return;
+      }
+      if (action === "request_changes" && note.trim().length < 10) {
+        setMessage("Write at least 10 characters explaining what the Host should change.");
+        return;
+      }
+      if (!await ask({ draftKey: actionKey,
+        title: action === "approve" ? `Publish ${item.event_title}?` : `Ask the Host to update ${item.event_title}?`,
+        description: action === "approve"
+          ? `The reviewed event page becomes public. ${event?.registration_mode === "closed" ? "Registration will stay closed until you change its setting." : "Who can request a place still depends on registration and member-access settings."} Confirm the venue, capacity, safety contact and joining details before continuing.`
+          : "Your note will return the draft to the Host. The event stays as it is until you approve a revised draft.",
+        confirmLabel: action === "approve" ? "Approve and publish" : "Send guidance",
+      })) return;
+      setBusy(true);
+      setMessage("");
+      const { error } = await supabase.rpc("review_event_host_workspace", {
+        p_event_id: item.event_id,
+        p_action: action,
+        p_note: note,
+      });
+      if (!error) markSaved();
+      setBusy(false);
+      setMessage(error ? adminErrorMessage(error, "review the Host draft") : action === "approve" ? "Reviewed content published." : "Your guidance was sent to the Host.");
+      if (!error) router.refresh();
     });
-    setBusy(false);
-    setMessage(error ? adminErrorMessage(error, "review the Host draft") : action === "approve" ? "Reviewed content published." : "Your guidance was sent to the Host.");
-    if (!error) router.refresh();
   }
 
   async function saveSafetyContact(item: AdminEventHostWorkspace) {
-    if (!safetyReady) return;
-    const existing = safetyContacts.find((entry) => entry.event_id === item.event_id);
-    const draft = contactDrafts[item.event_id] ?? { name: existing?.contact_name ?? "", phone: existing?.contact_phone ?? "" };
-    if (draft.name.trim().length < 2 || draft.phone.trim().length < 7) {
-      setMessage("Add the full name and a reachable phone number for the event safety contact.");
-      return;
-    }
-    setBusy(true);
-    setMessage("");
-    const { error } = await supabase.rpc("save_event_safety_contact", {
-      p_event_id: item.event_id,
-      p_name: draft.name,
-      p_phone: draft.phone,
+    const actionKey = "event-safety:" + item.event_id;
+    return runAdminAction(actionKey, async () => {
+      if (!safetyReady) return;
+      const existing = safetyContacts.find((entry) => entry.event_id === item.event_id);
+      const draft = contactDrafts[item.event_id] ?? { name: existing?.contact_name ?? "", phone: existing?.contact_phone ?? "" };
+      if (draft.name.trim().length < 2 || draft.phone.trim().length < 7) {
+        setMessage("Add the full name and a reachable phone number for the event safety contact.");
+        return;
+      }
+      setBusy(true);
+      setMessage("");
+      const { error } = await supabase.rpc("save_event_safety_contact", {
+        p_event_id: item.event_id,
+        p_name: draft.name,
+        p_phone: draft.phone,
+      });
+      if (!error) markSaved();
+      setBusy(false);
+      setMessage(error ? adminErrorMessage(error, "save the event safety contact") : "Safety contact saved privately for the event team.");
+      if (!error) router.refresh();
     });
-    setBusy(false);
-    setMessage(error ? adminErrorMessage(error, "save the event safety contact") : "Safety contact saved privately for the event team.");
-    if (!error) router.refresh();
   }
 
   async function changeHostStatus(item: AdminEventHostWorkspace) {
-    if (!lifecycleReady) return;
-    const pausing = item.host_status === "active";
-    const result = await ask({
-      title: pausing ? `Pause ${item.host_name || item.host_email}'s Host access?` : `Restore ${item.host_name || item.host_email}'s Host access?`,
-      description: pausing
-        ? "The Host immediately loses access to this private workspace. The event and any published guest information remain unchanged. You can restore or replace the Host later."
-        : "The Host may return to this private workspace. You still make all publication decisions.",
-      confirmLabel: pausing ? "Pause Host access" : "Restore Host access",
-      tone: pausing ? "danger" : "default",
-      fields: pausing ? [{ name: "reason", label: "Reason sent to the Host", type: "textarea", required: true, minLength: 10, maxLength: 500, placeholder: "Explain the pause clearly." }] : [],
+    const actionKey = "host-access:" + item.event_id;
+    return runAdminAction(actionKey, async () => {
+      if (!lifecycleReady) return;
+      const pausing = item.host_status === "active";
+      const result = await ask({ draftKey: actionKey,
+        title: pausing ? `Pause ${item.host_name || item.host_email}'s Host access?` : `Restore ${item.host_name || item.host_email}'s Host access?`,
+        description: pausing
+          ? "The Host immediately loses access to this private workspace. The event and any published guest information remain unchanged. You can restore or replace the Host later."
+          : "The Host may return to this private workspace. You still make all publication decisions.",
+        confirmLabel: pausing ? "Pause Host access" : "Restore Host access",
+        tone: pausing ? "danger" : "default",
+        fields: pausing ? [{ name: "reason", label: "Reason sent to the Host", type: "textarea", required: true, minLength: 10, maxLength: 500, placeholder: "Explain the pause clearly." }] : [],
+      });
+      if (!result) return;
+      setBusy(true);
+      setMessage("");
+      const { error } = await supabase.rpc("set_event_host_status", {
+        p_event_id: item.event_id,
+        p_status: pausing ? "paused" : "active",
+        p_note: pausing ? String(result.reason ?? "") : "",
+      });
+      if (!error) markSaved();
+      setBusy(false);
+      setMessage(error ? adminErrorMessage(error, "change Host access") : pausing ? "Host access paused. The event itself is unchanged." : "Host access restored.");
+      if (!error) router.refresh();
     });
-    if (!result) return;
-    setBusy(true);
-    setMessage("");
-    const { error } = await supabase.rpc("set_event_host_status", {
-      p_event_id: item.event_id,
-      p_status: pausing ? "paused" : "active",
-      p_note: pausing ? String(result.reason ?? "") : "",
-    });
-    setBusy(false);
-    setMessage(error ? adminErrorMessage(error, "change Host access") : pausing ? "Host access paused. The event itself is unchanged." : "Host access restored.");
-    if (!error) router.refresh();
   }
 
   return <div className="focused-admin-tool">
@@ -195,8 +212,8 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
       <h2>Give a member Host access</h2>
       <p>Choose an existing event and an active member’s email. Replacing a Host ends the former Host’s access.</p>
       <p>Is your Host new here? Share the <Link href="/sign-in?mode=apply">membership request page</Link>. She will verify her email and request to join. Approve her membership and let her finish setup before assigning Host access below.</p>
-      <label>Event<select value={eventId} onChange={(event) => { setEventId(event.target.value); router.replace(eventToolHref("/admin/events?view=host", event.target.value), { scroll: false }); }}>{events.filter((event) => ["draft", "published"].includes(event.status)).map((event) => <option key={event.id} value={event.id}>{event.title}</option>)}</select></label>
-      <label>Member email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label>
+      <label>Event<select disabled={Boolean(busy)} value={eventId} onChange={(event) => { setEventId(event.target.value); router.replace(eventToolHref("/admin/events?view=host", event.target.value), { scroll: false }); }}>{events.filter((event) => ["draft", "published"].includes(event.status)).map((event) => <option key={event.id} value={event.id}>{event.title}</option>)}</select></label>
+      <label>Member email<input disabled={Boolean(busy)} type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" /></label>
       <button className="button button-outline" type="button" disabled={busy || !eventId || !email.trim()} onClick={() => void assign()}>Assign Event Host</button>
     </section> : null}
     <section className="admin-section">
@@ -239,8 +256,8 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
           {safetyReady ? <div className="admin-section">
             <h4>On-the-day safety contact</h4>
             <p>Private to the event team. Save a reachable person before publication.</p>
-            <label>Name<input maxLength={120} value={contact.name} onChange={(event) => setContactDrafts((all) => ({ ...all, [item.event_id]: { ...contact, name: event.target.value } }))} /></label>
-            <label>Phone<input maxLength={40} type="tel" value={contact.phone} onChange={(event) => setContactDrafts((all) => ({ ...all, [item.event_id]: { ...contact, phone: event.target.value } }))} /></label>
+            <label>Name<input disabled={Boolean(busy)} maxLength={120} value={contact.name} onChange={(event) => setContactDrafts((all) => ({ ...all, [item.event_id]: { ...contact, name: event.target.value } }))} /></label>
+            <label>Phone<input disabled={Boolean(busy)} maxLength={40} type="tel" value={contact.phone} onChange={(event) => setContactDrafts((all) => ({ ...all, [item.event_id]: { ...contact, phone: event.target.value } }))} /></label>
             <button className="button button-outline" disabled={busy} onClick={() => void saveSafetyContact(item)} type="button">Save safety contact</button>
           </div> : null}
           <Link href={eventToolHref("/admin/events?view=edit", item.event_id)}>Review event details</Link>
@@ -250,7 +267,7 @@ export function EventHostReviewManager({ events, selectedEventId, workspaces, mi
           <h4>Arrival details</h4><p>{item.arrival_info}</p>
           <h4>Programme</h4><ul>{item.programme.map((entry, index) => <li key={index}><strong>{entry.title}</strong> · {new Intl.DateTimeFormat("en-KE", { dateStyle: "medium", timeStyle: "short", timeZone: event?.timezone ?? "Africa/Nairobi" }).format(new Date(entry.starts_at))}{entry.speaker_name ? ` · ${entry.speaker_name}` : ""}<p>{entry.description}</p></li>)}</ul>
           <h4>Partners</h4>{item.partners.length ? <ul>{item.partners.map((entry, index) => <li key={index}>{entry.name}{entry.website_url ? ` · ${entry.website_url}` : ""}</li>)}</ul> : <p>None listed.</p>}
-          <label>Note to Host<textarea rows={3} value={notes[item.event_id] ?? ""} onChange={(event) => setNotes((all) => ({ ...all, [item.event_id]: event.target.value }))} placeholder="Explain what needs to change, if anything." /></label>
+          <label>Note to Host<textarea disabled={Boolean(busy)} rows={3} value={notes[item.event_id] ?? ""} onChange={(event) => setNotes((all) => ({ ...all, [item.event_id]: event.target.value }))} placeholder="Explain what needs to change, if anything." /></label>
           <div className="portal-actions"><button className="button button-primary" type="button" disabled={busy || item.host_status !== "active" || !safetyReady || !savedContact || !arrivalReady || !onlineReady || !ticketReady || publicationWindowClosed} onClick={() => void review(item, "approve")}>Approve and publish</button><button className="button button-outline" type="button" disabled={busy || item.host_status !== "active"} onClick={() => void review(item, "request_changes")}>Ask for changes</button></div>
         </div> : item.review_note ? <p>Last review note: {item.review_note}</p> : null}
         {item.event_status === "published" ? <Link href={`/events/${item.event_slug}`}>View public page</Link> : null}

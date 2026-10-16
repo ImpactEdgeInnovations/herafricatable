@@ -1203,7 +1203,8 @@ for (const contract of [
 }
 assert(
   membershipApprovalReview.includes("member-approved:") &&
-    membershipApprovalReview.includes("welcome email was sent") &&
+    membershipApprovalReview.includes("welcome email was accepted for delivery") &&
+    membershipApprovalReview.includes("Check Message delivery for the welcome email status") &&
     targetedNotificationRoute.includes("member-approved"),
   "Admin approval must attempt exact welcome-email delivery without losing the retry queue",
 );

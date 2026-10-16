@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { createClient } from "@/lib/supabase/client";
+import { useAdminOperation } from "@/lib/use-admin-operation";
 import { adminErrorMessage } from "@/lib/admin-error";
 
 export type CommunityHostApplicationAdmin = {
@@ -71,10 +72,10 @@ export function CommunityHostApplicationManager({
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const { ask, dialog } = useActionDialog();
+  const { ask, dialog, clearDraft } = useActionDialog({ retainDrafts: true });
   const [filter, setFilter] = useState<"open" | "closed" | "all">("open");
-  const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
+  const { busy, setBusy, runAdminAction, markSaved } = useAdminOperation<string>("", "pending", setMessage, clearDraft);
   const openStatuses = ["pending", "under_review", "changes_requested"];
   const visible = applications.filter((item) =>
     filter === "all"
@@ -96,56 +97,60 @@ export function CommunityHostApplicationManager({
     application: CommunityHostApplicationAdmin,
   ) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const nativeEvent = event.nativeEvent as SubmitEvent;
-    const action =
-      nativeEvent.submitter instanceof HTMLButtonElement
-        ? nativeEvent.submitter.value
-        : "";
-    if (!action) return;
-    if (action === "approve" || action === "decline") {
-      const confirmed = await ask({
-        confirmLabel:
-          action === "approve" ? "Approve and create draft" : "Decline proposal",
-        description:
-          action === "approve"
-            ? "This creates a private draft community and makes the applicant its owner. Publication still requires the full release checks."
-            : "This closes the proposal. The applicant will see your review note and may submit a new idea.",
-        title:
-          action === "approve"
-            ? `Approve ${application.community_name}?`
-            : `Decline ${application.community_name}?`,
-        tone: action === "approve" ? "default" : "danger",
-      });
-      if (!confirmed) return;
-    }
+    const actionKey = "community-application:" + application.application_id;
+    return runAdminAction(actionKey, async () => {
+      const form = new FormData(event.currentTarget);
+      const nativeEvent = event.nativeEvent as SubmitEvent;
+      const action =
+        nativeEvent.submitter instanceof HTMLButtonElement
+          ? nativeEvent.submitter.value
+          : "";
+      if (!action) return;
+      if (action === "approve" || action === "decline") {
+        const confirmed = await ask({ draftKey: actionKey,
+          confirmLabel:
+            action === "approve" ? "Approve and create draft" : "Decline proposal",
+          description:
+            action === "approve"
+              ? "This creates a private draft community and makes the applicant its owner. Publication still requires the full release checks."
+              : "This closes the proposal. The applicant will see your review note and may submit a new idea.",
+          title:
+            action === "approve"
+              ? `Approve ${application.community_name}?`
+              : `Decline ${application.community_name}?`,
+          tone: action === "approve" ? "default" : "danger",
+        });
+        if (!confirmed) return;
+      }
 
-    setBusy(application.application_id);
-    setMessage("");
-    const { error } = await supabase.rpc(
-      "review_community_host_application",
-      {
-        p_action: action,
-        p_admin_note: String(form.get("admin_note") ?? ""),
-        p_application_id: application.application_id,
-        p_approved_slug: String(
-          form.get("approved_slug") ?? application.proposed_slug,
-        ),
-      },
-    );
-    setBusy("");
-    setMessage(
-      error
-        ? adminErrorMessage(error, "review this community application")
-        : action === "approve"
-          ? "Application approved. A private draft community and owner access were created."
-          : action === "request_changes"
-            ? "Guidance sent. The member can now update and resubmit."
-            : action === "start_review"
-              ? "Application moved into review."
-              : "Application declined and the member was notified.",
-    );
-    if (!error) router.refresh();
+      setBusy(application.application_id);
+      setMessage("");
+      const { error } = await supabase.rpc(
+        "review_community_host_application",
+        {
+          p_action: action,
+          p_admin_note: String(form.get("admin_note") ?? ""),
+          p_application_id: application.application_id,
+          p_approved_slug: String(
+            form.get("approved_slug") ?? application.proposed_slug,
+          ),
+        },
+      );
+      if (!error) markSaved();
+      setBusy("");
+      setMessage(
+        error
+          ? adminErrorMessage(error, "review this community application")
+          : action === "approve"
+            ? "Application approved. A private draft community and owner access were created."
+            : action === "request_changes"
+              ? "Guidance sent. The member can now update and resubmit."
+              : action === "start_review"
+                ? "Application moved into review."
+                : "Application declined. Check Message delivery for the member notice.",
+      );
+      if (!error) router.refresh();
+    });
   }
 
   if (!migrationReady) {
@@ -290,7 +295,7 @@ export function CommunityHostApplicationManager({
                         Draft URL
                         <div>
                           <span>/communities/</span>
-                          <input
+                          <input disabled={Boolean(busy)}
                             defaultValue={application.proposed_slug}
                             name="approved_slug"
                             pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
@@ -300,7 +305,7 @@ export function CommunityHostApplicationManager({
                       </label>
                       <label>
                         Review note
-                        <textarea
+                        <textarea disabled={Boolean(busy)}
                           defaultValue={application.admin_note ?? ""}
                           maxLength={2000}
                           name="admin_note"
@@ -313,7 +318,7 @@ export function CommunityHostApplicationManager({
                       {application.status === "pending" ? (
                         <button
                           className="button button-outline"
-                          disabled={busy === application.application_id}
+                          disabled={Boolean(busy)}
                           name="action"
                           value="start_review"
                         >
@@ -322,7 +327,7 @@ export function CommunityHostApplicationManager({
                       ) : null}
                       <button
                         className="button button-outline"
-                        disabled={busy === application.application_id}
+                        disabled={Boolean(busy)}
                         name="action"
                         value="request_changes"
                       >
@@ -330,7 +335,7 @@ export function CommunityHostApplicationManager({
                       </button>
                       <button
                         className="button button-primary"
-                        disabled={busy === application.application_id}
+                        disabled={Boolean(busy)}
                         name="action"
                         value="approve"
                       >
@@ -340,7 +345,7 @@ export function CommunityHostApplicationManager({
                       </button>
                       <button
                         className="button button-quiet"
-                        disabled={busy === application.application_id}
+                        disabled={Boolean(busy)}
                         name="action"
                         value="decline"
                       >

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { useAdminOperation } from "@/lib/use-admin-operation";
 import { adminErrorMessage } from "@/lib/admin-error";
 import { createClient } from "@/lib/supabase/client";
 
@@ -40,9 +41,9 @@ export function TableInvitationManager({
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const { ask, dialog } = useActionDialog();
-  const [busy, setBusy] = useState("");
+  const { ask, dialog, clearDraft } = useActionDialog({ retainDrafts: true });
   const [message, setMessage] = useState("");
+  const { busy, setBusy, runAdminAction, markSaved } = useAdminOperation<string>("", "pending", setMessage, clearDraft);
   const pending = invitations.filter(
     (invitation) => invitation.invitation_status === "pending_review",
   );
@@ -51,80 +52,84 @@ export function TableInvitationManager({
     invitation: AdminTableInvitation,
     action: "approve" | "reject" | "revoke",
   ) {
-    const needsReason = action !== "approve";
-    const result = await ask({
-      confirmLabel:
-        action === "approve"
-          ? "Approve and email"
-          : action === "reject"
-            ? "Decline invitation"
-            : "Revoke invitation",
-      description:
-        action === "approve"
-          ? `This places a secure, single-use invitation for ${invitation.invitee_email} in the Resend email queue. Membership and destination approval rules still apply.`
-          : "The link will not be usable. The reason remains visible to the Admin team.",
-      fields: needsReason
-        ? [
-            {
-              label: "Short private reason",
-              maxLength: 400,
-              minLength: 5,
-              name: "reason",
-              required: true,
-              type: "textarea",
-            },
-          ]
-        : undefined,
-      title:
-        action === "approve"
-          ? `Email this ${invitation.destination_type} invitation?`
-          : `${action === "reject" ? "Decline" : "Revoke"} this invitation?`,
-      tone: needsReason ? "danger" : "default",
-    });
-    if (!result) return;
-    setBusy(invitation.invitation_id);
-    setMessage("");
-    const { error } = await supabase.rpc("review_table_invitation", {
-      p_action: action,
-      p_invitation_id: invitation.invitation_id,
-      p_note: needsReason ? String(result.reason ?? "") : null,
-    });
-    if (error) {
-      setBusy("");
-      setMessage(adminErrorMessage(error, "review this invitation"));
-      return;
-    }
-    if (action === "approve") {
-      try {
-        const response = await fetch("/api/admin/notifications/process", {
-          body: JSON.stringify({
-            dedupeKey: `table-invitation:${invitation.invitation_id}`,
-          }),
-          headers: { "content-type": "application/json" },
-          method: "POST",
-        });
-        const delivery = (await response.json()) as {
-          error?: string;
-          failed?: number;
-          sent?: number;
-        };
-        setMessage(
-          response.ok && (delivery.sent ?? 0) > 0 && !(delivery.failed ?? 0)
-            ? `Approved. The protected Resend queue sent ${delivery.sent} waiting message${delivery.sent === 1 ? "" : "s"}; the delivery record confirms each result.`
-            : response.ok
-              ? "Approved. The protected delivery queue was processed; check Message delivery for its final state."
-              : `Approved and safely queued. ${delivery.error ?? "Use Message delivery to try sending again."}`,
-        );
-      } catch {
-        setMessage(
-          "Approved and safely queued. Use Message delivery to send waiting messages.",
-        );
+    const actionKey = "invitation:" + invitation.invitation_id + ":" + action;
+    return runAdminAction(actionKey, async () => {
+      const needsReason = action !== "approve";
+      const result = await ask({ draftKey: actionKey,
+        confirmLabel:
+          action === "approve"
+            ? "Approve and email"
+            : action === "reject"
+              ? "Decline invitation"
+              : "Revoke invitation",
+        description:
+          action === "approve"
+            ? `This places a secure, single-use invitation for ${invitation.invitee_email} in the Resend email queue. Membership and destination approval rules still apply.`
+            : "The link will not be usable. The reason remains visible to the Admin team.",
+        fields: needsReason
+          ? [
+              {
+                label: "Short private reason",
+                maxLength: 400,
+                minLength: 5,
+                name: "reason",
+                required: true,
+                type: "textarea",
+              },
+            ]
+          : undefined,
+        title:
+          action === "approve"
+            ? `Email this ${invitation.destination_type} invitation?`
+            : `${action === "reject" ? "Decline" : "Revoke"} this invitation?`,
+        tone: needsReason ? "danger" : "default",
+      });
+      if (!result) return;
+      setBusy(invitation.invitation_id);
+      setMessage("");
+      const { error } = await supabase.rpc("review_table_invitation", {
+        p_action: action,
+        p_invitation_id: invitation.invitation_id,
+        p_note: needsReason ? String(result.reason ?? "") : null,
+      });
+      if (!error) markSaved();
+      if (error) {
+        setBusy("");
+        setMessage(adminErrorMessage(error, "review this invitation"));
+        return;
       }
-    } else {
-      setMessage("Invitation updated.");
-    }
-    setBusy("");
-    router.refresh();
+      if (action === "approve") {
+        try {
+          const response = await fetch("/api/admin/notifications/process", {
+            body: JSON.stringify({
+              dedupeKey: `table-invitation:${invitation.invitation_id}`,
+            }),
+            headers: { "content-type": "application/json" },
+            method: "POST",
+          });
+          const delivery = (await response.json()) as {
+            error?: string;
+            failed?: number;
+            sent?: number;
+          };
+          setMessage(
+            response.ok && (delivery.sent ?? 0) > 0 && !(delivery.failed ?? 0)
+              ? `Approval saved. Resend accepted ${delivery.sent} message${delivery.sent === 1 ? "" : "s"} for delivery. Check Message delivery for the result.`
+              : response.ok
+                ? "Approved. The protected delivery queue was processed; check Message delivery for its final state."
+                : "Approval saved. Check Message delivery before retrying the email.",
+          );
+        } catch {
+          setMessage(
+            "Approval saved. Check Message delivery before retrying the email.",
+          );
+        }
+      } else {
+        setMessage("Invitation updated.");
+      }
+      setBusy("");
+      router.refresh();
+    });
   }
 
   return (

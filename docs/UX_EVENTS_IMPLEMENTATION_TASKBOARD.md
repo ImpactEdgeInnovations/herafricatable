@@ -26,7 +26,17 @@ Final browser evidence: the existing Seina member session opened the Lavington W
 
 **16 October — Admin audit track:** [Source/live-database audit, functional matrix and implementation tasks](HAT_ADMIN_AUDIT_20261016.md). Inventoried 83 files, 256 literal RPC call sites and 200 unique live RPCs; no missing names or inspected named-argument mismatches. Eleven sampled ordinary-member privileged reads denied/returned no rows; member browser correctly denied Admin entry. This is not full Super Admin write/visual acceptance. ADMIN-01–04: permissions, staged cleanup, durable delivery outcomes and refund workflow. ADMIN-05–06: action recovery and support context. ADMIN-07–08: honest counts/readiness. ADMIN-09–10: navigation/plain language. ADMIN-11–12: paged oversight, activity and complete role/release acceptance. All implementation tasks are queued; the audit changed documentation only.
 
-**16 October — Admin phase 1 implemented:** ADMIN-01–04 now have active-role page/API guards, resumable cleanup, honest queue-persistence outcomes and separate manual refund completion. Full automated tests/build and rollback SQL test 064 passed. Database migration applied live; no owner SQL needed. Real external/Auth/Storage/provider/browser acceptance remains open. [Evidence and limits](ADMIN_PHASE_ONE_HANDOVER_20261016.md). Phase 2 (decision/support recovery) is next; phases 3–5 remain queued.
+**16 October — Admin phase 1 implemented:** ADMIN-01–04 now have active-role page/API guards, resumable cleanup, honest queue-persistence outcomes and separate manual refund completion. Full automated tests/build and rollback SQL test 064 passed. Database migration applied live; no owner SQL needed. Real external/Auth/Storage/provider/browser acceptance remains open. [Evidence and limits](ADMIN_PHASE_ONE_HANDOVER_20261016.md).
+
+**16 October — Admin phase 2 implemented:** ADMIN-05/06 now have synchronous decision locks, failure cleanup, retained record/action notes, honest save/delivery feedback, ticket-scoped Support drafts, visible recipients and failed-conversation read gating. Controlled executable L1 tests, full tests/typecheck/build passed. No SQL or real outbound communication in this phase. Live recovery, role/device and inbox acceptance remain open. [Evidence and tester checklist](ADMIN_PHASE_TWO_HANDOVER_20261016.md).
+
+| Admin phase | Focus | Implementation | Acceptance |
+| --- | --- | --- | --- |
+| 1 | Permissions, privacy, refunds and durable delivery | Implemented | Selected L1/L2 passed; external/browser checks open |
+| 2 | Reliable decisions and support replies | Implemented | L1 passed; live L2/L3 open |
+| 3 | Accurate counts and launch-readiness inputs | Next | ADMIN-07/08 |
+| 4 | Clear navigation and plain wording | Queued | ADMIN-09/10 |
+| 5 | Scale, investigation and release/security rehearsal | Queued | ADMIN-11/12 |
 
 **16 October featured-spot follow-up:** Fixed stale Admin decisions and overly restrictive date-overlap counting. Passed live rollback tests 062/063 for three-plus-one capacity, reuse, adjacent/disjoint periods and stale decision refusal. Added a filtered Admin queue, read-error gating, double-submit protection and stale-read recovery with executable L1 tests. Host form access was observed live. Full independent Host/Admin browser writes and truly concurrent review sessions remain open; the lock probe was inconclusive. Database update applied live; no owner SQL action needed.
 
