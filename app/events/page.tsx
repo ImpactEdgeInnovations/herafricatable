@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FeaturedSpots } from "@/components/featured/featured-spots";
 import { EventDiscovery } from "@/components/events/event-discovery";
+import { EventCardMedia } from "@/components/events/event-card-media";
 import { createClient } from "@/lib/supabase/server";
 import { MemberHeader } from "@/components/member/member-header";
 import {
@@ -232,7 +233,7 @@ export default async function EventsPage() {
           const tickets = ticketsByEvent.get(event.id) ?? [];
           return { id: event.id, title: event.title, summary: event.summary, location: event.venues?.city ?? "Online", startsAt:event.starts_at, timezone:event.timezone, format: `${event.format.replaceAll("_", " ")} ${eventFormatLabel(event.format)}`, content: (
           <article key={event.id} className={poster?.url ? "has-poster" : "without-poster"}>
-            {poster?.url ? <Link href={`/events/${event.slug}`} className="public-event-image-link" tabIndex={-1} aria-hidden="true"><img className="public-event-poster" alt="" src={poster.url} loading="lazy" /></Link> : null}
+            <EventCardMedia src={poster?.url} alt={poster?.alt} title={event.title} dateLabel={new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "long", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))} />
             <div className="public-event-date"><strong>{new Intl.DateTimeFormat("en-KE", { day: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))}</strong><span>{new Intl.DateTimeFormat("en-KE", { month: "short", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</span></div>
             <div className="public-event-copy"><span>{event.audience === "community" ? "Community gathering" : eventFormatLabel(event.format)}</span><h2><Link href={`/events/${event.slug}`}>{event.title}</Link></h2><p className="public-event-facts">{new Intl.DateTimeFormat("en-KE", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} <span aria-hidden="true">·</span> {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"} <span aria-hidden="true">·</span> {eventPrice(tickets, Boolean(publicTicketError))}</p><p className="public-event-summary">{event.summary || "Open this event to see the details."}</p><p className="public-event-booking-state">{bookingLabel(event, bookingAvailability.get(event.id), event.free_instant_booking && isActiveMember && intakeMode === "trusted_auto")}</p></div>
             <Link className="public-event-open" href={`/events/${event.slug}`}>View event <span aria-hidden="true">→</span></Link>

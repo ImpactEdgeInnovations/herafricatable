@@ -34,7 +34,7 @@ assert(render('missing', '').includes('Show all events'));
 assert(render('missing', '').includes('0 of 2'));
 const page = read('app/events/page.tsx');
 assert(page.includes('<EventDiscovery items=') && page.includes('public-event-booking-state'));
-assert(page.includes('className="public-event-image-link"') && page.includes('loading="lazy"'));
+assert(page.includes('<EventCardMedia src={poster?.url}') && read('components/events/event-card-media.tsx').includes('loading="lazy"'));
 const css = read('app/product-ui-foundation.css');
 assert(css.includes('.public-event-poster') && css.includes('object-fit: contain'));
 const mobile = read('components/events/event-mobile-action.tsx');

@@ -1,10 +1,12 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 15 October 2026. Historical baseline release: `b4be9ca`.
+Updated: 16 October 2026. Historical baseline release: `b4be9ca`.
 
 This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
 ## 7 October execution alignment
+
+**16 October — Events grid alignment and poster readability:** Admin phase 3 is paused for this requested UI fix. Upcoming event cards now share a larger 8:5 media frame, with a restrained name/date panel when there is no image (or an image fails). Desktop uses two equal, stretched columns; mobile uses one. Dates, minimum title/fact/summary areas and bottom actions are consistent across image/no-image cards. Posters are shown complete, not cropped, with a labelled button opening a native in-page dialog for a much larger scrollable view. Closing does not navigate away or reset search filters. Controlled tests cover open/close, backdrop targeting, missing/broken images and replacement recovery; full tests/typecheck/build passed. No SQL, booking, permissions or email changes. Desktop/mobile visual, native focus/Escape and touch acceptance remain OPEN because browser origin approval was blocked by an app usage-limit review failure; no workaround was attempted.
 
 **Phase 4 Host follow-through, verified 8 October:** `fe05c02` is pushed and deployed. Host editing now retains account/event-scoped text drafts and gives an explicit discard action; selected posters have a local preview and leave-page protection. Poster-save reconciliation keeps existing live images safe on uncertain responses. Optional booking, invitation, colour and cancellation tools share a compact reading edge. Live 390 px inspection measured 358 px for both editor and tools, with a 390 px document and no horizontal overflow. A benign unsaved text rehearsal survived tab changes and was discarded back to the original; no save, publication, invitation or upload was performed. Mocked failure tests and the full suite/build passed. Real-file uploads, populated Community search/replies and multi-account acceptance are still open; Phase 4 is not marked complete.
 
