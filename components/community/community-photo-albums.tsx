@@ -8,12 +8,13 @@ import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
 import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 import { CommunityPhotoViewer } from "./community-photo-viewer";
+import { CommunityAlbumCard } from "./community-album-card";
 import { CommunityGatheringDiscussion } from "@/components/member/community-gathering-discussion";
 
-type Album = { id: string; title: string; description: string; contribution_mode: string; is_closed: boolean; photo_count: number; gathering_title: string | null; post_id: string | null };
+type Album = { id: string; title: string; description: string; contribution_mode: string; is_closed: boolean; photo_count: number; gathering_title: string | null; post_id: string | null; cover_photo_id?: string | null; cover_is_custom?: boolean };
 type Photo = { id: string; caption: string; status: string; uploader_id: string | null; uploader_name: string; created_at: string };
 type AlbumList = { albums: Album[]; allowance_bytes: number; used_bytes: number; uploads_enabled: boolean; can_manage: boolean; pilot_available?: boolean; admin_paused?: boolean };
-type AlbumDetails = { album: Album; photos: Photo[]; can_manage: boolean; can_upload: boolean };
+type AlbumDetails = { album: Album; photos: Photo[]; can_manage: boolean; can_upload: boolean; has_more?: boolean; next_cursor?: string | null; total_count?: number };
 type SelectedFile = { file: File; id?: string; saved?: boolean; error?: string };
 const emptyDraft = { title: "", description: "", roomId: "", requestId: "" };
 const choices = [ ["hosts_only", "Only Hosts can add photos"], ["members", "Members can add photos immediately"], ["review", "Member photos need approval"] ];
@@ -41,6 +42,9 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
   const closePhoto = useCallback(() => setSelectedPhoto(""), []);
   const input = useRef<HTMLInputElement>(null);
   const requestVersion = useRef(0);
+  const loadedCount = useRef(24);
+  const moreRequest = useRef<{ version: number; albumId: string } | null>(null);
+  const coverSaving = useRef(false);
   const [draft, setDraft, clearDraft] = useCommunityDraft(communityDraftKey(currentUserId, "photo-album", initialGatheringId ? `${communityId}:${initialGatheringId}` : communityId), { ...emptyDraft, roomId: initialGatheringId ?? "" });
   const unsavedFiles = files.some(item => !item.saved);
   const photoSettingsInitial = { mode: details?.album.contribution_mode ?? "hosts_only", closed: details?.album.is_closed ?? false };
@@ -68,8 +72,9 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
       } catch {
         if (stopped) return;
         requestVersion.current++;
+        moreRequest.current = null;
         setList(null); setDetails(null); setSelectedPhoto(""); setFiles([]);
-        setBusy(current => current === "album" ? "" : current);
+        setBusy(current => ["album", "more", "cover"].includes(current) ? "" : current);
         setMessage("Photos could not be opened. Please try again when your connection or membership access is restored.");
       } finally { checking = false; }
     }
@@ -83,11 +88,12 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
     let stopped = false;
     let checking = false;
     async function recheck() {
-      if (checking) return;
+      if (checking || moreRequest.current) return;
       checking = true;
+      const limit = loadedCount.current;
       try {
-        const { data, error } = await supabase.rpc("get_community_photo_album", { p_album_id: selectedAlbumId });
-        if (stopped) return;
+        const { data, error } = await supabase.rpc("get_community_photo_album_page", { p_album_id: selectedAlbumId, p_after: null, p_limit: limit });
+        if (stopped || moreRequest.current || limit !== loadedCount.current) return;
         if (error || !data) throw error || new Error("Album unavailable");
         setDetails(previous => previous?.album.id === selectedAlbumId ? data as AlbumDetails : previous);
       } catch {
@@ -118,9 +124,10 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
   async function select(id: string) {
     if (unsavedFiles && !(await ask({ title: "Choose a different album?", description: "The photos you have not saved will need to be selected again.", confirmLabel: "Change album", tone: "danger" }))) return;
     const version = ++requestVersion.current;
+    loadedCount.current = 24; moreRequest.current = null;
     setFiles([]); setBatchId(""); setCaption(""); setPermission(false); setSelectedPhoto(""); setShowDiscussion(false); setDetails(null); setBusy("album"); setMessage("");
     try {
-      const { data, error } = await supabase.rpc("get_community_photo_album", { p_album_id: id });
+      const { data, error } = await supabase.rpc("get_community_photo_album_page", { p_album_id: id, p_after: null, p_limit: 24 });
       if (version !== requestVersion.current) return;
       if (error || !data) throw error || new Error("Album unavailable");
       setDetails(data as AlbumDetails);
@@ -128,6 +135,32 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
       if (version === requestVersion.current) setMessage(memberErrorMessage(error, "open this album"));
     } finally {
       if (version === requestVersion.current) setBusy("");
+    }
+  }
+  async function loadMore() {
+    if (!details?.has_more || !details.next_cursor || moreRequest.current || busy) return false;
+    const token = { version: requestVersion.current, albumId: details.album.id };
+    moreRequest.current = token; setBusy("more"); setMessage("");
+    try {
+      const { data, error } = await supabase.rpc("get_community_photo_album_page", { p_album_id: token.albumId, p_after: details.next_cursor, p_limit: 24 });
+      if (token.version !== requestVersion.current || moreRequest.current !== token) return false;
+      if (error || !data) throw error || new Error("Photos unavailable");
+      const page = data as AlbumDetails;
+      const photos = [...new Map([...details.photos, ...page.photos].map(photo => [photo.id, photo])).values()];
+      loadedCount.current = Math.min(100, Math.max(24, photos.length));
+      setDetails(current => {
+        if (!current || current.album.id !== token.albumId) return current;
+        return { ...page, photos };
+      });
+      return true;
+    } catch (error) {
+      if (token.version === requestVersion.current) {
+        if ((error as { code?: string })?.code === "42501") { setDetails(null); setList(null); setSelectedPhoto(""); }
+        setMessage(memberErrorMessage(error, "load more photos"));
+      }
+      return false;
+    } finally {
+      if (moreRequest.current === token) { moreRequest.current = null; if (token.version === requestVersion.current) setBusy(""); }
     }
   }
   async function create(event: FormEvent<HTMLFormElement>) {
@@ -140,8 +173,9 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
       const { data, error } = await supabase.rpc("create_community_photo_album", { p_community_id: communityId, p_request_id: requestId,
         p_title: draft.title, p_description: draft.description, p_room_id: draft.roomId || null });
       if (error) throw error;
+      loadedCount.current = 24;
       await refresh();
-      const { data: album, error: albumError } = await supabase.rpc("get_community_photo_album", { p_album_id: data });
+      const { data: album, error: albumError } = await supabase.rpc("get_community_photo_album_page", { p_album_id: data, p_after: null, p_limit: 24 });
       if (albumError) throw albumError;
       setDetails(album as AlbumDetails); clearDraft({ ...emptyDraft, roomId: initialGatheringId ?? "" }); setMessage("Album created.");
     } catch (error) { setMessage(memberErrorMessage(error, "create this album")); }
@@ -156,7 +190,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
       clearPhotoSettings(submitted);
       setDetails(current => current ? { ...current, can_upload: false, album: { ...current.album, contribution_mode: submitted.mode, is_closed: submitted.closed } } : current);
       try {
-        const refreshed = await supabase.rpc("get_community_photo_album", { p_album_id: details.album.id });
+        const refreshed = await supabase.rpc("get_community_photo_album_page", { p_album_id: details.album.id, p_after: null, p_limit: loadedCount.current });
         if (refreshed.error || !refreshed.data) throw new Error("Refresh unavailable");
         setDetails(refreshed.data as AlbumDetails);
       } catch { setMessage("Photo settings saved. Reopen this album to refresh who can upload."); return; }
@@ -191,7 +225,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
       const saved = selected.filter(item => item.saved).length;
       setMessage(saved === selected.length ? "Photos saved." : `${saved} of ${selected.length} photos saved. You can retry the remaining photos.`);
       if (saved === selected.length) { setFiles([]); setBatchId(""); setPermission(false); setCaption(""); if (input.current) input.current.value = ""; }
-      const { data } = await supabase.rpc("get_community_photo_album", { p_album_id: details.album.id });
+      const { data } = await supabase.rpc("get_community_photo_album_page", { p_album_id: details.album.id, p_after: null, p_limit: loadedCount.current });
       if (data) setDetails(data as AlbumDetails);
       await refresh();
     } catch (error) { setMessage(memberErrorMessage(error, "save these photos")); }
@@ -204,7 +238,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
     try {
       const { error } = await supabase.rpc("review_community_album_photo", { p_photo_id: photo.id, p_action: action });
       if (error) throw error;
-      const { data, error: albumError } = await supabase.rpc("get_community_photo_album", { p_album_id: details.album.id });
+      const { data, error: albumError } = await supabase.rpc("get_community_photo_album_page", { p_album_id: details.album.id, p_after: null, p_limit: loadedCount.current });
       if (albumError) throw albumError;
       if (data) setDetails(data as AlbumDetails);
       await refresh();
@@ -239,9 +273,36 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
     } catch (error) { setMessage(memberErrorMessage(error, "change photo sharing")); }
     finally { setBusy(""); }
   }
+  async function saveCover(photoId: string | null) {
+    if (!details?.can_manage || busy || moreRequest.current || coverSaving.current) return;
+    coverSaving.current = true;
+    const albumId = details.album.id;
+    const version = requestVersion.current;
+    let saved = false;
+    setBusy("cover"); setMessage("");
+    try {
+      const result = await supabase.rpc("save_community_album_cover", { p_album_id: albumId, p_photo_id: photoId });
+      if (result.error) throw result.error;
+      saved = true;
+      const refreshed = await supabase.rpc("get_community_photo_album_page", { p_album_id: albumId, p_after: null, p_limit: loadedCount.current });
+      if (refreshed.error || !refreshed.data) throw refreshed.error || new Error("Album unavailable");
+      if (version !== requestVersion.current) return;
+      setDetails(refreshed.data as AlbumDetails);
+      await refresh();
+      if (version === requestVersion.current) setMessage(photoId ? "Album cover saved." : "The first approved photo is now used automatically.");
+    } catch (error) {
+      if (version === requestVersion.current) setMessage(saved ? "Album cover saved. Reopen photos to refresh its preview." : memberErrorMessage(error, "save the album cover"));
+    } finally { coverSaving.current = false; if (version === requestVersion.current) setBusy(""); }
+  }
+  async function showAlbums() {
+    if (busy || moreRequest.current) return;
+    if (unsavedFiles && !await ask({ title: "Return to albums?", description: "Your selected photos have not been saved. Returning to albums will clear this selection.", confirmLabel: "Return to albums", tone: "danger" })) return;
+    requestVersion.current++; loadedCount.current = 24;
+    setDetails(null); setSelectedPhoto(""); setShowDiscussion(false); setFiles([]); setBatchId("");
+  }
   const content = <div className="community-photo-body">
       {dialog}
-      {selectedPhoto && details ? <CommunityPhotoViewer photos={details.photos.filter(photo => ["published", "pending", "hidden"].includes(photo.status))} selectedId={selectedPhoto} onSelect={setSelectedPhoto} onClose={closePhoto} /> : null}
+      {selectedPhoto && details ? <CommunityPhotoViewer photos={details.photos.filter(photo => ["published", "pending", "hidden"].includes(photo.status))} selectedId={selectedPhoto} onSelect={setSelectedPhoto} onClose={closePhoto} hasMore={Boolean(details.has_more)} loadingMore={busy === "more"} onLoadMore={loadMore} /> : null}
       {message ? <p role="status" className="network-message">{message}</p> : null}
       {busy === "load" ? <p>Opening albums…</p> : null}
       {!list && !busy ? <button className="button button-outline" onClick={() => void load()}>Try again</button> : null}
@@ -251,10 +312,10 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
           {list.admin_paused ? <p>Admin has paused photo sharing. Ask Admin to reopen it.</p> : <button className="button button-outline" disabled={Boolean(busy) || unsavedFiles} onClick={() => void togglePilotPhotos()}>{list.uploads_enabled ? "Pause photo sharing" : "Allow photos during the pilot"}</button>}
         </div> : null}
         {list.albums.length && !details ? <p>Choose an album to view photos or add yours where the Host allows it.</p> : null}
-        <div className="community-photo-album-list" role="group" aria-label="Choose an album">
-          {list.albums.map(album => <button key={album.id} disabled={Boolean(busy)} aria-pressed={details?.album.id === album.id} onClick={() => void select(album.id)}><strong>{album.title}</strong><small>{album.gathering_title || "Community album"} · {album.photo_count} photos</small></button>)}
+        {!details ? <div className="community-photo-album-list" role="group" aria-label="Choose an album">
+          {list.albums.map(album => <CommunityAlbumCard key={album.id} album={album} disabled={Boolean(busy)} selected={false} onOpen={() => void select(album.id)} />)}
           {!list.albums.length ? <p>{list.can_manage ? "No albums yet. Start with a name and a short description." : "No photos yet. Albums shared by your Community will appear here."}</p> : null}
-        </div>
+        </div> : null}
         {list.can_manage ? <details className="community-photo-create"><summary>New album</summary><form onSubmit={create}>
           <label>Album name<input required minLength={3} maxLength={140} value={draft.title} disabled={Boolean(busy)} onChange={event => setDraft(previous => ({ ...previous, title: event.target.value }))} /></label>
           <label>Description (optional)<textarea maxLength={2000} rows={3} value={draft.description} disabled={Boolean(busy)} onChange={event => setDraft(previous => ({ ...previous, description: event.target.value }))} /></label>
@@ -263,10 +324,13 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
         </form></details> : null}
       </> : null}
       {details ? <section className="community-photo-selected" aria-label={details.album.title}>
+        <button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => void showAlbums()}>← All albums</button>
         <header><h3>{details.album.title}</h3>{details.album.gathering_title ? <small>From {details.album.gathering_title}</small> : null}<p>{details.album.description}</p></header>
         <button type="button" className="button button-outline" aria-expanded={showDiscussion} onClick={() => setShowDiscussion(value => !value)}>{showDiscussion ? "Close conversation" : "Open conversation"}</button>
         {showDiscussion ? <CommunityGatheringDiscussion key={details.album.id} albumId={details.album.id} currentUserId={currentUserId} revision={0} /> : null}
         {details.can_manage ? <form onSubmit={settings} className="community-photo-settings">
+          <p className="community-album-cover-guide">The first approved photo is used as the cover. To choose another, select <strong>Use as album cover</strong> below that photo.</p>
+          {details.album.cover_is_custom ? <button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => void saveCover(null)}>Use an automatic cover</button> : null}
           <label>Who can add photos?<select value={photoSettings.mode} disabled={Boolean(busy)} onChange={event => setPhotoSettings(current => ({ ...current, mode: event.target.value }))}>{choices.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label className="community-photo-check"><input type="checkbox" checked={photoSettings.closed} disabled={Boolean(busy)} onChange={event => setPhotoSettings(current => ({ ...current, closed: event.target.checked }))} />Close this album to new photos</label>
           <button className="button button-outline" disabled={Boolean(busy) || unsavedFiles || !settingsDirty}>Save photo settings</button>
@@ -291,6 +355,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
           <p>{photo.caption}</p><small>{photo.uploader_name} · {new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", timeZone: "Africa/Nairobi" }).format(new Date(photo.created_at))}</small>
           <span>{statusLabels[photo.status]}</span>
           <footer>
+            {details.can_manage && photo.status === "published" ? photo.id === details.album.cover_photo_id ? <span className="community-album-cover-label">Album cover</span> : <button type="button" disabled={Boolean(busy)} onClick={() => void saveCover(photo.id)}>Use as album cover</button> : null}
             {["published", "pending", "hidden"].includes(photo.status) ? <button disabled={Boolean(busy)} onClick={() => void report(photo)}>Report privately</button> : null}
             {details.can_manage && photo.status === "pending" ? <><button disabled={Boolean(busy)} onClick={() => void review(photo, "approve")}>Approve</button><button disabled={Boolean(busy)} onClick={() => void review(photo, "reject")}>Decline</button></> : null}
             {details.can_manage && photo.status === "published" ? <button disabled={Boolean(busy)} onClick={() => void review(photo, "hide")}>Hide</button> : null}
@@ -298,6 +363,7 @@ export function CommunityPhotoAlbums({ communityId, currentUserId, presentation 
             {photo.status !== "removed" && (details.can_manage || photo.uploader_id === currentUserId) ? <button disabled={Boolean(busy)} onClick={() => void review(photo, "remove")}>Remove</button> : null}
           </footer>
         </article>)}</div>
+        {details.has_more ? <div className="community-photo-more"><p>{details.photos.length} of {details.total_count ?? "more"} photos loaded</p><button type="button" className="button button-outline" disabled={Boolean(busy)} onClick={() => void loadMore()}>{busy === "more" ? "Loading photos…" : "Show more photos"}</button></div> : null}
         {!details.photos.length ? <p>No photos in this album yet.</p> : null}
       </section> : null}
     </div>;

@@ -4,13 +4,15 @@ import { useEffect, useId, useRef, useState } from "react";
 
 export type ViewablePhoto = { id: string; caption: string; uploader_name: string; created_at: string };
 
-export function CommunityPhotoViewer({ photos, selectedId, onSelect, onClose }: {
+export function CommunityPhotoViewer({ photos, selectedId, onSelect, onClose, hasMore = false, loadingMore = false, onLoadMore }: {
   photos: ViewablePhoto[]; selectedId: string; onSelect(id: string): void; onClose(): void;
+  hasMore?: boolean; loadingMore?: boolean; onLoadMore?(): Promise<boolean>;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
   const titleId = useId();
   const [failed, setFailed] = useState(false);
+  const nextRequested = useRef(false);
   const index = photos.findIndex(photo => photo.id === selectedId);
   const photo = photos[index];
   useEffect(() => {
@@ -19,9 +21,21 @@ export function CommunityPhotoViewer({ photos, selectedId, onSelect, onClose }: 
     return () => { if (element?.open) element.close(); };
   }, []);
   useEffect(() => { setFailed(false); if (!photo) onClose(); }, [selectedId, Boolean(photo), onClose]);
-  function move(direction: number) {
+  useEffect(() => {
+    if (nextRequested.current && !loadingMore) {
+      nextRequested.current = false;
+      if (photos[index + 1]) onSelect(photos[index + 1].id);
+    }
+  }, [photos, index, onSelect, loadingMore]);
+  async function move(direction: number) {
+    if (loadingMore || nextRequested.current) return;
     const next = photos[index + direction];
     if (next) onSelect(next.id);
+    else if (direction === 1 && hasMore && onLoadMore) {
+      nextRequested.current = true;
+      try { if (!await onLoadMore()) nextRequested.current = false; }
+      catch { nextRequested.current = false; }
+    }
   }
   return <dialog ref={dialog} className="community-photo-viewer" aria-labelledby={titleId}
     onCancel={event => { event.preventDefault(); onClose(); }}
@@ -47,9 +61,9 @@ export function CommunityPhotoViewer({ photos, selectedId, onSelect, onClose }: 
       </div>
       <p>{photo.caption}</p>
       <small>Shared by {photo.uploader_name} · {new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Nairobi" }).format(new Date(photo.created_at))}</small>
-      <footer aria-label="Browse album photos"><button type="button" disabled={index === 0} onClick={() => move(-1)}>← Previous</button>
-        <span role="status" aria-live="polite">{index + 1} of {photos.length}</span>
-        <button type="button" disabled={index === photos.length - 1} onClick={() => move(1)}>Next →</button></footer>
+      <footer aria-label="Browse album photos"><button type="button" disabled={index === 0 || loadingMore} onClick={() => void move(-1)}>← Previous</button>
+        <span role="status" aria-live="polite">{index + 1} of {photos.length}{hasMore ? "+" : ""}</span>
+        <button type="button" disabled={loadingMore || (index === photos.length - 1 && !hasMore)} onClick={() => void move(1)}>{loadingMore ? "Loading…" : "Next →"}</button></footer>
     </> : <p role="status">This photo is no longer available.</p>}
   </dialog>;
 }

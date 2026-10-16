@@ -9,14 +9,14 @@ function compile(start,end,name,context) {
 }
 function context(rpc) {
   const state={busy:[],messages:[],details:[],files:[]};
-  return {...state,requestVersion:{current:0},unsavedFiles:false,ask:async()=>true,
+  return {...state,requestVersion:{current:0},loadedCount:{current:24},moreRequest:{current:null},unsavedFiles:false,ask:async()=>true,
     setFiles:v=>state.files.push(v),setBatchId:()=>{},setCaption:()=>{},setPermission:()=>{},setSelectedPhoto:()=>{},setShowDiscussion:()=>{},
     setDetails:v=>state.details.push(v),setBusy:v=>state.busy.push(v),setMessage:v=>state.messages.push(v),
     supabase:{rpc},memberErrorMessage:()=> 'Please try opening this album again.'};
 }
 const album={album:{id:'one',contribution_mode:'hosts_only',is_closed:true},photos:[],can_manage:false,can_upload:false};
 for(const outcome of ['success','returned','throw','empty']) {
-  const ctx=context(async(name,args)=>{assert.equal(name,'get_community_photo_album');assert.deepEqual(args,{p_album_id:'one'});if(outcome==='throw')throw Error('Offline');return {data:outcome==='empty'?null:album,error:outcome==='returned'?Error('Denied'):null};});
+  const ctx=context(async(name,args)=>{assert.equal(name,'get_community_photo_album_page');assert.deepEqual(args,{p_album_id:'one',p_after:null,p_limit:24});if(outcome==='throw')throw Error('Offline');return {data:outcome==='empty'?null:album,error:outcome==='returned'?Error('Denied'):null};});
   await compile('  async function select(', '  async function create(', 'select',ctx)('one');
   assert.equal(ctx.busy.at(-1),'');
   assert.equal(ctx.details.at(-1),outcome==='success'?album:null);
@@ -34,7 +34,7 @@ await compile('  async function select(', '  async function create(', 'select',d
 // Exercise both background readers, including thrown fetches and stopped effects.
 for(const kind of ['list','album'])for(const outcome of ['success','returned','throw','empty','stopped']) {
   let details={...album,can_manage:true,can_upload:true};let list={albums:[]};const messages=[];let calls=0;
-  const background={stopped:outcome==='stopped',checking:false,communityId:'community-one',selectedAlbumId:'one',requestVersion:{current:0},
+  const background={stopped:outcome==='stopped',checking:false,communityId:'community-one',selectedAlbumId:'one',requestVersion:{current:0},loadedCount:{current:24},moreRequest:{current:null},
     supabase:{rpc:async()=>{calls++;if(outcome==='throw')throw Error('Offline');return {data:outcome==='empty'?null:kind==='list'?{albums:[]}:album,error:outcome==='returned'?Error('Denied'):null};}},
     setList:value=>list=value,setDetails:value=>details=typeof value==='function'?value(details):value,setFiles:()=>{},setSelectedPhoto:()=>{},setBusy:()=>{},setMessage:value=>messages.push(value)};
   const start=kind==='list'?'    async function recheckList()':'    async function recheck()';
@@ -46,7 +46,7 @@ for(const kind of ['list','album'])for(const outcome of ['success','returned','t
 }
 for(const kind of ['list','album']) {
   let release;let calls=0;
-  const background={stopped:false,checking:false,communityId:'community-one',selectedAlbumId:'one',requestVersion:{current:0},supabase:{rpc:()=>{calls++;return new Promise(done=>release=done);}},setList:()=>{},setDetails:()=>{},setFiles:()=>{},setSelectedPhoto:()=>{},setBusy:()=>{},setMessage:()=>{}};
+  const background={stopped:false,checking:false,communityId:'community-one',selectedAlbumId:'one',requestVersion:{current:0},loadedCount:{current:24},moreRequest:{current:null},supabase:{rpc:()=>{calls++;return new Promise(done=>release=done);}},setList:()=>{},setDetails:()=>{},setFiles:()=>{},setSelectedPhoto:()=>{},setBusy:()=>{},setMessage:()=>{}};
   const read=compile(kind==='list'?'    async function recheckList()':'    async function recheck()','    const timer',kind==='list'?'recheckList':'recheck',background);
   const pending=read();await read();assert.equal(calls,1,'Focus and timer checks must not overlap');release({data:kind==='list'?{albums:[]}:album,error:null});await pending;
 }
