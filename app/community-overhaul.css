@@ -199,6 +199,10 @@
 .community-host-page .community-brand-preview.safe-brand-preview .community-brand-cover { max-height: 160px; object-fit: cover; }
 .community-host-page .community-brand-preview.safe-brand-preview > div:last-child { padding: 0; }
 .community-image-ready { font: 400 .9rem/1.5 var(--sans, Arial, sans-serif); color: #365e4c; }
+.community-cover-fit { display: grid; gap: 8px; margin: 12px 0; padding: 12px; border: 1px solid #e4dfdc; border-radius: 6px; }
+.community-cover-fit legend { padding: 0 4px; font-size: .9rem; }
+.community-cover-fit label { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.community-cover-fit input[type="radio"] { width: 18px; height: 18px; flex: 0 0 18px; margin: 0; }
 @media (max-width: 600px) { .community-application-image-handoff { align-items: flex-start; } .community-application-image-handoff > img { width: 48px; height: 48px; } .community-application-image-handoff .button { white-space: normal; } }
 .community-room-page .community-host-identity { font-size: .85rem; color: #655e60; }
 .community-room-page .community-host-identity a { color: #241e20; font-weight: 600; }

@@ -9,7 +9,7 @@ import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityDraft } from "@/lib/use-community-draft";
 import { brandAccent } from "@/lib/brand-themes";
-import { prepareCommunityImage } from "@/lib/community-image-preview";
+import { prepareCommunityCover, prepareCommunityImage } from "@/lib/community-image-preview";
 
 export type CommunityApplicationImage = {
   storage_path: string;
@@ -90,12 +90,22 @@ export function CommunityBrandingPanel({
   const [icon, setIcon] = useState<File | null>(null);
   const [message, setMessage] = useState("");
   const [iconPreview, setIconPreview] = useState<string | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverFit, setCoverFit] = useState<"whole" | "fill">("whole");
+  const coverSource = useRef<File | null>(null);
+  const preparingCover = useRef(false);
   useEffect(() => {
     if (!icon) { setIconPreview(null); return; }
     const url = URL.createObjectURL(icon);
     setIconPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [icon]);
+  useEffect(() => {
+    if (!cover) { setCoverPreview(null); return; }
+    const url = URL.createObjectURL(cover);
+    setCoverPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [cover]);
   const formRef = useRef<HTMLFormElement>(null);
   const initialDraft = { tagline: identity?.tagline ?? "", accent: identity?.accent_key ?? "wine", iconAlt: "", coverAlt: "", removeIcon: false, removeCover: false };
   const [draft, setDraft, clearDraft] = useCommunityDraft(communityDraftKey(currentUserId, "branding", communityId), initialDraft);
@@ -109,7 +119,29 @@ export function CommunityBrandingPanel({
     blocked: () => setMessage("Please wait for your images to finish saving."),
   });
   function clearFileInputs() {
+    coverSource.current = null;
+    setCoverFit("whole");
     formRef.current?.querySelectorAll<HTMLInputElement>('input[type="file"]').forEach(input => { input.value = ""; });
+  }
+
+  async function chooseCover(file: File | null, fit: "whole" | "fill" = "whole") {
+    if (busy || preparingCover.current) return;
+    if (!file) { coverSource.current = null; setCover(null); setCoverFit("whole"); return; }
+    preparingCover.current = true;
+    setBusy(true); setPreparing(true); setMessage("");
+    try {
+      const prepared = await prepareCommunityCover(file, fit);
+      coverSource.current = file;
+      setCover(prepared); setCoverFit(fit);
+      setDraft(current => ({...current, removeCover: false}));
+      setMessage("Cover ready. Check the preview, then Save look and feel. Your changes are not saved yet.");
+    } catch (cause) {
+      // Keep a previously prepared cover if a replacement cannot be read.
+      setMessage(memberErrorMessage(cause, "prepare your cover"));
+    } finally {
+      preparingCover.current = false;
+      setBusy(false); setPreparing(false);
+    }
   }
 
   async function useApplicationImage() {
@@ -144,7 +176,7 @@ export function CommunityBrandingPanel({
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!owner || busy || (!dirty && !icon && !cover)) return;
+    if (!owner || busy || preparingCover.current || (!dirty && !icon && !cover)) return;
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const submitted = { ...draft };
@@ -213,7 +245,7 @@ export function CommunityBrandingPanel({
           ratio > 4.5
         ) {
           throw new Error(
-            "The cover must be at least 1200 × 400 px with a wide landscape shape.",
+            "We could not prepare this cover. Please choose the image again and check its preview.",
           );
         }
         const path = `${communityId}/branding/${user.id}/cover-${crypto.randomUUID()}.${extensionFor(cover)}`;
@@ -289,13 +321,14 @@ export function CommunityBrandingPanel({
         className={`community-brand-preview accent-${draft.accent} safe-brand-preview`}
         data-brand-accent={brandAccent(draft.accent)}
       >
-        {identity?.cover_url ? (
+        {coverPreview || identity?.cover_url ? (
           <img
-            alt={identity.cover_alt_text ?? ""}
+            alt={coverPreview ? draft.coverAlt : identity?.cover_alt_text ?? ""}
             className="community-brand-cover"
-            height={identity.cover_height ?? undefined}
-            src={identity.cover_url}
-            width={identity.cover_width ?? undefined}
+            height={400}
+            src={coverPreview ?? identity?.cover_url ?? ""}
+            width={1200}
+            style={{aspectRatio: "3 / 1", height: "auto", maxHeight: "none", objectFit: "contain"}}
           />
         ) : null}
         <div>
@@ -401,11 +434,17 @@ export function CommunityBrandingPanel({
             <input
               accept="image/jpeg,image/png,image/webp"
               name="cover"
-              onChange={(event) => setCover(event.target.files?.[0] ?? null)}
+              onChange={(event) => void chooseCover(event.target.files?.[0] ?? null)}
               type="file"
             />
-            <small>JPG, PNG or WebP · 1200 × 400 px minimum · 8 MB maximum.</small>
+            <small>JPG, PNG or WebP · up to 8 MB. We fit it to the banner for you. A wide image at least 1200 px across looks sharpest.</small>
           </label>
+          {cover ? <fieldset className="community-cover-fit">
+            <legend>How should the cover fit?</legend>
+            <label><input type="radio" name="cover_fit" value="whole" checked={coverFit === "whole"} onChange={() => void chooseCover(coverSource.current, "whole")} />Keep the whole image</label>
+            <label><input type="radio" name="cover_fit" value="fill" checked={coverFit === "fill"} onChange={() => void chooseCover(coverSource.current, "fill")} />Fill the banner</label>
+            <small>{coverFit === "whole" ? "Nothing is cut off or stretched. Light space may appear around the image." : "We crop the centre to fill the banner. Check that faces and words are still visible. Small images may look soft."}</small>
+          </fieldset> : null}
           <label>
             Cover description
             <input

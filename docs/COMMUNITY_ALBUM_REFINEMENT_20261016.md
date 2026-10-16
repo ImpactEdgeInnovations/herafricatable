@@ -36,3 +36,13 @@ Use an approved private test Community and clearly tagged disposable photos; do 
 6. At narrow mobile width and desktop, verify readable album cards, no horizontal page overflow, visible focus, Close/Escape, correct captions/uploader names and unchanged search/tab state.
 
 No launch gate or production-readiness percentage is increased from these implementation checks alone. Admin phase 3 remains paused until the Product Owner resumes that track.
+
+## Follow-up: Community banner upload
+
+The Community cover image is separate from a photo album cover. The former required the original to be at least 1200 × 400 with a wide shape, rejecting ordinary portrait and smaller landscape images.
+
+The form now prepares a real 1200 × 400 image locally before upload. Keep the whole image is the default: no cropping or stretching, with light space if needed. Fill the banner uses an explicitly selected centre crop. The processed image is previewed before Save look and feel; selecting or changing the fit does not upload anything. Existing private Storage, owner permissions and database validation remain unchanged. No migration is required.
+
+Verification: actual preparation code exercised with controlled browser APIs for wide, portrait and small sources, explicit crop, invalid size/type, decoding/encoding failure, PNG fallback and temporary-URL cleanup. Actual selection handler tested for synchronous duplicate prevention, busy recovery and preserving a previous cover after replacement failure. These are L1 checks; the live database upload requirements were inspected, not replaced. Real-file Storage and browser acceptance are not claimed.
+
+Tester check: choose your original image again after deployment; compare both fit choices, add a short description, save, refresh and confirm the cover remains. Repeat on mobile and check that important text/faces remain visible. Confirm changing the fit without Save does not change the saved Community.
