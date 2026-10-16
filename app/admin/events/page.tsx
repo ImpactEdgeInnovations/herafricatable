@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getActiveAdminRole } from "@/lib/admin-access";
 import { FeaturedRequestPanel } from "@/components/featured/featured-request-panel";
 import { redirect } from "next/navigation";
 import { AdminHeader, type AdminRole } from "@/components/admin/admin-header";
@@ -83,17 +84,8 @@ export default async function AdminEventsPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/sign-in");
-  const { data: roleRows } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .in("role", ["super_admin", "event_staff"]);
-  const assignedRoles = new Set((roleRows ?? []).map((item) => item.role));
-  const role: AdminRole | null = assignedRoles.has("super_admin")
-    ? "super_admin"
-    : assignedRoles.has("event_staff")
-      ? "event_staff"
-      : null;
+  const { data: activeRole } = await getActiveAdminRole(supabase, ["super_admin", "event_staff"]);
+  const role: AdminRole | null = activeRole?.role ?? null;
   if (!role) redirect("/admin");
   if (role !== "super_admin" && ["proposals", "host", "stories", "follow-up"].includes(view)) {
     view = "overview";

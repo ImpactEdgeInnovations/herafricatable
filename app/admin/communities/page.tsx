@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getActiveAdminRole } from "@/lib/admin-access";
 import { FeaturedRequestPanel } from "@/components/featured/featured-request-panel";
 import { AdminHeader } from "@/components/admin/admin-header";
 import {
@@ -22,12 +23,7 @@ export default async function AdminCommunitiesPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/sign-in");
 
-  const { data: role } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("role", "super_admin")
-    .maybeSingle();
+  const { data: role } = await getActiveAdminRole(supabase, ["super_admin"]);
   if (!role) redirect("/admin");
 
   const [communityResult, applicationResult, joiningResult, brandingResult, applicationMediaResult, pilotResult, videoResult] = await Promise.all([

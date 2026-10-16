@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getActiveAdminRole } from "@/lib/admin-access";
 import { redirect } from "next/navigation";
 import { AdminActionCentre } from "@/components/admin/admin-action-centre";
 import {
@@ -36,13 +37,7 @@ export default async function AdminHomePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/sign-in");
 
-  const { data: roleRow } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .in("role", ["super_admin", "event_staff", "moderator"])
-    .limit(1)
-    .maybeSingle();
+  const { data: roleRow } = await getActiveAdminRole(supabase, ["super_admin", "event_staff", "moderator"]);
 
   if (!roleRow) {
     return (

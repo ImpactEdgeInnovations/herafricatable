@@ -1,0 +1,47 @@
+-- TEST ONLY. Existing tagged identities and synthetic records; all changes roll back.
+begin;
+create temporary table admin_phase_one_results(result text);
+do $$
+declare member_id uuid;admin_id uuid;request_id uuid:=gen_random_uuid();eid uuid:=gen_random_uuid();oid uuid:=gen_random_uuid();rid uuid:=gen_random_uuid();denied boolean;
+begin
+ select u.id into strict member_id from auth.users u join public.profiles p on p.id=u.id where u.email='community.member.one@hat-test.invalid' and p.is_test_account;
+ select user_id into strict admin_id from public.user_roles where role='super_admin' and (expires_at is null or expires_at>now()) limit 1;
+ if exists(select 1 from public.user_roles where user_id=member_id)then raise exception 'An ordinary tagged identity is required';end if;
+ insert into public.user_roles(user_id,role,expires_at) values(member_id,'super_admin',now()-interval '1 day'),(member_id,'moderator',now()+interval '1 day');
+ perform set_config('request.jwt.claim.sub',member_id::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',member_id,'role','authenticated')::text,true);execute 'set local role authenticated';
+ if public.get_my_active_admin_role()<>'moderator' or public.is_admin(array['super_admin']::public.app_role[])then raise exception 'Expired privilege or role priority failed';end if;
+ execute 'reset role';delete from public.user_roles where user_id=member_id;
+ insert into public.privacy_requests(id,user_id,request_type,status,scheduled_for)values(request_id,member_id,'deletion','approved',now()-interval '1 day');
+ insert into public.events(id,slug,title,format,audience,status,starts_at,ends_at,registration_mode,created_by)values(eid,'admin-recovery-test-'||eid,'[TEST] Admin recovery','virtual','public','draft',now()+interval '10 days',now()+interval '11 days','closed',admin_id);
+ insert into public.orders(id,user_id,event_id,status,processing_mode,currency,subtotal_minor,total_minor)values(oid,member_id,eid,'fulfilled','manual_review','KES',100,100);
+ insert into public.refund_requests(id,order_id,user_id,reason)values(rid,oid,member_id,'Synthetic refund for rollback acceptance.');
+ perform set_config('request.jwt.claim.sub',member_id::text,true);execute 'set local role authenticated';
+ denied:=false;begin perform public.execute_account_deletion(request_id);exception when others then if sqlerrm='Super admin required' then denied:=true;else raise;end if;end;if not denied then raise exception 'Member executed account deletion';end if;
+ denied:=false;begin perform public.record_manual_refund_completion(rid,'TEST-REFERENCE');exception when others then if sqlerrm='Not authorized' then denied:=true;else raise;end if;end;if not denied then raise exception 'Member recorded refund';end if;
+ perform set_config('request.jwt.claim.sub',admin_id::text,true);perform set_config('request.jwt.claims',jsonb_build_object('sub',admin_id,'role','authenticated')::text,true);
+ if public.get_my_active_admin_role()<>'super_admin' then raise exception 'Active Admin role not resolved';end if;
+ denied:=false;begin perform public.review_refund_request(rid,null,'Invalid decision.');exception when others then if sqlerrm='Unsupported refund action' then denied:=true;else raise;end if;end;if not denied then raise exception 'Null decision approved refund';end if;
+ perform public.review_refund_request(rid,'approve','Synthetic approval only.');
+ execute 'reset role';
+ if not exists(select 1 from public.refund_requests where id=rid and status='approved' and completed_at is null) or not exists(select 1 from public.orders where id=oid and status='refund_pending') then raise exception 'Approval falsely completed refund';end if;
+ execute 'set local role authenticated';
+ denied:=false;begin perform public.record_manual_refund_completion(rid,'');exception when others then if sqlerrm='Add the confirmed transfer reference' then denied:=true;else raise;end if;end;if not denied then raise exception 'Missing reference accepted';end if;
+ perform public.record_manual_refund_completion(rid,'TEST-REFERENCE');perform public.record_manual_refund_completion(rid,'TEST-REFERENCE');
+ perform public.execute_account_deletion(request_id);
+ execute 'reset role';
+ if not exists(select 1 from public.privacy_requests where id=request_id and status='processing' and completed_at is null and anonymized_at is not null)then raise exception 'Cleanup completed before external steps';end if;
+ if not exists(select 1 from public.profiles where id=member_id and access_status='deleted')then raise exception 'Anonymization did not close member access';end if;
+ execute 'set local role authenticated';
+ perform public.record_account_cleanup_step(request_id,'auth',true);perform public.record_account_cleanup_step(request_id,'avatar',false);
+ execute 'reset role';
+ if not exists(select 1 from public.privacy_requests where id=request_id and status='processing' and auth_disabled_at is not null and avatar_removed_at is null and cleanup_error is not null)then raise exception 'Failed step lost checkpoint';end if;
+ execute 'set local role authenticated';
+ perform public.execute_account_deletion(request_id);perform public.record_account_cleanup_step(request_id,'avatar',true);perform public.record_account_cleanup_step(request_id,'avatar',true);
+ execute 'reset role';
+ if not exists(select 1 from public.privacy_requests where id=request_id and status='completed' and completed_at is not null and cleanup_error is null)then raise exception 'Cleanup did not finish after both steps';end if;
+ if (select count(*) from public.audit_events where target_id=request_id and action='privacy.cleanup_completed')<>1 then raise exception 'Cleanup completion audit duplicated';end if;
+ if not exists(select 1 from public.refund_requests where id=rid and status='completed' and external_reference='TEST-REFERENCE') or (select count(*) from public.audit_events where target_id=oid and action='refund.manual_completed')<>1 then raise exception 'Manual completion/reference/idempotency failed';end if;
+ insert into admin_phase_one_results values('PASS L2: expired role denied, active role resolved, ordinary-member deletion/refund denied, approval separate from refund completion, reference required, completion idempotent, anonymization/cleanup checkpoints and recovery with single final audit. All changes roll back; Auth/Storage/provider calls were not made.');
+end $$;
+select * from admin_phase_one_results;
+rollback;

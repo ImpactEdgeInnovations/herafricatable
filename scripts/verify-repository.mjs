@@ -87,8 +87,8 @@ assert(
 );
 const privacy = read("app/api/admin/privacy/delete/route.ts");
 assert(
-  privacy.includes('eq("role","super_admin")'),
-  "Deletion endpoint must verify Super Admin",
+  privacy.includes('requireSuperAdmin(request)') && read("lib/notifications/admin-access.ts").includes('check_roles:["super_admin"]'),
+  "Deletion endpoint must verify active Super Admin through the shared guard",
 );
 assert(
   privacy.includes("execute_account_deletion"),
@@ -1198,7 +1198,7 @@ assert(
 );
 const testUsers = read("app/api/admin/test-users/route.ts");
 assert(
-  testUsers.includes('eq("role","super_admin")'),
+  testUsers.includes('requireSuperAdmin(request)'),
   "Test user creation must verify Super Admin",
 );
 assert(
@@ -2364,7 +2364,7 @@ for (const contract of [
 }
 const tableGuideConnectionTest = read("app/api/admin/table-guide/test/route.ts");
 for (const contract of [
-  'eq("role", "super_admin")',
+  'requireSuperAdmin(request)',
   '`${OPENAI_URL}/responses`',
   "OPENAI_API_KEY",
   "table_guide.connection_test_failed",

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "pretest": "npm run test:featured",
+    "test:admin-phase-one": "node scripts/verify-admin-phase-one.mjs",
+    "pretest": "npm run test:featured && npm run test:admin-phase-one",
     "test:featured": "node scripts/verify-featured-spots.mjs && node scripts/verify-featured-request-recovery.mjs",
     "dev": "next dev",
     "build": "next build",

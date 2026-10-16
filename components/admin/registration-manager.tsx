@@ -232,7 +232,7 @@ export function RegistrationManager({
           : "Decline this refund request?",
       description:
         action === "approve"
-          ? "Manual refunds will be marked complete. Paystack refunds will be sent to Paystack and must be checked again afterward."
+          ? "This records approval only. For a manual payment, return the money separately, then record its transfer reference here. For Paystack, arrange the refund in the provider dashboard; this button does not send it."
           : "The refund will not proceed. Write a clear reason for the member and your records.",
       confirmLabel: action === "approve" ? "Approve refund" : "Decline refund",
       tone: action === "reject" ? "danger" : "default",
@@ -263,10 +263,18 @@ export function RegistrationManager({
     setBusy(false);
     setMessage(
       action === "approve"
-        ? "Refund approved. Manual refunds are complete; Paystack refunds are waiting for Paystack."
+        ? "Refund approved. Return the money separately, then record or confirm completion."
         : "Refund request declined and saved in the records.",
     );
     router.refresh();
+  }
+  async function completeManualRefund(refund: AdminRefund) {
+    const result=await ask({title:"Record a completed refund?",description:"Use this only after the money has been returned outside Her Africa Table. This records completion; it does not transfer money.",confirmLabel:"Record refund completion",fields:[{name:"reference",label:"Confirmed transfer reference",type:"text",required:true,minLength:3,maxLength:160,help:"Use the transfer receipt/reference. Do not include bank account or card details."}]});
+    if(!result)return;
+    setBusy(true);setMessage("");
+    try{const {error}=await supabase.rpc("record_manual_refund_completion",{p_refund_id:refund.refund_id,p_reference:String(result.reference??"")});if(error)throw error;setMessage("Completed refund recorded.");router.refresh();}
+    catch(error){setMessage(adminErrorMessage(error,"record this refund completion"));}
+    finally{setBusy(false);}
   }
   if (!migrationReady)
     return (
@@ -629,6 +637,8 @@ export function RegistrationManager({
                   </div>
                   <div>
                     <span className="member-status">{r.status}</span>
+                    {r.status==='approved' && r.processing_mode==='manual_review' ? <button disabled={busy} onClick={()=>void completeManualRefund(r)}>Record completed refund</button> : null}
+                    {r.status==='approved' && r.processing_mode!=='manual_review' ? <p>Arrange this refund in Paystack. Completion is confirmed through the provider update.</p> : null}
                     {r.status === "requested" ? (
                       <div className="member-actions">
                         <button

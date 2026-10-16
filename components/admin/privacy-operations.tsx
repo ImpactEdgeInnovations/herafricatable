@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
@@ -39,6 +39,7 @@ export function PrivacyOperations({
   const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
+  const saving=useRef(false);
 
   async function manage(
     id: string,
@@ -99,13 +100,15 @@ export function PrivacyOperations({
   }
 
   async function execute(item: AdminPrivacyRequest) {
+    if(saving.current)return;
+    const resuming=item.status==='processing';
     const result = await ask({
-      title: "Permanently anonymize this account?",
+      title: resuming ? "Retry account cleanup?" : "Permanently anonymize this account?",
       description:
         "This revokes sign-in access and removes personal profile data. Only records required for financial, security and audit obligations are retained. This cannot be undone.",
-      confirmLabel: "Permanently anonymize",
+      confirmLabel: resuming ? "Retry cleanup" : "Permanently anonymize",
       tone: "danger",
-      fields: [
+      fields: resuming ? [] : [
         {
           name: "email",
           label: "Type the member email to confirm",
@@ -119,20 +122,24 @@ export function PrivacyOperations({
       ],
     });
     if (!result) return;
+    if(saving.current)return;
+    saving.current=true;
     setBusy(item.request_id);
+    try {
     const response = await fetch("/api/admin/privacy/delete", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ requestId: item.request_id }),
     });
     const payload = (await response.json()) as { error?: string };
-    setBusy("");
     setNotice(
       response.ok
-        ? "Account deletion executed and sign-in access revoked."
+        ? "Account cleanup completed. New sign-in is blocked."
         : adminErrorMessage(payload.error, "execute this account deletion"),
     );
-    if (response.ok) router.refresh();
+    router.refresh();
+    } catch {setNotice("The connection failed. Refresh to check the saved cleanup steps before retrying.");}
+    finally {saving.current=false;setBusy("");}
   }
 
   return (
@@ -163,7 +170,7 @@ export function PrivacyOperations({
               <article key={item.request_id}>
                 <div>
                   <span className={`support-state ${item.status}`}>
-                    {item.status.replace("_", " ")}
+                    {item.status==='processing' ? 'Cleanup in progress' : item.status.replace("_", " ")}
                   </span>
                   <small>
                     {item.reference} · {item.request_type}
@@ -207,11 +214,11 @@ export function PrivacyOperations({
                       </button>
                     </>
                   ) : null}
-                  {item.status === "approved" ? (
+                  {item.request_type==='deletion' && ["approved","processing"].includes(item.status) ? (
                     <button
                       className="danger"
                       disabled={
-                        busy === item.request_id ||
+                        Boolean(busy) ||
                         Boolean(
                           item.scheduled_for &&
                             new Date(item.scheduled_for) > new Date(),
@@ -219,7 +226,7 @@ export function PrivacyOperations({
                       }
                       onClick={() => void execute(item)}
                     >
-                      Execute deletion
+                      {item.status==='processing' ? 'Retry cleanup' : 'Execute deletion'}
                     </button>
                   ) : null}
                 </div>

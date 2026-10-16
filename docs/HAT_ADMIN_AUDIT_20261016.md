@@ -2,6 +2,8 @@
 
 Audit date: 16 October 2026, Africa/Nairobi. Application baseline: `74f0b55`. Live project: `gtzwqromwvzqytygebfc`. Scope: Her Africa Table, adapting the supplied DukaPilot audit framework to the modules that actually exist here.
 
+Implementation follow-up: [Phase 1 handover and evidence](ADMIN_PHASE_ONE_HANDOVER_20261016.md). ADMIN-01–04 are implemented; the findings below remain the historical audit baseline. L3 acceptance stays open as documented.
+
 This is an audit report. Application code, permissions, member records, settings, payments and notifications were not changed during the audit. Documentation is the deliverable. The current browser session is an ordinary member/Host session; live Super Admin visual and write acceptance remains open.
 
 ## Verdict
@@ -198,10 +200,10 @@ Keep existing wine/cream identity, readable interface typography, Member/Admin s
 
 | Task | Phase | Priority | Status / acceptance |
 | --- | --- | --- | --- |
-| ADMIN-01 active-role guards | 1 — permission and critical operations | P1 | QUEUED: shared expiry-aware checks before privileged/provider work; expired/revoked/read-error cases pass |
-| ADMIN-02 resumable privacy cleanup | 1 | P1 | QUEUED: separate stages, recovery after refresh, disposable-account acceptance |
-| ADMIN-03 durable email-worker outcomes | 1 | P1 | QUEUED: completion failures surfaced; no false sent count; idempotent retry |
-| ADMIN-04 truthful refund workflow | 1, required before paid use | P1 | QUEUED: approval distinct from transfer/provider submission; no real money moved in tests |
+| ADMIN-01 active-role guards | 1 — permission and critical operations | P1 | IMPLEMENTED: L1 and live role-resolution L2 pass; browser expiry/revocation acceptance open |
+| ADMIN-02 resumable privacy cleanup | 1 | P1 | IMPLEMENTED: L1 service-failure mocks and live SQL checkpoint/retry pass; real disposable-account acceptance open |
+| ADMIN-03 durable email-worker outcomes | 1 | P1 | IMPLEMENTED: controlled persistence/provider failure tests pass; real external failure acceptance open |
+| ADMIN-04 truthful refund workflow | 1, required before paid use | P1 | IMPLEMENTED: separate manual completion/reference and live state checks pass; Paystack initiation remains an external dashboard step |
 | ADMIN-05 safe action recovery | 2 — reliable decisions | P1/P2 | QUEUED: critical handlers recover from thrown/rejected requests and double clicks |
 | ADMIN-06 support thread/draft context | 2 | P1/P2 | QUEUED: failed read visible; draft never silently follows another recipient |
 | ADMIN-07 trustworthy counts | 3 — accurate operational data | P1 | QUEUED: failed count ≠ zero; real aggregate totals and partial-state display |
@@ -211,7 +213,7 @@ Keep existing wine/cream identity, readable interface typography, Member/Admin s
 | ADMIN-11 paged oversight / activity | 5 — scale and investigation | P2 | QUEUED: aggregate overview, selected rosters/media, paged jobs/support/members/history |
 | ADMIN-12 permission and release acceptance | 5 | P1/P2 | OPEN: 200-operation inventory is catalog checked; per-operation permission/write/refresh cases, concurrent users and clean replay remain |
 
-No tasks above were silently marked complete by the audit. Featured-spot work has its own evidence sheet. Phase 1 should precede expanding paid features; phase 2/3 will improve everyday free-pilot reliability. Visual polish follows verified workflows.
+Phase-1 implementation statuses were updated only after the linked handover recorded scoped evidence. Featured-spot work has its own evidence sheet. Phase 1 acceptance should precede expanding paid features; phase 2/3 will improve everyday free-pilot reliability. Visual polish follows verified workflows.
 
 ## Standalone implementation briefs
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { requireSuperAdmin } from "@/lib/admin-access";
 
 const OPENAI_URL = "https://api.openai.com/v1";
 const DEFAULT_MODEL = "gpt-5.6-luna";
@@ -14,22 +14,10 @@ function providerMessage(status: number, code?: string) {
   return `OpenAI returned service status ${status}. Try the test again shortly.`;
 }
 
-export async function POST() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Sign in is required." }, { status: 401 });
-
-  const { data: role } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("role", "super_admin")
-    .maybeSingle();
-  if (!role)
-    return NextResponse.json({ error: "Super Admin access is required." }, { status: 403 });
+export async function POST(request: Request) {
+  const access = await requireSuperAdmin(request);
+  if (access.response) return access.response;
+  const user = access.user;
 
   const apiKey = process.env.OPENAI_API_KEY;
   const safetySalt = process.env.AI_SAFETY_SALT;
@@ -42,12 +30,13 @@ export async function POST() {
 
   const admin = createAdminClient();
   const since = new Date(Date.now() - COOLDOWN_SECONDS * 1000).toISOString();
-  const { count } = await admin
+  const { count, error: cooldownError } = await admin
     .from("audit_events")
     .select("id", { count: "exact", head: true })
     .eq("actor_id", user.id)
     .in("action", ["table_guide.connection_test", "table_guide.connection_test_failed"])
     .gte("created_at", since);
+  if (cooldownError) return NextResponse.json({ error: "The test could not be checked. Please try again." }, { status: 503 });
   if ((count ?? 0) > 0)
     return NextResponse.json(
       { error: "Please wait 30 seconds before testing again." },

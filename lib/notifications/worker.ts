@@ -134,6 +134,12 @@ export async function processNotificationQueue({
   let sent = 0;
   let failed = 0;
   let suppressed = 0;
+  let providerAccepted = 0;
+  let persistenceFailed = 0;
+  async function finishJob(args: {p_error_code:string|null;p_job_id:string;p_provider_message_id:string|null;p_success:boolean}) {
+    try { const result=await admin.rpc("finish_notification_job",args);if(result.error){persistenceFailed++;return false;}return true; }
+    catch {persistenceFailed++;return false;}
+  }
   await Promise.all(
     jobs.map(async (job) => {
       if (job.dedupe_key.startsWith("pilot-member-invite:")) {
@@ -143,7 +149,7 @@ export async function processNotificationQueue({
           admin.from("membership_intake_settings").select("mode,trusted_auto_expires_at").eq("id", true).maybeSingle(),
         ]);
         if (inviteResult.error || intakeResult.error) {
-          await admin.rpc("finish_notification_job", {
+          await finishJob({
             p_error_code: "pilot_invitation_eligibility_unavailable",
             p_job_id: job.job_id,
             p_provider_message_id: null,
@@ -161,7 +167,7 @@ export async function processNotificationQueue({
             .update({ status: "suppressed", locked_at: null, updated_at: new Date().toISOString() })
             .eq("id", job.job_id).eq("status", "processing");
           if (suppressionError) {
-            await admin.rpc("finish_notification_job", {
+            await finishJob({
               p_error_code: "pilot_invitation_suppression_unavailable",
               p_job_id: job.job_id,
               p_provider_message_id: null,
@@ -180,7 +186,7 @@ export async function processNotificationQueue({
           { p_job_id: job.job_id },
         );
         if (reminderCheckError) {
-          await admin.rpc("finish_notification_job", {
+          await finishJob({
             p_error_code: "reminder_eligibility_unavailable",
             p_job_id: job.job_id,
             p_provider_message_id: null,
@@ -195,26 +201,27 @@ export async function processNotificationQueue({
         }
       }
       if (/\.invalid$/i.test(job.to_email.trim())) {
-        await admin.rpc("finish_notification_job", {
+        const recorded=await finishJob({
           p_error_code: null,
           p_job_id: job.job_id,
           p_provider_message_id: "suppressed:test-address",
           p_success: true,
         });
-        suppressed += 1;
+        if(recorded)suppressed += 1;
         return;
       }
       try {
         const providerId = await sendNotificationEmail(job);
-        await admin.rpc("finish_notification_job", {
+        providerAccepted += 1;
+        const recorded=await finishJob({
           p_error_code: null,
           p_job_id: job.job_id,
           p_provider_message_id: providerId,
           p_success: true,
         });
-        sent += 1;
+        if(recorded)sent += 1;
       } catch (error) {
-        await admin.rpc("finish_notification_job", {
+        await finishJob({
           p_error_code:
             error instanceof Error ? error.message : "provider_error",
           p_job_id: job.job_id,
@@ -236,5 +243,8 @@ export async function processNotificationQueue({
     sent,
     suppressed,
     targeted: Boolean(dedupeKey),
-  });
+    providerAccepted,
+    persistenceFailed,
+    ...(persistenceFailed ? {error:"Some delivery results could not be saved. Provider acceptance and queue completion must be checked separately."} : {}),
+  },{status:persistenceFailed ? 503 : 200});
 }
