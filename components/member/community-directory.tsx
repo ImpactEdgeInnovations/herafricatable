@@ -55,7 +55,7 @@ export type CommunityActivitySummary = {
 };
 
 function money(amount: number | null, currency: string | null) {
-  if (amount === null || !currency) return "Free";
+  if (amount === null || !currency) return "Fee details unavailable";
   return new Intl.NumberFormat("en-KE", {
     currency,
     maximumFractionDigits: 0,
@@ -93,7 +93,7 @@ export function CommunityDirectory({
       item.location_scope === "place" && item.location_label?.toLocaleLowerCase() === locationFilter);
 
   async function join(item: CommunitySummary) {
-    if (busy || !joinLimitsReady) return;
+    if (busy || !joinLimitsReady || (!item.effective_mode && item.membership_status !== "invited")) return;
     setBusy(item.community_id);
     setMessage("");
     try {
@@ -245,6 +245,13 @@ export function CommunityDirectory({
     context: "discover" | "member",
   ) {
     const paid = item.offer_access_type === "paid";
+    const joiningLabel = item.effective_mode === "approval"
+      ? "Host approval required"
+      : item.effective_mode === "invite_only"
+        ? "Invitation only"
+        : item.effective_mode === "open"
+          ? "Join straight away"
+          : "Joining details unavailable";
     const newActivity = Number(item.new_activity_count ?? 0);
     const awaitingPayment =
       item.membership_status === "approved_pending_payment";
@@ -263,7 +270,7 @@ export function CommunityDirectory({
                 ? "Invitation only"
                 : item.effective_mode === "approval"
                 ? "Request to join"
-                : "Join now";
+                : item.effective_mode === "open" ? "Join now" : "Joining details unavailable";
 
     return (
       <article
@@ -299,13 +306,7 @@ export function CommunityDirectory({
               </span>
             )}
             <div>
-              <small>
-                {item.membership_status==="active" ? "You have joined this Community" : item.effective_mode === "invite_only"
-                  ? "Invitation only"
-                  : item.effective_mode === "approval"
-                    ? "Ask the Host to join"
-                    : "Open to members · Join now"}
-              </small>
+              {item.membership_status === "active" ? <small>You have joined this Community</small> : null}
               <h3>{item.name}</h3>
               {item.location_scope ? <small>{item.location_scope === "global" ? "Global / online" : item.location_label}</small> : null}
             </div>
@@ -314,11 +315,12 @@ export function CommunityDirectory({
             <strong>
               {paid
                 ? money(item.offer_price_minor, item.offer_currency)
-                : "Free"}
+                : "No membership fee"}
             </strong>
             {paid ? (
               <small>{intervalLabel(item.offer_billing_interval)}</small>
             ) : null}
+            <small>{joiningLabel}</small>
           </div>
         </div>
         <p>{item.tagline || item.description}</p>
@@ -470,10 +472,10 @@ export function CommunityDirectory({
               <span className="community-membership-state"><strong>By invitation</strong><small>Ask the Host to invite you.</small></span>
             ) : <button
               className="button button-outline"
-              disabled={Boolean(busy)||!joinLimitsReady||(item.is_full&&!item.waiting_list_enabled)}
+              disabled={Boolean(busy)||!joinLimitsReady||!item.effective_mode||(item.is_full&&!item.waiting_list_enabled)}
               onClick={() => void join(item)}
             >
-              {item.is_full ? item.waiting_list_enabled ? "Join waiting list" : "Community full" : item.membership_status === "invited"
+              {!item.effective_mode ? "Joining unavailable" : item.is_full ? item.waiting_list_enabled ? "Join waiting list" : "Community full" : item.membership_status === "invited"
                 ? "Accept invitation"
                 : item.effective_mode === "approval"
                   ? "Ask to join"

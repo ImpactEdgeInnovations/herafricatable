@@ -69,7 +69,7 @@ export function CommunityJoiningSettingsPanel({
         </div>
         <p>
           Everyone must first be an approved Her Africa Table member. This
-          choice only controls entry to this Community.
+          choice only controls entry to this Community, not its membership fee.
         </p>
       </header>
 
