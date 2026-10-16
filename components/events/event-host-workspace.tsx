@@ -12,6 +12,7 @@ import { communityDraftKey } from "@/lib/community-drafts";
 import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { saveHostPoster } from "@/lib/events/save-host-poster";
+import { EventImageDisplayOptions } from "@/components/events/event-image-display-options";
 
 export type HostProgrammeItem = {
   key: string;
@@ -272,6 +273,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
       </div>
 
       <div className="host-workspace-panel" id="host-image" hidden={section !== "image"}>
+        <EventImageDisplayOptions key={initial.event_id} eventId={initial.event_id} imageUrl={coverPreview ?? cover?.draft_url ?? cover?.published_url} />
         <div className="host-workspace-panel-heading"><div><h2>Event poster</h2><p>One optional image for your event page and event listing.</p></div></div>
         <p>{selfPublish ? "Choose an image you have permission to share. It will appear on your event page when saved." : "One clear image helps guests recognise your gathering. A previous image stays live while the team reviews its replacement."}</p>
         {!coverReady ? <p role="status">Event image uploads will be available after the latest database update.</p> : <>

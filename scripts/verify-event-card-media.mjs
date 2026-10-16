@@ -4,10 +4,21 @@ import ts from 'typescript';
 const read = file => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
 const source = read('components/events/event-card-media.tsx').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
 const code = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
+const fitCode = ts.transpileModule(read('lib/events/image-fit.ts').replace(/^export /gm, ''), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
+const eventImageFit = new Function(`${fitCode};return eventImageFit;`)();
+assert.equal(eventImageFit('automatic', 1200, 800, 520, 325), 'cover');
+assert.equal(eventImageFit('automatic', 900, 1600, 520, 325), 'cover');
+assert.equal(eventImageFit('automatic', 200, 300, 520, 325), 'scale-down');
+assert.equal(eventImageFit('automatic', 600, 900, 1000, 625), 'scale-down');
+assert.equal(eventImageFit('complete', 1200, 800, 520, 325), 'contain');
+assert.equal(eventImageFit('complete', 100, 100, 520, 325), 'scale-down');
+assert.equal(eventImageFit('automatic', 0, 0, 520, 325), 'contain');
 const React = { Fragment: 'Fragment', createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat(Infinity) }) };
-let failed = null, opened = 0, closed = 0;
+let opened = 0, closed = 0, cursor = 0;
+const states = [];
 const ref = { current: { showModal() { opened++; }, close() { closed++; } } };
-const Component = new Function('React', 'useRef', 'useId', 'useState', `${code};return EventCardMedia;`)(React, () => ref, () => 'poster-heading', () => [failed, value => { failed = value; }]);
+const renderComponent = new Function('React', 'useRef', 'useId', 'useState', 'useEffect', 'eventImageFit', `${code};return EventCardMedia;`)(React, () => ref, () => 'poster-heading', initial => { const i=cursor++; if(!(i in states))states[i]=initial; return [states[i], value => { states[i]=value; }]; }, () => {}, eventImageFit);
+const Component = props => { cursor=0; return renderComponent(props); };
 const props = { src: '/poster.jpg', title: 'Test event', alt: 'Complete poster', dateLabel: '26 October 2026' };
 function find(node, predicate) { if (!node || typeof node !== 'object') return null; if (predicate(node)) return node; for (const child of node.children ?? []) { const found = find(child, predicate); if (found) return found; } return null; }
 let tree = Component(props);
@@ -28,4 +39,23 @@ assert.equal(Component({ ...props, src: null }).props.className, tree.props.clas
 assert(find(Component({ ...props, src: '/new.jpg' }), n => n.type === 'button'), 'A replacement image can recover without remounting');
 const css = read('app/event-discovery-refinement.css');
 for (const value of ['grid-template-columns:repeat(2,minmax(0,1fr))', 'align-items:stretch', 'aspect-ratio:8/5', 'max-height:none; object-fit:contain', 'grid-template-columns:minmax(0,1fr)', '.event-poster-dialog::backdrop']) assert(css.includes(value), `Missing layout contract: ${value}`);
-console.log('Event-card media controlled tests passed: consistent image/fallback frames, full-poster open/close, failed-image fallback and replacement recovery. Native focus/Escape and responsive browser acceptance remain separate.');
+const optionsSource = read('components/events/event-image-display-options.tsx');
+const optionsTree = ts.createSourceFile('options.tsx', optionsSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+let saveBody;
+function visit(node) { if(ts.isFunctionDeclaration(node) && node.name?.text === 'save') saveBody = node.getText(optionsTree); ts.forEachChild(node, visit); }
+visit(optionsTree); assert(saveBody);
+const saveCode = ts.transpileModule(saveBody, {compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+const saveFactory = new Function('ctx', `const {ready,saving,choice,saved,setBusy,setMessage,supabase,eventId,setSaved,router,memberErrorMessage}=ctx;${saveCode};return save;`);
+for(const mode of ['ok','error','throw','refresh-failed','hold']) {
+  const messages=[], busy=[], savedValues=[], calls=[]; let release;
+  const saving={current:false};
+  const save=saveFactory({ready:true,saving,choice:'complete',saved:'automatic',eventId:'test-event',setBusy:value=>busy.push(value),setMessage:value=>messages.push(value),setSaved:value=>savedValues.push(value),memberErrorMessage:()=> 'Safe error',router:{refresh(){if(mode==='refresh-failed')throw Error('offline');}},supabase:{rpc:async(name,args)=>{calls.push({name,args});if(mode==='throw')throw Error('offline');if(mode==='hold')return new Promise(resolve=>{release=resolve;});return {data:'complete',error:mode==='error'?Error('denied'):null};}}});
+  const result=save();
+  if(mode==='hold'){await save();assert.equal(calls.length,1);release({data:'complete',error:null});}
+  await result;
+  assert.equal(saving.current,false);assert.equal(busy.at(-1),false);
+  assert.deepEqual(calls[0],{name:'save_event_card_image_style',args:{p_event_id:'test-event',p_style:'complete'}});
+  assert.equal(savedValues.length,['error','throw'].includes(mode)?0:1);
+  if(mode==='refresh-failed')assert.match(messages.at(-1),/saved.*could not refresh/);
+}
+console.log('Event-card media controlled tests passed: automatic photo crop, resolution/upscale guard, complete-poster fit, consistent fallback frames, open/close and replacement recovery. Native focus/Escape and responsive browser acceptance remain separate.');

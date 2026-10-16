@@ -11,6 +11,7 @@ import {
 } from "@/lib/application-proposal-media";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
+import { EventImageDisplayOptions } from "@/components/events/event-image-display-options";
 
 export function ApplicationImageQuickEdit({
   contextId,
@@ -18,12 +19,14 @@ export function ApplicationImageQuickEdit({
   existing,
   label,
   automatic = false,
+  eventId,
 }: {
   contextId: string;
   contextType: ApplicationProposalMedia["context_type"];
   existing: ApplicationProposalMedia | null;
   label: string;
   automatic?: boolean;
+  eventId?: string | null;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -83,6 +86,7 @@ export function ApplicationImageQuickEdit({
       </button>
       {open ? <><ApplicationImageField automatic={automatic} altText={altText} existing={existing} file={file} label={label} onAltText={setAltText} onFile={setFile} onRemoveExisting={() => void remove()} removing={busy} /><button className="button button-small button-primary" disabled={busy || !file || altText.trim().length < 10} onClick={() => void upload()} type="button">{busy ? "Uploading…" : automatic ? "Save poster" : "Send image for review"}</button>{file && altText.trim().length < 10 ? <p className="form-hint" role="status">Add a short image description (at least 10 characters) to save your poster.</p> : null}</> : null}
       {message ? <p className="manager-message" role="status">{message}</p> : null}
+      {open && existing && eventId ? <EventImageDisplayOptions key={eventId} eventId={eventId} imageUrl={file ? null : existing.image_url} /> : null}
       {dialog}
     </div>
   );

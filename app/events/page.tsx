@@ -86,6 +86,14 @@ export default async function EventsPage() {
     .gte("ends_at", new Date().toISOString())
     .order("starts_at", { ascending: true });
   const events = (data as unknown as PublicEvent[] | null) ?? [];
+  let imageStyleRows: { event_id: string; image_style: "automatic" | "complete" }[] = [];
+  if (events.length) {
+    try {
+      const result = await supabase.rpc("list_event_card_image_styles", { p_event_ids: events.map(event => event.id) });
+      if (!result.error) imageStyleRows = result.data ?? [];
+    } catch { /* Optional image preferences must not hide the event list. */ }
+  }
+  const imageStyles = new Map(imageStyleRows.map(item => [item.event_id, item.image_style]));
   const { data: publicTicketRows, error: publicTicketError } = events.length
     ? await supabase.from("ticket_types")
       .select("event_id,id,name,description,inventory_quantity,price_minor,currency,sales_start_at,sales_end_at")
@@ -233,7 +241,7 @@ export default async function EventsPage() {
           const tickets = ticketsByEvent.get(event.id) ?? [];
           return { id: event.id, title: event.title, summary: event.summary, location: event.venues?.city ?? "Online", startsAt:event.starts_at, timezone:event.timezone, format: `${event.format.replaceAll("_", " ")} ${eventFormatLabel(event.format)}`, content: (
           <article key={event.id} className={poster?.url ? "has-poster" : "without-poster"}>
-            <EventCardMedia src={poster?.url} alt={poster?.alt} title={event.title} dateLabel={new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "long", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))} />
+            <EventCardMedia src={poster?.url} alt={poster?.alt} title={event.title} imageStyle={imageStyles.get(event.id) ?? "complete"} dateLabel={new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "long", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))} />
             <div className="public-event-date"><strong>{new Intl.DateTimeFormat("en-KE", { day: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))}</strong><span>{new Intl.DateTimeFormat("en-KE", { month: "short", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</span></div>
             <div className="public-event-copy"><span>{event.audience === "community" ? "Community gathering" : eventFormatLabel(event.format)}</span><h2><Link href={`/events/${event.slug}`}>{event.title}</Link></h2><p className="public-event-facts">{new Intl.DateTimeFormat("en-KE", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} <span aria-hidden="true">·</span> {event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online"} <span aria-hidden="true">·</span> {eventPrice(tickets, Boolean(publicTicketError))}</p><p className="public-event-summary">{event.summary || "Open this event to see the details."}</p><p className="public-event-booking-state">{bookingLabel(event, bookingAvailability.get(event.id), event.free_instant_booking && isActiveMember && intakeMode === "trusted_auto")}</p></div>
             <Link className="public-event-open" href={`/events/${event.slug}`}>View event <span aria-hidden="true">→</span></Link>

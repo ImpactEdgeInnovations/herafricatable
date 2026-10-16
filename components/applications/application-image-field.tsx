@@ -28,8 +28,10 @@ export function ApplicationImageField({
   automatic?: boolean;
 }) {
   const [preview, setPreview] = useState<string | null>(existing?.image_url ?? null);
+  const [imageWidth, setImageWidth] = useState(0);
 
   useEffect(() => {
+    setImageWidth(0);
     if (!file) {
       setPreview(existing?.image_url ?? null);
       return;
@@ -48,7 +50,7 @@ export function ApplicationImageField({
       </div>
       <div className="application-image-field-layout">
         <div className="application-image-preview">
-          {preview ? <img alt={altText || existing?.alt_text || "Selected application image"} src={preview} /> : <span aria-hidden="true">Add an image</span>}
+          {preview ? <img alt={altText || existing?.alt_text || "Selected application image"} src={preview} onLoad={event => setImageWidth(event.currentTarget.naturalWidth)} /> : <span aria-hidden="true">Add an image</span>}
         </div>
         <div className="application-image-controls">
           {existing && !file ? <small className={`media-state state-${existing.status}`}>{applicationMediaStatus(existing.status)}</small> : null}
@@ -61,6 +63,7 @@ export function ApplicationImageField({
               type="file"
             />
             <small>JPG, PNG or WebP · up to 6 MB · at least 400 × 240 pixels</small>
+            {file && imageWidth > 0 && imageWidth < 1200 ? <small className="event-image-quality-note">This image is {imageWidth} pixels wide. For a sharper result on larger screens, use an image at least 1200 pixels wide. You can still use this one.</small> : null}
           </label>
           {existing && existing.status !== "approved" && onRemoveExisting ? (
             <button className="application-image-remove" disabled={removing} onClick={onRemoveExisting} type="button">
