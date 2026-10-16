@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "pretest": "npm run test:featured",
-    "test:featured": "node scripts/verify-featured-spots.mjs",
+    "test:featured": "node scripts/verify-featured-spots.mjs && node scripts/verify-featured-request-recovery.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
