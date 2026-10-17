@@ -1,0 +1,91 @@
+-- TEST ONLY: tagged identities, transaction rollback, no external email delivery.
+begin;
+create temporary table join_note_results(result text);
+do $$
+declare cid uuid; member_id uuid; other_id uuid; host_id uuid; moderator_id uuid; admin_id uuid; mid uuid;
+  result text; denied boolean; occupied integer;
+begin
+  select id into strict cid from public.communities where slug='hat-community-event-acceptance';
+  select u.id into strict member_id from auth.users u join public.profiles p on p.id=u.id where u.email='community.member.one@hat-test.invalid' and p.is_test_account;
+  select u.id into strict other_id from auth.users u join public.profiles p on p.id=u.id where u.email='community.member.two@hat-test.invalid' and p.is_test_account;
+  select u.id into strict host_id from auth.users u join public.profiles p on p.id=u.id where u.email='community.host@hat-test.invalid' and p.is_test_account;
+  select user_id into strict admin_id from public.user_roles where role='super_admin' and (expires_at is null or expires_at>now()) limit 1;
+  if not exists(select 1 from public.community_memberships where community_id=cid and user_id=host_id and role='owner') then raise exception 'Tagged fixture owner mismatch';end if;
+  select m.user_id into strict moderator_id from public.community_memberships m join public.profiles p on p.id=m.user_id
+    where m.community_id=cid and m.role='moderator' and m.status='active' and p.is_test_account;
+  perform set_config('request.jwt.claim.sub',admin_id::text,true);
+  update public.community_release_checks set status='passed' where community_id=cid;
+  update public.communities set status='published',join_policy='approval' where id=cid;
+  update public.community_offers set status='draft' where community_id=cid and status='published';
+  delete from public.community_join_waitlist where community_id=cid and user_id in(member_id,other_id);
+  update public.community_memberships set status='removed' where community_id=cid and user_id=member_id;
+  update public.community_memberships set status='active',role='member' where community_id=cid and user_id=other_id;
+  insert into public.community_join_limits(community_id,maximum_members,waiting_list_enabled) values(cid,null,true)
+    on conflict(community_id) do update set maximum_members=null,waiting_list_enabled=true;
+  perform set_config('request.jwt.claim.sub',member_id::text,true);
+  execute 'set local role authenticated';
+  result:=public.join_community_with_message(cid,'  I would like to learn with this Community.  ');
+  if result<>'requested' then raise exception 'Approval mode bypassed';end if;
+  if not exists(select 1 from public.community_join_request_notes where community_id=cid and user_id=member_id and message='I would like to learn with this Community.') then raise exception 'Requester note not saved/trimmed';end if;
+  denied:=false;begin perform public.join_community_with_message(cid,'Duplicate');exception when raise_exception then denied:=true;end;
+  if not denied then raise exception 'Duplicate request accepted';end if;
+  denied:=false;begin insert into public.community_join_request_notes values(cid,other_id,'Forbidden',now());exception when insufficient_privilege then denied:=true;end;
+  if not denied then raise exception 'Direct note write allowed';end if;
+  perform set_config('request.jwt.claim.sub',other_id::text,true);
+  if exists(select 1 from public.community_join_request_notes where community_id=cid and user_id=member_id) then raise exception 'Ordinary member read private note';end if;
+  perform set_config('request.jwt.claim.sub',host_id::text,true);
+  if not exists(select 1 from public.community_join_request_notes where community_id=cid and user_id=member_id) then raise exception 'Host cannot read request note';end if;
+  execute 'reset role';
+  perform set_config('request.jwt.claim.sub',moderator_id::text,true);execute 'set local role authenticated';
+  if not exists(select 1 from public.community_join_request_notes where community_id=cid and user_id=member_id) then raise exception 'Moderator cannot read request note';end if;
+  execute 'reset role';
+  update public.profiles set access_status='suspended' where id=host_id;
+  perform set_config('request.jwt.claim.sub',host_id::text,true);execute 'set local role authenticated';
+  if exists(select 1 from public.community_join_request_notes where community_id=cid) then raise exception 'Suspended Host read note';end if;
+  execute 'reset role';update public.profiles set access_status='active' where id=host_id;
+  perform set_config('request.jwt.claim.sub',admin_id::text,true);execute 'set local role authenticated';
+  if not exists(select 1 from public.community_join_request_notes where community_id=cid and user_id=member_id) then raise exception 'Super Admin cannot read note';end if;
+  execute 'reset role';
+  select id into strict mid from public.community_memberships where community_id=cid and user_id=member_id;
+  perform set_config('request.jwt.claim.sub',host_id::text,true);execute 'set local role authenticated';
+  denied:=false;begin perform public.review_community_join_request(mid,'decline',null);exception when raise_exception then denied:=true;end;
+  if not denied then raise exception 'Decline without reason accepted';end if;
+  perform public.review_community_join_request(mid,'decline','This test request is outside the group purpose.');
+  execute 'reset role';
+  if exists(select 1 from public.community_join_request_notes where community_id=cid and user_id=member_id) then raise exception 'Declined request note retained';end if;
+  if not exists(select 1 from public.community_join_decisions where membership_id=mid and reason='This test request is outside the group purpose.') then raise exception 'Decline reason not persisted';end if;
+
+  perform set_config('request.jwt.claim.sub',member_id::text,true);execute 'set local role authenticated';
+  result:=public.join_community_with_message(cid,'   ');
+  if result<>'requested' or exists(select 1 from public.community_join_request_notes where community_id=cid and user_id=member_id) then raise exception 'Blank optional note failed';end if;
+  execute 'reset role';update public.community_memberships set status='removed' where community_id=cid and user_id=member_id;
+  execute 'set local role authenticated';
+  denied:=false;begin perform public.join_community_with_message(cid,repeat('x',501));exception when raise_exception then denied:=true;end;
+  if not denied then raise exception 'Overlong note accepted';end if;
+  result:=public.join_community_with_message(cid,repeat('é',500));
+  if result<>'requested' then raise exception 'Unicode boundary note failed';end if;
+  execute 'reset role';update public.community_memberships set status='removed' where community_id=cid and user_id=member_id;
+  if exists(select 1 from public.community_join_request_notes where community_id=cid and user_id=member_id) then raise exception 'Cancelled/resolved note retained';end if;
+  update public.communities set join_policy='open' where id=cid;
+  execute 'set local role authenticated';result:=public.join_community_with_message(cid,'Not needed for open joining');
+  if result<>'active' then raise exception 'Open joining changed';end if;
+  execute 'reset role';
+  if exists(select 1 from public.community_join_request_notes where community_id=cid and user_id=member_id) then raise exception 'Open join note retained unnecessarily';end if;
+  update public.community_memberships set status='removed' where community_id=cid and user_id=member_id;
+  select count(*) into occupied from public.community_memberships where community_id=cid and status in('active','approved_pending_payment');
+  if occupied<2 then raise exception 'Fixture needs two active seats';end if;
+  update public.community_join_limits set maximum_members=occupied where community_id=cid;
+  execute 'set local role authenticated';result:=public.join_community_with_message(cid,'Please offer a place when one opens.');
+  if result<>'waitlisted' then raise exception 'Capacity guard bypassed';end if;
+  if not exists(select 1 from public.community_join_request_notes where community_id=cid and user_id=member_id) then raise exception 'Waiting-list note missing';end if;
+  perform public.leave_community_waitlist(cid);
+  execute 'reset role';
+  if exists(select 1 from public.community_join_request_notes where community_id=cid and user_id=member_id) then raise exception 'Left-waitlist note retained';end if;
+  if has_function_privilege('anon','public.join_community_with_message(uuid,text)','execute')
+    or has_table_privilege('anon','public.community_join_request_notes','select')
+    or has_table_privilege('authenticated','public.community_join_request_notes','insert') then raise exception 'Private grants incorrect';end if;
+  if exists(select 1 from public.audit_events where target_id=cid and metadata::text like '%I would like to learn with this Community%') then raise exception 'Note copied into audit metadata';end if;
+  insert into join_note_results values('PASS: saved/blank/Unicode/duplicate/capacity/review-reason/privacy/cleanup boundaries; rollback only.');
+end; $$;
+select * from join_note_results;
+rollback;

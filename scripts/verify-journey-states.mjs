@@ -931,7 +931,7 @@ for (const contract of [
   "Enter Community",
   "Review your request",
   "Joining opens soon",
-  "request_community_access",
+  "join_community_with_message",
 ]) {
   assert(
     communityAboutAction.includes(contract),
@@ -1787,7 +1787,7 @@ assert(
 );
 assert(
   read("components/member/community-directory.tsx").includes(
-    "join_community_with_capacity",
+    "join_community_with_message",
   ) && read("supabase/migrations/20261015062516_joining_capacity_host_reviews.sql").includes("respond_to_community_invitation(c.id,true)"),
   "Cohort invitations must require an explicit member acceptance action",
 );

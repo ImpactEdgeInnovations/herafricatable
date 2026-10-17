@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
+import { useActionDialog } from "@/components/ui/action-dialog";
 
 export function CommunityAboutAction({
   accessType,
@@ -31,28 +32,33 @@ export function CommunityAboutAction({
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const joining = useRef(false);
+  const {ask,clearDraft,dialog} = useActionDialog({retainDrafts: true});
 
   async function join() {
+    if (busy || joining.current) return;
+    joining.current = true;
     setBusy(true);
     setMessage("");
-    const { error } = await supabase.rpc("request_community_access", {
-      p_community_id: communityId,
-    });
-    setBusy(false);
-    if (error) {
+    try {
+      const draftKey = `community-join:${communityId}`;
+      let note: string | null = null;
+      if (joiningMode === "approval") {
+        const answer = await ask({draftKey,title:"Ask to join this Community",description:"Your message is private to you and the people reviewing your request. You can leave it blank.",confirmLabel:"Send request",fields:[{name:"message",label:"Message to the Host (optional)",type:"textarea",maxLength:500,placeholder:"Tell the Host why you’d like to join, or mention someone you know."}]});
+        if (!answer) return;
+        note = String(answer.message ?? "").trim() || null;
+      }
+      const {data,error} = await supabase.rpc("join_community_with_message", {p_community_id:communityId,p_message:note});
+      if (error) throw error;
+      clearDraft(draftKey);
+      if (data === "active") { router.push(`/communities/${slug}`); return; }
+      setMessage(data === "waitlisted" ? "This Community is full. You are on the waiting list; no place is reserved. The Host has been notified." : data === "requested" ? "Your request has been sent to the Host. We’ll let you know under Updates." : "Your place is ready. Open Community to complete payment.");
+      router.refresh();
+    } catch (error) {
       setMessage(memberErrorMessage(error, "request Community access"));
-      return;
+    } finally {
+      joining.current = false; setBusy(false);
     }
-    if (joiningMode === "open" && accessType !== "paid") {
-      router.push(`/communities/${slug}`);
-      return;
-    }
-    setMessage(
-      joiningMode === "approval"
-        ? "The Community host has your request. We’ll let you know under Updates."
-        : "Your place is ready. Open Community to complete payment.",
-    );
-    router.refresh();
   }
 
   if (!signedIn) {
@@ -132,6 +138,7 @@ export function CommunityAboutAction({
 
   return (
     <div className="community-about-action">
+      {dialog}
       <button
         className="button button-primary"
         disabled={busy}

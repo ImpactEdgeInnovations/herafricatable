@@ -206,6 +206,9 @@
 .community-page .community-directory-title { flex-wrap: wrap; }
 .community-page .community-directory-title .community-price { max-width: 12rem; }
 .community-page .community-directory-title .community-price :is(strong, small) { white-space: normal; line-height: 1.4; }
+.community-request-note { max-width: 42rem; margin: 10px 0 0; padding: 10px 12px; background: #f8f6f2; border-left: 2px solid #d9d0c5; border-radius: 3px; color: #332e2a; }
+.community-request-note > strong { display: block; font-size: .8rem; }
+.community-request-note p { margin: 5px 0 0; font: 400 .9rem/1.5 var(--sans, Arial, sans-serif); white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 600px) { .community-application-image-handoff { align-items: flex-start; } .community-application-image-handoff > img { width: 48px; height: 48px; } .community-application-image-handoff .button { white-space: normal; } }
 .community-room-page .community-host-identity { font-size: .85rem; color: #655e60; }
 .community-room-page .community-host-identity a { color: #241e20; font-weight: 600; }

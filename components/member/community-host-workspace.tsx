@@ -13,6 +13,7 @@ import {
 } from "@/components/member/destination-invitation-panel";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { CommunityHostSection } from "./community-host-section";
+import { CommunityRequestNote } from "@/components/community/community-request-note";
 
 export type CommunityHostHealth = {
   active_members: number;
@@ -33,6 +34,7 @@ export type CommunityHostMember = {
   role: string;
   status: string;
   created_at: string;
+  join_message?: string | null;
 };
 
 export type CommunityContinuitySummary = {
@@ -156,6 +158,7 @@ export function CommunityHostWorkspace({
   invitations,
   invitationsReady,
   members,
+  joinMessagesReady = true,
   migrationReady,
   options,
   outcomeTrends,
@@ -174,6 +177,7 @@ export function CommunityHostWorkspace({
   invitations: DestinationInvitation[];
   invitationsReady: boolean;
   members: CommunityHostMember[];
+  joinMessagesReady?: boolean;
   migrationReady: boolean;
   options: CommunityProgrammingOption[];
   outcomeTrends: CommunityOutcomeTrend[];
@@ -612,6 +616,7 @@ export function CommunityHostWorkspace({
         </details>
         <div className="community-host-member-list">
           <h3>{pending.length ? "Waiting for your decision" : "No join requests are waiting"}</h3>
+          {!joinMessagesReady && pending.some(member => member.status === "requested") ? <button type="button" disabled={Boolean(busy)} onClick={() => router.refresh()}>Reload member messages</button> : null}
           {pending.map((member) => (
             <article key={member.membership_id}>
               <div>
@@ -621,17 +626,18 @@ export function CommunityHostWorkspace({
                     "Member profile"}
                 </span>
                 <small>{member.status === "requested" ? "Requested access" : "Invitation awaiting response"}</small>
+                {member.status === "requested" ? <CommunityRequestNote message={member.join_message} unavailable={!joinMessagesReady} /> : null}
               </div>
               {member.status === "requested" ? (
                 <div>
                   <button
-                    disabled={Boolean(busy)}
+                    disabled={Boolean(busy) || !joinMessagesReady}
                     onClick={() => void review(member, "approve")}
                   >
                     Approve
                   </button>
                   <button
-                    disabled={Boolean(busy)}
+                    disabled={Boolean(busy) || !joinMessagesReady}
                     onClick={() => void review(member, "decline")}
                   >
                     Decline

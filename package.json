@@ -5,7 +5,7 @@
   "scripts": {
     "test:admin-phase-one": "node scripts/verify-admin-phase-one.mjs",
     "test:admin-phase-two": "node scripts/verify-admin-phase-two.mjs",
-    "pretest": "npm run test:featured && npm run test:admin-phase-one && npm run test:admin-phase-two && node scripts/verify-event-card-media.mjs && node scripts/verify-community-album-covers.mjs && node scripts/verify-community-cover-preparation.mjs",
+    "pretest": "npm run test:featured && npm run test:admin-phase-one && npm run test:admin-phase-two && node scripts/verify-event-card-media.mjs && node scripts/verify-community-album-covers.mjs && node scripts/verify-community-cover-preparation.mjs && node scripts/verify-community-join-message.mjs",
     "test:featured": "node scripts/verify-featured-spots.mjs && node scripts/verify-featured-request-recovery.mjs",
     "dev": "next dev",
     "build": "next build",

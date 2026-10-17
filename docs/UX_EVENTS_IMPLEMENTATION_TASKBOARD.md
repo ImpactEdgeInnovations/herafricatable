@@ -1,10 +1,12 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 16 October 2026. Historical baseline release: `b4be9ca`.
+Updated: 17 October 2026. Historical baseline release: `b4be9ca`.
 
 This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
 ## 7 October execution alignment
+
+**17 October — Optional private joining messages implemented:** Ask to join now offers a 500-character optional note in an in-page dialog on the directory, About and linked event entry points. Hosts/moderators see it beside the request; failed note reads show recovery and block the affected review controls. Existing Approve/Decline remains, with a private reason required for Decline. A narrow private table/RLS and capacity-preserving RPC are applied live; no owner SQL action is needed. Full tests/typecheck/build and rollback-only core SQL test 067 passed, including request/Host/moderator/Admin visibility, ordinary-member/suspended-Host denial, blank/Unicode/duplicate/capacity cases and cleanup. No real email or Community change persisted. Browser/inbox delivery acceptance is separate. [Handover and checks](COMMUNITY_JOIN_MESSAGES_20261017.md).
 
 **16 October — Community fee and joining labels clarified:** Directory cards now show **No membership fee** separately from **Host approval required**, **Join straight away** or **Invitation only**, including the owner's own card. Joining settings explicitly say that changing approval does not change the fee. Missing joining data no longer defaults to Join now; unknown non-invitation joining is disabled. An incomplete paid offer says Fee details unavailable rather than Free. Read-only live inspection confirmed Food, Fitness, Fashion has `join_policy=approval` and no paid offer; Lavington Women remains `open`. No settings or memberships were changed and no migration is needed. Rendered open/approval/invitation/Host/paid/unknown-state tests, full suite and typecheck passed; browser visual and real joining acceptance remain separate.
 

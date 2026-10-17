@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
+import { CommunityRequestNote } from "@/components/community/community-request-note";
 
 export type CommunityJoinLimit = { community_id: string; maximum_members: number | null; waiting_list_enabled: boolean; occupied_members: number; is_full: boolean; on_waiting_list: boolean };
-type WaitingMember = { user_id: string; display_name: string; joined_at: string };
+type WaitingMember = { user_id: string; display_name: string; joined_at: string; join_message?:string|null };
 
 export function CommunityCapacityPanel({communityId,owner}:{communityId:string;owner:boolean}) {
   const supabase=useMemo(()=>createClient(),[]);
@@ -19,6 +20,7 @@ export function CommunityCapacityPanel({communityId,owner}:{communityId:string;o
   const [people,setPeople]=useState<WaitingMember[]>([]);
   const [loading,setLoading]=useState(true);
   const [ready,setReady]=useState(false);
+  const [notesReady,setNotesReady]=useState(true);
   const [busy,setBusy]=useState("");
   const [message,setMessage]=useState("");
   const lock=useRef(false);
@@ -31,7 +33,11 @@ export function CommunityCapacityPanel({communityId,owner}:{communityId:string;o
       if(version!==generation.current)return;
       const row=(limits.data as CommunityJoinLimit[]|null)?.[0];
       if(limits.error||waiting.error||!row||!Array.isArray(waiting.data))throw Error("Member limits could not be loaded. Your current joining rules have not changed.");
-      setCurrent(row);setLimit(row.maximum_members===null?"":String(row.maximum_members));setWaitingEnabled(row.waiting_list_enabled);setPeople(waiting.data);setReady(true);
+      const notes=waiting.data.length ? await supabase.from("community_join_request_notes").select("user_id,message").eq("community_id",communityId).in("user_id",waiting.data.map((person:WaitingMember)=>person.user_id)) : {data:[],error:null};
+      if(version!==generation.current)return;
+      const byUser=new Map(((notes.data??[]) as {user_id:string;message:string}[]).map(note=>[note.user_id,note.message]));
+      setNotesReady(!notes.error);
+      setCurrent(row);setLimit(row.maximum_members===null?"":String(row.maximum_members));setWaitingEnabled(row.waiting_list_enabled);setPeople(waiting.data.map((person:WaitingMember)=>({...person,join_message:byUser.get(person.user_id)??null})));setReady(true);
     }catch(error){if(version===generation.current)setMessage(memberErrorMessage(error,"load member limits"));}
     finally{if(version===generation.current)setLoading(false);}
   },[communityId,supabase]);
@@ -59,7 +65,7 @@ export function CommunityCapacityPanel({communityId,owner}:{communityId:string;o
     {loading?<p role="status">Loading member places…</p>:!ready?<button type="button" onClick={()=>void load()}>Try again</button>:<>
       <p>{current?.occupied_members} {Number(current?.occupied_members)===1?"place":"places"} occupied{current?.maximum_members!==null?` of ${current?.maximum_members}`:" · no limit"}.</p>
       {owner?<div className="community-host-invite"><label>Maximum members (optional)<input aria-label="Maximum members" type="number" min={2} max={100000} value={limit} onChange={e=>setLimit(e.target.value)} disabled={Boolean(busy)}/><small>Leave blank for no limit.</small></label><label><input type="checkbox" checked={waitingEnabled} onChange={e=>setWaitingEnabled(e.target.checked)} disabled={Boolean(busy)}/>Allow a waiting list when full</label><button type="button" className="button button-primary" disabled={Boolean(busy)} onClick={()=>void save()}>{busy==="save"?"Saving…":"Save member limit"}</button></div>:<p>Only the owner can change the limit. You can still review waiting members.</p>}
-      <h3>Waiting for a place</h3>{!people.length?<p>No one is on the waiting list.</p>:<div className="community-host-member-list">{people.map(person=><article key={person.user_id}><strong>{person.display_name}</strong><div><button type="button" disabled={Boolean(busy)||current?.is_full} onClick={()=>void review(person,"approve")}>Approve place</button><button type="button" disabled={Boolean(busy)} onClick={()=>void review(person,"decline")}>Decline</button></div></article>)}</div>}
+      <h3>Waiting for a place</h3>{!notesReady&&people.length?<button type="button" disabled={Boolean(busy)} onClick={()=>void load()}>Reload member messages</button>:null}{!people.length?<p>No one is on the waiting list.</p>:<div className="community-host-member-list">{people.map(person=><article key={person.user_id}><div><strong>{person.display_name}</strong><CommunityRequestNote message={person.join_message} unavailable={!notesReady}/></div><div><button type="button" disabled={Boolean(busy)||!notesReady||current?.is_full} onClick={()=>void review(person,"approve")}>Approve place</button><button type="button" disabled={Boolean(busy)||!notesReady} onClick={()=>void review(person,"decline")}>Decline</button></div></article>)}</div>}
       {current?.is_full&&people.length?<p>All places are occupied. Increase the limit or free a place before approving someone.</p>:null}{people.length===100?<p>Showing the first 100 waiting members. Review these to see more.</p>:null}
     </>}{message?<p className="manager-message" role="status">{message}</p>:null}{dialog}
   </section>;

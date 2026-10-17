@@ -33,9 +33,9 @@ assert.equal(memberNextSuggestion({...next,pastEvent:null}),fallback);
 function component(path,name) {
   const source = read(path).replace(/^import[\s\S]*?;\n/gm,'').replace(/^export /gm,'');
   const code = ts.transpileModule(source,{compilerOptions:{jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
-  return new Function('React','Link','useMemo','useState','useRouter','createClient','useActionDialog','memberErrorMessage','matchesDiscoverySearch','memberDirectoryHref','memberPageSize',`${code};return ${name};`)(
+  return new Function('React','Link','useMemo','useState','useRef','useRouter','createClient','useActionDialog','memberErrorMessage','matchesDiscoverySearch','memberDirectoryHref','memberPageSize',`${code};return ${name};`)(
     React,({href,children,...props})=>React.createElement('a',{href,...props},children),
-    fn=>fn(),initial=>[typeof initial==='function'?initial():initial,()=>{}],()=>({refresh(){}}),()=>({rpc(){throw Error('Rendering must not call a database command');}}),()=>({dialog:null,ask:async()=>null}),()=> 'Try again',matchesDiscoverySearch,memberDirectoryHref,memberPageSize,
+    fn=>fn(),initial=>[typeof initial==='function'?initial():initial,()=>{}],initial=>({current:initial}),()=>({refresh(){}}),()=>({rpc(){throw Error('Rendering must not call a database command');}}),()=>({dialog:null,ask:async()=>null}),()=> 'Try again',matchesDiscoverySearch,memberDirectoryHref,memberPageSize,
   );
 }
 const CommunityDirectory = component('components/member/community-directory.tsx','CommunityDirectory');

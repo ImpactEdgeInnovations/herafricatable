@@ -250,6 +250,12 @@ export default async function CommunityHostPage({
     }),
   ]);
 
+  const requestMembers = ((memberResult.data as CommunityHostMember[] | null) ?? []).filter(member => member.status === "requested");
+  const requestNotes = requestMembers.length
+    ? await supabase.from("community_join_request_notes").select("user_id,message").eq("community_id",community.community_id).in("user_id",requestMembers.map(member => member.user_id))
+    : {data:[],error:null};
+  const noteByUser = new Map(((requestNotes.data ?? []) as {user_id:string;message:string}[]).map(note => [note.user_id,note.message]));
+
   const migrationReady =
     !healthResult.error && !memberResult.error && !programmingResult.error;
   const continuityReady =
@@ -449,7 +455,8 @@ export default async function CommunityHostPage({
           (invitationResult.data as DestinationInvitation[] | null) ?? []
         }
         invitationsReady={!invitationResult.error}
-        members={(memberResult.data as CommunityHostMember[] | null) ?? []}
+        members={((memberResult.data as CommunityHostMember[] | null) ?? []).map(member => ({...member,join_message: member.status === "requested" ? noteByUser.get(member.user_id) ?? null : null}))}
+        joinMessagesReady={!requestNotes.error}
         migrationReady={migrationReady}
         options={
           (programmingResult.data as CommunityProgrammingOption[] | null) ?? []

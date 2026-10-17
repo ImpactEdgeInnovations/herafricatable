@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
@@ -78,7 +78,8 @@ export function CommunityDirectory({
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const { ask, dialog } = useActionDialog();
+  const { ask, clearDraft, dialog } = useActionDialog({retainDrafts: true});
+  const joining = useRef(false);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
@@ -93,15 +94,30 @@ export function CommunityDirectory({
       item.location_scope === "place" && item.location_label?.toLocaleLowerCase() === locationFilter);
 
   async function join(item: CommunitySummary) {
-    if (busy || !joinLimitsReady || (!item.effective_mode && item.membership_status !== "invited")) return;
+    if (busy || joining.current || !joinLimitsReady || (!item.effective_mode && item.membership_status !== "invited")) return;
+    joining.current = true;
     setBusy(item.community_id);
     setMessage("");
     try {
-      const {data,error}=await supabase.rpc("join_community_with_capacity",{p_community_id:item.community_id});
+      let note: string | null = null;
+      const draftKey = `community-join:${item.community_id}`;
+      if (item.membership_status !== "invited" && (item.effective_mode === "approval" || (item.is_full && item.waiting_list_enabled))) {
+        const answer = await ask({
+          draftKey,
+          title: `Ask to join ${item.name}`,
+          description: "Your message is private to you and the people reviewing your request. You can leave it blank.",
+          confirmLabel: item.is_full ? "Join waiting list" : "Send request",
+          fields: [{name: "message", label: "Message to the Host (optional)", type: "textarea", maxLength: 500, placeholder: "Tell the Host why you’d like to join, or mention someone you know."}],
+        });
+        if (!answer) return;
+        note = String(answer.message ?? "").trim() || null;
+      }
+      const {data,error}=await supabase.rpc("join_community_with_message",{p_community_id:item.community_id,p_message:note});
       if(error)throw error;
+      clearDraft(draftKey);
       setMessage(data==="waitlisted"?"This Community is full. You are on the waiting list; no place is reserved. The Host has been notified.":data==="requested"?"Your request has been sent to the Host.":data==="approved_pending_payment"?"Your place is approved. Complete payment to join.":"You have joined the Community.");
       router.refresh();
-    }catch(error){setMessage(memberErrorMessage(error,"join this Community"));}finally{setBusy("");}
+    }catch(error){setMessage(memberErrorMessage(error,"join this Community"));}finally{joining.current=false;setBusy("");}
   }
   async function leaveWaitingList(item:CommunitySummary){
     if(busy)return;setBusy(item.community_id);setMessage("");
