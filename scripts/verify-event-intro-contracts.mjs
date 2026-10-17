@@ -29,7 +29,7 @@ assert(!ownPage.includes("get_my_event_pass") && !scanPage.includes("get_my_even
 assert(passPage.includes("get_my_event_pass"), "The entry QR must remain a separate route");
 assert(eventPage.includes("isConfirmedGuest && !introReadyResult.error"), "Only confirmed guests should see introduction entry");
 assert(
-  eventPage.includes("const { data: ownMembership } = user\n") &&
+  eventPage.includes("const { data: ownMembership } = user && !memberPreview\n") &&
     !eventPage.includes("const { data: ownMembership } = user && memberProfile?.access_status === \"active\""),
   "A confirmed event-only guest must be able to see her own place and introduction entry",
 );

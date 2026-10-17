@@ -25,6 +25,8 @@ import {
 import { EventRegistrationForm } from "@/components/events/event-registration-form";
 import { EventMobileAction } from "@/components/events/event-mobile-action";
 import { loadEventBookingAvailability } from "@/lib/events/server-booking-availability";
+import { eventViewerMode } from "@/lib/events/viewer-mode";
+import { EventBookingPreview } from "@/components/events/event-booking-preview";
 import { EventQuestions, type EventQuestion } from "@/components/events/event-questions";
 import {
   DestinationInvitationPanel,
@@ -34,12 +36,13 @@ import { FloatingTableGuide } from "@/components/member/floating-table-guide";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams?:Promise<{preview?:string|string[]}> }): Promise<Metadata> {
   const { slug } = await params;
   const event = (await getPublicEventSeo(slug))[0];
   if (!event) return { title: "Gathering", robots: { index: false, follow: false } };
   const description = (event.summary || `Explore ${event.title}, a Her Africa Table gathering for meaningful conversations and connections.`).slice(0, 160);
-  return publicPageMetadata(event.title, description, `/events/${encodeURIComponent(event.slug)}`);
+  const metadata = publicPageMetadata(event.title, description, `/events/${encodeURIComponent(event.slug)}`);
+  return (await searchParams)?.preview === "member" ? {...metadata,robots:{index:false,follow:false}} : metadata;
 }
 
 type EventDetail = {
@@ -58,8 +61,9 @@ type EventDetail = {
   venues: { address_line: string | null; city: string; country: string; map_url: string | null; name: string } | null;
 };
 
-export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function EventDetailPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{preview?:string|string[]}> }) {
   const { slug } = await params;
+  const requestedView = (await searchParams) ?? {};
   const supabase = await createClient();
   const { data, error: eventLoadError } = await supabase
     .from("events")
@@ -150,25 +154,33 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const { data: communityMembership } = activeMember && eventCommunity?.community_id
     ? await supabase.from("community_memberships").select("status").eq("community_id", eventCommunity.community_id).eq("user_id", user!.id).maybeSingle()
     : { data: null };
-  const [eventManagerResult, eventProposerResult] = user
+  const [eventManagerResult, eventProposerResult, eventHostResult, eventOutcomesResult] = user
     ? await Promise.all([
         supabase.rpc("can_manage_event", { check_event_id: event.id }),
         supabase
           .from("member_event_proposals")
           .select("id")
-          .eq("event_id", event.id)
+          .eq("canonical_event_id", event.id)
           .eq("proposed_by", user.id)
           .eq("status", "approved")
           .maybeSingle(),
+        supabase.rpc("can_host_event", { p_event_id: event.id }),
+        supabase.rpc("can_view_event_host_outcomes", { p_event_id: event.id }),
       ])
-    : [{ data: false, error: null }, { data: null, error: null }];
-  const canInviteToEvent = Boolean(
-    eventManagerResult.data || eventProposerResult.data,
-  );
-  const { data: canHostEvent } = user
-    ? await supabase.rpc("can_host_event", { p_event_id: event.id })
-    : { data: false };
-  const viewingAsHost = canInviteToEvent || canHostEvent === true;
+    : [{ data: false, error: null }, { data: null, error: null }, { data: false, error: null }, { data: false, error: null }];
+  const roleChecksReady = !eventManagerResult.error && !eventProposerResult.error && !eventHostResult.error && !eventOutcomesResult.error;
+  const canHostEvent = !eventHostResult.error && eventHostResult.data === true;
+  const viewer = eventViewerMode({
+    creator: Boolean(eventProposerResult.data),
+    host: canHostEvent || eventOutcomesResult.data === true,
+    manager: eventManagerResult.data === true,
+    checksReady: roleChecksReady,
+    previewRequested: requestedView.preview === "member",
+    slug,
+    eventId: event.id,
+  });
+  const {memberPreview,viewingAsHost,viewingAsAdmin} = viewer;
+  const canInviteToEvent = roleChecksReady && !memberPreview && Boolean(eventManagerResult.data || eventProposerResult.data || canHostEvent);
   const { data: hostPublicRows } = await supabase.rpc("get_event_public_host", { p_event_id: event.id });
   const publicHost = ((hostPublicRows as PublicEventHost[] | null) ?? [])[0] ?? null;
   const eventInvitationResult = canInviteToEvent
@@ -178,7 +190,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       })
     : { data: [], error: null };
   const hasEnded = new Date(event.ends_at).getTime() < Date.now();
-  const useCommunityGathering = Boolean(eventCommunity && communityMembership?.status === "active");
+  const useCommunityGathering = !memberPreview && Boolean(eventCommunity && communityMembership?.status === "active");
   const eventQuestionResult = activeMember && !useCommunityGathering
     ? await supabase.rpc("list_event_questions", { p_event_id: event.id })
     : { data: [], error: null };
@@ -192,10 +204,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const recap = recapResult.data as { highlights: string[]; summary: string; title: string } | null;
   const testimonials = (testimonialResult.data as { attribution: string; quote: string }[] | null) ?? [];
   const continuation = continuationResult.data?.communities as unknown as { name: string; slug: string } | null;
-  const { data: ownMembership } = user
+  const { data: ownMembership } = user && !memberPreview
     ? await supabase.from("event_memberships").select("status").eq("event_id", event.id).eq("user_id", user.id).maybeSingle()
     : { data: null };
-  const { data: ownOrder } = user
+  const { data: ownOrder } = user && !memberPreview
     ? await supabase.from("orders")
         .select("reference,status")
         .eq("event_id", event.id)
@@ -209,7 +221,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const [{ data: tickets }, { data: registration }] = !hasEnded
     ? await Promise.all([
         supabase.from("ticket_types").select("id,name,description,price_minor,currency,inventory_quantity,sales_start_at,sales_end_at").eq("event_id", event.id).eq("status", "on_sale").order("sort_order"),
-        user
+        user && !memberPreview
           ? supabase.from("registration_requests").select("status").eq("event_id", event.id).eq("user_id", user.id).maybeSingle()
           : Promise.resolve({ data: null, error: null }),
       ])
@@ -240,7 +252,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     : [{ data: null }, { data: [] }, { data: [] }, { data: null, error: null }, { data: [] }];
   const followUp = ((followUpResult.data as { available: boolean; interested: boolean }[] | null) ?? [])[0] ?? null;
   const roundStatus = ((roundStatusResult.data as { enabled: boolean; opted_in: boolean }[] | null) ?? [])[0] ?? null;
-  const archiveResult = user && memberProfile?.access_status === "active" && hasEnded
+  const archiveResult = user && !memberPreview && memberProfile?.access_status === "active" && hasEnded
     ? await supabase.rpc("get_my_member_event_archive", { p_event_id: event.id })
     : { data: [], error: null };
   const archiveAccess = ((archiveResult.data as MemberEventArchiveAccess[] | null) ?? [])[0] ?? null;
@@ -260,7 +272,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     .filter((community) => ["owner", "host"].includes(community.membership_role ?? ""))
     .map(({ community_id, name, slug }) => ({ community_id, name, slug }))) as LedCommunity[];
   const menuItemIds = menuItems?.map((item) => item.id) ?? [];
-  const { data: ownFeedback } = user && memberProfile?.access_status === "active" && menuItemIds.length
+  const { data: ownFeedback } = user && !memberPreview && memberProfile?.access_status === "active" && menuItemIds.length
     ? await supabase.from("menu_item_feedback").select("item_id, rating, is_favorite, comment").eq("user_id", user.id).in("item_id", menuItemIds)
     : { data: [] };
   const { data: galleryAlbums } = await supabase.from("gallery_albums").select("id, title, introduction, sort_order").eq("event_id", event.id).eq("status", "published").order("sort_order", { ascending: true });
@@ -294,7 +306,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       : availability?.tickets.some((ticket) => ticket.bookingState === "not_open")
         ? "Bookings open soon"
         : "Booking unavailable";
-  const cta = viewingAsHost ? "Manage your event" : gatheringRoomHref
+  const cta = memberPreview ? "Preview only" : viewingAsHost ? "Manage your event" : viewingAsAdmin ? "Open Admin controls" : gatheringRoomHref
     ? hasEnded ? "View meetup recap" : "Join meetup"
     : hasEnded ? recap ? "Read event recap" : "Event completed" : isConfirmedGuest ? "Open my event pass"
       : registration?.status === "pending_payment" || registration?.status === "pending_review"
@@ -310,11 +322,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const costLabel = hasEnded ? "Past event" : lowestTicket
     ? lowestTicket.price_minor === 0 ? "Free" : `From ${lowestTicket.currency} ${new Intl.NumberFormat("en-KE").format(lowestTicket.price_minor / 100)}`
     : "See booking details";
-  const entryLabel = viewingAsHost ? "You manage this event" : hasEnded ? "Completed" : event.audience === "community" ? "Community members"
+  const entryLabel = viewingAsHost ? "You host this event" : viewingAsAdmin ? "Admin oversight" : hasEnded ? "Completed" : event.audience === "community" ? "Community members"
     : activeMember ? "Member booking"
       : eventGuestFlag?.enabled ? "Guest booking available" : "Membership required";
   // Reuse the existing destination; this bar cannot book or bypass any eligibility check.
-  const mobileActionHref = hasEnded ? null : viewingAsHost ? `/events/${slug}/host` : gatheringRoomHref ?? (
+  const mobileActionHref = hasEnded ? null : memberPreview || !roleChecksReady ? null : viewingAsHost || viewingAsAdmin ? viewer.controlsHref : gatheringRoomHref ?? (
     isConfirmedGuest ? `/events/${slug}/pass`
       : registration?.status === "waitlisted" ? "#registration"
         : event.registration_mode !== "closed" && !bookingClosed ? "#registration" : null
@@ -335,13 +347,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <Link className="brand" href={user ? "/home" : "/"} prefetch={false}><span className="brand-mark" aria-hidden="true">H</span><span>Her Africa Table<small>Meet. Connect. Rise.</small></span></Link>
         <Link href="/events">All events</Link>
       </header>}
-      <div className="event-detail-back"><Link href="/events">← All events</Link>{viewingAsHost ? <span>You are viewing your event as a Host.</span> : null}</div>
+      <div className="event-detail-back"><Link href="/events">← All events</Link>{viewer.identity && !memberPreview ? <span>{viewer.identity}</span> : null}{viewer.mayPreview ? <Link href={memberPreview ? `/events/${slug}` : `/events/${slug}?preview=member`}>{memberPreview ? "Return to your event view" : "Preview the member view"}</Link> : null}</div>
+      {memberPreview ? <section className="event-view-preview" aria-label="Read-only member preview"><strong>Member preview · read-only</strong><p>You are seeing the page for a member who has not booked. Booking, Community joining and posting are disabled. Private guest details and management tools are not shown.</p></section> : null}
+      {!roleChecksReady ? <div className="event-view-preview" role="status"><strong>We could not check your event access.</strong><p>Your permissions have not changed. Reload before booking or opening event controls.</p><Link href={`/events/${slug}`}>Try again</Link></div> : null}
       <section className="event-detail-hero" aria-label="Event details">
         <div><p className="eyebrow">{event.audience === "community" ? "Community meetup" : event.format === "hybrid" ? "In person & online" : event.format === "online" ? "Online" : "In person"} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "See when, where and how to join below."}</p>{eventCommunity && event.audience === "community" ? <span className="event-community-badge">For active members of {eventCommunity.name}</span> : null}</div>
         {eventImage ? <figure className="event-detail-poster"><img alt={eventImage.alt} src={eventImage.url} fetchPriority="high" /></figure> : null}
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div><div><dt>Cost</dt><dd>{costLabel}</dd></div><div><dt>Entry</dt><dd>{entryLabel}</dd></div></dl>
-          <div id="event-primary-action">{viewingAsHost ? <Link className="button button-primary" href={`/events/${slug}/host`}>{cta}</Link> : gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : hasEnded && recap ? <a className="button button-primary" href="#event-recap">{cta}</a> : !hasEnded && isConfirmedGuest ? <Link className="button button-primary" href={`/events/${slug}/pass`}>{cta}</Link> : !hasEnded && registration?.status === "waitlisted" ? <a className="button button-primary" href="#registration">{cta}</a> : hasEnded || event.registration_mode === "closed" || bookingClosed ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}</div>
+          <div id="event-primary-action">{memberPreview || !roleChecksReady ? <button className="button button-outline" type="button" disabled>{memberPreview ? "Preview only" : "Reload to continue"}</button> : viewingAsHost || viewingAsAdmin ? <Link className="button button-primary" href={viewer.controlsHref!}>{cta}</Link> : gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : hasEnded && recap ? <a className="button button-primary" href="#event-recap">{cta}</a> : !hasEnded && isConfirmedGuest ? <Link className="button button-primary" href={`/events/${slug}/pass`}>{cta}</Link> : !hasEnded && registration?.status === "waitlisted" ? <a className="button button-primary" href="#registration">{cta}</a> : hasEnded || event.registration_mode === "closed" || bookingClosed ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}</div>
           {gatheringRoomHref && isConfirmedGuest && !hasEnded ? <Link className="event-pass-inline-link" href={`/events/${slug}/pass`}>Open my entry pass</Link> : null}
         </aside>
       </section>
@@ -349,14 +363,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       {publicHost ? <section className="event-public-host" aria-label="Event Host"><div className="event-public-host-identity"><span className="event-public-host-monogram" aria-hidden="true">{publicHost.display_name.trim().slice(0,1)}</span><div><small>Hosted by</small><h2>{publicHost.display_name}</h2>{publicHost.introduction ? <p>{publicHost.introduction}</p> : null}</div></div><div className="event-public-host-links">{publicHost.website_url ? <a href={publicHost.website_url} target="_blank" rel="noopener noreferrer nofollow">Website ↗</a> : null}{publicHost.linkedin_url ? <a href={publicHost.linkedin_url} target="_blank" rel="noopener noreferrer nofollow">LinkedIn ↗</a> : null}{publicHost.instagram_url ? <a href={publicHost.instagram_url} target="_blank" rel="noopener noreferrer nofollow">Instagram ↗</a> : null}{publicHost.contact_email ? <a href={`mailto:${encodeURIComponent(publicHost.contact_email)}`}>Email Host</a> : null}{publicHost.contact_phone ? <a href={`tel:${publicHost.contact_phone.replace(/[^\d+]/g,"")}`}>Call Host</a> : null}</div></section> : null}
 
       <nav className="event-detail-jump-links" aria-label="On this event page">
-        {!viewingAsHost && !hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? <a href="#registration">Places</a> : null}
+        {(viewer.showBooking || memberPreview) && !hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? <a href="#registration">Places</a> : null}
         {gatheringRoomHref ? <Link href={`${gatheringRoomHref}#questions`}>Conversation</Link> : <a href="#questions">Questions</a>}
         {eventCommunity ? <a href="#event-community">Community</a> : null}
         {sessions?.length ? <a href="#event-programme">Programme</a> : null}
         {hasEnded && recap ? <a href="#event-recap">Recap</a> : null}
       </nav>
 
-      {!hasEnded && canHostEvent === true ? <div className="event-host-shortcut"><span>{eventImage ? "Your event tools" : poster || cover ? "Your poster could not load. Check it in your Host tools." : "No poster added yet."}</span><div><Link href={`/events/${slug}/host#host-image`}>{eventImage ? "Manage poster" : "Add or check poster"}</Link><Link href={`/events/${slug}/host#host-host`}>{publicHost ? "Edit Host details" : "Add Host details"}</Link></div></div> : null}
+      {!memberPreview && roleChecksReady && !hasEnded && canHostEvent === true ? <div className="event-host-shortcut"><span>{eventImage ? "Your event tools" : poster || cover ? "Your poster could not load. Check it in your Host tools." : "No poster added yet."}</span><div><Link href={`/events/${slug}/host#host-image`}>{eventImage ? "Manage poster" : "Add or check poster"}</Link><Link href={`/events/${slug}/host#host-host`}>{publicHost ? "Edit Host details" : "Add Host details"}</Link></div></div> : null}
 
       {!hasEnded && canInviteToEvent ? (
         <details className="event-inline-invitations"><summary>Invite people</summary>
@@ -373,7 +387,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         </details>
       ) : null}
 
-      {!viewingAsHost && !hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? (
+      {memberPreview && !hasEnded ? <EventBookingPreview tickets={availability?.tickets ?? []} closed={bookingClosed || event.registration_mode === "closed"} closedLabel={event.registration_mode === "closed" ? "Registration closed" : bookingClosedLabel} mode={event.registration_mode} /> : null}
+      {viewer.showBooking && !hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? (
         <section className="event-inline-registration" id="registration">
           {bookingClosed && !registration && !isConfirmedGuest ? (
             <div className="event-registration-entry">
@@ -439,7 +454,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <aside>
             <span>{linkedJoining?.join_policy === "open" ? "Members can join immediately" : linkedJoining?.join_policy === "invite_only" ? "Invitation only" : linkedJoining?.join_policy === "approval" ? "The Host approves joining requests" : "Community membership"}</span>
             <p>{event.audience === "community" ? "This meetup is for active members of the Community." : "This is an open event connected to the Community. Joining either one is always your choice."}</p>
-            <EventCommunityJoin communityId={eventCommunity.community_id} slug={eventCommunity.slug} activeMember={activeMember} signedIn={Boolean(user)} initialStatus={communityMembership?.status ?? null} joinPolicy={linkedJoining?.join_policy ?? null} />
+            {memberPreview ? <button className="button button-outline" type="button" disabled>Join this event’s Community</button> : <EventCommunityJoin communityId={eventCommunity.community_id} slug={eventCommunity.slug} activeMember={activeMember} signedIn={Boolean(user)} initialStatus={communityMembership?.status ?? null} joinPolicy={linkedJoining?.join_policy ?? null} />}
           </aside>
         </section>
       ) : null}
@@ -447,13 +462,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       {announcements?.length ? <section className="event-content-section"><div><p className="eyebrow">Latest information</p><h2>Announcements</h2></div><div className="announcement-list">{announcements.map((item) => <article key={item.id}><span>{item.published_at ? new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", timeZone: event.timezone }).format(new Date(item.published_at)) : "Update"}</span><div><h3>{item.title}</h3><p>{item.body}</p></div></article>)}</div></section> : null}
 
       {!useCommunityGathering ? <EventQuestions
-        canAsk={activeMember && !hasEnded}
+        canAsk={activeMember && !hasEnded && !memberPreview}
         currentUserId={user?.id ?? null}
         eventId={event.id}
         eventSlug={slug}
         gatheringHref={useCommunityGathering && eventCommunity ? `/communities/${eventCommunity.slug}/gatherings/${slug}#questions` : null}
-        initialQuestions={(eventQuestionResult.data as EventQuestion[] | null) ?? []}
+        initialQuestions={((eventQuestionResult.data as EventQuestion[] | null) ?? []).filter(question => !memberPreview || question.question_status !== "hidden").map(question => memberPreview ? {...question,can_manage:false,supported_by_me:false} : question)}
         migrationReady={useCommunityGathering || !eventQuestionResult.error}
+        readOnly={memberPreview}
       /> : null}
 
       {sessions?.length ? <section className="event-content-section" id="event-programme"><div><p className="eyebrow">The gathering</p><h2>Programme</h2></div><div className="programme-list">{sessions.map((session) => { const speakers = speakersFor(session.id); return <article key={session.id}><time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(session.starts_at))}</time><div><h3>{session.title}</h3>{speakers.map((speaker) => <p className="programme-speaker" key={`${session.id}-${speaker.name}`}><strong>{speaker.name}</strong>{[speaker.job_title, speaker.company].filter(Boolean).join(" · ") ? ` · ${[speaker.job_title, speaker.company].filter(Boolean).join(" · ")}` : ""}</p>)}<p>{session.description}</p>{session.room ? <span>{session.room}</span> : null}</div></article>; })}</div></section> : null}
@@ -463,7 +479,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       {hasEnded && testimonials.length ? <section className="event-public-reflections"><header><p className="eyebrow">Shared with permission</p><h2>What guests carried forward.</h2></header><div>{testimonials.map((item) => <blockquote key={`${item.attribution}-${item.quote}`}><p>“{item.quote}”</p><cite>— {item.attribution}</cite></blockquote>)}</div></section> : null}
 
-      {menu ? <section className="event-menu-section"><header><p className="eyebrow">A culinary journey</p><h2>{menu.title}</h2><p>{menu.introduction}</p></header><div className="public-menu-courses">{menuCourses?.map((course) => { const dishes = menuItems?.filter((item) => item.course_id === course.id) ?? []; return dishes.length ? <article className="public-menu-course" key={course.id}><div><span>{String(course.sort_order + 1).padStart(2, "0")}</span><h3>{course.name}</h3><p>{course.description}</p></div><div>{dishes.map((dish) => { const feedback = ownFeedback?.find((entry) => entry.item_id === dish.id); return <section key={dish.id}><div className="dish-heading"><h4>{dish.name}</h4>{dish.cultural_origin ? <span>{dish.cultural_origin}</span> : null}</div><p>{dish.description}</p>{dish.cultural_story ? <blockquote>{dish.cultural_story}</blockquote> : null}{dish.ingredients?.length ? <p className="dish-meta"><strong>Ingredients</strong>{dish.ingredients.join(" · ")}</p> : null}{dish.dietary_tags?.length ? <div className="dish-tags">{dish.dietary_tags.map((tag: string) => <span key={tag}>{tag}</span>)}</div> : null}{dish.allergen_notes ? <p className="allergen-note"><strong>Allergen note:</strong> {dish.allergen_notes}</p> : null}{memberProfile?.access_status === "active" ? <MenuFeedbackControls itemId={dish.id} initialRating={feedback?.rating ?? null} initialFavorite={feedback?.is_favorite ?? false} initialComment={feedback?.comment ?? null} /> : null}</section>; })}</div></article> : null; })}</div>{menu.embassy_note ? <aside className="embassy-note"><span>From the table</span><p>{menu.embassy_note}</p></aside> : null}</section> : null}
+      {menu ? <section className="event-menu-section"><header><p className="eyebrow">A culinary journey</p><h2>{menu.title}</h2><p>{menu.introduction}</p></header><div className="public-menu-courses">{menuCourses?.map((course) => { const dishes = menuItems?.filter((item) => item.course_id === course.id) ?? []; return dishes.length ? <article className="public-menu-course" key={course.id}><div><span>{String(course.sort_order + 1).padStart(2, "0")}</span><h3>{course.name}</h3><p>{course.description}</p></div><div>{dishes.map((dish) => { const feedback = ownFeedback?.find((entry) => entry.item_id === dish.id); return <section key={dish.id}><div className="dish-heading"><h4>{dish.name}</h4>{dish.cultural_origin ? <span>{dish.cultural_origin}</span> : null}</div><p>{dish.description}</p>{dish.cultural_story ? <blockquote>{dish.cultural_story}</blockquote> : null}{dish.ingredients?.length ? <p className="dish-meta"><strong>Ingredients</strong>{dish.ingredients.join(" · ")}</p> : null}{dish.dietary_tags?.length ? <div className="dish-tags">{dish.dietary_tags.map((tag: string) => <span key={tag}>{tag}</span>)}</div> : null}{dish.allergen_notes ? <p className="allergen-note"><strong>Allergen note:</strong> {dish.allergen_notes}</p> : null}{!memberPreview && memberProfile?.access_status === "active" ? <MenuFeedbackControls itemId={dish.id} initialRating={feedback?.rating ?? null} initialFavorite={feedback?.is_favorite ?? false} initialComment={feedback?.comment ?? null} /> : null}</section>; })}</div></article> : null; })}</div>{menu.embassy_note ? <aside className="embassy-note"><span>From the table</span><p>{menu.embassy_note}</p></aside> : null}</section> : null}
 
       {galleryAlbums?.length && galleryAssets.some((asset) => asset.signed_url) ? <section className="event-gallery-section"><header><p className="eyebrow">In the room</p><h2>Moments from the table.</h2></header>{galleryAlbums.map((album) => { const albumAssets = galleryAssets.filter((asset) => asset.album_id === album.id && asset.signed_url); return albumAssets.length ? <article className="public-gallery-album" key={album.id}><div><h3>{album.title}</h3><p>{album.introduction}</p></div><div className="public-gallery-grid">{albumAssets.map((asset) => <figure className={asset.is_featured ? "featured" : ""} key={asset.id}><img src={asset.signed_url!} alt={asset.alt_text} width={asset.width ?? undefined} height={asset.height ?? undefined} loading="lazy" /><figcaption><span>{asset.caption}</span>{asset.credit ? <small>Photo: {asset.credit}</small> : null}</figcaption></figure>)}</div></article> : null; })}</section> : null}
 

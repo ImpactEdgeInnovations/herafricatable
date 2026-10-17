@@ -31,6 +31,7 @@ export function EventQuestions({
   gatheringHref,
   initialQuestions,
   migrationReady,
+  readOnly = false,
 }: {
   canAsk: boolean;
   currentUserId: string | null;
@@ -39,6 +40,7 @@ export function EventQuestions({
   gatheringHref?: string | null;
   initialQuestions: EventQuestion[];
   migrationReady: boolean;
+  readOnly?: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -63,6 +65,7 @@ export function EventQuestions({
 
   async function submitQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (readOnly) return;
     const form = event.currentTarget;
     const data = new FormData(form);
     setBusy("submit");
@@ -80,6 +83,7 @@ export function EventQuestions({
   }
 
   async function support(question: EventQuestion) {
+    if (readOnly) return;
     setBusy(`support-${question.question_id}`);
     setMessage("");
     const { error } = await supabase.rpc("toggle_event_question_support", { p_question_id: question.question_id });
@@ -90,6 +94,7 @@ export function EventQuestions({
 
   async function answer(event: FormEvent<HTMLFormElement>, question: EventQuestion) {
     event.preventDefault();
+    if (readOnly) return;
     const form = event.currentTarget;
     const data = new FormData(form);
     setBusy(`answer-${question.question_id}`);
@@ -106,6 +111,7 @@ export function EventQuestions({
   }
 
   async function hide(question: EventQuestion) {
+    if (readOnly) return;
     const confirmed = await ask({
       title: "Hide this question?",
       description: "It will leave the public event page immediately. A safety audit record remains.",
@@ -121,6 +127,7 @@ export function EventQuestions({
   }
 
   async function report(question: EventQuestion) {
+    if (readOnly) return;
     const result = await ask({
       title: "Report this question privately?",
       description: "Only the Her Africa Table safety team will receive your report.",
@@ -153,7 +160,7 @@ export function EventQuestions({
           <h2 id="event-questions-title">Ask before you arrive.</h2>
           <p>Ask about the programme, access or what to expect. Support a question instead of repeating it.</p>
         </div>
-        {canAsk && migrationReady ? (
+        {canAsk && migrationReady && !readOnly ? (
           <button className="button button-primary" onClick={() => setComposerOpen((open) => !open)} type="button">
             {composerOpen ? "Close" : "Ask a question"}
           </button>
@@ -161,8 +168,8 @@ export function EventQuestions({
       </header>
 
       {!migrationReady ? <p className="event-question-note">Questions for the Host are being prepared.</p> : null}
-      {!currentUserId ? <p className="event-question-note"><Link href={`/sign-in?next=${encodeURIComponent(`/events/${eventSlug}#questions`)}`}>Sign in</Link> with your approved email to ask or support a question.</p> : null}
-      {composerOpen ? (
+      {!currentUserId && !readOnly ? <p className="event-question-note"><Link href={`/sign-in?next=${encodeURIComponent(`/events/${eventSlug}#questions`)}`}>Sign in</Link> with your approved email to ask or support a question.</p> : null}
+      {composerOpen && !readOnly ? (
         <form className="event-question-composer" onSubmit={(event) => void submitQuestion(event)}>
           <label><span>Your question</span><textarea autoFocus maxLength={600} minLength={10} name="body" placeholder="What would you like the Host to clarify?" required rows={3} /></label>
           <div><small>Do not include phone numbers, addresses or another person’s private details.</small><button className="button button-primary" disabled={busy === "submit"} type="submit">{busy === "submit" ? "Sending…" : "Send question"}</button></div>
@@ -177,16 +184,16 @@ export function EventQuestions({
               <header><div className="event-question-avatar" aria-hidden="true">{question.author_name.slice(0, 1)}</div><div><strong>{question.author_name}</strong><time>{new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short" }).format(new Date(question.created_at))}</time></div><span>{question.question_status === "answered" ? "Answered" : "For the Host"}</span></header>
               <p>{question.body}</p>
               {question.answer_body ? <blockquote><span>Host answer{question.answerer_name ? ` · ${question.answerer_name}` : ""}</span><p>{question.answer_body}</p></blockquote> : null}
-              <footer>
+              {!readOnly ? <footer>
                 <button disabled={busy === `support-${question.question_id}`} onClick={() => void support(question)} type="button">{question.supported_by_me ? "Supported" : "I’d like this answered"} · {Number(question.support_count)}</button>
                 {question.can_manage ? <><button onClick={() => setAnsweringId(answeringId === question.question_id ? null : question.question_id)} type="button">{question.answer_body ? "Update answer" : "Answer"}</button><button className="danger-link" disabled={busy === `hide-${question.question_id}`} onClick={() => void hide(question)} type="button">Hide</button></> : question.author_id !== currentUserId ? <button className="quiet-link" disabled={busy === `report-${question.question_id}`} onClick={() => void report(question)} type="button">Report privately</button> : null}
-              </footer>
-              {answeringId === question.question_id ? <form className="event-question-answer" onSubmit={(event) => void answer(event, question)}><label><span>Your answer</span><textarea defaultValue={question.answer_body ?? ""} maxLength={1200} minLength={2} name="answer" required rows={3} /></label><button className="button button-primary" disabled={busy === `answer-${question.question_id}`} type="submit">Publish answer</button></form> : null}
+              </footer> : null}
+              {answeringId === question.question_id && !readOnly ? <form className="event-question-answer" onSubmit={(event) => void answer(event, question)}><label><span>Your answer</span><textarea defaultValue={question.answer_body ?? ""} maxLength={1200} minLength={2} name="answer" required rows={3} /></label><button className="button button-primary" disabled={busy === `answer-${question.question_id}`} type="submit">Publish answer</button></form> : null}
             </article>
           ))}
         </div>
       ) : migrationReady ? <div className="event-question-empty"><strong>No questions yet.</strong><p>If something would help other guests too, ask the Host here.</p></div> : null}
-      {dialog}
+      {!readOnly ? dialog : null}
     </section>
   );
 }

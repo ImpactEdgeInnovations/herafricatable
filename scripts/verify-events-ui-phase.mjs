@@ -66,7 +66,7 @@ cleanup();
 assert(disconnected);
 const detail = read('app/events/[slug]/page.tsx');
 assert(detail.includes('viewingAsHost ? "Manage your event"'));
-assert(detail.includes('!viewingAsHost && !hasEnded && !gatheringRoomHref'));
+assert(detail.includes('viewer.showBooking && !hasEnded && !gatheringRoomHref'));
 assert(detail.includes('<MemberHeader active="events"'));
 const confirmationCode=ts.transpileModule(read('components/member/meetup-place-confirmation.tsx').replace('export function','function'),{compilerOptions:{jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022}}).outputText;
 const Confirmation=new Function('React',`${confirmationCode};return MeetupPlaceConfirmation;`)(React);
