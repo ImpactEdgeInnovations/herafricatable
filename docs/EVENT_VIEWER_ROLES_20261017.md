@@ -26,7 +26,7 @@ Updated: 17 October 2026.
 
 The role-context check used only temporary results and transaction rollback. It did not authenticate a browser session, change accounts/assignments, create bookings or send messages. Supabase guidance kept database capabilities authoritative and preview state presentation-only.
 
-**Level 3 — pending deployment/browser check:** check the existing Host session's creator wording, Preview link, disabled booking/Community actions and return path. Independent Admin/member browser sessions and physical-device acceptance remain separate until actually exercised.
+**Level 3 — existing Host browser check passed on deployed `d103054`:** the live Food & Tech Event tab showed You created this event, You host this event and Preview the member view. Opening preview showed the read-only notice, static complimentary-ticket option, disabled Preview only/Book a place/Community-join controls and no Host or invitation tools. Return to your event view restored creator wording and Manage your event. Navigation used the existing signed-in Host session; no booking, message, invitation or assignment was submitted. Screenshot: `tmp/event-member-preview-20261017.jpg`. Independent Admin/member browser sessions, explicit hard-refresh acceptance and physical-device acceptance remain separate until exercised.
 
 ## Tester checklist
 
