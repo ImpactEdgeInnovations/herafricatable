@@ -14,7 +14,7 @@ Updated: 19 October 2026.
 
 ### L1 — controlled code/runtime
 
-`scripts/verify-event-poster-recovery.mjs` executes the actual recovery state machine, lifecycle hook and route with controlled dependencies: stale events, bounded retry, duplicate retry prevention, resume throttling, visibility, timeout cleanup, invalid IDs, denied audiences, missing poster, failed signing, published-cover preference and proposal fallback. `verify-event-card-media.mjs` renders/executes the real card controls, including visible Retry and replacement recovery. Provider calls here are mocked, not inbox/device evidence.
+`scripts/verify-event-poster-recovery.mjs` executes the actual recovery state machine, lifecycle hook and route with controlled dependencies: stale events, bounded retry, duplicate retry prevention, resume throttling, visibility, timeout cleanup, invalid IDs, denied audiences, missing poster, failed signing, published-cover preference and proposal fallback. `verify-event-card-media.mjs` renders/executes the real card controls, including visible Retry and replacement recovery. Full `npm test`, typecheck and production build passed. Provider calls in controlled tests are mocked, not inbox/device evidence.
 
 ### L2 — live database
 
@@ -26,7 +26,7 @@ Security advisor comparison introduced no new findings. Existing project-wide fi
 
 ### L3 — browser and physical devices
 
-Deployment/browser checks will be recorded after release. Physical installed iPhone/Android PWA acceptance remains open. A responsive desktop browser is not a substitute for that check.
+Release `32aba53` pushed to main and Vercel status confirmed success. In the existing creator/Host Chrome session at 390 × 844, Food & Tech and December Dubai Trip both decoded successfully from the new same-origin endpoints, at a 320 × 200 card size. Food & Tech's full-poster dialog opened and closed correctly; its event-detail poster also decoded successfully from the new endpoint after navigation. Screenshot: `tmp/event-poster-recovery-mobile-20261019.jpg`. These are real browser/provider checks but not independent-member browser or physical-device acceptance. Physical installed iPhone/Android, hour-long background/resume and real connectivity-failure acceptance remain open. A responsive desktop browser is not a substitute for those checks.
 
 ## Tester check
 
