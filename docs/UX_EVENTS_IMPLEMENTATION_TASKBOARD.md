@@ -1,10 +1,12 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 17 October 2026. Historical baseline release: `b4be9ca`.
+Updated: 19 October 2026. Historical baseline release: `b4be9ca`.
 
 This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
 ## 7 October execution alignment
+
+**19 October — Event poster access and PWA recovery:** Published poster file and metadata access now follow the event's audience, without exposing applicant records or draft/replaced images. Both buckets remain private. Listing/detail use a permission-checked, non-cached endpoint, bounded automatic renewal/retry on app resume, and visible Retry image recovery. Live ordinary-member readback and rollback-only public/Community/draft privacy tests passed; no test fixtures or uploads remain. Controlled route/hook/card tests passed. Physical installed iPhone/Android acceptance remains separate. [Evidence and tester checks](EVENT_POSTER_RECOVERY_20261019.md). Admin phase 3 remains paused.
 
 **17 October — Event role clarity and read-only member preview:** Creator, assigned Host and Admin/staff oversight are now separate. The creator lookup uses the real canonical event column; invitation permission no longer labels a person as Host. Admin-only controls lead to the filtered Admin workspace. Preview the member view omits write-capable widgets/private account records and uses disabled static booking/Community actions; questions are read-only and hidden questions removed. Normal attendee access and all database permissions remain unchanged. Full tests/typecheck/build and read-only live role-capability checks passed; no migration is needed. Release `d103054` deployed; the live creator-session browser check confirmed the new label, preview notice, disabled booking/Community actions, hidden Host/invitation tools and Return path. No real write action was submitted. Independent-role browser and physical-device checks remain separate. [Role evidence and tester checks](EVENT_VIEWER_ROLES_20261017.md).
 

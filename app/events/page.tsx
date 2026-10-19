@@ -113,8 +113,7 @@ export default async function EventsPage() {
     : { data: [] };
   const eventPosters = new Map(
     await Promise.all((((posterRows as { alt_text: string; event_id: string; storage_path: string }[] | null) ?? [])).map(async (poster) => {
-      const signed = await supabase.storage.from("proposal-media").createSignedUrl(poster.storage_path, 3600);
-      return [poster.event_id, { alt: poster.alt_text, url: signed.data?.signedUrl ?? null }] as const;
+      return [poster.event_id, { alt: poster.alt_text, url: `/api/events/${poster.event_id}/poster` }] as const;
     })),
   );
   const { data: hostCoverRows } = events.length
@@ -122,8 +121,7 @@ export default async function EventsPage() {
     : { data: [] };
   const hostCovers = new Map(
     await Promise.all((((hostCoverRows as { alt_text: string; event_id: string; storage_path: string }[] | null) ?? [])).map(async (cover) => {
-      const signed = await supabase.storage.from("event-host-covers").createSignedUrl(cover.storage_path, 3600);
-      return [cover.event_id, { alt: cover.alt_text, url: signed.data?.signedUrl ?? null }] as const;
+      return [cover.event_id, { alt: cover.alt_text, url: `/api/events/${cover.event_id}/poster` }] as const;
     })),
   );
   const {

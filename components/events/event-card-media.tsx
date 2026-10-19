@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { eventImageFit, type EventImageStyle } from "@/lib/events/image-fit";
+import { useEventPoster } from "@/components/events/use-event-poster";
 
 export function EventCardMedia({ src, alt, title, dateLabel, imageStyle = "automatic" }: {
   src?: string | null;
@@ -12,11 +13,11 @@ export function EventCardMedia({ src, alt, title, dateLabel, imageStyle = "autom
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useId();
-  const [failedSource, setFailedSource] = useState<string | null>(null);
+  const image = useEventPoster(src);
   const frame = useRef<HTMLButtonElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [natural, setNatural] = useState({ src: "", width: 0, height: 0 });
-  const available = Boolean(src && failedSource !== src);
+  const available = Boolean(src && !image.failed);
   useEffect(() => {
     const element = frame.current;
     if (!element) return;
@@ -30,19 +31,20 @@ export function EventCardMedia({ src, alt, title, dateLabel, imageStyle = "autom
   const fit = eventImageFit(imageStyle, natural.src === src ? natural.width : 0, natural.src === src ? natural.height : 0, size.width, size.height);
 
   if (!available) return (
-    <div className="public-event-card-media public-event-card-placeholder" aria-hidden="true">
+    <div className="public-event-card-media public-event-card-placeholder" aria-hidden={src ? undefined : true}>
       <span>Her Africa Table</span>
       <strong>{title}</strong>
       <small>{dateLabel}</small>
+      {src ? <div className="event-poster-unavailable" role="status"><p>Image unavailable</p><button type="button" onClick={image.retry}>Retry image</button></div> : null}
     </div>
   );
 
   return <>
     <button className="public-event-card-media public-event-poster-button" type="button" ref={frame} data-image-fit={fit}
       aria-label={`View full poster for ${title}`} onClick={() => dialog.current?.showModal()}>
-      <img className="public-event-poster" alt="" src={src!} loading="lazy" style={{ objectFit: fit }}
-        onLoad={(event) => setNatural({ src: src!, width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })}
-        onError={() => setFailedSource(src!)} />
+      <img className="public-event-poster" alt="" src={image.url} loading={image.attempt ? "eager" : "lazy"} style={{ objectFit: fit }}
+        onLoad={(event) => { image.onLoad(); setNatural({ src: src!, width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight }); }}
+        onError={image.onError} />
       <span className="public-event-poster-hint">View full poster <span aria-hidden="true">↗</span></span>
     </button>
     <dialog className="event-poster-dialog" aria-labelledby={heading} ref={dialog}
@@ -51,7 +53,7 @@ export function EventCardMedia({ src, alt, title, dateLabel, imageStyle = "autom
         <div><span>Event poster</span><h2 id={heading}>{title}</h2></div>
         <button type="button" autoFocus onClick={() => dialog.current?.close()} aria-label="Close poster">Close <span aria-hidden="true">×</span></button>
       </header>
-      <div className="event-poster-dialog-image"><img src={src!} alt={alt?.trim() || `Poster for ${title}`} /></div>
+      <div className="event-poster-dialog-image"><img src={image.url} alt={alt?.trim() || `Poster for ${title}`} onError={image.onError} /></div>
     </dialog>
   </>;
 }

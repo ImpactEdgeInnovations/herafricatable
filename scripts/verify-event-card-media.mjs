@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
+import {createPosterRecovery} from '../lib/events/poster-recovery.ts';
 const read = file => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
 const source = read('components/events/event-card-media.tsx').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
 const code = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
@@ -17,7 +18,9 @@ const React = { Fragment: 'Fragment', createElement: (type, props, ...children) 
 let opened = 0, closed = 0, cursor = 0;
 const states = [];
 const ref = { current: { showModal() { opened++; }, close() { closed++; } } };
-const renderComponent = new Function('React', 'useRef', 'useId', 'useState', 'useEffect', 'eventImageFit', `${code};return EventCardMedia;`)(React, () => ref, () => 'poster-heading', initial => { const i=cursor++; if(!(i in states))states[i]=initial; return [states[i], value => { states[i]=value; }]; }, () => {}, eventImageFit);
+let recovery, recoverySource;
+const useEventPoster=src=>{if(src!==recoverySource){recoverySource=src;recovery=createPosterRecovery(src,()=>{});}const state=recovery.read();return {...state,retry:()=>recovery.retry(),onError:()=>recovery.error(state.url),onLoad:()=>{}};};
+const renderComponent = new Function('React', 'useRef', 'useId', 'useState', 'useEffect', 'eventImageFit', 'useEventPoster', `${code};return EventCardMedia;`)(React, () => ref, () => 'poster-heading', initial => { const i=cursor++; if(!(i in states))states[i]=initial; return [states[i], value => { states[i]=value; }]; }, () => {}, eventImageFit,useEventPoster);
 const Component = props => { cursor=0; return renderComponent(props); };
 const props = { src: '/poster.jpg', title: 'Test event', alt: 'Complete poster', dateLabel: '26 October 2026' };
 function find(node, predicate) { if (!node || typeof node !== 'object') return null; if (predicate(node)) return node; for (const child of node.children ?? []) { const found = find(child, predicate); if (found) return found; } return null; }
@@ -33,8 +36,13 @@ dialog.props.onClick({ target: 'dialog', currentTarget: 'dialog' }); assert.equa
 assert.equal(find(dialog, n => n.type === 'img').props.alt, 'Complete poster');
 find(tree, n => n.type === 'img').props.onError();
 tree = Component(props);
+find(tree, n => n.type === 'img').props.onError();
+tree = Component(props);
 assert(tree.props.className.includes('public-event-card-placeholder'));
-assert(!find(tree, n => n.type === 'button'), 'Broken images must not offer a broken viewer');
+assert.equal(find(tree,n=>n.type==='button').children[0],'Retry image');
+assert(!find(tree,n=>n.type==='dialog'),'Broken images must not offer a broken viewer');
+find(tree,n=>n.type==='button').props.onClick();
+assert(find(Component(props),n=>n.type==='img'),'Manual retry must restore the image');
 assert.equal(Component({ ...props, src: null }).props.className, tree.props.className);
 assert(find(Component({ ...props, src: '/new.jpg' }), n => n.type === 'button'), 'A replacement image can recover without remounting');
 const css = read('app/event-discovery-refinement.css');

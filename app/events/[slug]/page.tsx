@@ -27,6 +27,7 @@ import { EventMobileAction } from "@/components/events/event-mobile-action";
 import { loadEventBookingAvailability } from "@/lib/events/server-booking-availability";
 import { eventViewerMode } from "@/lib/events/viewer-mode";
 import { EventBookingPreview } from "@/components/events/event-booking-preview";
+import { EventPosterImage } from "@/components/events/event-poster-image";
 import { EventQuestions, type EventQuestion } from "@/components/events/event-questions";
 import {
   DestinationInvitationPanel,
@@ -79,19 +80,11 @@ export default async function EventDetailPage({ params, searchParams }: { params
   const publiclyIndexable = event.audience === "public" && Boolean((await getPublicEventSeo(slug))[0]);
   const { data: posterRows } = await supabase.rpc("list_public_event_proposal_posters", { p_event_ids: [event.id] });
   const poster = ((posterRows as { alt_text: string; storage_path: string }[] | null) ?? [])[0] ?? null;
-  const posterSigned = poster
-    ? await supabase.storage.from("proposal-media").createSignedUrl(poster.storage_path, 3600)
-    : { data: null };
   const { data: coverRows } = await supabase.rpc("list_public_event_host_covers", { p_event_ids: [event.id] });
   const cover = ((coverRows as { alt_text: string; storage_path: string }[] | null) ?? [])[0] ?? null;
-  const coverSigned = cover
-    ? await supabase.storage.from("event-host-covers").createSignedUrl(cover.storage_path, 3600)
-    : { data: null };
-  const eventImage = coverSigned.data?.signedUrl
-    ? { url: coverSigned.data.signedUrl, alt: cover!.alt_text }
-    : posterSigned.data?.signedUrl && poster
-      ? { url: posterSigned.data.signedUrl, alt: poster.alt_text }
-      : null;
+  const eventImage = cover || poster
+    ? { url: `/api/events/${event.id}/poster`, alt: (cover || poster)!.alt_text }
+    : null;
   const { data: communityRows, error: communityLookupError } = await supabase.rpc("get_event_community_for_visitor", {
     p_event_id: event.id,
   });
@@ -352,7 +345,7 @@ export default async function EventDetailPage({ params, searchParams }: { params
       {!roleChecksReady ? <div className="event-view-preview" role="status"><strong>We could not check your event access.</strong><p>Your permissions have not changed. Reload before booking or opening event controls.</p><Link href={`/events/${slug}`}>Try again</Link></div> : null}
       <section className="event-detail-hero" aria-label="Event details">
         <div><p className="eyebrow">{event.audience === "community" ? "Community meetup" : event.format === "hybrid" ? "In person & online" : event.format === "online" ? "Online" : "In person"} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "See when, where and how to join below."}</p>{eventCommunity && event.audience === "community" ? <span className="event-community-badge">For active members of {eventCommunity.name}</span> : null}</div>
-        {eventImage ? <figure className="event-detail-poster"><img alt={eventImage.alt} src={eventImage.url} fetchPriority="high" /></figure> : null}
+        {eventImage ? <EventPosterImage src={eventImage.url} alt={eventImage.alt} /> : null}
         <aside>
           <dl><div><dt>Date</dt><dd>{new Intl.DateTimeFormat("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at))}</dd></div><div><dt>Time</dt><dd>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at))} – {new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at))}</dd></div><div><dt>Venue</dt><dd>{event.venues ? `${event.venues.name}, ${event.venues.city}` : "Online access for confirmed attendees"}</dd></div><div><dt>Cost</dt><dd>{costLabel}</dd></div><div><dt>Entry</dt><dd>{entryLabel}</dd></div></dl>
           <div id="event-primary-action">{memberPreview || !roleChecksReady ? <button className="button button-outline" type="button" disabled>{memberPreview ? "Preview only" : "Reload to continue"}</button> : viewingAsHost || viewingAsAdmin ? <Link className="button button-primary" href={viewer.controlsHref!}>{cta}</Link> : gatheringRoomHref ? <Link className="button button-primary" href={gatheringRoomHref}>{cta}</Link> : hasEnded && recap ? <a className="button button-primary" href="#event-recap">{cta}</a> : !hasEnded && isConfirmedGuest ? <Link className="button button-primary" href={`/events/${slug}/pass`}>{cta}</Link> : !hasEnded && registration?.status === "waitlisted" ? <a className="button button-primary" href="#registration">{cta}</a> : hasEnded || event.registration_mode === "closed" || bookingClosed ? <span className="button button-outline" aria-disabled="true">{cta}</span> : <a className="button button-primary" href="#registration">{cta}</a>}</div>
