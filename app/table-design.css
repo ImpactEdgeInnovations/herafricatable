@@ -418,6 +418,8 @@ body.hat-design-c {
 .hat-design-c .profile-editor-section-title h2,.hat-design-c .settings-card h2 { font:500 23px/1.3 var(--sans); }
 .hat-design-c .profile-editor-section-title p,.hat-design-c .profile-editor-avatar small { font-size:12px; line-height:1.6; }
 .hat-design-c .profile-editor-avatar strong { font-size:14px; }
+.hat-design-c .profile-completion>span strong { font-family:var(--sans); font-size:18px; font-weight:500; }
+.hat-design-c .profile-completion>i>b { background:var(--wine); }
 .hat-design-c .profile-editor-grid label { font-size:13px; font-weight:500; color:var(--ink); letter-spacing:0; text-transform:none; }
 .hat-design-c .profile-editor .profile-goals label { background:#fff; border-color:var(--line); border-radius:8px; font-size:13px; }
 .hat-design-c .profile-editor .profile-goals label:has(input:checked) { background:var(--hat-soft); border-color:#a6bca1; color:var(--ink); }
@@ -426,10 +428,15 @@ body.hat-design-c {
 .hat-design-c .account-settings-shell .settings-card.deletion-zone { grid-template-columns:1fr; }
 .hat-design-c .settings-card :is(p,dd) { font-size:14px; line-height:1.65; }
 .hat-design-c .settings-card dt { font-size:11px; font-weight:500; text-transform:none; letter-spacing:0; }
+.hat-design-c .account-settings-shell>header>aside strong { font:500 20px/1.4 var(--sans); }
 .hat-design-c .connection-preference-options button { border-radius:8px; border-color:var(--line); background:#fff; }
 .hat-design-c .connection-preference-options button.is-selected { background:var(--hat-soft); border-color:#9db596; color:var(--ink); }
 .hat-design-c .table-guide-setting-options button[aria-pressed="true"] { background:var(--hat-soft); color:var(--ink); border-color:#9db596; }
 .hat-design-c .message-shell { width:min(1120px,calc(100% - 72px)); margin:25px auto; border-color:var(--line); border-radius:12px; min-height:480px; height:calc(100dvh - 130px); grid-template-columns:300px minmax(0,1fr); }
+.hat-design-c .message-shell.is-empty { height:auto; min-height:0; grid-template-columns:1fr; }
+.hat-design-c .message-shell.is-empty .conversation-panel { display:none; }
+.hat-design-c .message-shell.is-empty .conversation-list { border-right:0; }
+.hat-design-c .message-empty { background:#f1f5ec; }
 .hat-design-c .conversation-list h1 { font:500 27px/1.2 var(--sans); }
 .hat-design-c .conversation-list>header { padding:24px 21px; }
 .hat-design-c .conversation-list>a { min-height:78px; }
@@ -466,6 +473,7 @@ body.hat-design-c {
   .hat-design-c .account-settings-shell .settings-card { padding:21px; grid-template-columns:1fr; gap:20px; }
   .hat-design-c .settings-action>button { justify-self:start; }
   .hat-design-c .message-shell { height:calc(100dvh - 190px); min-height:380px; grid-template-columns:1fr; }
+  .hat-design-c .message-shell.is-empty { height:auto; min-height:0; }
   .hat-design-c .message-shell.has-selection .conversation-list { display:none; }
   .hat-design-c .message-shell:not(.has-selection) .conversation-panel { display:none; }
   .hat-design-c .message-thread { padding:18px 14px; }
