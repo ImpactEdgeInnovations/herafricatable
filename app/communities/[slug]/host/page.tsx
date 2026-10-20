@@ -61,6 +61,7 @@ import {
 import type { DestinationInvitation } from "@/components/member/destination-invitation-panel";
 import { CommunityPhotoAlbums } from "@/components/community/community-photo-albums";
 import { CommunityLocationPanel, type CommunityLocation } from "@/components/member/community-location-panel";
+import {CommunityTopicSettings} from "@/components/member/community-topic-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -90,7 +91,7 @@ export default async function CommunityHostPage({
     redirect(`/communities/${slug}`);
   }
 
-  const [capabilityResult, brandingResult, publicProfileResult, joiningSettingsResult] = await Promise.all([
+  const [capabilityResult, brandingResult, publicProfileResult, joiningSettingsResult, conversationTopicsResult] = await Promise.all([
     supabase.rpc("get_community_host_capabilities", {
       p_community_id: community.community_id,
     }),
@@ -105,6 +106,7 @@ export default async function CommunityHostPage({
     supabase.rpc("list_community_joining_settings", {
       p_community_id: community.community_id,
     }),
+    supabase.rpc("get_community_conversation_topics",{p_community_id:community.community_id}),
   ]);
   const { data: pilotEligible } = community.status === "draft" && community.membership_role === "owner"
     ? await supabase.rpc("community_pilot_member_ready") : { data: false };
@@ -364,6 +366,7 @@ export default async function CommunityHostPage({
       </CommunityHostSection>
       </HostToolArea>
       <HostToolArea area="settings">
+      <CommunityTopicSettings communityId={community.community_id} initialTopics={Array.isArray(conversationTopicsResult.data)?conversationTopicsResult.data as string[]:[]} ready={!conversationTopicsResult.error}/>
       <CommunityHostSection id="public-page-area" title="Shareable Community page">
       <CommunityPublicProfilePanel
         currentUserId={user.id}

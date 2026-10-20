@@ -112,9 +112,10 @@ export default async function CommunityPage({
   ).find((item) => item.slug === slug);
   if (!community) notFound();
   if (community.membership_status !== "active") redirect("/communities");
-  const [joiningResult, hostResult] = await Promise.all([
+  const [joiningResult, hostResult, conversationTopicsResult] = await Promise.all([
     supabase.rpc("list_community_joining_settings", { p_community_id: community.community_id }),
     supabase.rpc("get_community_host_identity", { p_community_id: community.community_id }),
+    showConversations ? supabase.rpc("get_community_conversation_topics",{p_community_id:community.community_id}) : Promise.resolve({data:null,error:null}),
   ]);
   const communityHost = hostResult.data as { user_id: string; display_name: string | null } | null;
   const joiningMode = ((joiningResult.data as { effective_mode: string }[] | null) ?? [])[0]?.effective_mode ?? "unknown";
@@ -443,6 +444,8 @@ export default async function CommunityPage({
           canManage={canManage}
           composerInitiallyOpen={isEventFollowUp}
           enhanced={structuredConversationsReady}
+          enabledTopics={Array.isArray(conversationTopicsResult.data)?conversationTopicsResult.data as string[]:undefined}
+          topicSettingsReady={!conversationTopicsResult.error}
           communityId={community.community_id}
           currentUserId={user.id}
           initialComments={

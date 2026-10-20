@@ -1234,7 +1234,7 @@ for (const contract of [
   "set_community_post_saved",
   "set_community_post_followed",
   "set_community_post_pinned",
-  "What are you sharing?",
+  "Choose a topic",
   "Save privately",
   "Follow replies",
   "Report privately",

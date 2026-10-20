@@ -1,0 +1,51 @@
+import assert from 'node:assert/strict';
+import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import ts from 'typescript';
+import {communityConversationTopics,conversationTopicForStart} from '../lib/community-conversation-topics.ts';
+const read=file=>readFileSync(new URL(`../${file}`,import.meta.url),'utf8');
+const compile=source=>ts.transpileModule(source.replace(/^import[\s\S]*?;\n/gm,'').replace(/^export /gm,''),{compilerOptions:{jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+const keys=communityConversationTopics.map(topic=>topic.value);
+const base={filter:'resource',current:'discussion',available:keys,hasDraft:false,chosen:false};
+assert.equal(conversationTopicForStart(base),'resource');
+assert.equal(conversationTopicForStart({...base,hasDraft:true}),'discussion');
+assert.equal(conversationTopicForStart({...base,chosen:true}),'discussion');
+assert.equal(conversationTopicForStart({...base,filter:'all',current:'win',available:['resource']}),'resource');
+assert.equal(conversationTopicForStart({...base,filter:'announcement'}),'discussion');
+assert.equal(conversationTopicForStart({...base,current:'win',hasDraft:true,available:['resource']}),'win','Do not silently recategorize an unfinished post');
+const feed=read('components/member/community-feed.tsx');
+const noOp=()=>{};
+const Feed=new Function('React','useRouter','useEffect','useMemo','useRef','useState','createClient','useActionDialog','memberErrorMessage','communityDraftKey','readCommunityDraft','writeCommunityDraft','useCommunityDraft','useCommunityFileGuard','CommunityReplyForm','CommunityAttachmentRetry','signCommunityAttachments','CommunityAvatar','communityConversationTopics','conversationTopicForStart',`${compile(feed)};return CommunityFeed;`)(React,()=>({refresh:noOp}),React.useEffect,React.useMemo,React.useRef,React.useState,()=>({}),()=>({ask:async()=>false,dialog:null}),()=> 'Please try again',(...parts)=>parts.join(':'),noOp,noOp,(_,initial)=>[initial,noOp,noOp],noOp,()=>null,()=>null,noOp,({name})=>React.createElement('span',null,name?.[0]),communityConversationTopics,conversationTopicForStart);
+const post={post_id:'post-one',author_id:'member',author_name:'Example member',author_company:null,author_role:null,category:'resource',body:'A useful resource to discuss.',created_at:'2026-10-20T08:00:00Z',comment_count:1};
+const comment={...post,comment_id:'reply-one',body:'Thanks for sharing this.',post_id:'post-one'};
+const props={communityId:'test',currentUserId:'member',canManage:false,enhanced:true,initialPosts:[post],initialComments:[comment],composerInitiallyOpen:true};
+const render=extra=>renderToStaticMarkup(React.createElement(Feed,{...props,...extra}));
+const html=render({enabledTopics:['resource'],initialComposerType:'resource'});
+assert(html.includes('Choose a topic')&&html.includes('value="resource" selected=""'));
+assert(!html.includes('value="announcement"'),'Members cannot publish Host-only announcements');
+assert(html.includes('Browse topic: Useful links')&&html.includes('class="community-post-body"'));
+assert(html.includes('aria-label="Conversation replies" tabindex="0"'));
+assert(html.includes('Thanks for sharing this.'));
+assert(render({readOnly:true}).includes('Conversation replies'));
+assert(!render({readOnly:true}).includes('Choose a topic'));
+assert(render({topicSettingsReady:false}).includes('Topics could not load.'));
+assert(feed.includes('setCategory(selectedCategory);setQuery("");setView("all");setOrder("newest");'),'A published post must not stay hidden by the previous topic/search/view');
+const host=read('components/member/community-topic-settings.tsx');
+const save=host.slice(host.indexOf('  async function save('),host.indexOf('  return <section'));
+const makeSave=new Function('context',`${compile(`const {busy,ready,topics,setBusy,setMessage,supabase,communityId,setSaved,setTopics,router,memberErrorMessage}=context;${save}`)};return save;`);
+function context(outcome='success') {const calls=[],states=[],messages=[],saved=[];return {calls,states,messages,saved,busy:false,ready:true,topics:['discussion'],setBusy:value=>states.push(value),setMessage:(...args)=>messages.push(args),supabase:{rpc:async(name,args)=>{calls.push({name,args});if(outcome==='throw')throw Error('offline');return {data:outcome==='malformed'?null:['discussion'],error:outcome==='error'?Error('denied'):null};}},communityId:'test',setSaved:value=>saved.push(value),setTopics:noOp,router:{refresh:noOp},memberErrorMessage:()=> 'Please try again'};}
+for(const outcome of ['success','error','throw','malformed']){const ctx=context(outcome);await makeSave(ctx)({preventDefault(){}});assert.equal(ctx.calls[0].name,'set_community_conversation_topics');assert.equal(ctx.states.at(-1),false);assert.equal(ctx.saved.length,outcome==='success'?1:0);assert.equal(ctx.messages.at(-1)[1],outcome==='success'?'success':undefined);}
+const sql=read('supabase/migrations/20261020085640_community_conversation_topics.sql');
+const guard=read('supabase/migrations/20261020090339_community_topic_reply_guard.sql');
+for(const source of [sql,guard])assert(source.includes('if new.parent_post_id is not null then return new; end if;'));
+assert(sql.includes('enable row level security')&&sql.includes('from public, anon, authenticated'));
+assert(sql.includes('public.can_manage_community(p_community_id)')&&sql.includes('for share'));
+if(process.argv.includes('--preview')) {
+  const output=new URL('../tmp/design-c-preview/',import.meta.url);mkdirSync(output,{recursive:true});
+  const css=[...read('app/layout.tsx').matchAll(/^import "\.\/(.+\.css)";/gm)].map(match=>read(`app/${match[1]}`)).join('\n');
+  writeFileSync(new URL('conversation.css',output),css);
+  const populated=render({initialComments:Array.from({length:14},(_,index)=>({...comment,comment_id:`reply-${index}`,author_name:`Example member ${index+1}`}))}).replace('<details class="community-comment-thread">','<details class="community-comment-thread" open>');
+  writeFileSync(new URL('conversation-topics.html',output),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Conversation topics — isolated visual fixture</title><link rel="stylesheet" href="conversation.css"></head><body class="hat-design-c"><main class="community-page community-room-page"><p style="padding:20px;font-size:12px">LAYOUT TEST · EXAMPLE DATA · POSTING DISABLED</p>${populated}</main></body></html>`);
+}
+console.log('Conversation topics L1 passed: new-topic defaults, protected drafts, role-limited options, published badges, scrollable replies, read-only/error states and confirmed Host saves. Live database acceptance uses a separate rolled-back rehearsal.');

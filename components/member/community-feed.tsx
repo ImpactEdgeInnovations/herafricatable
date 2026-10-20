@@ -12,17 +12,9 @@ import { CommunityReplyForm } from "./community-reply-form";
 import {CommunityAttachmentRetry} from "./community-attachment-retry";
 import {signCommunityAttachments} from "@/lib/community-attachment-delivery";
 import { CommunityAvatar } from "./community-avatar";
+import {communityConversationTopics,conversationTopicForStart} from "@/lib/community-conversation-topics";
 
-const conversationTypes = [
-  { label: "Questions & ideas", value: "discussion" },
-  { label: "Introduction", value: "introduction" },
-  { label: "Ask for help", value: "ask" },
-  { label: "Offer help", value: "offer" },
-  { label: "Opportunity", value: "opportunity" },
-  { label: "Useful links", value: "resource" },
-  { label: "After a meetup", value: "event_follow_up" },
-  { label: "Good news", value: "win" },
-] as const;
+const conversationTypes = communityConversationTopics;
 
 const hostConversationTypes = [
   { label: "Start here", value: "start_here" },
@@ -181,6 +173,8 @@ export function CommunityFeed({
   readStateReady = false,
   readOnly = false,
   prompt,
+  enabledTopics,
+  topicSettingsReady = true,
 }: {
   canManage: boolean;
   hostUserId?: string;
@@ -199,6 +193,8 @@ export function CommunityFeed({
   readStateReady?: boolean;
   readOnly?: boolean;
   prompt?: string;
+  enabledTopics?: string[];
+  topicSettingsReady?: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -212,13 +208,14 @@ export function CommunityFeed({
   const [category, setCategory] = useState("all");
   const [moreTopics, setMoreTopics] = useState(false);
   const [morePostTypes, setMorePostTypes] = useState(false);
-  const availableTypes = canManage
-    ? [...hostConversationTypes, ...conversationTypes]
-    : [...conversationTypes];
+  const allowedTopics = new Set<string>(enabledTopics ?? conversationTypes.map(topic=>topic.value));
+  const memberTypes = conversationTypes.filter(topic=>allowedTopics.has(topic.value));
+  const availableTypes = canManage ? [...memberTypes, ...hostConversationTypes] : [...memberTypes];
+  const composerTopicChosen = useRef(false);
   const [composerType, setComposerType, clearComposerType] = useCommunityDraft(communityDraftKey(currentUserId, "community-post-category", communityId),
     availableTypes.some((item) => item.value === initialComposerType)
       ? initialComposerType
-      : "discussion",
+      : availableTypes[0]?.value ?? "",
   );
   const [composerExpanded, setComposerExpanded] = useState(
     composerInitiallyOpen || Boolean(composerBody),
@@ -365,12 +362,24 @@ export function CommunityFeed({
     setView("all");
   }
 
+  function chooseBrowseTopic(next:string) {
+    if(next==="more"){setMoreTopics(true);return;}
+    setCategory(next);
+    if(composerExpanded)setComposerType(conversationTopicForStart({filter:next,current:composerType,available:availableTypes.map(item=>item.value),hasDraft:Boolean(composerBody.trim()),chosen:composerTopicChosen.current}));
+  }
+  function toggleComposer(open:boolean) {
+    if(open)setComposerType(conversationTopicForStart({filter:category,current:composerType,available:availableTypes.map(item=>item.value),hasDraft:Boolean(composerBody.trim()),chosen:composerTopicChosen.current}));
+    setComposerExpanded(open);
+  }
+
   async function publish(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const body = String(form.get("body") || "");
     const selectedCategory = String(form.get("category") || "discussion");
+    if(busy==="publish")return;
+    if(enhanced&&(!topicSettingsReady||!availableTypes.some(topic=>topic.value===selectedCategory))){setMessage("Choose an available topic before publishing. Your draft is safe.");return;}
     setBusy("publish");
 
     let dimensions: { height: number; width: number } | null = null;
@@ -484,7 +493,9 @@ export function CommunityFeed({
     setAttachmentFile(null);
     setAttachmentMode("none");
     setAttachmentUrl("");
-    clearComposerType("discussion");
+    composerTopicChosen.current=false;
+    clearComposerType(conversationTopicForStart({filter:selectedCategory,current:"discussion",available:availableTypes.map(item=>item.value),hasDraft:false,chosen:false}));
+    if(enhanced){setCategory(selectedCategory);setQuery("");setView("all");setOrder("newest");}
     router.refresh();
   }
 
@@ -798,7 +809,7 @@ export function CommunityFeed({
         </div>
         {enhanced ? <label className="community-topic-picker">
           Browse topics
-          <select value={category} onChange={event => event.target.value === "more" ? setMoreTopics(true) : setCategory(event.target.value)}>
+          <select value={category} onChange={event => chooseBrowseTopic(event.target.value)}>
             <option value="all">All topics</option>
             <optgroup label="Everyday conversations">{conversationTypes.filter(item => everydayTopics.has(item.value)).map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</optgroup>
             {moreTopics || (category !== "all" && !everydayTopics.has(category)) ? <optgroup label="More topics">{[...hostConversationTypes, ...conversationTypes.filter(item => !everydayTopics.has(item.value))].map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</optgroup> : <option value="more">More topics…</option>}
@@ -831,7 +842,7 @@ export function CommunityFeed({
         <details
           className="community-composer-panel"
           id="create-conversation"
-          onToggle={(event) => setComposerExpanded(event.currentTarget.open)}
+          onToggle={(event) => toggleComposer(event.currentTarget.open)}
           open={composerExpanded}
         >
           <summary>
@@ -848,12 +859,15 @@ export function CommunityFeed({
               </label>
               {enhanced ? (
                 <label>
-                  What are you sharing?
+                  Choose a topic
                   <select
                     name="category"
-                    onChange={(event) => event.target.value === "more" ? setMorePostTypes(true) : setComposerType(event.target.value)}
+                    aria-describedby="conversation-topic-help"
+                    disabled={!topicSettingsReady || busy==="publish"}
+                    onChange={(event) => {if(event.target.value==="more"){setMorePostTypes(true);return;}composerTopicChosen.current=true;setComposerType(event.target.value);}}
                     value={composerType}
                   >
+                    {!availableTypes.some(item=>item.value===composerType)?<option value={composerType} disabled>Choose an available topic</option>:null}
                     <optgroup label="Everyday conversations">{availableTypes.filter(item => everydayTopics.has(item.value)).map((item) => (
                       <option key={item.value} value={item.value}>
                         {item.label}
@@ -865,10 +879,11 @@ export function CommunityFeed({
               ) : null}
             </div>
             {enhanced ? (
-              <p className="community-composer-hint">
-                {conversationTypeHints.get(composerType)}
+              <p className="community-composer-hint" id="conversation-topic-help">
+                {topicSettingsReady ? availableTypes.some(topic=>topic.value===composerType) ? `${conversationTypeHints.get(composerType)} Your post and its replies stay together under this topic.` : "This draft’s topic is no longer available for new posts. Choose another topic; your text is unchanged." : "Topics could not load. Refresh before publishing; your draft is safe."}
               </p>
             ) : null}
+            {enhanced&&!topicSettingsReady?<button className="button button-outline" type="button" onClick={()=>router.refresh()}>Try loading topics again</button>:null}
             <textarea
               id="community-post"
               name="body"
@@ -969,7 +984,7 @@ export function CommunityFeed({
               </small>
               <button
                 className="button button-primary"
-                disabled={busy === "publish"}
+                disabled={busy === "publish" || (enhanced && (!topicSettingsReady || !availableTypes.some(topic=>topic.value===composerType)))}
               >
                 {busy === "publish" ? "Posting…" : "Post to community"}
               </button>
@@ -1077,11 +1092,11 @@ export function CommunityFeed({
                 <header>
                   <div className="community-post-author">
                     <CommunityAvatar name={post.author_name} src={null} />
-                    <span className="community-post-category">
+                    <button type="button" className="community-post-category" onClick={()=>chooseBrowseTopic(post.category ?? "discussion")} aria-label={`Browse topic: ${categoryLabels.get(post.category ?? "discussion") ?? "Questions & ideas"}`}>
                       {post.is_pinned ? "Pinned · " : ""}
                       {categoryLabels.get(post.category ?? "discussion") ??
                         "Discussion"}
-                    </span>
+                    </button>
                     {post.is_new || Number(post.new_reply_count ?? 0) > 0 ? (
                       <span className="community-post-new-label">
                         {post.is_new ? "New conversation" : "New reply"}
@@ -1108,7 +1123,7 @@ export function CommunityFeed({
                     {post.edited_at ? <small>Edited</small> : null}
                   </div>
                 </header>
-                <p>{post.body}</p>
+                <p className="community-post-body">{post.body}</p>
                 {post.attachment?.attachment_type === "image" &&
                 post.attachment.signed_url && !failedAttachments.has(post.attachment.asset_id) ? (
                   <figure className="community-post-image">
@@ -1220,7 +1235,7 @@ export function CommunityFeed({
                         : "Add the first comment"}
                     </summary>
                     {comments.length ? (
-                      <div className="community-comments">
+                      <div className="community-comments" role="region" aria-label="Conversation replies" tabIndex={0}>
                         {comments.map((commentItem) => (
                           <article key={commentItem.comment_id}>
                             <header>

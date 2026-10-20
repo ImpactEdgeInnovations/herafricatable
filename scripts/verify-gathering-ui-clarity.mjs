@@ -11,7 +11,7 @@ assert(room.includes('className="gathering-recap-editor"'));
 assert(read("components/member/community-gatherings.tsx").includes('canManage ? <span>{Number(card.going_count)}'));
 const feed=read("components/member/community-feed.tsx");
 assert(feed.includes('new Set(["discussion", "introduction", "ask", "opportunity", "resource"])'));
-assert(feed.includes('event.target.value === "more" ? setMoreTopics(true) : setCategory'));
+assert(feed.includes('if(next==="more"){setMoreTopics(true);return;}') && feed.includes('chooseBrowseTopic(event.target.value)'));
 const css=read("app/community-overhaul.css");
 assert(css.includes('--wine: var(--room-accent)'));
 assert(css.includes('background: var(--room-accent-soft)'));
