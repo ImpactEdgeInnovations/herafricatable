@@ -483,3 +483,34 @@ body.hat-design-c {
   .hat-design-c .community-event-wizard { padding:20px; }
   .hat-design-c .community-program-empty,.hat-design-c .community-home-empty { padding:20px; }
 }
+
+/* List alignment: keep identity, metadata and actions in distinct lanes. */
+.hat-design-c .community-host-member-list>article { align-items:flex-start; flex-wrap:wrap; gap:14px 20px; }
+.hat-design-c .community-host-member-list article>div:first-child { display:grid; flex:1 1 190px; min-width:0; gap:5px; }
+.hat-design-c .community-host-member-list article>div:first-child strong { font:500 16px/1.4 var(--sans); overflow-wrap:anywhere; }
+.hat-design-c .community-host-member-list article>div:first-child :is(span,small) { font-size:12px; line-height:1.6; overflow-wrap:anywhere; text-transform:none; }
+.hat-design-c .community-host-member-list article>div+div { display:flex; flex:0 1 auto; flex-wrap:wrap; align-items:center; gap:8px; max-width:100%; }
+.hat-design-c .community-host-member-list button { min-height:44px; max-width:100%; padding:9px 12px; border-radius:7px; font:500 13px/1.4 var(--sans); white-space:normal; }
+.hat-design-c .community-host-member-list>article>strong { flex:1 1 190px; min-width:0; font:500 16px/1.4 var(--sans); overflow-wrap:anywhere; }
+.hat-design-c .community-welcome-list article>div:nth-child(2) { min-width:0; }
+.hat-design-c .community-welcome-list strong { font:500 16px/1.4 var(--sans); overflow-wrap:anywhere; }
+.hat-design-c .community-welcome-list :is(span,small) { font-size:12px; line-height:1.6; overflow-wrap:anywhere; }
+.hat-design-c .community-welcome-list button { min-height:44px; font:500 13px/1.4 var(--sans); border-radius:7px; }
+.hat-design-c .community-welcomed-history>div p { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:6px 16px; }
+.hat-design-c .community-welcomed-history>div p strong { min-width:0; overflow-wrap:anywhere; }
+.hat-design-c .notification-feed>header,.hat-design-c .community-host-activity>header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; }
+.hat-design-c .notification-feed>header>div,.hat-design-c .community-host-activity>header h2 { min-width:0; flex:1 1 220px; }
+.hat-design-c .notification-feed>header button,.hat-design-c .community-host-activity>header button { flex:none; min-height:44px; font-size:13px; }
+.hat-design-c .notification-feed article { grid-template-columns:85px minmax(0,1fr) auto; gap:16px; }
+.hat-design-c .notification-feed article>div { min-width:0; overflow-wrap:anywhere; }
+.hat-design-c .notification-feed article>:is(a,button) { min-height:44px; display:inline-flex; align-items:center; justify-content:center; padding:8px 12px; font-size:13px; border:1px solid var(--line); border-radius:7px; }
+.hat-design-c .settings-history article { grid-template-columns:minmax(100px,1fr) minmax(100px,1fr) minmax(0,1.2fr); gap:12px 20px; }
+.hat-design-c .settings-history article>* { min-width:0; overflow-wrap:anywhere; font-size:13px; line-height:1.6; }
+@media(max-width:700px) {
+  .hat-design-c .community-welcome-list article { grid-template-columns:38px minmax(0,1fr); align-items:start; gap:10px 12px; }
+  .hat-design-c .community-welcome-list article>button { grid-column:2; justify-self:start; }
+  .hat-design-c .notification-feed article { grid-template-columns:minmax(0,1fr) auto; gap:10px 14px; }
+  .hat-design-c .notification-feed .notification-kind { grid-column:1/-1; }
+  .hat-design-c .notification-feed article>div { grid-column:1; }
+  .hat-design-c .settings-history article { grid-template-columns:minmax(0,1fr); gap:5px; }
+}

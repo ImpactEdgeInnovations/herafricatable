@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import ts from 'typescript';
+import {parseInvitationEmails} from '../lib/invitation-emails.ts';
+const root=new URL('../',import.meta.url);
+const read=file=>readFileSync(new URL(file,root),'utf8');
+const compile=source=>ts.transpileModule(source.replace(/^import[\s\S]*?;\n/gm,'').replace(/^export /gm,''),{compilerOptions:{jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+const styles=new Proxy({},{get:(_,key)=>`align-${String(key)}`});
+const Panel=new Function('React','useEffect','useMemo','useRef','useState','useRouter','createClient','useCommunityDraft','communityDraftKey','useActionDialog','parseInvitationEmails','useActionFeedback','ActionFeedback','memberErrorMessage','historyStyles',`${compile(read('components/member/destination-invitation-panel.tsx'))};return DestinationInvitationPanel;`)(React,React.useEffect,React.useMemo,React.useRef,React.useState,()=>({refresh(){}}),()=>({}),(_,initial)=>[initial,()=>{},()=>{}],()=> 'isolated-preview',()=>({ask:async()=>false,dialog:null}),parseInvitationEmails,()=>({feedback:null,setMessage(){}}),()=>null,()=>'',styles);
+const record=(id,email,delivery,status='sent')=>({invitation_id:id,invitee_email:email,delivery_status:delivery,invitation_status:status,created_at:'2026-10-15T06:36:00Z',expires_at:null,personal_note:null});
+const invitations=[record('one','member@example.invalid','sent'),record('two','a-very-long-address-for-alignment-checks@example.invalid','queued'),record('three','another.member@example.invalid','failed')];
+const props={destinationId:'fixture',currentUserId:'fixture',destinationName:'Example Community',destinationType:'community',ready:true,invitations};
+const html=renderToStaticMarkup(React.createElement(Panel,props));
+assert(html.includes('<header class="align-heading"><h3>Recent invitations</h3>'));
+assert.equal((html.match(/class="align-entry"/g)||[]).length,3);
+for(const label of ['Email sent','Email waiting to send','Email failed — contact support','not that it reached the inbox'])assert(html.includes(label));
+assert(html.includes('aria-label="Recent invitation delivery"')&&html.includes('tabindex="0"'));
+assert(html.includes('align-person')&&html.includes('align-badge')&&html.includes('align-hint'));
+const empty=renderToStaticMarkup(React.createElement(Panel,{...props,invitations:[]}));
+assert(empty.includes('align-empty')&&!empty.includes('align-entry'));
+const css=read('components/member/invitation-history.module.css');
+assert(css.includes('overflow-wrap: anywhere')&&css.includes('@container invitations (max-width: 360px)'));
+const foundation=read('app/table-design.css');
+assert(foundation.includes('.community-host-member-list article>div:first-child { display:grid; flex:1 1 190px;'));
+assert(foundation.includes('.community-host-member-list article>div+div { display:flex;'));
+assert(foundation.includes('.settings-history article { grid-template-columns:minmax(0,1fr);'));
+if(process.argv.includes('--preview')) {
+  const output=new URL('tmp/design-c-preview/',root);mkdirSync(output,{recursive:true});
+  const allCss=[...read('app/layout.tsx').matchAll(/^import "\.\/(.+\.css)";/gm)].map(match=>read(`app/${match[1]}`)).join('\n');
+  const scoped=css.replace(/\.([a-zA-Z][\w-]*)/g,(_,key)=>`.align-${key}`);
+  writeFileSync(new URL('alignment.css',output),`${allCss}\n${scoped}`);
+  writeFileSync(new URL('invitation-alignment.html',output),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Invitation alignment — isolated layout fixture</title><link rel="stylesheet" href="alignment.css"></head><body class="hat-design-c"><main class="community-page community-host-page"><div class="host-tools-shell"><p style="padding-top:24px;font-size:12px">LAYOUT TEST · EXAMPLE DATA · NO EMAIL CAN BE SENT</p>${html}</div></main></body></html>`);
+}
+console.log('List alignment render passed: semantic history heading, separate identity/metadata/status, long-address wrapping, explicit empty and honest delivery states. Fixture checks layout only and cannot send email.');

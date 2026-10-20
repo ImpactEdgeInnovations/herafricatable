@@ -1,0 +1,75 @@
+.history {
+  container-type: inline-size;
+  container-name: invitations;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line, #dce2d8);
+  border-radius: 12px;
+  background: #fff;
+  align-self: start;
+}
+.history .heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin: 0 0 8px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--line, #dce2d8);
+}
+.history .heading h3 {
+  margin: 0;
+  color: var(--ink, #203c34);
+  font: 500 16px/1.4 var(--sans, sans-serif);
+  letter-spacing: -.02em;
+}
+.history .heading button { flex: none; margin: 0; font-size: 13px; line-height: 1.4; }
+.history .list { max-height: 400px; overflow: auto; overscroll-behavior: contain; }
+.history .entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px 16px;
+  margin: 0;
+  padding: 16px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line, #dce2d8);
+}
+.history .entry:last-child { border-bottom: 0; }
+.history .person { display: grid; min-width: 0; gap: 5px; }
+.history .person strong {
+  display: block;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
+  color: var(--ink, #203c34);
+  font: 500 14px/1.5 var(--sans, sans-serif);
+}
+.history .person small { margin: 0; color: var(--muted, #5c6b63); font-size: 12px; line-height: 1.5; }
+.history .entry .badge {
+  justify-self: start;
+  align-self: start;
+  max-width: 160px;
+  margin: 0;
+  padding: 6px 9px;
+  border-radius: 6px;
+  font: 500 12px/1.4 var(--sans, sans-serif);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.history .hint {
+  display: block;
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line, #dce2d8);
+  color: var(--muted, #5c6b63);
+  font: 400 12px/1.65 var(--sans, sans-serif);
+}
+.history .empty { margin: 8px 0 16px; font-size: 14px; color: var(--muted, #5c6b63); line-height: 1.6; }
+.history .more { justify-self: start; margin: 4px 0 14px; }
+@container invitations (max-width: 360px) {
+  .history .entry { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+}
+@media(max-width: 700px) { .history { padding: 18px; } }

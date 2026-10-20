@@ -9,6 +9,7 @@ import { useCommunityDraft } from "@/lib/use-community-draft";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { parseInvitationEmails } from "@/lib/invitation-emails";
 import { ActionFeedback, useActionFeedback } from "@/components/ui/action-feedback";
+import historyStyles from "./invitation-history.module.css";
 
 export type DestinationInvitation = {
   created_at: string; expires_at: string | null; invitation_id: string;
@@ -70,10 +71,10 @@ export function DestinationInvitationPanel({destinationId,currentUserId,destinat
         {dirty?<p className="invitation-draft-note">Not sent yet. <button type="button" disabled={busy} onClick={()=>clearDraft({email:"",note:"",preset:""})}>Clear</button></p>:null}
         <small>We do not upload your address book or share addresses between recipients.</small>
       </form>
-      <div className="destination-invitation-history" id="recent-invitations"><div><strong>Recent invitations</strong><button type="button" disabled={busy} onClick={()=>void checkDelivery()}>{checking?"Checking…":"Refresh status"}</button></div>
-        <div className="invitation-history-list" tabIndex={0} aria-label="Recent invitation delivery">{history.length?history.slice(0,showAll?50:6).map(invitation=><article key={invitation.invitation_id}><div><strong>{invitation.invitee_email}</strong><small>{new Intl.DateTimeFormat("en-KE",{day:"numeric",month:"short"}).format(new Date(invitation.created_at))} · {statusCopy[invitation.invitation_status]||"In progress"}</small></div><span data-status={invitation.delivery_status}>{invitation.invitation_status==="pending_review"?"Not emailed yet":deliveryCopy[invitation.delivery_status??""]||"Delivery not confirmed"}</span></article>):<p>Your invitations and their email status will appear here.</p>}</div>
-        {history.length>6?<button type="button" onClick={()=>setShowAll(value=>!value)}>{showAll?"Show fewer":"Show all recent invitations"}</button>:null}
-        <small>“Email sent” means the email provider accepted it, not that it reached the inbox. Ask her to check Spam or Promotions.</small>
+      <div className={`destination-invitation-history ${historyStyles.history}`} id="recent-invitations"><header className={historyStyles.heading}><h3>Recent invitations</h3><button type="button" disabled={busy} onClick={()=>void checkDelivery()}>{checking?"Checking…":"Refresh status"}</button></header>
+        <div className={`invitation-history-list ${historyStyles.list}`} tabIndex={0} aria-label="Recent invitation delivery">{history.length?history.slice(0,showAll?50:6).map(invitation=><article className={historyStyles.entry} key={invitation.invitation_id}><div className={historyStyles.person}><strong>{invitation.invitee_email}</strong><small>{new Intl.DateTimeFormat("en-KE",{day:"numeric",month:"short"}).format(new Date(invitation.created_at))} · {statusCopy[invitation.invitation_status]||"In progress"}</small></div><span className={historyStyles.badge} data-status={invitation.delivery_status}>{invitation.invitation_status==="pending_review"?"Not emailed yet":deliveryCopy[invitation.delivery_status??""]||"Delivery not confirmed"}</span></article>):<p className={historyStyles.empty}>Your invitations and their email status will appear here.</p>}</div>
+        {history.length>6?<button className={historyStyles.more} type="button" onClick={()=>setShowAll(value=>!value)}>{showAll?"Show fewer":"Show all recent invitations"}</button>:null}
+        <small className={historyStyles.hint}>“Email sent” means the email provider accepted it, not that it reached the inbox. Ask her to check Spam or Promotions.</small>
         {results.some(row=>row.error_message)?<div role="status">{results.filter(row=>row.error_message).map(row=><p key={row.invitee_email}><strong>{row.invitee_email}</strong> — {row.error_message}</p>)}</div>:null}
       </div>
     </div>}{dialog}
