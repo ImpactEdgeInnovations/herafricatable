@@ -27,4 +27,13 @@ No SQL migration is expected for this visual release. Host-selected Community an
 - Real component visual fixture: member home and navigation at desktop and 390px mobile; this is not database or logged-in acceptance.
 - Release-specific corrections: removed an old global input-corner override, kept the mobile event action above member navigation, and refreshed the public PWA cache for the green icons.
 
-Production deployment and signed-in visual checks are recorded after the release is pushed. No new database acceptance, financial transaction, notification send or physical-device installation is claimed by this visual release.
+## Deployed release
+
+- Implementation commit: `4c981f40e8f7b0f7ae7469eb02688227c623b128`, pushed to `main`; Vercel reported success on 20 October 2026.
+- Live homepage: green theme and locally hosted 1600px stock image loaded successfully, with no horizontal overflow at desktop width.
+- Signed-in live home: real member name, Community, unread updates and upcoming event rendered with the desktop navigation rail.
+- Signed-in Community: real cover/icon loaded, Host attribution and all local tabs remained available; desktop and 390px phone layout checked without horizontal page overflow. The owner's existing burgundy accent was preserved.
+- Live mobile Events: search reduced three events to one; clearing restored all three. Inputs use the new 8px corners and the mobile navigation remains visible.
+- Live event detail: published poster loaded, the existing creator was correctly shown Host tools rather than a duplicate booking action, and the 390px page had no horizontal overflow.
+
+These checks used the existing signed-in member/Host session and read-only discovery actions. No new database acceptance, financial transaction, notification send, Super Admin session acceptance or physical-device installation is claimed by this visual release.
