@@ -154,6 +154,28 @@ export async function MemberHeader({
   );
   return (
     <>
+      {user ? <aside className="member-sidebar" aria-label="Your Table">
+        <Link className="brand" href="/home" prefetch={false} aria-label="Her Africa Table — your home">
+          <span className="brand-mark" aria-hidden="true">H</span>
+          <span>Her Africa Table<small>Meet. Connect. Rise.</small></span>
+        </Link>
+        <nav aria-label="Main member navigation">
+          {navigation.filter(destination => destination.key !== "account").map(destination => <Link
+            key={destination.key} href={destination.href}
+            aria-current={active === destination.key ? "page" : undefined}
+            className={`member-nav-${destination.key}`}>
+            <MemberIcon destination={destination.key} /><span>{destination.label}</span>
+            {destination.key === "community" && newCommunityActivity ? <b className="member-community-badge" aria-label={`${newCommunityActivity} new updates`}>{newCommunityActivity > 9 ? "9+" : newCommunityActivity}</b> : null}
+          </Link>)}
+        </nav>
+        <div className="member-sidebar-bottom">
+          <Link href="/support">Help & support <span aria-hidden="true">↗</span></Link>
+          <Link className="member-sidebar-profile" href={accountHref}>
+            {profile?.avatar_url ? <img src={profile.avatar_url} alt="" /> : <span aria-hidden="true">{memberInitial}</span>}
+            <span><strong>{memberName}</strong><small>Your profile & account</small></span>
+          </Link>
+        </div>
+      </aside> : null}
       <header className="member-home-header member-shell-header">
         <Link className="brand" href="/home" prefetch={false} aria-label="Her Africa Table — your home">
           <span className="brand-mark" aria-hidden="true">
@@ -176,6 +198,7 @@ export async function MemberHeader({
               href={destination.href}
               key={destination.key}
             >
+              <MemberIcon destination={destination.key} />
               {destination.label}
               {destination.key === "community" && newCommunityActivity ? (
                 <b aria-hidden="true" className="member-community-badge">

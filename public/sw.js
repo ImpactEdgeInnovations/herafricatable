@@ -1,4 +1,4 @@
-const CACHE_NAME = "hat-public-shell-v1";
+const CACHE_NAME = "hat-public-shell-v2-green";
 const PUBLIC_SHELL = [
   "/offline",
   "/icon.svg",

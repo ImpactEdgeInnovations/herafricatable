@@ -688,6 +688,12 @@ export default async function MemberHomePage() {
           action={actionToday}
           community={communityToday}
           person={personToday}
+          upcoming={nextEvent ? {
+            title: nextEvent.title,
+            href: `/events/${nextEvent.slug}`,
+            when: new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: "Africa/Nairobi", timeZoneName: "short" }).format(new Date(nextEvent.starts_at)),
+            location: nextEvent.format === "online" || nextEvent.format === "virtual" ? "Online" : [nextEvent.venues?.name, nextEvent.venues?.city].filter(Boolean).join(", ") || "See event details for the location",
+          } : undefined}
         />
       ) : null}
       {accessStatus === "active" || isApproved || feedbackPrompt || orders.length ? (

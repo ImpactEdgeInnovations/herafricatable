@@ -4,9 +4,9 @@ export default function Loading() {
   return (
     <main className="route-state-page">
       <JourneyState
-        description="We are securely preparing your account and the latest table updates."
+        description="Your page will be ready in a moment."
         eyebrow="Her Africa Table"
-        title="Preparing your table…"
+        title="Opening Her Africa Table…"
         variant="loading"
       />
     </main>

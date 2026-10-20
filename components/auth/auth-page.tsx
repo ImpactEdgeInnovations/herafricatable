@@ -19,11 +19,11 @@ export function AuthPage({
           <span>Her Africa Table<small>Meet. Connect. Rise.</small></span>
         </Link>
         <div className="story-copy">
-          <p className="eyebrow">{isAdmin ? "Protecting the table" : "Welcome to the table"}</p>
-          <h1>{isAdmin ? <>Thoughtful access.<br />Trusted stewardship.</> : <>A trusted room<br />changes what&apos;s<br />possible.</>}</h1>
-          <p>{isAdmin ? "Administration is restricted to approved team members and every sensitive action is recorded." : "Join a private network built for meaningful introductions, practical opportunity, and relationships that last beyond the event."}</p>
+          <p className="eyebrow">{isAdmin ? "Team sign in" : "Her Africa Table"}</p>
+          <h1>{isAdmin ? <>A clear view.<br />A well-kept Table.</> : <>Good company.<br />New possibilities.</>}</h1>
+          <p>{isAdmin ? "Use your approved team email to open your workspace." : "Meet women, find an event and keep the conversation going in your Community."}</p>
         </div>
-        <p className="auth-quote">“When women gather with intention, possibility becomes practical.”</p>
+        <p className="auth-quote">Starting in Nairobi. Connecting across Africa.</p>
       </section>
       <section className="auth-panel-wrap" aria-label={`${isAdmin ? "Team" : "Member"} sign in`}>
         <AuthPanel destination={destination} initialJourney={initialJourney} intent={intent} />

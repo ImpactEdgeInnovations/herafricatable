@@ -12,11 +12,12 @@ export function CommunityHomeConversations({ posts, slug, unavailable, readOnly 
       {!readOnly ? <Link className="community-start-primary" href={`${conversations}#create-conversation`}>Start a conversation</Link> : null}
     </header>
     {unavailable ? <div className="community-home-empty" role="status"><p>Conversations could not load just now.</p><Link href={conversations}>Try opening conversations</Link></div>
-      : posts.length ? <div className="community-home-posts">{posts.slice(0, 3).map(post => <Link key={post.post_id} href={`${conversations}#conversation-${post.post_id}`}>
-        <div><strong>{post.author_name || "Community member"}</strong>{post.is_pinned ? <span>Pinned by the Host</span> : null}</div>
+      : posts.length ? <div className="community-home-posts">{posts.slice(0, 3).map(post => { const created = new Date(post.created_at); return <Link key={post.post_id} href={`${conversations}#conversation-${post.post_id}`}>
+        <span className="community-home-avatar" aria-hidden="true">{(post.author_name || "Member").trim().slice(0, 1).toUpperCase()}</span>
+        <div className="community-home-post-author"><strong>{post.author_name || "Community member"}</strong>{post.is_pinned ? <span>Pinned by the Host</span> : null}{Number.isFinite(created.getTime()) ? <time dateTime={created.toISOString()}>{new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "short", timeZone: "Africa/Nairobi" }).format(created)}</time> : null}</div>
         <p>{post.body}</p>
         <small>{Number(post.comment_count ?? 0)} {Number(post.comment_count ?? 0) === 1 ? "reply" : "replies"}<span aria-hidden="true"> · </span>Read conversation →</small>
-      </Link>)}</div>
+      </Link>; })}</div>
       : <div className="community-home-empty"><strong>No conversations yet</strong><p>{readOnly ? "Past conversations will appear here when available." : "Say hello or ask a question. Your post will be shared with this Community."}</p></div>}
     {posts.length ? <footer><Link href={conversations}>See all conversations →</Link></footer> : null}
   </section>;

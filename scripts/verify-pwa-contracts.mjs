@@ -15,7 +15,7 @@ for (const value of [
   'sizes: "192x192"',
   'sizes: "512x512"',
   'purpose: "maskable"',
-  'theme_color: "#5f1722"',
+  'theme_color: "#215846"',
 ]) assert(manifest.includes(value), `PWA manifest must include ${value}`);
 
 for (const [path, size] of [

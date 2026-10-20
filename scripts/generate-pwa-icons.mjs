@@ -15,8 +15,8 @@ await Promise.all([
 function adaptiveIcon(size) {
   return Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="${size}" height="${size}">
-      <rect width="512" height="512" fill="#5f1722"/>
-      <circle cx="256" cy="256" r="172" fill="#5f1722" stroke="#d8ad67" stroke-width="12"/>
+      <rect width="512" height="512" fill="#215846"/>
+      <circle cx="256" cy="256" r="172" fill="#215846" stroke="#d8ad67" stroke-width="12"/>
       <path d="M158 154h74v20h-14v62h76v-62h-14v-20h74v20h-14v164h14v20h-74v-20h14v-60h-76v60h14v20h-74v-20h14V174h-14z" fill="#fffaf0"/>
       <circle cx="359" cy="145" r="15" fill="#d8ad67"/>
     </svg>

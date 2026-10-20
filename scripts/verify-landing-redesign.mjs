@@ -71,14 +71,14 @@ assert.equal((html.match(/<h1 /g) || []).length, 1);
 assert.equal((html.match(/>Event one</g) || []).length, 1);
 assert.equal((html.match(/>Event two</g) || []).length, 1);
 for (const path of ['/sign-in', '/sign-in?mode=apply', '/events', '/communities', '/faq', '/privacy', '/terms', '/community-guidelines']) assert(html.includes(`href="${path}"`), path);
-for (const text of ['A place to meet.', 'A reason to stay.', 'Confirm your email', 'no approval wait', 'Sign in to see the Communities', 'Install app']) assert(html.includes(text), text);
+for (const text of ['Meet at the Table.', 'Make it your own.', 'Confirm your email', 'no approval wait', 'Sign in to see the Communities', 'Install app']) assert(html.includes(text), text);
 assert(!html.includes('Our team reviews your request privately'));
 const manual = render({ openPilot: false });
 assert(manual.includes('Our team reviews your request privately') && !manual.includes('no approval wait'));
 for (const unavailable of [false, true]) {
   const empty = render({ listing: { events: [], unavailable } });
   assert(!empty.includes('Event one') && !empty.includes('Date to be shared'));
-  assert.equal(empty.includes('preview couldn’t load'), unavailable);
+  assert.equal(empty.includes('The calendar is taking a moment.'), unavailable);
 }
 assert(render({ countdown: { event_name: 'Approved', city: 'Nairobi', starts_at: '2026-10-26T07:00:00Z' } }).includes('Countdown'));
 assert(!html.includes('Countdown'));
@@ -92,7 +92,7 @@ assert.equal(west.day, '26');
 assert.deepEqual(landingEventDate({ ...dateFixture, timezone: 'invalid' }), west);
 if (previousTZ === undefined) delete process.env.TZ; else process.env.TZ = previousTZ;
 const css = read('components/landing/landing-page.module.css');
-assert(css.includes('object-fit: contain') && css.includes('focus-visible') && css.includes('prefers-reduced-motion'));
+assert(/object-fit:\s*contain/.test(css) && css.includes('focus-visible') && css.includes('prefers-reduced-motion'));
 assert(css.includes('@media (max-width: 620px)'));
 assert(read('app/page.tsx').includes('getLandingEvents()'));
 console.log('Landing redesign passed: anonymous public-only event projection, artwork fallback, honest errors, three-event bound, timezone-safe dates, rendered pilot/manual journeys, links, single heading and scoped responsive styling.');

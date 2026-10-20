@@ -22,6 +22,7 @@ import "./member-directory-refinement.css";
 import "./community-member-refinement.css";
 import "./event-discovery-refinement.css";
 import "./featured-spots.css";
+import "./table-design.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
@@ -61,7 +62,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: "light",
-  themeColor: "#5f1722",
+  themeColor: "#215846",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -70,7 +71,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body>
+      <body className="hat-design-c">
         <PwaProvider>
           <a className="skip-link" href="#hat-page-content">
             Skip to main content

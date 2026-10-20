@@ -1025,7 +1025,7 @@ for (const contract of [
   "A place to meet.",
   "A reason to stay.",
   "Explore events",
-  "Explore member Communities",
+  "Explore Communities",
   "Confirm your email",
   "Our team reviews your request privately",
   "Make yourself at home",

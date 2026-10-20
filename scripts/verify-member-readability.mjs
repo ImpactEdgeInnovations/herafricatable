@@ -8,7 +8,7 @@ const home = read("app/home/page.tsx");
 assert(layout.indexOf('./member-readability.css') > layout.indexOf('./community-room.css'));
 assert(today.includes('id="table-today-title">Your Table today'));
 assert(today.includes('aria-labelledby="table-today-title"'));
-assert(today.includes('const suggestions = [person, community, action]'), "Keep the three useful suggestions");
+assert(today.includes('const suggestions = [community, person, action]'), "Keep all three useful suggestions with Community first");
 assert(today.includes('href={suggestion.href}'), "Suggestion actions must retain their real destination");
 assert(!today.includes("table-today-number"), "Remove decorative numbering, not the actual suggestions");
 assert(home.includes("Getting started, invitations and account details."));

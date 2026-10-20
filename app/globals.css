@@ -31417,7 +31417,7 @@ body {
 input,
 select,
 textarea {
-  border-radius: 2px !important;
+  border-radius: 2px;
 }
 
 .event-view-switcher {
