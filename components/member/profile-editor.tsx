@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { memberErrorMessage } from "@/lib/member-error";
 import { createClient } from "@/lib/supabase/client";
+import { ActionFeedback, useActionFeedback } from "@/components/ui/action-feedback";
 
 export type EditableMemberProfile = {
   avatar_url: string | null;
@@ -86,7 +87,7 @@ export function ProfileEditor({
   const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState("");
+  const {feedback,setMessage} = useActionFeedback();
   const [avatarUrl, setAvatarUrl] = useState(initial.avatar_url ?? "");
   const [goals, setGoals] = useState(initial.goals);
   const [interests, setInterests] = useState(initial.interests);
@@ -155,7 +156,7 @@ export function ProfileEditor({
     }
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
     setAvatarUrl(`${data.publicUrl}?v=${Date.now()}`);
-    setMessage("Photo updated. Your other changes are still ready to save.");
+    setMessage("Photo updated. Your other changes are still ready to save.","success");
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -191,7 +192,7 @@ export function ProfileEditor({
     setMessage(
       error
         ? memberErrorMessage(error, "save your profile")
-        : "Your profile is up to date.",
+        : "Your profile is up to date.", error ? "error" : "success",
     );
     if (!error) router.refresh();
   }
@@ -200,12 +201,11 @@ export function ProfileEditor({
     <form className="profile-editor" onSubmit={(event) => void save(event)}>
       <header>
         <div>
-          <p className="eyebrow">Your member identity</p>
-          <h1>Your profile.</h1>
+          <p className="eyebrow">About you</p>
+          <h1>Your profile</h1>
           <p>
-            Help trusted members understand who you are and what brings you to
-            the table. Private contact details remain protected until a
-            connection is mutually accepted.
+            Tell members a little about yourself. Your contact details stay
+            private unless you choose to share them with accepted connections.
           </p>
         </div>
         <div className="profile-editor-summary">
@@ -440,7 +440,7 @@ export function ProfileEditor({
       </section>
 
       <footer>
-        <p role="status">{message}</p>
+        <ActionFeedback value={feedback} floating onDismiss={() => setMessage("")}>{feedback?.tone==="success" ? <Link href="/home">Back to home →</Link> : null}</ActionFeedback>
         <button
           className="button button-primary"
           disabled={

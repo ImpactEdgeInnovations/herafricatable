@@ -215,8 +215,8 @@ export function CommunityGatherings({
       ) : (
         <div className="community-program-empty">
           <strong>{area === "past" ? "No past meetups yet." : "No meetup is scheduled yet."}</strong>
-          <p>When your Host schedules one, it will appear here. You can browse the main event calendar in the meantime.</p>
-          <Link href="/events">Explore events</Link>
+          <p>{canManage ? area === "past" ? "Finished meetups and their conversations will stay here." : "Bring members together online or in person. Start with a name, a time and a short introduction." : "When your Host schedules one, it will appear here. You can browse the main event calendar in the meantime."}</p>
+          {canManage && area !== "past" ? <button className="button button-primary" type="button" onClick={() => { setPlannerMounted(true); setPlannerOpened(true); setLinkerOpened(false); }}>Plan your first meetup</button> : <Link href="/events">Explore events</Link>}
         </div>
       )}
       <footer className="gathering-boundary-note">

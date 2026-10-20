@@ -7,9 +7,9 @@ const read = file => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'
 const compile = source => ts.transpileModule(source.replace(/^import[\s\S]*?;\n/gm, '').replace(/^export /gm, ''), {compilerOptions:{target:ts.ScriptTarget.ES2022, jsx:ts.JsxEmit.React}}).outputText;
 const Home = new Function('React','Link', `${compile(read('components/member/community-home-conversations.tsx'))}; return CommunityHomeConversations;`)(React, props => React.createElement('a', props));
 const render = props => renderToStaticMarkup(React.createElement(Home,{posts:[],slug:'test-room',unavailable:false,readOnly:false,...props}));
-assert(render({}).includes('No conversations yet'));
+assert(render({}).includes('Be the first to say hello'));
 assert(render({unavailable:true}).includes('could not load'));
-assert(!render({unavailable:true}).includes('No conversations yet'));
+assert(!render({unavailable:true}).includes('Be the first to say hello'));
 assert(!render({readOnly:true}).includes('Start a conversation'));
 const posts=Array.from({length:4},(_,i)=>({post_id:`post-${i}`,body:`A question <script>${i}</script>`,author_name:'Test member',comment_count:i,is_pinned:i===0}));
 const populated=render({posts});

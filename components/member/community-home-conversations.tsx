@@ -18,7 +18,7 @@ export function CommunityHomeConversations({ posts, slug, unavailable, readOnly 
         <p>{post.body}</p>
         <small>{Number(post.comment_count ?? 0)} {Number(post.comment_count ?? 0) === 1 ? "reply" : "replies"}<span aria-hidden="true"> · </span>Read conversation →</small>
       </Link>; })}</div>
-      : <div className="community-home-empty"><strong>No conversations yet</strong><p>{readOnly ? "Past conversations will appear here when available." : "Say hello or ask a question. Your post will be shared with this Community."}</p></div>}
+      : <div className="community-home-empty"><strong>{readOnly ? "No conversations yet" : "Be the first to say hello"}</strong><p>{readOnly ? "Past conversations will appear here when available." : "Share what brought you here or ask one simple question. Only members of this Community can take part."}</p></div>}
     {posts.length ? <footer><Link href={conversations}>See all conversations →</Link></footer> : null}
   </section>;
 }

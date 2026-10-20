@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { ScrollableTabs } from "@/components/ui/scrollable-tabs";
 
 export type CommunityArea =
   | "overview"
@@ -29,27 +29,6 @@ export function CommunityLocalNavigation({
   slug: string;
 }) {
   const router = useRouter();
-  const tabs = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const container = tabs.current;
-    const selected = container?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (!container || !selected) return;
-    // Scroll only the local tab strip, never the page or member's feed position.
-    function alignSelected() {
-      if (!container || !selected) return;
-      const bounds = container.getBoundingClientRect();
-      const selectedBounds = selected.getBoundingClientRect();
-      if (selectedBounds.left < bounds.left) {
-        container.scrollLeft = container.scrollLeft + selectedBounds.left - bounds.left;
-      } else if (selectedBounds.right > bounds.right) {
-        container.scrollLeft = container.scrollLeft + selectedBounds.right - bounds.right;
-      }
-    }
-    alignSelected();
-    const observer = new ResizeObserver(alignSelected);
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [active]);
   return (
     <nav className="community-local-navigation" aria-label="Inside this Community">
       <label className="community-mobile-menu">
@@ -58,7 +37,7 @@ export function CommunityLocalNavigation({
           {areas.map(area => <option key={area.key} value={area.key}>{area.label}</option>)}
         </select>
       </label>
-      <div className="community-local-tabs" ref={tabs}>
+      <ScrollableTabs className="community-local-tabs" label="Community sections" activeKey={active}>
         {areas.map((area) => (
           <Link
             aria-current={active === area.key ? "page" : undefined}
@@ -68,7 +47,7 @@ export function CommunityLocalNavigation({
             {area.label}
           </Link>
         ))}
-      </div>
+      </ScrollableTabs>
       <div className="community-local-more">
         {canManage ? (
           <Link href={`/communities/${slug}/host`}>Host tools</Link>

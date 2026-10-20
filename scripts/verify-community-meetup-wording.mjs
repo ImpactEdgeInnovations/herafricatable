@@ -9,7 +9,9 @@ const nav = read('components/member/community-local-navigation.tsx');
 const source = nav.replace(/^import[\s\S]*?;\n/gm, '').replace(/^export /gm, '');
 const code = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
 const Link = ({ children, ...props }) => React.createElement('a', props, children);
-const Navigation = new Function('React', 'Link', 'useRef', 'useEffect', 'useRouter', `${code};return CommunityLocalNavigation;`)(React, Link, () => ({ current: null }), () => {}, () => ({push(){}}));
+const tabsCode = ts.transpileModule(read('components/ui/scrollable-tabs.tsx').replace(/^import[\s\S]*?;\n/gm, '').replace(/^export /gm, ''), {compilerOptions:{jsx:ts.JsxEmit.React,target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+const ScrollableTabs = new Function('React','useCallback','useEffect','useRef','useState',`${tabsCode};return ScrollableTabs;`)(React,React.useCallback,React.useEffect,React.useRef,React.useState);
+const Navigation = new Function('React', 'Link', 'ScrollableTabs', 'useRouter', `${code};return CommunityLocalNavigation;`)(React, Link, ScrollableTabs, () => ({push(){}}));
 for (const canManage of [false, true]) {
   const html = renderToStaticMarkup(React.createElement(Navigation, { active: 'gatherings', canManage, slug: 'lavington-women' }));
   assert(html.includes('>Meetups</a>') && !html.includes('>Gatherings</a>'));

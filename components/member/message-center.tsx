@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
+import { ActionFeedback, useActionFeedback } from "@/components/ui/action-feedback";
 export type ConversationSummary = {
   avatar_url: string | null;
   company: string | null;
@@ -39,7 +40,7 @@ export function MessageCenter({
   const router = useRouter();
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const {feedback,setMessage} = useActionFeedback();
   const { ask, dialog } = useActionDialog();
   useEffect(() => {
     if (!selectedConversation) return;
@@ -90,7 +91,7 @@ export function MessageCenter({
     setMessage(
       error
         ? memberErrorMessage(error, "remove this message")
-        : "Message removed.",
+        : "Message removed.", error ? "error" : "success",
     );
     if (!error) router.refresh();
   }
@@ -144,7 +145,7 @@ export function MessageCenter({
     setMessage(
       error
         ? memberErrorMessage(error, "send this private message report")
-        : "Message reported privately to moderators.",
+        : "Message reported privately to moderators.", error ? "error" : "success",
     );
     if (!error) router.refresh();
   }
@@ -287,18 +288,14 @@ export function MessageCenter({
         ) : (
           <div className="conversation-placeholder">
             <p className="eyebrow">Messages</p>
-            <h2>Choose a conversation</h2>
+            <h2>{conversations.length ? "Choose a conversation" : "A hello starts with a connection"}</h2>
             <p>
               Your messages stay private between you and people who have
               agreed to connect.
             </p>
           </div>
         )}
-        {message ? (
-          <p className="message-status" role="status">
-            {message}
-          </p>
-        ) : null}
+        <ActionFeedback value={feedback} />
       </section>
     </div>
   );

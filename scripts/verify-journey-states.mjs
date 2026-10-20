@@ -1710,7 +1710,7 @@ const accountSettings = read("components/member/account-settings.tsx");
 for (const contract of [
   "How would you like to connect?",
   "Open to introductions",
-  "Curated only",
+  "Introductions from our team only",
   "Pause new introductions",
   "set_my_connection_preferences",
 ]) {
@@ -1814,10 +1814,10 @@ assert(
 const profileEditor = read("components/member/profile-editor.tsx");
 for (const contract of [
   "update_member_profile",
-  "mutually accepted",
+  "accepted connections",
   "share_phone",
   "memberErrorMessage",
-  'role="status"',
+  'ActionFeedback',
 ]) {
   assert(
     profileEditor.includes(contract),

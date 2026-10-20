@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { memberErrorMessage } from "@/lib/member-error";
 import { InstallAppCard } from "@/components/pwa/install-app";
+import { ActionFeedback, useActionFeedback } from "@/components/ui/action-feedback";
 
 export type PrivacyRequest = {
   id: string;
@@ -53,7 +54,7 @@ export function AccountSettings({
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const [busy, setBusy] = useState("");
-  const [notice, setNotice] = useState("");
+  const {feedback,setMessage:setNotice} = useActionFeedback();
   const [connectionMode, setConnectionMode] = useState(
     connectionPreference.request_mode,
   );
@@ -82,7 +83,7 @@ export function AccountSettings({
         ? memberErrorMessage(error, "change your profile visibility")
         : paused
           ? "Other members can no longer find your profile."
-          : "Your profile is visible to active members again.",
+          : "Your profile is visible to active members again.", error ? "error" : "success",
     );
     if (!error) router.refresh();
   }
@@ -102,7 +103,7 @@ export function AccountSettings({
           ? "Members may now request an introduction directly."
           : mode === "curated_only"
             ? "Only Her Africa Table may propose new introductions."
-            : "New introductions are paused. Existing connections are unchanged.",
+            : "New introductions are paused. Existing connections are unchanged.", error ? "error" : "success",
     );
     if (!error) {
       setConnectionMode(mode);
@@ -127,7 +128,7 @@ export function AccountSettings({
           ? nextRecommendMe
             ? "The Table Guide is on, and your visible profile may be suggested to suitable members."
             : "The Table Guide is on. Your profile is not included in its suggestions."
-          : "The Table Guide is off for your account.",
+          : "The Table Guide is off for your account.", error ? "error" : "success",
     );
     if (!error) {
       setAssistantEnabled(nextAssistantEnabled);
@@ -153,7 +154,7 @@ export function AccountSettings({
     link.download = `her-africa-table-data-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(href);
-    setNotice("Your private copy is ready and was created on this device.");
+    setNotice("Your private copy is ready and was created on this device.","success");
   }
   async function requestDeletion(event: FormEvent) {
     event.preventDefault();
@@ -174,7 +175,7 @@ export function AccountSettings({
     setNotice(
       error
         ? memberErrorMessage(error, "submit your deletion request")
-        : "Deletion request submitted. Your profile is hidden during the seven-day review window.",
+        : "Deletion request submitted. Your profile is hidden during the seven-day review window.", error ? "error" : "notice",
     );
     if (!error) {
       setConfirmation("");
@@ -192,7 +193,7 @@ export function AccountSettings({
     setNotice(
       error
         ? memberErrorMessage(error, "cancel your deletion request")
-        : "Deletion request cancelled.",
+        : "Deletion request cancelled.", error ? "error" : "success",
     );
     if (!error) router.refresh();
   }
@@ -202,10 +203,9 @@ export function AccountSettings({
       <header>
         <div>
           <p className="eyebrow">Privacy and control</p>
-          <h1>Account &amp; privacy.</h1>
+          <h1>Account &amp; privacy</h1>
           <p>
-            Control how members find you, download your information, and manage
-            important account decisions.
+            Choose who can find you and how you connect. Your account stays in your control.
           </p>
         </div>
         <aside>
@@ -275,7 +275,7 @@ export function AccountSettings({
             {
               description:
                 "Only Her Africa Table may propose a match; you still decide privately.",
-              label: "Curated only",
+              label: "Introductions from our team only",
               value: "curated_only" as const,
             },
             {
@@ -304,8 +304,8 @@ export function AccountSettings({
       {tableGuideReady ? (
         <section className="settings-card table-guide-settings-card">
           <div>
-            <p className="eyebrow">Optional member concierge</p>
-            <h2>Your Table Guide choices</h2>
+            <p className="eyebrow">Your optional helper</p>
+            <h2>Nia, your Table Guide</h2>
             <p>
               Decide whether to use the Guide and whether your visible profile may
               be suggested to members with relevant interests or goals.
@@ -460,11 +460,7 @@ export function AccountSettings({
           ))}
         </section>
       ) : null}
-      {notice ? (
-        <p className="network-message" role="status">
-          {notice}
-        </p>
-      ) : null}
+      <ActionFeedback value={feedback} floating onDismiss={() => setNotice("")} />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { CommunityHostSection } from "./community-host-section";
 import { CommunityRequestNote } from "@/components/community/community-request-note";
+import { ActionFeedback, useActionFeedback } from "@/components/ui/action-feedback";
 
 export type CommunityHostHealth = {
   active_members: number;
@@ -188,7 +189,7 @@ export function CommunityHostWorkspace({
   const { ask, dialog } = useActionDialog();
   const [busy, setBusy] = useState("");
   const actionBusy = useRef(false);
-  const [message, setMessage] = useState("");
+  const {feedback,setMessage} = useActionFeedback();
   const [activity,setActivity]=useState<"posts"|"replies"|"asks"|"events"|"reports"|null>(null);
   useEffect(()=>{if(activity){document.getElementById("host-activity")?.scrollIntoView({block:"start",behavior:"smooth"});document.getElementById("host-activity-title")?.focus({preventScroll:true});}},[activity]);
   function openMetric(key:keyof CommunityHostHealth){
@@ -217,7 +218,7 @@ export function CommunityHostWorkspace({
     setMessage(
       error
         ? memberErrorMessage(error, "invite this member")
-        : "Invitation sent. The member must accept before opening the community.",
+        : "Invitation sent. The member must accept before opening the community.", error ? "error" : "success",
     );
     if (!error) {
       formElement.reset();
@@ -256,7 +257,7 @@ export function CommunityHostWorkspace({
     setMessage(
       error
         ? memberErrorMessage(error, "update this community member")
-        : "Community access updated.",
+        : "Community access updated.", error ? "error" : "success",
     );
     if (!error) router.refresh();
     } catch (error) { setMessage(memberErrorMessage(error, "update this Community member")); }
@@ -290,7 +291,7 @@ export function CommunityHostWorkspace({
         ? memberErrorMessage(error, "update what members can see")
         : active
         ? option.item_type === "event" ? "Event linked. Members can find it in Meetups." : "Learning updated."
-        : "Item removed from this community.",
+        : "Item removed from this community.", error ? "error" : "success",
     );
     if (!error) router.refresh();
     } catch (error) { setMessage(memberErrorMessage(error, "link this item")); }
@@ -301,7 +302,7 @@ export function CommunityHostWorkspace({
     if(actionBusy.current)return;
     if (!automations) {
       setMessage(
-        "Introduction reminders are not included in your current plan.",
+        "Introduction reminders are not included in your current plan.", "notice",
       );
       return;
     }
@@ -321,7 +322,7 @@ export function CommunityHostWorkspace({
     setMessage(
       error
         ? memberErrorMessage(error, "send this reminder")
-        : "Reminder scheduled. The member’s notification choices will be respected.",
+        : "Reminder scheduled. The member’s notification choices will be respected.", error ? "error" : "notice",
     );
     if (!error) router.refresh();
     } catch (error) { setMessage(memberErrorMessage(error, "send this reminder")); }
@@ -386,15 +387,11 @@ export function CommunityHostWorkspace({
       ) : null}
       </HostToolArea>
 
-      {message ? (
-        <p className="community-host-message" role="status">
-          {message}
-        </p>
-      ) : null}
+      <ActionFeedback value={feedback} floating onDismiss={() => setMessage("")} />
 
       <HostToolArea area="overview"><CommunityHostSection id="writing-area" title="Help writing a post or welcome message"><CommunityHostAssistant communityId={communityId} /></CommunityHostSection></HostToolArea>
 
-      <HostToolArea area="people">
+      <HostToolArea area="invitations">
       {communityStatus === "published" ? (
         <DestinationInvitationPanel
           currentUserId={currentUserId}

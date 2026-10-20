@@ -13,6 +13,7 @@ import { useCommunityFileGuard } from "@/lib/use-community-file-guard";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { saveHostPoster } from "@/lib/events/save-host-poster";
 import { EventImageDisplayOptions } from "@/components/events/event-image-display-options";
+import { ActionFeedback, useActionFeedback } from "@/components/ui/action-feedback";
 
 export type HostProgrammeItem = {
   key: string;
@@ -88,7 +89,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
   const [coverAlt, setCoverAlt] = useState(cover?.draft_alt_text ?? "");
   const [busy, setBusy] = useState(false);
   const [busyAction, setBusyAction] = useState<"draft" | "publish" | "image" | "community" | null>(null);
-  const [message, setMessage] = useState("");
+  const {feedback,setMessage} = useActionFeedback();
   const [chosenCommunity, setChosenCommunity] = useState("");
   const [section, setSection] = useState("introduction");
   const [coverPreview,setCoverPreview] = useState<string|null>(null);
@@ -124,7 +125,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
     try {
       const {error}=await supabase.rpc("link_my_host_event_community",{p_event_id:initial.event_id,p_community_id:chosenCommunity});
       if(error)throw error;
-      setMessage("Community connected. Guests will see it when its public page is ready.");router.refresh();
+      setMessage("Community connected. Guests will see it when its public page is ready.","success");router.refresh();
     } catch(error){setMessage(memberErrorMessage(error,"connect your Community"));}
     finally{setBusy(false);setBusyAction(null);}
   }
@@ -153,7 +154,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
       const path=`${initial.event_id}/${auth.user.id}/${crypto.randomUUID()}.${extension}`;
       const result=await saveHostPoster(supabase,{eventId:initial.event_id,path,file:coverFile,alt:coverAlt.trim(),previousDraft:cover?.draft_storage_path??null,previousPublished:cover?.published_storage_path??null});
       setCoverFile(null);if(coverInput.current)coverInput.current.value="";
-      setMessage((result.status==="live"?"Poster saved and visible to guests.":result.status==="private"?"Poster saved privately. Send your event to the team for review before it appears to guests.":"Your poster was saved. Reopen this tab to check its latest display status.")+(result.cleanupPending?" Your saved poster is safe, but the team may need to clear the previous private image.":""));
+      setMessage((result.status==="live"?"Poster saved and visible to guests.":result.status==="private"?"Poster saved privately. Send your event to the team for review before it appears to guests.":"Your poster was saved. Reopen this tab to check its latest display status.")+(result.cleanupPending?" Your saved poster is safe, but the team may need to clear the previous private image.":""),result.status==="live"&&!result.cleanupPending?"success":"notice");
       router.refresh();
     }catch(error){setMessage(memberErrorMessage(error,"save the event image"));}
     finally{setBusy(false);setBusyAction(null);}
@@ -193,7 +194,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
       if(saved.error)throw saved.error;
       savedPrivately=true;setSavedDraft(draft);clearDraft(draft);
       if(sendForReview){const sent=await supabase.rpc(selfPublish?"publish_my_pilot_event_updates":"submit_event_host_workspace",{p_event_id:initial.event_id});if(sent.error)throw sent.error;}
-      setMessage(sendForReview?selfPublish?"Your changes are live. Open the guest view to see them.":"Sent to the event team for review. Your changes are not public yet.":"Draft saved privately.");router.refresh();
+      setMessage(sendForReview?selfPublish?"Your changes are live. Open the guest view to see them.":"Sent to the event team for review. Your changes are not public yet.":"Draft saved privately.","success");router.refresh();
     }catch(error){setMessage(`${savedPrivately?"Your draft was saved. ":""}${memberErrorMessage(error,savedPrivately?"publish these changes":"save your event draft")}`);}
     finally{setBusy(false);setBusyAction(null);}
   }
@@ -238,7 +239,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
           </>}
       </div>
       {communityPanel()}
-      {message ? <p className="manager-message" role="status">{message}</p> : null}
+      <ActionFeedback value={feedback} />
     </section>
   );
 
@@ -318,7 +319,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
         {!locked ? <button className="button button-outline" type="button" disabled={busy || partners.length >= 20} onClick={() => setPartners((items) => [...items, { key: crypto.randomUUID(), name: "", tier: "", website_url: "", logo_url: "" }])}>Add a partner</button> : null}
       </div>
 
-      {message ? <p className="manager-message" role="status">{message}</p> : null}
+      <ActionFeedback value={feedback}>{feedback?.tone==="success" && initial.event_status==="published" ? <Link href={`/events/${initial.event_slug}`}>View guest page →</Link> : null}</ActionFeedback>
       {!locked && ["introduction", "programme", "partners"].includes(section) ? <div className="host-workspace-actions"><p>{busyAction === "draft" ? "Saving your draft…" : busyAction === "publish" ? selfPublish ? "Publishing your changes…" : "Sending to the team…" : dirty ? "Changes not saved yet" : "No unsaved text changes"}</p><div><button className="button button-outline" disabled={busy || !dirty} onClick={() => void save(false)} type="button">{busyAction === "draft" ? "Saving…" : "Save privately"}</button><button className="button button-primary" disabled={busy} onClick={() => void save(true)} type="button">{busyAction === "publish" ? selfPublish ? "Publishing…" : "Sending…" : selfPublish ? "Publish changes" : "Send for review"}</button></div><small>{selfPublish ? "Save privately to keep preparing. Publish changes makes the event details visible to guests." : "Save privately to keep preparing. The team reviews your changes before guests see them."}</small></div> : null}
       {dialog}
     </section>

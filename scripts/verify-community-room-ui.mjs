@@ -12,7 +12,9 @@ for (const label of ["Home", "Conversations", "Meetups", "People", "Host tools"]
 }
 assert(nav.includes('aria-current={active === area.key ? "page" : undefined}'));
 assert(nav.includes("{canManage ?"), "Host tools must remain role-gated");
-assert(nav.includes("container.scrollLeft ="), "Selected tab must stay visible on narrow screens");
+const tabs = read("components/ui/scrollable-tabs.tsx");
+assert(nav.includes("ScrollableTabs") && tabs.includes("node.scrollLeft += item.right - bounds.right"), "Selected tab must stay visible on narrow screens");
+assert(tabs.includes("Show more") && tabs.includes("Show previous"), "Overflow must have visible, labelled controls");
 assert(!nav.includes("scrollIntoView"), "Local tabs must not scroll the entire page");
 assert(room.includes('membership_status !== "active"'), "Community membership gate must remain intact");
 assert(room.includes('className="community-page community-room-page"'));
