@@ -39,3 +39,9 @@ The header, hero content and floating-card layout are retained. Below them:
 - Footer policy links receive larger touch areas without adding another large section.
 
 Local browser checks at 390 px confirmed the event row moved from scroll position 2 to 337 when swiped, revealing the next real event; document width remained 390 px. Community feature labels were checked for readable light-on-green text. Public event data, private/reviewed registration copy and empty/error states remain covered by the landing regression.
+
+### Focused events-section follow-up
+
+Replaced “Make a plan / Something to look forward to” with the direct “Upcoming events” heading. Posters have larger, complete-image display areas without an extra card-within-card frame. The date line now includes the weekday, month, year and local time, followed by a stronger event title, venue and format. Mobile swipe discovery and the real event destinations are preserved; no booking or data access changes were made.
+
+Browser checks confirmed no document overflow at 390 px and 900 px. At 900 px all three poster heights and action-link positions matched, including the event without a poster.

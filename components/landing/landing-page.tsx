@@ -23,7 +23,7 @@ export function landingEventDate(event: LandingEvent) {
   let timeZone = event.timezone || "Africa/Nairobi";
   try { new Intl.DateTimeFormat("en-KE", { timeZone }).format(); } catch { timeZone = "Africa/Nairobi"; }
   return {
-    date: new Intl.DateTimeFormat("en-KE", { weekday: "short", day: "numeric", month: "long", timeZone }).format(new Date(event.starts_at)),
+    date: new Intl.DateTimeFormat("en-KE", { weekday: "short", day: "numeric", month: "long", year: "numeric", timeZone }).format(new Date(event.starts_at)),
     time: new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone, timeZoneName: "short" }).format(new Date(event.starts_at)),
     day: new Intl.DateTimeFormat("en-KE", { day: "2-digit", timeZone }).format(new Date(event.starts_at)),
     month: new Intl.DateTimeFormat("en-KE", { month: "short", timeZone }).format(new Date(event.starts_at)),
@@ -80,16 +80,18 @@ export function LandingPage({ openPilot, countdown, listing }: { openPilot: bool
     <div className={styles.container}>
       {countdown ? <div className={styles.countdown}><EventCountdown initialEvent={countdown} /></div> : null}
 
-      <section className={styles.events} aria-labelledby="events-title"><header className={styles.sectionHeading}><div><p className={styles.kicker}>Make a plan</p><h2 id="events-title">Something to look forward to.</h2><p className={styles.sectionDescription}>Good conversations start with showing up.</p></div><Link className={styles.outlineLink} href="/events">All events <Arrow /></Link></header>
+      <section className={styles.events} id="upcoming-events" aria-labelledby="events-title"><header className={styles.sectionHeading}><div><h2 id="events-title">Upcoming events</h2><p className={styles.sectionDescription}>Meet in person or join online.</p></div><Link className={styles.outlineLink} href="/events">All events <Arrow /></Link></header>
         {listing.events.length ? <><div className={styles.eventGrid} role="region" aria-label="Upcoming events" tabIndex={0}>{listing.events.map((event, index) => { const date = landingEventDate(event); return <article className={styles.eventCard} key={event.id}>
           <Link href={`/events/${event.slug}`} className={styles.eventImage} aria-label={`View ${event.title}`}>
             {event.image ? <img src={event.image.url} alt={event.image.alt} width={640} height={400} loading="lazy" decoding="async" /> : <div className={styles.eventArtwork} data-artwork={index % 3} aria-hidden="true"><span>Her Africa Table</span><strong>{index === 0 ? <>A seat<br />for you.</> : <>Meet.<br />Connect.<br />Rise.</>}</strong><small>{date.day} {date.month} {new Date(event.starts_at).getUTCFullYear()}</small><i>H</i></div>}
           </Link>
-          <div className={styles.eventInfo}>
-            <time className={styles.dateTile} dateTime={event.starts_at} aria-label={`${date.date}, ${date.time}`}><strong>{date.day}</strong><span>{date.month}</span></time>
-            <div className={styles.eventCardBody}><p className={styles.eventFormat}>{event.format === "hybrid" ? "In person & online" : event.format === "virtual" || event.format === "online" ? "Online" : "In person"}</p><h3><Link href={`/events/${event.slug}`}>{event.title}</Link></h3><p className={styles.eventTime}>{date.time}</p><p className={styles.eventLocation}>{event.format === "virtual" || event.format === "online" ? "Join online" : [event.venues?.name, event.venues?.city].filter(Boolean).join(", ") || "See event details for the location"}</p></div>
+          <div className={styles.eventCardBody}>
+            <time className={styles.eventSchedule} dateTime={event.starts_at}>{date.date}<span>{date.time}</span></time>
+            <h3><Link href={`/events/${event.slug}`}>{event.title}</Link></h3>
+            <p className={styles.eventLocation}>{event.format === "virtual" || event.format === "online" ? "Join online" : [event.venues?.name, event.venues?.city].filter(Boolean).join(", ") || "See event details for the location"}</p>
+            <p className={styles.eventFormat}><span aria-hidden="true" />{event.format === "hybrid" ? "In person & online" : event.format === "virtual" || event.format === "online" ? "Online" : "In person"}</p>
           </div>
-          <Link href={`/events/${event.slug}`} className={styles.cardAction}>Event details <Arrow /></Link>
+          <Link href={`/events/${event.slug}`} className={styles.cardAction}>View event <Arrow /></Link>
         </article>; })}</div>{listing.events.length > 1 ? <p className={styles.swipeHint}>Swipe to see more events <Arrow /></p> : null}</> : <div className={styles.emptyEvents}><div><h3>{listing.unavailable ? "The calendar is taking a moment." : "Your next invitation is on its way."}</h3><p>{listing.unavailable ? "You can still open Events and try the calendar again." : "New dates will appear here when they’re ready."}</p></div><Link className={styles.textLink} href="/events">View events <Arrow /></Link></div>}
       </section>
 
