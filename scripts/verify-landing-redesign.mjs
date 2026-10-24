@@ -76,6 +76,12 @@ for (const text of ['Good company.', 'Great things ahead.', 'Find your Table', '
 assert(html.includes('class="floatingScene" aria-hidden="true"'));
 assert.equal((html.match(/class="floatingCard /g) || []).length, 4);
 assert(html.includes('alt=""') && html.includes('Pause motion'));
+assert(html.includes('role="region" aria-label="Upcoming events" tabindex="0"'));
+assert(html.includes('dateTime="2026-10-26T07:00:00Z"'));
+assert.equal((html.match(/class="dateTile"/g) || []).length, listing.events.length);
+for (const text of ['Inside a Community', 'Conversations', 'Meetups', 'People', 'Meet members', 'Your place at the Table.']) assert(html.includes(text), text);
+assert(html.includes('Swipe to see more events'));
+assert(!render({ listing: { events: [listing.events[0]], unavailable: false } }).includes('Swipe to see more events'));
 assert(!html.includes('Our team reviews your request privately'));
 const manual = render({ openPilot: false });
 assert(manual.includes('Our team reviews your request privately') && !manual.includes('no approval wait'));
@@ -100,6 +106,8 @@ assert(/object-fit:\s*contain/.test(css) && css.includes('focus-visible') && css
 assert(css.includes('@media (max-width: 620px)'));
 assert(css.includes('@keyframes card-float') && css.includes('animation-play-state: paused'));
 assert(css.includes('.motionToggle[aria-pressed="true"]'));
+assert(css.includes('scroll-snap-type: x proximity') && css.includes('overscroll-behavior-x: contain'));
+assert(css.includes('.page .communityFeatures h3 { color: #f5f7ef;'));
 let paused = false;
 const { HeroMotionControl } = new Function('React', 'useState', `${compile(read('components/landing/hero-motion-control.tsx'))};return {HeroMotionControl};`)(React,
   () => [paused, update => { paused = update(paused); }]);

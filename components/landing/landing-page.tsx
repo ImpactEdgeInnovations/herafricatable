@@ -10,6 +10,15 @@ function Arrow() {
   return <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M3 10h13m-5-5 5 5-5 5" /></svg>;
 }
 
+function CommunityFeatureIcon({ kind }: { kind: "conversation" | "calendar" | "people" }) {
+  return <svg aria-hidden="true" viewBox="0 0 24 24">{kind === "conversation"
+    ? <><path d="M20 11a8 8 0 0 1-8 8H5l-3 3V11a9 9 0 0 1 18 0Z" /><path d="M7 9h8M7 13h5" /></>
+    : kind === "calendar"
+      ? <><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M7 3v4M17 3v4M3 10h18M8 15h3" /></>
+      : <><circle cx="9" cy="8" r="3" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 4v2" /></>}
+  </svg>;
+}
+
 export function landingEventDate(event: LandingEvent) {
   let timeZone = event.timezone || "Africa/Nairobi";
   try { new Intl.DateTimeFormat("en-KE", { timeZone }).format(); } catch { timeZone = "Africa/Nairobi"; }
@@ -71,21 +80,34 @@ export function LandingPage({ openPilot, countdown, listing }: { openPilot: bool
     <div className={styles.container}>
       {countdown ? <div className={styles.countdown}><EventCountdown initialEvent={countdown} /></div> : null}
 
-      <section className={styles.events} aria-labelledby="events-title"><header className={styles.sectionHeading}><div><p className={styles.kicker}>Out of the group chat. Into your calendar.</p><h2 id="events-title">Something to look forward to.</h2></div><Link className={styles.textLink} href="/events">All events <Arrow /></Link></header>
-        {listing.events.length ? <div className={styles.eventGrid}>{listing.events.map((event, index) => { const date = landingEventDate(event); return <article className={styles.eventCard} key={event.id}>
+      <section className={styles.events} aria-labelledby="events-title"><header className={styles.sectionHeading}><div><p className={styles.kicker}>Make a plan</p><h2 id="events-title">Something to look forward to.</h2><p className={styles.sectionDescription}>Good conversations start with showing up.</p></div><Link className={styles.outlineLink} href="/events">All events <Arrow /></Link></header>
+        {listing.events.length ? <><div className={styles.eventGrid} role="region" aria-label="Upcoming events" tabIndex={0}>{listing.events.map((event, index) => { const date = landingEventDate(event); return <article className={styles.eventCard} key={event.id}>
           <Link href={`/events/${event.slug}`} className={styles.eventImage} aria-label={`View ${event.title}`}>
             {event.image ? <img src={event.image.url} alt={event.image.alt} width={640} height={400} loading="lazy" decoding="async" /> : <div className={styles.eventArtwork} data-artwork={index % 3} aria-hidden="true"><span>Her Africa Table</span><strong>{index === 0 ? <>A seat<br />for you.</> : <>Meet.<br />Connect.<br />Rise.</>}</strong><small>{date.day} {date.month} {new Date(event.starts_at).getUTCFullYear()}</small><i>H</i></div>}
           </Link>
-          <div className={styles.eventCardBody}><p className={styles.eventDate}><strong>{date.day}</strong> {date.month} <span>· {date.time}</span></p><p className={styles.eventFormat}>{event.format === "hybrid" ? "In person & online" : event.format === "virtual" || event.format === "online" ? "Online" : "In person"}</p><h3><Link href={`/events/${event.slug}`}>{event.title}</Link></h3><p className={styles.eventLocation}>{event.format === "virtual" || event.format === "online" ? "Join online" : [event.venues?.name, event.venues?.city].filter(Boolean).join(", ") || "See event details for the location"}</p><Link href={`/events/${event.slug}`} className={styles.cardAction}>View event <Arrow /></Link></div>
-        </article>; })}</div> : <div className={styles.emptyEvents}><div><h3>{listing.unavailable ? "The calendar is taking a moment." : "Your next invitation is on its way."}</h3><p>{listing.unavailable ? "You can still open Events and try the calendar again." : "New dates will appear here when they’re ready."}</p></div><Link className={styles.textLink} href="/events">View events <Arrow /></Link></div>}
+          <div className={styles.eventInfo}>
+            <time className={styles.dateTile} dateTime={event.starts_at} aria-label={`${date.date}, ${date.time}`}><strong>{date.day}</strong><span>{date.month}</span></time>
+            <div className={styles.eventCardBody}><p className={styles.eventFormat}>{event.format === "hybrid" ? "In person & online" : event.format === "virtual" || event.format === "online" ? "Online" : "In person"}</p><h3><Link href={`/events/${event.slug}`}>{event.title}</Link></h3><p className={styles.eventTime}>{date.time}</p><p className={styles.eventLocation}>{event.format === "virtual" || event.format === "online" ? "Join online" : [event.venues?.name, event.venues?.city].filter(Boolean).join(", ") || "See event details for the location"}</p></div>
+          </div>
+          <Link href={`/events/${event.slug}`} className={styles.cardAction}>Event details <Arrow /></Link>
+        </article>; })}</div>{listing.events.length > 1 ? <p className={styles.swipeHint}>Swipe to see more events <Arrow /></p> : null}</> : <div className={styles.emptyEvents}><div><h3>{listing.unavailable ? "The calendar is taking a moment." : "Your next invitation is on its way."}</h3><p>{listing.unavailable ? "You can still open Events and try the calendar again." : "New dates will appear here when they’re ready."}</p></div><Link className={styles.textLink} href="/events">View events <Arrow /></Link></div>}
       </section>
 
-      <section className={styles.community} id="community" aria-labelledby="community-title"><header className={styles.sectionHeading}><div><p className={styles.kicker}>More than a one-off hello</p><h2 id="community-title">Find your Community.</h2></div><p>A shared interest. A familiar place.<br />People you’ll want to see again.</p></header><div className={styles.communityGrid}>
-        <Link href="/communities" className={styles.communityCard}><span className={styles.communityMark} aria-hidden="true">H</span><div><h3>Make yourself at home.</h3><p>Find a Community around something you enjoy. Ask, share and get to know each other.</p><span>Explore Communities <Arrow /></span></div></Link>
-        <Link href="/network" className={styles.communityCard}><span className={styles.connectionMark} aria-hidden="true"><i /><i /></span><div><h3>Turn a hello into a connection.</h3><p>Meet members who are open to connecting. Share an introduction and take it from there.</p><span>Meet members <Arrow /></span></div></Link>
-      </div><p className={styles.memberNote}>Sign in to see the Communities and profiles available to you.</p></section>
+      <section className={styles.community} id="community" aria-labelledby="community-title">
+        <div className={styles.communityCopy}><p className={styles.kicker}>Stay for the people</p><h2 id="community-title">Find your Community.<br /><em>Keep the connection.</em></h2><p>Find women who share your interests, your neighbourhood or your goals. Join the conversation and make plans to meet again.</p><Link href="/communities" className={styles.primaryButton}>Explore Communities <Arrow /></Link><p className={styles.memberNote}>Sign in to see the Communities and profiles available to you.</p></div>
+        <div className={styles.communityFeatures} aria-label="Inside a Community">
+          <div className={styles.featuresHeading}><span aria-hidden="true">H</span><div><small>INSIDE YOUR COMMUNITY</small><p>A place to keep in touch.</p></div></div>
+          <ul>{[
+            { kind: "conversation", title: "Conversations", text: "Ask a question. Share something useful." },
+            { kind: "calendar", title: "Meetups", text: "Meet online or make a plan in person." },
+            { kind: "people", title: "People", text: "Get to know the women in your Community." },
+          ].map(feature => <li key={feature.title}><span className={styles.featureIcon}><CommunityFeatureIcon kind={feature.kind as "conversation" | "calendar" | "people"} /></span><div><h3>{feature.title}</h3><p>{feature.text}</p></div></li>)}</ul>
+        </div>
+      </section>
 
-      <section className={styles.membership} id="membership" aria-labelledby="membership-title"><header><div><p className={styles.kicker}>A simple start</p><h2 id="membership-title">A hello is all it takes.</h2><p>{openPilot ? "Registration is open during our pilot. Confirm your email, share a few details and complete your profile—no approval wait." : "Membership requests are reviewed by our team. We’ll let you know by email when your place is ready."}</p></div><Link className={styles.primaryButton} href="/sign-in?mode=apply">Join Her Africa Table <Arrow /></Link></header><ol className={styles.joinSteps} aria-label="How membership works">{joinSteps.map((step, index) => <li key={step.title}><span>0{index + 1}</span><div><h3>{step.title}</h3><p>{step.text}</p></div></li>)}</ol><p className={styles.alreadyMember}>Already a member? <Link href="/sign-in">Sign in</Link></p></section>
+      <section className={styles.networkStrip} aria-labelledby="network-title"><span className={styles.connectionMark} aria-hidden="true"><i /><i /></span><div><h2 id="network-title">Start with a hello.</h2><p>Find members who are open to connecting. A shared interest is a good place to begin.</p></div><Link href="/network" className={styles.outlineLink}>Meet members <Arrow /></Link></section>
+
+      <section className={styles.membership} id="membership" aria-labelledby="membership-title"><header><p className={styles.kicker}>A simple start</p><h2 id="membership-title">Your place at the Table.</h2><p>{openPilot ? "Registration is open during our pilot. Confirm your email, share a few details and complete your profile—no approval wait." : "Membership requests are reviewed by our team. We’ll let you know by email when your place is ready."}</p><Link className={styles.primaryButton} href="/sign-in?mode=apply">Join Her Africa Table <Arrow /></Link><p className={styles.alreadyMember}>Already a member? <Link href="/sign-in">Sign in</Link></p></header><ol className={styles.joinSteps} aria-label="How membership works">{joinSteps.map((step, index) => <li key={step.title}><span>0{index + 1}</span><div><h3>{step.title}</h3><p>{step.text}</p></div></li>)}</ol></section>
 
       <footer className={styles.footer}><div className={styles.footerTop}><Wordmark small /><nav aria-label="Helpful links"><Link href="/events">Events</Link><Link href="/faq">FAQs</Link><a href="mailto:support@herafricatable.com">Contact</a><InstallAppButton compact /></nav></div><div className={styles.footerBottom}><span>© {new Date().getFullYear()} Her Africa Table · Nairobi, Kenya</span><nav aria-label="Trust and policies"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/community-guidelines">Community guidelines</Link></nav></div></footer>
     </div>

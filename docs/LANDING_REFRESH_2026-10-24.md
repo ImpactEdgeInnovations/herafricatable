@@ -28,3 +28,14 @@ The actual local Next.js route loaded the existing public event projection, incl
 - Reloaded the homepage and confirmed the real event content and images still appeared.
 
 This is acceptance of the landing-page refresh, not a claim that every platform workflow has been re-tested. Reduced-motion handling is covered by the stylesheet contract; an OS preference change was not performed during browser QA.
+
+## Lower-page refinement
+
+The header, hero content and floating-card layout are retained. Below them:
+
+- Event cards have a separate date tile, clearly grouped time/location and consistent complete-poster areas. On phones the cards form a horizontally scrollable, snap-aligned row, with a visible swipe hint, a scrollbar and a keyboard-focusable region.
+- A new Community introduction explains Conversations, Meetups and People without inventing member counts, public profiles or Community activity. These feature descriptions are not imitation buttons; the real “Explore Communities” link remains the action.
+- A compact member-discovery strip links to the existing network. Registration becomes a two-column introduction and three-step list on desktop, stacked on phones. The automatic/reviewed intake conditions are unchanged.
+- Footer policy links receive larger touch areas without adding another large section.
+
+Local browser checks at 390 px confirmed the event row moved from scroll position 2 to 337 when swiped, revealing the next real event; document width remained 390 px. Community feature labels were checked for readable light-on-green text. Public event data, private/reviewed registration copy and empty/error states remain covered by the landing regression.
