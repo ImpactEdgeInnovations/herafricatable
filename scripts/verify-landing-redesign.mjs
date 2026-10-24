@@ -62,16 +62,20 @@ assert(!loaderSource.includes('service_role') && !loaderSource.includes('createS
 
 const Link = ({ children, ...props }) => React.createElement('a', props, children);
 const styles = new Proxy({}, { get: (_, key) => String(key) });
-const { LandingPage, landingEventDate } = new Function('React', 'Link', 'InstallAppButton', 'EventCountdown', 'styles',
+const { LandingPage, landingEventDate } = new Function('React', 'Link', 'InstallAppButton', 'EventCountdown', 'styles', 'HeroMotionControl',
   `${compile(read('components/landing/landing-page.tsx'))};return {LandingPage,landingEventDate};`)(React, Link,
-  () => React.createElement('button', null, 'Install app'), () => React.createElement('div', null, 'Countdown'), styles);
+  () => React.createElement('button', null, 'Install app'), () => React.createElement('div', null, 'Countdown'), styles,
+  ({ className }) => React.createElement('button', { className, 'aria-pressed': false }, 'Pause motion'));
 const render = props => renderToStaticMarkup(React.createElement(LandingPage, { openPilot: true, countdown: null, listing, ...props }));
 const html = render();
 assert.equal((html.match(/<h1 /g) || []).length, 1);
 assert.equal((html.match(/>Event one</g) || []).length, 1);
 assert.equal((html.match(/>Event two</g) || []).length, 1);
 for (const path of ['/sign-in', '/sign-in?mode=apply', '/events', '/communities', '/faq', '/privacy', '/terms', '/community-guidelines']) assert(html.includes(`href="${path}"`), path);
-for (const text of ['Meet at the Table.', 'Make it your own.', 'Confirm your email', 'no approval wait', 'Sign in to see the Communities', 'Install app']) assert(html.includes(text), text);
+for (const text of ['Good company.', 'Great things ahead.', 'Find your Table', 'Confirm your email', 'no approval wait', 'Sign in to see the Communities', 'Install app']) assert(html.includes(text), text);
+assert(html.includes('class="floatingScene" aria-hidden="true"'));
+assert.equal((html.match(/class="floatingCard /g) || []).length, 4);
+assert(html.includes('alt=""') && html.includes('Pause motion'));
 assert(!html.includes('Our team reviews your request privately'));
 const manual = render({ openPilot: false });
 assert(manual.includes('Our team reviews your request privately') && !manual.includes('no approval wait'));
@@ -94,5 +98,19 @@ if (previousTZ === undefined) delete process.env.TZ; else process.env.TZ = previ
 const css = read('components/landing/landing-page.module.css');
 assert(/object-fit:\s*contain/.test(css) && css.includes('focus-visible') && css.includes('prefers-reduced-motion'));
 assert(css.includes('@media (max-width: 620px)'));
+assert(css.includes('@keyframes card-float') && css.includes('animation-play-state: paused'));
+assert(css.includes('.motionToggle[aria-pressed="true"]'));
+let paused = false;
+const { HeroMotionControl } = new Function('React', 'useState', `${compile(read('components/landing/hero-motion-control.tsx'))};return {HeroMotionControl};`)(React,
+  () => [paused, update => { paused = update(paused); }]);
+let control = HeroMotionControl({ className: 'motionToggle' });
+assert.equal(control.props['aria-pressed'], false);
+assert.equal(control.props['aria-label'], 'Pause floating card animation');
+control.props.onClick();
+control = HeroMotionControl({ className: 'motionToggle' });
+assert.equal(control.props['aria-pressed'], true);
+assert.equal(control.props['aria-label'], 'Play floating card animation');
+control.props.onClick();
+assert.equal(paused, false);
 assert(read('app/page.tsx').includes('getLandingEvents()'));
-console.log('Landing redesign passed: anonymous public-only event projection, artwork fallback, honest errors, three-event bound, timezone-safe dates, rendered pilot/manual journeys, links, single heading and scoped responsive styling.');
+console.log('Landing redesign passed: public-only events, honest errors, timezone-safe dates, pilot/manual journeys, real links, decorative floating cards, working motion control and responsive/reduced-motion styling.');

@@ -1022,8 +1022,8 @@ for (const contract of [
 }
 const publicHome = read("components/landing/landing-page.tsx");
 for (const contract of [
-  "A place to meet.",
-  "A reason to stay.",
+  "Good company.",
+  "Great things ahead.",
   "Explore events",
   "Explore Communities",
   "Confirm your email",
