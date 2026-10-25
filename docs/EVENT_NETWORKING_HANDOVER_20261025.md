@@ -6,6 +6,22 @@ Updated: 25 October 2026. First release: pairs only, up to 200 participants per 
 
 Visual follow-up: an in-page countdown strip introduces the scheduled session, a gentle green radar appears only while a joined guest waits, and a portrait card replaces it when matched. No simulated match percentage or automatic sounds. Reduced-motion preferences and a local Pause animation control are supported; pausing animation never pauses the actual session. See [members’ club UI handover](MEMBERS_CLUB_UI_HANDOVER_20261025.md).
 
+### Research-led design revision — 25 October
+
+The first radar panel was too tall and explanatory. The revision uses a restrained editorial header, a single round timer inside a subtle animated dial, short waiting copy and expandable Why might I wait? guidance. Once matched, the actual member portrait/initial, first name, introduction, meeting point and clock become the focal information. There are no invented attendee portraits or match percentages. Failed portrait loading reveals the initial fallback; a new match remounts its portrait so a previous image failure does not carry over.
+
+Alignment with the owner's two visual references is **directional, not a literal replica**: the first contributes warm ivory, an editorial event feel and human photography; the second contributes clear app structure, portrait-led introductions and explicit actions. The approved green identity remains. Neither the poster's dense ornamental layout nor the mockup's full black/gold palette is copied. Real member photography still depends on members uploading a profile photo.
+
+Research informed the emphasis on clear participants, time, place and explicit consent—not the visual palette:
+
+- [Brella on-site meetings](https://help-attendees.brella.io/en/articles/189148-understand-1-1-brella-meetings) — acceptance and a clear meeting location/table.
+- [Swapcard meeting flow](https://help-attendees.swapcard.com/en/articles/8185472-how-to-book-meetings-with-other-attendees) — a prominent next action and a distinction between meetings and connection requests.
+- [W3C Pause, Stop, Hide](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide) — retain a separate motion pause control and reduced-motion support; pausing the visual never freezes real session time.
+
+Completed networking opens People you met automatically and explains the current 14-day event-history window. Accepted connections remain under People → Your connections; the refinement does **not** create a permanent unconnected-introduction archive. A lasting personal history would require a separate retention/access design and is a suggested follow-up, not an already-delivered feature.
+
+UI verification: actual-component tests cover the new completed-history state as well as prior recovery, consent and timer states. Browser example-data checks at 320px and 390px showed no horizontal page overflow; the waiting view has exactly one timer. Desktop layout checked separately. Evidence: `tmp/networking-match-refined-example.png`, `tmp/networking-radar-refined-example.png`. These are UI fixtures, not live matches or a full multi-device rehearsal. No SQL, matching algorithm, registration, payment or membership rule changed.
+
 - A Host schedules one networking session within a published in-person or hybrid event: start/finish, 2–15 minute conversations, 30–180 second changeover, 1–30 distinct meeting points, optional conversation starter. Default proposal is a 30-minute session.
 - Host starts at or after the scheduled time, pauses, resumes or finishes. Pausing freezes the round, but never extends the event/session's hard finish. Super Admin can disable/re-enable the feature for that event; a Host cannot override this.
 - Guests take part on the event page, without navigation. Joining requires explicit consent, a checked-in (`attended`) valid place, a visible active/pending profile and a valid associated order if present. Free approved orders and paid/fulfilled orders qualify. Cancelled/refunded orders do not.
