@@ -109,6 +109,8 @@ assert(css.includes('@media (max-width: 620px)'));
 assert(css.includes('@keyframes card-float') && css.includes('animation-play-state: paused'));
 assert(css.includes('.motionToggle[aria-pressed="true"]'));
 assert(css.includes('scroll-snap-type: x proximity') && css.includes('overscroll-behavior-x: contain'));
+assert(css.includes('grid-template-columns: 104px minmax(0, 1fr)'));
+assert(css.includes('width: 104px; height: 104px;') && css.includes('width: 90px; height: 90px;'));
 assert(css.includes('.page .communityFeatures h3 { color: #f5f7ef;'));
 let paused = false;
 const { HeroMotionControl } = new Function('React', 'useState', `${compile(read('components/landing/hero-motion-control.tsx'))};return {HeroMotionControl};`)(React,

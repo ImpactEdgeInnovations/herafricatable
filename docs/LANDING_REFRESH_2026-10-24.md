@@ -45,3 +45,9 @@ Local browser checks at 390 px confirmed the event row moved from scroll positio
 Replaced “Make a plan / Something to look forward to” with the direct “Upcoming events” heading. Posters have larger, complete-image display areas without an extra card-within-card frame. The date line now includes the weekday, month, year and local time, followed by a stronger event title, venue and format. Mobile swipe discovery and the real event destinations are preserved; no booking or data access changes were made.
 
 Browser checks confirmed no document overflow at 390 px and 900 px. At 900 px all three poster heights and action-link positions matched, including the event without a poster.
+
+### Compact thumbnails — 25 October 2026
+
+At the owner's request, event artwork is now a compact square thumbnail beside the details: 104 × 104 px on large screens, 88 × 88 px on tablets and 90 × 90 px on phones. The full poster is still contained, not cropped, and opens the existing event page. Card spacing and the missing-poster illustration are scaled to match; the rest of the landing page is unchanged.
+
+Browser verification: all three mobile thumbnails measured 90 × 90 px, and the mobile section height was about 343 px. At 900 px the three action links remained aligned. Neither viewport had horizontal document overflow.
