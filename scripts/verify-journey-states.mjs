@@ -224,7 +224,7 @@ assert(adminPage.includes('.select("id,is_test_account")') &&
   adminPage.includes("memberCountsReady ? pendingMembers : \"—\""),
 "Admin cockpit must exclude tagged test accounts from real member and request counts");
 assert(adminActionCentre.includes("memberQueueUnavailable") &&
-  adminActionCentre.includes("Member queue unavailable"),
+  adminActionCentre.includes("Member requests unavailable"),
 "Admin cockpit must not report all clear when member counts cannot load");
 for (const specialist of [
   "EventContentManager",
@@ -370,7 +370,7 @@ for (const contract of [
   "save_module_release_check",
   "Record result",
   "passwords, OTPs",
-  "20260803050000_module_release_acceptance.sql",
+  "Feature checks couldn’t load",
 ]) {
   assert(
     moduleReleaseGate.includes(contract),
@@ -387,7 +387,7 @@ for (const contract of [
   "Database ready",
   "Updates still needed",
   "See {check.missing_items.length} missing database item",
-  "20260803010000_production_database_readiness.sql",
+  "Database checks couldn’t load",
 ]) {
   assert(
     databaseReadinessPanel.includes(contract),

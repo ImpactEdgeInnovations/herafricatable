@@ -637,7 +637,7 @@ export default async function AdminOperationsPage({
           .eq("key", "partner_perks")
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
-    role.role === "super_admin" && loadPeople
+    role.role === "super_admin" && (loadPeople || loadRelease)
       ? supabase.rpc("get_launch_readiness_metrics")
       : Promise.resolve({ data: [], error: null }),
     role.role === "super_admin" && loadPeople
@@ -1471,7 +1471,7 @@ export default async function AdminOperationsPage({
                   database: !databaseReadinessResult.error,
                   modules: !moduleReleaseResult.error,
                   launch: !launchGateResult.error,
-                  reporting: !readinessResult.error && !analyticsResult.error,
+                  reporting: !readinessResult.error,
                 }}
               />
               <DatabaseReadinessPanel

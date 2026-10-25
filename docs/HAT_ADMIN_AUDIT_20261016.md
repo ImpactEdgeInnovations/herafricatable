@@ -206,8 +206,8 @@ Keep existing wine/cream identity, readable interface typography, Member/Admin s
 | ADMIN-04 truthful refund workflow | 1, required before paid use | P1 | IMPLEMENTED: separate manual completion/reference and live state checks pass; Paystack initiation remains an external dashboard step |
 | ADMIN-05 safe action recovery | 2 — reliable decisions | P1/P2 | IMPLEMENTED: synchronous locks, finally recovery, retained decision notes and saved/unknown feedback; controlled L1 pass; live recovery acceptance open |
 | ADMIN-06 support thread/draft context | 2 | P1/P2 | IMPLEMENTED: failed-read gating, recipient-scoped drafts and stale-response isolation; controlled L1 pass; real thread/inbox/browser acceptance open |
-| ADMIN-07 trustworthy counts | 3 — accurate operational data | P1 | QUEUED: failed count ≠ zero; real aggregate totals and partial-state display |
-| ADMIN-08 readiness inputs and meaning | 3 | P1 | QUEUED: all required sources loaded; explained groups and consistent denominator |
+| ADMIN-07 trustworthy counts | 3 — accurate operational data | P1 | IN PROGRESS: Today failure/truncation states implemented 25 October; aggregate queries, wider oversight and operational acceptance open |
+| ADMIN-08 readiness inputs and meaning | 3 | P1 | IN PROGRESS: release target loading and incomplete-group percentage suppression implemented 25 October; complete catalog/group acceptance open |
 | ADMIN-09 daily workspace simplification | 4 — plain language and navigation | P2 | QUEUED: canonical record tools, preserved context, fewer repeated forms |
 | ADMIN-10 current roadmap / delivery labels | 4 | P2 | QUEUED: current owners/context and accurate delivery/setup copy |
 | ADMIN-11 paged oversight / activity | 5 — scale and investigation | P2 | QUEUED: aggregate overview, selected rosters/media, paged jobs/support/members/history |

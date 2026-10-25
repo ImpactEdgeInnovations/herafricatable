@@ -1,7 +1,7 @@
 type AdminRole = "super_admin" | "event_staff" | "moderator";
 
 type ActionItem = {
-  count: number;
+  count: number | null;
   description: string;
   href: string;
   label: string;
@@ -18,14 +18,14 @@ export function AdminActionCentre({
   pendingRegistrations,
   role,
 }: {
-  draftEvents: number;
-  hasEvents: boolean;
-  openReports: number;
+  draftEvents: number | null;
+  hasEvents: boolean | null;
+  openReports: number | null;
   pendingMembers: number;
   memberCountsReady: boolean;
-  pendingCommunityApplications: number;
-  pendingRefunds: number;
-  pendingRegistrations: number;
+  pendingCommunityApplications: number | null;
+  pendingRefunds: number | null;
+  pendingRegistrations: number | null;
   role: AdminRole;
 }) {
   const actions: ActionItem[] = [];
@@ -33,7 +33,7 @@ export function AdminActionCentre({
   if (role === "super_admin") {
     actions.push(
       {
-        count: pendingMembers,
+        count: memberCountsReady ? pendingMembers : null,
         description: pendingMembers
           ? "Approve or decline new membership access."
           : "No new membership decisions are waiting.",
@@ -96,9 +96,10 @@ export function AdminActionCentre({
     });
   }
 
-  const total = actions.reduce((sum, action) => sum + action.count, 0);
-  const openActions = actions.filter((action) => action.count > 0);
+  const total = actions.reduce((sum, action) => sum + (action.count ?? 0), 0);
+  const openActions = actions.filter((action) => action.count === null || action.count > 0);
   const memberQueueUnavailable = role === "super_admin" && !memberCountsReady;
+  const queuesUnavailable = actions.some((action) => action.count === null);
 
   return (
     <section
@@ -115,27 +116,19 @@ export function AdminActionCentre({
             card to go directly to it.
           </p>
         </div>
-        <span className={total || memberQueueUnavailable ? "has-work" : "all-clear"}>
-          {memberQueueUnavailable ? "Check member queue" : total ? `${total} open task${total === 1 ? "" : "s"}` : "All clear"}
+        <span className={total || queuesUnavailable ? "has-work" : "all-clear"}>
+          {queuesUnavailable ? total ? `At least ${total} open tasks · some lists unavailable` : "Some lists couldn’t load" : total ? `${total} open task${total === 1 ? "" : "s"}` : "All clear"}
         </span>
       </header>
-      {openActions.length || memberQueueUnavailable ? (
+      {openActions.length ? (
         <div className="admin-action-grid">
-          {memberQueueUnavailable ? (
-            <a className="has-work" href="/admin/members">
-              <span aria-hidden="true">!</span>
-              <strong>Member queue unavailable</strong>
-              <p>We could not check which requests are real. Open Member oversight before deciding.</p>
-              <small>Check now <span aria-hidden="true">→</span></small>
-            </a>
-          ) : null}
           {openActions.map((action) => (
             <a className="has-work" href={action.href} key={action.label}>
-              <span>{action.count}</span>
-              <strong>{action.label}</strong>
-              <p>{action.description}</p>
+              <span>{action.count === null ? "!" : action.count}</span>
+              <strong>{action.count === null ? memberQueueUnavailable && action.label === "Membership requests" ? "Member requests unavailable" : `${action.label} unavailable` : action.label}</strong>
+              <p>{action.count === null ? "We couldn’t load this list completely. Open the work area to try again." : action.description}</p>
               <small>
-                Review now{" "}
+                {action.count === null ? "Open list" : "Review now"}{" "}
                 <span aria-hidden="true">→</span>
               </small>
             </a>

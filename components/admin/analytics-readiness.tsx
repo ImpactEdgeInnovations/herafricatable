@@ -91,7 +91,7 @@ export function AnalyticsReadiness({
     if (!error) router.refresh();
   }
 
-  if (!migrationReady)
+  if (!migrationReady || !metrics.length)
     return (
       <section className="admin-section" id="analytics">
         <div className="admin-empty">
@@ -109,7 +109,7 @@ export function AnalyticsReadiness({
         <div className="admin-section-heading">
           <div>
             <p className="eyebrow">Privacy-safe operations</p>
-            <h2>Launch readiness</h2>
+            <h2>Member activity targets</h2>
             <p>
               Server-recorded aggregates exclude tagged test identities and
               never retain content, searches, private contact details, IP
@@ -121,7 +121,7 @@ export function AnalyticsReadiness({
               {metrics.length ? Math.round((ready / metrics.length) * 100) : 0}%
             </strong>
             <span>
-              {ready} of {metrics.length} gates ready
+              {ready} of {metrics.length} targets reached
             </span>
           </div>
         </div>

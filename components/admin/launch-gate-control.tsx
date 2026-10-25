@@ -159,14 +159,14 @@ export function LaunchGateControl({
     if (!error) router.refresh();
   }
 
-  if (!migrationReady)
+  if (!migrationReady || !required.length)
     return (
       <section className="admin-section launch-gates" id="launch-gates">
         <div className="admin-empty">
-          <strong>Launch evidence is not available yet</strong>
+          <strong>Required launch checks couldn’t load</strong>
           <p>
-            Apply the launch-gate migration, then reload this workspace. Existing
-            release controls are unchanged.
+            Reload the workspace to try again. Do not treat an empty result as a
+            completed checklist. Existing sign-offs and release controls are unchanged.
           </p>
         </div>
       </section>

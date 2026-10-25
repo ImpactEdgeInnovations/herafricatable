@@ -135,14 +135,14 @@ export function ModuleReleaseGate({
     if (!error) router.refresh();
   }
 
-  if (!migrationReady) {
+  if (!migrationReady || !checks.length) {
     return (
       <section className="module-release-gate" id="module-release-gate">
         <div className="admin-empty">
-          <strong>Feature checks need a database update</strong>
+          <strong>Feature checks couldn’t load</strong>
           <p>
-            Apply <code>20260803050000_module_release_acceptance.sql</code>, then
-            reload this page. Existing feature settings will not be changed.
+            Reload the workspace to try again. A failed read does not identify a
+            missing database update. Existing feature settings are unchanged.
           </p>
         </div>
       </section>

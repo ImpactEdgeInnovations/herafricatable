@@ -1,10 +1,12 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 19 October 2026. Historical baseline release: `b4be9ca`.
+Updated: 25 October 2026. Historical baseline release: `b4be9ca`.
 
 This board turns the 4 October UI/UX and Events audit (saved separately on the Product Owner's Desktop) into implementation work. It tracks delivery and acceptance for the audit recommendations. The Product Owner paused the former ten-sprint execution on 4 October so engineering can focus on this board. The Admin **Launch gates** remain the source for production release evidence. A task marked Done here does not automatically pass a launch gate or publish an event.
 
 ## 7 October execution alignment
+
+**25 October — Admin phase 3, first reliability slice:** Today now distinguishes complete zero, failed reads and known-truncated queues; missing safety sources and partial photo-report pages cannot report All clear. The release summary loads its actual activity targets and withholds percentages when an input group is unavailable or empty. Activity targets are no longer labelled as launch approval; failed reads no longer prescribe rerunning migrations. Existing permissions and decisions are unchanged. Controlled execution and read-only live source/catalog checks passed; independent Super Admin operational acceptance and broader aggregate/oversight work remain open. [Evidence and remaining work](ADMIN_PHASE_THREE_HANDOVER_20261025.md).
 
 **19 October — Event poster access and PWA recovery:** Published poster file and metadata access now follow the event's audience, without exposing applicant records or draft/replaced images. Both buckets remain private. Listing/detail use a permission-checked, non-cached endpoint, bounded automatic renewal/retry on app resume, and visible Retry image recovery. Live ordinary-member readback and rollback-only public/Community/draft privacy tests passed; no test fixtures or uploads remain. Full tests/typecheck/build passed. Release `32aba53` deployed successfully; live browser checks confirmed phone-width posters, full-poster viewer and event-detail image loading. Physical installed iPhone/Android and long-background/connectivity acceptance remain separate. [Evidence and tester checks](EVENT_POSTER_RECOVERY_20261019.md). Admin phase 3 remains paused.
 
@@ -50,7 +52,7 @@ Final browser evidence: the existing Seina member session opened the Lavington W
 | --- | --- | --- | --- |
 | 1 | Permissions, privacy, refunds and durable delivery | Implemented | Selected L1/L2 passed; external/browser checks open |
 | 2 | Reliable decisions and support replies | Implemented | L1 passed; live L2/L3 open |
-| 3 | Accurate counts and launch-readiness inputs | Next | ADMIN-07/08 |
+| 3 | Accurate counts and launch-readiness inputs | In progress — first reliability slice implemented | ADMIN-07/08; aggregate/oversight and independent Admin acceptance still open |
 | 4 | Clear navigation and plain wording | Queued | ADMIN-09/10 |
 | 5 | Scale, investigation and release/security rehearsal | Queued | ADMIN-11/12 |
 

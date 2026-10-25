@@ -7,6 +7,7 @@ import {
   type AdminRole,
 } from "@/components/admin/admin-header";
 import { createClient } from "@/lib/supabase/server";
+import { adminRowsReady, adminCountReady } from "@/lib/admin-read-state";
 
 type MemberRow = {
   access_status: string;
@@ -74,33 +75,45 @@ export default async function AdminHomePage() {
     communityReports,
     membershipIntakeResult,
     communityApplicationResult,
+    gatheringReports,
+    eventQuestionReports,
+    photoReports,
   ] = await Promise.all([
     role === "super_admin"
-      ? supabase.rpc("list_admin_members_v3")
+      ? supabase.rpc("list_admin_members_v3", undefined, { count: "exact" })
       : Promise.resolve({ data: [], error: null }),
     canManageEvents
-      ? supabase.rpc("list_managed_events")
+      ? supabase.rpc("list_managed_events", undefined, { count: "exact" })
       : Promise.resolve({ data: [], error: null }),
     canModerate
-      ? supabase.rpc("list_member_reports")
+      ? supabase.rpc("list_member_reports", undefined, { count: "exact" })
       : Promise.resolve({ data: [], error: null }),
     canModerate
-      ? supabase.rpc("list_marketplace_reports")
+      ? supabase.rpc("list_marketplace_reports", undefined, { count: "exact" })
       : Promise.resolve({ data: [], error: null }),
     canModerate
-      ? supabase.rpc("list_community_safety_reports")
+      ? supabase.rpc("list_community_safety_reports", undefined, { count: "exact" })
       : Promise.resolve({ data: [], error: null }),
     role === "super_admin"
       ? supabase.rpc("get_membership_intake_admin")
       : Promise.resolve({ data: [], error: null }),
     role === "super_admin"
-      ? supabase.rpc("list_community_host_applications_admin")
+      ? supabase.rpc("list_community_host_applications_admin", undefined, { count: "exact" })
       : Promise.resolve({ data: [], error: null }),
+    canModerate
+      ? supabase.rpc("list_community_gathering_reports", undefined, { count: "exact" })
+      : Promise.resolve({ data: [], error: null }),
+    canModerate
+      ? supabase.rpc("list_event_question_reports", undefined, { count: "exact" })
+      : Promise.resolve({ data: [], error: null }),
+    canModerate
+      ? supabase.rpc("list_community_photo_reports_page", { p_before_active: null, p_before_created_at: null, p_before_id: null })
+      : Promise.resolve({ data: { reports: [], has_more: false }, error: null }),
   ]);
 
   const memberFallbackResult =
     role === "super_admin" && memberApplicationResult.error
-      ? await supabase.rpc("list_admin_members_v2")
+      ? await supabase.rpc("list_admin_members_v2", undefined, { count: "exact" })
       : null;
   const memberResult = memberFallbackResult ?? memberApplicationResult;
 
@@ -109,7 +122,7 @@ export default async function AdminHomePage() {
   const memberTagsResult = role === "super_admin" && memberIds.length
     ? await supabase.from("profiles").select("id,is_test_account").in("id", memberIds)
     : { data: [], error: null };
-  const memberCountsReady = !memberResult.error && !memberTagsResult.error &&
+  const memberCountsReady = adminRowsReady(memberApplicationResult) && adminRowsReady(memberResult) && !memberTagsResult.error &&
     memberTagsResult.data?.length === memberIds.length;
   const testFlagById = new Map((memberTagsResult.data ?? [])
     .map((profile) => [profile.id, profile.is_test_account === true] as const));
@@ -117,6 +130,7 @@ export default async function AdminHomePage() {
     ? members.filter((member) => testFlagById.get(member.user_id) === false)
     : [];
   const events = (eventResult.data as EventRow[] | null) ?? [];
+  const eventCountsReady = adminRowsReady(eventResult);
   const eventIds = events.map((event) => event.event_id);
 
   const [registrationResult, refundResult] =
@@ -139,15 +153,22 @@ export default async function AdminHomePage() {
         ];
 
   const communityReportsFallback = communityReports.error
-    ? await supabase.rpc("list_community_reports")
+    ? await supabase.rpc("list_community_reports", undefined, { count: "exact" })
     : null;
   const effectiveCommunityReports = communityReports.error
     ? communityReportsFallback
     : communityReports;
+  const photoReportPage = photoReports.data as { reports: ReportRow[]; has_more: boolean } | null;
+  const reportCountsReady = [memberReports, marketplaceReports, effectiveCommunityReports, gatheringReports, eventQuestionReports].every(adminRowsReady) &&
+    !photoReports.error && Array.isArray(photoReportPage?.reports) && photoReportPage.has_more === false;
+  const communityCountsReady = adminRowsReady(communityApplicationResult);
   const reports = [
     ...((memberReports.data as ReportRow[] | null) ?? []),
     ...((marketplaceReports.data as ReportRow[] | null) ?? []),
     ...((effectiveCommunityReports?.data as ReportRow[] | null) ?? []),
+    ...((gatheringReports.data as ReportRow[] | null) ?? []),
+    ...((eventQuestionReports.data as ReportRow[] | null) ?? []),
+    ...(photoReportPage?.reports ?? []),
   ];
   const pendingMembers = realMembers.filter(
     (member) =>
@@ -175,8 +196,8 @@ export default async function AdminHomePage() {
           detail: "This is the recommended setting for the limited pilot.",
         },
         trusted_auto: {
-          label: "Verified invitations can join automatically",
-          detail: "Other applications still wait for your review.",
+          label: "Automatic joining is enabled",
+          detail: "Current pilot limits and eligibility rules still apply.",
         },
       }[membershipIntake.mode]
     : null;
@@ -217,18 +238,19 @@ export default async function AdminHomePage() {
           {canManageEvents ? (
             <>
               <article>
-                <strong>{events.length}</strong>
+                <strong>{eventCountsReady ? events.length : "—"}</strong>
                 <span>Events</span>
+                {!eventCountsReady ? <small>Couldn’t load the complete count</small> : null}
               </article>
               <article>
-                <strong>{draftEvents}</strong>
+                <strong>{eventCountsReady ? draftEvents : "—"}</strong>
                 <span>Draft events</span>
               </article>
             </>
           ) : null}
           {role === "moderator" ? (
             <article>
-              <strong>{openReports}</strong>
+              <strong>{reportCountsReady ? openReports : "—"}</strong>
               <span>Open safety reports</span>
             </article>
           ) : null}
@@ -239,10 +261,10 @@ export default async function AdminHomePage() {
         <section className="admin-pilot-status" aria-label="Limited pilot status">
           <div>
             <p className="eyebrow">Limited pilot</p>
-            <strong>{joiningMode?.label ?? "Manual membership review"}</strong>
+            <strong>{!membershipIntakeResult.error && joiningMode ? joiningMode.label : "Joining settings couldn’t load"}</strong>
             <span>
-              {joiningMode?.detail ??
-                "Admit members in small batches and check their first journey personally."}
+              {!membershipIntakeResult.error && joiningMode ? joiningMode.detail :
+                "Open Membership and access to check the current setting. Nothing has been changed."}
             </span>
           </div>
           <div>
@@ -256,14 +278,14 @@ export default async function AdminHomePage() {
       ) : null}
 
       <AdminActionCentre
-        draftEvents={draftEvents}
-        hasEvents={events.length > 0}
-        openReports={openReports}
-        pendingCommunityApplications={pendingCommunityApplications}
+        draftEvents={eventCountsReady ? draftEvents : null}
+        hasEvents={eventCountsReady ? events.length > 0 : null}
+        openReports={reportCountsReady ? openReports : null}
+        pendingCommunityApplications={communityCountsReady ? pendingCommunityApplications : null}
         pendingMembers={pendingMembers}
         memberCountsReady={memberCountsReady}
-        pendingRefunds={refundResult.count ?? 0}
-        pendingRegistrations={registrationResult.count ?? 0}
+        pendingRefunds={eventCountsReady && adminCountReady(refundResult) ? refundResult.count : null}
+        pendingRegistrations={eventCountsReady && adminCountReady(registrationResult) ? registrationResult.count : null}
         role={role}
       />
 

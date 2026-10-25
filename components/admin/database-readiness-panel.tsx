@@ -23,15 +23,14 @@ export function DatabaseReadinessPanel({
   checks: DatabaseReleaseCheck[];
   migrationReady: boolean;
 }) {
-  if (!migrationReady) {
+  if (!migrationReady || !checks.length) {
     return (
       <section className="database-readiness" id="database-readiness">
         <div className="admin-empty">
-          <strong>Database readiness check is not installed yet</strong>
+          <strong>Database checks couldn’t load</strong>
           <p>
-            Apply <code>20260803010000_production_database_readiness.sql</code>,
-            then reload this page. No feature flag or member access changes when
-            this read-only check is installed.
+            Reload this workspace to try again. A failed read does not mean a
+            database update is missing. No feature settings or member access have changed.
           </p>
         </div>
       </section>
