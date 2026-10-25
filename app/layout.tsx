@@ -23,6 +23,7 @@ import "./community-member-refinement.css";
 import "./event-discovery-refinement.css";
 import "./featured-spots.css";
 import "./table-design.css";
+import "./members-club.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),

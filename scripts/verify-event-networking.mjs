@@ -3,7 +3,7 @@ import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import ts from 'typescript';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { networkingCountdown, networkingPhase, networkingRemaining } from '../lib/events/networking.ts';
+import { networkingCountdown, networkingStartCountdown, networkingPhase, networkingRemaining } from '../lib/events/networking.ts';
 import { formatEventTimeInput, parseEventTimeInput } from '../lib/events/zoned-datetime.ts';
 const root = new URL('../', import.meta.url);
 const read = path => readFileSync(new URL(path, root), 'utf8');
@@ -13,6 +13,7 @@ const base = { server_now: '2030-01-01T15:00:00Z', can_manage: false, eligible: 
   session: { starts_at:'2030-01-01T15:00:00Z', ends_at:'2030-01-01T15:30:00Z', minutes:5, changeover:60, status:'running', disabled:false, round_no:1, round_ends_at:'2030-01-01T15:05:00Z', next_at:'2030-01-01T15:06:00Z', prompt:'What are you building?', points:['Table 1'] },
   match: { id:'match-1', status:'offered', point:'Table 1', ends_at:'2030-01-01T15:05:00Z', accept_by:'2030-01-01T15:00:30Z', accepted:false, person:{ name:'Amina', introduction:'Building a food business', avatar_url:null } }, met:[] };
 assert.equal(networkingCountdown(272), '04:32');
+assert.equal(networkingStartCountdown(3661),'1h 1m');assert.equal(networkingStartCountdown(90000),'1d 1h');
 assert.equal(networkingRemaining(base.match.ends_at, Date.parse(base.server_now)),300);
 assert.equal(networkingRemaining(base.match.ends_at, Date.parse(base.match.ends_at)+1000),0);
 assert.equal(networkingPhase(base,Date.parse(base.server_now)),'offered');
@@ -34,7 +35,7 @@ function harness(initial = base) {
   const win={addEventListener:(name,fn)=>listeners.set('win:'+name,fn),removeEventListener:name=>listeners.delete('win:'+name)};
   const deps={React,useCallback:fn=>fn,useEffect:fn=>effects.push(fn),useMemo:fn=>fn(),useRef:ref,useState:state,createClient:()=>client,
     memberErrorMessage:()=> 'Please try again.',useActionDialog:()=>({ask:async()=>({note:'We met during networking.'}),dialog:null}),
-    formatEventTimeInput,parseEventTimeInput,networkingCountdown,networkingPhase,networkingRemaining,
+    formatEventTimeInput,parseEventTimeInput,networkingCountdown,networkingStartCountdown,networkingPhase,networkingRemaining,
     styles:new Proxy({},{get:(_,key)=>String(key)}),document:doc,window:win,performance,
     setInterval:fn=>{intervals.set(++intervalId,fn);return intervalId;},clearInterval:id=>intervals.delete(id)};
   const Component=new Function(...Object.keys(deps),`${source};return EventNetworking;`)(...Object.values(deps));
@@ -64,6 +65,9 @@ scheduling.button('Edit schedule',true).props.onClick();scheduling.forms(true)[0
 const saved=scheduling.calls.find(x=>x.name==='save_event_networking');assert.equal(saved.args.p_starts_at,base.session.starts_at.replace('00Z','00.000Z'));assert.deepEqual(saved.args.p_points,['Table 1']);assert.equal(saved.args.p_minutes,5);scheduling.cleanup();
 const notChecked=harness({...base,eligible:false,joined:false,match:null});await flush();assert(notChecked.html().includes('checked at the door'));assert(!notChecked.button('Join networking'));notChecked.cleanup();
 const unjoined=harness({...base,joined:false,match:null});await flush();assert(unjoined.button('Join networking'));unjoined.cleanup();
+const radar=harness({...base,match:null});await flush();assert(radar.html().includes('class="radar"'));assert(radar.html().includes('Finding your next introduction'));radar.button('Pause animation').props.onClick();assert(radar.html().includes('radarPaused'));assert(radar.button('Resume animation'));assert.equal(radar.calls.filter(x=>x.name!=='get_event_networking').length,0,'pausing animation does not leave or pause the session');radar.cleanup();
+const scheduled=harness({...base,joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}});await flush();assert(scheduled.html().includes('12:46'));assert(!scheduled.html().includes('<form'));scheduled.button('Join networking').props.onClick();assert(scheduled.html().includes('<form'));scheduled.cleanup();
+const waitingHost=harness({...base,joined:false,match:null,session:{...base.session,status:'scheduled'}});await flush();assert(waitingHost.html().includes('Waiting for the Host to begin'));assert(!waitingHost.html().includes('class="radar"'));waitingHost.cleanup();
 
 const sql=read('supabase/migrations/20261025060849_event_networking_pairs.sql');
 for(const guard of ['for update','unique(event_id,member_a,member_b)',"m.status='attended'",'public.is_blocked_pair','accepted_a and accepted_b',"interval '60 seconds'",'revoke all on schema hat_networking','revoke all on all functions in schema hat_networking','request_connection_with_context']) assert(sql.includes(guard),guard);
@@ -76,5 +80,8 @@ if(process.argv.includes('--preview')) {
   const target=new URL('tmp/networking-preview/',root);mkdirSync(target,{recursive:true});
   const css=read('components/events/event-networking.module.css')+'\nbody{margin:0;background:#f6f4ed;font-family:Arial,sans-serif;padding:24px;color:#263a31}main{max-width:900px;margin:auto}button{font:inherit;border:1px solid #bfcfc3;border-radius:8px;padding:10px 16px;background:white;color:#215846;cursor:pointer}.button-primary{background:#215846;color:white}h1{font-size:28px}';
   writeFileSync(new URL('index.html',target),`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking preview — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE PEOPLE · NO LIVE ACTIONS</p><h1>Meet someone new</h1>${p.html()}</main></body></html>`);p.cleanup();
+  for(const [name,extra] of [['radar',{match:null}],['strip',{joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}}]]){
+    const sample=harness({...base,...extra});await flush();writeFileSync(new URL(`${name}.html`,target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking ${name} — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${sample.html()}</main></body></html>`);sample.cleanup();
+  }
 }
 console.log('PASS: networking clock/phase boundaries, actual component rendering, double-submit lock, rejected-write recovery, stale-read hiding, reconnect, background pause, Host controls, eligibility guidance and scoped wiring. Multi-device L3 remains separate.');

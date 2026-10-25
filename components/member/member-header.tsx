@@ -34,9 +34,9 @@ const destinations: {
     href: "/communities",
     key: "community",
     label: "Communities",
-    shortLabel: "Community",
+    shortLabel: "Communities",
   },
-  { href: "/network", key: "members", label: "Members", shortLabel: "Members" },
+  { href: "/network", key: "members", label: "People", shortLabel: "People" },
   {
     href: "/messages",
     key: "messages",
@@ -141,7 +141,7 @@ export async function MemberHeader({
   );
   const mobileNavigation = navigation.filter(
     (destination) =>
-      destination.key !== "account" && destination.key !== "explore",
+      ["home", "events", "community", "members"].includes(destination.key),
   );
   const memberName = profile?.display_name?.trim() || "Member";
   const memberInitial = memberName.charAt(0).toUpperCase();
@@ -209,6 +209,9 @@ export async function MemberHeader({
           ))}
         </nav>
         <div className="member-header-actions">
+          <Link href="/messages" className="member-message-link" aria-label="Messages" aria-current={active === "messages" ? "page" : undefined}>
+            <MemberIcon destination="messages" /><span>Messages</span>
+          </Link>
           <Link
             aria-current={active === "search" ? "page" : undefined}
             aria-label="Search your table"

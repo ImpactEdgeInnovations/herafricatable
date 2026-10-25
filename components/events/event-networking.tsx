@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
 import { useActionDialog } from "@/components/ui/action-dialog";
 import { formatEventTimeInput, parseEventTimeInput } from "@/lib/events/zoned-datetime";
-import { networkingCountdown, networkingPhase, networkingRemaining, type NetworkingState } from "@/lib/events/networking";
+import { networkingCountdown, networkingStartCountdown, networkingPhase, networkingRemaining, type NetworkingState } from "@/lib/events/networking";
 import styles from "./event-networking.module.css";
 
 export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventStartsAt, eventEndsAt,
@@ -37,6 +37,8 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   const [points, setPoints] = useState(initial?.session?.points?.join("\n") ?? "Table 1\nTable 2\nTable 3\nTable 4\nTable 5");
   const [prompt, setPrompt] = useState(initial?.session?.prompt ?? "What would help your business most right now?");
   const [formOpen, setFormOpen] = useState(false);
+  const [entryOpen, setEntryOpen] = useState(false);
+  const [animationPaused, setAnimationPaused] = useState(false);
 
   const refresh = useCallback(() => {
     if (request.current) return request.current;
@@ -122,11 +124,13 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   const match = synced && ["offered", "talking"].includes(phase) ? state?.match : null;
   const time = (value: string) => new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone }).format(new Date(value));
   if (!manage && !session && !error) return null;
-  return <section className={styles.panel} id="event-networking" aria-labelledby={`networking-title-${manage ? "host" : "guest"}`}>
+  const startRemaining = networkingRemaining(session?.starts_at, now);
+  return <section className={`${styles.panel}${!manage && !state?.joined ? ` ${styles.strip}` : ""}`} id="event-networking" aria-labelledby={`networking-title-${manage ? "host" : "guest"}`}>
     <header className={styles.heading}><div><p className={styles.eyebrow}>{manage ? "Host tools · In person" : "Optional · In person"}</p><h2 id={`networking-title-${manage ? "host" : "guest"}`}>{manage ? "Networking rounds" : "Meet someone new"}</h2>
       {session ? <p>{time(session.starts_at)}–{time(session.ends_at)} · {session.minutes} minutes together · {session.changeover} seconds to change places</p> : <p>Short introductions for checked-in guests. No contact details are shared.</p>}</div>
       {session ? <span className={styles.badge}>{session.disabled ? "Disabled by Admin" : session.status === "running" ? `Round ${session.round_no || 1}` : session.status === "scheduled" ? "Starts with the Host" : session.status === "paused" ? "Paused" : "Finished"}</span> : null}
     </header>
+    {!manage && session && phase === "scheduled" ? <div className={styles.startStrip} aria-label="Networking start time"><span className={styles.liveDot} aria-hidden="true" /><strong>{!synced ? "Checking the start time…" : startRemaining > 0 ? "Networking starts in" : "Waiting for the Host to begin"}</strong>{synced && startRemaining > 0 ? <span className={styles.startTimer}>{networkingStartCountdown(startRemaining)}</span> : null}</div> : null}
     {error ? <div className={styles.notice} role="alert"><p>{error}</p><button type="button" className="button button-outline" onClick={() => void refresh()} disabled={busy}>Try again</button></div> : null}
     {manager ? <>
       {!session || session.status === "scheduled" ? <>
@@ -155,18 +159,24 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
       {phase === "finished" ? <p>Networking has finished. You can choose to stay connected with the people you met below.</p>
         : phase === "disabled" || phase === "paused" ? <p>The event team has paused networking. You do not need to do anything.</p>
         : !state.eligible ? <p>Have your event pass checked at the door first. Then return here to join networking.</p>
+        : !state.joined && !entryOpen ? <div className={styles.joinStrip}><p>{phase === "scheduled" ? "Meet other guests in short, guided conversations." : "Networking is open. Meet someone new, one conversation at a time."}</p><button className="button button-primary" disabled={locked} onClick={() => setEntryOpen(true)}>Join networking</button></div>
         : !state.joined ? <form className={styles.form} onSubmit={e => { e.preventDefault(); void run("join_event_networking", { p_join: true, p_introduction: introduction }, "You joined networking. Keep this panel open while taking part."); }}>
           <p>Meet other guests, one conversation at a time. Joining is your choice; you can leave whenever you like.</p>
           <label>A short introduction<textarea required minLength={5} maxLength={280} rows={2} value={introduction} onChange={e => setIntroduction(e.target.value)} placeholder="I run a food business and would enjoy meeting other founders." /></label><small>Only your first name, profile photo and introduction appear to your match. Please leave out contact details.</small>
           <button className="button button-primary" disabled={locked}>Join networking</button>
         </form> : <>
           {match ? <article className={styles.match}>
-            <div className={styles.person}>{match.person.avatar_url ? <img src={match.person.avatar_url} width={72} height={72} alt="" onError={e => { e.currentTarget.hidden = true; }} /> : <span className={styles.initial} aria-hidden="true">{match.person.name.slice(0,1)}</span>}<div><p className={styles.eyebrow}>{phase === "talking" ? "Your conversation" : "Your next introduction"}</p><h3>Meet {match.person.name}</h3><p>{match.person.introduction}</p></div></div>
+            <div className={styles.person}><div className={`${styles.matchOrbit}${phase === "offered" ? ` ${styles.newMatch}` : ""}`}>{match.person.avatar_url ? <img src={match.person.avatar_url} width={72} height={72} alt="" onError={e => { e.currentTarget.hidden = true; }} /> : <span className={styles.initial} aria-hidden="true">{match.person.name.slice(0,1)}</span>}</div><div><p className={styles.eyebrow}>{phase === "talking" ? "Your conversation" : "Your next introduction"}</p><h3>Meet {match.person.name}</h3><p>{match.person.introduction}</p></div></div>
             <div className={styles.meeting}><strong>Meet at {match.point}</strong><span className={styles.timer} aria-label={phase === "talking" ? "Conversation time remaining" : "Time to accept"}>{networkingCountdown(networkingRemaining(phase === "talking" ? match.ends_at : match.accept_by, now))}</span></div>
             {phase === "talking" ? <><p>{session.prompt || "What would you enjoy sharing with each other?"}</p><small>The timer is a friendly cue to move to the next introduction.</small></> : <p>{match.accepted ? "Waiting for the other person to accept. We will tell you when you are both ready." : "Would you like to meet? Both of you choose before the conversation starts."}</p>}
             <div className={styles.actions}>{phase === "offered" && !match.accepted ? <button className="button button-primary" disabled={locked} onClick={() => void run("answer_event_networking", { p_match_id: match.id, p_accept: true }, "Accepted. Waiting for both of you to be ready.")}>Accept introduction</button> : null}
               <button className="button button-outline" disabled={locked} onClick={() => void run("answer_event_networking", { p_match_id: match.id, p_accept: false }, "Introduction ended. You will not be paired with this person again at this event.")}>{phase === "talking" ? "Leave this round" : "Skip"}</button></div>
-          </article> : <div className={styles.waiting} role="status"><h3>{phase === "scheduled" ? "You are ready" : phase === "changeover" ? "Time to change places" : "Ready for someone new"}</h3><p>{phase === "scheduled" ? "The Host will start the session. Keep this panel open." : "You may have a short break if no new partner is available. We never repeat an introduction at this event."}</p>{phase === "changeover" && session.next_at ? <span className={styles.timer}>{networkingCountdown(networkingRemaining(session.next_at, now))}</span> : null}</div>}
+          </article> : <div className={`${styles.waiting}${phase === "waiting" && synced ? ` ${styles.searching}` : ""}`}>
+            {phase === "waiting" && synced ? <div className={`${styles.radar}${animationPaused ? ` ${styles.radarPaused}` : ""}`} aria-hidden="true"><i /><i /><span>H</span></div> : null}
+            <div><h3 role="status">{!synced ? "Reconnecting to networking" : phase === "scheduled" ? "You are ready" : phase === "changeover" ? "Time to change places" : "Finding your next introduction"}</h3><p>{phase === "scheduled" ? "The Host will start the session. Keep this panel open." : "You may have a short break if no new partner is available. We never repeat an introduction at this event."}</p>
+            {synced && phase === "waiting" && session.round_ends_at ? <p className={styles.roundTime}>Round {session.round_no} · <span className={styles.timer}>{networkingCountdown(networkingRemaining(session.round_ends_at, now))}</span> left</p> : null}
+            {synced && phase === "waiting" ? <button className={styles.motionToggle} type="button" aria-pressed={animationPaused} onClick={() => setAnimationPaused(!animationPaused)}>{animationPaused ? "Resume animation" : "Pause animation"}</button> : null}
+            {phase === "changeover" && session.next_at ? <p className={styles.roundTime}>Next introduction in <span className={styles.timer}>{networkingCountdown(networkingRemaining(session.next_at, now))}</span></p> : null}</div></div>}
           <div className={styles.actions}><button className="button button-outline" disabled={busy} onClick={() => void run("join_event_networking", { p_join: false }, "You left networking. Your event place is unchanged.")}>Leave networking</button><button className="button button-quiet" disabled={busy} onClick={() => void help()}>Get help</button></div>
         </>}
       {state.met?.length ? <details className={styles.roster}><summary>People you met · {state.met.length}</summary><ul>{state.met.map(p => <li key={p.match_id}><span>{p.name}</span><button className="button button-outline" disabled={locked} onClick={() => void connect(p)}>Stay connected</button></li>)}</ul><p>Connections are optional. Nothing is sent until you confirm.</p></details> : null}

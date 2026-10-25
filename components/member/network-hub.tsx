@@ -1221,7 +1221,7 @@ export function NetworkHub({
                     onClick={() => void request(member.user_id, null)}
                   >
                     {connectionModeFor(member.user_id) === "open"
-                      ? "Ask to connect"
+                      ? "Connect"
                       : connectionModeFor(member.user_id) === "curated_only"
                         ? "Team introductions only"
                         : "Not available right now"}
@@ -1253,7 +1253,7 @@ export function NetworkHub({
           <div className="member-directory-content">
         <header>
           <div>
-            <h2 id="member-directory-title">Find members</h2>
+            <h2 id="member-directory-title">Browse people</h2>
             <p>
               Only shared profiles appear here. Messaging opens when you both agree to connect.
             </p>
@@ -1350,7 +1350,7 @@ export function NetworkHub({
                       : member.connection_status === "pending"
                         ? "Request pending"
                         : connectionModeFor(member.user_id) === "open"
-                          ? "Ask to connect"
+                          ? "Connect"
                           : connectionModeFor(member.user_id) ===
                               "curated_only"
                             ? "Team introductions only"

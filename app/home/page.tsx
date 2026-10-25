@@ -137,6 +137,11 @@ export default async function MemberHomePage() {
     .limit(1)
     .maybeSingle();
   const nextEvent = nextEventRow as unknown as NextEvent | null;
+  const nextEventImages = nextEvent ? await Promise.all([
+    supabase.rpc("list_public_event_proposal_posters", { p_event_ids: [nextEvent.id] }),
+    supabase.rpc("list_public_event_host_covers", { p_event_ids: [nextEvent.id] }),
+  ]) : [];
+  const nextEventHasPoster = nextEventImages.some(result => !result.error && Array.isArray(result.data) && result.data.length > 0);
   const { data: nextRegistration } = nextEvent
     ? await supabase
         .from("registration_requests")
@@ -380,7 +385,7 @@ export default async function MemberHomePage() {
           label: "Membership active",
           title: `Welcome${firstName ? `, ${firstName}` : ""}.`,
           description:
-            "Your membership is ready. Meet members, join an event, or continue a conversation from here.",
+            "Here’s what’s happening around your Table.",
           action: "Find members",
           href: "/network",
         }
@@ -691,6 +696,7 @@ export default async function MemberHomePage() {
           upcoming={nextEvent ? {
             title: nextEvent.title,
             href: `/events/${nextEvent.slug}`,
+            poster: nextEventHasPoster ? `/api/events/${nextEvent.id}/poster` : undefined,
             when: new Intl.DateTimeFormat("en-KE", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: "Africa/Nairobi", timeZoneName: "short" }).format(new Date(nextEvent.starts_at)),
             location: nextEvent.format === "online" || nextEvent.format === "virtual" ? "Online" : [nextEvent.venues?.name, nextEvent.venues?.city].filter(Boolean).join(", ") || "See event details for the location",
           } : undefined}

@@ -38,10 +38,14 @@ for (const path of ['/home', '/events', '/communities', '/network', '/messages',
 assert(headerHtml.includes('Sign out') && headerHtml.includes('aria-current="page"'));
 assert(!headerHtml.includes('/admin'), 'A visual navigation change must not invent an Admin grant');
 assert(headerHtml.includes('aria-label="Member shortcuts"'));
+const dock=headerHtml.split('aria-label="Member shortcuts"')[1].split('</nav>')[0];
+assert.equal((dock.match(/<a /g)||[]).length,4,'Four stable mobile destinations');
+for(const label of ['Home','Events','Communities','People'])assert(dock.includes(`>${label}`)||dock.includes(label));
+assert(!dock.includes('href="/messages"'));assert(headerHtml.includes('class="member-message-link"'),'Messages remains accessible from header');
 signedIn = false;
 assert(!renderToStaticMarkup(await MemberHeader({ active: 'events', label: 'Events' })).includes('class="member-sidebar"'));
 
-const { YourTableToday } = new Function('React', 'Link', `${compile(read('components/member/your-table-today.tsx'))};return {YourTableToday};`)(React, Link);
+const { YourTableToday } = new Function('React', 'Link', 'EventPosterImage', `${compile(read('components/member/your-table-today.tsx'))};return {YourTableToday};`)(React, Link,({src,alt})=>React.createElement('figure',{className:'event-detail-poster'},React.createElement('img',{src,alt})));
 const suggestion = (title, href, kicker, action, description) => ({ title, href, kicker, action, description });
 const props = {
   community: suggestion('Food, Fitness & Fashion', '/communities/fixture', 'Your Community', 'Open Community', 'Pick up a conversation, share an idea or see what’s coming up.'),
@@ -51,12 +55,15 @@ const props = {
 const todayHtml = renderToStaticMarkup(React.createElement(YourTableToday, props));
 assert.equal((todayHtml.match(/<article/g) || []).length, 3);
 assert(todayHtml.indexOf('Food, Fitness') < todayHtml.indexOf('Meet someone new'));
+assert(todayHtml.indexOf('Your updates') < todayHtml.indexOf('Food, Fitness'),'One personalised next action leads the home');
+assert.equal((todayHtml.match(/button button-primary/g)||[]).length,1);
 for (const s of Object.values(props)) assert(todayHtml.includes(`href="${s.href}"`));
 assert(todayHtml.includes('Food, Fitness &amp; Fashion'), 'Real titles must remain escaped');
 assert(!todayHtml.includes('Coming up at the Table'), 'Do not invent an event when none is supplied');
 const upcoming = { title: 'Food & Tech Event', when: '6 November, 10:00 EAT', location: 'Nairobi', href: '/events/fixture' };
 const populatedToday = React.createElement(YourTableToday, { ...props, upcoming });
 assert(renderToStaticMarkup(populatedToday).includes('href="/events/fixture"'));
+assert(renderToStaticMarkup(React.createElement(YourTableToday,{...props,upcoming:{...upcoming,poster:'/api/events/example/poster'}})).includes('src="/api/events/example/poster"'),'Home uses the authorised event image path rather than fake member photography');
 
 const layout = read('app/layout.tsx');
 assert(layout.includes('className="hat-design-c"'));
@@ -78,4 +85,4 @@ if (process.argv.includes('--preview')) {
       React.createElement('p', null, 'Here are a few places to start today.'))), populatedToday);
   writeFileSync(new URL('index.html', output), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HAT actual-component visual QA</title><link rel="stylesheet" href="styles.css"></head><body class="hat-design-c"><div id="hat-page-content">${renderToStaticMarkup(content)}</div></body></html>`);
 }
-console.log('Green design render passed: real member navigation and sign out, no invented Admin grant, Community-first suggestions, real destinations, escaped titles, honest event absence and green PWA identity. Visual fixture is not live acceptance.');
+console.log('Green design render passed: four mobile destinations, visible messages/profile/sign out, no invented Admin grant, one leading next action, real destinations, escaped titles, honest event absence and green PWA identity. Visual fixture is not live acceptance.');

@@ -19,6 +19,11 @@ export function networkingRemaining(end: string | null | undefined, serverNow: n
 export function networkingCountdown(seconds: number) {
   return `${Math.floor(seconds / 60).toString().padStart(2, "0")}:${(seconds % 60).toString().padStart(2, "0")}`;
 }
+export function networkingStartCountdown(seconds: number) {
+  if (seconds >= 86400) return `${Math.floor(seconds / 86400)}d ${Math.floor(seconds % 86400 / 3600)}h`;
+  if (seconds >= 3600) return `${Math.floor(seconds / 3600)}h ${Math.floor(seconds % 3600 / 60)}m`;
+  return networkingCountdown(seconds);
+}
 export function networkingPhase(state: NetworkingState, now: number) {
   const s = state.session;
   if (!s) return "not_scheduled";

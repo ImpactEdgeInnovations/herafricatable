@@ -4,6 +4,8 @@ Updated: 25 October 2026. First release: pairs only, up to 200 participants per 
 
 ## What is implemented
 
+Visual follow-up: an in-page countdown strip introduces the scheduled session, a gentle green radar appears only while a joined guest waits, and a portrait card replaces it when matched. No simulated match percentage or automatic sounds. Reduced-motion preferences and a local Pause animation control are supported; pausing animation never pauses the actual session. See [members’ club UI handover](MEMBERS_CLUB_UI_HANDOVER_20261025.md).
+
 - A Host schedules one networking session within a published in-person or hybrid event: start/finish, 2–15 minute conversations, 30–180 second changeover, 1–30 distinct meeting points, optional conversation starter. Default proposal is a 30-minute session.
 - Host starts at or after the scheduled time, pauses, resumes or finishes. Pausing freezes the round, but never extends the event/session's hard finish. Super Admin can disable/re-enable the feature for that event; a Host cannot override this.
 - Guests take part on the event page, without navigation. Joining requires explicit consent, a checked-in (`attended`) valid place, a visible active/pending profile and a valid associated order if present. Free approved orders and paid/fulfilled orders qualify. Cancelled/refunded orders do not.

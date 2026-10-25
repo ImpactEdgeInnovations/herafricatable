@@ -348,7 +348,7 @@ export default async function EventDetailPage({ params, searchParams }: { params
       <div className="event-detail-back"><Link href="/events">← All events</Link>{viewer.identity && !memberPreview ? <span>{viewer.identity}</span> : null}{viewer.mayPreview ? <Link href={memberPreview ? `/events/${slug}` : `/events/${slug}?preview=member`}>{memberPreview ? "Return to your event view" : "Preview the member view"}</Link> : null}</div>
       {memberPreview ? <section className="event-view-preview" aria-label="Read-only member preview"><strong>Member preview · read-only</strong><p>You are seeing the page for a member who has not booked. Booking, Community joining and posting are disabled. Private guest details and management tools are not shown.</p></section> : null}
       {!roleChecksReady ? <div className="event-view-preview" role="status"><strong>We could not check your event access.</strong><p>Your permissions have not changed. Reload before booking or opening event controls.</p><Link href={`/events/${slug}`}>Try again</Link></div> : null}
-      <section className="event-detail-hero" aria-label="Event details">
+      <section className="event-detail-hero" aria-label="Event details" id="event-details">
         <div><p className="eyebrow">{event.audience === "community" ? "Community meetup" : event.format === "hybrid" ? "In person & online" : event.format === "online" ? "Online" : "In person"} · {event.venues?.city ?? "Online"}</p><h1>{event.title}</h1><p>{event.summary || "See when, where and how to join below."}</p>{eventCommunity && event.audience === "community" ? <span className="event-community-badge">For active members of {eventCommunity.name}</span> : null}</div>
         {eventImage ? <EventPosterImage src={eventImage.url} alt={eventImage.alt} /> : null}
         <aside>
@@ -361,10 +361,11 @@ export default async function EventDetailPage({ params, searchParams }: { params
       {publicHost ? <section className="event-public-host" aria-label="Event Host"><div className="event-public-host-identity"><span className="event-public-host-monogram" aria-hidden="true">{publicHost.display_name.trim().slice(0,1)}</span><div><small>Hosted by</small><h2>{publicHost.display_name}</h2>{publicHost.introduction ? <p>{publicHost.introduction}</p> : null}</div></div><div className="event-public-host-links">{publicHost.website_url ? <a href={publicHost.website_url} target="_blank" rel="noopener noreferrer nofollow">Website ↗</a> : null}{publicHost.linkedin_url ? <a href={publicHost.linkedin_url} target="_blank" rel="noopener noreferrer nofollow">LinkedIn ↗</a> : null}{publicHost.instagram_url ? <a href={publicHost.instagram_url} target="_blank" rel="noopener noreferrer nofollow">Instagram ↗</a> : null}{publicHost.contact_email ? <a href={`mailto:${encodeURIComponent(publicHost.contact_email)}`}>Email Host</a> : null}{publicHost.contact_phone ? <a href={`tel:${publicHost.contact_phone.replace(/[^\d+]/g,"")}`}>Call Host</a> : null}</div></section> : null}
 
       <nav className="event-detail-jump-links" aria-label="On this event page">
+        <a href="#event-details">Details</a>
+        {sessions?.length ? <a href="#event-programme">Programme</a> : null}
+        {eventCommunity ? <a href="#event-community">Community</a> : null}
         {(viewer.showBooking || memberPreview) && !hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? <a href="#registration">Places</a> : null}
         {gatheringRoomHref ? <Link href={`${gatheringRoomHref}#questions`}>Conversation</Link> : <a href="#questions">Questions</a>}
-        {eventCommunity ? <a href="#event-community">Community</a> : null}
-        {sessions?.length ? <a href="#event-programme">Programme</a> : null}
         {!memberPreview && networkingResult.data?.session ? <a href="#event-networking">Networking</a> : null}
         {hasEnded && recap ? <a href="#event-recap">Recap</a> : null}
       </nav>

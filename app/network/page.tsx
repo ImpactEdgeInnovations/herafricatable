@@ -106,11 +106,11 @@ export default async function NetworkPage({
   ].filter((area): area is string => Boolean(area));
   return (
     <main className="network-page">
-      <MemberHeader active="members" label="Members" />
+      <MemberHeader active="members" label="People" />
       <section className="network-hero">
         <div>
-          <p className="eyebrow">Members</p>
-          <h1>Meet members</h1>
+          <p className="eyebrow">Your network</p>
+          <h1>People to meet</h1>
           <p>Find people to meet, or keep in touch with your connections.</p>
         </div>
         {!networkResult.error && (accepted.length || pending.length) ? <aside aria-label="Network summary">
