@@ -11,6 +11,8 @@ import { PilotEventCancellation, type PilotCancellation } from "@/components/eve
 import { EventHostExtraTools } from "@/components/events/event-host-extra-tools";
 import { EventRepeatPlanner } from "@/components/events/event-repeat-planner";
 import { EventHostRequests } from "@/components/events/event-host-requests";
+import { EventNetworking } from "@/components/events/event-networking";
+import type { NetworkingState } from "@/lib/events/networking";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -30,7 +32,11 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
   const { data: selfPublish } = await supabase.rpc("can_self_publish_pilot_event", { p_event_id: workspace.event_id });
   const { data: canCancel } = await supabase.rpc("can_cancel_pilot_event", { p_event_id: workspace.event_id });
   const hasEnded = new Date(workspace.ends_at).getTime() < Date.now();
-  const appearanceResult = await supabase.from("events").select("appearance_accent_key").eq("id", workspace.event_id).maybeSingle();
+  const appearanceResult = await supabase.from("events").select("appearance_accent_key,format").eq("id", workspace.event_id).maybeSingle();
+  const inPersonNetworking = ["in_person", "hybrid"].includes(appearanceResult.data?.format ?? "");
+  const networkingResult = workspace.event_status === "published" && !hasEnded && inPersonNetworking
+    ? await supabase.rpc("get_event_networking", { p_event_id: workspace.event_id })
+    : { data: null, error: null };
   const freeBookingResult = workspace.event_status === "published" && !hasEnded
     ? await supabase.from("events").select("free_instant_booking,registration_mode")
         .eq("id", workspace.event_id).maybeSingle()
@@ -69,6 +75,7 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
     <MemberHeader active="events" label="Your event" />
     <EventHostWorkspace currentUserId={user.id} initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} communities={(communitiesResult.data as EventHostCommunity[] | null) ?? []} communityLinksReady={!communitiesResult.error} selfPublish={selfPublish === true} />
     <EventHostExtraTools>
+      {workspace.event_status === "published" && !hasEnded && inPersonNetworking ? <EventNetworking key={workspace.event_id} eventId={workspace.event_id} timeZone={workspace.timezone} eventStartsAt={workspace.starts_at} eventEndsAt={workspace.ends_at} initial={networkingResult.data as NetworkingState | null} initialError={Boolean(networkingResult.error)} manage /> : null}
       {workspace.event_status === "published" && !hasEnded ? <FeaturedRequestPanel kind="event" targetId={workspace.event_id}/> : null}
       {workspace.event_status === "published" && !hasEnded ? <details id="guest-requests"><summary>Guest requests and waiting list</summary><EventHostRequests eventId={workspace.event_id}/></details> : null}
       {["published", "completed"].includes(workspace.event_status) ? <EventRepeatPlanner eventId={workspace.event_id} currentUserId={user.id} sourceStartsAt={workspace.starts_at} /> : null}

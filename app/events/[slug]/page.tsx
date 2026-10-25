@@ -34,6 +34,8 @@ import {
   type DestinationInvitation,
 } from "@/components/member/destination-invitation-panel";
 import { FloatingTableGuide } from "@/components/member/floating-table-guide";
+import { EventNetworking } from "@/components/events/event-networking";
+import type { NetworkingState } from "@/lib/events/networking";
 
 export const dynamic = "force-dynamic";
 
@@ -245,6 +247,9 @@ export default async function EventDetailPage({ params, searchParams }: { params
     : [{ data: null }, { data: [] }, { data: [] }, { data: null, error: null }, { data: [] }];
   const followUp = ((followUpResult.data as { available: boolean; interested: boolean }[] | null) ?? [])[0] ?? null;
   const roundStatus = ((roundStatusResult.data as { enabled: boolean; opted_in: boolean }[] | null) ?? [])[0] ?? null;
+  const networkingResult = isConfirmedGuest && !memberPreview && ["in_person", "hybrid"].includes(event.format)
+    ? await supabase.rpc("get_event_networking", { p_event_id: event.id })
+    : { data: null, error: null };
   const archiveResult = user && !memberPreview && memberProfile?.access_status === "active" && hasEnded
     ? await supabase.rpc("get_my_member_event_archive", { p_event_id: event.id })
     : { data: [], error: null };
@@ -360,8 +365,11 @@ export default async function EventDetailPage({ params, searchParams }: { params
         {gatheringRoomHref ? <Link href={`${gatheringRoomHref}#questions`}>Conversation</Link> : <a href="#questions">Questions</a>}
         {eventCommunity ? <a href="#event-community">Community</a> : null}
         {sessions?.length ? <a href="#event-programme">Programme</a> : null}
+        {!memberPreview && networkingResult.data?.session ? <a href="#event-networking">Networking</a> : null}
         {hasEnded && recap ? <a href="#event-recap">Recap</a> : null}
       </nav>
+
+      {isConfirmedGuest && !memberPreview && ["in_person", "hybrid"].includes(event.format) && (networkingResult.data?.session || (networkingResult.error && networkingResult.error.code !== "PGRST202")) ? <EventNetworking key={event.id} eventId={event.id} timeZone={event.timezone} initial={networkingResult.data as NetworkingState | null} initialError={Boolean(networkingResult.error)} /> : null}
 
       {!memberPreview && roleChecksReady && !hasEnded && canHostEvent === true ? <div className="event-host-shortcut"><span>{eventImage ? "Your event tools" : poster || cover ? "Your poster could not load. Check it in your Host tools." : "No poster added yet."}</span><div><Link href={`/events/${slug}/host#host-image`}>{eventImage ? "Manage poster" : "Add or check poster"}</Link><Link href={`/events/${slug}/host#host-host`}>{publicHost ? "Edit Host details" : "Add Host details"}</Link></div></div> : null}
 

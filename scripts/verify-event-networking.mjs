@@ -1,0 +1,80 @@
+import assert from 'node:assert/strict';
+import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import ts from 'typescript';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { networkingCountdown, networkingPhase, networkingRemaining } from '../lib/events/networking.ts';
+import { formatEventTimeInput, parseEventTimeInput } from '../lib/events/zoned-datetime.ts';
+const root = new URL('../', import.meta.url);
+const read = path => readFileSync(new URL(path, root), 'utf8');
+const compile = source => ts.transpileModule(source.replace(/^import[\s\S]*?;\n/gm, '').replace(/^export /gm, ''), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None, jsx: ts.JsxEmit.React } }).outputText;
+const source = compile(read('components/events/event-networking.tsx'));
+const base = { server_now: '2030-01-01T15:00:00Z', can_manage: false, eligible: true, joined: true, introduction: 'I run a business',
+  session: { starts_at:'2030-01-01T15:00:00Z', ends_at:'2030-01-01T15:30:00Z', minutes:5, changeover:60, status:'running', disabled:false, round_no:1, round_ends_at:'2030-01-01T15:05:00Z', next_at:'2030-01-01T15:06:00Z', prompt:'What are you building?', points:['Table 1'] },
+  match: { id:'match-1', status:'offered', point:'Table 1', ends_at:'2030-01-01T15:05:00Z', accept_by:'2030-01-01T15:00:30Z', accepted:false, person:{ name:'Amina', introduction:'Building a food business', avatar_url:null } }, met:[] };
+assert.equal(networkingCountdown(272), '04:32');
+assert.equal(networkingRemaining(base.match.ends_at, Date.parse(base.server_now)),300);
+assert.equal(networkingRemaining(base.match.ends_at, Date.parse(base.match.ends_at)+1000),0);
+assert.equal(networkingPhase(base,Date.parse(base.server_now)),'offered');
+assert.equal(networkingPhase({...base,match:{...base.match,status:'active'}},Date.parse(base.server_now)),'talking');
+assert.equal(networkingPhase({...base,session:{...base.session,disabled:true}},Date.parse(base.server_now)),'disabled');
+assert.equal(networkingPhase({...base,session:{...base.session,status:'paused'}},Date.parse(base.server_now)),'paused');
+assert.equal(networkingPhase(base,Date.parse(base.session.ends_at)),'finished');
+assert.equal(networkingPhase({...base,match:null},Date.parse('2030-01-01T15:05:01Z')),'changeover');
+assert.equal(networkingPhase(base,Date.parse('2030-01-01T15:00:31Z')),'waiting','expired offer cannot be accepted through stale UI');
+
+const flush = async () => { for(let i=0;i<5;i++) await new Promise(resolve => setImmediate(resolve)); };
+function harness(initial = base) {
+  let current=structuredClone(initial), fail=false, mutationError=false, cursor=0, values=[], effects=[], intervalId=0;
+  const calls=[], intervals=new Map(), listeners=new Map();
+  const client={ rpc:async(name,args)=>{calls.push({name,args}); if(fail) throw Error('offline'); if(name==='get_event_networking')return {data:current,error:null}; if(mutationError)throw Error('write failed'); return {data:null,error:null}; } };
+  const state=initialValue=>{const i=cursor++; if(!(i in values))values[i]=typeof initialValue==='function'?initialValue():initialValue; return [values[i],v=>{values[i]=typeof v==='function'?v(values[i]):v;}];};
+  const ref=v=>{const i=cursor++; return values[i]??=( {current:v} );};
+  const doc={hidden:false,addEventListener:(name,fn)=>listeners.set('doc:'+name,fn),removeEventListener:name=>listeners.delete('doc:'+name)};
+  const win={addEventListener:(name,fn)=>listeners.set('win:'+name,fn),removeEventListener:name=>listeners.delete('win:'+name)};
+  const deps={React,useCallback:fn=>fn,useEffect:fn=>effects.push(fn),useMemo:fn=>fn(),useRef:ref,useState:state,createClient:()=>client,
+    memberErrorMessage:()=> 'Please try again.',useActionDialog:()=>({ask:async()=>({note:'We met during networking.'}),dialog:null}),
+    formatEventTimeInput,parseEventTimeInput,networkingCountdown,networkingPhase,networkingRemaining,
+    styles:new Proxy({},{get:(_,key)=>String(key)}),document:doc,window:win,performance,
+    setInterval:fn=>{intervals.set(++intervalId,fn);return intervalId;},clearInterval:id=>intervals.delete(id)};
+  const Component=new Function(...Object.keys(deps),`${source};return EventNetworking;`)(...Object.values(deps));
+  function render(manage=false){cursor=0;effects=[];return Component({eventId:'event',timeZone:'Africa/Nairobi',initial,manage});}
+  let tree=render(); const cleanup=effects.map(fn=>fn());
+  function elements(node){if(!node||typeof node!=='object')return [];return [node,...React.Children.toArray(node.props?.children).flatMap(elements)];}
+  function button(label,manage=false){return elements(render(manage)).find(e=>e.type==='button'&&text(e)===label);}
+  function text(node){if(typeof node==='string'||typeof node==='number')return String(node);return React.Children.toArray(node?.props?.children).map(text).join('');}
+  return {calls,intervals,listeners,doc,render,button,forms:manage=>elements(render(manage)).filter(e=>e.type==='form'),html:manage=>renderToStaticMarkup(render(manage)),set:v=>{current=structuredClone(v);},fail:v=>{fail=v;},mutationError:v=>{mutationError=v;},poll:async()=>{[...intervals.values()][0]();await flush();},cleanup:()=>cleanup.forEach(fn=>fn?.())};
+}
+const h=harness(); await flush();
+assert(h.html().includes('Meet Amina'));assert(h.html().includes('Accept introduction'));
+h.button('Accept introduction').props.onClick();h.button('Accept introduction').props.onClick();await flush();
+assert.equal(h.calls.filter(x=>x.name==='answer_event_networking').length,1,'double click produces one write');
+assert.deepEqual(h.calls.find(x=>x.name==='answer_event_networking').args,{p_event_id:'event',p_match_id:'match-1',p_accept:true});
+h.mutationError(true);h.button('Skip').props.onClick();await flush();assert(!h.button('Skip').props.disabled,'write rejection releases busy state');
+h.fail(true);await h.poll();assert(h.html().includes('Reconnecting'));assert(!h.html().includes('Meet Amina'),'failed read hides stale match');
+h.fail(false);await h.poll();assert(h.html().includes('Meet Amina'),'successful poll recovers');
+const before=h.calls.length;h.doc.hidden=true;await h.poll();assert.equal(h.calls.length,before,'hidden app does not heartbeat');h.doc.hidden=false;
+h.set({...base,match:null});await h.poll();assert(h.html().includes('That introduction has ended'),'partner loss has discreet feedback');
+h.cleanup();assert.equal(h.intervals.size,0);assert.equal(h.listeners.size,0);
+const host=harness({...base,can_manage:true,is_admin:true,match:null,people:[{name:'Amina',ready:true,paired:true}],help:[{id:'help',name:'Amina',note:'Help finding the table'}]});await flush();
+assert(host.html(true).includes('Disable networking'));assert(host.html(true).includes('Mark handled'));assert(!host.html(true).includes('Accept introduction'));
+host.button('Pause',true).props.onClick();await flush();assert.equal(host.calls.find(x=>x.name==='control_event_networking').args.p_action,'pause');host.cleanup();
+const scheduling=harness({...base,can_manage:true,match:null,session:{...base.session,status:'scheduled'}});await flush();
+scheduling.button('Edit schedule',true).props.onClick();scheduling.forms(true)[0].props.onSubmit({preventDefault(){}});await flush();
+const saved=scheduling.calls.find(x=>x.name==='save_event_networking');assert.equal(saved.args.p_starts_at,base.session.starts_at.replace('00Z','00.000Z'));assert.deepEqual(saved.args.p_points,['Table 1']);assert.equal(saved.args.p_minutes,5);scheduling.cleanup();
+const notChecked=harness({...base,eligible:false,joined:false,match:null});await flush();assert(notChecked.html().includes('checked at the door'));assert(!notChecked.button('Join networking'));notChecked.cleanup();
+const unjoined=harness({...base,joined:false,match:null});await flush();assert(unjoined.button('Join networking'));unjoined.cleanup();
+
+const sql=read('supabase/migrations/20261025060849_event_networking_pairs.sql');
+for(const guard of ['for update','unique(event_id,member_a,member_b)',"m.status='attended'",'public.is_blocked_pair','accepted_a and accepted_b',"interval '60 seconds'",'revoke all on schema hat_networking','revoke all on all functions in schema hat_networking','request_connection_with_context']) assert(sql.includes(guard),guard);
+assert(!sql.includes('grant select'),'private networking tables must not gain direct client reads');
+assert(read('app/events/[slug]/page.tsx').includes('<EventNetworking'));
+assert(read('app/events/[slug]/host/page.tsx').includes('<EventNetworking'));
+assert(read('components/admin/event-command-centre.tsx').includes('<EventNetworkingControl'));
+if(process.argv.includes('--preview')) {
+  const p=harness({...base,match:{...base.match,status:'active'},met:[{match_id:'old',name:'Zuri'}]});await flush();
+  const target=new URL('tmp/networking-preview/',root);mkdirSync(target,{recursive:true});
+  const css=read('components/events/event-networking.module.css')+'\nbody{margin:0;background:#f6f4ed;font-family:Arial,sans-serif;padding:24px;color:#263a31}main{max-width:900px;margin:auto}button{font:inherit;border:1px solid #bfcfc3;border-radius:8px;padding:10px 16px;background:white;color:#215846;cursor:pointer}.button-primary{background:#215846;color:white}h1{font-size:28px}';
+  writeFileSync(new URL('index.html',target),`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking preview — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE PEOPLE · NO LIVE ACTIONS</p><h1>Meet someone new</h1>${p.html()}</main></body></html>`);p.cleanup();
+}
+console.log('PASS: networking clock/phase boundaries, actual component rendering, double-submit lock, rejected-write recovery, stale-read hiding, reconnect, background pause, Host controls, eligibility guidance and scoped wiring. Multi-device L3 remains separate.');

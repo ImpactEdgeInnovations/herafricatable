@@ -11,6 +11,7 @@ import type { AdminEvent } from "@/components/admin/event-manager";
 import type { PilotReadinessStep } from "@/lib/event-pilot-readiness";
 import { EventIntroSafety } from "@/components/admin/event-intro-safety";
 import { EventRoundReview } from "@/components/admin/event-round-review";
+import { EventNetworkingControl } from "@/components/admin/event-networking-control";
 import { eventToolHref } from "@/lib/events/admin-event-link";
 import { hostDraftPublicationCutoff } from "@/lib/events/host-publication-window";
 
@@ -269,6 +270,7 @@ export function EventCommandCentre({
               ) : null}
               {canControlLifecycle && ["published", "completed"].includes(event.status) ? <EventIntroSafety eventId={event.id} /> : null}
               {canControlLifecycle && ["published", "completed"].includes(event.status) ? <EventRoundReview eventId={event.id} /> : null}
+              {canControlLifecycle && event.status === "published" && event.format !== "virtual" ? <EventNetworkingControl eventId={event.id} timeZone={event.timezone} startsAt={event.starts_at} endsAt={event.ends_at} /> : null}
               <aside><strong>Clear responsibility</strong><p>Event Hosts shape the experience and answer attendee questions. Admin controls public publication, registration decisions, payments, refunds and safety intervention.</p></aside>
               <footer>
                 {event.status === "published" ? <Link className="button button-outline" href={`/events/${event.slug}`}>View event page</Link> : null}
