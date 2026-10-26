@@ -9,7 +9,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 type DoorEvent = {
   event_id: string; event_slug: string; event_title: string;
-  starts_at: string; ends_at: string; venue_name: string | null;
+  starts_at: string; ends_at: string; venue_name: string | null; timezone: string;
 };
 
 export default async function EventDoorPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -22,6 +22,6 @@ export default async function EventDoorPage({ params }: { params: Promise<{ slug
   if (error || !event) notFound();
   return <main className="admin-command-center event-command-page">
     <MemberHeader active="events" label="Guest arrival" />
-    <EventDoorConsole eventId={event.event_id} title={event.event_title} startsAt={event.starts_at} venue={event.venue_name} />
+    <EventDoorConsole eventId={event.event_id} title={event.event_title} startsAt={event.starts_at} venue={event.venue_name} timeZone={event.timezone} />
   </main>;
 }

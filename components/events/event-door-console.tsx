@@ -8,8 +8,8 @@ type DoorResult = { outcome: string; message: string; attendee_name: string | nu
 type Detector = { detect(source: HTMLVideoElement): Promise<{ rawValue: string }[]> };
 type DetectorConstructor = new (options?: { formats?: string[] }) => Detector;
 
-export function EventDoorConsole({ eventId, title, startsAt, venue }: {
-  eventId: string; title: string; startsAt: string; venue: string | null;
+export function EventDoorConsole({ eventId, title, startsAt, venue, timeZone = "Africa/Nairobi" }: {
+  eventId: string; title: string; startsAt: string; venue: string | null; timeZone?: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [code, setCode] = useState("");
@@ -38,6 +38,7 @@ export function EventDoorConsole({ eventId, title, startsAt, venue }: {
     busyRef.current = true;
     setBusy(true);
     setResult(null);
+    try {
     const { data, error } = await supabase.rpc("door_check_in_event_member", {
       p_event_id: eventId,
       p_credential: value.trim(),
@@ -48,8 +49,9 @@ export function EventDoorConsole({ eventId, title, startsAt, venue }: {
       ? { outcome: "error", message: memberErrorMessage(error, "check this pass"), attendee_name: null, checked_in_at: null }
       : ((data?.[0] as DoorResult | undefined) ?? { outcome: "error", message: "No answer was returned. Please try again.", attendee_name: null, checked_in_at: null }));
     if (!error && data?.[0]?.outcome === "checked_in") setCode("");
-    busyRef.current = false;
-    setBusy(false);
+    } catch (failure) {
+      setResult({ outcome:"error",message:memberErrorMessage(failure,"confirm this check-in; retrying the same pass will not add a second arrival"),attendee_name:null,checked_in_at:null });
+    } finally { busyRef.current = false; setBusy(false); }
   }
 
   async function startCamera() {
@@ -85,10 +87,10 @@ export function EventDoorConsole({ eventId, title, startsAt, venue }: {
 
   return <section className="focused-admin-tool" aria-labelledby="door-heading">
     <div className="admin-section">
-      <p className="eyebrow">Guest arrival</p>
+      <p className="eyebrow">Checking passes for this event only</p>
       <h1 id="door-heading">{title}</h1>
-      <p>{venue ? `${venue} · ` : ""}{new Intl.DateTimeFormat("en-KE", { dateStyle: "full", timeStyle: "short", timeZone: "Africa/Nairobi" }).format(new Date(startsAt))}</p>
-      <p>Check one private pass at a time. Guest lists, payments and event settings are not available here.</p>
+      <p>{venue ? `${venue} · ` : ""}{new Intl.DateTimeFormat("en-KE", { dateStyle: "full", timeStyle: "short", timeZone }).format(new Date(startsAt))} · {timeZone}</p>
+      <p>Check one private pass at a time. A pass for a different event will not be accepted. Guest lists, payments and event settings are not available here.</p>
     </div>
     <div className="admin-section">
       <h2>Scan a guest pass</h2>

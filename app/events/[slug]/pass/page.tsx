@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NetworkingSchedule, type EventNetworkingSchedule } from "@/components/events/event-networking-schedule";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import QRCode from "qrcode";
@@ -53,10 +54,11 @@ export default async function EventPassPage({ params }: { params: Promise<{ slug
     .eq("id", pass.event_id)
     .maybeSingle();
   const arrival = arrivalError ? null : arrivalData as unknown as ArrivalDetails | null;
-  const [{ data: communityLink, error: communityLinkError }, { data: reminder, error: reminderError }, { data: notificationPreference }] = await Promise.all([
+  const [{ data: communityLink, error: communityLinkError }, { data: reminder, error: reminderError }, { data: notificationPreference }, { data: networkingSchedule, error: networkingScheduleError }] = await Promise.all([
     service.from("community_event_links").select("community_id").eq("event_id", pass.event_id).limit(1).maybeSingle(),
     supabase.from("standalone_event_reminders").select("status").eq("event_id", pass.event_id).eq("user_id", user.id).maybeSingle(),
     supabase.from("notification_preferences").select("email_events").eq("user_id", user.id).maybeSingle(),
+    supabase.rpc("get_event_networking_schedule", { p_event_id:pass.event_id }),
   ]);
   const reminderActive = reminder?.status === "scheduled" || reminder?.status === "queued";
   const canSetReminder = arrival?.status === "published" && new Date(pass.starts_at).getTime() - Date.now() > 86_400_000;
@@ -92,6 +94,7 @@ export default async function EventPassPage({ params }: { params: Promise<{ slug
           <p className="eyebrow">Your place is confirmed</p>
           <h1>{pass.event_title}</h1>
           <p>Present this private pass at the welcome desk. Keep the code to yourself.</p>
+          <NetworkingSchedule schedule={networkingSchedule as EventNetworkingSchedule | null} timeZone={pass.timezone} failed={Boolean(networkingScheduleError)}/>
           <dl>
             <div><dt>Date</dt><dd>{date} · {time}</dd></div>
             <div><dt>Venue</dt><dd>{[pass.venue_name, pass.city].filter(Boolean).join(", ") || "Online"}</dd></div>

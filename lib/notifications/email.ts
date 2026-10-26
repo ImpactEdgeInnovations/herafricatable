@@ -34,8 +34,9 @@ export async function sendNotificationEmail(job: EmailJob) {
   const isEventReview = job.dedupe_key.startsWith("event-registration-review:");
   const isWaitlistOpening = job.dedupe_key.startsWith("event-waitlist-open:");
   const isStandaloneReminder = job.dedupe_key.startsWith("standalone-event-reminder:");
+  const isDoorHelper = job.dedupe_key.startsWith("event-door-helper:");
   const isCommunityHostNotice = job.template_key === "community" && (job.payload.href?.includes("/host#") ?? false);
-  const isEventNotice = isEventReview ||
+  const isEventNotice = isEventReview || isDoorHelper ||
     isWaitlistOpening ||
     isStandaloneReminder ||
     job.dedupe_key.startsWith("event-registration-declined:") ||
@@ -47,7 +48,7 @@ export async function sendNotificationEmail(job: EmailJob) {
       "Your event refund needs review",
       "Your event refund was recorded",
     ].includes(title);
-  const buttonLabel = isConnectionRequest ? "View her profile & request" : isPhotoReport
+  const buttonLabel = isDoorHelper && job.payload.href?.endsWith("/door") ? "Open event check-in" : isConnectionRequest ? "View her profile & request" : isPhotoReport
     ? "Review photo report"
     : isInvitation
     ? "Open your invitation"

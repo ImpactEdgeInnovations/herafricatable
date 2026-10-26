@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { memberErrorMessage } from "@/lib/member-error";
@@ -68,7 +68,7 @@ export type EventHostCommunity = {
   can_select: boolean;
 };
 
-export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, outcomes, communities, communityLinksReady, selfPublish = false }: { currentUserId: string; initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean; outcomes: EventHostOutcomes | null; communities: EventHostCommunity[]; communityLinksReady: boolean; selfPublish?: boolean }) {
+export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, outcomes, communities, communityLinksReady, selfPublish = false, networking, arrival }: { currentUserId: string; initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean; outcomes: EventHostOutcomes | null; communities: EventHostCommunity[]; communityLinksReady: boolean; selfPublish?: boolean; networking?: ReactNode; arrival?: ReactNode }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const initialDraft = { summary: initial.summary, arrivalInfo: initial.arrival_info, programme:
@@ -104,7 +104,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
   useEffect(() => {
     const openLinkedSection = () => {
       const linked = window.location.hash.replace("#host-", "");
-      if (["introduction", "image", "programme", "community", "partners", "host"].includes(linked)) setSection(linked);
+      if (["introduction", "image", "programme", "community", "partners", "host", "networking", "guests"].includes(linked)) setSection(linked);
     };
     openLinkedSection();
     window.addEventListener("hashchange", openLinkedSection);
@@ -114,6 +114,8 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
   const locked = initial.workspace_status === "submitted" || hasEnded;
   const linkedCommunity = communities.find((community) => community.linked_to_event);
   const primarySections = [["introduction", "Event details"], ["image", "Poster"], ["programme", "Schedule"]];
+  if (networking) primarySections.push(["networking", "Networking"]);
+  if (arrival) primarySections.push(["guests", "Guests & check-in"]);
   const optionalSections = [["host", "Host details"], ["community", "Community"], ["partners", "Partners"]];
   function chooseSection(next: string) { if (busy) return; setSection(next); setMessage(""); }
 
@@ -239,6 +241,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
           </>}
       </div>
       {communityPanel()}
+      {arrival ? <div className="host-workspace-panel" id="host-guests">{arrival}</div> : null}
       <ActionFeedback value={feedback} />
     </section>
   );
@@ -263,6 +266,8 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
       {dirty && !locked ? <div className="host-workspace-draft-note" role="status"><span>{restoredDraft ? "Your unfinished changes are back." : "You have unsaved changes."} Text stays in this tab until you save, discard or sign out.</span><button type="button" disabled={busy} onClick={()=>clearDraft(savedDraft)}>Discard text changes</button></div> : null}
 
       {section === "host" ? <div className="host-workspace-panel" id="host-host"><EventHostPublicDetails eventId={initial.event_id} currentUserId={currentUserId}/></div> : null}
+      {section === "networking" && networking ? <div className="host-workspace-panel" id="host-networking">{networking}</div> : null}
+      {section === "guests" && arrival ? <div className="host-workspace-panel" id="host-guests">{arrival}</div> : null}
 
       <div className="host-workspace-panel" id="host-introduction" hidden={section !== "introduction"}>
         <div className="host-workspace-panel-heading"><div><h2>Event details</h2><p>Tell guests what to expect and how to arrive.</p></div></div>

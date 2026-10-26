@@ -36,6 +36,7 @@ import {
 import { FloatingTableGuide } from "@/components/member/floating-table-guide";
 import { EventNetworking } from "@/components/events/event-networking";
 import type { NetworkingState } from "@/lib/events/networking";
+import { NetworkingSchedule, type EventNetworkingSchedule } from "@/components/events/event-networking-schedule";
 
 export const dynamic = "force-dynamic";
 
@@ -250,6 +251,8 @@ export default async function EventDetailPage({ params, searchParams }: { params
   const networkingResult = isConfirmedGuest && !memberPreview && ["in_person", "hybrid"].includes(event.format)
     ? await supabase.rpc("get_event_networking", { p_event_id: event.id })
     : { data: null, error: null };
+  const { data: networkingScheduleData, error: networkingScheduleError } = await supabase.rpc("get_event_networking_schedule", { p_event_id:event.id });
+  const networkingSchedule = networkingScheduleData as EventNetworkingSchedule | null;
   const archiveResult = user && !memberPreview && memberProfile?.access_status === "active" && hasEnded
     ? await supabase.rpc("get_my_member_event_archive", { p_event_id: event.id })
     : { data: [], error: null };
@@ -362,7 +365,7 @@ export default async function EventDetailPage({ params, searchParams }: { params
 
       <nav className="event-detail-jump-links" aria-label="On this event page">
         <a href="#event-details">Details</a>
-        {sessions?.length ? <a href="#event-programme">Programme</a> : null}
+        {sessions?.length || networkingSchedule || networkingScheduleError ? <a href="#event-programme">Programme</a> : null}
         {eventCommunity ? <a href="#event-community">Community</a> : null}
         {(viewer.showBooking || memberPreview) && !hasEnded && !gatheringRoomHref && (event.registration_mode !== "closed" || Boolean(registration) || isConfirmedGuest) ? <a href="#registration">Places</a> : null}
         {gatheringRoomHref ? <Link href={`${gatheringRoomHref}#questions`}>Conversation</Link> : <a href="#questions">Questions</a>}
@@ -474,7 +477,7 @@ export default async function EventDetailPage({ params, searchParams }: { params
         readOnly={memberPreview}
       /> : null}
 
-      {sessions?.length ? <section className="event-content-section" id="event-programme"><div><p className="eyebrow">The gathering</p><h2>Programme</h2></div><div className="programme-list">{sessions.map((session) => { const speakers = speakersFor(session.id); return <article key={session.id}><time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(session.starts_at))}</time><div><h3>{session.title}</h3>{speakers.map((speaker) => <p className="programme-speaker" key={`${session.id}-${speaker.name}`}><strong>{speaker.name}</strong>{[speaker.job_title, speaker.company].filter(Boolean).join(" · ") ? ` · ${[speaker.job_title, speaker.company].filter(Boolean).join(" · ")}` : ""}</p>)}<p>{session.description}</p>{session.room ? <span>{session.room}</span> : null}</div></article>; })}</div></section> : null}
+      {sessions?.length || networkingSchedule || networkingScheduleError ? <section className="event-content-section" id="event-programme"><div><p className="eyebrow">The gathering</p><h2>Programme</h2></div><NetworkingSchedule schedule={networkingSchedule} timeZone={event.timezone} failed={Boolean(networkingScheduleError)}/><div className="programme-list">{(sessions ?? []).map((session) => { const speakers = speakersFor(session.id); return <article key={session.id}><time>{new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(session.starts_at))}</time><div><h3>{session.title}</h3>{speakers.map((speaker) => <p className="programme-speaker" key={`${session.id}-${speaker.name}`}><strong>{speaker.name}</strong>{[speaker.job_title, speaker.company].filter(Boolean).join(" · ") ? ` · ${[speaker.job_title, speaker.company].filter(Boolean).join(" · ")}` : ""}</p>)}<p>{session.description}</p>{session.room ? <span>{session.room}</span> : null}</div></article>; })}</div></section> : null}
 
       {hasEnded && recap ? <section className="event-public-recap" id="event-recap"><div><p className="eyebrow">From the Host</p><h2>{recap.title}</h2><p>{recap.summary}</p>{recap.highlights?.length ? <ul>{recap.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}</ul> : null}</div>{continuation ? <aside><span>The conversation continues</span><strong>{continuation.name}</strong><p>Join the approved Community for future meetups and ongoing conversation.</p><Link className="button button-primary" href={`/communities/${continuation.slug}`}>View Community</Link></aside> : null}</section> : null}
       {hasEnded && isConfirmedGuest && (activeMember || guestFollowUpAccess) ? <section className="event-intro-entry"><div><p className="eyebrow">For guests who attended</p><h2>Continue after the table</h2><p>Read the approved recap, share private feedback and choose whether to hear about the next gathering. An event place does not approve network membership.</p></div><Link className="button button-outline" href={`/events/${slug}/follow-up`}>Open my follow-up</Link></section> : null}

@@ -44,7 +44,7 @@ function harness(initial = base) {
   function elements(node){if(!node||typeof node!=='object')return [];return [node,...React.Children.toArray(node.props?.children).flatMap(elements)];}
   function button(label,manage=false){return elements(render(manage)).find(e=>e.type==='button'&&text(e)===label);}
   function text(node){if(typeof node==='string'||typeof node==='number')return String(node);return React.Children.toArray(node?.props?.children).map(text).join('');}
-  return {calls,intervals,listeners,doc,render,button,forms:manage=>elements(render(manage)).filter(e=>e.type==='form'),html:manage=>renderToStaticMarkup(render(manage)),set:v=>{current=structuredClone(v);},fail:v=>{fail=v;},mutationError:v=>{mutationError=v;},poll:async()=>{[...intervals.values()][0]();await flush();},cleanup:()=>cleanup.forEach(fn=>fn?.())};
+  return {calls,intervals,listeners,doc,render,button,inputs:manage=>elements(render(manage)).filter(e=>e.type==='input'),forms:manage=>elements(render(manage)).filter(e=>e.type==='form'),html:manage=>renderToStaticMarkup(render(manage)),set:v=>{current=structuredClone(v);},fail:v=>{fail=v;},mutationError:v=>{mutationError=v;},poll:async()=>{[...intervals.values()][0]();await flush();},cleanup:()=>cleanup.forEach(fn=>fn?.())};
 }
 const h=harness(); await flush();
 assert(h.html().includes('Meet Amina'));assert(h.html().includes('Accept introduction'));
@@ -62,7 +62,10 @@ assert(host.html(true).includes('Disable networking'));assert(host.html(true).in
 host.button('Pause',true).props.onClick();await flush();assert.equal(host.calls.find(x=>x.name==='control_event_networking').args.p_action,'pause');host.cleanup();
 const scheduling=harness({...base,can_manage:true,match:null,session:{...base.session,status:'scheduled'}});await flush();
 scheduling.button('Edit schedule',true).props.onClick();scheduling.forms(true)[0].props.onSubmit({preventDefault(){}});await flush();
-const saved=scheduling.calls.find(x=>x.name==='save_event_networking');assert.equal(saved.args.p_starts_at,base.session.starts_at.replace('00Z','00.000Z'));assert.deepEqual(saved.args.p_points,['Table 1']);assert.equal(saved.args.p_minutes,5);scheduling.cleanup();
+const saved=scheduling.calls.find(x=>x.name==='save_event_networking');assert.equal(saved.args.p_starts_at,base.session.starts_at.replace('00Z','00.000Z'));assert.deepEqual(saved.args.p_points,['Table 1']);assert.equal(saved.args.p_minutes,5);
+scheduling.inputs(true).find(x=>x.props.type==='number').props.onChange({target:{value:'10'}});scheduling.forms(true)[0].props.onSubmit({preventDefault(){}});await flush();
+assert.equal(scheduling.calls.filter(x=>x.name==='save_event_networking').at(-1).args.p_points.length,10);assert.equal(scheduling.calls.filter(x=>x.name==='save_event_networking').at(-1).args.p_points[9],'Table 10');
+const writes=scheduling.calls.filter(x=>x.name==='save_event_networking').length;scheduling.inputs(true).find(x=>x.props.type==='number').props.onChange({target:{value:''}});scheduling.forms(true)[0].props.onSubmit({preventDefault(){}});await flush();assert.equal(scheduling.calls.filter(x=>x.name==='save_event_networking').length,writes,'blank meeting-point count cannot save a misleading schedule');scheduling.cleanup();
 const notChecked=harness({...base,eligible:false,joined:false,match:null});await flush();assert(notChecked.html().includes('checked at the door'));assert(!notChecked.button('Join networking'));notChecked.cleanup();
 const unjoined=harness({...base,joined:false,match:null});await flush();assert(unjoined.button('Join networking'));unjoined.cleanup();
 const invitation=harness({...base,joined:false,match:null});await flush();
@@ -126,6 +129,8 @@ if(process.argv.includes('--preview')) {
   const target=new URL('tmp/networking-preview/',root);mkdirSync(target,{recursive:true});
   const css=read('components/events/event-networking.module.css')+'\nbody{margin:0;background:#f6f4ed;font-family:Arial,sans-serif;padding:24px;color:#263a31}main{max-width:900px;margin:auto}button{font:inherit;border:1px solid #bfcfc3;border-radius:8px;padding:10px 16px;background:white;color:#215846;cursor:pointer}.button-primary{background:#215846;color:white}h1{font-size:28px}';
   writeFileSync(new URL('index.html',target),`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking preview — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE PEOPLE · NO LIVE ACTIONS</p>${p.html()}</main></body></html>`);p.cleanup();
+  const hostSetup=harness({...base,can_manage:true,joined:false,match:null,session:{...base.session,status:'scheduled'}});await flush();hostSetup.button('Edit schedule',true).props.onClick();
+  writeFileSync(new URL('host-networking.html',target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Host networking — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${hostSetup.html(true)}</main></body></html>`);hostSetup.cleanup();
   for(const [name,extra] of [['invitation',{joined:false,match:null}],['ended',endedState],['radar',{match:null}],['strip',{joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}}]]){
     const sample=harness({...base,...extra});await flush();writeFileSync(new URL(`${name}.html`,target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking ${name} — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${sample.html()}</main></body></html>`);sample.cleanup();
   }

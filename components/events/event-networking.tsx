@@ -35,6 +35,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   const [minutes, setMinutes] = useState(initial?.session?.minutes ?? 5);
   const [changeover, setChangeover] = useState(initial?.session?.changeover ?? 60);
   const [points, setPoints] = useState(initial?.session?.points?.join("\n") ?? "Table 1\nTable 2\nTable 3\nTable 4\nTable 5");
+  const [pointCount, setPointCount] = useState(String(initial?.session?.points?.length ?? 5));
   const [prompt, setPrompt] = useState(initial?.session?.prompt ?? "What would help your business most right now?");
   const [formOpen, setFormOpen] = useState(false);
   const [entryOpen, setEntryOpen] = useState(false);
@@ -60,7 +61,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
           setIntroduction(next.introduction ?? "");
           if (next.session) {
             setStart(formatEventTimeInput(next.session.starts_at, timeZone)); setEnd(formatEventTimeInput(next.session.ends_at, timeZone));
-            setMinutes(next.session.minutes); setChangeover(next.session.changeover); setPoints(next.session.points?.join("\n") ?? ""); setPrompt(next.session.prompt);
+            setMinutes(next.session.minutes); setChangeover(next.session.changeover); setPoints(next.session.points?.join("\n") ?? ""); setPointCount(String(next.session.points?.length ?? 5)); setPrompt(next.session.prompt);
           }
         }
         clock.current = { server: Date.parse(next.server_now), sampled: performance.now() };
@@ -125,6 +126,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
     if (answer) await run("connect_event_networking", { p_match_id: match.match_id, p_note: String(answer.note ?? "") }, "Connection request sent. She can accept or decline privately.");
   }
   async function save() {
+    if (!pointCount || Number(pointCount)<1 || Number(pointCount)>30) { setMessage("Choose between one and thirty meeting points."); return; }
     let starts: string, ends: string;
     try { starts = parseEventTimeInput(start, timeZone); ends = parseEventTimeInput(end, timeZone); }
     catch { setMessage("Choose a valid start and finish time."); return; }
@@ -154,13 +156,14 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
     {error ? <div className={styles.notice} role="alert"><p>{error}</p><button type="button" className="button button-outline" onClick={() => void refresh()} disabled={busy}>Try again</button></div> : null}
     {manager ? <>
       {!session || session.status === "scheduled" ? <>
-        <button className="button button-outline" type="button" aria-expanded={formOpen} onClick={() => setFormOpen(!formOpen)}>{session ? "Edit schedule" : "Schedule networking"}</button>
+        <button className="button button-outline" type="button" aria-expanded={formOpen} onClick={() => setFormOpen(!formOpen)}>{session ? "Edit schedule" : "Set up networking"}</button>
         {formOpen ? <form className={styles.form} onSubmit={e => { e.preventDefault(); void save(); }}>
-          <p>Pairs only. Add one meeting point per pair you can accommodate. Times use {timeZone}. The session must fit inside your published in-person event.</p>
+          <p>Guests meet in pairs. Choose a time within your event. Times are shown in {timeZone.split("/").at(-1)?.replaceAll("_", " ")} time.</p>
           <div className={styles.fields}><label>Starts<input required type="datetime-local" value={start} onChange={e => setStart(e.target.value)} /></label><label>Finishes<input required type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} /></label>
           <label>Minutes per conversation<select value={minutes} onChange={e => setMinutes(Number(e.target.value))}>{[2,3,4,5,6,7,8,10,12,15].map(x => <option key={x}>{x}</option>)}</select></label>
           <label>Time to change places<select value={changeover} onChange={e => setChangeover(Number(e.target.value))}><option value={30}>30 seconds</option><option value={60}>1 minute</option><option value={120}>2 minutes</option><option value={180}>3 minutes</option></select></label></div>
-          <label>Meeting points · One per line<textarea required rows={4} value={points} onChange={e => setPoints(e.target.value)} maxLength={1830} /></label>
+          <label>How many meeting points?<input type="number" min={1} max={30} required value={pointCount} onChange={e => { setPointCount(e.target.value); const count=Number(e.target.value); if(Number.isInteger(count) && count>=1 && count<=30) setPoints(Array.from({length:count},(_,i)=>`Table ${i+1}`).join("\n")); }} /></label><small>One point for each pair. Ten meeting points can accommodate twenty guests at once.</small>
+          <details className={styles.waitingHelp}><summary>Name your meeting points (optional)</summary><label>One name per line<textarea required rows={3} value={points} onChange={e => {setPoints(e.target.value);setPointCount(String(e.target.value.split("\n").filter(x=>x.trim()).length));}} maxLength={1830}/></label></details>
           <label>Conversation starter (optional)<textarea rows={2} value={prompt} onChange={e => setPrompt(e.target.value)} maxLength={280} /></label>
           <button className="button button-primary" disabled={locked}>Save schedule</button>
         </form> : null}
@@ -174,7 +177,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
       </div> : null}
       {!synced ? <p>Live attendance is unavailable until we reconnect.</p> : state.people?.length ? <div className={styles.roster}><h3>People taking part</h3><ul>{state.people.map((p, i) => <li key={i}><span>{p.name}</span><small>{p.choosing ? "Taking a moment" : !p.ready ? "Away / left" : p.paired ? "With an introduction" : "Ready for a new person"}</small></li>)}</ul></div> : <p>No guests have joined networking yet.</p>}
       {state.help?.length ? <div className={styles.notice}><h3>Guests asking for help</h3>{state.help.map(h => <article key={h.id}><strong>{h.name}</strong><p>{h.note}</p><button className="button button-outline" disabled={locked} onClick={() => void run("resolve_event_networking_help", { p_help_id: h.id }, "Marked as handled.")}>Mark handled</button></article>)}</div> : null}
-      <p className={styles.help}>Guests keep this panel open while taking part. A short break is normal when numbers are uneven. No per-pair Admin approval is needed.</p>
+      <p className={styles.help}>Guests choose whether to join. A short break is normal when numbers are uneven. Keep this panel open to see who needs help.</p>
     </> : state && session ? <>
       {phase === "finished" ? <p>Networking has finished. You can choose to stay connected with the people you met below.</p>
         : phase === "disabled" || phase === "paused" ? <p>The event team has paused networking. You do not need to do anything.</p>

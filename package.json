@@ -50,7 +50,7 @@
     "test:event-timezone": "node scripts/verify-event-timezone.mjs",
     "test:event-introductions": "node scripts/verify-event-intro-contracts.mjs",
     "test:event-rounds": "node scripts/verify-event-round-contracts.mjs && npm run test:event-networking",
-    "test:event-networking": "node scripts/verify-event-networking.mjs",
+    "test:event-networking": "node scripts/verify-event-networking.mjs && node scripts/verify-host-arrival.mjs",
     "test:event-guest-follow-up": "node scripts/verify-event-guest-follow-up.mjs",
     "test:event-host-outcomes": "node scripts/verify-event-host-outcomes.mjs",
     "test:event-follow-up-invitations": "node scripts/verify-event-follow-up-invitations.mjs",
