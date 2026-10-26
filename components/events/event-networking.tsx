@@ -38,6 +38,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   const [prompt, setPrompt] = useState(initial?.session?.prompt ?? "What would help your business most right now?");
   const [formOpen, setFormOpen] = useState(false);
   const [entryOpen, setEntryOpen] = useState(false);
+  const [invitationDismissed, setInvitationDismissed] = useState(false);
   const [animationPaused, setAnimationPaused] = useState(false);
 
   const refresh = useCallback(() => {
@@ -82,21 +83,29 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   }, [refresh]);
 
   async function run(name: string, args: Record<string, unknown>, success: string) {
-    if (actionLock.current) return;
+    if (actionLock.current) return false;
     actionLock.current = true; setBusy(true); setMessage("");
     try {
       if (request.current) await request.current;
       const result = await supabase.rpc(name, { p_event_id: eventId, ...args });
       if (result.error) throw result.error;
       await refresh(); setMessage(success);
+      return true;
     } catch (failure) {
       const domain = failure as { code?: string; message?: string };
       const feedback = domain?.code === "P0001" && /^(Networking is not available|Networking has not been scheduled|This networking session is full|Start during the scheduled networking time|This introduction has ended|Refresh networking and choose whether to continue)$/.test(domain.message ?? "")
         ? domain.message! : memberErrorMessage(failure, "update networking");
       await refresh();
       setMessage(feedback);
+      return false;
     }
     finally { actionLock.current = false; if (mounted.current) setBusy(false); }
+  }
+  function deferNetworking() {
+    setEntryOpen(false); setInvitationDismissed(true);
+  }
+  async function leaveNetworking() {
+    if (await run("join_event_networking", { p_join: false }, "You left networking. Your event place is unchanged.")) deferNetworking();
   }
   async function control(action: string) {
     if (["finish", "disable"].includes(action) && !await ask({ title: action === "finish" ? "Finish networking?" : "Disable networking?",
@@ -132,10 +141,14 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   const startRemaining = networkingRemaining(session?.starts_at, now);
   const roundRemaining = networkingRemaining(session?.round_ends_at, now);
   const roundProgress = session ? Math.min(1, roundRemaining / (session.minutes * 60)) : 0;
+  const invitationLive = !manage && synced && state?.eligible && !state.joined && !state.end_notice && session?.status === "running" && !session.disabled && phase !== "finished";
+  const invitationTitle = invitationLive && !entryOpen && !invitationDismissed
+    ? session.round_no <= 1 ? "Networking is starting" : "Networking is live"
+    : "Meet someone new";
   return <section className={`${styles.panel}${!manage ? ` ${styles.guest}` : ""}${!manage && !state?.joined ? ` ${styles.strip}` : ""}`} id="event-networking" aria-labelledby={`networking-title-${manage ? "host" : "guest"}`}>
-    <header className={styles.heading}><div><p className={styles.eyebrow}>{manage ? "Host tools · In person" : "At this event · Networking"}</p><h2 id={`networking-title-${manage ? "host" : "guest"}`}>{manage ? "Networking rounds" : "Meet someone new"}</h2>
+    <header className={styles.heading}><div><p className={styles.eyebrow}>{manage ? "Host tools · In person" : "At this event · Networking"}</p><h2 id={`networking-title-${manage ? "host" : "guest"}`}>{manage ? "Networking rounds" : invitationTitle}</h2>
       {session ? <p>{time(session.starts_at)}–{time(session.ends_at)} <span aria-hidden="true">·</span> {session.minutes} min per conversation{manage ? ` · ${session.changeover}s between rounds` : ""}</p> : <p>Short introductions for checked-in guests. No contact details are shared.</p>}</div>
-      {session ? <span className={styles.badge}>{session.disabled ? "Paused by Admin" : session.status === "running" ? manage ? `Round ${session.round_no || 1}` : "Live now" : session.status === "scheduled" ? "Coming up" : session.status === "paused" ? "Paused" : "Finished"}</span> : null}
+      {session ? <span className={styles.badge}>{!manage && !synced ? "Checking…" : session.disabled ? "Paused by Admin" : phase === "finished" ? "Finished" : session.status === "running" ? manage ? `Round ${session.round_no || 1}` : "Live now" : session.status === "scheduled" ? "Coming up" : session.status === "paused" ? "Paused" : "Finished"}</span> : null}
     </header>
     {!manage && session && phase === "scheduled" ? <div className={styles.startStrip} aria-label="Networking start time"><span className={styles.liveDot} aria-hidden="true" /><strong>{!synced ? "Checking the start time…" : startRemaining > 0 ? "Networking starts in" : "Waiting for the Host to begin"}</strong>{synced && startRemaining > 0 ? <span className={styles.startTimer}>{networkingStartCountdown(startRemaining)}</span> : null}</div> : null}
     {error ? <div className={styles.notice} role="alert"><p>{error}</p><button type="button" className="button button-outline" onClick={() => void refresh()} disabled={busy}>Try again</button></div> : null}
@@ -170,14 +183,18 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
           <div role="status" aria-live="polite"><p className={styles.eyebrow}>Take a moment</p><h3>{state.end_notice.conversation ? "This conversation has ended" : "This introduction has ended"}</h3>
           <p>You are not being matched right now. When you’re ready, we’ll find someone new. You won’t be paired with this person again at this event.</p></div>
           <div className={styles.actions}><button className="button button-primary" disabled={locked || phase === "scheduled"} onClick={() => void run("continue_event_networking", { p_notice_id: state.end_notice!.id }, "You’re ready for another introduction.")}>Find someone else</button>
-          <button className="button button-outline" disabled={locked} onClick={() => void run("join_event_networking", { p_join: false }, "You left networking. Your event place is unchanged.")}>Leave networking</button>
+          <button className="button button-outline" disabled={locked} onClick={() => void leaveNetworking()}>Leave networking</button>
           <button className="button button-quiet" disabled={locked} onClick={() => void help()}>Get help</button></div>
         </div>
-        : !state.joined && !entryOpen ? <div className={styles.joinStrip}><p>Short conversations with other guests.<small>Optional, for checked-in guests.</small></p><button className="button button-primary" disabled={locked} onClick={() => setEntryOpen(true)}>Join networking</button></div>
+        : !state.joined && !entryOpen ? invitationLive && !invitationDismissed ? <div className={styles.invitation} aria-label="Networking invitation">
+          <div className={styles.invitationCopy}><p role="status">Meet other guests, one conversation at a time.</p><small><span className={styles.checkMark} aria-hidden="true">✓</span> You’re checked in <span aria-hidden="true">·</span> Joining is optional</small></div>
+          <div className={styles.invitationClock}><small>Session ends in</small><strong aria-label="Networking session time remaining">{networkingCountdown(networkingRemaining(session.ends_at, now))}</strong></div>
+          <div className={styles.invitationActions}><button type="button" className="button button-primary" disabled={locked} onClick={() => setEntryOpen(true)}>Join networking</button><button type="button" className={`button button-quiet ${styles.notNow}`} onClick={deferNetworking}>Not now</button></div>
+        </div> : <div className={styles.joinStrip}><p>{invitationDismissed ? "Join whenever you’re ready." : "Short conversations with other guests."}<small>{invitationDismissed ? `Networking finishes at ${time(session.ends_at)}. Your event place is unchanged.` : "Optional, for checked-in guests."}</small></p><button className={`button ${invitationDismissed ? "button-outline" : "button-primary"}`} disabled={locked} onClick={() => setEntryOpen(true)}>Join networking</button></div>
         : !state.joined ? <form className={styles.form} onSubmit={e => { e.preventDefault(); void run("join_event_networking", { p_join: true, p_introduction: introduction }, "You joined networking. Keep this panel open while taking part."); }}>
-          <p>Meet other guests, one conversation at a time. Joining is your choice; you can leave whenever you like.</p>
+          <div className={styles.entryHeading}><h3>What would you like her to know?</h3><p>One sentence is enough. You can leave networking whenever you like.</p></div>
           <label>A short introduction<textarea required minLength={5} maxLength={280} rows={2} value={introduction} onChange={e => setIntroduction(e.target.value)} placeholder="I run a food business and would enjoy meeting other founders." /></label><small>Only your first name, profile photo and introduction appear to your match. Please leave out contact details.</small>
-          <button className="button button-primary" disabled={locked}>Join networking</button>
+          <div className={styles.invitationActions}><button className="button button-primary" disabled={locked}>Join networking</button><button className={`button button-quiet ${styles.notNow}`} type="button" disabled={busy} onClick={deferNetworking}>Not now</button></div>
         </form> : <>
           {match ? <article className={styles.match} key={match.id}>
             <div className={styles.person}><div className={`${styles.matchOrbit}${phase === "offered" ? ` ${styles.newMatch}` : ""}`}>{match.person.avatar_url ? <img src={match.person.avatar_url} width={112} height={112} alt="" onError={e => { e.currentTarget.hidden = true; }} /> : null}<span className={styles.initial} aria-hidden="true">{match.person.name.slice(0,1)}</span></div><div><p className={styles.eyebrow}>{phase === "talking" ? "You’re both ready" : "Your next introduction"}</p><h3>Meet {match.person.name}</h3><p>{match.person.introduction}</p></div></div>
@@ -190,10 +207,10 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
             <div className={styles.waitingCopy}><h3 role="status">{!synced ? "Reconnecting to networking" : phase === "scheduled" ? "You are ready" : phase === "changeover" ? "A moment to move" : "Finding your next introduction"}</h3><p>{phase === "scheduled" ? "The Host will begin shortly. Keep this page open." : phase === "changeover" ? "Your next introduction will appear here." : "Stay here. We’ll introduce you to someone new."}</p>
             {synced && phase === "waiting" ? <details className={styles.waitingHelp}><summary>Why might I wait?</summary><p>We match checked-in guests who chose to join. If everyone is paired, you may have a short break. Introductions never repeat.</p></details> : null}
             {phase === "changeover" && session.next_at ? <p className={styles.roundTime}>Next round <span className={styles.timer}>{networkingCountdown(networkingRemaining(session.next_at, now))}</span></p> : null}</div></div>}
-          <div className={styles.actions}><button className="button button-outline" disabled={busy} onClick={() => void run("join_event_networking", { p_join: false }, "You left networking. Your event place is unchanged.")}>Leave networking</button><button className="button button-quiet" disabled={busy} onClick={() => void help()}>Get help</button></div>
+          <div className={styles.actions}><button className="button button-outline" disabled={busy} onClick={() => void leaveNetworking()}>Leave networking</button><button className="button button-quiet" disabled={busy} onClick={() => void help()}>Get help</button></div>
         </>}
       {state.met?.length ? <details className={styles.roster} open={phase === "finished"}><summary>People you met · {state.met.length}</summary><ul>{state.met.map(p => <li key={p.match_id}><span>{p.name}</span><button className="button button-outline" disabled={locked} onClick={() => void connect(p)}>Stay connected</button></li>)}</ul><p>Connections are optional. Nothing is sent until you confirm.</p>{phase === "finished" ? <p>This event history is available for 14 days. Accepted connections stay in <a href="/network?view=connections">Your connections</a>.</p> : null}</details> : null}
-      {state.joined && ["paused", "disabled", "finished"].includes(phase) ? <div className={styles.actions}><button className="button button-outline" disabled={busy} onClick={() => void run("join_event_networking", { p_join: false }, "You left networking. Your event place is unchanged.")}>Leave networking</button></div> : null}
+      {state.joined && ["paused", "disabled", "finished"].includes(phase) ? <div className={styles.actions}><button className="button button-outline" disabled={busy} onClick={() => void leaveNetworking()}>Leave networking</button></div> : null}
     </> : null}
     {message ? <p className={styles.notice} role="status">{message}</p> : null}
     {dialog}

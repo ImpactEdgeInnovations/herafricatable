@@ -40,7 +40,23 @@
 .startStrip { display:flex; gap:10px; align-items:center; padding:18px 26px 4px; color:#215846; font-size:14px; flex-wrap:wrap; }
 .liveDot { width:7px; height:7px; background:#8b713d; border-radius:50%; flex-shrink:0; }
 .startTimer { font-size:34px; font-weight:500; line-height:1.1; font-variant-numeric:tabular-nums; letter-spacing:-.04em; margin-left:auto; }
-.strip { box-shadow:inset 3px 0 #215846; }
+.strip { box-shadow:0 6px 26px #263c3106; }
+.invitation { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:22px 28px; align-items:center; padding:24px 26px; background:linear-gradient(120deg,#f0f4e5,#fbfcf6); border-top:3px solid #a1b17c; }
+.invitationCopy { min-width:0; }
+.invitationCopy p { margin:0 0 12px; font-size:17px; line-height:1.5; color:#2b4936; max-width:38ch; }
+.invitationCopy small { color:#51664d; font-size:12px; line-height:1.6; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.checkMark { display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#dbe5cd; color:#28573c; font-size:11px; }
+.invitationClock { border-left:1px solid #d5ddc6; padding-left:26px; text-align:right; }
+.invitationClock small { display:block; font-size:11px; color:#55684f; margin-bottom:6px; }
+.invitationClock strong { font-size:37px; line-height:1; font-weight:500; font-variant-numeric:tabular-nums; letter-spacing:-.04em; color:#215846; }
+.invitationActions { grid-column:1/-1; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.panel .invitationActions>button { min-height:46px; padding:11px 22px; font-size:14px; border-radius:8px; }
+.panel .invitationActions>button:first-child { background:#215846; border:1px solid #215846; color:#fffdf7; font-weight:600; }
+.panel .invitationActions>button:first-child:hover:not(:disabled) { background:#173e31; }
+.panel .notNow { background:transparent; color:#435c49; border:1px solid transparent; }
+.panel .notNow:hover:not(:disabled) { background:#e5ebdc; }
+.entryHeading h3 { margin:0 0 7px; font:400 26px/1.2 Georgia,serif; letter-spacing:-.02em; }
+.entryHeading p { margin:0; }
 .joinStrip { display:flex; justify-content:space-between; align-items:center; gap:18px; padding:16px 26px 22px; }
 .joinStrip p { margin:0; color:var(--network-ink); font-size:15px; line-height:1.5; }
 .joinStrip small { display:block; color:var(--network-muted); font-size:12px; margin-top:5px; }
@@ -51,7 +67,7 @@
 .waiting p { font-size:15px; color:var(--network-muted); line-height:1.6; margin:0; }
 .searching { display:grid; grid-template-columns:180px minmax(0,1fr); align-items:center; gap:30px; padding:25px 32px 20px; }
 .dialGroup { display:grid; justify-items:center; gap:2px; }
-.dial { width:160px; height:160px; position:relative; border-radius:50%; background:conic-gradient(#8d9f68 calc(var(--network-progress,1)*1turn),#e4e7d7 0); display:grid; place-items:center; }
+.dial { width:148px; height:148px; position:relative; border-radius:50%; background:conic-gradient(#8d9f68 calc(var(--network-progress,1)*1turn),#e4e7d7 0); display:grid; place-items:center; }
 .dial::before { content:""; position:absolute; inset:3px; border-radius:50%; background:#f9faf1; }
 .radar { position:absolute; inset:9px; border:1px solid #e2e6d5; border-radius:50%; background:repeating-radial-gradient(circle,transparent 0,transparent 23px,#e1e7d7 24px,transparent 25px); overflow:hidden; }
 .radar::before { content:""; position:absolute; inset:0; border-radius:50%; background:conic-gradient(transparent 0deg,transparent 285deg,#7b9d4930 350deg,#6a91484d 360deg); animation:radar-sweep 6s linear infinite; }
@@ -77,16 +93,16 @@
 .person img { position:relative; z-index:1; }
 .person img:not([hidden])+.initial { visibility:hidden; }
 .initial { display:grid; place-items:center; background:#e8ead9; color:#215846; font:400 42px Georgia,serif; }
-.person h3 { margin:5px 0 9px; font:400 36px/1.1 Georgia,serif; letter-spacing:-.03em; overflow-wrap:anywhere; }
+.person h3 { margin:5px 0 9px; font:400 34px/1.1 Georgia,serif; letter-spacing:-.03em; overflow-wrap:anywhere; }
 .person p { margin:0; line-height:1.6; font-size:15px; overflow-wrap:anywhere; color:var(--network-muted); max-width:45ch; }
-.meeting { margin:24px 0 18px; display:flex; align-items:center; justify-content:space-between; gap:24px; padding:16px 20px; background:#edf1e4; border-radius:9px; }
+.meeting { margin:24px 0 18px; display:flex; align-items:center; justify-content:space-between; gap:24px; padding:18px 20px; background:#edf1e4; border-radius:9px; border:1px solid #dfe6d3; }
 .meeting small,.prompt small { display:block; color:#5d6e58; font-size:10px; text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
 .meeting>div:first-child { min-width:0; }
 .meeting strong { display:block; font-size:22px; line-height:1.2; font-weight:600; color:#254a36; overflow-wrap:anywhere; }
-.meetingClock { text-align:right; flex-shrink:0; }
+.meetingClock { text-align:right; flex-shrink:0; padding-left:22px; border-left:1px solid #d2dbc4; }
 .meetingClock .timer { font-size:34px; }
 .acceptance { margin:0; font-size:14px; color:var(--network-muted); }
-.prompt { padding:0 1px; }
+.prompt { padding:2px 1px; }
 .prompt p { font:400 19px/1.45 Georgia,serif; margin:0; color:#3c4c3e; }
 .match .actions { margin:20px 0 0; }
 .ended { padding:26px; border-top:3px solid #9a8350; background:linear-gradient(120deg,#fbf7e9,#fffdf7); }
@@ -125,10 +141,20 @@
   .joinStrip { padding:14px 20px 20px; align-items:flex-start; flex-direction:column; gap:14px; }
   .joinStrip button { width:100%; }
   .joinStrip p { font-size:14px; }
+  .invitation { padding:20px; gap:20px 14px; grid-template-columns:minmax(0,1fr) auto; }
+  .invitationCopy p { font-size:15px; margin-bottom:10px; }
+  .invitationCopy small { font-size:11px; gap:5px; }
+  .invitationClock { padding-left:14px; }
+  .invitationClock strong { font-size:30px; }
+  .invitationClock small { font-size:10px; }
+  .invitationActions { gap:8px; width:100%; }
+  .invitationActions>button:first-child { flex:1 1 auto; }
+  .panel .invitationActions>button { padding:11px 15px; }
+  .entryHeading h3 { font-size:24px; }
   .waiting { padding:22px 20px; }
-  .searching { grid-template-columns:1fr; justify-items:center; gap:4px; padding:22px 22px 16px; }
+  .searching { grid-template-columns:1fr; justify-items:center; gap:4px; padding:20px 22px 14px; }
   .dialGroup { gap:0; }
-  .dial { width:148px; height:148px; }
+  .dial { width:132px; height:132px; }
   .dialText .timer { font-size:35px; }
   .waitingCopy { text-align:center; }
   .waiting h3 { font-size:23px; max-width:24ch; margin:0 auto 8px; }
@@ -152,6 +178,7 @@
   .meeting { padding:15px; gap:15px; margin:20px 0 16px; }
   .meeting strong { font-size:20px; }
   .meetingClock .timer { font-size:31px; }
+  .meetingClock { padding-left:15px; }
   .prompt p { font-size:18px; }
   .match .actions>* { flex:1 1 auto; }
   .roster li { flex-wrap:wrap; }
@@ -164,6 +191,9 @@
   .person { gap:12px; }
   .matchOrbit { width:60px; height:60px; }
   .person h3 { font-size:26px; }
+  .invitation { grid-template-columns:1fr; gap:16px; }
+  .invitationClock { border-left:0; border-top:1px solid #d5ddc6; padding:12px 0 0; display:flex; align-items:center; justify-content:space-between; gap:12px; text-align:left; }
+  .invitationClock small { margin:0; font-size:11px; }
 }
 @media(prefers-reduced-motion:reduce) {
   .radar::before,.newMatch,.match { animation:none; }

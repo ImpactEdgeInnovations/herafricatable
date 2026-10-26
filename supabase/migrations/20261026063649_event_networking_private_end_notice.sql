@@ -1,5 +1,5 @@
--- Applied with Management API history version 20261026063649.
 begin;
+-- Applied with Management API history version 20261026063649.
 
 -- Private acknowledgement, not an email/push or a disclosure of who ended it.
 -- Existing deny-all RLS and schema/table grants remain unchanged.

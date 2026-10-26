@@ -65,6 +65,29 @@ scheduling.button('Edit schedule',true).props.onClick();scheduling.forms(true)[0
 const saved=scheduling.calls.find(x=>x.name==='save_event_networking');assert.equal(saved.args.p_starts_at,base.session.starts_at.replace('00Z','00.000Z'));assert.deepEqual(saved.args.p_points,['Table 1']);assert.equal(saved.args.p_minutes,5);scheduling.cleanup();
 const notChecked=harness({...base,eligible:false,joined:false,match:null});await flush();assert(notChecked.html().includes('checked at the door'));assert(!notChecked.button('Join networking'));notChecked.cleanup();
 const unjoined=harness({...base,joined:false,match:null});await flush();assert(unjoined.button('Join networking'));unjoined.cleanup();
+const invitation=harness({...base,joined:false,match:null});await flush();
+assert(invitation.html().includes('Networking is starting'));assert(invitation.html().includes('30:00'));
+assert(invitation.html().includes('You’re checked in'));assert(invitation.button('Not now'));
+assert(!invitation.html().includes('class="radar"'),'never animate a search before opt-in');
+invitation.button('Not now').props.onClick();assert(!invitation.button('Not now'));assert(invitation.button('Join networking'));
+assert(invitation.html().includes('Join whenever you’re ready.'));
+await invitation.poll();assert(!invitation.button('Not now'),'polling must not undo dismissal');
+assert.equal(invitation.calls.filter(x=>x.name!=='get_event_networking').length,0,'dismissal does not change a booking or participation');
+invitation.button('Join networking').props.onClick();assert(invitation.html().includes('A short introduction'));assert(invitation.button('Not now'));
+assert.equal(invitation.calls.filter(x=>x.name!=='get_event_networking').length,0,'opening the form is not enrolment');
+invitation.button('Not now').props.onClick();assert(!invitation.html().includes('<form'));
+invitation.button('Join networking').props.onClick();invitation.set({...base,match:null});
+invitation.forms()[0].props.onSubmit({preventDefault(){}});await flush();
+assert.deepEqual(invitation.calls.find(x=>x.name==='join_event_networking').args,{p_event_id:'event',p_join:true,p_introduction:base.introduction});
+assert(invitation.html().includes('class="radar"'),'search begins only after server confirms participation');
+invitation.set({...base,joined:false,match:null});invitation.button('Leave networking').props.onClick();await flush();
+assert(invitation.html().includes('Join whenever you’re ready.'));assert(!invitation.html().includes('<form'),'leaving must not reopen the entry form');
+invitation.cleanup();
+for(const extra of [{eligible:false},{session:{...base.session,status:'paused'}},{session:{...base.session,disabled:true}},{session:{...base.session,status:'finished'}}]){
+  const unavailable=harness({...base,joined:false,match:null,...extra});await flush();
+  assert(!unavailable.html().includes('class="invitation"'),'unavailable session never invites a guest');assert(!unavailable.button('Not now'));unavailable.cleanup();
+}
+const lateInvitation=harness({...base,joined:false,match:null,session:{...base.session,round_no:3}});await flush();assert(lateInvitation.html().includes('Networking is live'));lateInvitation.fail(true);await lateInvitation.poll();assert(!lateInvitation.html().includes('class="invitation"'),'failed eligibility refresh hides live invitation');lateInvitation.cleanup();
 const radar=harness({...base,match:null});await flush();assert(radar.html().includes('class="radar"'));assert(radar.html().includes('Finding your next introduction'));radar.button('Pause animation').props.onClick();assert(radar.html().includes('radarPaused'));assert(radar.button('Resume animation'));assert.equal(radar.calls.filter(x=>x.name!=='get_event_networking').length,0,'pausing animation does not leave or pause the session');radar.cleanup();
 const scheduled=harness({...base,joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}});await flush();assert(scheduled.html().includes('12:46'));assert(!scheduled.html().includes('<form'));scheduled.button('Join networking').props.onClick();assert(scheduled.html().includes('<form'));scheduled.cleanup();
 const waitingHost=harness({...base,joined:false,match:null,session:{...base.session,status:'scheduled'}});await flush();assert(waitingHost.html().includes('Waiting for the Host to begin'));assert(!waitingHost.html().includes('class="radar"'));waitingHost.cleanup();
@@ -103,7 +126,7 @@ if(process.argv.includes('--preview')) {
   const target=new URL('tmp/networking-preview/',root);mkdirSync(target,{recursive:true});
   const css=read('components/events/event-networking.module.css')+'\nbody{margin:0;background:#f6f4ed;font-family:Arial,sans-serif;padding:24px;color:#263a31}main{max-width:900px;margin:auto}button{font:inherit;border:1px solid #bfcfc3;border-radius:8px;padding:10px 16px;background:white;color:#215846;cursor:pointer}.button-primary{background:#215846;color:white}h1{font-size:28px}';
   writeFileSync(new URL('index.html',target),`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking preview — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE PEOPLE · NO LIVE ACTIONS</p>${p.html()}</main></body></html>`);p.cleanup();
-  for(const [name,extra] of [['ended',endedState],['radar',{match:null}],['strip',{joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}}]]){
+  for(const [name,extra] of [['invitation',{joined:false,match:null}],['ended',endedState],['radar',{match:null}],['strip',{joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}}]]){
     const sample=harness({...base,...extra});await flush();writeFileSync(new URL(`${name}.html`,target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking ${name} — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${sample.html()}</main></body></html>`);sample.cleanup();
   }
 }

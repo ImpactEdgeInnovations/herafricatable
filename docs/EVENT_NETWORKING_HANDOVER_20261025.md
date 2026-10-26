@@ -2,6 +2,14 @@
 
 Updated: 26 October 2026. First release: pairs only, up to 200 participants per event.
 
+## Live invitation and visual polish — 26 October
+
+On the open event page, a server-confirmed checked-in guest who has not joined sees a compact green/ivory invitation when the Host starts. The first round says **Networking is starting**; later rounds say **Networking is live**. The strip includes the real session-end countdown, **Join networking** and **Not now**. It is inline, not a modal or global/background notification. No sound, location tracking or pre-opt-in searching animation is used.
+
+Join opens a short introduction form; only submitting that form invokes the existing join RPC. Not now collapses the invitation to a quiet Join whenever you're ready row and makes no RPC write. Dismissal lasts for that mounted event-page visit and survives polling, not browser reloads or other devices. The member can reopen the form and join later. Leaving successfully closes the entry form and returns to the quiet state, so the invitation does not immediately nag her to rejoin. A pause, disable, finish, failed refresh or missing check-in cannot show a live invitation. Existing server eligibility and matching rules remain authoritative.
+
+The waiting dial is smaller, the match title and person remain the focus, and the meeting point and timer are separated for scanning. Entry wording is shorter and offers a Not now action. Full tests, TypeScript and production build passed; actual-component checks cover dismissal without writes, polling persistence, deliberate form submission, leave/reopen behaviour, late rounds, offline state and unavailable-session states. Example-data browser checks at 320px/390px show no horizontal overflow and 46px invitation buttons; desktop checked separately. Screenshots: `tmp/networking-invitation-example.png`, `tmp/networking-waiting-polished-example.png`, `tmp/networking-person-polished-example.png`. These are controlled UI previews, not a new L3 multi-device acceptance. No new migration or Vercel setting is required. The previous migration's history comment was moved inside its transaction solely to satisfy the repository's begin-first convention; no SQL behaviour changed.
+
 ## Early endings — 26 October
 
 Ending a mutually accepted conversation now asks for confirmation. Both guests receive the same discreet, durable in-page notice: **This conversation has ended**. A skipped, unavailable or interrupted offer says **This introduction has ended** instead. No actor, reason or contact detail is included. Matching pauses for each guest independently until she chooses **Find someone else** or **Leave networking**; Get help remains available. The old portrait and timer disappear. A normal completed timed round still rotates automatically.
