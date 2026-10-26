@@ -12,7 +12,7 @@ Guests & check-in → Registered / Arrived / Still expected, search by name, fil
 
 ## Appointing a helper
 
-1. Open Guests & check-in → Your check-in team.
+1. Open Guests & check-in → Add or remove check-in helpers.
 2. Enter a verified active member's sign-in email and press Add helper. Up to ten helpers per event.
 3. The existing notification engine creates a private in-app notification and, subject to preferences, an email job. Delivery uses the existing Resend queue; it is not a promise of immediate inbox delivery. Nothing was sent to real people during verification.
 4. Share the displayed event-specific check-in link if needed. The helper signs in with her own email. The link alone does not grant permission.
@@ -20,6 +20,14 @@ Guests & check-in → Registered / Arrived / Still expected, search by name, fil
 6. The server validates permission, event ID, pass validity, registration and check-in window. Successful scans record time, operator and method, and update the guest to attended. Repeat scans return Already checked in; the database uniqueness constraint prevents another active arrival record.
 
 Only the active Host can add delegated helpers. A helper cannot delegate, browse the guest list, change the event, access payments or reverse attendance. Removing her grant takes effect on the next request, without waiting for a new JWT. A suspended/removed Host's grants stop working because the grantor's active Host assignment is checked on every scanner request. Existing Admin-appointed door staff remain separate; removing a Host delegation does not remove an independent Admin appointment. Super Admin keeps existing oversight and can remove delegated access. Revocation also works after an event; adding helpers requires an upcoming published event.
+
+The helper needs a verified active platform account, but does **not** need to buy/register for the event to operate its scanner. Unknown emails are rejected; no account is silently created. If she is not yet a member, she completes normal registration first and the Host adds her afterward. Hosts do not need Super Admin approval to appoint/remove helpers or manage networking. Existing separate publication/payment/safety gates are unchanged. A Copy link button has a manual-copy fallback when browser clipboard permission is unavailable.
+
+## Who checked in your guests?
+
+Guests & check-in now includes a private **Who checked in your guests?** report. Each operator has a successful-arrival total, QR/code split, first/latest check-in times in the event timezone, and a separate undone count. The guest list identifies the operator and method beside each recorded arrival. Repeated scans return the existing record and do not inflate totals. Active totals include only current confirmed/attended guests and unreversed arrivals; reversed records are counted separately. Removing a helper does not erase her check-in history. Names reflect current profile names, not immutable identity snapshots. Hosts and Admin staff activity are included as well as helpers; the report is not a staff attendance/time-tracking system.
+
+The report uses the existing Host-only event guard, including post-event access. Helpers and other event Hosts cannot read it. Search/filter do not alter event-wide operator totals. There are no guest emails, order data or QR tokens in the response. Foreground refresh is every 15 seconds, not instant push; manual Refresh remains available. Out-of-range guest pages clamp to the last populated page after the list shrinks. Helper instructions are above the guest list; editorial review status is hidden in the live-operation tabs to avoid implying these controls await Admin approval.
 
 ## Concurrent events
 
@@ -37,6 +45,7 @@ Applied live, with local CLI-created filenames aligned to Management API history
 
 - `20261026071404_event_host_arrival_and_networking_schedule.sql`
 - `20261026072143_event_host_helper_offboarding.sql`
+- `20261026112916_event_host_checkin_activity.sql`
 
 No owner SQL or Vercel environment update is needed. No real event, helper assignment, registration or role was modified. Local database runtime is unavailable, so changes were rehearsed against the real project's functions in rollback-only transactions before being applied once.
 
@@ -47,7 +56,7 @@ Supabase skill guidance influenced the least-privilege split and runtime permiss
 ## Verification levels
 
 - **L1:** Actual-component tests for helper assignment and duplicate-submit lock, failure cleanup, stale attendance hiding, filters/paging, foreground refresh, event-scoped scanner calls and scanner thrown-request recovery. Actual schedule rendering verifies Nairobi times. Host tabs render from the real workspace component in example-data previews. Full tests, TypeScript and production build passed.
-- **L2:** `supabase/tests/071_host_event_arrival.sql` contains 36 rollback-only assertions. Covers two simultaneous events, wrong-event QR/manual rejection, correct QR, duplicate scan, Host-only roster, helper-only scanner, no finance permission, removal, Host suspension, public schedule privacy, queue-time email enrichment, a 31-person paginated list, cancelled pass, post-event attendance and post-event revocation. Re-run after application passed. No tagged fixture users were retained and no test email jobs committed.
+- **L2:** `supabase/tests/071_host_event_arrival.sql` now contains 47 rollback-only assertions. Covers two simultaneous events, wrong-event QR/manual rejection, correct QR/code entry, duplicate scan, operator attribution/totals/reversals, history after helper removal, unknown email rejection, clamped pagination, Host-only roster, helper-only scanner, no finance permission, removal, Host suspension, public schedule privacy, queue-time email enrichment, a 31-person paginated list, cancelled pass, post-event attendance and post-event revocation. Re-run after application passed. No tagged fixture users were retained and no test email jobs committed.
 - **L3:** Not complete. Browser checks used actual components with explicit example data—not a signed-in production Host/helper performing camera scans. 320px/390px layouts showed no horizontal page overflow; all five Host tabs were visible and the guest list scrolled within 440px. Example screenshots: `tmp/host-workspace-arrival-example.png`, `tmp/host-arrival-example.png`, `tmp/host-helper-team-example.png`.
 
 ## Pilot acceptance still required

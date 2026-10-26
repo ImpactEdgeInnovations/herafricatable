@@ -409,6 +409,13 @@ Wave 0 owner actions and Wave 1 engineering work may proceed in parallel. No wav
 
 ## What to monitor here in Codex
 
+### 26 October — Host helper flow and check-in accountability
+
+- Implemented/applied: Host-only per-operator attendance counts, QR/manual split, first/latest times, reversal counts and per-guest operator attribution. Removing a helper retains history; duplicates do not inflate counts. No new helper or cross-event data access.
+- Refined: prominent in-page helper setup above the guest list, three plain steps, copyable event-scoped scanner link, active-access labels, last-read time, clear search and pagination recovery. Networking/check-in tabs state that routine operations do not need Admin approval; unrelated editorial review status is not shown there. Publication/payment/safety approvals remain separate.
+- Verified: full tests, TypeScript, production build; 47 rollback-only live DB assertions before/after application, including wrong-event passes, helper restrictions and operator accounting. Example-data mobile/desktop visual inspection is not a live multi-device scanner rehearsal.
+- Database: `20261026112916_event_host_checkin_activity.sql` applied; no owner SQL or Vercel settings required. Physical iOS/Android scan + real helper notification delivery remains an acceptance task, not marked complete.
+
 ### 8 October — Gathering room, themes and topic clarity
 
 - Implemented: remove attendance totals from member gathering hero/cards; total remains in Host-only expandable tools. Hide an empty opted-in attendee section for all members.
