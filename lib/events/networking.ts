@@ -7,10 +7,11 @@ export type NetworkingSession = {
 export type NetworkingState = {
   server_now: string; can_manage: boolean; is_admin?: boolean; eligible?: boolean;
   joined?: boolean; introduction?: string; session: NetworkingSession | null;
+  end_notice?: { id: string; at: string; conversation: boolean };
   match?: { id: string; status: "offered" | "active"; point: string; ends_at: string;
     accept_by: string; accepted: boolean; person: { name: string; avatar_url: string | null; introduction: string } };
   met?: { match_id: string; name: string }[];
-  people?: { name: string; ready: boolean; paired: boolean }[];
+  people?: { name: string; ready: boolean; paired: boolean; choosing?: boolean }[];
   help?: { id: string; name: string; note: string; created_at: string }[];
 };
 export function networkingRemaining(end: string | null | undefined, serverNow: number) {

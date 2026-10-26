@@ -48,10 +48,10 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
         if (!mounted.current) return;
         if (result.error || !result.data?.server_now) throw result.error ?? new Error("Missing session response");
         const next = result.data as NetworkingState;
-        if (previousMatch.current && previousMatch.current.id !== next.match?.id) {
+        if (previousMatch.current && previousMatch.current.id !== next.match?.id && !next.end_notice) {
           setMessage(Date.parse(previousMatch.current.ends_at) <= Date.parse(next.server_now)
             ? "The round has ended. Your next introduction will appear here."
-            : "That introduction has ended. We will look for someone else while you are taking part.");
+            : "That introduction has ended. Your networking status is shown below.");
         }
         previousMatch.current = next.match ?? null;
         if (!hydrated.current) {
@@ -88,12 +88,13 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
       if (request.current) await request.current;
       const result = await supabase.rpc(name, { p_event_id: eventId, ...args });
       if (result.error) throw result.error;
-      setMessage(success); await refresh();
+      await refresh(); setMessage(success);
     } catch (failure) {
       const domain = failure as { code?: string; message?: string };
-      setMessage(domain?.code === "P0001" && /^(Networking is not available|Networking has not been scheduled|This networking session is full|Start during the scheduled networking time)$/.test(domain.message ?? "")
-        ? domain.message! : memberErrorMessage(failure, "update networking"));
+      const feedback = domain?.code === "P0001" && /^(Networking is not available|Networking has not been scheduled|This networking session is full|Start during the scheduled networking time|This introduction has ended|Refresh networking and choose whether to continue)$/.test(domain.message ?? "")
+        ? domain.message! : memberErrorMessage(failure, "update networking");
       await refresh();
+      setMessage(feedback);
     }
     finally { actionLock.current = false; if (mounted.current) setBusy(false); }
   }
@@ -105,6 +106,10 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   async function help() {
     const answer = await ask({ title: "Ask the event team for help", description: "This goes to the Host’s networking panel. For urgent help, speak to the team at the venue; this is not an emergency service.", confirmLabel: "Send to Host", fields: [{ name: "note", label: "What help do you need?", type: "textarea", minLength: 5, maxLength: 500, required: true }] });
     if (answer) await run("event_networking_help", { p_note: String(answer.note) }, "Your request is in the Host’s networking panel.");
+  }
+  async function endIntroduction(matchId: string, talking: boolean) {
+    if (talking && !await ask({ title: "End this conversation?", description: "The other person will see that the conversation has ended, without a reason. You can then meet someone else or leave networking.", confirmLabel: "End conversation" })) return;
+    await run("answer_event_networking", { p_match_id: matchId, p_accept: false }, "");
   }
   async function connect(match: { match_id: string; name: string }) {
     const answer = await ask({ title: `Stay connected with ${match.name}?`, description: "We will send a connection request. Private messages open only if she accepts. Both of you need active platform membership.", confirmLabel: "Send connection request", fields: [{ name: "note", label: "Add a note (optional)", type: "textarea", maxLength: 500, minLength: 10 }] });
@@ -154,13 +159,20 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
         {session.status !== "finished" ? <button className="button button-outline" disabled={locked} onClick={() => void control("finish")}>Finish session</button> : null}
         {state.is_admin ? <button className="button button-outline" disabled={locked} onClick={() => void control(session.disabled ? "enable" : "disable")}>{session.disabled ? "Enable networking" : "Disable networking"}</button> : null}
       </div> : null}
-      {!synced ? <p>Live attendance is unavailable until we reconnect.</p> : state.people?.length ? <div className={styles.roster}><h3>People taking part</h3><ul>{state.people.map((p, i) => <li key={i}><span>{p.name}</span><small>{!p.ready ? "Away / left" : p.paired ? "With an introduction" : "Ready for a new person"}</small></li>)}</ul></div> : <p>No guests have joined networking yet.</p>}
+      {!synced ? <p>Live attendance is unavailable until we reconnect.</p> : state.people?.length ? <div className={styles.roster}><h3>People taking part</h3><ul>{state.people.map((p, i) => <li key={i}><span>{p.name}</span><small>{p.choosing ? "Taking a moment" : !p.ready ? "Away / left" : p.paired ? "With an introduction" : "Ready for a new person"}</small></li>)}</ul></div> : <p>No guests have joined networking yet.</p>}
       {state.help?.length ? <div className={styles.notice}><h3>Guests asking for help</h3>{state.help.map(h => <article key={h.id}><strong>{h.name}</strong><p>{h.note}</p><button className="button button-outline" disabled={locked} onClick={() => void run("resolve_event_networking_help", { p_help_id: h.id }, "Marked as handled.")}>Mark handled</button></article>)}</div> : null}
       <p className={styles.help}>Guests keep this panel open while taking part. A short break is normal when numbers are uneven. No per-pair Admin approval is needed.</p>
     </> : state && session ? <>
       {phase === "finished" ? <p>Networking has finished. You can choose to stay connected with the people you met below.</p>
         : phase === "disabled" || phase === "paused" ? <p>The event team has paused networking. You do not need to do anything.</p>
         : !state.eligible ? <p>Have your event pass checked at the door first. Then return here to join networking.</p>
+        : state.end_notice ? <div className={styles.ended} key={state.end_notice.id}>
+          <div role="status" aria-live="polite"><p className={styles.eyebrow}>Take a moment</p><h3>{state.end_notice.conversation ? "This conversation has ended" : "This introduction has ended"}</h3>
+          <p>You are not being matched right now. When you’re ready, we’ll find someone new. You won’t be paired with this person again at this event.</p></div>
+          <div className={styles.actions}><button className="button button-primary" disabled={locked || phase === "scheduled"} onClick={() => void run("continue_event_networking", { p_notice_id: state.end_notice!.id }, "You’re ready for another introduction.")}>Find someone else</button>
+          <button className="button button-outline" disabled={locked} onClick={() => void run("join_event_networking", { p_join: false }, "You left networking. Your event place is unchanged.")}>Leave networking</button>
+          <button className="button button-quiet" disabled={locked} onClick={() => void help()}>Get help</button></div>
+        </div>
         : !state.joined && !entryOpen ? <div className={styles.joinStrip}><p>Short conversations with other guests.<small>Optional, for checked-in guests.</small></p><button className="button button-primary" disabled={locked} onClick={() => setEntryOpen(true)}>Join networking</button></div>
         : !state.joined ? <form className={styles.form} onSubmit={e => { e.preventDefault(); void run("join_event_networking", { p_join: true, p_introduction: introduction }, "You joined networking. Keep this panel open while taking part."); }}>
           <p>Meet other guests, one conversation at a time. Joining is your choice; you can leave whenever you like.</p>
@@ -172,7 +184,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
             <div className={styles.meeting}><div><small>Meeting point</small><strong>{match.point}</strong></div><div className={styles.meetingClock}><small>{phase === "talking" ? "Time together" : "Time to accept"}</small><span className={styles.timer} aria-label={phase === "talking" ? "Conversation time remaining" : "Time to accept"}>{networkingCountdown(networkingRemaining(phase === "talking" ? match.ends_at : match.accept_by, now))}</span></div></div>
             {phase === "talking" ? <div className={styles.prompt}><small>A conversation starter</small><p>{session.prompt || "What would you enjoy sharing with each other?"}</p></div> : <p className={styles.acceptance}>{match.accepted ? "You said yes. Waiting for her reply." : "Would you like to meet? You both choose."}</p>}
             <div className={styles.actions}>{phase === "offered" && !match.accepted ? <button className="button button-primary" disabled={locked} onClick={() => void run("answer_event_networking", { p_match_id: match.id, p_accept: true }, "Accepted. Waiting for both of you to be ready.")}>Accept introduction</button> : null}
-              <button className="button button-outline" disabled={locked} onClick={() => void run("answer_event_networking", { p_match_id: match.id, p_accept: false }, "Introduction ended. You will not be paired with this person again at this event.")}>{phase === "talking" ? "Leave this round" : "Skip"}</button></div>
+              <button className="button button-outline" disabled={locked} onClick={() => void endIntroduction(match.id, phase === "talking")}>{phase === "talking" ? "End conversation" : "Skip"}</button></div>
           </article> : <div className={`${styles.waiting}${phase === "waiting" && synced ? ` ${styles.searching}` : ""}`}>
             {phase === "waiting" && synced ? <div className={styles.dialGroup}><div className={styles.dial} style={{"--network-progress":roundProgress} as CSSProperties}><div className={`${styles.radar}${animationPaused ? ` ${styles.radarPaused}` : ""}`} aria-hidden="true"><i /><i /></div><div className={styles.dialText}><small>Round {session.round_no}</small><span className={styles.timer} aria-label="Round time remaining">{networkingCountdown(roundRemaining)}</span><small>remaining</small></div></div><button className={styles.motionToggle} type="button" aria-pressed={animationPaused} onClick={() => setAnimationPaused(!animationPaused)}>{animationPaused ? "Resume animation" : "Pause animation"}</button></div> : null}
             <div className={styles.waitingCopy}><h3 role="status">{!synced ? "Reconnecting to networking" : phase === "scheduled" ? "You are ready" : phase === "changeover" ? "A moment to move" : "Finding your next introduction"}</h3><p>{phase === "scheduled" ? "The Host will begin shortly. Keep this page open." : phase === "changeover" ? "Your next introduction will appear here." : "Stay here. We’ll introduce you to someone new."}</p>

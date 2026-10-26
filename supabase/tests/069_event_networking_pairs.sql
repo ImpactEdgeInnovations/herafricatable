@@ -90,11 +90,23 @@ select member_a,member_b,'[TEST] Blocked pair' from hat_networking.matches where
 select hat_networking.tick('f0252000-0000-4000-8000-000000000001');
 select pg_temp.check_networking(not exists(select 1 from hat_networking.matches where round_no=2 and status in ('offered','active')),'block invalidates current offer');
 delete from public.member_blocks where blocker_id::text like 'f0250000-%';
+-- Test participants explicitly choose to continue after the interruption.
+-- In production this is each guest's Find someone else button, not auto-join.
+do $$ declare p record; begin
+  for p in select user_id,ended_match_id from hat_networking.participants
+    where event_id='f0252000-0000-4000-8000-000000000001' and ended_match_id is not null loop
+    perform set_config('request.jwt.claim.sub',p.user_id::text,true);
+    perform public.continue_event_networking('f0252000-0000-4000-8000-000000000001',p.ended_match_id);
+  end loop;
+end; $$;
 -- Bring in a fourth checked-in guest for skip/timeout/refresh assertions.
 set local role authenticated;
 select set_config('request.jwt.claim.sub','f0250000-0000-4000-8000-000000000006',true);
 select public.join_event_networking('f0252000-0000-4000-8000-000000000001',true,'Building a local retail business');
 reset role;
+-- Advance offer deadlines with the synthetic schedule, as real time would.
+update hat_networking.matches set ends_at=now()-interval '1 second'
+  where event_id='f0252000-0000-4000-8000-000000000001' and status='offered';
 update hat_networking.sessions set anchor_at=now()-interval '12 minutes',next_at=now()-interval '1 second' where event_id='f0252000-0000-4000-8000-000000000001';
 select hat_networking.tick('f0252000-0000-4000-8000-000000000001');
 select pg_temp.check_networking(not exists(select 1 from hat_networking.matches where event_id='f0252000-0000-4000-8000-000000000001' group by member_a,member_b having count(*)>1),'unique event pair history survives rotations');
@@ -108,6 +120,13 @@ reset role;
 select pg_temp.check_networking((select status='closed' from hat_networking.matches where id=current_setting('test.networking.second')::uuid),'skip closes introduction');
 select pg_temp.check_networking(not exists(select 1 from hat_networking.matches x join hat_networking.matches y on x.event_id=y.event_id and x.member_a=y.member_a and x.member_b=y.member_b and x.id<>y.id),'declined pairs never repeat');
 -- Timeout a fresh offer without accepting it. No conversation is recorded.
+do $$ declare p record; begin
+  for p in select user_id,ended_match_id from hat_networking.participants
+    where event_id='f0252000-0000-4000-8000-000000000001' and ended_match_id is not null loop
+    perform set_config('request.jwt.claim.sub',p.user_id::text,true);
+    perform public.continue_event_networking('f0252000-0000-4000-8000-000000000001',p.ended_match_id);
+  end loop;
+end; $$;
 select pg_temp.check_networking(exists(select 1 from hat_networking.matches where status='offered'),'timeout fixture has a real offered pair');
 update hat_networking.matches set accept_by=now()-interval '1 second' where status='offered';
 select hat_networking.tick('f0252000-0000-4000-8000-000000000001');

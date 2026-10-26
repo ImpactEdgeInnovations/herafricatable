@@ -89,6 +89,10 @@
 .prompt { padding:0 1px; }
 .prompt p { font:400 19px/1.45 Georgia,serif; margin:0; color:#3c4c3e; }
 .match .actions { margin:20px 0 0; }
+.ended { padding:26px; border-top:3px solid #9a8350; background:linear-gradient(120deg,#fbf7e9,#fffdf7); }
+.ended h3 { margin:8px 0 12px; font:400 29px/1.2 Georgia,serif; letter-spacing:-.025em; }
+.ended p:not(.eyebrow) { color:var(--network-muted); font-size:15px; line-height:1.65; max-width:56ch; margin:0; }
+.ended .actions { margin:22px 0 0; }
 .newMatch { animation:match-arrived .65s ease-out 1; }
 .notice { padding:12px 16px; margin:12px 0; border-left:3px solid #527d61; background:#edf2e5; line-height:1.5; font-size:14px; overflow-wrap:anywhere; }
 .notice p { margin:3px 0 10px; }
@@ -136,6 +140,10 @@
   .guest>.actions { padding:7px 20px; gap:12px; }
   .guest>.form { padding:20px; }
   .match { padding:23px 20px; }
+  .ended { padding:22px 20px; }
+  .ended h3 { font-size:26px; }
+  .ended .actions { align-items:stretch; }
+  .ended .actions>* { flex:1 1 auto; }
   .person { gap:16px; }
   .matchOrbit { width:76px; height:76px; padding:4px; }
   .initial { font-size:32px; }

@@ -1,6 +1,20 @@
 # Meet someone new — in-person networking
 
-Updated: 25 October 2026. First release: pairs only, up to 200 participants per event.
+Updated: 26 October 2026. First release: pairs only, up to 200 participants per event.
+
+## Early endings — 26 October
+
+Ending a mutually accepted conversation now asks for confirmation. Both guests receive the same discreet, durable in-page notice: **This conversation has ended**. A skipped, unavailable or interrupted offer says **This introduction has ended** instead. No actor, reason or contact detail is included. Matching pauses for each guest independently until she chooses **Find someone else** or **Leave networking**; Get help remains available. The old portrait and timer disappear. A normal completed timed round still rotates automatically.
+
+The notice survives refresh and reconnection. It is not an email, push notification or promise of immediate delivery while offline; foreground polling remains five seconds. Leaving networking also ends the current pairing and gives the remaining guest the choice. Host pause/Admin disable prevent continuation, and cancelled registration fails the eligibility check. A notice-specific acknowledgement prevents stale tabs from clearing a later interruption. Early-ended introductions still do not enter People you met; no retention policy changed.
+
+Migration `20261026063649_event_networking_private_end_notice.sql` applied live, with local filename aligned to the recorded Management API version. No local database runtime is available, so SQL was rehearsed in rollback-only transactions using the live project's tagged fake fixtures, then applied once. Both 34-assertion test 069 and 23-assertion test 070 passed before and after application; no test data or outbound emails were retained. Test 069 now explicitly acknowledges interruptions and advances fake offer deadlines with its synthetic clock.
+
+Actual-component L1 tests cover actor ending, peer notice, refresh-loaded notice, failed/duplicate continuation, no stale portrait/timer, pause and eligibility. TypeScript, full tests and production build passed. At 320px/390px the example-data notice has no horizontal overflow and controls are at least 44px tall (`tmp/networking-ended-example.png`). This is not a two-device L3 rehearsal; that acceptance remains open. Advisors retain the existing deny-all private-table notices; the new authenticated SECURITY DEFINER warning is the intentional own-notice RPC, protected by authentication, eligibility, notice ownership and the session lock. Existing unrelated advisories remain outside this change.
+
+### When guests see networking
+
+Registration alone does not permit participation. A confirmed guest can open the event and see its scheduled countdown, but must check in before joining. A checked-in guest sees the in-page Join networking option; once the Host starts, the panel shows Live now and updates while open. Physically attending without recorded check-in is insufficient. There is no site-wide alert, automatic email/push prompt, automatic opt-in or location tracking. Merely reaching the start time does not start a Host-controlled session.
 
 ## What is implemented
 
@@ -29,8 +43,8 @@ UI verification: actual-component tests cover the new completed-history state as
 - Each offer has a 30-second acceptance window; both people accept before a conversation is active. All conversations in a round share its server end time, so acceptance uses part of the round rather than starting a new full-length timer.
 - Every offered pairing is recorded uniquely for the event, including declined/expired offers. Those pairs never repeat in this session. Matching prioritises guests with fewer conversations, then those waiting longest. An uneven pool may have a fair break; constrained matching is not a promise to meet every guest.
 - Refresh preserves assignments. Foreground state polls every five seconds, uses server time plus a monotonic elapsed clock, resynchronises on focus/online, hides stale matches on failure, and pauses heartbeat while hidden. This is not Supabase Realtime.
-- Only present, opted-in guests receive new offers. Locking a phone does not terminate an already mutually accepted **in-person** conversation. On explicit departure, cancellation, refund, block or profile ineligibility, the pairing closes on the next authorised tick. Late arrivals can join if at least a minute remains; otherwise they wait for the next round. An unanswered offer expires; a responding partner can return to the pool.
-- Leaving a round is distinct from leaving networking. Skips are discreet; no reason is disclosed to the other person. Guests can also leave while paused/disabled.
+- Only present, opted-in guests receive new offers. Locking a phone does not terminate an already mutually accepted **in-person** conversation. On explicit departure, cancellation, refund, block or profile ineligibility, the pairing closes on the next authorised tick. Late arrivals can join if at least a minute remains; otherwise they wait for the next round. An unanswered offer expires; guests choose whether to return to the pool after an early interruption.
+- Ending a conversation is distinct from leaving networking. Skips are discreet; no reason is disclosed to the other person. Guests can also leave while paused/disabled.
 - Completed mutual introductions appear under People you met. Stay connected requires another explicit confirmation and uses the existing connection-request function, including its active-member, block, cooldown and notification rules. Event-only guests do not gain member messaging.
 - Get help writes a private request to the selected event's Host/Admin networking panel. One outstanding request per guest. It is not an emergency service or an email/push alert; the Host must monitor the panel and guests should speak to the venue team if urgent.
 - Host attendance is limited to joined names/readiness/pairing state, not a private conversation feed. Reads that fail do not show an all-clear or stale ready counts.
@@ -71,6 +85,7 @@ Full local test suite, TypeScript and production build passed. No real outbound 
 - [ ] Refresh, lock/unlock a phone, briefly disconnect, then reconnect. The shared clock must not restart; an accepted face-to-face conversation survives the phone lock.
 - [ ] Run at least three rounds. Nobody appears twice, waiting guests rotate and a late arrival joins safely.
 - [ ] Skip, fail to respond, leave a round, leave networking, block someone and revoke an event place. Verify the other device's discreet feedback and no stale match after the next update.
+- [ ] End an accepted conversation early. Both devices show the generic notice, no old timer/portrait and no new match until each guest chooses. Refresh one device; its notice remains. Find someone else must not repeat the ended pair; leaving must not alter the event booking. Verify no email/push is sent for ending.
 - [ ] Host pause/resume, Super Admin disable, Host denied resume, Admin enable and Host finish. End time remains authoritative.
 - [ ] Send help and mark it handled on the Host panel. Verify another event's Host cannot read it.
 - [ ] After a completed introduction, send an explicit connection request, inspect the pending request on the recipient account and accept/decline; verify messaging still needs acceptance.

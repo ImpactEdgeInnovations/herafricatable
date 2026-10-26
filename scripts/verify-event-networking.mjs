@@ -69,6 +69,28 @@ const radar=harness({...base,match:null});await flush();assert(radar.html().incl
 const scheduled=harness({...base,joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}});await flush();assert(scheduled.html().includes('12:46'));assert(!scheduled.html().includes('<form'));scheduled.button('Join networking').props.onClick();assert(scheduled.html().includes('<form'));scheduled.cleanup();
 const waitingHost=harness({...base,joined:false,match:null,session:{...base.session,status:'scheduled'}});await flush();assert(waitingHost.html().includes('Waiting for the Host to begin'));assert(!waitingHost.html().includes('class="radar"'));waitingHost.cleanup();
 const completed=harness({...base,match:null,session:{...base.session,status:'finished'},met:[{match_id:'old',name:'Zuri'}]});await flush();assert(completed.html().includes('class="roster" open=""'));assert(completed.html().includes('14 days'));assert(completed.html().includes('/network?view=connections'));completed.cleanup();
+const endedState={...base,joined:false,match:null,end_notice:{id:'match-1',at:base.server_now,conversation:true}};
+const ended=harness(endedState);await flush();
+assert(ended.html().includes('This conversation has ended'),'refresh loads durable ending state');
+assert(!ended.html().includes('Conversation time remaining'));assert(!ended.html().includes('class="radar"'));
+assert(!ended.button('Join networking'));assert(ended.button('Find someone else'));assert(ended.button('Leave networking'));
+ended.mutationError(true);ended.button('Find someone else').props.onClick();await flush();
+assert(ended.html().includes('This conversation has ended'),'failed continuation keeps choice visible');
+assert(!ended.button('Find someone else').props.disabled,'failed continuation releases action lock');
+ended.mutationError(false);ended.set({...base,match:null});
+ended.button('Find someone else').props.onClick();ended.button('Find someone else').props.onClick();await flush();
+assert.equal(ended.calls.filter(x=>x.name==='continue_event_networking').length,2,'one failed attempt and one successful write, not a duplicate click');
+assert.deepEqual(ended.calls.find(x=>x.name==='continue_event_networking').args,{p_event_id:'event',p_notice_id:'match-1'});
+assert(ended.html().includes('Finding your next introduction'));assert(!ended.html().includes('This conversation has ended'));ended.cleanup();
+const early=harness({...base,match:{...base.match,status:'active'}});await flush();
+assert(early.button('End conversation'));early.set(endedState);early.button('End conversation').props.onClick();await flush();
+assert.deepEqual(early.calls.find(x=>x.name==='answer_event_networking').args,{p_event_id:'event',p_match_id:'match-1',p_accept:false});
+assert(early.html().includes('This conversation has ended'));assert(!early.html().includes('Meet Amina'));early.cleanup();
+const peer=harness({...base,match:{...base.match,status:'active'}});await flush();peer.set(endedState);await peer.poll();
+assert(peer.html().includes('This conversation has ended'));assert(!peer.html().includes('We will look for someone else'));
+assert.equal(peer.calls.filter(x=>x.name!=='get_event_networking').length,0,'peer notification never auto-acknowledges');
+peer.set({...endedState,session:{...base.session,status:'paused'}});await peer.poll();assert(!peer.button('Find someone else'),'Host pause prevents continuation');
+peer.set({...endedState,eligible:false});await peer.poll();assert(!peer.button('Find someone else'),'revoked guest cannot continue');peer.cleanup();
 
 const sql=read('supabase/migrations/20261025060849_event_networking_pairs.sql');
 for(const guard of ['for update','unique(event_id,member_a,member_b)',"m.status='attended'",'public.is_blocked_pair','accepted_a and accepted_b',"interval '60 seconds'",'revoke all on schema hat_networking','revoke all on all functions in schema hat_networking','request_connection_with_context']) assert(sql.includes(guard),guard);
@@ -81,7 +103,7 @@ if(process.argv.includes('--preview')) {
   const target=new URL('tmp/networking-preview/',root);mkdirSync(target,{recursive:true});
   const css=read('components/events/event-networking.module.css')+'\nbody{margin:0;background:#f6f4ed;font-family:Arial,sans-serif;padding:24px;color:#263a31}main{max-width:900px;margin:auto}button{font:inherit;border:1px solid #bfcfc3;border-radius:8px;padding:10px 16px;background:white;color:#215846;cursor:pointer}.button-primary{background:#215846;color:white}h1{font-size:28px}';
   writeFileSync(new URL('index.html',target),`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking preview — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE PEOPLE · NO LIVE ACTIONS</p>${p.html()}</main></body></html>`);p.cleanup();
-  for(const [name,extra] of [['radar',{match:null}],['strip',{joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}}]]){
+  for(const [name,extra] of [['ended',endedState],['radar',{match:null}],['strip',{joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}}]]){
     const sample=harness({...base,...extra});await flush();writeFileSync(new URL(`${name}.html`,target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking ${name} — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${sample.html()}</main></body></html>`);sample.cleanup();
   }
 }
