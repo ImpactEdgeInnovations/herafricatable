@@ -28,7 +28,7 @@ const flush = async () => { for(let i=0;i<5;i++) await new Promise(resolve => se
 function harness(initial = base) {
   let current=structuredClone(initial), fail=false, mutationError=false, cursor=0, values=[], effects=[], intervalId=0;
   const calls=[], intervals=new Map(), listeners=new Map();
-  const client={ rpc:async(name,args)=>{calls.push({name,args}); if(fail) throw Error('offline'); if(name==='get_event_networking')return {data:current,error:null}; if(mutationError)throw Error('write failed'); return {data:null,error:null}; } };
+  const client={ rpc:async(name,args)=>{calls.push({name,args}); if(fail) throw Error('offline'); if(name==='get_event_networking')return {data:current,error:null};if(name==='get_my_networking_connection_states')return {data:(current.met??[]).map(p=>({match_id:p.match_id,state:p.connection_state??'available'})),error:null}; if(mutationError)throw Error('write failed'); return {data:null,error:null}; } };
   const state=initialValue=>{const i=cursor++; if(!(i in values))values[i]=typeof initialValue==='function'?initialValue():initialValue; return [values[i],v=>{values[i]=typeof v==='function'?v(values[i]):v;}];};
   const ref=v=>{const i=cursor++; return values[i]??=( {current:v} );};
   const doc={hidden:false,addEventListener:(name,fn)=>listeners.set('doc:'+name,fn),removeEventListener:name=>listeners.delete('doc:'+name)};
@@ -59,6 +59,7 @@ h.set({...base,match:null});await h.poll();assert(h.html().includes('That introd
 h.cleanup();assert.equal(h.intervals.size,0);assert.equal(h.listeners.size,0);
 const host=harness({...base,can_manage:true,is_admin:true,match:null,people:[{name:'Amina',ready:true,paired:true}],help:[{id:'help',name:'Amina',note:'Help finding the table'}]});await flush();
 assert(host.html(true).includes('Disable networking'));assert(host.html(true).includes('Mark handled'));assert(!host.html(true).includes('Accept introduction'));
+assert(host.html(true).includes('Your live session'));assert(host.html(true).includes('Ready to meet'));assert(host.html(true).includes('Round ends in'));assert(host.html(true).includes('No Admin approval needed'));
 host.button('Pause',true).props.onClick();await flush();assert.equal(host.calls.find(x=>x.name==='control_event_networking').args.p_action,'pause');host.cleanup();
 const scheduling=harness({...base,can_manage:true,match:null,session:{...base.session,status:'scheduled'}});await flush();
 scheduling.button('Edit schedule',true).props.onClick();scheduling.forms(true)[0].props.onSubmit({preventDefault(){}});await flush();
@@ -95,6 +96,9 @@ const radar=harness({...base,match:null});await flush();assert(radar.html().incl
 const scheduled=harness({...base,joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}});await flush();assert(scheduled.html().includes('12:46'));assert(!scheduled.html().includes('<form'));scheduled.button('Join networking').props.onClick();assert(scheduled.html().includes('<form'));scheduled.cleanup();
 const waitingHost=harness({...base,joined:false,match:null,session:{...base.session,status:'scheduled'}});await flush();assert(waitingHost.html().includes('Waiting for the Host to begin'));assert(!waitingHost.html().includes('class="radar"'));waitingHost.cleanup();
 const completed=harness({...base,match:null,session:{...base.session,status:'finished'},met:[{match_id:'old',name:'Zuri'}]});await flush();assert(completed.html().includes('class="roster" open=""'));assert(completed.html().includes('14 days'));assert(completed.html().includes('/network?view=connections'));completed.cleanup();
+for (const [status,label] of [['connected','Connected · View connections'],['outgoing','Request sent'],['incoming','Respond to her request'],['unavailable','Connection unavailable'],['unknown','Connection status unavailable']]) {
+  const history=harness({...base,match:null,session:{...base.session,status:'finished'},met:[{match_id:'old',name:'Zuri',connection_state:status}]});await flush();assert(history.html().includes(label));assert(!history.button('Stay connected'));history.cleanup();
+}
 const endedState={...base,joined:false,match:null,end_notice:{id:'match-1',at:base.server_now,conversation:true}};
 const ended=harness(endedState);await flush();
 assert(ended.html().includes('This conversation has ended'),'refresh loads durable ending state');
@@ -131,6 +135,7 @@ if(process.argv.includes('--preview')) {
   writeFileSync(new URL('index.html',target),`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking preview — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE PEOPLE · NO LIVE ACTIONS</p>${p.html()}</main></body></html>`);p.cleanup();
   const hostSetup=harness({...base,can_manage:true,joined:false,match:null,session:{...base.session,status:'scheduled'}});await flush();hostSetup.button('Edit schedule',true).props.onClick();
   writeFileSync(new URL('host-networking.html',target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Host networking — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${hostSetup.html(true)}</main></body></html>`);hostSetup.cleanup();
+  const liveHost=harness({...base,can_manage:true,match:null,people:[{name:'Amina',ready:true,paired:true},{name:'Zuri',ready:true,paired:true},{name:'Wanjiku',ready:true,paired:false},{name:'Nia',ready:false,paired:false}],help:[]});await flush();writeFileSync(new URL('host-live.html',target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Host live controls — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${liveHost.html(true)}</main></body></html>`);liveHost.cleanup();
   for(const [name,extra] of [['invitation',{joined:false,match:null}],['ended',endedState],['radar',{match:null}],['strip',{joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}}]]){
     const sample=harness({...base,...extra});await flush();writeFileSync(new URL(`${name}.html`,target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking ${name} — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${sample.html()}</main></body></html>`);sample.cleanup();
   }

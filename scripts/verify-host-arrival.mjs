@@ -45,7 +45,7 @@ const doorSource=read('components/events/event-door-console.tsx');
 const checkSource=compile(doorSource.slice(doorSource.indexOf('  async function checkIn('),doorSource.indexOf('  async function startCamera(')));
 for(const fail of [false,true]){
   const calls=[],states=[],results=[],busyRef={current:false};
-  const context={busyRef,setBusy:v=>states.push(v),setResult:v=>results.push(v),setCode(){},eventId:'event-a',memberErrorMessage:()=> 'Try the same pass again.',supabase:{rpc:async(name,args)=>{calls.push({name,args});if(fail)throw Error('offline');return {data:[{outcome:'checked_in',message:'Checked in'}],error:null};}}};
+  const context={busyRef,setBusy:v=>states.push(v),setLastMethod(){},setResult:v=>results.push(v),setCode(){},eventId:'event-a',memberErrorMessage:()=> 'Try the same pass again.',supabase:{rpc:async(name,args)=>{calls.push({name,args});if(fail)throw Error('offline');return {data:[{outcome:'checked_in',message:'Checked in'}],error:null};}}};
   const check=new Function(...Object.keys(context),`${checkSource};return checkIn;`)(...Object.values(context));
   await Promise.all([check('PASS-TEST','manual'),check('PASS-TEST','manual')]);
   assert.equal(calls.length,1);assert.equal(calls[0].args.p_event_id,'event-a');assert.equal(busyRef.current,false);assert.equal(states.at(-1),false);

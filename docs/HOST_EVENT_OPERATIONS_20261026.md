@@ -2,6 +2,8 @@
 
 Updated: 26 October 2026. Implementation complete; independent physical-device acceptance remains open.
 
+Follow-up: [scanner, live controls, member reminders, connection status and attendance CSV](EVENT_OPERATIONS_POLISH_20261026.md) implemented in the next refinement pass. The attendance integration fixture now has 67 assertions; the 47-assertion entry below records the earlier helper-report baseline.
+
 ## Where to find it
 
 Open your published in-person/hybrid event → Manage your event. **Networking** and **Guests & check-in** are visible preparation tabs, not hidden under More. Tabs wrap on phones. Other editing drafts are retained while moving between sections.

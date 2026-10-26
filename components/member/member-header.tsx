@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { FloatingTableGuide } from "@/components/member/floating-table-guide";
 import { createClient } from "@/lib/supabase/server";
+import { NetworkingUpdates } from "@/components/events/networking-updates";
 
 type MemberDestination =
   | "account"
@@ -257,6 +258,7 @@ export async function MemberHeader({
           <SignOutButton className="member-sign-out" />
         </div>
       </header>
+      {user ? <NetworkingUpdates /> : null}
       <nav className="member-mobile-dock" aria-label="Member shortcuts">
         {mobileNavigation.map((destination) => (
           <Link

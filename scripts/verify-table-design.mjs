@@ -28,12 +28,13 @@ const client = {
     return { data: name === 'list_my_community_activity' ? [{ new_activity_count: 2 }] : [] };
   },
 };
-const { MemberHeader } = new Function('React', 'Link', 'SignOutButton', 'FloatingTableGuide', 'createClient',
+const { MemberHeader } = new Function('React', 'Link', 'SignOutButton', 'FloatingTableGuide', 'NetworkingUpdates', 'createClient',
   `${compile(read('components/member/member-header.tsx'))};return {MemberHeader};`)(React, Link,
-  () => React.createElement('button', { className: 'session-sign-out', type: 'button' }, 'Sign out'), () => null, async () => client);
+  () => React.createElement('button', { className: 'session-sign-out', type: 'button' }, 'Sign out'), () => null, () => React.createElement('aside',{'data-networking-updates':true}), async () => client);
 const header = await MemberHeader({ active: 'home', label: 'Member home' });
 const headerHtml = renderToStaticMarkup(header);
 assert(headerHtml.includes('class="member-sidebar"'));
+assert(headerHtml.includes('data-networking-updates'),'Authenticated member shell includes read-only networking reminder');
 for (const path of ['/home', '/events', '/communities', '/network', '/messages', '/explore', '/profile', '/support', '/search', '/notifications']) assert(headerHtml.includes(`href="${path}"`), path);
 assert(headerHtml.includes('Sign out') && headerHtml.includes('aria-current="page"'));
 assert(!headerHtml.includes('/admin'), 'A visual navigation change must not invent an Admin grant');
@@ -43,7 +44,8 @@ assert.equal((dock.match(/<a /g)||[]).length,4,'Four stable mobile destinations'
 for(const label of ['Home','Events','Communities','People'])assert(dock.includes(`>${label}`)||dock.includes(label));
 assert(!dock.includes('href="/messages"'));assert(headerHtml.includes('class="member-message-link"'),'Messages remains accessible from header');
 signedIn = false;
-assert(!renderToStaticMarkup(await MemberHeader({ active: 'events', label: 'Events' })).includes('class="member-sidebar"'));
+const publicHeader=renderToStaticMarkup(await MemberHeader({ active: 'events', label: 'Events' }));
+assert(!publicHeader.includes('class="member-sidebar"'));assert(!publicHeader.includes('data-networking-updates'),'No private reminder on public visitor shell');
 
 const { YourTableToday } = new Function('React', 'Link', 'EventPosterImage', `${compile(read('components/member/your-table-today.tsx'))};return {YourTableToday};`)(React, Link,({src,alt})=>React.createElement('figure',{className:'event-detail-poster'},React.createElement('img',{src,alt})));
 const suggestion = (title, href, kicker, action, description) => ({ title, href, kicker, action, description });

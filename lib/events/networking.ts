@@ -10,7 +10,7 @@ export type NetworkingState = {
   end_notice?: { id: string; at: string; conversation: boolean };
   match?: { id: string; status: "offered" | "active"; point: string; ends_at: string;
     accept_by: string; accepted: boolean; person: { name: string; avatar_url: string | null; introduction: string } };
-  met?: { match_id: string; name: string }[];
+  met?: { match_id: string; name: string; connection_state?: "available" | "connected" | "outgoing" | "incoming" | "unavailable" | "unknown" }[];
   people?: { name: string; ready: boolean; paired: boolean; choosing?: boolean }[];
   help?: { id: string; name: string; note: string; created_at: string }[];
 };

@@ -27,6 +27,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   const request = useRef<Promise<void> | null>(null);
   const hydrated = useRef(Boolean(initial));
   const previousMatch = useRef(initial?.match ?? null);
+  const connectionCache = useRef<{ sampled:number; ids:string; rows:{match_id:string;state:NonNullable<NetworkingState["met"]>[number]["connection_state"]}[] }>({ sampled:-Infinity, ids:"", rows:[] });
   const [introduction, setIntroduction] = useState(initial?.introduction ?? "");
   const proposedStart = Math.max(Date.parse(eventStartsAt ?? new Date().toISOString()) + 15 * 60_000, Date.now());
   const proposedEnd = Math.min(proposedStart + 30 * 60_000, Date.parse(eventEndsAt ?? new Date(proposedStart + 30 * 60_000).toISOString()));
@@ -50,6 +51,23 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
         if (!mounted.current) return;
         if (result.error || !result.data?.server_now) throw result.error ?? new Error("Missing session response");
         const next = result.data as NetworkingState;
+        if (!manage && next.met?.length) {
+          // A status-read failure must not make an existing request look absent.
+          const ids = next.met.map(p => p.match_id).sort().join(",");
+          let statuses = connectionCache.current.rows;
+          if (ids !== connectionCache.current.ids || performance.now() - connectionCache.current.sampled >= 30000) {
+            statuses = [];
+            try {
+              const read = await supabase.rpc("get_my_networking_connection_states", { p_event_id: eventId });
+              if (!read.error && Array.isArray(read.data)) {
+                statuses = read.data;
+                connectionCache.current = { sampled:performance.now(), ids, rows:statuses };
+              } else connectionCache.current.sampled = -Infinity;
+            } catch { connectionCache.current.sampled = -Infinity; }
+          }
+          next.met = next.met.map(person => ({ ...person, connection_state: statuses.find(s => s.match_id === person.match_id)?.state ?? "unknown" }));
+        }
+        if (!mounted.current) return;
         if (previousMatch.current && previousMatch.current.id !== next.match?.id && !next.end_notice) {
           setMessage(Date.parse(previousMatch.current.ends_at) <= Date.parse(next.server_now)
             ? "The round has ended. Your next introduction will appear here."
@@ -71,7 +89,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
       } finally { request.current = null; }
     })();
     return request.current;
-  }, [eventId, supabase, timeZone]);
+  }, [eventId, supabase, timeZone, manage]);
 
   useEffect(() => {
     mounted.current = true;
@@ -90,6 +108,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
       if (request.current) await request.current;
       const result = await supabase.rpc(name, { p_event_id: eventId, ...args });
       if (result.error) throw result.error;
+      if (name === "connect_event_networking") connectionCache.current.sampled = -Infinity;
       await refresh(); setMessage(success);
       return true;
     } catch (failure) {
@@ -147,6 +166,9 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   const invitationTitle = invitationLive && !entryOpen && !invitationDismissed
     ? session.round_no <= 1 ? "Networking is starting" : "Networking is live"
     : "Meet someone new";
+  const readyPeople = state?.people?.filter(p => p.ready && !p.paired && !p.choosing).length ?? 0;
+  const pairedPeople = state?.people?.filter(p => p.paired).length ?? 0;
+  const restingPeople = state?.people?.filter(p => !p.paired && (!p.ready || p.choosing)).length ?? 0;
   return <section className={`${styles.panel}${!manage ? ` ${styles.guest}` : ""}${!manage && !state?.joined ? ` ${styles.strip}` : ""}`} id="event-networking" aria-labelledby={`networking-title-${manage ? "host" : "guest"}`}>
     <header className={styles.heading}><div><p className={styles.eyebrow}>{manage ? "Host tools · In person" : "At this event · Networking"}</p><h2 id={`networking-title-${manage ? "host" : "guest"}`}>{manage ? "Networking rounds" : invitationTitle}</h2>
       {session ? <p>{time(session.starts_at)}–{time(session.ends_at)} <span aria-hidden="true">·</span> {session.minutes} min per conversation{manage ? ` · ${session.changeover}s between rounds` : ""}</p> : <p>Short introductions for checked-in guests. No contact details are shared.</p>}</div>
@@ -155,6 +177,10 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
     {!manage && session && phase === "scheduled" ? <div className={styles.startStrip} aria-label="Networking start time"><span className={styles.liveDot} aria-hidden="true" /><strong>{!synced ? "Checking the start time…" : startRemaining > 0 ? "Networking starts in" : "Waiting for the Host to begin"}</strong>{synced && startRemaining > 0 ? <span className={styles.startTimer}>{networkingStartCountdown(startRemaining)}</span> : null}</div> : null}
     {error ? <div className={styles.notice} role="alert"><p>{error}</p><button type="button" className="button button-outline" onClick={() => void refresh()} disabled={busy}>Try again</button></div> : null}
     {manager ? <>
+      {session ? <div className={styles.liveOverview}>
+        <div className={styles.liveClock}><div><p className={styles.eyebrow}>Your live session</p><h3>{!synced ? "Reconnecting…" : session.disabled ? "Paused by Admin" : phase === "finished" ? "Session finished" : session.status === "paused" ? "Session paused" : session.status === "scheduled" ? "Ready when you are" : phase === "changeover" ? "Time to change places" : `Round ${session.round_no || 1}`}</h3><p>No Admin approval needed to start, pause or finish. Guests still choose to join.</p></div>{synced && session.status === "running" && !session.disabled && phase !== "finished" ? <div><small>{phase === "changeover" ? "Next round in" : "Round ends in"}</small><strong className={styles.timer}>{networkingCountdown(phase === "changeover" ? networkingRemaining(session.next_at,now) : roundRemaining)}</strong></div> : null}</div>
+        {synced ? <div className={styles.liveCounts}><div><strong>{readyPeople}</strong><span>Ready to meet</span></div><div><strong>{pairedPeople}</strong><span>Paired</span></div><div><strong>{restingPeople}</strong><span>Taking a break</span></div></div> : <p>Counts will return after we reconnect.</p>}
+      </div> : null}
       {!session || session.status === "scheduled" ? <>
         <button className="button button-outline" type="button" aria-expanded={formOpen} onClick={() => setFormOpen(!formOpen)}>{session ? "Edit schedule" : "Set up networking"}</button>
         {formOpen ? <form className={styles.form} onSubmit={e => { e.preventDefault(); void save(); }}>
@@ -168,7 +194,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
           <button className="button button-primary" disabled={locked}>Save schedule</button>
         </form> : null}
       </> : null}
-      {session ? <div className={styles.actions}>
+      {session ? <div className={`${styles.actions} ${styles.hostControls}`} aria-label="Networking session controls">
         {session.status === "scheduled" && !session.disabled ? <button className="button button-primary" disabled={locked || now < Date.parse(session.starts_at) || now >= Date.parse(session.ends_at)} onClick={() => void control("start")}>Start networking</button> : null}
         {session.status === "running" ? <button className="button button-outline" disabled={locked} onClick={() => void control("pause")}>Pause</button> : null}
         {session.status === "paused" && !session.disabled ? <button className="button button-primary" disabled={locked || now >= Date.parse(session.ends_at)} onClick={() => void control("resume")}>Resume</button> : null}
@@ -212,7 +238,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
             {phase === "changeover" && session.next_at ? <p className={styles.roundTime}>Next round <span className={styles.timer}>{networkingCountdown(networkingRemaining(session.next_at, now))}</span></p> : null}</div></div>}
           <div className={styles.actions}><button className="button button-outline" disabled={busy} onClick={() => void leaveNetworking()}>Leave networking</button><button className="button button-quiet" disabled={busy} onClick={() => void help()}>Get help</button></div>
         </>}
-      {state.met?.length ? <details className={styles.roster} open={phase === "finished"}><summary>People you met · {state.met.length}</summary><ul>{state.met.map(p => <li key={p.match_id}><span>{p.name}</span><button className="button button-outline" disabled={locked} onClick={() => void connect(p)}>Stay connected</button></li>)}</ul><p>Connections are optional. Nothing is sent until you confirm.</p>{phase === "finished" ? <p>This event history is available for 14 days. Accepted connections stay in <a href="/network?view=connections">Your connections</a>.</p> : null}</details> : null}
+      {synced && state.met?.length ? <details className={styles.roster} open={phase === "finished"}><summary>People you met · {state.met.length}</summary><ul>{state.met.map(p => <li key={p.match_id}><span>{p.name}</span>{p.connection_state === "connected" ? <a href="/network?view=connections">Connected · View connections</a> : p.connection_state === "outgoing" ? <span className={styles.connectionStatus}>Request sent</span> : p.connection_state === "incoming" ? <a href="/network?view=connections#network-connections">Respond to her request</a> : p.connection_state === "available" ? <button className="button button-outline" disabled={locked} onClick={() => void connect(p)}>Stay connected</button> : <small>{p.connection_state === "unknown" ? "Connection status unavailable. Try again shortly." : "Connection unavailable"}</small>}</li>)}</ul><p>Connections are optional. Nothing is sent until you confirm.</p>{phase === "finished" ? <p>This event history is available for 14 days. Accepted connections stay in <a href="/network?view=connections">Your connections</a>.</p> : null}</details> : null}
       {state.joined && ["paused", "disabled", "finished"].includes(phase) ? <div className={styles.actions}><button className="button button-outline" disabled={busy} onClick={() => void leaveNetworking()}>Leave networking</button></div> : null}
     </> : null}
     {message ? <p className={styles.notice} role="status">{message}</p> : null}

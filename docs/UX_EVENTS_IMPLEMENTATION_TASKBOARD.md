@@ -409,6 +409,14 @@ Wave 0 owner actions and Wave 1 engineering work may proceed in parallel. No wav
 
 ## What to monitor here in Codex
 
+### 26 October — Networking operations polish and follow-through
+
+- **Implemented:** scanner next-guest flow and camera interruption guards; Host round clock, readiness counts and grouped controls; read-only signed-in networking reminder; Home/Events recent introductions; current connection-state labels; Host-only full attendance CSV with safe spreadsheet escaping and audit trail.
+- **Applied:** `20261026115758_event_networking_followthrough_and_exports.sql`. No owner SQL/Vercel setting required. Routine Host operations remain self-service; safety/payment/publication rules remain separate.
+- **L1/L2:** actual component/download-route tests and 67 rollback-only real-database assertions. Source/build results are separate from physical-device evidence.
+- **Open acceptance:** one Host + two helpers + 5–10 consenting guests on real iOS/Android, concurrent-event wrong-pass rejection, multi-round networking/refresh/reconnect, permission revocation and real inbox delivery. No real invitations or roles changed in the fixtures.
+- Full scope, evidence and human checklist: [Event operations refinement](EVENT_OPERATIONS_POLISH_20261026.md).
+
 ### 26 October — Host helper flow and check-in accountability
 
 - Implemented/applied: Host-only per-operator attendance counts, QR/manual split, first/latest times, reversal counts and per-guest operator attribution. Removing a helper retains history; duplicates do not inflate counts. No new helper or cross-event data access.
