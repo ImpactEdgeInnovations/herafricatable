@@ -2,13 +2,15 @@
 
 Updated: 27 October 2026. Historical baseline release: `b4be9ca`.
 
+**27 October — Phase 3 browser pass and Host usability:** Read-only live Host/guest-preview navigation exposed lost Host-tab selection after refresh/return. Release `253b752` fixes it with safe section links, truthful first-load/unscheduled networking states and clearer scanner wording. Full tests/build passed; deployed browser checks confirmed Networking after refresh and Guests & check-in after scanner Back. No real records changed; independent OTP guest sessions, physical cameras, phone lock and inbox acceptance remain open. [Browser findings and next checks](NETWORKING_BROWSER_ACCEPTANCE_20261027.md).
+
 **27 October — Networking phase 2, persistent API rehearsal passed:** Five existing tagged accounts used independent Auth sessions against two fresh private, registration-closed test events. All 26 checks passed: event-bound helper access, wrong-event/duplicate checks, saved arrivals and operator totals, helper revocation, reminder without opt-in, mutual acceptance, late arrival, three real timed rounds with three unique pairs, fresh-read clock persistence, Host help/resolve, relationship reads and Host finish. Both fixtures were cancelled through the audited lifecycle and read back closed. No existing account, role, relationship or real event was changed. This is L2 persistent API evidence, not physical-camera/browser/inbox L3. [Results, phases and remaining acceptance](NETWORKING_API_REHEARSAL_20261027.md).
 
 | Current networking phase | Status | Completion evidence / remaining work |
 | --- | --- | --- |
 | 1 — Engineering and interface | Complete | Release `8506127`; component tests, rollback database tests and example-data layouts. |
 | 2 — Independent-session API rehearsal | Complete | 26 checks; three real timed rounds; verified fixture closure on 27 October. |
-| 3 — Real-device and operational acceptance | Open | iPhone/Android camera and PWA, phone lock/reconnect, two-device early-end feedback, consenting connection/email delivery, paid eligibility through PSP sandbox, 10–20 person rehearsal and accessibility. |
+| 3 — Real-device and operational acceptance | In progress | Live read-only Host navigation/member preview checked; refresh usability fixed. Independent OTP guest sessions, iPhone/Android camera and PWA, phone lock/reconnect, two-device early-end feedback, consenting connection/email delivery, paid eligibility through PSP sandbox, 10–20 person rehearsal and accessibility remain. |
 
 Do not convert the phase-2 result into a blanket production-ready percentage. No new migration or Vercel setting is required for the rehearsal tooling.
 
