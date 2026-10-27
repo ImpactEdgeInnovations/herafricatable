@@ -1,6 +1,16 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 26 October 2026. Historical baseline release: `b4be9ca`.
+Updated: 27 October 2026. Historical baseline release: `b4be9ca`.
+
+**27 October — Networking phase 2, persistent API rehearsal passed:** Five existing tagged accounts used independent Auth sessions against two fresh private, registration-closed test events. All 26 checks passed: event-bound helper access, wrong-event/duplicate checks, saved arrivals and operator totals, helper revocation, reminder without opt-in, mutual acceptance, late arrival, three real timed rounds with three unique pairs, fresh-read clock persistence, Host help/resolve, relationship reads and Host finish. Both fixtures were cancelled through the audited lifecycle and read back closed. No existing account, role, relationship or real event was changed. This is L2 persistent API evidence, not physical-camera/browser/inbox L3. [Results, phases and remaining acceptance](NETWORKING_API_REHEARSAL_20261027.md).
+
+| Current networking phase | Status | Completion evidence / remaining work |
+| --- | --- | --- |
+| 1 — Engineering and interface | Complete | Release `8506127`; component tests, rollback database tests and example-data layouts. |
+| 2 — Independent-session API rehearsal | Complete | 26 checks; three real timed rounds; verified fixture closure on 27 October. |
+| 3 — Real-device and operational acceptance | Open | iPhone/Android camera and PWA, phone lock/reconnect, two-device early-end feedback, consenting connection/email delivery, paid eligibility through PSP sandbox, 10–20 person rehearsal and accessibility. |
+
+Do not convert the phase-2 result into a blanket production-ready percentage. No new migration or Vercel setting is required for the rehearsal tooling.
 
 **26 October — Host networking and event-scoped arrival:** Visible Networking and Guests & check-in tabs, shorter networking setup, generated meeting-point names, Host-only attendance with search/filters/25-person pages, and up to ten delegated check-in helpers per event. Helper notification/link uses existing delivery; scanner remains event-bound and grants no roster/payment/Admin access. Wrong-event QR/manual, duplicate, cancelled-pass, suspended-Host and post-event revocation paths passed 36 L2 rollback assertions. Programme/pass and future confirmation email jobs use the saved networking schedule. Both migrations applied; no owner SQL needed. Full tests/build and example-data mobile layout checks passed; physical scanner and real delivery L3 remain open. [Handover and acceptance](HOST_EVENT_OPERATIONS_20261026.md).
 

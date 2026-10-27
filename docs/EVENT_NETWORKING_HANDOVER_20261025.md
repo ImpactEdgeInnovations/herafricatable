@@ -1,6 +1,12 @@
 # Meet someone new — in-person networking
 
-Updated: 26 October 2026. First release: pairs only, up to 200 participants per event.
+Updated: 27 October 2026. First release: pairs only, up to 200 participants per event.
+
+## Latest acceptance — 27 October
+
+The persistent multi-session API rehearsal passed **26 checks and three real timed rounds** using existing tagged accounts. Each of three guests completed two introductions, with no repeated pair; the late guest rotated into rounds two and three. Helper isolation, immediate revocation, saved arrival attribution, read-only reminders, shared match timing, Host help/resolve and finish passed. Both isolated test events were closed and verified afterwards. [Full evidence and next phase](NETWORKING_API_REHEARSAL_20261027.md).
+
+This extends L2 beyond rollback tests; it does not complete physical-device/browser/inbox L3. Later delivery in release `8506127` also adds a foreground member-shell reminder and Home/Events follow-through; the dated descriptions below record earlier implementation stages, not current global-alert limitations. See [current operations](EVENT_OPERATIONS_POLISH_20261026.md).
 
 ## Live invitation and visual polish — 26 October
 

@@ -1,6 +1,8 @@
 # Event operations — refinement and acceptance
 
-Updated: 26 October 2026 (Africa/Nairobi). Engineering implemented; independent phone/inbox rehearsal remains open.
+Updated: 27 October 2026 (Africa/Nairobi). Engineering and persistent multi-session API rehearsal passed; independent phone/inbox rehearsal remains open.
+
+**Persistent integration evidence:** The 27 October rehearsal passed 26 checks using five existing tagged accounts, including three real timed rounds with no repeated pair and verified cleanup. See [recorded results and phase-3 acceptance](NETWORKING_API_REHEARSAL_20261027.md). The checklist below remains open wherever it requires physical devices, real inboxes, a paid-provider path or consenting browser interaction; the API run does not mark those outcomes complete.
 
 ## Delivered
 
@@ -24,7 +26,7 @@ No owner SQL or Vercel environment change is required.
 | L2 — real database integration | Expanded `supabase/tests/071_host_event_arrival.sql`: 67 rollback-only assertions, before and after application. Includes all prior event/helper isolation plus full 31-row export, operator attribution, no pass/email data, Host/helper export boundaries, live checked-in reminder, no automatic opt-in, pause suppression, other-event denial, completed history, outgoing/incoming/accepted states, block privacy and post-event export. | A committed human-browser rehearsal or provider/inbox delivery. |
 | L3 — visual/outcome | Actual components with clearly labelled example data reviewed at 390px and desktop; no horizontal overflow. Scanner success has one next action. Host controls and bounded rosters are visible. | Signed-in multi-account production flows, physical iOS/Android scanning, screen-reader acceptance and notification delivery remain open. |
 
-## Controlled rehearsal — do not mark complete yet
+## Physical-device and operational rehearsal — still open
 
 - [ ] Choose an isolated test event, one consenting Host, two consenting helpers and 5–10 guests. Include a free guest, a valid paid guest, someone not checked in and a second simultaneous event's pass.
 - [ ] Host assigns both helpers without Admin approval; verify their own-account notification and link, then camera/manual check-in on physical Android and iPhone/PWA.
