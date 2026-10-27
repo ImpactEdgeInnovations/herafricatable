@@ -182,7 +182,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
         {synced ? <div className={styles.liveCounts}><div><strong>{readyPeople}</strong><span>Ready to meet</span></div><div><strong>{pairedPeople}</strong><span>Paired</span></div><div><strong>{restingPeople}</strong><span>Taking a break</span></div></div> : <p>Counts will return after we reconnect.</p>}
       </div> : null}
       {!session || session.status === "scheduled" ? <>
-        <button className="button button-outline" type="button" aria-expanded={formOpen} onClick={() => setFormOpen(!formOpen)}>{session ? "Edit schedule" : "Set up networking"}</button>
+        <button className="button button-outline" type="button" disabled={locked} aria-expanded={formOpen} onClick={() => setFormOpen(!formOpen)}>{session ? "Edit schedule" : "Set up networking"}</button>
         {formOpen ? <form className={styles.form} onSubmit={e => { e.preventDefault(); void save(); }}>
           <p>Guests meet in pairs. Choose a time within your event. Times are shown in {timeZone.split("/").at(-1)?.replaceAll("_", " ")} time.</p>
           <div className={styles.fields}><label>Starts<input required type="datetime-local" value={start} onChange={e => setStart(e.target.value)} /></label><label>Finishes<input required type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} /></label>
@@ -201,9 +201,9 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
         {session.status !== "finished" ? <button className="button button-outline" disabled={locked} onClick={() => void control("finish")}>Finish session</button> : null}
         {state.is_admin ? <button className="button button-outline" disabled={locked} onClick={() => void control(session.disabled ? "enable" : "disable")}>{session.disabled ? "Enable networking" : "Disable networking"}</button> : null}
       </div> : null}
-      {!synced ? <p>Live attendance is unavailable until we reconnect.</p> : state.people?.length ? <div className={styles.roster}><h3>People taking part</h3><ul>{state.people.map((p, i) => <li key={i}><span>{p.name}</span><small>{p.choosing ? "Taking a moment" : !p.ready ? "Away / left" : p.paired ? "With an introduction" : "Ready for a new person"}</small></li>)}</ul></div> : <p>No guests have joined networking yet.</p>}
+      {!synced ? <p role="status">{error ? "Live attendance is unavailable until we reconnect." : "Checking your networking session…"}</p> : !session ? <p role="status">Networking is not scheduled yet.</p> : state.people?.length ? <div className={styles.roster}><h3>People taking part</h3><ul>{state.people.map((p, i) => <li key={i}><span>{p.name}</span><small>{p.choosing ? "Taking a moment" : !p.ready ? "Away / left" : p.paired ? "With an introduction" : "Ready for a new person"}</small></li>)}</ul></div> : <p>No guests have joined networking yet.</p>}
       {state.help?.length ? <div className={styles.notice}><h3>Guests asking for help</h3>{state.help.map(h => <article key={h.id}><strong>{h.name}</strong><p>{h.note}</p><button className="button button-outline" disabled={locked} onClick={() => void run("resolve_event_networking_help", { p_help_id: h.id }, "Marked as handled.")}>Mark handled</button></article>)}</div> : null}
-      <p className={styles.help}>Guests choose whether to join. A short break is normal when numbers are uneven. Keep this panel open to see who needs help.</p>
+      <p className={styles.help}>{session ? "Guests choose whether to join. A short break is normal when numbers are uneven. Keep this panel open to see who needs help." : "Set a time, then start networking when guests are ready. Guests join themselves after check-in."}</p>
     </> : state && session ? <>
       {phase === "finished" ? <p>Networking has finished. You can choose to stay connected with the people you met below.</p>
         : phase === "disabled" || phase === "paused" ? <p>The event team has paused networking. You do not need to do anything.</p>

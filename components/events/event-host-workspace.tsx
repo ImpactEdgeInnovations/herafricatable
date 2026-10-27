@@ -104,12 +104,15 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
   useEffect(() => {
     const openLinkedSection = () => {
       const linked = window.location.hash.replace("#host-", "");
-      if (["introduction", "image", "programme", "community", "partners", "host", "networking", "guests"].includes(linked)) setSection(linked);
+      if (!linked) setSection("introduction");
+      else if (["introduction", "image", "programme", "community", "partners", "host"].includes(linked)
+        || (linked === "networking" && networking) || (linked === "guests" && arrival)) setSection(linked);
     };
     openLinkedSection();
     window.addEventListener("hashchange", openLinkedSection);
-    return () => window.removeEventListener("hashchange", openLinkedSection);
-  }, []);
+    window.addEventListener("popstate", openLinkedSection);
+    return () => { window.removeEventListener("hashchange", openLinkedSection); window.removeEventListener("popstate", openLinkedSection); };
+  }, [networking, arrival]);
   const hasEnded = new Date(initial.ends_at).getTime() < Date.now();
   const locked = initial.workspace_status === "submitted" || hasEnded;
   const linkedCommunity = communities.find((community) => community.linked_to_event);
@@ -117,7 +120,15 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
   if (networking) primarySections.push(["networking", "Networking"]);
   if (arrival) primarySections.push(["guests", "Guests & check-in"]);
   const optionalSections = [["host", "Host details"], ["community", "Community"], ["partners", "Partners"]];
-  function chooseSection(next: string) { if (busy) return; setSection(next); setMessage(""); }
+  function chooseSection(next: string) {
+    if (busy || ![...primarySections, ...optionalSections].some(([key]) => key === next)) return;
+    setSection(next); setMessage("");
+    // Keep refresh/share links on this section without a page reload, scroll
+    // jump or a new Back entry for every tab. No draft or guest data in the URL.
+    const url = new URL(window.location.href);
+    url.hash = `host-${next}`;
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+  }
 
   async function linkCommunity() {
     if (!chosenCommunity || busy) return;

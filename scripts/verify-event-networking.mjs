@@ -61,6 +61,14 @@ const host=harness({...base,can_manage:true,is_admin:true,match:null,people:[{na
 assert(host.html(true).includes('Disable networking'));assert(host.html(true).includes('Mark handled'));assert(!host.html(true).includes('Accept introduction'));
 assert(host.html(true).includes('Your live session'));assert(host.html(true).includes('Ready to meet'));assert(host.html(true).includes('Round ends in'));assert(host.html(true).includes('No Admin approval needed'));
 host.button('Pause',true).props.onClick();await flush();assert.equal(host.calls.find(x=>x.name==='control_event_networking').args.p_action,'pause');host.cleanup();
+const emptyHost=harness({...base,can_manage:true,joined:false,match:null,session:null,people:[]});
+assert(emptyHost.html(true).includes('Checking your networking session'));
+assert(!emptyHost.html(true).includes('unavailable until we reconnect'),'first load is not an outage');
+assert(emptyHost.button('Set up networking',true).props.disabled,'do not open stale schedule fields before refresh');
+await flush();assert(emptyHost.html(true).includes('Networking is not scheduled yet.'));
+assert(!emptyHost.html(true).includes('No guests have joined'),'no schedule is not an empty live attendance list');
+assert(!emptyHost.button('Set up networking',true).props.disabled);
+emptyHost.fail(true);await emptyHost.poll();assert(emptyHost.html(true).includes('unavailable until we reconnect'));emptyHost.cleanup();
 const scheduling=harness({...base,can_manage:true,match:null,session:{...base.session,status:'scheduled'}});await flush();
 scheduling.button('Edit schedule',true).props.onClick();scheduling.forms(true)[0].props.onSubmit({preventDefault(){}});await flush();
 const saved=scheduling.calls.find(x=>x.name==='save_event_networking');assert.equal(saved.args.p_starts_at,base.session.starts_at.replace('00Z','00.000Z'));assert.deepEqual(saved.args.p_points,['Table 1']);assert.equal(saved.args.p_minutes,5);

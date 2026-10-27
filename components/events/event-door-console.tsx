@@ -140,6 +140,6 @@ export function EventDoorConsole({ eventId, title, startsAt, venue, timeZone = "
         <button className="button button-outline" disabled={busy || code.trim().length !== 10} type="submit">{busy ? "Checking…" : "Check in guest"}</button>
       </form>
     </div>
-    <p className={styles.privacy}>Only successful check-ins are saved as arrivals. Scanning a pass twice won’t add another guest. Your access does not include guest lists, payments or event settings.</p>
+    <p className={styles.privacy}>Only successful check-ins are saved as arrivals. Scanning a pass twice won’t add another guest. This scanner does not display guest lists, payments or event settings.</p>
   </section>;
 }
