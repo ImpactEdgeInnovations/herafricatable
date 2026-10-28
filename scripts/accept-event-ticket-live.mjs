@@ -11,7 +11,7 @@ assert.equal(new URL(url).hostname,'gtzwqromwvzqytygebfc.supabase.co');
 assert.equal(process.env.HAT_CONFIRM_TICKET_REHEARSAL,'yes','Explicit isolated rehearsal opt-in required');
 const options={auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(input,init)=>fetch(input,{...init,signal:init?.signal??AbortSignal.timeout(20000)})}};
 const service=createClient(url,process.env.SUPABASE_SECRET_KEY,options),owner=createClient(url,key,options),sessions=[];
-const id=randomUUID(),slug=`hat-ticket-rehearsal-${id}`,orderId=randomUUID(),ticketId=randomUUID();
+const id=randomUUID(),slug=`hat-ticket-rehearsal-${id}`,orderId=randomUUID(),ticketId=randomUUID(),venueId=randomUUID();
 let created=false,failed=null,cleanup=false;const checks=[];
 const check=(condition,label)=>{assert(condition,label);checks.push(label);console.log(`PASS: ${label}`);};
 async function rpc(client,name,args){const r=await client.rpc(name,args);if(r.error)throw Error(`${name}:${r.error.code}`);return r.data;}
@@ -26,7 +26,8 @@ try{
   const loginOwner=await owner.auth.signInWithPassword({email:process.env.HAT_PRIMARY_ADMIN_EMAIL,password:process.env.HAT_PRIMARY_ADMIN_PASSWORD});assert(!loginOwner.error&&(await rpc(owner,'get_my_active_admin_role'))==='super_admin','Existing owner cleanup access required');
   const host=await login('community.host@hat-test.invalid'),guest=await login('community.member.one@hat-test.invalid'),other=await login('community.member.two@hat-test.invalid');
   const clock=Date.parse((await rpc(host.client,'get_my_networking_updates')).server_now);
-  await insert('events',{id,slug,title:'[TEST] Private PDF ticket rehearsal',summary:'Internal isolated API acceptance only.',format:'in_person',audience:'community',registration_mode:'closed',status:'published',starts_at:new Date(clock+86400000).toISOString(),ends_at:new Date(clock+90000000).toISOString(),created_by:host.id,capacity:2});created=true;
+  await insert('venues',{id:venueId,name:'[TEST] PDF ticket room',city:'Nairobi',country:'Kenya',address_line:'[TEST] No physical event - API rehearsal only'});
+  await insert('events',{id,slug,title:'[TEST] Private PDF ticket rehearsal',summary:'Internal isolated API acceptance only.',format:'in_person',audience:'community',registration_mode:'closed',status:'published',venue_id:venueId,starts_at:new Date(clock+86400000).toISOString(),ends_at:new Date(clock+90000000).toISOString(),created_by:host.id,capacity:2});created=true;
   await insert('event_hosts',{event_id:id,user_id:host.id,status:'active',assigned_by:host.id});
   await rpc(host.client,'save_event_host_public_details',{p_event_id:id,p_details:{display_name:'[TEST] Host',organisation_name:'[TEST] Organising team',enabled:true}});
   await insert('ticket_types',{id:ticketId,event_id:id,name:'[TEST] Free place',price_minor:0,currency:'KES',inventory_quantity:2,status:'on_sale'});

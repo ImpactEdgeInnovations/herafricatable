@@ -28,6 +28,12 @@ Private job-scoped ticket snapshots make PDF bytes stable across provider retrie
 
 Live HTTPS fixture-download rehearsal results are recorded after deployment; the tool explicitly requires `HAT_CONFIRM_TICKET_REHEARSAL=yes` and existing tagged credentials. It creates only a fresh private closed event and zero-value test records, sends no provider mail, then cancels via the audited lifecycle. No passwords, roles or existing real events are changed.
 
+### Deployed HTTPS rehearsal — passed
+
+Release `13f1eea` deployed successfully. Run `87acc137-5c84-441a-8357-45984ea7c25d` passed seven real Auth/HTTPS checks: anonymous 401; other member 404; own confirmed guest PDF 200; PDF content type/private no-store headers; valid one-page server-generated document with deployed font assets; shared Host/company data through the guest session; and a claimed confirmation attachment with the same private QR/order as the guest download. Its fresh private closed event and zero-value records were cancelled using the audited lifecycle; cleanup readback passed. No email was sent to a provider. Report: `tmp/ticket-api-rehearsal-87acc137-5c84-441a-8357-45984ea7c25d.json`.
+
+The initial attempt stopped at the existing in-person venue constraint before creating an event. The fixture was corrected to include its own tagged test venue; the production constraint was not weakened. The test venue is retained with the cancelled audit fixture. These are independent API sessions, not a browser OTP/camera/inbox rehearsal. The generated email HTML passed template/escaping checks; local browser preview was unavailable, so real mail-client rendering is still part of inbox acceptance.
+
 ## Database / configuration
 
 Applied live: `supabase/migrations/20261028072336_event_ticket_documents.sql` (Management API history version aligned locally). **No owner SQL or new Vercel variable is needed.** `supabase/tests/072_event_ticket_documents.sql` is a rollback test, not a migration.
