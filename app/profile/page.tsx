@@ -91,6 +91,7 @@ export default async function ProfilePage() {
   return (
     <main className="profile-page">
       <MemberHeader active="account" label="Your profile" />
+      <nav className="portal-actions" aria-label="Your account tools" style={{maxWidth:1000,margin:"20px auto",padding:"0 24px"}}><Link className="button button-outline" href="/profile/tickets">My tickets · View & download</Link></nav>
       {profileResult.error ||
       privateResult.error ||
       interestsResult.error ||

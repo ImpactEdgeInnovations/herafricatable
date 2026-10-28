@@ -9,7 +9,7 @@ import {useCommunityDraft} from "@/lib/use-community-draft";
 import {communityDraftKey,readCommunityDraft} from "@/lib/community-drafts";
 
 export type PublicEventHost = {display_name:string; introduction:string; website_url:string|null; linkedin_url:string|null; instagram_url:string|null; contact_email:string|null; contact_phone:string|null};
-const blank={display_name:"",introduction:"",website_url:"",linkedin_url:"",instagram_url:"",contact_email:"",contact_phone:"",enabled:false};
+const blank={display_name:"",organisation_name:"",introduction:"",website_url:"",linkedin_url:"",instagram_url:"",contact_email:"",contact_phone:"",enabled:false};
 export function EventHostPublicDetails({eventId,currentUserId}:{eventId:string;currentUserId:string}) {
   const supabase=useMemo(()=>createClient(),[]);
   const router=useRouter();
@@ -27,7 +27,7 @@ export function EventHostPublicDetails({eventId,currentUserId}:{eventId:string;c
     setReady(false);setLoadFailed(false);setMessage("");
     void (async()=>{
       try {
-        const {data,error}=await supabase.from("event_host_public_details").select("display_name,introduction,website_url,linkedin_url,instagram_url,contact_email,contact_phone,enabled").eq("event_id",eventId).maybeSingle();
+        const {data,error}=await supabase.from("event_host_public_details").select("display_name,organisation_name,introduction,website_url,linkedin_url,instagram_url,contact_email,contact_phone,enabled").eq("event_id",eventId).maybeSingle();
         if(!live)return;
         if(error)throw error;
         const next={...blank,...Object.fromEntries(Object.entries(data??{}).map(([key,value])=>[key,value??""]))} as typeof blank;
@@ -49,7 +49,7 @@ export function EventHostPublicDetails({eventId,currentUserId}:{eventId:string;c
     if(snapshot.enabled && snapshot.display_name.trim().length<2){setMessage("Add the name guests should see.");return;}
     setBusy(true);setMessage("");
     try{
-      if(snapshot.enabled && !await ask({title:"Share these Host details?",description:"Your chosen name, introduction, links and contact details will appear on this event page. For a public event, anyone can see them. Your private account details are not copied.",confirmLabel:"Share and save"}))return;
+      if(snapshot.enabled && !await ask({title:"Share these Host details?",description:"Your chosen name, introduction, links and contact details will appear on this event page. Your Host name and company also appear on guests’ PDF tickets and confirmation emails. For a public event, anyone can see the page. Your private account details are not copied.",confirmLabel:"Share and save"}))return;
       const {error}=await supabase.rpc("save_event_host_public_details",{p_event_id:eventId,p_details:snapshot});
       if(error)throw error;
       setSaved(snapshot);clearDraft(snapshot);setMessage(snapshot.enabled?"Your Host details are now saved for this event page.":"Your Host details are hidden from the event page.");router.refresh();
@@ -62,7 +62,9 @@ export function EventHostPublicDetails({eventId,currentUserId}:{eventId:string;c
     {loadFailed?<button type="button" className="button button-outline" onClick={()=>setLoadAttempt(attempt=>attempt+1)}>Try loading again</button>:null}
     {ready&&changed?<p className="host-workspace-draft-note">You have unsaved changes. They stay in this tab until you save, discard or sign out.</p>:null}
     <fieldset disabled={!ready||busy}>
-      <label>Name guests will see<input value={values.display_name} maxLength={120} onChange={e=>update("display_name",e.target.value)} placeholder="Your name or organising team"/></label>
+      <label>Host name guests will see<input value={values.display_name} maxLength={120} onChange={e=>update("display_name",e.target.value)} placeholder="Your name or organising team"/></label>
+      <label>Company or organisation <small>Optional</small><input value={values.organisation_name??""} maxLength={160} onChange={e=>update("organisation_name",e.target.value)} placeholder="The company or team hosting this event"/></label>
+      <p>When shared, your Host name and company also appear on guests’ tickets. Private account contacts are never copied.</p>
       <label>A little about you <small>Optional</small><textarea rows={3} maxLength={500} value={values.introduction} onChange={e=>update("introduction",e.target.value)} placeholder="Who you are and why you are hosting this event"/></label>
       <details><summary>Add links or a contact <small>Optional</small></summary>
         <p>Use only details you are comfortable sharing with visitors.</p>

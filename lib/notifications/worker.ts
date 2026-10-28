@@ -221,6 +221,13 @@ export async function processNotificationQueue({
         });
         if(recorded)sent += 1;
       } catch (error) {
+        if((error as {code?:string})?.code==="TICKET_NO_LONGER_VALID"){
+          try{
+            const result=await admin.from("notification_jobs").update({status:"suppressed",locked_at:null,last_error:"ticket_no_longer_valid",updated_at:new Date().toISOString()}).eq("id",job.job_id).eq("status","processing").select("id").maybeSingle();
+            if(result.error||!result.data){persistenceFailed++;failed++;}else suppressed++;
+          }catch{persistenceFailed++;failed++;}
+          return;
+        }
         await finishJob({
           p_error_code:
             error instanceof Error ? error.message : "provider_error",

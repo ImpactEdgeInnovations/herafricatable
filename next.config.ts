@@ -19,6 +19,7 @@ const contentSecurityPolicy = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  outputFileTracingIncludes: {"/*":["./assets/tickets/NotoSans-Regular.ttf"]},
   async headers() {
     const privateRoutes = [
       "admin", "api", "auth", "apply", "circles", "communities", "continue",

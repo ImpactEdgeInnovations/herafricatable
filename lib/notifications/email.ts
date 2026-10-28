@@ -1,4 +1,5 @@
 import { renderBrandedEmail } from "./template";
+import { prepareTicketEmail } from "./ticket-attachment";
 import "server-only";
 
 type EmailJob = {
@@ -16,12 +17,15 @@ export async function sendNotificationEmail(job: EmailJob) {
   if (!apiKey || !from || !siteUrl)
     throw new Error("Email delivery is not configured");
 
-  const title = (job.payload.title ?? "Her Africa Table update").slice(0, 160);
+  const ticketEmail=await prepareTicketEmail(job);
+
+  const title = (ticketEmail?.title ?? job.payload.title ?? "Her Africa Table update").slice(0, 160);
   const body = (
     job.payload.body ?? "A new update is available in your account."
   ).slice(0, 1000);
-  const href = job.payload.href?.startsWith("/") && !job.payload.href.startsWith("//") && !job.payload.href.includes("\\")
-    ? `${siteUrl}${job.payload.href}`
+  const relativeHref=ticketEmail?.href??job.payload.href;
+  const href = relativeHref?.startsWith("/") && !relativeHref.startsWith("//") && !relativeHref.includes("\\")
+    ? `${siteUrl}${relativeHref}`
     : siteUrl;
   const isInvitation = ["referral_invitation", "table_invitation", "pilot_invitation"].includes(
     job.template_key,
@@ -48,7 +52,7 @@ export async function sendNotificationEmail(job: EmailJob) {
       "Your event refund needs review",
       "Your event refund was recorded",
     ].includes(title);
-  const buttonLabel = isDoorHelper && job.payload.href?.endsWith("/door") ? "Open event check-in" : isConnectionRequest ? "View her profile & request" : isPhotoReport
+  const buttonLabel = ticketEmail ? "View my ticket" : isDoorHelper && job.payload.href?.endsWith("/door") ? "Open event check-in" : isConnectionRequest ? "View her profile & request" : isPhotoReport
     ? "Review photo report"
     : isInvitation
     ? "Open your invitation"
@@ -74,10 +78,11 @@ export async function sendNotificationEmail(job: EmailJob) {
       : isEventNotice
         ? "This event message was sent to the email address on your account."
       : "This update is private. You can change optional emails in your notification settings.";
+  const emailBody=ticketEmail?.body??body;
   const text = isMemberWelcome
     ? `${body}\n\nYour first steps:\n1. Complete your profile so introductions feel relevant.\n2. Discover a Community where you feel at home.\n3. Find an event or conversation worth joining.\n\n${buttonLabel}: ${href}\n\nWelcome to the Table.\nThe Her Africa Table team`
-    : `${body}\n\n${buttonLabel}: ${href}`;
-  const html = renderBrandedEmail({ title, body, href, buttonLabel, preferenceNote, welcome: isMemberWelcome });
+    : `${emailBody}\n\n${buttonLabel}: ${href}`;
+  const html = renderBrandedEmail({ title, body:ticketEmail?.content.body??emailBody, details:ticketEmail?.content.details, afterDetails:ticketEmail?.content.afterDetails, href, buttonLabel, preferenceNote, welcome: isMemberWelcome });
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -92,6 +97,7 @@ export async function sendNotificationEmail(job: EmailJob) {
       subject: title,
       text,
       html,
+      ...(ticketEmail ? {attachments:[ticketEmail.attachment]} : {}),
       tags: [
         {
           name: "category",

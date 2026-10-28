@@ -1,6 +1,8 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 27 October 2026. Historical baseline release: `b4be9ca`.
+Updated: 28 October 2026. Historical baseline release: `b4be9ca`.
+
+**28 October — Private PDF tickets and personalised confirmations:** Added guest/ticket/booking/Host-company details, private PDF download, Profile → My tickets and queued Resend PDF attachments. Standard confirmations now greet the guest and show event details, published arrival instructions and saved networking times. Thirty rollback SQL assertions passed before/after application; PDF, endpoint, provider-payload, profile and suppression regressions plus full tests/build verified. No owner SQL/new environment variables required. Real inbox/phone acceptance remains separate; current Hobby queue timing is unchanged. [Delivery and acceptance notes](EVENT_TICKETS_AND_EMAIL_20261028.md).
 
 **27 October — Phase 3 browser pass and Host usability:** Read-only live Host/guest-preview navigation exposed lost Host-tab selection after refresh/return. Release `253b752` fixes it with safe section links, truthful first-load/unscheduled networking states and clearer scanner wording. Full tests/build passed; deployed browser checks confirmed Networking after refresh and Guests & check-in after scanner Back. No real records changed; independent OTP guest sessions, physical cameras, phone lock and inbox acceptance remain open. [Browser findings and next checks](NETWORKING_BROWSER_ACCEPTANCE_20261027.md).
 

@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AddToCalendarButton } from "@/components/events/add-to-calendar-button";
 import { StandaloneEventReminder } from "@/components/events/standalone-event-reminder";
+import type {EventTicket} from "@/lib/events/ticket-pdf";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -45,6 +46,8 @@ export default async function EventPassPage({ params }: { params: Promise<{ slug
   const pass = (data?.[0] as EventPass | undefined) ?? null;
   if (error || !pass) return <main className="event-pass-page"><header className="legal-header"><Link className="brand" href="/home"><span className="brand-mark">H</span><span>Her Africa Table<small>Event pass</small></span></Link><Link href={`/events/${slug}`}>Back to event</Link></header><section className="event-pass-unavailable"><p className="eyebrow">Event access</p><h1>Your pass is not ready yet.</h1><p>A pass is issued after your registration and payment review are confirmed. If you believe this is an error, contact support with your order reference.</p><div><Link className="button button-primary" href={`/events/${slug}`}>View my event</Link><a className="button button-outline" href="mailto:support@herafricatable.com">Contact support</a></div></section></main>;
 
+  const {data:ticketData,error:ticketError}=await supabase.rpc("get_my_event_ticket",{p_slug:slug});
+  const ticket=ticketError?null:ticketData as EventTicket|null;
   // The pass RPC establishes the current member's confirmed, non-revoked access.
   // Read private arrival details only after that check and render them only here.
   const service = createAdminClient();
@@ -96,11 +99,14 @@ export default async function EventPassPage({ params }: { params: Promise<{ slug
           <p>Present this private pass at the welcome desk. Keep the code to yourself.</p>
           <NetworkingSchedule schedule={networkingSchedule as EventNetworkingSchedule | null} timeZone={pass.timezone} failed={Boolean(networkingScheduleError)}/>
           <dl>
+            {ticket ? <><div><dt>Guest</dt><dd>{ticket.guest_name}</dd></div><div><dt>Ticket</dt><dd>{ticket.ticket_type}</dd></div><div><dt>Booking reference</dt><dd>{ticket.booking_reference}</dd></div><div><dt>Hosted by</dt><dd>{[ticket.host_name,ticket.organisation_name].filter(Boolean).join(" · ")}</dd></div></> : null}
             <div><dt>Date</dt><dd>{date} · {time}</dd></div>
             <div><dt>Venue</dt><dd>{[pass.venue_name, pass.city].filter(Boolean).join(", ") || "Online"}</dd></div>
-            <div><dt>Status</dt><dd>{pass.checked_in_at ? `Checked in at ${new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: pass.timezone }).format(new Date(pass.checked_in_at))}` : "Ready for check-in"}</dd></div>
+            <div><dt>Status</dt><dd>{ticket?.event_ended ? "Event ended" : pass.checked_in_at ? `Checked in at ${new Intl.DateTimeFormat("en-KE", { hour: "numeric", minute: "2-digit", timeZone: pass.timezone }).format(new Date(pass.checked_in_at))}` : "Ready for check-in"}</dd></div>
           </dl>
           <div className="event-pass-actions">
+            {ticket ? <a className="button button-primary" href={`/events/${slug}/ticket.pdf`} download>Download ticket (PDF)</a> : <p role="status">PDF ticket details are unavailable. Your entry pass below is unchanged; please try again.</p>}
+            <Link className="button button-outline" href="/profile/tickets">My tickets</Link>
             <AddToCalendarButton
               endsAt={pass.ends_at}
               eventId={pass.event_id}
@@ -115,10 +121,10 @@ export default async function EventPassPage({ params }: { params: Promise<{ slug
           </div>
         </div>
         <article className={`event-pass-card${pass.checked_in_at ? " is-used" : ""}`}>
-          <div className="event-pass-card-head"><span>Her Africa Table</span><small>{pass.checked_in_at ? "Attendance confirmed" : "Event entry"}</small></div>
+          <div className="event-pass-card-head"><span>Her Africa Table</span><small>{ticket?.event_ended ? "Event ended" : pass.checked_in_at ? "Attendance confirmed" : "Event entry"}</small></div>
           <img src={qrDataUrl} alt={`QR entry pass for ${pass.event_title}`} width="264" height="264" />
           <div className="event-pass-code"><span>Manual code</span><strong>{pass.manual_code}</strong></div>
-          <p>{pass.checked_in_at ? "You are checked in. Welcome to the table." : "Use this code if the camera is unavailable."}</p>
+          <p>{ticket?.event_ended ? "This event has ended. Your saved ticket is for your records." : pass.checked_in_at ? "You are checked in. Welcome to the table." : "Use this code if the camera is unavailable."}</p>
         </article>
       </section>
       {showReminder ? <StandaloneEventReminder

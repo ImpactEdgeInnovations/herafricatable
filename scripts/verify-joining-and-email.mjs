@@ -16,7 +16,7 @@ assert(renderBrandedEmail({title:'Welcome',body:'Hello',href:'https://www.herafr
 
 let providerPayload;
 const senderCode=compile(read('lib/notifications/email.ts'));
-const send=new Function('renderBrandedEmail','process','fetch',`${senderCode};return sendNotificationEmail;`)(renderBrandedEmail,{env:{RESEND_API_KEY:'mock-key',EMAIL_FROM:'Her Africa Table <community@example.invalid>',NEXT_PUBLIC_SITE_URL:'https://www.herafricatable.com'}},async(url,options)=>{assert.equal(url,'https://api.resend.com/emails');providerPayload=JSON.parse(options.body);assert.equal(options.headers['idempotency-key'],'test-job');return {ok:true,json:async()=>({id:'test-provider-id'})};});
+const send=new Function('renderBrandedEmail','prepareTicketEmail','process','fetch',`${senderCode};return sendNotificationEmail;`)(renderBrandedEmail,async()=>null,{env:{RESEND_API_KEY:'mock-key',EMAIL_FROM:'Her Africa Table <community@example.invalid>',NEXT_PUBLIC_SITE_URL:'https://www.herafricatable.com'}},async(url,options)=>{assert.equal(url,'https://api.resend.com/emails');providerPayload=JSON.parse(options.body);assert.equal(options.headers['idempotency-key'],'test-job');return {ok:true,json:async()=>({id:'test-provider-id'})};});
 const job={job_id:'test-job',to_email:'host@example.invalid',template_key:'community',dedupe_key:'community-join-requested:test',payload:{title:'New request',body:'A member would like to join.',href:'/communities/example/host#admissions'}};
 assert.equal(await send(job),'test-provider-id');
 assert(providerPayload.html.includes('Review join request')&&providerPayload.html.includes('Her Africa Table'));

@@ -50,7 +50,7 @@
     "test:event-timezone": "node scripts/verify-event-timezone.mjs",
     "test:event-introductions": "node scripts/verify-event-intro-contracts.mjs",
     "test:event-rounds": "node scripts/verify-event-round-contracts.mjs && npm run test:event-networking",
-    "test:event-networking": "node scripts/verify-event-networking.mjs && node scripts/verify-host-arrival.mjs && node scripts/verify-event-operations-polish.mjs && node scripts/verify-networking-rehearsal.mjs",
+    "test:event-networking": "node scripts/verify-event-networking.mjs && node scripts/verify-host-arrival.mjs && node scripts/verify-event-operations-polish.mjs && node scripts/verify-networking-rehearsal.mjs && node scripts/verify-event-tickets.mjs",
     "test:event-guest-follow-up": "node scripts/verify-event-guest-follow-up.mjs",
     "test:event-host-outcomes": "node scripts/verify-event-host-outcomes.mjs",
     "test:event-follow-up-invitations": "node scripts/verify-event-follow-up-invitations.mjs",
@@ -93,13 +93,15 @@
     "ops:table-guide:accept": "node --env-file=.env.local --env-file=.env.test.local scripts/accept-table-guide-production.mjs"
   },
   "dependencies": {
+    "@pdf-lib/fontkit": "1.1.1",
     "@supabase/ssr": "0.12.3",
     "@supabase/supabase-js": "2.110.6",
     "next": "16.3.2",
+    "pdf-lib": "1.17.1",
     "qrcode": "1.5.4",
-    "sharp": "0.35.3",
     "react": "19.2.7",
-    "react-dom": "19.2.7"
+    "react-dom": "19.2.7",
+    "sharp": "0.35.3"
   },
   "devDependencies": {
     "@types/node": "24.10.1",
