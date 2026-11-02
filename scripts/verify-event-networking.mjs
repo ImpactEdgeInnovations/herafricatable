@@ -25,16 +25,17 @@ assert.equal(networkingPhase({...base,match:null},Date.parse('2030-01-01T15:05:0
 assert.equal(networkingPhase(base,Date.parse('2030-01-01T15:00:31Z')),'waiting','expired offer cannot be accepted through stale UI');
 
 const flush = async () => { for(let i=0;i<5;i++) await new Promise(resolve => setImmediate(resolve)); };
+const isMutation = call => !['get_event_networking','get_my_networking_followthrough','get_event_networking_live_counts'].includes(call.name);
 function harness(initial = base) {
-  let current=structuredClone(initial), fail=false, mutationError=false, cursor=0, values=[], effects=[], intervalId=0;
-  const calls=[], intervals=new Map(), listeners=new Map();
-  const client={ rpc:async(name,args)=>{calls.push({name,args}); if(fail) throw Error('offline'); if(name==='get_event_networking')return {data:current,error:null};if(name==='get_event_networking_live_counts')return {data:{counts:current.session?.status==='running'&&!current.session.disabled?(current.live_counts??{talking:0,offered:2,waiting:0,away:0}):null},error:null};if(name==='get_my_networking_connection_states')return {data:(current.met??[]).map(p=>({match_id:p.match_id,state:p.connection_state??'available'})),error:null}; if(mutationError)throw Error('write failed'); return {data:null,error:null}; } };
+  let current=structuredClone(initial), fail=false, mutationError=false, historyFail=false, cancelDialog=false, cursor=0, values=[], effects=[], intervalId=0;
+  const calls=[], dialogs=[], intervals=new Map(), listeners=new Map();
+  const client={ rpc:async(name,args)=>{calls.push({name,args}); if(fail) throw Error('offline'); if(name==='get_event_networking')return {data:structuredClone(current),error:null};if(name==='get_event_networking_live_counts')return {data:{counts:current.session?.status==='running'&&!current.session.disabled?(current.live_counts??{talking:0,offered:2,waiting:0,away:0}):null},error:null};if(name==='get_my_networking_followthrough'){if(historyFail)throw Error('history unavailable');return {data:(current.met??[]).map(p=>({...p,connection_state:p.connection_state??'available'})),error:null};} if(mutationError)throw Error('write failed');if(name==='defer_networking_connection')current.met=(current.met??[]).map(p=>p.match_id===args.p_match_id?{...p,deferred:true}:p);if(name==='connect_event_networking')current.met=(current.met??[]).map(p=>p.match_id===args.p_match_id?{...p,connection_state:'outgoing'}:p); return {data:null,error:null}; } };
   const state=initialValue=>{const i=cursor++; if(!(i in values))values[i]=typeof initialValue==='function'?initialValue():initialValue; return [values[i],v=>{values[i]=typeof v==='function'?v(values[i]):v;}];};
   const ref=v=>{const i=cursor++; return values[i]??=( {current:v} );};
   const doc={hidden:false,addEventListener:(name,fn)=>listeners.set('doc:'+name,fn),removeEventListener:name=>listeners.delete('doc:'+name)};
   const win={addEventListener:(name,fn)=>listeners.set('win:'+name,fn),removeEventListener:name=>listeners.delete('win:'+name)};
   const deps={React,useCallback:fn=>fn,useEffect:fn=>effects.push(fn),useMemo:fn=>fn(),useRef:ref,useState:state,createClient:()=>client,
-    memberErrorMessage:()=> 'Please try again.',useActionDialog:()=>({ask:async()=>({note:'We met during networking.'}),dialog:null}),
+    memberErrorMessage:()=> 'Please try again.',useActionDialog:()=>({ask:async options=>{dialogs.push(options);return cancelDialog?null:{note:options.fields?.find(f=>f.name==='note')?.initialValue??'We met during networking.'};},dialog:null}),
     formatEventTimeInput,parseEventTimeInput,networkingCountdown,networkingStartCountdown,networkingPhase,networkingRemaining,
     styles:new Proxy({},{get:(_,key)=>String(key)}),document:doc,window:win,performance,
     setInterval:fn=>{intervals.set(++intervalId,fn);return intervalId;},clearInterval:id=>intervals.delete(id)};
@@ -44,7 +45,7 @@ function harness(initial = base) {
   function elements(node){if(!node||typeof node!=='object')return [];return [node,...React.Children.toArray(node.props?.children).flatMap(elements)];}
   function button(label,manage=false){return elements(render(manage)).find(e=>e.type==='button'&&text(e)===label);}
   function text(node){if(typeof node==='string'||typeof node==='number')return String(node);return React.Children.toArray(node?.props?.children).map(text).join('');}
-  return {calls,intervals,listeners,doc,render,button,inputs:manage=>elements(render(manage)).filter(e=>e.type==='input'),forms:manage=>elements(render(manage)).filter(e=>e.type==='form'),html:manage=>renderToStaticMarkup(render(manage)),set:v=>{current=structuredClone(v);},fail:v=>{fail=v;},mutationError:v=>{mutationError=v;},poll:async()=>{[...intervals.values()][0]();await flush();},cleanup:()=>cleanup.forEach(fn=>fn?.())};
+  return {calls,dialogs,intervals,listeners,doc,render,button,inputs:manage=>elements(render(manage)).filter(e=>e.type==='input'),forms:manage=>elements(render(manage)).filter(e=>e.type==='form'),html:manage=>renderToStaticMarkup(render(manage)),set:v=>{current=structuredClone(v);},fail:v=>{fail=v;},historyFail:v=>{historyFail=v;},cancelDialog:v=>{cancelDialog=v;},mutationError:v=>{mutationError=v;},poll:async()=>{[...intervals.values()][0]();await flush();},cleanup:()=>cleanup.forEach(fn=>fn?.())};
 }
 const h=harness(); await flush();
 assert(h.html().includes('Meet Amina'));assert(h.html().includes('Accept introduction'));
@@ -85,9 +86,9 @@ assert(!invitation.html().includes('class="radar"'),'never animate a search befo
 invitation.button('Not now').props.onClick();assert(!invitation.button('Not now'));assert(invitation.button('Join networking'));
 assert(invitation.html().includes('Join whenever you’re ready.'));
 await invitation.poll();assert(!invitation.button('Not now'),'polling must not undo dismissal');
-assert.equal(invitation.calls.filter(x=>x.name!=='get_event_networking').length,0,'dismissal does not change a booking or participation');
+assert.equal(invitation.calls.filter(isMutation).length,0,'dismissal does not change a booking or participation');
 invitation.button('Join networking').props.onClick();assert(invitation.html().includes('A short introduction'));assert(invitation.button('Not now'));
-assert.equal(invitation.calls.filter(x=>x.name!=='get_event_networking').length,0,'opening the form is not enrolment');
+assert.equal(invitation.calls.filter(isMutation).length,0,'opening the form is not enrolment');
 invitation.button('Not now').props.onClick();assert(!invitation.html().includes('<form'));
 invitation.button('Join networking').props.onClick();invitation.set({...base,match:null});
 invitation.forms()[0].props.onSubmit({preventDefault(){}});await flush();
@@ -101,7 +102,7 @@ for(const extra of [{eligible:false},{session:{...base.session,status:'paused'}}
   assert(!unavailable.html().includes('class="invitation"'),'unavailable session never invites a guest');assert(!unavailable.button('Not now'));unavailable.cleanup();
 }
 const lateInvitation=harness({...base,joined:false,match:null,session:{...base.session,round_no:3}});await flush();assert(lateInvitation.html().includes('Networking is live'));lateInvitation.fail(true);await lateInvitation.poll();assert(!lateInvitation.html().includes('class="invitation"'),'failed eligibility refresh hides live invitation');lateInvitation.cleanup();
-const radar=harness({...base,match:null});await flush();assert(radar.html().includes('class="radar"'));assert(radar.html().includes('Finding your next introduction'));radar.button('Pause animation').props.onClick();assert(radar.html().includes('radarPaused'));assert(radar.button('Resume animation'));assert.equal(radar.calls.filter(x=>x.name!=='get_event_networking').length,0,'pausing animation does not leave or pause the session');radar.cleanup();
+const radar=harness({...base,match:null});await flush();assert(radar.html().includes('class="radar"'));assert(radar.html().includes('Finding your next introduction'));radar.button('Pause animation').props.onClick();assert(radar.html().includes('radarPaused'));assert(radar.button('Resume animation'));assert.equal(radar.calls.filter(isMutation).length,0,'pausing animation does not leave or pause the session');radar.cleanup();
 const scheduled=harness({...base,joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}});await flush();assert(scheduled.html().includes('12:46'));assert(!scheduled.html().includes('<form'));scheduled.button('Join networking').props.onClick();assert(scheduled.html().includes('<form'));scheduled.cleanup();
 const waitingHost=harness({...base,joined:false,match:null,session:{...base.session,status:'scheduled'}});await flush();assert(waitingHost.html().includes('Waiting for the Host to begin'));assert(!waitingHost.html().includes('class="radar"'));waitingHost.cleanup();
 const completed=harness({...base,match:null,session:{...base.session,status:'finished'},met:[{match_id:'old',name:'Zuri'}]});await flush();assert(completed.html().includes('class="roster" open=""'));assert(completed.html().includes('14 days'));assert(completed.html().includes('/network?view=connections'));completed.cleanup();
@@ -133,9 +134,22 @@ assert.deepEqual(early.calls.find(x=>x.name==='answer_event_networking').args,{p
 assert(early.html().includes('This conversation has ended'));assert(!early.html().includes('Meet Amina'));early.cleanup();
 const peer=harness({...base,match:{...base.match,status:'active'}});await flush();peer.set(endedState);await peer.poll();
 assert(peer.html().includes('This conversation has ended'));assert(!peer.html().includes('We will look for someone else'));
-assert.equal(peer.calls.filter(x=>x.name!=='get_event_networking').length,0,'peer notification never auto-acknowledges');
+assert.equal(peer.calls.filter(isMutation).length,0,'peer notification never auto-acknowledges');
 peer.set({...endedState,session:{...base.session,status:'paused'}});await peer.poll();assert(!peer.button('Find someone else'),'Host pause prevents continuation');
 peer.set({...endedState,eligible:false});await peer.poll();assert(!peer.button('Find someone else'),'revoked guest cannot continue');peer.cleanup();
+
+const followState={...endedState,met:[{match_id:'match-1',name:'Amina',connection_state:'available',deferred:false}]};
+const follow=harness(followState);await flush();assert(follow.html().includes('Enjoyed meeting Amina?'));assert.equal(follow.calls.filter(isMutation).length,0,'prompt never sends automatically');
+follow.cancelDialog(true);follow.button('Connect with Amina').props.onClick();await flush();assert.equal(follow.calls.filter(isMutation).length,0,'closing confirmation sends nothing');
+assert(follow.dialogs.at(-1).fields[0].initialValue.includes('enjoyed our conversation'),'friendly note prefilled');
+follow.cancelDialog(false);follow.button('Connect with Amina').props.onClick();await flush();
+assert.equal(follow.calls.filter(c=>c.name==='connect_event_networking').length,1);assert(follow.html().includes('Request sent'));assert(!follow.html().includes('Enjoyed meeting Amina?'));follow.cleanup();
+const later=harness(followState);await flush();later.button('Maybe later').props.onClick();later.button('Maybe later').props.onClick();await flush();
+assert.equal(later.calls.filter(c=>c.name==='defer_networking_connection').length,1,'one private deferral');assert(!later.html().includes('Enjoyed meeting Amina?'));assert(later.button('Stay connected'),'deferral keeps the person in history');assert(later.html().includes('Nothing was sent'));later.cleanup();
+const brokenFollow=harness({...followState,met:[]});brokenFollow.historyFail(true);await brokenFollow.poll();
+assert(brokenFollow.html().includes('People you met could not load'));assert(!brokenFollow.button('Connect with Amina'),'failed read cannot offer a duplicate connection');brokenFollow.historyFail(false);brokenFollow.set(followState);brokenFollow.button('Try people again').props.onClick();await flush();assert(brokenFollow.button('Connect with Amina'));brokenFollow.cleanup();
+const duringConversation=harness({...base,match:{...base.match,status:'active'},met:followState.met});await flush();assert(!duringConversation.button('Connect with Amina'),'do not interrupt an active conversation with the previous prompt');duringConversation.cleanup();
+const afterEvent=harness({...followState,session:{...base.session,status:'finished'}});await flush();assert(afterEvent.button('Connect with Amina'),'ended notice must not hide after-event follow-through');afterEvent.cleanup();
 
 const sql=read('supabase/migrations/20261025060849_event_networking_pairs.sql');
 for(const guard of ['for update','unique(event_id,member_a,member_b)',"m.status='attended'",'public.is_blocked_pair','accepted_a and accepted_b',"interval '60 seconds'",'revoke all on schema hat_networking','revoke all on all functions in schema hat_networking','request_connection_with_context']) assert(sql.includes(guard),guard);
@@ -156,7 +170,7 @@ if(process.argv.includes('--preview')) {
   const hostSetup=harness({...base,can_manage:true,joined:false,match:null,session:{...base.session,status:'scheduled'}});await flush();hostSetup.button('Edit schedule',true).props.onClick();
   writeFileSync(new URL('host-networking.html',target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Host networking — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${hostSetup.html(true)}</main></body></html>`);hostSetup.cleanup();
   const liveHost=harness({...base,can_manage:true,match:null,people:[{name:'Amina',ready:true,paired:true},{name:'Zuri',ready:true,paired:true},{name:'Wanjiku',ready:true,paired:false},{name:'Nia',ready:false,paired:false}],help:[]});await flush();writeFileSync(new URL('host-live.html',target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Host live controls — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${liveHost.html(true)}</main></body></html>`);liveHost.cleanup();
-  for(const [name,extra] of [['offered',{}],['invitation',{joined:false,match:null}],['ended',endedState],['radar',{match:null}],['strip',{joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}}]]){
+  for(const [name,extra] of [['followthrough',followState],['offered',{}],['invitation',{joined:false,match:null}],['ended',endedState],['radar',{match:null}],['strip',{joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}}]]){
     const sample=harness({...base,...extra});await flush();writeFileSync(new URL(`${name}.html`,target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking ${name} — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${sample.html()}</main></body></html>`);sample.cleanup();
   }
 }

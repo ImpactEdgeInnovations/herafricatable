@@ -27,7 +27,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   const request = useRef<Promise<void> | null>(null);
   const hydrated = useRef(Boolean(initial));
   const previousMatch = useRef(initial?.match ?? null);
-  const connectionCache = useRef<{ sampled:number; ids:string; rows:{match_id:string;state:NonNullable<NetworkingState["met"]>[number]["connection_state"]}[] }>({ sampled:-Infinity, ids:"", rows:[] });
+  const connectionCache = useRef<{ sampled:number; ids:string; rows:NonNullable<NetworkingState["met"]> }>({ sampled:-Infinity, ids:"", rows:[] });
   const [introduction, setIntroduction] = useState(initial?.introduction ?? "");
   const proposedStart = Math.max(Date.parse(eventStartsAt ?? new Date().toISOString()) + 15 * 60_000, Date.now());
   const proposedEnd = Math.min(proposedStart + 30 * 60_000, Date.parse(eventEndsAt ?? new Date(proposedStart + 30 * 60_000).toISOString()));
@@ -56,21 +56,22 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
           if (counts.error) throw counts.error;
           next.live_counts = counts.data?.counts ?? null;
         }
-        if (!manage && next.met?.length) {
+        if (!manage) {
+          next.followthrough_error = false;
           // A status-read failure must not make an existing request look absent.
-          const ids = next.met.map(p => p.match_id).sort().join(",");
+          const ids = [(next.met ?? []).map(p => p.match_id).sort().join(","), next.end_notice?.id, next.match?.id, previousMatch.current?.id].join(":");
           let statuses = connectionCache.current.rows;
           if (ids !== connectionCache.current.ids || performance.now() - connectionCache.current.sampled >= 30000) {
             statuses = [];
             try {
-              const read = await supabase.rpc("get_my_networking_connection_states", { p_event_id: eventId });
+              const read = await supabase.rpc("get_my_networking_followthrough", { p_event_id: eventId });
               if (!read.error && Array.isArray(read.data)) {
                 statuses = read.data;
                 connectionCache.current = { sampled:performance.now(), ids, rows:statuses };
-              } else connectionCache.current.sampled = -Infinity;
-            } catch { connectionCache.current.sampled = -Infinity; }
+              } else { connectionCache.current.sampled = -Infinity; next.followthrough_error = true; }
+            } catch { connectionCache.current.sampled = -Infinity; next.followthrough_error = true; }
           }
-          next.met = next.met.map(person => ({ ...person, connection_state: statuses.find(s => s.match_id === person.match_id)?.state ?? "unknown" }));
+          next.met = next.followthrough_error ? (next.met ?? []).map(person => ({ ...person, connection_state: "unknown", deferred: true })) : statuses;
         }
         if (!mounted.current) return;
         if (previousMatch.current && previousMatch.current.id !== next.match?.id && !next.end_notice) {
@@ -111,9 +112,9 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
     actionLock.current = true; setBusy(true); setMessage("");
     try {
       if (request.current) await request.current;
+      if (name === "connect_event_networking" || name === "defer_networking_connection") connectionCache.current.sampled = -Infinity;
       const result = await supabase.rpc(name, { p_event_id: eventId, ...args });
       if (result.error) throw result.error;
-      if (name === "connect_event_networking") connectionCache.current.sampled = -Infinity;
       await refresh(); setMessage(success);
       return true;
     } catch (failure) {
@@ -146,7 +147,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
     await run("answer_event_networking", { p_match_id: matchId, p_accept: false }, "");
   }
   async function connect(match: { match_id: string; name: string }) {
-    const answer = await ask({ title: `Stay connected with ${match.name}?`, description: "We will send a connection request. Private messages open only if she accepts. Both of you need active platform membership.", confirmLabel: "Send connection request", fields: [{ name: "note", label: "Add a note (optional)", type: "textarea", maxLength: 500, minLength: 10 }] });
+    const answer = await ask({ title: `Stay connected with ${match.name}?`, description: "Review your note before sending. She can view your profile and choose whether to accept. Private messages open only if she accepts. Both of you need active platform membership.", confirmLabel: "Send connection request", fields: [{ name: "note", label: "Add a note (optional)", type: "textarea", maxLength: 500, minLength: 10, initialValue: "I enjoyed our conversation at this event and would love to stay connected." }] });
     if (answer) await run("connect_event_networking", { p_match_id: match.match_id, p_note: String(answer.note ?? "") }, "Connection request sent. She can accept or decline privately.");
   }
   async function save() {
@@ -174,8 +175,13 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   const counts = synced && now - clock.current.server < 15000 ? state?.live_counts : null;
   const introductionRemaining = match ? networkingRemaining(phase === "talking" ? match.ends_at : match.accept_by, now) : 0;
   const conversationProgress = session ? Math.min(1, introductionRemaining / (session.minutes * 60)) : 0;
+  const latestConversation = state?.met?.[0];
+  const followthrough = synced && !manage && !match && !entryOpen && !state?.followthrough_error
+    && latestConversation?.connection_state === "available" && !latestConversation.deferred ? latestConversation : null;
+  const endedNoticeVisible = state?.end_notice && state.eligible && !["finished","paused","disabled"].includes(phase);
+  const followthroughPanel = followthrough ? <aside className={styles.followthrough} aria-labelledby="networking-followthrough-title"><div className={styles.followthroughPerson}><span className={styles.followthroughAvatar} aria-hidden="true">{followthrough.avatar_url ? <img src={followthrough.avatar_url} alt="" width="48" height="48" onError={e => {e.currentTarget.hidden = true;}}/> : null}<span>{followthrough.name.slice(0,1)}</span></span><div><h3 id="networking-followthrough-title">Enjoyed meeting {followthrough.name}?</h3><p>Stay in touch after the event.</p></div></div><div className={styles.followthroughActions}><button className="button button-primary" disabled={locked} onClick={() => void connect(followthrough)}>Connect with {followthrough.name}</button><button className="button button-quiet" disabled={locked} onClick={() => void run("defer_networking_connection",{p_match_id:followthrough.match_id},"Saved for later under People you met. Nothing was sent.")}>Maybe later</button></div><small>Your choice stays private. Nothing sends until you confirm.</small></aside> : null;
   return <section className={`${styles.panel}${!manage ? ` ${styles.guest}` : ""}${!manage && !state?.joined ? ` ${styles.strip}` : ""}`} id="event-networking" aria-labelledby={`networking-title-${manage ? "host" : "guest"}`}>
-    <header className={styles.heading}><div><p className={styles.eyebrow}>{manage ? "Host tools · In person" : match ? `At this event · Round ${session?.round_no || 1}` : "At this event · Networking"}</p><h2 id={`networking-title-${manage ? "host" : "guest"}`}>{manage ? "Networking rounds" : match ? "Networking" : invitationTitle}</h2>
+    <header className={styles.heading}><div><p className={styles.eyebrow}>{manage ? "Host tools · In person" : match || state?.end_notice ? `At this event · Round ${session?.round_no || 1}` : "At this event · Networking"}</p><h2 id={`networking-title-${manage ? "host" : "guest"}`}>{manage ? "Networking rounds" : match || state?.end_notice ? "Networking" : invitationTitle}</h2>
       {session ? <p>{time(session.starts_at)}–{time(session.ends_at)} <span aria-hidden="true">·</span> {session.minutes} min per conversation{manage ? ` · ${session.changeover}s between rounds` : ""}</p> : <p>Short introductions for checked-in guests. No contact details are shared.</p>}</div>
       {session ? <span className={styles.badge}>{!manage && !synced ? "Checking…" : session.disabled ? "Paused by Admin" : phase === "finished" ? "Finished" : session.status === "running" ? manage ? `Round ${session.round_no || 1}` : "Live now" : session.status === "scheduled" ? "Coming up" : session.status === "paused" ? "Paused" : "Finished"}</span> : null}
     </header>
@@ -215,8 +221,9 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
         : !state.eligible ? <p>Have your event pass checked at the door first. Then return here to join networking.</p>
         : state.end_notice ? <div className={styles.ended} key={state.end_notice.id}>
           <div role="status" aria-live="polite"><p className={styles.eyebrow}>Take a moment</p><h3>{state.end_notice.conversation ? "This conversation has ended" : "This introduction has ended"}</h3>
-          <p>You are not being matched right now. When you’re ready, we’ll find someone new. You won’t be paired with this person again at this event.</p></div>
-          <div className={styles.actions}><button className="button button-primary" disabled={locked || phase === "scheduled"} onClick={() => void run("continue_event_networking", { p_notice_id: state.end_notice!.id }, "You’re ready for another introduction.")}>Find someone else</button>
+          <p>You’re taking a break. Choose your next introduction when you’re ready. Introductions won’t repeat.</p></div>
+          {followthroughPanel}
+          <div className={styles.actions}><button className={`button ${followthrough ? "button-outline" : "button-primary"}`} disabled={locked || phase === "scheduled"} onClick={() => void run("continue_event_networking", { p_notice_id: state.end_notice!.id }, "You’re ready for another introduction.")}>Find someone else</button>
           <button className="button button-outline" disabled={locked} onClick={() => void leaveNetworking()}>Leave networking</button>
           <button className="button button-quiet" disabled={locked} onClick={() => void help()}>Get help</button></div>
         </div>
@@ -253,6 +260,8 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
             {phase === "changeover" && session.next_at ? <p className={styles.roundTime}>Next round <span className={styles.timer}>{networkingCountdown(networkingRemaining(session.next_at, now))}</span></p> : null}</div></div>}
           <div className={styles.actions}><button className="button button-outline" disabled={busy} onClick={() => void leaveNetworking()}>Leave networking</button><button className="button button-quiet" disabled={busy} onClick={() => void help()}>Get help</button></div>
         </>}
+      {!endedNoticeVisible ? followthroughPanel : null}
+      {synced && state.followthrough_error ? <div className={styles.notice} role="status"><p>People you met could not load. Networking is unchanged.</p><button className="button button-outline" disabled={busy} onClick={() => {connectionCache.current.sampled = -Infinity; void refresh();}}>Try people again</button></div> : null}
       {synced && state.met?.length ? <details className={styles.roster} open={phase === "finished"}><summary>People you met · {state.met.length}</summary><ul>{state.met.map(p => <li key={p.match_id}><span>{p.name}</span>{p.connection_state === "connected" ? <a href="/network?view=connections">Connected · View connections</a> : p.connection_state === "outgoing" ? <span className={styles.connectionStatus}>Request sent</span> : p.connection_state === "incoming" ? <a href="/network?view=connections#network-connections">Respond to her request</a> : p.connection_state === "available" ? <button className="button button-outline" disabled={locked} onClick={() => void connect(p)}>Stay connected</button> : <small>{p.connection_state === "unknown" ? "Connection status unavailable. Try again shortly." : "Connection unavailable"}</small>}</li>)}</ul><p>Connections are optional. Nothing is sent until you confirm.</p>{phase === "finished" ? <p>This event history is available for 14 days. Accepted connections stay in <a href="/network?view=connections">Your connections</a>.</p> : null}</details> : null}
       {state.joined && ["paused", "disabled", "finished"].includes(phase) ? <div className={styles.actions}><button className="button button-outline" disabled={busy} onClick={() => void leaveNetworking()}>Leave networking</button></div> : null}
     </> : null}
