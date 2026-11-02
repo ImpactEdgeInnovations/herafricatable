@@ -51,6 +51,11 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
         if (!mounted.current) return;
         if (result.error || !result.data?.server_now) throw result.error ?? new Error("Missing session response");
         const next = result.data as NetworkingState;
+        if (manage && next.can_manage) {
+          const counts = await supabase.rpc("get_event_networking_live_counts", { p_event_id: eventId });
+          if (counts.error) throw counts.error;
+          next.live_counts = counts.data?.counts ?? null;
+        }
         if (!manage && next.met?.length) {
           // A status-read failure must not make an existing request look absent.
           const ids = next.met.map(p => p.match_id).sort().join(",");
@@ -166,9 +171,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
   const invitationTitle = invitationLive && !entryOpen && !invitationDismissed
     ? session.round_no <= 1 ? "Networking is starting" : "Networking is live"
     : "Meet someone new";
-  const readyPeople = state?.people?.filter(p => p.ready && !p.paired && !p.choosing).length ?? 0;
-  const pairedPeople = state?.people?.filter(p => p.paired).length ?? 0;
-  const restingPeople = state?.people?.filter(p => !p.paired && (!p.ready || p.choosing)).length ?? 0;
+  const counts = synced && now - clock.current.server < 15000 ? state?.live_counts : null;
   return <section className={`${styles.panel}${!manage ? ` ${styles.guest}` : ""}${!manage && !state?.joined ? ` ${styles.strip}` : ""}`} id="event-networking" aria-labelledby={`networking-title-${manage ? "host" : "guest"}`}>
     <header className={styles.heading}><div><p className={styles.eyebrow}>{manage ? "Host tools · In person" : "At this event · Networking"}</p><h2 id={`networking-title-${manage ? "host" : "guest"}`}>{manage ? "Networking rounds" : invitationTitle}</h2>
       {session ? <p>{time(session.starts_at)}–{time(session.ends_at)} <span aria-hidden="true">·</span> {session.minutes} min per conversation{manage ? ` · ${session.changeover}s between rounds` : ""}</p> : <p>Short introductions for checked-in guests. No contact details are shared.</p>}</div>
@@ -179,7 +182,7 @@ export function EventNetworking({ eventId, timeZone = "Africa/Nairobi", eventSta
     {manager ? <>
       {session ? <div className={styles.liveOverview}>
         <div className={styles.liveClock}><div><p className={styles.eyebrow}>Your live session</p><h3>{!synced ? "Reconnecting…" : session.disabled ? "Paused by Admin" : phase === "finished" ? "Session finished" : session.status === "paused" ? "Session paused" : session.status === "scheduled" ? "Ready when you are" : phase === "changeover" ? "Time to change places" : `Round ${session.round_no || 1}`}</h3><p>No Admin approval needed to start, pause or finish. Guests still choose to join.</p></div>{synced && session.status === "running" && !session.disabled && phase !== "finished" ? <div><small>{phase === "changeover" ? "Next round in" : "Round ends in"}</small><strong className={styles.timer}>{networkingCountdown(phase === "changeover" ? networkingRemaining(session.next_at,now) : roundRemaining)}</strong></div> : null}</div>
-        {synced ? <div className={styles.liveCounts}><div><strong>{readyPeople}</strong><span>Ready to meet</span></div><div><strong>{pairedPeople}</strong><span>Paired</span></div><div><strong>{restingPeople}</strong><span>Taking a break</span></div></div> : <p>Counts will return after we reconnect.</p>}
+        {counts ? <><div className={styles.liveCounts}><div><strong>{counts.talking}</strong><span>In conversations</span></div><div><strong>{counts.offered}</strong><span>Awaiting acceptance</span></div><div><strong>{counts.waiting}</strong><span>Ready to meet</span></div></div>{counts.away > 0 ? <p>{counts.away} taking a break, away or choosing what to do next.</p> : null}</> : <p>{!synced ? "Counts will return after we reconnect." : "Live counts appear while networking is running."}</p>}
       </div> : null}
       {!session || session.status === "scheduled" ? <>
         <button className="button button-outline" type="button" disabled={locked} aria-expanded={formOpen} onClick={() => setFormOpen(!formOpen)}>{session ? "Edit schedule" : "Set up networking"}</button>

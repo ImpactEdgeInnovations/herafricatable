@@ -12,6 +12,7 @@ export type NetworkingState = {
     accept_by: string; accepted: boolean; person: { name: string; avatar_url: string | null; introduction: string } };
   met?: { match_id: string; name: string; connection_state?: "available" | "connected" | "outgoing" | "incoming" | "unavailable" | "unknown" }[];
   people?: { name: string; ready: boolean; paired: boolean; choosing?: boolean }[];
+  live_counts?: { talking: number; offered: number; waiting: number; away: number } | null;
   help?: { id: string; name: string; note: string; created_at: string }[];
 };
 export function networkingRemaining(end: string | null | undefined, serverNow: number) {

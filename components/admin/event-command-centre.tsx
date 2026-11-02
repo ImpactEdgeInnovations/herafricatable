@@ -275,7 +275,7 @@ export function EventCommandCentre({
               <footer>
                 {event.status === "published" ? <Link className="button button-outline" href={`/events/${event.slug}`}>View event page</Link> : null}
                 <Link className="button button-outline" href={eventToolHref("/admin/events?view=registrations", event.id)}>Registrations</Link>
-                <Link className="button button-outline" href={eventToolHref("/admin/events?view=arrival", event.id)}>Guest arrival</Link>
+                <Link className="button button-outline" href={eventToolHref("/admin/events?view=arrival", event.id)}>Event day</Link>
                 <Link className="button button-outline" href="/admin/events?view=stories">Stories & media</Link>
                 <Link className="button button-outline" href={eventToolHref("/admin/events?view=edit", event.id)}>Edit details</Link>
                 {event.status === "published" && lifecycle?.active_action === "registrations_paused" ? <button className="button button-outline" disabled={Boolean(busy)|| !lifecycleReady} onClick={() => void manageLifecycle("resume_registrations")} type="button">Reopen registrations</button> : null}

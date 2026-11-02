@@ -1,6 +1,14 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 28 October 2026. Historical baseline release: `b4be9ca`.
+Updated: 2 November 2026. Historical baseline release: `b4be9ca`.
+
+**2 November — Event day operations delivered:** One Host/Admin overview combines checked-in/not-checked-in figures, private late/can’t-attend guest updates and accurate networking counts (accepted conversations vs awaiting acceptance vs ready). Foreground refresh, age, offline/error/stale hiding and bounded guest paging are implemented; scanning helpers retain no private note access. Attendance updates do not cancel bookings, revoke passes or initiate refunds. Migration applied live; no owner SQL or new Vercel variables needed. 51 rollback SQL assertions and 13 independent Auth/API checks passed, with fixture closure verified and no provider emails. Actual component/hook tests, full suite, TypeScript/build and desktop/mobile example-data visual checks passed. Physical-device/event rehearsal remains open. [Delivery and tester handover](EVENT_DAY_OPERATIONS_20261102.md).
+
+| Event-day completion phase | State | Evidence / remaining work |
+| --- | --- | --- |
+| 1 — Host/Admin screen and guest updates | Implemented | Event-scoped database operations, private notes, plain labels and unchanged scanner. |
+| 2 — Permission, integration and recovery checks | Passed | 51 rollback assertions, 13 independent Auth/API checks and actual-component tests. |
+| 3 — Real event/device acceptance | Open | Run the short tester handover on real phones/PWA and a private rehearsal event; this is not replaced by example-data screenshots. |
 
 **28 October — Private PDF tickets and personalised confirmations:** Added guest/ticket/booking/Host-company details, private PDF download, Profile → My tickets and queued Resend PDF attachments. Standard confirmations now greet the guest and show event details, published arrival instructions and saved networking times. Thirty rollback SQL assertions passed before/after application; PDF, endpoint, provider-payload, profile and suppression regressions plus full tests/build verified. No owner SQL/new environment variables required. Real inbox/phone acceptance remains separate; current Hobby queue timing is unchanged. [Delivery and acceptance notes](EVENT_TICKETS_AND_EMAIL_20261028.md).
 

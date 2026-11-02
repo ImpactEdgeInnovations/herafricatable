@@ -28,7 +28,7 @@ const flush = async () => { for(let i=0;i<5;i++) await new Promise(resolve => se
 function harness(initial = base) {
   let current=structuredClone(initial), fail=false, mutationError=false, cursor=0, values=[], effects=[], intervalId=0;
   const calls=[], intervals=new Map(), listeners=new Map();
-  const client={ rpc:async(name,args)=>{calls.push({name,args}); if(fail) throw Error('offline'); if(name==='get_event_networking')return {data:current,error:null};if(name==='get_my_networking_connection_states')return {data:(current.met??[]).map(p=>({match_id:p.match_id,state:p.connection_state??'available'})),error:null}; if(mutationError)throw Error('write failed'); return {data:null,error:null}; } };
+  const client={ rpc:async(name,args)=>{calls.push({name,args}); if(fail) throw Error('offline'); if(name==='get_event_networking')return {data:current,error:null};if(name==='get_event_networking_live_counts')return {data:{counts:current.session?.status==='running'&&!current.session.disabled?(current.live_counts??{talking:0,offered:2,waiting:0,away:0}):null},error:null};if(name==='get_my_networking_connection_states')return {data:(current.met??[]).map(p=>({match_id:p.match_id,state:p.connection_state??'available'})),error:null}; if(mutationError)throw Error('write failed'); return {data:null,error:null}; } };
   const state=initialValue=>{const i=cursor++; if(!(i in values))values[i]=typeof initialValue==='function'?initialValue():initialValue; return [values[i],v=>{values[i]=typeof v==='function'?v(values[i]):v;}];};
   const ref=v=>{const i=cursor++; return values[i]??=( {current:v} );};
   const doc={hidden:false,addEventListener:(name,fn)=>listeners.set('doc:'+name,fn),removeEventListener:name=>listeners.delete('doc:'+name)};
@@ -40,7 +40,7 @@ function harness(initial = base) {
     setInterval:fn=>{intervals.set(++intervalId,fn);return intervalId;},clearInterval:id=>intervals.delete(id)};
   const Component=new Function(...Object.keys(deps),`${source};return EventNetworking;`)(...Object.values(deps));
   function render(manage=false){cursor=0;effects=[];return Component({eventId:'event',timeZone:'Africa/Nairobi',initial,manage});}
-  let tree=render(); const cleanup=effects.map(fn=>fn());
+  let tree=render(Boolean(initial?.can_manage)); const cleanup=effects.map(fn=>fn());
   function elements(node){if(!node||typeof node!=='object')return [];return [node,...React.Children.toArray(node.props?.children).flatMap(elements)];}
   function button(label,manage=false){return elements(render(manage)).find(e=>e.type==='button'&&text(e)===label);}
   function text(node){if(typeof node==='string'||typeof node==='number')return String(node);return React.Children.toArray(node?.props?.children).map(text).join('');}
@@ -60,6 +60,7 @@ h.cleanup();assert.equal(h.intervals.size,0);assert.equal(h.listeners.size,0);
 const host=harness({...base,can_manage:true,is_admin:true,match:null,people:[{name:'Amina',ready:true,paired:true}],help:[{id:'help',name:'Amina',note:'Help finding the table'}]});await flush();
 assert(host.html(true).includes('Disable networking'));assert(host.html(true).includes('Mark handled'));assert(!host.html(true).includes('Accept introduction'));
 assert(host.html(true).includes('Your live session'));assert(host.html(true).includes('Ready to meet'));assert(host.html(true).includes('Round ends in'));assert(host.html(true).includes('No Admin approval needed'));
+assert(host.html(true).includes('Awaiting acceptance'));assert(host.html(true).includes('In conversations'));assert(!host.html(true).includes('<span>Paired</span>'));
 host.button('Pause',true).props.onClick();await flush();assert.equal(host.calls.find(x=>x.name==='control_event_networking').args.p_action,'pause');host.cleanup();
 const emptyHost=harness({...base,can_manage:true,joined:false,match:null,session:null,people:[]});
 assert(emptyHost.html(true).includes('Checking your networking session'));

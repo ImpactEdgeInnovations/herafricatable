@@ -1,0 +1,111 @@
+-- TEST ONLY. Everything, including queued fixture notifications, rolls back.
+begin;
+create function pg_temp.day_assert(ok boolean,label text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception 'FAIL: %',label; end if; end;$$;
+create function pg_temp.day_denied(statement text) returns boolean language plpgsql as $$begin execute statement;return false;exception when others then return true;end;$$;
+insert into auth.users(id,email,aud,role,raw_app_meta_data,raw_user_meta_data,email_confirmed_at)
+select ('f1020000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'day-'||n||'@test.invalid','authenticated','authenticated','{}','{}',now() from generate_series(1,35)n;
+update public.profiles set access_status='active',is_test_account=true,visibility_paused=false,display_name='Day Tester '||right(id::text,2) where id::text like 'f1020000-%';
+insert into public.user_roles(user_id,role,granted_by) values('f1020000-0000-4000-8000-000000000033','super_admin','f1020000-0000-4000-8000-000000000033');
+insert into public.venues(id,name,city,country,address_line) values('f1021000-0000-4000-8000-000000000001','[TEST] Day venue','Nairobi','Kenya','[TEST] Arrival Lane');
+insert into public.events(id,slug,title,format,audience,status,starts_at,ends_at,venue_id,created_by)
+select ('f1022000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'test-day-'||n,'[TEST] Event day '||n,'in_person','public','published',now()-interval '10 minutes',now()+interval '2 hours','f1021000-0000-4000-8000-000000000001','f1020000-0000-4000-8000-000000000001' from generate_series(1,2)n;
+insert into public.event_hosts(event_id,user_id,status,assigned_by) values('f1022000-0000-4000-8000-000000000001','f1020000-0000-4000-8000-000000000001','active','f1020000-0000-4000-8000-000000000001');
+insert into public.orders(id,user_id,event_id,status,processing_mode,currency,subtotal_minor,total_minor)
+select ('f1023000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,('f1020000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'f1022000-0000-4000-8000-000000000001','approved','manual_review','KES',0,0 from generate_series(2,32)n;
+insert into public.event_memberships(event_id,user_id,status,order_id)
+select 'f1022000-0000-4000-8000-000000000001',('f1020000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,case when n<=8 then 'attended' else 'confirmed' end,('f1023000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid from generate_series(2,32)n;
+insert into public.event_checkins(event_id,user_id,method,checked_in_by)
+select 'f1022000-0000-4000-8000-000000000001',('f1020000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'manual','f1020000-0000-4000-8000-000000000034' from generate_series(2,8)n;
+insert into public.orders(id,user_id,event_id,status,processing_mode,currency,subtotal_minor,total_minor) values('f1023000-0000-4000-8000-000000000001','f1020000-0000-4000-8000-000000000009','f1022000-0000-4000-8000-000000000001','approved','manual_review','KES',0,0);
+update public.event_memberships set order_id='f1023000-0000-4000-8000-000000000001' where user_id='f1020000-0000-4000-8000-000000000009';
+insert into hat_event_ops.door_helpers(event_id,user_id,granted_by) values('f1022000-0000-4000-8000-000000000001','f1020000-0000-4000-8000-000000000034','f1020000-0000-4000-8000-000000000001');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','f1020000-0000-4000-8000-000000000009',true);
+select pg_temp.day_assert(public.get_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001')->>'status'='as_planned','default plan');
+select pg_temp.day_assert(public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001','running_late','  Arriving at 7 — thank you  ')->>'note'='Arriving at 7 — thank you','own trimmed unicode note saved');
+select pg_temp.day_assert(public.get_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001')->>'status'='running_late','persists on next read');
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.get_event_day_overview('f1022000-0000-4000-8000-000000000001')$q$),'guest cannot read other notes');
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000002','running_late','')$q$),'other event denied');
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001','bad','')$q$),'invalid status denied');
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001',null,'')$q$),'null status denied');
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001','running_late',repeat('x',281))$q$),'long note denied');
+select pg_temp.day_assert((select status='confirmed' from public.event_memberships where user_id=auth.uid() and event_id='f1022000-0000-4000-8000-000000000001'),'plan does not cancel registration');
+select pg_temp.day_assert((select status='approved' from public.orders where id='f1023000-0000-4000-8000-000000000001'),'plan does not request refund');
+select public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001','not_attending','Cannot make it');
+select pg_temp.day_assert((select count(*)=1 from public.get_my_event_pass('f1022000-0000-4000-8000-000000000001')),'cannot attend does not revoke pass');
+select public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001','running_late','Arriving at 7 — thank you');
+select set_config('request.jwt.claim.sub','f1020000-0000-4000-8000-000000000010',true);
+select public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001','not_attending','Sorry, I cannot attend');
+select set_config('request.jwt.claim.sub','f1020000-0000-4000-8000-000000000002',true);
+select pg_temp.day_assert(public.get_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001')->>'can_edit'='false','checked in plan is locked');
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001','not_attending','')$q$),'checked in cannot submit absence');
+select set_config('request.jwt.claim.sub','f1020000-0000-4000-8000-000000000034',true);
+select pg_temp.day_assert(public.can_operate_event_door('f1022000-0000-4000-8000-000000000001'),'helper still operates own scanner');
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.get_event_day_overview('f1022000-0000-4000-8000-000000000001')$q$),'helper cannot read private notes/roster');
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.get_event_networking_live_counts('f1022000-0000-4000-8000-000000000001')$q$),'helper cannot read networking');
+select set_config('request.jwt.claim.sub','f1020000-0000-4000-8000-000000000001',true);
+select pg_temp.day_assert(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001')->>'confirmed'='31','all confirmed guests counted');
+select pg_temp.day_assert(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001')->>'checked_in'='7','checked in count');
+select pg_temp.day_assert(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001')->>'not_checked_in'='24','not checked in includes reported absence');
+select pg_temp.day_assert(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001')->>'running_late'='1','late subset');
+select pg_temp.day_assert(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001')->>'not_attending'='1','absence subset');
+select pg_temp.day_assert(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001','','running_late')->'guests'->0->>'note'='Arriving at 7 — thank you','Host can read private note');
+select pg_temp.day_assert(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001','No such guest')->>'total'='0','empty search');
+select pg_temp.day_assert(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001','Tester 09')->>'total'='1','name search');
+select pg_temp.day_assert(jsonb_array_length(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001')->'guests')=25,'bounded first page');
+select pg_temp.day_assert(jsonb_array_length(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001','','all',25)->'guests')=6,'second page');
+select pg_temp.day_assert(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001','','all',9999)->>'offset'='25','offset clamped');
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.get_event_day_overview('f1022000-0000-4000-8000-000000000002')$q$),'Host event isolation');
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.get_event_day_overview('f1022000-0000-4000-8000-000000000001','','invalid')$q$),'invalid filter denied');
+select pg_temp.day_assert(not(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001')->'guests'->0 ? 'manual_code'),'no pass credentials in overview');
+select pg_temp.day_assert(not(public.get_my_event_arrival_export('test-day-1')->'guests'->0 ? 'note'),'private notes excluded from CSV export');
+select set_config('request.jwt.claim.sub','f1020000-0000-4000-8000-000000000033',true);
+select pg_temp.day_assert(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001','','not_attending')->'guests'->0->>'note'='Sorry, I cannot attend','authorised Admin can review note');
+reset role;
+insert into hat_networking.sessions(event_id,starts_at,ends_at,minutes,changeover,points,status,round_no,round_ends_at,updated_by)
+values('f1022000-0000-4000-8000-000000000001',now()-interval '5 minutes',now()+interval '35 minutes',5,60,array['Table 1'],'running',1,now()+interval '3 minutes','f1020000-0000-4000-8000-000000000001');
+insert into hat_networking.participants(event_id,user_id,ready,seen_at)
+select 'f1022000-0000-4000-8000-000000000001',('f1020000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,n<>7,case when n in(2,3) then now()-interval '5 minutes' else now() end from generate_series(2,8)n;
+insert into hat_networking.matches(event_id,member_a,member_b,round_no,status,accepted_a,accepted_b,point,accept_by,ends_at)
+values('f1022000-0000-4000-8000-000000000001','f1020000-0000-4000-8000-000000000002','f1020000-0000-4000-8000-000000000003',1,'active',true,true,'Table 1',now()-interval '1 minute',now()+interval '3 minutes'),
+('f1022000-0000-4000-8000-000000000001','f1020000-0000-4000-8000-000000000004','f1020000-0000-4000-8000-000000000005',1,'offered',true,false,'Table 2',now()+interval '1 minute',now()+interval '3 minutes');
+update hat_networking.participants set ended_match_id=(select id from hat_networking.matches where member_a='f1020000-0000-4000-8000-000000000002'),ended_at=now() where user_id='f1020000-0000-4000-8000-000000000008';
+set local role authenticated;
+select set_config('request.jwt.claim.sub','f1020000-0000-4000-8000-000000000001',true);
+select pg_temp.day_assert(public.get_event_networking_live_counts('f1022000-0000-4000-8000-000000000001')->'counts'->>'talking'='2','mutually accepted conversations count people even with locked phones');
+select pg_temp.day_assert(public.get_event_networking_live_counts('f1022000-0000-4000-8000-000000000001')->'counts'->>'offered'='2','one accepted offer is not a conversation');
+select pg_temp.day_assert(public.get_event_networking_live_counts('f1022000-0000-4000-8000-000000000001')->'counts'->>'waiting'='1','ready unpaired guests');
+select pg_temp.day_assert(public.get_event_networking_live_counts('f1022000-0000-4000-8000-000000000001')->'counts'->>'away'='2','break/choosing separated');
+select pg_temp.day_assert(public.get_event_day_overview('f1022000-0000-4000-8000-000000000001')->'networking'->'counts'->>'talking'='2','same canonical counts in overview');
+reset role;
+select pg_temp.day_assert((select count(*)=7 from hat_networking.participants where event_id='f1022000-0000-4000-8000-000000000001'),'monitoring does not join the Host');
+select pg_temp.day_assert((select seen_at<now()-interval '4 minutes' from hat_networking.participants where user_id='f1020000-0000-4000-8000-000000000002'),'monitoring does not heartbeat guests');
+select pg_temp.day_assert((select round_no=1 from hat_networking.sessions where event_id='f1022000-0000-4000-8000-000000000001'),'monitoring does not advance rounds');
+update hat_networking.matches set accepted_b=false where member_a='f1020000-0000-4000-8000-000000000002';
+select pg_temp.day_assert(hat_event_ops.networking_overview('f1022000-0000-4000-8000-000000000001')->'counts'->>'talking'='0','inconsistent active match never counts as talking');
+update hat_networking.sessions set status='paused' where event_id='f1022000-0000-4000-8000-000000000001';
+select pg_temp.day_assert(hat_event_ops.networking_overview('f1022000-0000-4000-8000-000000000001')->'counts'='null'::jsonb,'paused counts not fake zeros');
+update hat_networking.sessions set status='running',disabled=true where event_id='f1022000-0000-4000-8000-000000000001';
+select pg_temp.day_assert(hat_event_ops.networking_overview('f1022000-0000-4000-8000-000000000001')->'counts'='null'::jsonb,'disabled counts not fake zeros');
+update public.orders set status='refund_pending' where id='f1023000-0000-4000-8000-000000000001';
+set local role authenticated;
+select set_config('request.jwt.claim.sub','f1020000-0000-4000-8000-000000000009',true);
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001','not_attending','')$q$),'invalidated paid place cannot update attendance');
+select set_config('request.jwt.claim.sub','f1020000-0000-4000-8000-000000000010',true);
+select pg_temp.day_assert(public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001','as_planned','discard this')->>'note'='','clear update also clears note');
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','f1020000-0000-4000-8000-000000000033',true);
+select public.manage_event_lifecycle('f1022000-0000-4000-8000-000000000001','suspend','[TEST] Attendance permission rehearsal','[TEST] This fixture is paused during a rollback-only test.');
+select set_config('request.jwt.claim.sub','f1020000-0000-4000-8000-000000000010',true);
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.set_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001','running_late','')$q$),'suspended event update denied');
+select pg_temp.day_assert(pg_temp.day_denied($q$select * from hat_event_ops.attendance_plans$q$),'no direct private-table reads');
+reset role;
+set local role anon;
+select set_config('request.jwt.claim.sub','',true);
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.get_event_day_overview('f1022000-0000-4000-8000-000000000001')$q$),'anonymous overview denied');
+select pg_temp.day_assert(pg_temp.day_denied($q$select public.get_my_event_attendance_plan('f1022000-0000-4000-8000-000000000001')$q$),'anonymous plan denied');
+reset role;
+select pg_temp.day_assert(not has_schema_privilege('authenticated','hat_event_ops','usage'),'private schema inaccessible');
+select pg_temp.day_assert(not has_function_privilege('anon','public.set_my_event_attendance_plan(uuid,text,text)','execute'),'no anonymous write grant');
+rollback;

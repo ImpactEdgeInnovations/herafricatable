@@ -14,6 +14,7 @@ import { EventHostRequests } from "@/components/events/event-host-requests";
 import { EventNetworking } from "@/components/events/event-networking";
 import type { NetworkingState } from "@/lib/events/networking";
 import { EventHostArrival } from "@/components/events/event-host-arrival";
+import { EventDayOverview } from "@/components/events/event-day-overview";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -75,6 +76,7 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
   return <main className="event-host-page">
     <MemberHeader active="events" label="Your event" />
     <EventHostWorkspace currentUserId={user.id} initial={workspace} cover={cover} coverReady={!coverResult.error} outcomes={outcomes} communities={(communitiesResult.data as EventHostCommunity[] | null) ?? []} communityLinksReady={!communitiesResult.error} selfPublish={selfPublish === true}
+      eventDay={["published","completed"].includes(workspace.event_status) && inPersonNetworking ? <EventDayOverview key={workspace.event_id} eventId={workspace.event_id} slug={slug} title={workspace.event_title} timeZone={workspace.timezone} scannerAvailable={workspace.event_status === "published" && !hasEnded} networkingAvailable={workspace.event_status === "published" && !hasEnded} /> : undefined}
       networking={workspace.event_status === "published" && !hasEnded && inPersonNetworking ? <EventNetworking key={workspace.event_id} eventId={workspace.event_id} timeZone={workspace.timezone} eventStartsAt={workspace.starts_at} eventEndsAt={workspace.ends_at} initial={networkingResult.data as NetworkingState | null} initialError={Boolean(networkingResult.error)} manage /> : undefined}
       arrival={["published","completed"].includes(workspace.event_status) && inPersonNetworking ? <EventHostArrival key={workspace.event_id} eventId={workspace.event_id} slug={slug} title={workspace.event_title} timeZone={workspace.timezone} upcoming={!hasEnded} /> : undefined}
     />

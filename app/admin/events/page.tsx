@@ -30,6 +30,8 @@ import {
   type CheckinAttendee,
 } from "@/components/admin/event-checkin-console";
 import { EventDoorStaffControl, type DoorStaff } from "@/components/admin/event-door-staff-control";
+import { EventDayOverview } from "@/components/events/event-day-overview";
+import { EventNetworkingControl } from "@/components/admin/event-networking-control";
 import {
   MemberEventArchiveManager,
   type EventMediaSubmissionAdmin,
@@ -63,7 +65,7 @@ const views: { href: EventView; label: string }[] = [
   { href: "host", label: "Host drafts" },
   { href: "edit", label: "Event details" },
   { href: "registrations", label: "Registrations" },
-  { href: "arrival", label: "Guest arrival" },
+  { href: "arrival", label: "Event day" },
   { href: "stories", label: "Stories & media" },
   { href: "follow-up", label: "After-event invites" },
 ];
@@ -439,8 +441,12 @@ export default async function AdminEventsPage({
       {view === "edit" ? <section className="focused-admin-tool"><EventManager automaticCheckoutOpen={automaticCheckoutOpen} automaticCheckoutReady={automaticCheckoutReady} canCreate={role === "super_admin"} hostedEventIds={hostedEventIds} initialSafetyContacts={publicationSafetyContacts} initialEvents={events} selectedEventId={selectedEventId} migrationReady={!eventResult.error} publicationGuardReady={publicationGuardReady} privateEvents={managedRows.map((event) => ({ event_id: event.event_id, online_url: event.online_url }))} /></section> : null}
       {view === "registrations" ? <section className="focused-admin-tool"><RegistrationManager events={events} selectedEventId={selectedEventId} initialPayments={payments} initialRefunds={refunds} initialRegistrations={registrations} initialTickets={tickets} initialWaitlist={waitlist} waitlistReady={waitlistReady} migrationReady={registrationReady} paystackConfigured={Boolean(process.env.PAYSTACK_SECRET_KEY && process.env.SUPABASE_SECRET_KEY && process.env.NEXT_PUBLIC_SITE_URL)} /></section> : null}
       {view === "arrival" ? <section className="focused-admin-tool">
+        <form method="get"><input type="hidden" name="view" value="arrival"/><label>Choose an event<select name="event" defaultValue={arrivalEvent?.id ?? ""}>{events.map(event => <option key={event.id} value={event.id}>{event.title}</option>)}</select></label><button className="button button-outline">View event day</button></form>
+        {arrivalEvent ? <EventDayOverview key={arrivalEvent.id} eventId={arrivalEvent.id} slug={arrivalEvent.slug} title={arrivalEvent.title} timeZone={arrivalEvent.timezone} scannerAvailable={arrivalEvent.status === "published" && arrivalEvent.format !== "virtual" && new Date(arrivalEvent.ends_at).getTime() > Date.now()} adminTools={role === "super_admin" && arrivalEvent.format !== "virtual" && arrivalEvent.status === "published" && new Date(arrivalEvent.ends_at).getTime() > Date.now() ? <EventNetworkingControl eventId={arrivalEvent.id} timeZone={arrivalEvent.timezone} startsAt={arrivalEvent.starts_at} endsAt={arrivalEvent.ends_at}/> : <p>Networking controls are available to the Host and Super Admin during an in-person event.</p>} /> : <p>No event is available.</p>}
+        <details><summary>Check-in corrections and Admin tools</summary>
         {role === "super_admin" && arrivalEvent ? <EventDoorStaffControl eventId={arrivalEvent.id} eventSlug={arrivalEvent.slug} staff={(doorStaffResult.data as DoorStaff[] | null) ?? []} ready={!doorStaffResult.error} /> : null}
         <EventCheckinConsole events={events.map((event) => ({ id: event.id, title: event.title, starts_at: event.starts_at, ends_at: event.ends_at }))} selectedEventId={selectedEventId} initialAttendees={checkinAttendees} migrationReady={checkinReady} />
+        </details>
       </section> : null}
       {view === "stories" && role === "super_admin" ? <section className="focused-admin-tool"><MemberEventArchiveManager archives={archives} media={media} migrationReady={storiesReady} /></section> : null}
       {view === "follow-up" && role === "super_admin" ? <EventFollowUpInvitations candidates={followUpCandidates} ready={!followUpResult.error} /> : null}

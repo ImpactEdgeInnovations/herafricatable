@@ -68,7 +68,7 @@ export type EventHostCommunity = {
   can_select: boolean;
 };
 
-export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, outcomes, communities, communityLinksReady, selfPublish = false, networking, arrival }: { currentUserId: string; initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean; outcomes: EventHostOutcomes | null; communities: EventHostCommunity[]; communityLinksReady: boolean; selfPublish?: boolean; networking?: ReactNode; arrival?: ReactNode }) {
+export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, outcomes, communities, communityLinksReady, selfPublish = false, networking, arrival, eventDay }: { currentUserId: string; initial: EventHostWorkspaceRow; cover: EventHostCover | null; coverReady: boolean; outcomes: EventHostOutcomes | null; communities: EventHostCommunity[]; communityLinksReady: boolean; selfPublish?: boolean; networking?: ReactNode; arrival?: ReactNode; eventDay?: ReactNode }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const initialDraft = { summary: initial.summary, arrivalInfo: initial.arrival_info, programme:
@@ -91,7 +91,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
   const [busyAction, setBusyAction] = useState<"draft" | "publish" | "image" | "community" | null>(null);
   const {feedback,setMessage} = useActionFeedback();
   const [chosenCommunity, setChosenCommunity] = useState("");
-  const [section, setSection] = useState("introduction");
+  const [section, setSection] = useState(eventDay ? "day" : "introduction");
   const [coverPreview,setCoverPreview] = useState<string|null>(null);
   const coverInput = useRef<HTMLInputElement>(null);
   const {ask,dialog} = useActionDialog();
@@ -104,19 +104,20 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
   useEffect(() => {
     const openLinkedSection = () => {
       const linked = window.location.hash.replace("#host-", "");
-      if (!linked) setSection("introduction");
+      if (!linked) setSection(eventDay ? "day" : "introduction");
       else if (["introduction", "image", "programme", "community", "partners", "host"].includes(linked)
-        || (linked === "networking" && networking) || (linked === "guests" && arrival)) setSection(linked);
+        || (linked === "networking" && networking) || (linked === "guests" && arrival) || (linked === "day" && eventDay)) setSection(linked);
     };
     openLinkedSection();
     window.addEventListener("hashchange", openLinkedSection);
     window.addEventListener("popstate", openLinkedSection);
     return () => { window.removeEventListener("hashchange", openLinkedSection); window.removeEventListener("popstate", openLinkedSection); };
-  }, [networking, arrival]);
+  }, [networking, arrival, eventDay]);
   const hasEnded = new Date(initial.ends_at).getTime() < Date.now();
   const locked = initial.workspace_status === "submitted" || hasEnded;
   const linkedCommunity = communities.find((community) => community.linked_to_event);
   const primarySections = [["introduction", "Event details"], ["image", "Poster"], ["programme", "Schedule"]];
+  if (eventDay) primarySections.unshift(["day", "Event day"]);
   if (networking) primarySections.push(["networking", "Networking"]);
   if (arrival) primarySections.push(["guests", "Guests & check-in"]);
   const optionalSections = [["host", "Host details"], ["community", "Community"], ["partners", "Partners"]];
@@ -252,6 +253,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
           </>}
       </div>
       {communityPanel()}
+      {eventDay ? <div className="host-workspace-panel" id="host-day">{eventDay}</div> : null}
       {arrival ? <div className="host-workspace-panel" id="host-guests">{arrival}</div> : null}
       <ActionFeedback value={feedback} />
     </section>
@@ -262,8 +264,8 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
       <header className="host-workspace-hero">
         <p className="eyebrow">Your event</p>
         <h1 id="host-workspace-heading">{initial.event_title}</h1>
-        <p className="host-workspace-intro">{section === "networking" || section === "guests" ? "You run this event. Set networking times, add check-in helpers and follow arrivals without waiting for Admin approval." : selfPublish ? "Your event is public. Save privately while you prepare, then publish your changes when ready." : initial.event_status === "published" ? "Your event is public. Prepare changes here, then send them to the team to publish." : "Prepare the details guests will see when your event opens."}</p>
-        <div className="host-workspace-status"><span className="host-workspace-state">{initial.event_status === "published" ? "Event is public" : "Event is private"}</span>{section !== "networking" && section !== "guests" ? <span>{initial.workspace_status === "submitted" ? "Updates with the team" : initial.workspace_status === "changes_requested" ? "Updates need changes" : initial.workspace_status === "approved" ? "Latest updates are live" : "Updates not published yet"}</span> : null}</div>
+        <p className="host-workspace-intro">{section === "day" || section === "networking" || section === "guests" ? "Follow arrivals, manage your check-in team and run networking from here." : selfPublish ? "Your event is public. Save privately while you prepare, then publish your changes when ready." : initial.event_status === "published" ? "Your event is public. Prepare changes here, then send them to the team to publish." : "Prepare the details guests will see when your event opens."}</p>
+        <div className="host-workspace-status"><span className="host-workspace-state">{initial.event_status === "published" ? "Event is public" : "Event is private"}</span>{section !== "day" && section !== "networking" && section !== "guests" ? <span>{initial.workspace_status === "submitted" ? "Updates with the team" : initial.workspace_status === "changes_requested" ? "Updates need changes" : initial.workspace_status === "approved" ? "Latest updates are live" : "Updates not published yet"}</span> : null}</div>
         <p className="host-workspace-date">{new Intl.DateTimeFormat("en-KE", { dateStyle: "full", timeStyle: "short", timeZone: initial.timezone }).format(new Date(initial.starts_at))}</p>
         {initial.review_note ? <p className="host-workspace-review-note" role="status"><strong>From the event team:</strong> {initial.review_note}</p> : null}
         <div className="host-workspace-top-actions">{initial.event_status === "published" ? <><Link className="button button-outline" href={`/events/${initial.event_slug}`}>View guest page</Link><a className="button button-outline" href="#guest-requests">Guest requests</a><a className="button button-outline" href="#host-invites">Invite people</a><details><summary>More event tools</summary><Link href={`/events/${initial.event_slug}/rounds/host`}>Seating plan (optional)</Link></details></> : null}</div>
@@ -277,6 +279,7 @@ export function EventHostWorkspace({ currentUserId, initial, cover, coverReady, 
       {dirty && !locked ? <div className="host-workspace-draft-note" role="status"><span>{restoredDraft ? "Your unfinished changes are back." : "You have unsaved changes."} Text stays in this tab until you save, discard or sign out.</span><button type="button" disabled={busy} onClick={()=>clearDraft(savedDraft)}>Discard text changes</button></div> : null}
 
       {section === "host" ? <div className="host-workspace-panel" id="host-host"><EventHostPublicDetails eventId={initial.event_id} currentUserId={currentUserId}/></div> : null}
+      {section === "day" && eventDay ? <div className="host-workspace-panel" id="host-day">{eventDay}</div> : null}
       {section === "networking" && networking ? <div className="host-workspace-panel" id="host-networking">{networking}</div> : null}
       {section === "guests" && arrival ? <div className="host-workspace-panel" id="host-guests">{arrival}</div> : null}
 
