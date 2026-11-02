@@ -2,6 +2,10 @@
 
 Updated: 2 November 2026.
 
+### Member networking visual follow-through
+
+The member’s current introduction now has a compact round header, prominent portrait/first name, one meeting-point label and a circular countdown. Its ring uses the remaining server-scheduled round time; it does not give each guest a new local five minutes. Before mutual acceptance the clock is labelled Time to accept, with no conversation-progress claim. The prompt and End conversation action are distinct from the quieter Leave networking and Get help controls. Mobile keeps the person’s name on a full-width row, and the meeting point beside the timer below. Waiting retains the optional-animation radar and reduced-motion support. This is a presentation-only pass with unchanged database operations, eligibility, consent, private end notices and connection flow.
+
 ## What changed
 
 Hosts of published in-person/hybrid events now open on **Event day**. Event details, Poster, Schedule, Networking and Guests & check-in remain available. The selected section still survives refresh without repeated page redirects.

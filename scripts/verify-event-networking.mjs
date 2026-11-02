@@ -122,6 +122,12 @@ assert.equal(ended.calls.filter(x=>x.name==='continue_event_networking').length,
 assert.deepEqual(ended.calls.find(x=>x.name==='continue_event_networking').args,{p_event_id:'event',p_notice_id:'match-1'});
 assert(ended.html().includes('Finding your next introduction'));assert(!ended.html().includes('This conversation has ended'));ended.cleanup();
 const early=harness({...base,match:{...base.match,status:'active'}});await flush();
+assert(early.html().includes('class="conversationClock '),'active conversation has a dedicated clock');
+assert(early.html().includes('--conversation-progress:1'),'full shared round has a complete progress ring');
+assert(early.html().includes('Meet at'));assert(early.html().includes('You can end earlier'));
+assert(!early.html().includes('Meeting point</small>'),'old duplicated meeting card is removed');
+early.set({...base,server_now:'2030-01-01T15:02:30Z',match:{...base.match,status:'active'}});await early.poll();
+assert(early.html().includes('--conversation-progress:0.5'),'ring follows the server schedule, not a fresh five-minute local timer');
 assert(early.button('End conversation'));early.set(endedState);early.button('End conversation').props.onClick();await flush();
 assert.deepEqual(early.calls.find(x=>x.name==='answer_event_networking').args,{p_event_id:'event',p_match_id:'match-1',p_accept:false});
 assert(early.html().includes('This conversation has ended'));assert(!early.html().includes('Meet Amina'));early.cleanup();
@@ -134,6 +140,11 @@ peer.set({...endedState,eligible:false});await peer.poll();assert(!peer.button('
 const sql=read('supabase/migrations/20261025060849_event_networking_pairs.sql');
 for(const guard of ['for update','unique(event_id,member_a,member_b)',"m.status='attended'",'public.is_blocked_pair','accepted_a and accepted_b',"interval '60 seconds'",'revoke all on schema hat_networking','revoke all on all functions in schema hat_networking','request_connection_with_context']) assert(sql.includes(guard),guard);
 assert(!sql.includes('grant select'),'private networking tables must not gain direct client reads');
+const luminance=hex=>{const [r,g,b]=hex.match(/../g).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return .2126*r+.7152*g+.0722*b;};
+for(const [fg,bg] of [['596c51','f1f4e8'],['62705b','f1f4e8'],['6c694f','f7f6ed'],['66745f','fffef9']]){
+  assert(read('components/events/event-networking.module.css').includes(`#${fg}`));
+  assert((luminance(bg)+.05)/(luminance(fg)+.05)>=4.5,'small networking labels meet normal-text contrast');
+}
 assert(read('app/events/[slug]/page.tsx').includes('<EventNetworking'));
 assert(read('app/events/[slug]/host/page.tsx').includes('<EventNetworking'));
 assert(read('components/admin/event-command-centre.tsx').includes('<EventNetworkingControl'));
@@ -145,7 +156,7 @@ if(process.argv.includes('--preview')) {
   const hostSetup=harness({...base,can_manage:true,joined:false,match:null,session:{...base.session,status:'scheduled'}});await flush();hostSetup.button('Edit schedule',true).props.onClick();
   writeFileSync(new URL('host-networking.html',target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Host networking — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${hostSetup.html(true)}</main></body></html>`);hostSetup.cleanup();
   const liveHost=harness({...base,can_manage:true,match:null,people:[{name:'Amina',ready:true,paired:true},{name:'Zuri',ready:true,paired:true},{name:'Wanjiku',ready:true,paired:false},{name:'Nia',ready:false,paired:false}],help:[]});await flush();writeFileSync(new URL('host-live.html',target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Host live controls — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${liveHost.html(true)}</main></body></html>`);liveHost.cleanup();
-  for(const [name,extra] of [['invitation',{joined:false,match:null}],['ended',endedState],['radar',{match:null}],['strip',{joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}}]]){
+  for(const [name,extra] of [['offered',{}],['invitation',{joined:false,match:null}],['ended',endedState],['radar',{match:null}],['strip',{joined:false,match:null,session:{...base.session,status:'scheduled',starts_at:'2030-01-01T15:12:46Z'}}]]){
     const sample=harness({...base,...extra});await flush();writeFileSync(new URL(`${name}.html`,target),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Networking ${name} — example data</title><style>${css}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${sample.html()}</main></body></html>`);sample.cleanup();
   }
 }
