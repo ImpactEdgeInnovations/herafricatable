@@ -1,0 +1,57 @@
+import assert from 'node:assert/strict';
+import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
+import ts from 'typescript';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+const root=new URL('../',import.meta.url),read=p=>readFileSync(new URL(p,root),'utf8');
+const compile=s=>ts.transpileModule(s.replace(/^import[\s\S]*?;\n/gm,'').replace(/^export /gm,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None,jsx:ts.JsxEmit.React}}).outputText;
+const renderBrandedEmail=new Function(`${compile(read('lib/notifications/template.ts'))};return renderBrandedEmail;`)();
+const eventThankYouEmail=new Function('renderBrandedEmail',`${compile(read('lib/notifications/event-thank-you.ts'))};return eventThankYouEmail;`)(renderBrandedEmail);
+const context={event_title:'An evening at the Table',event_slug:'evening-at-the-table',guest_name:'Amina',ends_at:'2030-01-01T17:00:00Z',timezone:'Africa/Nairobi',host_name:'Seina',organisation_name:'Her Africa Table',host_message:'Thank you for sharing your evening with us. I hope our conversations are just the beginning.',has_recap:true,has_networking:true,community:{name:'Women building together',slug:'women-building-together'}};
+const rendered=eventThankYouEmail(context,'https://www.herafricatable.com');
+for(const value of ['Hello Amina','Thank you for being there.','View the event recap','People you met','Share your feedback','Visit Women building together','Seina · Her Africa Table'])assert(rendered.html.includes(value),value);
+assert(rendered.text.includes('#event-networking'));
+const minimal=eventThankYouEmail({...context,has_recap:false,has_networking:false,community:null,host_message:'<script>bad()</script>'},'https://www.herafricatable.com');
+assert(minimal.html.includes('Revisit the event'));assert(!minimal.html.includes('People you met'));assert(!minimal.html.includes('Women building together'));assert(!minimal.html.includes('<script>'));assert(minimal.html.includes('&lt;script&gt;'));
+assert.throws(()=>eventThankYouEmail(context,'http://unsafe.invalid'));
+assert(!renderBrandedEmail({title:'Safe',body:'Hi',href:'https://www.herafricatable.com',buttonLabel:'Open',preferenceNote:'Private',secondaryLinks:[{label:'bad',href:'javascript:alert(1)'}]}).includes('javascript:'));
+
+let contextError=false,contextData=context,contextCalls=0,providerCalls=0,providerPayload;
+const prepareEventThankYou=new Function('createAdminClient','eventThankYouEmail',`${compile(read('lib/notifications/event-thank-you-delivery.ts'))};return prepareEventThankYou;`)(()=>({rpc:async(name,args)=>{assert.equal(name,'get_event_thank_you_email');assert.equal(args.p_job_id,'thank-you-job');contextCalls++;return {data:contextData,error:contextError?{code:'offline'}:null};}}),eventThankYouEmail);
+const job={job_id:'thank-you-job',dedupe_key:'event-thank-you:11111111-1111-4111-8111-111111111111:22222222-2222-4222-8222-222222222222',template_key:'event',to_email:'guest@example.invalid',payload:{title:'Untrusted fallback',body:'Do not use'}};
+assert.equal(await prepareEventThankYou({...job,dedupe_key:'unrelated'},'https://www.herafricatable.com'),null);assert.equal(contextCalls,0);
+await assert.rejects(()=>prepareEventThankYou({...job,template_key:'community'},'https://www.herafricatable.com'),/job_invalid/);
+contextError=true;await assert.rejects(()=>prepareEventThankYou(job,'https://www.herafricatable.com'),/check_unavailable/);contextError=false;
+contextData=null;await assert.rejects(()=>prepareEventThankYou(job,'https://www.herafricatable.com'),e=>e.code==='EVENT_THANK_YOU_INELIGIBLE');contextData=context;
+const send=new Function('renderBrandedEmail','prepareTicketEmail','prepareEventThankYou','process','fetch',`${compile(read('lib/notifications/email.ts'))};return sendNotificationEmail;`)(renderBrandedEmail,async()=>null,prepareEventThankYou,{env:{RESEND_API_KEY:'mock',EMAIL_FROM:'Her Africa Table <team@example.invalid>',NEXT_PUBLIC_SITE_URL:'https://www.herafricatable.com'}},async(url,options)=>{providerCalls++;assert.equal(url,'https://api.resend.com/emails');assert.equal(options.headers['idempotency-key'],job.job_id);providerPayload=JSON.parse(options.body);return {ok:true,json:async()=>({id:'mock-provider'})};});
+assert.equal(await send(job),'mock-provider');assert.equal(providerPayload.subject,rendered.title);assert.equal(providerPayload.html,rendered.html);assert.equal(providerPayload.text,rendered.text);assert(!providerPayload.attachments);
+contextData=null;await assert.rejects(()=>send(job),e=>e.code==='EVENT_THANK_YOU_INELIGIBLE');assert.equal(providerCalls,1,'ineligible guest never reaches provider');contextData=context;
+
+const flush=async()=>{for(let i=0;i<8;i++)await new Promise(r=>setImmediate(r));};
+const text=n=>typeof n==='string'||typeof n==='number'?String(n):React.Children.toArray(n?.props?.children).map(text).join('');
+const elements=n=>!n||typeof n!=='object'?[]:[n,...React.Children.toArray(n.props?.children).flatMap(elements)];
+const styles=new Proxy({},{get:(_,k)=>String(k)});
+let values=[],effects=[],cursor=0,queued=[];
+const hooks={React,styles,eventThankYouEmail,useState:v=>{const i=cursor++;if(!(i in values))values[i]=typeof v==='function'?v():v;return [values[i],v=>values[i]=typeof v==='function'?v(values[i]):v];},useRef:v=>{const i=cursor++;return values[i]??={current:v};},useMemo:f=>{const i=cursor++;return values[i]??=f();},useCallback:(f,deps)=>{const i=cursor++,old=values[i];if(!old||deps.some((v,j)=>v!==old.deps[j]))values[i]={f,deps};return values[i].f;},useEffect:(f,deps)=>{const i=cursor++,old=effects[i];if(!old||deps.some((v,j)=>v!==old.deps[j]))queued.push(()=>{old?.cleanup?.();effects[i]={deps,cleanup:f()};});}};
+let settings={enabled:true,message:'',due_at:'2030-01-02T05:00:00Z',timezone:'Africa/Nairobi',applies:true,message_locked:false,queued:0,sent:0,failed:0,suppressed:0,preview:{...context,has_networking:false,host_message:''}},failRead=false,failWrite=false,holdWrite=false,releaseWrite;
+const calls=[];
+hooks.createClient=()=>({rpc:async(name,args)=>{calls.push({name,args});if(name==='get_event_thank_you_settings')return {data:settings,error:failRead?{code:'offline'}:null};if(holdWrite)await new Promise(resolve=>releaseWrite=resolve);if(failWrite)return {data:null,error:{code:'offline'}};settings={...settings,enabled:args.p_enabled,message:args.p_message};return {data:settings,error:null};}});
+const Component=new Function(...Object.keys(hooks),`${compile(read('components/events/event-thank-you-settings.tsx'))};return EventThankYouSettings;`)(...Object.values(hooks));
+const tree=()=>{cursor=0;queued=[];const value=Component({eventId:'event-a'});queued.forEach(f=>f());return value;},html=()=>renderToStaticMarkup(tree()),button=label=>elements(tree()).find(n=>n.type==='button'&&text(n)===label),field=type=>elements(tree()).find(n=>n.type===type);
+assert(html().includes('Loading your email settings'));await flush();assert(html().includes('One thoughtful email'));assert(button('Save changes').props.disabled);
+field('textarea').props.onChange({target:{value:'Thank you <script>bad()</script>'}});assert(!button('Save changes').props.disabled);assert.equal(calls.length,1,'editing sends nothing');
+button('Preview email').props.onClick();assert.equal(calls.length,1,'preview sends nothing');const frame=field('iframe');assert.equal(frame.props.sandbox,'');assert(!frame.props.srcDoc.includes('href='));assert(!frame.props.srcDoc.includes('<script>'));
+holdWrite=true;button('Save changes').props.onClick();button('Saving…').props.onClick();assert.equal(calls.filter(c=>c.name==='save_event_thank_you_settings').length,1,'duplicate save locked');assert(button('Refresh status').props.disabled);holdWrite=false;releaseWrite();await flush();assert(html().includes('Saved. Your thank-you email is on'));assert(button('Save changes').props.disabled);
+field('textarea').props.onChange({target:{value:'Please keep this draft'}});failWrite=true;button('Save changes').props.onClick();await flush();assert(html().includes('could not be confirmed'));assert(!field('textarea'),'stale controls hidden');failWrite=false;button('Refresh status').props.onClick();await flush();assert.equal(field('textarea').props.value,'Please keep this draft','draft survives recovery');
+failRead=true;button('Refresh status').props.onClick();await flush();assert(html().includes('could not load'));assert(!field('textarea'));failRead=false;button('Refresh status').props.onClick();await flush();
+settings={...settings,message_locked:true,message:'Locked message',queued:2};button('Refresh status').props.onClick();await flush();assert(field('textarea').props.disabled);assert.equal(field('textarea').props.value,'Locked message','locked preview displays actual saved message, not the stale draft');assert(html().includes('accepted by email provider'));field('input').props.onChange({target:{checked:false}});button('Save changes').props.onClick();await flush();assert.equal(calls.at(-1).args.p_message,'Locked message');assert(html().includes('Emails already in progress or sent cannot be recalled'));
+if(process.argv.includes('--preview')){
+  settings={...settings,enabled:true,message:context.host_message,message_locked:false,queued:0,preview:{...context,has_networking:false}};button('Refresh status').props.onClick();await flush();
+  field('textarea').props.onChange({target:{value:context.host_message}});field('input').props.onChange({target:{checked:true}});button('Save changes').props.onClick();await flush();
+  const dir=new URL('tmp/networking-preview/',root);mkdirSync(dir,{recursive:true});
+  writeFileSync(new URL('thank-you-email.html',dir),rendered.html);
+  const base='*{box-sizing:border-box}body{margin:0;padding:24px;background:#f7f5ee;color:#263c31;font:16px Arial,sans-serif}main{max-width:1100px;margin:auto}.button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:44px;border:1px solid #c7d2bf;border-radius:6px;padding:10px 16px;color:#215846;background:#fffefa;cursor:pointer}.button-primary{background:#215846;color:white}button:disabled{opacity:.55;cursor:default}';
+  writeFileSync(new URL('thank-you.html',dir),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>After the event · Example</title><style>${base}${read('components/events/event-thank-you-settings.module.css')}</style></head><body><main><p>DESIGN CHECK · EXAMPLE DATA · NO LIVE ACTIONS</p>${html()}<p><a href="thank-you-email.html">Open the example thank-you email</a></p></main></body></html>`);
+}
+effects.forEach(e=>e?.cleanup?.());
+console.log('PASS: actual thank-you renderer, delivery guard, provider payload/idempotency and Host component: safe content, conditional links, no send during preview, saved toggle/message, duplicate-save lock, locked-message handling and draft/error recovery. All provider calls mocked.');

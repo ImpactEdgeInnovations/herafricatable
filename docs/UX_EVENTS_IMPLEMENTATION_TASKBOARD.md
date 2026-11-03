@@ -1,6 +1,8 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 2 November 2026. Historical baseline release: `b4be9ca`.
+Updated: 3 November 2026. Historical baseline release: `b4be9ca`.
+
+**3 November — After-event thank-you email implemented:** Green/ivory personalised email, optional Host note, safe no-send preview, saved on/off switch and delivery counts. Due from 08:00 the next local morning for eligible recorded arrivals only; existing five-minute dispatcher/Resend engine reused. No old-event campaign, automatic connections or Community joins. Migration applied; nine live installation/permission checks and 32 rollback SQL assertions passed, with fixture cleanup verified and no provider emails. Actual component/delivery regressions, full tests/build and desktop/mobile example-data layouts passed. Real inbox/dispatcher and independent browser acceptance remain open. [Delivery, boundaries and tester checklist](EVENT_THANK_YOU_EMAILS_20261103.md).
 
 **2 November — Post-conversation connection prompt implemented:** Added Enjoyed meeting… → Connect / Maybe later, a prefilled editable optional note and explicit confirmation before sending. Maybe later persists privately and sends nothing; People you met remains available. Early-ended conversations are included only after mutual acceptance; skipped offers are excluded. Existing connection/profile/notification/email and messaging-consent workflows are reused. Migration applied live, 34 rollback SQL assertions passed alongside end-notice/arrival/Event-day regressions, and actual component tests cover confirmation, deferral, retry and after-event visibility. No real request or provider email sent. Physical-device/inbox acceptance remains separate. [Delivery and tester checks](NETWORKING_CONNECTION_PROMPT_20261102.md).
 

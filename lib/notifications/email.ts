@@ -1,5 +1,6 @@
 import { renderBrandedEmail } from "./template";
 import { prepareTicketEmail } from "./ticket-attachment";
+import { prepareEventThankYou } from "./event-thank-you-delivery";
 import "server-only";
 
 type EmailJob = {
@@ -18,8 +19,9 @@ export async function sendNotificationEmail(job: EmailJob) {
     throw new Error("Email delivery is not configured");
 
   const ticketEmail=await prepareTicketEmail(job);
+  const thankYouEmail=await prepareEventThankYou(job,siteUrl);
 
-  const title = (ticketEmail?.title ?? job.payload.title ?? "Her Africa Table update").slice(0, 160);
+  const title = (thankYouEmail?.title ?? ticketEmail?.title ?? job.payload.title ?? "Her Africa Table update").slice(0, 160);
   const body = (
     job.payload.body ?? "A new update is available in your account."
   ).slice(0, 1000);
@@ -95,8 +97,8 @@ export async function sendNotificationEmail(job: EmailJob) {
       from,
       to: [job.to_email],
       subject: title,
-      text,
-      html,
+      text:thankYouEmail?.text??text,
+      html:thankYouEmail?.html??html,
       ...(ticketEmail ? {attachments:[ticketEmail.attachment]} : {}),
       tags: [
         {

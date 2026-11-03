@@ -15,6 +15,7 @@ import { EventNetworking } from "@/components/events/event-networking";
 import type { NetworkingState } from "@/lib/events/networking";
 import { EventHostArrival } from "@/components/events/event-host-arrival";
 import { EventDayOverview } from "@/components/events/event-day-overview";
+import { EventThankYouSettings } from "@/components/events/event-thank-you-settings";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -80,6 +81,7 @@ export default async function EventHostPage({ params }: { params: Promise<{ slug
       networking={workspace.event_status === "published" && !hasEnded && inPersonNetworking ? <EventNetworking key={workspace.event_id} eventId={workspace.event_id} timeZone={workspace.timezone} eventStartsAt={workspace.starts_at} eventEndsAt={workspace.ends_at} initial={networkingResult.data as NetworkingState | null} initialError={Boolean(networkingResult.error)} manage /> : undefined}
       arrival={["published","completed"].includes(workspace.event_status) && inPersonNetworking ? <EventHostArrival key={workspace.event_id} eventId={workspace.event_id} slug={slug} title={workspace.event_title} timeZone={workspace.timezone} upcoming={!hasEnded} /> : undefined}
     />
+    {["published","completed"].includes(workspace.event_status) && inPersonNetworking ? <EventThankYouSettings key={`thanks-${workspace.event_id}`} eventId={workspace.event_id}/> : null}
     <EventHostExtraTools>
       {workspace.event_status === "published" && !hasEnded ? <FeaturedRequestPanel kind="event" targetId={workspace.event_id}/> : null}
       {workspace.event_status === "published" && !hasEnded ? <details id="guest-requests"><summary>Guest requests and waiting list</summary><EventHostRequests eventId={workspace.event_id}/></details> : null}

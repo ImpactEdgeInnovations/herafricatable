@@ -43,6 +43,7 @@ export async function processNotificationQueue({
   let briefingsQueued = 0;
   let eventRemindersQueued = 0;
   let standaloneRemindersQueued = 0;
+  let thankYousQueued = 0;
   // A single invitation must not queue unrelated work or depend on its availability.
   if (!dedupeKey) {
     const { data: lifecycleData, error: lifecycleError } = await admin.rpc(
@@ -102,6 +103,9 @@ export async function processNotificationQueue({
       );
     }
     standaloneRemindersQueued = Number(standaloneReminderData ?? 0);
+    const {data:thankYouData,error:thankYouError}=await admin.rpc("queue_due_event_thank_yous");
+    if(thankYouError&&!migrationPending(thankYouError as RpcError,"queue_due_event_thank_yous"))return NextResponse.json({error:"Event thank-you queue unavailable"},{status:503});
+    thankYousQueued=Number(thankYouData??0);
   }
 
   if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
@@ -112,6 +116,7 @@ export async function processNotificationQueue({
         error: "Email provider not configured",
         hostLifecycle,
         standaloneRemindersQueued,
+        thankYousQueued,
       },
       { status: 503 },
     );
@@ -221,9 +226,10 @@ export async function processNotificationQueue({
         });
         if(recorded)sent += 1;
       } catch (error) {
-        if((error as {code?:string})?.code==="TICKET_NO_LONGER_VALID"){
+        if(["TICKET_NO_LONGER_VALID","EVENT_THANK_YOU_INELIGIBLE"].includes((error as {code?:string})?.code??"")){
           try{
-            const result=await admin.from("notification_jobs").update({status:"suppressed",locked_at:null,last_error:"ticket_no_longer_valid",updated_at:new Date().toISOString()}).eq("id",job.job_id).eq("status","processing").select("id").maybeSingle();
+            const reason=(error as {code?:string})?.code==="EVENT_THANK_YOU_INELIGIBLE"?"event_thank_you_no_longer_eligible":"ticket_no_longer_valid";
+            const result=await admin.from("notification_jobs").update({status:"suppressed",locked_at:null,last_error:reason,updated_at:new Date().toISOString()}).eq("id",job.job_id).eq("status","processing").select("id").maybeSingle();
             if(result.error||!result.data){persistenceFailed++;failed++;}else suppressed++;
           }catch{persistenceFailed++;failed++;}
           return;
@@ -247,6 +253,7 @@ export async function processNotificationQueue({
     hostLifecycle,
     eventRemindersQueued,
     standaloneRemindersQueued,
+    thankYousQueued,
     sent,
     suppressed,
     targeted: Boolean(dedupeKey),
