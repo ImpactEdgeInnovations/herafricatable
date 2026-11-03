@@ -17,6 +17,7 @@ const operations = [
   ["Community member approval", "review_community_membership", { p_action: "approve", p_membership_id: unknown }],
   ["Community application approval", "review_community_host_application", { p_action: "start_review", p_admin_note: null, p_application_id: unknown, p_approved_slug: null }],
   ["member event approval", "review_member_event_proposal", { p_action: "start_review", p_proposal_id: unknown, p_review_note: null }],
+  ["finished Host draft approval", "review_event_host_workspace", { p_action: "approve", p_event_id: unknown, p_note: null }],
   ["Community event approval", "review_community_event_proposal", { p_action: "start_review", p_proposal_id: unknown, p_review_note: null }],
   ["manual registration approval", "review_manual_registration", { p_action: "approve", p_order_id: unknown, p_reviewer_note: "Boundary check" }],
   ["event-question moderation", "review_event_question_report", { p_action: "start_review", p_outcome: null, p_report_id: unknown }],
@@ -25,6 +26,7 @@ const operations = [
 const results = await Promise.all(
   operations.map(async ([label, rpc, args]) => ({ label, rpc, result: await client.rpc(rpc, args) })),
 );
+const databasePermissionDenied=new Set(["review_member","review_community_host_application","review_member_event_proposal","review_event_host_workspace"]);
 
 for (const { label, rpc, result } of results) {
   assert(
@@ -33,10 +35,12 @@ for (const { label, rpc, result } of results) {
     `${rpc} is not deployed`,
   );
   assert(result.error, `Signed-out visitors must not perform ${label}`);
+  assert(result.error.code,`${rpc}: transport failures are not evidence of an access denial`);
+  if(databasePermissionDenied.has(rpc))assert.equal(result.error.code,"42501",`${rpc} must reject anonymous callers at the database privilege boundary`);
 }
 
 process.stdout.write(`${JSON.stringify({
-  checks: Object.fromEntries(results.map(({ label }) => [label, "deployed and signed-out blocked"])),
+  checks: Object.fromEntries(results.map(({ label,rpc }) => [label, databasePermissionDenied.has(rpc)?"deployed; anonymous execution permission denied":"deployed and signed-out blocked"])),
   limitation: "Positive approve/decline writes require tagged Admin and member credentials",
   secretsPrinted: false,
 }, null, 2)}\n`);

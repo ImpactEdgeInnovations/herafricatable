@@ -37,7 +37,7 @@
     "test:community-photo-operations": "node scripts/verify-community-photo-operations.mjs",
     "test:community-photo-deletions": "node scripts/verify-community-photo-deletions.mjs",
     "test:event-questions": "node scripts/verify-event-question-contracts.mjs",
-    "test:admin-decisions": "node scripts/verify-admin-decision-contracts.mjs && node scripts/verify-temporary-admin-rehearsal.mjs",
+    "test:admin-decisions": "node scripts/verify-admin-decision-contracts.mjs && node scripts/verify-temporary-admin-rehearsal.mjs && node scripts/verify-approval-endpoint-permissions.mjs",
     "test:table-guide": "node scripts/verify-table-guide-experience.mjs",
     "test:table-guide-events": "node scripts/verify-table-guide-event-answer.mjs",
     "test:pwa": "node scripts/verify-pwa-contracts.mjs && node scripts/verify-install-suggestion.mjs",
