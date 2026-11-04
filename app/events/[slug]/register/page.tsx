@@ -15,7 +15,7 @@ export default async function RegisterPage({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    redirect(`/sign-in?next=${encodeURIComponent(`/events/${slug}#registration`)}`);
+    redirect(`/events/${slug}#registration`);
   }
 
   const [{ data: event }, { data: profile }] = await Promise.all([
@@ -38,6 +38,8 @@ export default async function RegisterPage({
         event.audience !== "public" || !guestFlag?.enabled) {
       redirect(`/events/${slug}`);
     }
+    const details=await supabase.rpc("get_my_event_guest_details",{p_event_id:event.id});
+    if(details.error||!details.data?.ready)redirect(`/events/${slug}#registration`);
   }
 
   const [{ data: tickets }, { data: registration }, { data: membership }, { data: order }] =
@@ -59,7 +61,6 @@ export default async function RegisterPage({
   const availability = ["waitlist", "closed"].includes(event.registration_mode)
     ? { checkFailed: false, eventFull: false, tickets: [] }
     : await loadEventBookingAvailability(event.id, event.capacity, tickets ?? []);
-  const { data: intakeMode } = await supabase.rpc("get_membership_intake_mode");
   const { data: automaticCheckoutOpen } = event.registration_mode === "automatic"
     ? await supabase.rpc("event_automatic_checkout_open")
     : { data: false };
@@ -79,7 +80,7 @@ export default async function RegisterPage({
         orderHref={order?.reference ? `/orders/${encodeURIComponent(order.reference)}` : null}
         eventTitle={event.title}
         mode={event.registration_mode}
-        freeInstantBooking={Boolean(event.free_instant_booking) && profile?.access_status === "active" && intakeMode === "trusted_auto"}
+        freeInstantBooking={Boolean(event.free_instant_booking)}
         tickets={availability.tickets}
         availabilityReady={!availability.checkFailed}
         automaticCheckoutOpen={event.registration_mode !== "automatic" || automaticCheckoutOpen === true}

@@ -67,7 +67,7 @@ select throws_ok(
   $$select public.create_event_registration(
     'a1000000-0000-4000-8000-000000000001',
     'a2000000-0000-4000-8000-000000000001', 1, '', '', '')$$,
-  'P0001', 'Event registration is available after membership approval',
+  'P0001', 'Complete your event booking details first',
   'pending guest cannot register while the pilot flag is off'
 );
 
@@ -106,6 +106,9 @@ select lives_ok(
 set local role authenticated;
 select set_config('request.jwt.claim.role', 'authenticated', true);
 select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000002', true);
+select public.save_my_event_guest_details(
+  'a1000000-0000-4000-8000-000000000001', 'Event Guest Tester', true
+);
 select throws_ok(
   $$select public.create_event_registration(
     'a1000000-0000-4000-8000-000000000001',
@@ -164,7 +167,7 @@ select throws_ok(
   $$select public.create_event_registration(
     'a1000000-0000-4000-8000-000000000002',
     'a2000000-0000-4000-8000-000000000002', 1, '', '', '')$$,
-  'P0001', 'Event is not available to this account',
+  'P0001', 'Complete your event booking details first',
   'public guest cannot use event access for a private Community event'
 );
 
@@ -231,7 +234,7 @@ select throws_ok(
   $$select public.create_event_registration(
     'a1000000-0000-4000-8000-000000000001',
     'a2000000-0000-4000-8000-000000000001', 1, '', '', '')$$,
-  'P0001', 'Event registration is available after membership approval',
+  'P0001', 'Complete your event booking details first',
   'new guest cannot request a place while guest entry is paused'
 );
 select set_config('request.jwt.claim.sub', 'a0000000-0000-4000-8000-000000000001', true);
@@ -387,7 +390,7 @@ select throws_ok(
   $$select public.create_event_registration(
     'a1000000-0000-4000-8000-000000000001',
     'a2000000-0000-4000-8000-000000000001', 1, '', '', '')$$,
-  'P0001', 'This account cannot request an event place',
+  'P0001', 'Complete your event booking details first',
   'suspended account cannot register as a guest'
 );
 

@@ -75,7 +75,7 @@ export function EventGuestAccessControl({
         <div>
           <p className="eyebrow">Public event entry</p>
           <h2 id="event-guest-access-title">Guests who are not members</h2>
-          <p>Verified visitors can attend a public event after event approval. They do not enter the member network automatically.</p>
+          <p>Visitors confirm their email on the event page. Hosts can confirm free places instantly or review requests; paid places still need verified payment or review. Booking does not make someone a HAT member.</p>
         </div>
         <span className="status-count">{enabled ? canOpen ? "Open" : "Review needed" : canOpen ? "Paused" : "Setup needed"}</span>
       </header>

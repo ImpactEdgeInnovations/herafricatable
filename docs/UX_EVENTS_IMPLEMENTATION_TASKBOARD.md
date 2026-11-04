@@ -1,6 +1,14 @@
 # Her Africa Table — implementation plan and taskboard
 
-Updated: 3 November 2026. Historical baseline release: `b4be9ca`.
+Updated: 4 November 2026. Historical baseline release: `b4be9ca`.
+
+**4 November — Event-first guest booking:** Implemented inline name/email/OTP booking without a HAT membership application; Host registration stays required. Optional Community/HAT invitations now appear beside the private ticket and in PDF/email, without automatic membership or joining. Free instant booking is independent of the membership pilot. Migration applied; full local tests/build and real alias OTP verification passed. Complete live booking rehearsal, real ticket inbox/device checks and security-advisor follow-up remain open; guest access stays switched off. The rollback SQL rehearsal stopped at a synthetic Community publication gate; corrected fixture still needs rerun after a live-tool usage-limit block. [Journey, evidence and release checklist](EVENT_FIRST_GUEST_BOOKING_20261104.md).
+
+| Guest-booking phase | State | Remaining |
+| --- | --- | --- |
+| 1 — Booking and optional ticket invitations | Implemented | Local form/page/PDF/email tests and build passed. |
+| 2 — Live integration rehearsal | In progress | Real OTP passed; rerun complete rollback booking test and advisors. |
+| 3 — Real guest acceptance and opening | Open | Independent browser/free booking/PDF inbox/device checks, then truthful release evidence and Admin activation. |
 
 **3 November — Approval endpoint permissions hardened:** Removed PUBLIC/anonymous execution for membership decisions, Community applications, member event proposals and finished Host draft reviews. Authenticated/service grants and all four function bodies are unchanged; internal Super Admin guards remain authoritative. Applied live; 28 rollback permission assertions and nine real public-key endpoint checks passed, including database-level anonymous denial for all four targets. Fixture absence verified, no real decisions/emails. Full Admin-to-member approval/inbox rehearsals remain open. [Scope and evidence](APPROVAL_ENDPOINT_PERMISSIONS_20261103.md).
 

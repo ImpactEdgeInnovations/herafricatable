@@ -40,10 +40,10 @@ const handlers=[];function visit(node){if(ts.isFunctionDeclaration(node)&&['subm
 for(const node of handlers){const fn=new Function('readOnly',`${compile(node.getText(tree))};return ${node.name.text};`)(true);await fn({preventDefault(){}},questions[0]);}
 assert.equal(handlers.length,5);
 
-async function renderPage(role,{preview=false,fail=false,confirmed=false,active=true}={}) {
+async function renderPage(role,{preview=false,fail=false,confirmed=false,active=true,anonymous=false,guestOpen=false,detailsReady=false,detailsError=false}={}) {
   const calls=[],mounted=[];
   const event={id:'event-id',slug:'event',title:'Food & Tech Event',summary:'A test event',format:'in_person',audience:'public',capacity:20,ends_at:'2099-11-06T18:00:00Z',starts_at:'2099-11-06T16:00:00Z',timezone:'Africa/Nairobi',registration_mode:'manual_review',free_instant_booking:true,venues:{name:'Venue',city:'Nairobi',country:'Kenya',address_line:'Road',map_url:null}};
-  const actor={id:'viewer'};
+  const actor=anonymous?null:{id:'viewer',email:'viewer@example.invalid'};
   function from(table){
     const filters=[];const chain=new Proxy({}, {get(_,key){
       if(key==='then')return (resolve,reject)=>{
@@ -51,6 +51,7 @@ async function renderPage(role,{preview=false,fail=false,confirmed=false,active=
         let data=[];
         if(table==='events')data=event;
         if(table==='profiles')data={access_status:active?'active':'pending',display_name:'Viewer'};
+        if(table==='feature_flags')data={enabled:guestOpen};
         if(table==='member_event_proposals'){
           assert(filters.some(([key,value])=>key==='canonical_event_id'&&value==='event-id'));
           assert(!filters.some(([key])=>key==='event_id'));
@@ -70,10 +71,11 @@ async function renderPage(role,{preview=false,fail=false,confirmed=false,active=
   const client={auth:{getUser:async()=>({data:{user:actor}})},from,storage:{from:()=>({createSignedUrl:async()=>({data:null})})},rpc:async(name,args)=>{
     calls.push({rpc:name,args});
     const data={can_manage_event:!!role.manager,can_host_event:!!role.host,can_view_event_host_outcomes:!!role.pastHost,get_event_public_host:[],get_event_community_for_visitor:[{community_id:'community',slug:'community',name:'A Community',community_type:'private'}],list_event_questions:questions,get_my_table_guide_access:[],get_membership_intake_mode:'trusted_auto'};
+    if(name==='get_my_event_guest_details')return {data:detailsReady?{ready:true,display_name:'Guest'}:null,error:detailsError?{code:'offline'}:null};
     return {data:name==='get_event_networking_schedule'?null:data[name]??[],error:null};
   }};
   const stub=name=>()=>{mounted.push(name);return React.createElement('div',{'data-component':name});};
-  const values={React,Link,NetworkingSchedule,createClient:async()=>client,createAdminClient:()=>client,notFound:()=>{throw Error('Unexpected not found');},eventViewerMode,EventBookingPreview:BookingPreview,EventQuestions:Questions,MemberHeader:stub('header'),EventRegistrationForm:stub('booking'),EventCommunityJoin:stub('community-join'),DestinationInvitationPanel:stub('invites'),MenuFeedbackControls:stub('feedback'),EventAttendeeDirectory:stub('attendees'),EventCommunityFollowUp:stub('follow-up'),MemberEventArchive:stub('archive'),FloatingTableGuide:stub('guide'),EventMobileAction:stub('mobile'),brandAccent:()=> 'wine',absoluteUrl:()=> '/',serializeJsonLd:JSON.stringify,getPublicEventSeo:async()=>[],loadEventBookingAvailability:async()=>({tickets,eventFull:false})};
+  const values={React,Link,NetworkingSchedule,createClient:async()=>client,createAdminClient:()=>client,notFound:()=>{throw Error('Unexpected not found');},eventViewerMode,EventBookingPreview:BookingPreview,EventQuestions:Questions,MemberHeader:stub('header'),EventRegistrationForm:stub('booking'),EventGuestEntry:stub('guest-entry'),EventCommunityJoin:stub('community-join'),DestinationInvitationPanel:stub('invites'),MenuFeedbackControls:stub('feedback'),EventAttendeeDirectory:stub('attendees'),EventCommunityFollowUp:stub('follow-up'),MemberEventArchive:stub('archive'),FloatingTableGuide:stub('guide'),EventMobileAction:stub('mobile'),brandAccent:()=> 'wine',absoluteUrl:()=> '/',serializeJsonLd:JSON.stringify,getPublicEventSeo:async()=>[],loadEventBookingAvailability:async()=>({tickets,eventFull:false})};
   const Page=new Function(...Object.keys(values),`${compile(read('app/events/[slug]/page.tsx')).replace('default async function','async function')};return EventDetailPage;`)(...Object.values(values));
   const html=renderToStaticMarkup(await Page({params:Promise.resolve({slug:'event'}),searchParams:Promise.resolve(preview?{preview:'member'}:{})}));
   return {html,calls,mounted};
@@ -101,4 +103,10 @@ for(const role of [{creator:true,host:true},{host:true},{manager:true},{creator:
 const failed=await renderPage({host:true,creator:true},{fail:true,preview:true});assert(failed.html.includes('We could not check your event access.'));assert(!failed.mounted.includes('booking'));assert(!failed.mounted.includes('invites'));
 const attendee=await renderPage({},{confirmed:true});assert(attendee.html.includes('Open my event pass'));assert(attendee.html.includes('Open introductions'));assert(attendee.mounted.includes('attendees'));
 const guest=await renderPage({},{confirmed:true,active:false});assert(guest.html.includes('Open my event pass'));assert(guest.html.includes('Open introductions'));assert(!guest.mounted.includes('attendees'));
+const visitor=await renderPage({},{anonymous:true,active:false,guestOpen:true});assert(visitor.mounted.includes('guest-entry'));assert(!visitor.mounted.includes('booking'));
+const paused=await renderPage({},{anonymous:true,active:false});assert(!paused.mounted.includes('guest-entry'));assert(paused.html.includes('Guest booking paused'));
+const newGuest=await renderPage({},{active:false,guestOpen:true});assert(newGuest.mounted.includes('guest-entry'));assert(!newGuest.mounted.includes('booking'));
+const returningGuest=await renderPage({},{active:false,guestOpen:true,detailsReady:true});assert(returningGuest.mounted.includes('booking'));assert(!returningGuest.mounted.includes('guest-entry'));
+const failedDetails=await renderPage({},{active:false,guestOpen:true,detailsError:true});assert(failedDetails.mounted.includes('guest-entry'));assert(!failedDetails.mounted.includes('booking'));
+const guestPreview=await renderPage({host:true},{preview:true,guestOpen:true});assert(!guestPreview.mounted.includes('guest-entry'));assert(!guestPreview.calls.some(call=>call.rpc==='get_my_event_guest_details'));
 console.log('Event viewer L1 passed: creator/Host/Admin/member/past-Host/error matrix, actual full-page render, canonical creator lookup, no preview private-account reads or mutable widgets, and guarded read-only question handlers. Live session/device acceptance separate.');

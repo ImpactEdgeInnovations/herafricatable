@@ -23,6 +23,7 @@ import {
   type MemberEventArchiveAccess,
 } from "@/components/events/member-event-archive";
 import { EventRegistrationForm } from "@/components/events/event-registration-form";
+import { EventGuestEntry } from "@/components/events/event-guest-entry";
 import { EventMobileAction } from "@/components/events/event-mobile-action";
 import { loadEventBookingAvailability } from "@/lib/events/server-booking-availability";
 import { eventViewerMode } from "@/lib/events/viewer-mode";
@@ -129,7 +130,6 @@ export default async function EventDetailPage({ params, searchParams }: { params
   const { data: { user } } = await supabase.auth.getUser();
   const { data: memberProfile } = user ? await supabase.from("profiles").select("access_status,display_name").eq("id", user.id).maybeSingle() : { data: null };
   const activeMember = Boolean(user && memberProfile?.access_status === "active");
-  const { data: intakeMode } = activeMember ? await supabase.rpc("get_membership_intake_mode") : { data: null };
   const { data: linkedJoining } = eventCommunity ? await supabase.from("communities").select("join_policy").eq("id", eventCommunity.community_id).maybeSingle() : { data: null };
   const { data: guideAccessRows } = activeMember
     ? await supabase.rpc("get_my_table_guide_access")
@@ -295,6 +295,9 @@ export default async function EventDetailPage({ params, searchParams }: { params
   const hasExistingGuestRequest = Boolean(
     user && memberProfile?.access_status === "pending" && registration,
   );
+  const guestDetailsResult=eventGuestEligible&&!memberPreview&&!isConfirmedGuest
+    ? await supabase.rpc("get_my_event_guest_details",{p_event_id:event.id}) : {data:null,error:null};
+  const needsGuestDetails=eventGuestEligible&&!isConfirmedGuest&&(!registration||["cancelled","waitlisted"].includes(registration.status))&&guestDetailsResult.data?.ready!==true;
   const canRequestNewPlace = Boolean(
     (activeMember || eventGuestEligible) && event.registration_mode !== "closed",
   );
@@ -325,7 +328,7 @@ export default async function EventDetailPage({ params, searchParams }: { params
     : "See booking details";
   const entryLabel = viewingAsHost ? "You host this event" : viewingAsAdmin ? "Admin oversight" : hasEnded ? "Completed" : event.audience === "community" ? "Community members"
     : activeMember ? "Member booking"
-      : eventGuestFlag?.enabled ? "Guest booking available" : "Membership required";
+      : eventGuestFlag?.enabled ? "Guest booking available" : "Guest booking paused";
   // Reuse the existing destination; this bar cannot book or bypass any eligibility check.
   const mobileActionHref = hasEnded ? null : memberPreview || !roleChecksReady ? null : viewingAsHost || viewingAsAdmin ? viewer.controlsHref : gatheringRoomHref ?? (
     isConfirmedGuest ? `/events/${slug}/pass`
@@ -408,6 +411,8 @@ export default async function EventDetailPage({ params, searchParams }: { params
                   : "No places can be requested right now. Please check back later."}</p>
               {availability?.checkFailed ? <a className="button button-outline" href={`/events/${slug}`}>Check again</a> : null}
             </div>
+          ) : ((!user&&event.audience==="public"&&eventGuestFlag?.enabled)||needsGuestDetails) ? (
+            <EventGuestEntry eventId={event.id} eventTitle={event.title} signedIn={Boolean(user)} initialEmail={user?.email??""} initialName={memberProfile?.display_name&&memberProfile.display_name!=="New member"?memberProfile.display_name:""} ready={!guestDetailsResult.error}/>
           ) : activeMember || eventGuestEligible || isConfirmedGuest || hasExistingGuestRequest ? (
             <>
               <EventRegistrationForm
@@ -418,7 +423,7 @@ export default async function EventDetailPage({ params, searchParams }: { params
                 eventTitle={event.title}
                 existingStatus={registration?.status ?? ownMembership?.status ?? null}
                 mode={event.registration_mode}
-                freeInstantBooking={event.free_instant_booking && activeMember && intakeMode === "trusted_auto"}
+                freeInstantBooking={event.free_instant_booking && (activeMember || eventGuestEligible)}
                 passReady={["confirmed", "attended"].includes(ownMembership?.status ?? "")}
                 tickets={availability?.tickets ?? []}
                 availabilityReady={!availability?.checkFailed}
@@ -433,13 +438,13 @@ export default async function EventDetailPage({ params, searchParams }: { params
           ) : (
             <div className="event-registration-entry">
               <p className="eyebrow">Your place at the table</p>
-              <h2>{user ? "Your account cannot request a place yet." : event.audience === "public" && !eventGuestFlag?.enabled ? "Membership is needed for this event." : "Confirm your email to join this event."}</h2>
-              <p>{user ? "Finish joining Her Africa Table, then return here to book your place. Your membership page shows your next step." : event.audience === "public" && !eventGuestFlag?.enabled ? "Confirm your email and complete the short joining steps. We will return you here when your membership is ready." : "We’ll email you a one-time code and return you to this event."}</p>
+              <h2>{event.audience==="public"&&!eventGuestFlag?.enabled?"Guest booking is paused.":user ? "Your account cannot request a place yet." : "This meetup is for Community members."}</h2>
+              <p>{event.audience==="public"&&!eventGuestFlag?.enabled?"You can read the event details without joining HAT. Existing members can sign in to see their booking options; new guest bookings will open when the event team is ready.":user ? "Your account page shows the next step. Your existing bookings have not changed." : "Sign in with the email you use for this Community to see your booking options."}</p>
               <Link
                 className="button button-primary"
-                href={user ? "/apply" : `/sign-in?${event.audience === "public" && !eventGuestFlag?.enabled ? "mode=apply&" : ""}next=${encodeURIComponent(`/events/${slug}#registration`)}`}
+                href={user ? "/home" : `/sign-in?next=${encodeURIComponent(`/events/${slug}#registration`)}`}
               >
-                {user ? "View membership request" : event.audience === "public" && !eventGuestFlag?.enabled ? "Request membership" : "Email me a code"}
+                {user ? "View my account" : "Sign in"}
               </Link>
             </div>
           )}

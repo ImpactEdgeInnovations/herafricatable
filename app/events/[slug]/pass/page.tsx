@@ -9,6 +9,7 @@ import { AddToCalendarButton } from "@/components/events/add-to-calendar-button"
 import { StandaloneEventReminder } from "@/components/events/standalone-event-reminder";
 import type {EventTicket} from "@/lib/events/ticket-pdf";
 import { EventAttendancePlan } from "@/components/events/event-attendance-plan";
+import { EventTicketInvitation } from "@/components/events/event-ticket-invitation";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -128,6 +129,7 @@ export default async function EventPassPage({ params }: { params: Promise<{ slug
           <p>{ticket?.event_ended ? "This event has ended. Your saved ticket is for your records." : pass.checked_in_at ? "You are checked in. Welcome to the table." : "Use this code if the camera is unavailable."}</p>
         </article>
       </section>
+      {ticket ? <EventTicketInvitation ticket={ticket}/> : null}
       {arrival?.status === "published" && new Date(pass.ends_at).getTime() > Date.now() ? <EventAttendancePlan eventId={pass.event_id} /> : null}
       {showReminder ? <StandaloneEventReminder
         canSet={canSetReminder}

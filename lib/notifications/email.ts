@@ -84,7 +84,7 @@ export async function sendNotificationEmail(job: EmailJob) {
   const text = isMemberWelcome
     ? `${body}\n\nYour first steps:\n1. Complete your profile so introductions feel relevant.\n2. Discover a Community where you feel at home.\n3. Find an event or conversation worth joining.\n\n${buttonLabel}: ${href}\n\nWelcome to the Table.\nThe Her Africa Table team`
     : `${emailBody}\n\n${buttonLabel}: ${href}`;
-  const html = renderBrandedEmail({ title, body:ticketEmail?.content.body??emailBody, details:ticketEmail?.content.details, afterDetails:ticketEmail?.content.afterDetails, href, buttonLabel, preferenceNote, welcome: isMemberWelcome });
+  const html = renderBrandedEmail({ title, body:ticketEmail?.content.body??emailBody, details:ticketEmail?.content.details, afterDetails:ticketEmail?.content.afterDetails,secondaryLinks:ticketEmail?.content.secondaryLinks, href, buttonLabel, preferenceNote, welcome: isMemberWelcome });
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",

@@ -1,6 +1,7 @@
 import {readFile} from "node:fs/promises";
 import path from "node:path";
-import {PDFDocument, rgb, type PDFFont} from "pdf-lib";
+import {PDFDocument,PDFString, rgb, type PDFFont} from "pdf-lib";
+import {ticketInvitationLinks} from "./ticket-invitations.mjs";
 import fontkit from "@pdf-lib/fontkit";
 import QRCode from "qrcode";
 
@@ -10,6 +11,7 @@ export type EventTicket = {
   host_name:string; organisation_name:string; qr_payload:string; manual_code:string;
   issued_at:string; checked_in_at:string|null; event_ended:boolean;
   arrival_info?:string; networking?:{starts_at:string;ends_at:string;minutes:number}|null;
+  guest_only?:boolean;community?:{name:string;slug:string}|null;
 };
 let fontBytes:Promise<Buffer>|undefined;
 const green=rgb(.13,.29,.23),ink=rgb(.13,.19,.16),muted=rgb(.36,.41,.38),ivory=rgb(.98,.97,.94),gold=rgb(.7,.57,.32);
@@ -66,6 +68,8 @@ export async function renderEventTicketPdf(ticket:EventTicket):Promise<Uint8Arra
   const qr=await pdf.embedPng(await QRCode.toBuffer(ticket.qr_payload,{type:"png",width:600,margin:4,errorCorrectionLevel:"M",color:{dark:"#153c2d",light:"#ffffff"}}));
   page.drawImage(qr,{x:197.5,y:111,width:200,height:200});
   if(ticket.networking){write("NETWORKING",48,272,9,muted,140);write(`${time(ticket.networking.starts_at)} - ${time(ticket.networking.ends_at)}`,48,251,11,green,140,2);write(`${ticket.networking.minutes}-minute introductions. Optional; check in first.`,48,215,9,muted,140,4);}
+  const invitations=ticketInvitationLinks(ticket);
+  if(invitations.length){write("OPTIONAL NEXT STEPS",414,272,8,muted,133);let y=250;for(const link of invitations){const height=write(link.label,414,y,9,green,133,3);page.node.addAnnot(pdf.context.register(pdf.context.obj({Type:"Annot",Subtype:"Link",Rect:[414,y-height+10,547,y+12],Border:[0,0,0],A:{Type:"Action",S:"URI",URI:PDFString.of(link.href)}})));y-=height+13;}if(ticket.guest_only)write("HAT membership is optional. Your ticket is already confirmed.",414,y-4,8,muted,133,4);}
   write("BACKUP ENTRY CODE",48,93,9,muted,499);write(ticket.manual_code,48,68,20,green);
   write("One guest. One event.",320,88,10,ink,227);write("Keep this ticket and its code private.",320,70,9,muted,227);
   page.drawLine({start:{x:48,y:49},end:{x:547,y:49},thickness:.5,color:gold});
